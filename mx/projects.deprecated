@@ -130,8 +130,7 @@ distribution@TRUFFLE-DSL-PROCESSOR@path=build/truffle-dsl-processor.jar
 distribution@TRUFFLE-DSL-PROCESSOR@subDir=graal
 distribution@TRUFFLE-DSL-PROCESSOR@sourcesPath=build/truffle-dsl-processor.src.zip
 distribution@TRUFFLE-DSL-PROCESSOR@javaCompliance=1.7
-distribution@TRUFFLE-DSL-PROCESSOR@dependencies=\
-com.oracle.truffle.dsl.processor
+distribution@TRUFFLE-DSL-PROCESSOR@dependencies=com.oracle.truffle.dsl.processor
 distribution@TRUFFLE-DSL-PROCESSOR@distDependencies=TRUFFLE
 
 # nfi

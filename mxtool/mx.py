@@ -136,6 +136,16 @@ class Distribution:
                     arc.zf.writestr("META-INF/MANIFEST.MF", manifest)
 
             for dep in self.sorted_deps(includeLibs=True):
+                isCoveredByDependecy = False
+                for d in self.distDependencies:
+                    if dep in _dists[d].sorted_deps(includeLibs=True, transitive=True):
+                        logv("Excluding {0} from {1} because it's provided by the dependency {2}".format(dep.name, self.path, d))
+                        isCoveredByDependecy = True
+                        break
+
+                if isCoveredByDependecy:
+                    continue
+
                 if dep.isLibrary():
                     l = dep
                     # merge library jar into distribution jar
@@ -159,16 +169,6 @@ class Distribution:
                                     srcArc.zf.writestr(arcname, lp.read(arcname))
                 elif dep.isProject():
                     p = dep
-
-                    isCoveredByDependecy = False
-                    for d in self.distDependencies:
-                        if p in _dists[d].sorted_deps():
-                            logv("Excluding {0} from {1} because it's provided by the dependency {2}".format(p.name, self.path, d))
-                            isCoveredByDependecy = True
-                            break
-
-                    if isCoveredByDependecy:
-                        continue
 
                     if self.javaCompliance:
                         if p.javaCompliance > self.javaCompliance:
