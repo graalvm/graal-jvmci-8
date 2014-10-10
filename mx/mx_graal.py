@@ -1375,8 +1375,11 @@ def ctw(args):
         jar = join(_jdk(installJars=False), 'jre', 'lib', 'rt.jar')
 
     vmargs += ['-XX:+CompileTheWorld']
-    if _get_vm() == 'graal':
-        vmargs += ['-XX:+BootstrapGraal', '-G:CompileTheWorldClasspath=' + jar]
+    vm_ = _get_vm()
+    if isGraalEnabled(vm_):
+        if vm_ == 'graal':
+            vmargs += ['-XX:+BootstrapGraal']
+        vmargs += ['-G:CompileTheWorldClasspath=' + jar]
     else:
         vmargs += ['-Xbootclasspath/p:' + jar]
     vm(vmargs)
