@@ -192,15 +192,11 @@ class OopRecorder : public ResourceObj {
     }
   }
 
-  void check_for_duplicates(int index, jobject h) NOT_DEBUG_RETURN;
-
   int allocate_oop_index(jobject h) {
     return _oops.allocate_index(h);
   }
   int find_index(jobject h) {
-    int result = _object_lookup != NULL ? _object_lookup->find_index(h, this) : _oops.find_index(h);
-    check_for_duplicates(result, h);
-    return result;
+    return _object_lookup != NULL ? _object_lookup->find_index(h, this) : _oops.find_index(h);
   }
   jobject oop_at(int index) {
     return _oops.at(index);
