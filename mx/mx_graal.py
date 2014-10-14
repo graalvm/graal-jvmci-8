@@ -1607,6 +1607,7 @@ def longtests(args):
 
 def _igvFallbackJDK(env):
     if mx._java_homes[0].version == mx.VersionSpec("1.8.0_20"):
+        env = dict(env)
         fallbackJDK = mx._java_homes[1]
         mx.logv("1.8.0_20 has a known javac bug (JDK-8043926), thus falling back to " + str(fallbackJDK.version))
         env['JAVA_HOME'] = str(fallbackJDK.jdk)
@@ -1616,7 +1617,7 @@ def igv(args):
     """run the Ideal Graph Visualizer"""
     with open(join(_graal_home, '.ideal_graph_visualizer.log'), 'w') as fp:
         # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
-        env = os.environ
+        env = dict(os.environ)
         proxy = os.environ.get('http_proxy')
         if not (proxy is None) and len(proxy) > 0:
             if '://' in proxy:
@@ -1626,7 +1627,7 @@ def igv(args):
             proxyName, proxyPort = proxy.split(':', 1)
             proxyEnv = '-DproxyHost="' + proxyName + '" -DproxyPort=' + proxyPort
             env['ANT_OPTS'] = proxyEnv
-        _igvFallbackJDK(env)
+        env = _igvFallbackJDK(env)
 
         mx.logv('[Ideal Graph Visualizer log is in ' + fp.name + ']')
         nbplatform = join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'nbplatform')
@@ -1644,7 +1645,7 @@ def igv(args):
 
         if not exists(nbplatform):
             mx.logv('[This execution may take a while as the NetBeans platform needs to be downloaded]')
-        mx.run(['ant', '-f', join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml'), '-l', fp.name, 'run'], env=env)
+        mx.run(['ant', '-f', mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env)
 
 def maven_install_truffle(args):
     """install Truffle into your local Maven repository"""
