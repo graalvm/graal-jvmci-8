@@ -1338,12 +1338,18 @@ def buildvms(args):
     mx.log('TOTAL TIME:   ' + '[' + str(allDuration) + ']')
 
 class Task:
-    def __init__(self, title):
+    def __init__(self, title, tasks=None):
         self.start = time.time()
         self.title = title
         self.end = None
         self.duration = None
+        self.tasks = tasks
         mx.log(time.strftime('gate: %d %b %Y %H:%M:%S: BEGIN: ') + title)
+    def __enter__(self):
+        assert self.tasks is not None, "using Task with 'with' statement requires to pass the tasks list in the constructor"
+        return self
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.tasks.append(self.stop())
     def stop(self):
         self.end = time.time()
         self.duration = datetime.timedelta(seconds=self.end - self.start)
@@ -1385,70 +1391,58 @@ def ctw(args):
     vm(vmargs)
 
 def _basic_gate_body(args, tasks):
-    t = Task('BuildHotSpotGraal: fastdebug,product')
-    buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product'])
-    tasks.append(t.stop())
+    with Task('BuildHotSpotGraal: fastdebug,product', tasks):
+        buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product'])
 
     with VM('graal', 'fastdebug'):
-        t = Task('BootstrapWithSystemAssertions:fastdebug')
-        vm(['-esa', '-XX:-TieredCompilation', '-version'])
-        tasks.append(t.stop())
+        with Task('BootstrapWithSystemAssertions:fastdebug', tasks):
+            vm(['-esa', '-XX:-TieredCompilation', '-version'])
 
     with VM('graal', 'fastdebug'):
-        t = Task('BootstrapWithSystemAssertionsNoCoop:fastdebug')
-        vm(['-esa', '-XX:-TieredCompilation', '-XX:-UseCompressedOops', '-version'])
-        tasks.append(t.stop())
+        with Task('BootstrapWithSystemAssertionsNoCoop:fastdebug', tasks):
+            vm(['-esa', '-XX:-TieredCompilation', '-XX:-UseCompressedOops', '-version'])
 
     with VM('graal', 'product'):
-        t = Task('BootstrapWithGCVerification:product')
-        out = mx.DuplicateSuppressingStream(['VerifyAfterGC:', 'VerifyBeforeGC:']).write
-        vm(['-XX:-TieredCompilation', '-XX:+UnlockDiagnosticVMOptions', '-XX:+VerifyBeforeGC', '-XX:+VerifyAfterGC', '-version'], out=out)
-        tasks.append(t.stop())
+        with Task('BootstrapWithGCVerification:product', tasks):
+            out = mx.DuplicateSuppressingStream(['VerifyAfterGC:', 'VerifyBeforeGC:']).write
+            vm(['-XX:-TieredCompilation', '-XX:+UnlockDiagnosticVMOptions', '-XX:+VerifyBeforeGC', '-XX:+VerifyAfterGC', '-version'], out=out)
 
     with VM('graal', 'product'):
-        t = Task('BootstrapWithG1GCVerification:product')
-        out = mx.DuplicateSuppressingStream(['VerifyAfterGC:', 'VerifyBeforeGC:']).write
-        vm(['-XX:-TieredCompilation', '-XX:+UnlockDiagnosticVMOptions', '-XX:-UseSerialGC', '-XX:+UseG1GC', '-XX:+VerifyBeforeGC', '-XX:+VerifyAfterGC', '-version'], out=out)
-        tasks.append(t.stop())
+        with Task('BootstrapWithG1GCVerification:product', tasks):
+            out = mx.DuplicateSuppressingStream(['VerifyAfterGC:', 'VerifyBeforeGC:']).write
+            vm(['-XX:-TieredCompilation', '-XX:+UnlockDiagnosticVMOptions', '-XX:-UseSerialGC', '-XX:+UseG1GC', '-XX:+VerifyBeforeGC', '-XX:+VerifyAfterGC', '-version'], out=out)
 
     with VM('graal', 'product'):
-        t = Task('BootstrapWithRegisterPressure:product')
-        vm(['-XX:-TieredCompilation', '-G:RegisterPressure=rbx,r11,r10,r14,xmm3,xmm11,xmm14', '-esa', '-version'])
-        tasks.append(t.stop())
+        with Task('BootstrapWithRegisterPressure:product', tasks):
+            vm(['-XX:-TieredCompilation', '-G:RegisterPressure=rbx,r11,r10,r14,xmm3,xmm11,xmm14', '-esa', '-version'])
 
     with VM('graal', 'product'):
-        t = Task('BootstrapWithImmutableCode:product')
-        vm(['-XX:-TieredCompilation', '-G:+ImmutableCode', '-G:+VerifyPhases', '-esa', '-version'])
-        tasks.append(t.stop())
+        with Task('BootstrapWithImmutableCode:product', tasks):
+            vm(['-XX:-TieredCompilation', '-G:+ImmutableCode', '-G:+VerifyPhases', '-esa', '-version'])
 
     with VM('server', 'product'):  # hosted mode
-        t = Task('UnitTests:hosted-product')
-        unittest(['--enable-timing', '--verbose'])
-        tasks.append(t.stop())
+        with Task('UnitTests:hosted-product', tasks):
+            unittest(['--enable-timing', '--verbose'])
 
     with VM('server', 'product'):  # hosted mode
-        t = Task('UnitTests-BaselineCompiler:hosted-product')
-        unittest(['--enable-timing', '--verbose', '--whitelist', 'test/whitelist_baseline.txt', '-G:+UseBaselineCompiler'])
-        tasks.append(t.stop())
+        with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
+            unittest(['--enable-timing', '--verbose', '--whitelist', 'test/whitelist_baseline.txt', '-G:+UseBaselineCompiler'])
 
     for vmbuild in ['fastdebug', 'product']:
         for test in sanitycheck.getDacapos(level=sanitycheck.SanityCheckLevel.Gate, gateBuildLevel=vmbuild) + sanitycheck.getScalaDacapos(level=sanitycheck.SanityCheckLevel.Gate, gateBuildLevel=vmbuild):
-            t = Task(str(test) + ':' + vmbuild)
-            if not test.test('graal'):
-                t.abort(test.name + ' Failed')
-            tasks.append(t.stop())
+            with Task(str(test) + ':' + vmbuild, tasks) as t:
+                if not test.test('graal'):
+                    t.abort(test.name + ' Failed')
 
     # ensure -Xbatch still works
     with VM('graal', 'product'):
-        t = Task('DaCapo_pmd:BatchMode:product')
-        dacapo(['-Xbatch', 'pmd'])
-        tasks.append(t.stop())
+        with Task('DaCapo_pmd:BatchMode:product', tasks):
+            dacapo(['-Xbatch', 'pmd'])
 
     # ensure -Xcomp still works
     with VM('graal', 'product'):
-        t = Task('XCompMode:product')
-        vm(['-Xcomp', '-version'])
-        tasks.append(t.stop())
+        with Task('XCompMode:product', tasks):
+            vm(['-Xcomp', '-version'])
 
     if args.jacocout is not None:
         jacocoreport([args.jacocout])
@@ -1456,19 +1450,17 @@ def _basic_gate_body(args, tasks):
     global _jacoco
     _jacoco = 'off'
 
-    t = Task('CleanAndBuildIdealGraphVisualizer')
-    env = _igvFallbackJDK(os.environ)
-    buildxml = mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml'))
-    mx.run(['ant', '-f', buildxml, '-q', 'clean', 'build'], env=env)
-    tasks.append(t.stop())
+    with Task('CleanAndBuildIdealGraphVisualizer', tasks):
+        env = _igvFallbackJDK(os.environ)
+        buildxml = mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml'))
+        mx.run(['ant', '-f', buildxml, '-q', 'clean', 'build'], env=env)
 
     # Prevent Graal modifications from breaking the standard builds
     if args.buildNonGraal:
-        t = Task('BuildHotSpotVarieties')
-        buildvms(['--vms', 'client,server', '--builds', 'fastdebug,product'])
-        buildvms(['--vms', 'server-nograal', '--builds', 'product'])
-        buildvms(['--vms', 'server-nograal', '--builds', 'optimized'])
-        tasks.append(t.stop())
+        with Task('BuildHotSpotVarieties', tasks):
+            buildvms(['--vms', 'client,server', '--builds', 'fastdebug,product'])
+            buildvms(['--vms', 'server-nograal', '--builds', 'product'])
+            buildvms(['--vms', 'server-nograal', '--builds', 'optimized'])
 
         for vmbuild in ['product', 'fastdebug']:
             for theVm in ['client', 'server']:
@@ -1476,13 +1468,11 @@ def _basic_gate_body(args, tasks):
                     mx.log('The' + theVm + ' VM is not supported on this platform')
                     continue
                 with VM(theVm, vmbuild):
-                    t = Task('DaCapo_pmd:' + theVm + ':' + vmbuild)
-                    dacapo(['pmd'])
-                    tasks.append(t.stop())
+                    with Task('DaCapo_pmd:' + theVm + ':' + vmbuild, tasks):
+                        dacapo(['pmd'])
 
-                    t = Task('UnitTests:' + theVm + ':' + vmbuild)
-                    unittest(['-XX:CompileCommand=exclude,*::run*', 'graal.api'])
-                    tasks.append(t.stop())
+                    with Task('UnitTests:' + theVm + ':' + vmbuild, tasks):
+                        unittest(['-XX:CompileCommand=exclude,*::run*', 'graal.api'])
 
 
 def gate(args, gate_body=_basic_gate_body):
@@ -1504,60 +1494,49 @@ def gate(args, gate_body=_basic_gate_body):
     tasks = []
     total = Task('Gate')
     try:
-
-        t = Task('Pylint')
-        mx.pylint([])
-        tasks.append(t.stop())
+        with Task('Pylint', tasks):
+            mx.pylint([])
 
         def _clean(name='Clean'):
-            t = Task(name)
-            cleanArgs = []
-            if not args.cleanNative:
-                cleanArgs.append('--no-native')
-            if not args.cleanJava:
-                cleanArgs.append('--no-java')
-            clean(cleanArgs)
-            tasks.append(t.stop())
+            with Task(name, tasks):
+                cleanArgs = []
+                if not args.cleanNative:
+                    cleanArgs.append('--no-native')
+                if not args.cleanJava:
+                    cleanArgs.append('--no-java')
+                clean(cleanArgs)
         _clean()
 
-        t = Task('IDEConfigCheck')
-        mx.ideclean([])
-        mx.ideinit([])
-        tasks.append(t.stop())
+        with Task('IDEConfigCheck', tasks):
+            mx.ideclean([])
+            mx.ideinit([])
 
         eclipse_exe = mx.get_env('ECLIPSE_EXE')
         if eclipse_exe is not None:
-            t = Task('CodeFormatCheck')
-            if mx.eclipseformat(['-e', eclipse_exe]) != 0:
-                t.abort('Formatter modified files - run "mx eclipseformat", check in changes and repush')
-            tasks.append(t.stop())
+            with Task('CodeFormatCheck', tasks) as t:
+                if mx.eclipseformat(['-e', eclipse_exe]) != 0:
+                    t.abort('Formatter modified files - run "mx eclipseformat", check in changes and repush')
 
-        t = Task('Canonicalization Check')
-        mx.log(time.strftime('%d %b %Y %H:%M:%S - Ensuring mx/projects files are canonicalized...'))
-        if mx.canonicalizeprojects([]) != 0:
-            t.abort('Rerun "mx canonicalizeprojects" and check-in the modified mx/projects files.')
-        tasks.append(t.stop())
+        with Task('Canonicalization Check', tasks) as t:
+            mx.log(time.strftime('%d %b %Y %H:%M:%S - Ensuring mx/projects files are canonicalized...'))
+            if mx.canonicalizeprojects([]) != 0:
+                t.abort('Rerun "mx canonicalizeprojects" and check-in the modified mx/projects files.')
 
         if mx.get_env('JDT'):
-            t = Task('BuildJavaWithEcj')
-            build(['-p', '--no-native', '--jdt-warning-as-error'])
-            tasks.append(t.stop())
-
+            with Task('BuildJavaWithEcj', tasks):
+                build(['-p', '--no-native', '--jdt-warning-as-error'])
             _clean('CleanAfterEcjBuild')
 
-        t = Task('BuildJavaWithJavac')
-        build(['-p', '--no-native', '--force-javac'])
-        tasks.append(t.stop())
+        with Task('BuildJavaWithJavac', tasks):
+            build(['-p', '--no-native', '--force-javac'])
 
-        t = Task('Checkheaders')
-        if checkheaders([]) != 0:
-            t.abort('Checkheaders warnings were found')
-        tasks.append(t.stop())
+        with Task('Checkheaders', tasks) as t:
+            if checkheaders([]) != 0:
+                t.abort('Checkheaders warnings were found')
 
-        t = Task('FindBugs')
-        if findbugs([]) != 0:
-            t.abort('FindBugs warnings were found')
-        tasks.append(t.stop())
+        with Task('FindBugs', tasks) as t:
+            if findbugs([]) != 0:
+                t.abort('FindBugs warnings were found')
 
         if exists('jacoco.exec'):
             os.unlink('jacoco.exec')
@@ -1607,6 +1586,7 @@ def longtests(args):
 
 def _igvFallbackJDK(env):
     if mx._java_homes[0].version == mx.VersionSpec("1.8.0_20"):
+        env = dict(env)
         fallbackJDK = mx._java_homes[1]
         mx.logv("1.8.0_20 has a known javac bug (JDK-8043926), thus falling back to " + str(fallbackJDK.version))
         env['JAVA_HOME'] = str(fallbackJDK.jdk)
@@ -1616,7 +1596,7 @@ def igv(args):
     """run the Ideal Graph Visualizer"""
     with open(join(_graal_home, '.ideal_graph_visualizer.log'), 'w') as fp:
         # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
-        env = os.environ
+        env = dict(os.environ)
         proxy = os.environ.get('http_proxy')
         if not (proxy is None) and len(proxy) > 0:
             if '://' in proxy:
@@ -1626,7 +1606,7 @@ def igv(args):
             proxyName, proxyPort = proxy.split(':', 1)
             proxyEnv = '-DproxyHost="' + proxyName + '" -DproxyPort=' + proxyPort
             env['ANT_OPTS'] = proxyEnv
-        _igvFallbackJDK(env)
+        env = _igvFallbackJDK(env)
 
         mx.logv('[Ideal Graph Visualizer log is in ' + fp.name + ']')
         nbplatform = join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'nbplatform')
@@ -1644,7 +1624,7 @@ def igv(args):
 
         if not exists(nbplatform):
             mx.logv('[This execution may take a while as the NetBeans platform needs to be downloaded]')
-        mx.run(['ant', '-f', join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml'), '-l', fp.name, 'run'], env=env)
+        mx.run(['ant', '-f', mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env)
 
 def maven_install_truffle(args):
     """install Truffle into your local Maven repository"""
