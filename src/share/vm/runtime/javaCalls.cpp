@@ -417,7 +417,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
       if (graalInstalledCode != NULL && graalInstalledCode->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isExternal(graalInstalledCode)) {
         entry_point = GraalRuntime::get_external_deopt_i2c_entry();
       } else {
-      entry_point = method->adapter()->get_i2c_entry();
+        entry_point = method->adapter()->get_i2c_entry();
       }
     } else {
       THROW(vmSymbols::com_oracle_graal_api_code_InvalidInstalledCodeException());
