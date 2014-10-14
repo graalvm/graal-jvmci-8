@@ -316,7 +316,7 @@
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotMetaspaceConstant,   "com/oracle/graal/hotspot/meta/HotSpotMetaspaceConstant"))        \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_HotSpotStackFrameReference,      "com/oracle/graal/hotspot/HotSpotStackFrameReference"))           \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_CompilationTask,                 "com/oracle/graal/hotspot/CompilationTask"))                      \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_Constant,                       "com/oracle/graal/api/meta/Constant"))                            \
+  GRAAL_ONLY(template(com_oracle_graal_api_meta_AbstractConstant,               "com/oracle/graal/api/meta/AbstractConstant"))                    \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_PrimitiveConstant,              "com/oracle/graal/api/meta/PrimitiveConstant"))                   \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_RawConstant,                    "com/oracle/graal/api/meta/RawConstant"))                         \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_NullConstant,                   "com/oracle/graal/api/meta/NullConstant"))                        \
@@ -326,6 +326,7 @@
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Kind,                           "com/oracle/graal/api/meta/Kind"))                                \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_LIRKind,                        "com/oracle/graal/api/meta/LIRKind"))                             \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Value,                          "com/oracle/graal/api/meta/Value"))                               \
+  GRAAL_ONLY(template(com_oracle_graal_api_meta_AbstractValue,                  "com/oracle/graal/api/meta/AbstractValue"))                       \
   GRAAL_ONLY(template(com_oracle_graal_api_code_Assumptions,                    "com/oracle/graal/api/code/Assumptions"))                         \
   GRAAL_ONLY(template(com_oracle_graal_api_code_Assumptions_MethodContents,     "com/oracle/graal/api/code/Assumptions$MethodContents"))          \
   GRAAL_ONLY(template(com_oracle_graal_api_code_Assumptions_ConcreteSubtype,    "com/oracle/graal/api/code/Assumptions$ConcreteSubtype"))         \

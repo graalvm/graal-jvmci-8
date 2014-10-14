@@ -235,7 +235,7 @@ class Ticks;
   GRAAL_ONLY(do_klass(StackSlot_klass,                       com_oracle_graal_api_code_StackSlot,                          Graal)) \
   GRAAL_ONLY(do_klass(VirtualObject_klass,                   com_oracle_graal_api_code_VirtualObject,                      Graal)) \
   GRAAL_ONLY(do_klass(SpeculationLog_klass,                  com_oracle_graal_api_code_SpeculationLog,                     Graal)) \
-  GRAAL_ONLY(do_klass(Constant_klass,                        com_oracle_graal_api_meta_Constant,                           Graal)) \
+  GRAAL_ONLY(do_klass(AbstractConstant_klass,                com_oracle_graal_api_meta_AbstractConstant,                   Graal)) \
   GRAAL_ONLY(do_klass(PrimitiveConstant_klass,               com_oracle_graal_api_meta_PrimitiveConstant,                  Graal)) \
   GRAAL_ONLY(do_klass(RawConstant_klass,                     com_oracle_graal_api_meta_RawConstant,                        Graal)) \
   GRAAL_ONLY(do_klass(NullConstant_klass,                    com_oracle_graal_api_meta_NullConstant,                       Graal)) \
@@ -244,6 +244,7 @@ class Ticks;
   GRAAL_ONLY(do_klass(LIRKind_klass,                         com_oracle_graal_api_meta_LIRKind,                            Graal)) \
   GRAAL_ONLY(do_klass(JavaMethod_klass,                      com_oracle_graal_api_meta_JavaMethod,                         Graal)) \
   GRAAL_ONLY(do_klass(JavaType_klass,                        com_oracle_graal_api_meta_JavaType,                           Graal)) \
+  GRAAL_ONLY(do_klass(AbstractValue_klass,                   com_oracle_graal_api_meta_AbstractValue,                      Graal)) \
   GRAAL_ONLY(do_klass(Value_klass,                           com_oracle_graal_api_meta_Value,                              Graal)) \
 
   /*end*/

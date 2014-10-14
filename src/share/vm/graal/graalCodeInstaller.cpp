@@ -177,7 +177,7 @@ static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder)
   if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
     oop obj = HotSpotMetaspaceConstant::metaspaceObject(constant);
     jlong prim = HotSpotMetaspaceConstant::primitive(constant);
-    assert(Kind::typeChar(Constant::kind(constant)) == 'j', "must have word kind");
+    assert(Kind::typeChar(AbstractConstant::kind(constant)) == 'j', "must have word kind");
     assert(obj != NULL, "must have an object");
     assert(prim != 0, "must have a primitive value");
 
@@ -195,7 +195,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
     return new LocationValue(Location::new_stk_loc(Location::invalid, 0));
   }
 
-  oop lirKind = Value::lirKind(value);
+  oop lirKind = AbstractValue::lirKind(value);
   oop platformKind = LIRKind::platformKind(lirKind);
   jint referenceMask = LIRKind::referenceMask(lirKind);
   assert(referenceMask == 0 || referenceMask == 1, "unexpected referenceMask");
@@ -274,7 +274,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
       second = value;
     }
     return value;
-  } else if (value->is_a(Constant::klass())){
+  } else if (value->is_a(AbstractConstant::klass())){
     record_metadata_in_constant(value, oop_recorder);
     if (value->is_a(PrimitiveConstant::klass())) {
       assert(!reference, "unexpected primitive constant type");
