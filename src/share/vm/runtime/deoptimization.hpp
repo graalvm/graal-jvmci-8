@@ -72,6 +72,8 @@ class Deoptimization : AllStatic {
     Reason_age,                   // nmethod too old; tier threshold reached
     Reason_predicate,             // compiler generated predicate failed
     Reason_loop_limit_check,      // compiler generated loop limits check failed
+    Reason_speculate_class_check, // saw unexpected object class from type speculation
+    Reason_rtm_state_change,      // rtm state change detected
 #ifdef GRAAL
     Reason_aliasing,              // optimistic assumption about aliasing failed
     Reason_transfer_to_interpreter, // explicit transferToInterpreter()
@@ -353,8 +355,21 @@ GRAAL_ONLY(public:)
       return reason;
     else if (reason == Reason_div0_check) // null check due to divide-by-zero?
       return Reason_null_check;           // recorded per BCI as a null check
+    else if (reason == Reason_speculate_class_check)
+      return Reason_class_check;
     else
       return Reason_none;
+  }
+
+  static bool reason_is_speculate(int reason) {
+    if (reason == Reason_speculate_class_check) {
+      return true;
+    }
+    return false;
+  }
+
+  static uint per_method_trap_limit(int reason) {
+    return reason_is_speculate(reason) ? (uint)PerMethodSpecTrapLimit : (uint)PerMethodTrapLimit;
   }
 
   static const char* trap_reason_name(int reason);
@@ -383,6 +398,7 @@ GRAAL_ONLY(public:)
 #ifdef GRAAL
                                                bool is_osr,
 #endif
+                                               Method* compiled_method,
                                                //outputs:
                                                uint& ret_this_trap_count,
                                                bool& ret_maybe_prior_trap,

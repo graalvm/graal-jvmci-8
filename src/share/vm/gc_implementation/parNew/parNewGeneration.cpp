@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -54,6 +54,8 @@
 #include "utilities/copy.hpp"
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/workgroup.hpp"
+
+PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -1636,8 +1638,7 @@ void ParNewGeneration::ref_processor_init() {
                              refs_discovery_is_mt(),     // mt discovery
                              (int) ParallelGCThreads,    // mt discovery degree
                              refs_discovery_is_atomic(), // atomic_discovery
-                             NULL,                       // is_alive_non_header
-                             false);                     // write barrier for next field updates
+                             NULL);                      // is_alive_non_header
   }
 }
 

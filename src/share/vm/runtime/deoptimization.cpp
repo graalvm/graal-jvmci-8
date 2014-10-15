@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -82,10 +82,15 @@
 #ifdef TARGET_ARCH_MODEL_arm
 # include "adfiles/ad_arm.hpp"
 #endif
-#ifdef TARGET_ARCH_MODEL_ppc
-# include "adfiles/ad_ppc.hpp"
+#ifdef TARGET_ARCH_MODEL_ppc_32
+# include "adfiles/ad_ppc_32.hpp"
 #endif
+#ifdef TARGET_ARCH_MODEL_ppc_64
+# include "adfiles/ad_ppc_64.hpp"
 #endif
+#endif // COMPILER2
+
+PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
 #ifdef GRAAL
 #include "graal/graalRuntime.hpp"
@@ -439,15 +444,9 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
     // frame[number_of_frames - 1 ] = on_stack_size(youngest)
     // frame[number_of_frames - 2 ] = on_stack_size(sender(youngest))
     // frame[number_of_frames - 3 ] = on_stack_size(sender(sender(youngest)))
-    int caller_parms = callee_parameters;
-    if ((index == array->frames() - 1) && caller_was_method_handle) {
-      caller_parms = 0;
-    }
-    frame_sizes[number_of_frames - 1 - index] = BytesPerWord * array->element(index)->on_stack_size(caller_parms,
-                                                                                                    callee_parameters,
+    frame_sizes[number_of_frames - 1 - index] = BytesPerWord * array->element(index)->on_stack_size(callee_parameters,
                                                                                                     callee_locals,
                                                                                                     index == 0,
-                                                                                                    index == array->frames() - 1,
                                                                                                     popframe_extra_args);
     // This pc doesn't have to be perfect just good enough to identify the frame
     // as interpreted so the skeleton frame will be walkable
@@ -1295,9 +1294,19 @@ void Deoptimization::load_class_by_index(constantPoolHandle constant_pool, int i
   load_class_by_index(constant_pool, index, THREAD);
   if (HAS_PENDING_EXCEPTION) {
     // Exception happened during classloading. We ignore the exception here, since it
-    // is going to be rethrown since the current activation is going to be deoptimzied and
+    // is going to be rethrown since the current activation is going to be deoptimized and
     // the interpreter will re-execute the bytecode.
     CLEAR_PENDING_EXCEPTION;
+    // Class loading called java code which may have caused a stack
+    // overflow. If the exception was thrown right before the return
+    // to the runtime the stack is no longer guarded. Reguard the
+    // stack otherwise if we return to the uncommon trap blob and the
+    // stack bang causes a stack overflow we crash.
+    assert(THREAD->is_Java_thread(), "only a java thread can be here");
+    JavaThread* thread = (JavaThread*)THREAD;
+    bool guard_pages_enabled = thread->stack_yellow_zone_enabled();
+    if (!guard_pages_enabled) guard_pages_enabled = thread->reguard_stack();
+    assert(guard_pages_enabled, "stack banging in uncommon trap blob may cause crash");
   }
 }
 
@@ -1416,7 +1425,8 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     gather_statistics(reason, action, trap_bc);
 
     // Ensure that we can record deopt. history:
-    bool create_if_missing = ProfileTraps;
+    // Need MDO to record RTM code generation state.
+    bool create_if_missing = ProfileTraps RTM_OPT_ONLY( || UseRTMLocking );
 
     methodHandle profiled_method;
 #ifdef GRAAL
@@ -1651,6 +1661,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
 #ifdef GRAAL
                                    nm->is_compiled_by_graal() && nm->is_osr_method(),
 #endif
+                                   nm->method(),
                                    //outputs:
                                    this_trap_count,
                                    maybe_prior_trap,
@@ -1696,7 +1707,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
       }
 
       // Go back to the compiler if there are too many traps in this method.
-      if (this_trap_count >= (uint)PerMethodTrapLimit) {
+      if (this_trap_count >= per_method_trap_limit(reason)) {
         // If there are too many traps in this method, force a recompile.
         // This will allow the compiler to see the limit overflow, and
         // take corrective action, if possible.
@@ -1730,6 +1741,17 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
         if (tstate1 != tstate0)
           pdata->set_trap_state(tstate1);
       }
+
+#if INCLUDE_RTM_OPT
+      // Restart collecting RTM locking abort statistic if the method
+      // is recompiled for a reason other than RTM state change.
+      // Assume that in new recompiled code the statistic could be different,
+      // for example, due to different inlining.
+      if ((reason != Reason_rtm_state_change) && (trap_mdo != NULL) &&
+          UseRTMDeopt && (nm->rtm_state() != ProfileRTM)) {
+        trap_mdo->atomic_set_rtm_state(ProfileRTM);
+      }
+#endif
     }
 
     if (inc_recompile_count) {
@@ -1788,6 +1810,7 @@ Deoptimization::query_update_method_data(MethodData* trap_mdo,
 #ifdef GRAAL
                                          bool is_osr,
 #endif
+                                         Method* compiled_method,
                                          //outputs:
                                          uint& ret_this_trap_count,
                                          bool& ret_maybe_prior_trap,
@@ -1823,9 +1846,16 @@ Deoptimization::query_update_method_data(MethodData* trap_mdo,
     // Find the profile data for this BCI.  If there isn't one,
     // try to allocate one from the MDO's set of spares.
     // This will let us detect a repeated trap at this point.
-    pdata = trap_mdo->allocate_bci_to_data(trap_bci);
+    pdata = trap_mdo->allocate_bci_to_data(trap_bci, reason_is_speculate(reason) ? compiled_method : NULL);
 
     if (pdata != NULL) {
+      if (reason_is_speculate(reason) && !pdata->is_SpeculativeTrapData()) {
+        if (LogCompilation && xtty != NULL) {
+          ttyLocker ttyl;
+          // no more room for speculative traps in this MDO
+          xtty->elem("speculative_traps_oom");
+        }
+      }
       // Query the trap state of this profile datum.
       int tstate0 = pdata->trap_state();
       if (!trap_state_has_reason(tstate0, per_bc_reason))
@@ -1863,6 +1893,7 @@ Deoptimization::update_method_data_from_interpreter(MethodData* trap_mdo, int tr
   uint ignore_this_trap_count;
   bool ignore_maybe_prior_trap;
   bool ignore_maybe_prior_recompile;
+  assert(!reason_is_speculate(reason), "reason speculate only used by compiler");
   // Graal uses the total counts to determine if deoptimizations are happening too frequently -> do not adjust total counts
   bool update_total_counts = GRAAL_ONLY(false) NOT_GRAAL(true);
   query_update_method_data(trap_mdo, trap_bci,
@@ -1871,6 +1902,7 @@ Deoptimization::update_method_data_from_interpreter(MethodData* trap_mdo, int tr
 #ifdef GRAAL
                            false,
 #endif
+                           NULL,
                            ignore_this_trap_count,
                            ignore_maybe_prior_trap,
                            ignore_maybe_prior_recompile);
@@ -2001,6 +2033,8 @@ const char* Deoptimization::_trap_reason_name[Reason_LIMIT] = {
   "age" GRAAL_ONLY("_or_jsr_mismatch"),
   "predicate",
   "loop_limit_check",
+  "speculate_class_check",
+  "rtm_state_change"
 #ifdef GRAAL
   "aliasing",
   "transfer_to_interpreter",

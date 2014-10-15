@@ -201,7 +201,7 @@ JVMState* VirtualCallGenerator::generate(JVMState* jvms, Parse* parent_parser) {
   // Block::implicit_null_check() only looks for loads and stores, not calls.
   ciMethod *caller = kit.method();
   ciMethodData *caller_md = (caller == NULL) ? NULL : caller->method_data();
-  if (!UseInlineCaches || !ImplicitNullChecks ||
+  if (!UseInlineCaches || !ImplicitNullChecks || !os::zero_page_read_protected() ||
        ((ImplicitNullCheckThreshold > 0) && caller_md &&
        (caller_md->trap_count(Deoptimization::Reason_null_check)
        >= (uint)ImplicitNullCheckThreshold))) {
@@ -381,7 +381,7 @@ void LateInlineCallGenerator::do_late_inline() {
   }
 
   // Setup default node notes to be picked up by the inlining
-  Node_Notes* old_nn = C->default_node_notes();
+  Node_Notes* old_nn = C->node_notes_at(call->_idx);
   if (old_nn != NULL) {
     Node_Notes* entry_nn = old_nn->clone(C);
     entry_nn->set_jvms(jvms);
@@ -722,7 +722,7 @@ JVMState* PredictedCallGenerator::generate(JVMState* jvms, Parse* parent_parser)
     Node* m = kit.map()->in(i);
     Node* n = slow_map->in(i);
     if (m != n) {
-      const Type* t = gvn.type(m)->meet(gvn.type(n));
+      const Type* t = gvn.type(m)->meet_speculative(gvn.type(n));
       Node* phi = PhiNode::make(region, m, t);
       phi->set_req(2, n);
       kit.map()->set_req(i, gvn.transform(phi));
@@ -837,8 +837,11 @@ CallGenerator* CallGenerator::for_method_handle_inline(JVMState* jvms, ciMethod*
           Node*             receiver_node = kit.argument(0);
           const TypeOopPtr* receiver_type = gvn.type(receiver_node)->isa_oopptr();
           // call_does_dispatch and vtable_index are out-parameters.  They might be changed.
-          target = C->optimize_virtual_call(caller, jvms->bci(), klass, target, receiver_type,
-                                            is_virtual,
+          // optimize_virtual_call() takes 2 different holder
+          // arguments for a corner case that doesn't apply here (see
+          // Parse::do_call())
+          target = C->optimize_virtual_call(caller, jvms->bci(), klass, klass,
+                                            target, receiver_type, is_virtual,
                                             call_does_dispatch, vtable_index);  // out-parameters
           // We lack profiling at this call but type speculation may
           // provide us with a type
@@ -975,7 +978,7 @@ JVMState* PredictedIntrinsicGenerator::generate(JVMState* jvms, Parse* parent_pa
     Node* m = kit.map()->in(i);
     Node* n = slow_map->in(i);
     if (m != n) {
-      const Type* t = gvn.type(m)->meet(gvn.type(n));
+      const Type* t = gvn.type(m)->meet_speculative(gvn.type(n));
       Node* phi = PhiNode::make(region, m, t);
       phi->set_req(2, n);
       kit.map()->set_req(i, gvn.transform(phi));

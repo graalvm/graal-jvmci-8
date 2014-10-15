@@ -1132,7 +1132,9 @@ static VMReg int_stk_helper( int i ) {
 
 int SharedRuntime::c_calling_convention(const BasicType *sig_bt,
                                          VMRegPair *regs,
+                                         VMRegPair *regs2,
                                          int total_args_passed) {
+    assert(regs2 == NULL, "not needed on sparc");
 
     // Return the number of VMReg stack_slots needed for the args.
     // This value does not include an abi space (like register window
@@ -2110,7 +2112,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   // the 1st six register arguments). It's weird see int_stk_helper.
   //
   int out_arg_slots;
-  out_arg_slots = c_calling_convention(out_sig_bt, out_regs, total_c_args);
+  out_arg_slots = c_calling_convention(out_sig_bt, out_regs, NULL, total_c_args);
 
   if (is_critical_native) {
     // Critical natives may have to call out so they need a save area
@@ -2711,7 +2713,7 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
   if (!is_critical_native) {
     // reset handle block
     __ ld_ptr(G2_thread, in_bytes(JavaThread::active_handles_offset()), L5);
-    __ st_ptr(G0, L5, JNIHandleBlock::top_offset_in_bytes());
+    __ st(G0, L5, JNIHandleBlock::top_offset_in_bytes());
 
     __ ld_ptr(G2_thread, in_bytes(Thread::pending_exception_offset()), G3_scratch);
     check_forward_pending_exception(masm, G3_scratch);
@@ -2857,7 +2859,7 @@ nmethod *SharedRuntime::generate_dtrace_nmethod(
   // the 1st six register arguments). It's weird see int_stk_helper.
   //
   int out_arg_slots;
-  out_arg_slots = c_calling_convention(out_sig_bt, out_regs, total_c_args);
+  out_arg_slots = c_calling_convention(out_sig_bt, out_regs, NULL, total_c_args);
 
   // Calculate the total number of stack slots we will need.
 
@@ -3379,13 +3381,16 @@ static void make_new_frames(MacroAssembler* masm, bool deopt) {
   Register        O4array_size       = O4;
   Label           loop;
 
-  // Before we make new frames, check to see if stack is available.
-  // Do this after the caller's return address is on top of stack
+#ifdef ASSERT
+  // Compilers generate code that bang the stack by as much as the
+  // interpreter would need. So this stack banging should never
+  // trigger a fault. Verify that it does not on non product builds.
   if (UseStackBanging) {
     // Get total frame size for interpreted frames
     __ ld(O2UnrollBlock, Deoptimization::UnrollBlock::total_frame_sizes_offset_in_bytes(), O4);
     __ bang_stack_size(O4, O3, G3_scratch);
   }
+#endif
 
   __ ld(O2UnrollBlock, Deoptimization::UnrollBlock::number_of_frames_offset_in_bytes(), O4array_size);
   __ ld_ptr(O2UnrollBlock, Deoptimization::UnrollBlock::frame_pcs_offset_in_bytes(), G3pcs);
@@ -3433,9 +3438,11 @@ void SharedRuntime::generate_deopt_blob() {
   ResourceMark rm;
   // setup code generation tools
   int pad = VerifyThread ? 512 : 0;// Extra slop space for more verify code
+#ifdef ASSERT
   if (UseStackBanging) {
     pad += StackShadowPages*16 + 32;
   }
+#endif
 #ifdef GRAAL
   pad += 1000; // Increase the buffer size when compiling for GRAAL
 #endif
@@ -3735,9 +3742,11 @@ void SharedRuntime::generate_uncommon_trap_blob() {
   ResourceMark rm;
   // setup code generation tools
   int pad = VerifyThread ? 512 : 0;
+#ifdef ASSERT
   if (UseStackBanging) {
     pad += StackShadowPages*16 + 32;
   }
+#endif
 #ifdef _LP64
   CodeBuffer buffer("uncommon_trap_blob", 2700+pad, 512);
 #else

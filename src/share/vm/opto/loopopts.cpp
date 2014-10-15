@@ -43,12 +43,6 @@ Node *PhaseIdealLoop::split_thru_phi( Node *n, Node *region, int policy ) {
     return NULL;
   }
 
-  if (n->is_MathExact()) {
-    // MathExact has projections that are not correctly handled in the code
-    // below.
-    return NULL;
-  }
-
   int wins = 0;
   assert(!n->is_CFG(), "");
   assert(region->is_Region(), "");
@@ -1115,8 +1109,8 @@ BoolNode *PhaseIdealLoop::clone_iff( PhiNode *phi, IdealLoopTree *loop ) {
     Node *n2 = phi->in(i)->in(1)->in(2);
     phi1->set_req( i, n1 );
     phi2->set_req( i, n2 );
-    phi1->set_type( phi1->type()->meet(n1->bottom_type()) );
-    phi2->set_type( phi2->type()->meet(n2->bottom_type()) );
+    phi1->set_type( phi1->type()->meet_speculative(n1->bottom_type()));
+    phi2->set_type( phi2->type()->meet_speculative(n2->bottom_type()));
   }
   // See if these Phis have been made before.
   // Register with optimizer
@@ -1189,8 +1183,8 @@ CmpNode *PhaseIdealLoop::clone_bool( PhiNode *phi, IdealLoopTree *loop ) {
     }
     phi1->set_req( j, n1 );
     phi2->set_req( j, n2 );
-    phi1->set_type( phi1->type()->meet(n1->bottom_type()) );
-    phi2->set_type( phi2->type()->meet(n2->bottom_type()) );
+    phi1->set_type(phi1->type()->meet_speculative(n1->bottom_type()));
+    phi2->set_type(phi2->type()->meet_speculative(n2->bottom_type()));
   }
 
   // See if these Phis have been made before.
@@ -1407,7 +1401,8 @@ void PhaseIdealLoop::clone_loop( IdealLoopTree *loop, Node_List &old_new, int dd
         // loop.  Happens if people set a loop-exit flag; then test the flag
         // in the loop to break the loop, then test is again outside of the
         // loop to determine which way the loop exited.
-        if( use->is_If() || use->is_CMove() ) {
+        // Loop predicate If node connects to Bool node through Opaque1 node.
+        if (use->is_If() || use->is_CMove() || C->is_predicate_opaq(use)) {
           // Since this code is highly unlikely, we lazily build the worklist
           // of such Nodes to go split.
           if( !split_if_set )
@@ -2362,8 +2357,7 @@ bool PhaseIdealLoop::partial_peel( IdealLoopTree *loop, Node_List &old_new ) {
         opc == Op_Catch     ||
         opc == Op_CatchProj ||
         opc == Op_Jump      ||
-        opc == Op_JumpProj  ||
-        opc == Op_FlagsProj) {
+        opc == Op_JumpProj) {
 #if !defined(PRODUCT)
       if (TracePartialPeeling) {
         tty->print_cr("\nExit control too complex: lp: %d", head->_idx);
@@ -2705,6 +2699,7 @@ bool PhaseIdealLoop::partial_peel( IdealLoopTree *loop, Node_List &old_new ) {
   // Inhibit more partial peeling on this loop
   new_head_clone->set_partial_peel_loop();
   C->set_major_progress();
+  loop->record_for_igvn();
 
 #if !defined(PRODUCT)
   if (TracePartialPeeling) {
@@ -2774,11 +2769,11 @@ void PhaseIdealLoop::reorg_offsets(IdealLoopTree *loop) {
       // Hit!  Refactor use to use the post-incremented tripcounter.
       // Compute a post-increment tripcounter.
       Node *opaq = new (C) Opaque2Node( C, cle->incr() );
-      register_new_node( opaq, u_ctrl );
+      register_new_node(opaq, exit);
       Node *neg_stride = _igvn.intcon(-cle->stride_con());
       set_ctrl(neg_stride, C->root());
       Node *post = new (C) AddINode( opaq, neg_stride);
-      register_new_node( post, u_ctrl );
+      register_new_node(post, exit);
       _igvn.rehash_node_delayed(use);
       for (uint j = 1; j < use->req(); j++) {
         if (use->in(j) == phi)

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -56,7 +56,7 @@ void trace_type_profile(Compile* C, ciMethod *method, int depth, int bci, ciMeth
     out->print(" \\-> TypeProfile (%d/%d counts) = ", receiver_count, site_count);
     stringStream ss;
     prof_klass->name()->print_symbol_on(&ss);
-    out->print(ss.as_string());
+    out->print("%s", ss.as_string());
     out->cr();
   }
 }
@@ -161,19 +161,8 @@ CallGenerator* Compile::call_generator(ciMethod* callee, int vtable_index, bool 
 
     // Try inlining a bytecoded method:
     if (!call_does_dispatch) {
-      InlineTree* ilt;
-      if (UseOldInlining) {
-        ilt = InlineTree::find_subtree_from_root(this->ilt(), jvms->caller(), jvms->method());
-      } else {
-        // Make a disembodied, stateless ILT.
-        // TO DO:  When UseOldInlining is removed, copy the ILT code elsewhere.
-        float site_invoke_ratio = prof_factor;
-        // Note:  ilt is for the root of this parse, not the present call site.
-        ilt = new InlineTree(this, jvms->method(), jvms->caller(), site_invoke_ratio, MaxInlineLevel);
-      }
+      InlineTree* ilt = InlineTree::find_subtree_from_root(this->ilt(), jvms->caller(), jvms->method());
       WarmCallInfo scratch_ci;
-      if (!UseOldInlining)
-        scratch_ci.init(jvms, callee, profile, prof_factor);
       bool should_delay = false;
       WarmCallInfo* ci = ilt->ok_to_inline(callee, jvms, profile, &scratch_ci, should_delay);
       assert(ci != &scratch_ci, "do not let this pointer escape");
@@ -261,7 +250,7 @@ CallGenerator* Compile::call_generator(ciMethod* callee, int vtable_index, bool 
           CallGenerator* miss_cg;
           Deoptimization::DeoptReason reason = morphism == 2 ?
                                     Deoptimization::Reason_bimorphic :
-                                    Deoptimization::Reason_class_check;
+                                    (speculative_receiver_type == NULL ? Deoptimization::Reason_class_check : Deoptimization::Reason_speculate_class_check);
           if ((morphism == 1 || (morphism == 2 && next_hit_cg != NULL)) &&
               !too_many_traps(jvms->method(), jvms->bci(), reason)
              ) {
@@ -369,7 +358,7 @@ bool Compile::should_delay_string_inlining(ciMethod* call_method, JVMState* jvms
 bool Compile::should_delay_boxing_inlining(ciMethod* call_method, JVMState* jvms) {
   if (eliminate_boxing() && call_method->is_boxing_method()) {
     set_has_boxed_value(true);
-    return true;
+    return aggressive_unboxing();
   }
   return false;
 }
@@ -471,8 +460,14 @@ void Parse::do_call() {
     Node* receiver_node             = stack(sp() - nargs);
     const TypeOopPtr* receiver_type = _gvn.type(receiver_node)->isa_oopptr();
     // call_does_dispatch and vtable_index are out-parameters.  They might be changed.
-    callee = C->optimize_virtual_call(method(), bci(), klass, orig_callee, receiver_type,
-                                      is_virtual,
+    // For arrays, klass below is Object. When vtable calls are used,
+    // resolving the call with Object would allow an illegal call to
+    // finalize() on an array. We use holder instead: illegal calls to
+    // finalize() won't be compiled as vtable calls (IC call
+    // resolution will catch the illegal call) and the few legal calls
+    // on array types won't be either.
+    callee = C->optimize_virtual_call(method(), bci(), klass, holder, orig_callee,
+                                      receiver_type, is_virtual,
                                       call_does_dispatch, vtable_index);  // out-parameters
     speculative_receiver_type = receiver_type != NULL ? receiver_type->speculative_type() : NULL;
   }
@@ -948,8 +943,8 @@ void Parse::count_compiled_calls(bool at_method_entry, bool is_inline) {
 
 
 ciMethod* Compile::optimize_virtual_call(ciMethod* caller, int bci, ciInstanceKlass* klass,
-                                         ciMethod* callee, const TypeOopPtr* receiver_type,
-                                         bool is_virtual,
+                                         ciKlass* holder, ciMethod* callee,
+                                         const TypeOopPtr* receiver_type, bool is_virtual,
                                          bool& call_does_dispatch, int& vtable_index) {
   // Set default values for out-parameters.
   call_does_dispatch = true;
@@ -964,7 +959,7 @@ ciMethod* Compile::optimize_virtual_call(ciMethod* caller, int bci, ciInstanceKl
     call_does_dispatch = false;
   } else if (!UseInlineCaches && is_virtual && callee->is_loaded()) {
     // We can make a vtable call at this site
-    vtable_index = callee->resolve_vtable_index(caller->holder(), klass);
+    vtable_index = callee->resolve_vtable_index(caller->holder(), holder);
   }
   return callee;
 }
@@ -987,8 +982,10 @@ ciMethod* Compile::optimize_inlining(ciMethod* caller, int bci, ciInstanceKlass*
   ciInstanceKlass* actual_receiver = klass;
   if (receiver_type != NULL) {
     // Array methods are all inherited from Object, and are monomorphic.
+    // finalize() call on array is not allowed.
     if (receiver_type->isa_aryptr() &&
-        callee->holder() == env()->Object_klass()) {
+        callee->holder() == env()->Object_klass() &&
+        callee->name() != ciSymbol::finalize_method_name()) {
       return callee;
     }
 

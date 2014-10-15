@@ -288,7 +288,7 @@ void LIR_Assembler::osr_entry() {
 
   // build frame
   ciMethod* m = compilation()->method();
-  __ build_frame(initial_frame_size_in_bytes());
+  __ build_frame(initial_frame_size_in_bytes(), bang_size_in_bytes());
 
   // OSR buffer is
   //
@@ -376,7 +376,7 @@ void LIR_Assembler::klass2reg_with_patching(Register reg, CodeEmitInfo* info) {
 }
 
 // This specifies the rsp decrement needed to build the frame
-int LIR_Assembler::initial_frame_size_in_bytes() {
+int LIR_Assembler::initial_frame_size_in_bytes() const {
   // if rounding, must let FrameMap know!
 
   // The frame_map records size in slots (32bit word)
@@ -802,9 +802,9 @@ void LIR_Assembler::const2mem(LIR_Opr src, LIR_Opr dest, BasicType type, CodeEmi
           __ movl(as_Address(addr), (int32_t)NULL_WORD);
         } else {
 #ifdef _LP64
-          __ xorptr(r10, r10);
+          __ xorptr(rscratch1, rscratch1);
           null_check_here = code_offset();
-          __ movptr(as_Address(addr), r10);
+          __ movptr(as_Address(addr), rscratch1);
 #else
           __ movptr(as_Address(addr), NULL_WORD);
 #endif

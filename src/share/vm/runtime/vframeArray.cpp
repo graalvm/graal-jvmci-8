@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,6 +43,7 @@
 #include "opto/runtime.hpp"
 #endif
 
+PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
 int vframeArrayElement:: bci(void) const { return (_bci == SynchronizationEntryBCI ? 0 : _bci); }
 
@@ -454,24 +455,20 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
 
 }
 
-int vframeArrayElement::on_stack_size(int caller_actual_parameters,
-                                      int callee_parameters,
+int vframeArrayElement::on_stack_size(int callee_parameters,
                                       int callee_locals,
                                       bool is_top_frame,
-                                      bool is_bottom_frame,
                                       int popframe_extra_stack_expression_els) const {
   assert(method()->max_locals() == locals()->size(), "just checking");
   int locks = monitors() == NULL ? 0 : monitors()->number_of_monitors();
   int temps = expressions()->size();
-  return Interpreter::size_activation(method(),
+  return Interpreter::size_activation(method()->max_stack(),
                                       temps + callee_parameters,
                                       popframe_extra_stack_expression_els,
                                       locks,
-                                      caller_actual_parameters,
                                       callee_parameters,
                                       callee_locals,
-                                      is_top_frame,
-                                      is_bottom_frame);
+                                      is_top_frame);
 }
 
 

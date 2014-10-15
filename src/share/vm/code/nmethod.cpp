@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -48,6 +48,8 @@
 #ifdef GRAAL
 #include "graal/graalJavaAccess.hpp"
 #endif
+
+PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
 #ifdef DTRACE_ENABLED
 
@@ -543,6 +545,9 @@ void nmethod::init_defaults() {
   _scavenge_root_link      = NULL;
   _scavenge_root_state     = 0;
   _compiler                = NULL;
+#if INCLUDE_RTM_OPT
+  _rtm_state               = NoRTM;
+#endif
 #ifdef GRAAL
   _graal_installed_code   = NULL;
   _speculation_log        = NULL;
@@ -692,7 +697,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
         InstanceKlass::cast(klass)->add_dependent_nmethod(nm);
       }
       if (nm != NULL)  note_java_nmethod(nm);
-      if (PrintAssembly) {
+      if (PrintAssembly || CompilerOracle::has_option_string(method, "PrintAssembly")) {
         Disassembler::decode(nm);
       }
     }
@@ -842,7 +847,11 @@ nmethod::nmethod(
     _hotness_counter         = NMethodSweeper::hotness_counter_reset_val();
 
     code_buffer->copy_values_to(this);
-    debug_only(verify_scavenge_root_oops());
+    if (ScavengeRootsInCode && detect_scavenge_root_oops()) {
+      CodeCache::add_scavenge_root_nmethod(this);
+      Universe::heap()->register_nmethod(this);
+    }
+    DEBUG_ONLY(verify_scavenge_root_oops();)
     CodeCache::commit(this);
   }
 
@@ -1044,13 +1053,13 @@ void nmethod::log_new_nmethod() const {
     LOG_OFFSET(xtty, consts);
     LOG_OFFSET(xtty, insts);
     LOG_OFFSET(xtty, stub);
-    LOG_OFFSET(xtty, oops);
-    LOG_OFFSET(xtty, metadata);
     LOG_OFFSET(xtty, scopes_data);
     LOG_OFFSET(xtty, scopes_pcs);
     LOG_OFFSET(xtty, dependencies);
     LOG_OFFSET(xtty, handler_table);
     LOG_OFFSET(xtty, nul_chk_table);
+    LOG_OFFSET(xtty, oops);
+    LOG_OFFSET(xtty, metadata);
 
     xtty->method(method());
     xtty->stamp();
@@ -1447,8 +1456,8 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
     // The caller can be calling the method statically or through an inline
     // cache call.
     if (!is_osr_method() && !is_not_entrant()) {
-      address stub = SharedRuntime::get_handle_wrong_method_stub();
-      NativeJump::patch_verified_entry(entry_point(), verified_entry_point(), stub);
+      NativeJump::patch_verified_entry(entry_point(), verified_entry_point(),
+                  SharedRuntime::get_handle_wrong_method_stub());
     }
 
     if (is_in_use()) {

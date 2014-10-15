@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -761,7 +761,7 @@ void PhaseChaitin::gather_lrg_masks( bool after_aggressive ) {
         // processes as vector in RA.
         if (RegMask::is_vector(ireg))
           lrg._is_vector = 1;
-        assert(n_type->isa_vect() == NULL || lrg._is_vector || ireg == Op_RegD,
+        assert(n_type->isa_vect() == NULL || lrg._is_vector || ireg == Op_RegD || ireg == Op_RegL,
                "vector must be in vector registers");
 
         // Check for bound register masks
@@ -961,7 +961,7 @@ void PhaseChaitin::gather_lrg_masks( bool after_aggressive ) {
         int kreg = n->in(k)->ideal_reg();
         bool is_vect = RegMask::is_vector(kreg);
         assert(n->in(k)->bottom_type()->isa_vect() == NULL ||
-               is_vect || kreg == Op_RegD,
+               is_vect || kreg == Op_RegD || kreg == Op_RegL,
                "vector must be in vector registers");
         if (lrgmask.is_bound(kreg))
           lrg._is_bound = 1;
@@ -2019,25 +2019,25 @@ void PhaseChaitin::dump() const {
       tty->print_cr("new LRG");
     }
   }
-  tty->print_cr("");
+  tty->cr();
 
   // Dump lo-degree list
   tty->print("Lo degree: ");
   for(uint i3 = _lo_degree; i3; i3 = lrgs(i3)._next )
     tty->print("L%d ",i3);
-  tty->print_cr("");
+  tty->cr();
 
   // Dump lo-stk-degree list
   tty->print("Lo stk degree: ");
   for(uint i4 = _lo_stk_degree; i4; i4 = lrgs(i4)._next )
     tty->print("L%d ",i4);
-  tty->print_cr("");
+  tty->cr();
 
   // Dump lo-degree list
   tty->print("Hi degree: ");
   for(uint i5 = _hi_degree; i5; i5 = lrgs(i5)._next )
     tty->print("L%d ",i5);
-  tty->print_cr("");
+  tty->cr();
 }
 
 void PhaseChaitin::dump_degree_lists() const {
@@ -2045,26 +2045,26 @@ void PhaseChaitin::dump_degree_lists() const {
   tty->print("Lo degree: ");
   for( uint i = _lo_degree; i; i = lrgs(i)._next )
     tty->print("L%d ",i);
-  tty->print_cr("");
+  tty->cr();
 
   // Dump lo-stk-degree list
   tty->print("Lo stk degree: ");
   for(uint i2 = _lo_stk_degree; i2; i2 = lrgs(i2)._next )
     tty->print("L%d ",i2);
-  tty->print_cr("");
+  tty->cr();
 
   // Dump lo-degree list
   tty->print("Hi degree: ");
   for(uint i3 = _hi_degree; i3; i3 = lrgs(i3)._next )
     tty->print("L%d ",i3);
-  tty->print_cr("");
+  tty->cr();
 }
 
 void PhaseChaitin::dump_simplified() const {
   tty->print("Simplified: ");
   for( uint i = _simplified; i; i = lrgs(i)._next )
     tty->print("L%d ",i);
-  tty->print_cr("");
+  tty->cr();
 }
 
 static char *print_reg( OptoReg::Name reg, const PhaseChaitin *pc, char *buf ) {
@@ -2143,7 +2143,7 @@ void PhaseChaitin::dump_frame() const {
       }
       tty->print("   : parm %d: ", k);
       domain->field_at(k + TypeFunc::Parms)->dump();
-      tty->print_cr("");
+      tty->cr();
     }
   }
 
@@ -2165,7 +2165,7 @@ void PhaseChaitin::dump_frame() const {
           _matcher._parm_regs[j].second() == reg ) {
         tty->print("parm %d: ",j);
         domain->field_at(j + TypeFunc::Parms)->dump();
-        tty->print_cr("");
+        tty->cr();
         break;
       }
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -45,6 +45,8 @@
 #include "runtime/vframe.hpp"
 #include "runtime/vframeArray.hpp"
 #include "runtime/vframe_hp.hpp"
+
+PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
 vframe::vframe(const frame* fr, const RegisterMap* reg_map, JavaThread* thread)
 : _reg_map(reg_map), _thread(thread) {
@@ -197,6 +199,7 @@ void javaVFrame::print_lock_info_on(outputStream* st, int frame_count) {
         continue;
       }
       if (monitor->owner() != NULL) {
+        // the monitor is associated with an object, i.e., it is locked
 
         // First, assume we have the monitor locked. If we haven't found an
         // owned monitor before and this is the first frame, then we need to
@@ -207,7 +210,11 @@ void javaVFrame::print_lock_info_on(outputStream* st, int frame_count) {
         if (!found_first_monitor && frame_count == 0) {
           markOop mark = monitor->owner()->mark();
           if (mark->has_monitor() &&
-              mark->monitor() == thread()->current_pending_monitor()) {
+              ( // we have marked ourself as pending on this monitor
+                mark->monitor() == thread()->current_pending_monitor() ||
+                // we are not the owner of this monitor
+                !mark->monitor()->is_entered(thread())
+              )) {
             lock_state = "waiting to lock";
           }
         }

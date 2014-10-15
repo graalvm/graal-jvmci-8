@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -115,6 +115,11 @@
 #include "opto/c2compiler.hpp"
 #include "opto/idealGraphPrinter.hpp"
 #endif
+#if INCLUDE_RTM_OPT
+#include "runtime/rtmLocking.hpp"
+#endif
+
+PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
 #ifdef DTRACE_ENABLED
 
@@ -244,7 +249,6 @@ Thread::Thread() {
   debug_only(_allow_allocation_count = 0;)
   NOT_PRODUCT(_allow_safepoint_count = 0;)
   NOT_PRODUCT(_skip_gcalot = false;)
-  CHECK_UNHANDLED_OOPS_ONLY(_gc_locked_out_count = 0;)
   _jvmti_env_iteration_count = 0;
   set_allocated_bytes(0);
   _vm_operation_started_count = 0;
@@ -320,6 +324,9 @@ void Thread::initialize_thread_local_storage() {
 void Thread::record_stack_base_and_size() {
   set_stack_base(os::current_stack_base());
   set_stack_size(os::current_stack_size());
+  if (is_Java_thread()) {
+    ((JavaThread*) this)->set_stack_overflow_limit();
+  }
   // CR 7190089: on Solaris, primordial thread's stack is adjusted
   // in initialize_thread(). Without the adjustment, stack size is
   // incorrect if stack is set to unlimited (ulimit -s unlimited).
@@ -1451,9 +1458,9 @@ void JavaThread::collect_counters(typeArrayOop array) {
 void JavaThread::initialize() {
   // Initialize fields
 
-  // Set the claimed par_id to -1 (ie not claiming any par_ids)
-  set_claimed_par_id(-1);
-  
+  // Set the claimed par_id to UINT_MAX (ie not claiming any par_ids)
+  set_claimed_par_id(UINT_MAX);
+
   _buffer_blob = NULL;
   set_saved_exception_pc(NULL);
   set_threadObj(NULL);
@@ -3665,6 +3672,8 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // debug stuff, that does not work until all basic classes have been initialized.
   set_init_completed();
 
+  Metaspace::post_initialize();
+
 #ifndef USDT2
   HS_DTRACE_PROBE(hotspot, vm__init__end);
 #else /* USDT2 */
@@ -3780,6 +3789,10 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   if (CheckJNICalls)                  JniPeriodicChecker::engage();
 
   BiasedLocking::init();
+
+#if INCLUDE_RTM_OPT
+  RTMLockingCounters::init();
+#endif
 
   if (JDK_Version::current().post_vm_init_hook_enabled()) {
     call_postVMInitHook(THREAD);
@@ -4111,14 +4124,8 @@ bool Threads::destroy_vm() {
     // GC vm_operations can get caught at the safepoint, and the
     // heap is unparseable if they are caught. Grab the Heap_lock
     // to prevent this. The GC vm_operations will not be able to
-    // queue until after the vm thread is dead.
-    // After this point, we'll never emerge out of the safepoint before
-    // the VM exits, so concurrent GC threads do not need to be explicitly
-    // stopped; they remain inactive until the process exits.
-    // Note: some concurrent G1 threads may be running during a safepoint,
-    // but these will not be accessing the heap, just some G1-specific side
-    // data structures that are not accessed by any other threads but them
-    // after this point in a terminal safepoint.
+    // queue until after the vm thread is dead. After this point,
+    // we'll never emerge out of the safepoint before the VM exits.
 
     MutexLocker ml(Heap_lock);
 
@@ -4426,7 +4433,7 @@ JavaThread *Threads::owning_thread_from_monitor_owner(address owner, bool doLock
 // Threads::print_on() is called at safepoint by VM_PrintThreads operation.
 void Threads::print_on(outputStream* st, bool print_stacks, bool internal_format, bool print_concurrent_locks) {
   char buf[32];
-  st->print_cr(os::local_time_string(buf, sizeof(buf)));
+  st->print_raw_cr(os::local_time_string(buf, sizeof(buf)));
 
   st->print_cr("Full thread dump %s (%s %s):",
                 Abstract_VM_Version::vm_name(),
@@ -4563,9 +4570,7 @@ void Thread::SpinAcquire (volatile int * adr, const char * LockName) {
         ++ctr ;
         if ((ctr & 0xFFF) == 0 || !os::is_MP()) {
            if (Yields > 5) {
-             // Consider using a simple NakedSleep() instead.
-             // Then SpinAcquire could be called by non-JVM threads
-             Thread::current()->_ParkEvent->park(1) ;
+             os::naked_short_sleep(1);
            } else {
              os::NakedYield() ;
              ++Yields ;

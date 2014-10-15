@@ -80,6 +80,7 @@ ciMethod::ciMethod(methodHandle h_m) : ciMetadata(h_m()) {
   _code_size          = h_m()->code_size();
   _intrinsic_id       = h_m()->intrinsic_id();
   _handler_count      = h_m()->exception_table_length();
+  _size_of_parameters = h_m()->size_of_parameters();
   _uses_monitors      = h_m()->access_flags().has_monitor_bytecodes();
   _balanced_monitors  = !_uses_monitors || h_m()->access_flags().is_monitor_matching();
   _is_c1_compilable   = !h_m()->is_not_c1_compilable();
@@ -1362,15 +1363,21 @@ ciMethodBlocks  *ciMethod::get_method_blocks() {
 
 #undef FETCH_FLAG_FROM_VM
 
+void ciMethod::dump_name_as_ascii(outputStream* st) {
+  Method* method = get_Method();
+  st->print("%s %s %s",
+            method->klass_name()->as_quoted_ascii(),
+            method->name()->as_quoted_ascii(),
+            method->signature()->as_quoted_ascii());
+}
+
 void ciMethod::dump_replay_data(outputStream* st) {
   ResourceMark rm;
   Method* method = get_Method();
   MethodCounters* mcs = method->method_counters();
-  Klass*  holder = method->method_holder();
-  st->print_cr("ciMethod %s %s %s %d %d %d %d %d",
-               holder->name()->as_quoted_ascii(),
-               method->name()->as_quoted_ascii(),
-               method->signature()->as_quoted_ascii(),
+  st->print("ciMethod ");
+  dump_name_as_ascii(st);
+  st->print_cr(" %d %d %d %d %d",
                mcs == NULL ? 0 : mcs->invocation_counter()->raw_counter(),
                mcs == NULL ? 0 : mcs->backedge_counter()->raw_counter(),
                interpreter_invocation_count(),
