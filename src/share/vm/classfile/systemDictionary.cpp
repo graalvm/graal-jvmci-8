@@ -1059,8 +1059,9 @@ Klass* SystemDictionary::parse_stream(Symbol* class_name,
       // deoptimizations.
       add_to_hierarchy(k, CHECK_NULL); // No exception, but can block
 
-      // But, do not add to system dictionary.  That normally takes
-      // care of updating _number_of_modifications so do it here.
+      // But, do not add to system dictionary.
+
+      // compiled code dependencies need to be validated anyway
       notice_modification();
     }
 
