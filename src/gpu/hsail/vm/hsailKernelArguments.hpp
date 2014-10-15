@@ -82,7 +82,7 @@ private:
         if (UseHSAILDeoptimization) {
             // Last argument is the exception info block
             if (TraceGPUInteraction) {
-                tty->print_cr("[HSAIL] exception block=" PTR_FORMAT, _exceptionHolder);
+                tty->print_cr("[HSAIL] exception block=" INTPTR_FORMAT, p2i(_exceptionHolder));
             }
             pushObject(_exceptionHolder);
         }

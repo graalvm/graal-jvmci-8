@@ -36,7 +36,7 @@ void HSAILKernelArguments::collectArgs() {
     jvalue jValue;
     if (arg == NULL) {
       if (TraceGPUInteraction) {
-        tty->print_cr("[HSAIL] %s::collectArgs object, _index=%d, value = " PTR_FORMAT " is a %s", argsBuilderName(), index, (void*) arg, "null");
+        tty->print_cr("[HSAIL] %s::collectArgs object, _index=%d, value = " PTR_FORMAT " is a %s", argsBuilderName(), index, p2i(arg), "null");
       }
       recordNullObjectParameter();
       pushObject(arg);
@@ -45,13 +45,13 @@ void HSAILKernelArguments::collectArgs() {
       BasicType basic_type = java_lang_boxing_object::basic_type(arg);
       if (basic_type == T_ILLEGAL && (!(arg->is_array()))) {
         if (TraceGPUInteraction) {
-          tty->print_cr("[HSAIL] %s::collectArgs object, _index=%d, value = " PTR_FORMAT " is a %s", argsBuilderName(), index, (void*) arg, arg == NULL ? "null" : arg->klass()->external_name());
+          tty->print_cr("[HSAIL] %s::collectArgs object, _index=%d, value = " PTR_FORMAT " is a %s", argsBuilderName(), index, p2i(arg), arg == NULL ? "null" : arg->klass()->external_name());
         }
         pushObject(arg);
       } else if (arg->is_array()) {
         if (TraceGPUInteraction) {
           int array_length = ((objArrayOop) arg)->length();
-          tty->print_cr("[HSAIL] %s::collectArgs array, length=%d, _index=%d, value = " PTR_FORMAT, argsBuilderName(), array_length, index, (void*) arg);
+          tty->print_cr("[HSAIL] %s::collectArgs array, length=%d, _index=%d, value = " PTR_FORMAT, argsBuilderName(), array_length, index, p2i(arg));
         }
         pushObject(arg);
       } else {
@@ -64,19 +64,19 @@ void HSAILKernelArguments::collectArgs() {
             break;
           case T_LONG:
             if (TraceGPUInteraction) {
-              tty->print_cr("[HSAIL] %s::collectArgs, T_LONG _index=%d, value = %d", argsBuilderName(), index, jValue.j);
+              tty->print_cr("[HSAIL] %s::collectArgs, T_LONG _index=%d, value = " JLONG_FORMAT, argsBuilderName(), index, jValue.j);
             }
             pushLong(jValue.j);
             break;
           case T_FLOAT:
             if (TraceGPUInteraction) {
-              tty->print_cr("[HSAIL] %s::collectArgs, T_FLOAT _index=%d, value = %d", argsBuilderName(), index, jValue.f);
+              tty->print_cr("[HSAIL] %s::collectArgs, T_FLOAT _index=%d, value = %f", argsBuilderName(), index, jValue.f);
             }
             pushFloat(jValue.f);
             break;
           case T_DOUBLE:
             if (TraceGPUInteraction) {
-              tty->print_cr("[HSAIL] %s::collectArgs, T_DOUBLE _index=%d, value = %d", argsBuilderName(), index, jValue.d);
+              tty->print_cr("[HSAIL] %s::collectArgs, T_DOUBLE _index=%d, value = %lf", argsBuilderName(), index, jValue.d);
             }
             pushDouble(jValue.d);
             break;

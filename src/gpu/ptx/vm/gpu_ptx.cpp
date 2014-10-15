@@ -470,7 +470,7 @@ class PtxCall: StackObj {
       char* message = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, O_BUFLEN + 1);
       jio_snprintf(message, O_BUFLEN, "[CUDA] *** Error (status=%d): %s", status, action);
       if (TraceGPUInteraction) {
-        tty->print_cr(message);
+        tty->print_raw_cr(message);
       }
       if (!HAS_PENDING_EXCEPTION) {
         SharedRuntime::throw_and_post_jvmti_exception(_thread, vmSymbols::java_lang_RuntimeException(), message);
@@ -641,7 +641,7 @@ private:
     if (obj != NULL) {
       char type[256];
       obj->klass()->name()->as_C_string(type, 256);
-      _st->print("oop "PTR_FORMAT" (%s)", (address) obj, type);
+      _st->print("oop "INTPTR_FORMAT" (%s)", p2i(obj), type);
     } else {
       _st->print("oop null");
     }
@@ -688,7 +688,7 @@ GPU_VMENTRY(void, Ptx::destroy_ptx_context, (void))
       _device_context = NULL;
       } else {
         if (TraceGPUInteraction) {
-          tty->print_cr("[CUDA] Destroyed context", status);
+          tty->print_cr("[CUDA] Destroyed context");
         }
       }
     }

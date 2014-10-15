@@ -47,7 +47,7 @@ void HSAILArgumentsBase::collectArgs() {
     oop arg = _args->obj_at(_index++);
     assert(arg->is_instance() && (!arg->is_array()), "First arg should be 'this'");
     if (TraceGPUInteraction) {
-      tty->print_cr("[HSAIL] %s, instance method, this " PTR_FORMAT ", is a %s", argsBuilderName(), (address) arg, arg->klass()->external_name());
+      tty->print_cr("[HSAIL] %s, instance method, this " INTPTR_FORMAT ", is a %s", argsBuilderName(), p2i(arg), arg->klass()->external_name());
     }
     pushObject(arg);
   } else {
@@ -139,7 +139,7 @@ void HSAILArgumentsBase::do_long() {
   jvalue jValue;
   java_lang_boxing_object::get_value(arg, &jValue);
   if (TraceGPUInteraction) {
-    tty->print_cr("[HSAIL] %s::do_long, _index=%d, value = %d", argsBuilderName(), _index - 1, jValue.j);
+    tty->print_cr("[HSAIL] %s::do_long, _index=%d, value = " JLONG_FORMAT, argsBuilderName(), _index - 1, jValue.j);
   }    
 
   pushLong(jValue.j);
@@ -153,7 +153,7 @@ void HSAILArgumentsBase::do_array(int begin, int end) {
       assert(arg->is_array(), "arg type mismatch");
   }
   if (TraceGPUInteraction) {
-    tty->print_cr("[HSAIL] %s::do_array, _index=%d, 0x%08x, is a %s", argsBuilderName(), _index - 1, (address) arg,
+    tty->print_cr("[HSAIL] %s::do_array, _index=%d, 0x" INTPTR_FORMAT ", is a %s", argsBuilderName(), _index - 1, p2i(arg),
                   arg == NULL ? "null" : arg->klass()->external_name());
   }
     
@@ -165,7 +165,7 @@ void HSAILArgumentsBase::do_object() {
 
   oop arg = _args->obj_at(_index++);
   if (TraceGPUInteraction) {
-    tty->print_cr("[HSAIL] %s::do_object, _index=%d, 0x%08x is a %s", argsBuilderName(), _index - 1, (address) arg,
+    tty->print_cr("[HSAIL] %s::do_object, _index=%d, 0x" INTPTR_FORMAT " is a %s", argsBuilderName(), _index - 1, p2i(arg),
                   arg == NULL ? "null" : arg->klass()->external_name());
   }
   if (arg == NULL) {

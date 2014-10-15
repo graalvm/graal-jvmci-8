@@ -355,9 +355,8 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
     if (TraceExceptions) {
       ttyLocker ttyl;
       ResourceMark rm;
-      int offset = pc - nm->code_begin();
-      tty->print_cr("Exception <%s> (0x%x) thrown in compiled method <%s> at PC " PTR_FORMAT " [" PTR_FORMAT "+%d] for thread 0x%x",
-                    exception->print_value_string(), (address)exception(), nm->method()->print_value_string(), pc, nm->code_begin(), offset, thread);
+      tty->print_cr("Exception <%s> (" INTPTR_FORMAT ") thrown in compiled method <%s> at PC " INTPTR_FORMAT " for thread " INTPTR_FORMAT "",
+                    exception->print_value_string(), p2i((address)exception()), nm->method()->print_value_string(), p2i(pc), p2i(thread));
     }
     // for AbortVMOnException flag
     NOT_PRODUCT(Exceptions::debug_check_abort(exception));
@@ -366,8 +365,7 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
     // exception handler can cause class loading, which might throw an
     // exception and those fields are expected to be clear during
     // normal bytecode execution.
-    thread->set_exception_oop(NULL);
-    thread->set_exception_pc(NULL);
+    thread->clear_exception_oop_and_pc();
 
     continuation = SharedRuntime::compute_compiled_exc_handler(nm, pc, exception, false, false);
     // If an exception was thrown during exception dispatch, the exception oop may have changed
@@ -387,7 +385,7 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
     ttyLocker ttyl;
     ResourceMark rm;
     tty->print_cr("Thread " PTR_FORMAT " continuing at PC " PTR_FORMAT " for exception thrown at PC " PTR_FORMAT,
-                  thread, continuation, pc);
+                  p2i(thread), p2i(continuation), p2i(pc));
   }
 
   return continuation;
@@ -441,7 +439,7 @@ JRT_ENTRY_NO_ASYNC(void, GraalRuntime::monitorenter(JavaThread* thread, oopDesc*
     char type[O_BUFLEN];
     obj->klass()->name()->as_C_string(type, O_BUFLEN);
     markOop mark = obj->mark();
-    tty->print_cr("%s: entered locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), obj, type, mark, lock);
+    tty->print_cr("%s: entered locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(mark), p2i(lock));
     tty->flush();
   }
 #ifdef ASSERT
@@ -463,7 +461,7 @@ JRT_ENTRY_NO_ASYNC(void, GraalRuntime::monitorenter(JavaThread* thread, oopDesc*
     }
   }
   if (TraceGraal >= 3) {
-    tty->print_cr("%s: exiting locking slow with obj=" INTPTR_FORMAT, thread->name(), obj);
+    tty->print_cr("%s: exiting locking slow with obj=" INTPTR_FORMAT, thread->name(), p2i(obj));
   }
 JRT_END
 
@@ -478,7 +476,7 @@ JRT_LEAF(void, GraalRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
     ResetNoHandleMark rhm;
     nmethod* method = thread->last_frame().cb()->as_nmethod_or_null();
     if (method != NULL) {
-      tty->print_cr("ERROR in monitorexit in method %s wrong obj " INTPTR_FORMAT, method->name(), obj);
+      tty->print_cr("ERROR in monitorexit in method %s wrong obj " INTPTR_FORMAT, method->name(), p2i(obj));
     }
     thread->print_stack_on(tty);
     assert(false, "invalid lock object pointer dected");
@@ -494,7 +492,7 @@ JRT_LEAF(void, GraalRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
   if (TraceGraal >= 3) {
     char type[O_BUFLEN];
     obj->klass()->name()->as_C_string(type, O_BUFLEN);
-    tty->print_cr("%s: exited locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), obj, type, obj->mark(), lock);
+    tty->print_cr("%s: exited locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(obj->mark()), p2i(lock));
     tty->flush();
   }
 JRT_END
@@ -506,15 +504,15 @@ JRT_LEAF(void, GraalRuntime::log_object(JavaThread* thread, oopDesc* obj, jint f
   if (!string) {
     if (!addr && obj->is_oop_or_null(true)) {
       char buf[O_BUFLEN];
-      tty->print("%s@%p", obj->klass()->name()->as_C_string(buf, O_BUFLEN), (address)obj);
+      tty->print("%s@" INTPTR_FORMAT, obj->klass()->name()->as_C_string(buf, O_BUFLEN), p2i(obj));
     } else {
-      tty->print("%p", (address)obj);
+      tty->print(INTPTR_FORMAT, p2i(obj));
     }
   } else {
     ResourceMark rm;
     assert(obj != NULL && java_lang_String::is_instance(obj), "must be");
     char *buf = java_lang_String::as_utf8_string(obj);
-    tty->print(buf);
+    tty->print_raw(buf);
   }
   if (newline) {
     tty->cr();
@@ -532,12 +530,12 @@ JRT_END
 JRT_LEAF(jboolean, GraalRuntime::validate_object(JavaThread* thread, oopDesc* parent, oopDesc* child))
   bool ret = true;
   if(!Universe::heap()->is_in_closed_subset(parent)) {
-    tty->print_cr("Parent Object "INTPTR_FORMAT" not in heap", parent);
+    tty->print_cr("Parent Object "INTPTR_FORMAT" not in heap", p2i(parent));
     parent->print();
     ret=false;
   }
   if(!Universe::heap()->is_in_closed_subset(child)) {
-    tty->print_cr("Child Object "INTPTR_FORMAT" not in heap", child);
+    tty->print_cr("Child Object "INTPTR_FORMAT" not in heap", p2i(child));
     child->print();
     ret=false;
   }
@@ -579,7 +577,7 @@ static void decipher(jlong v, bool ignoreZero) {
     if (cb) {
       if (cb->is_nmethod()) {
         char buf[O_BUFLEN];
-        tty->print("%s [%p+%d]", cb->as_nmethod_or_null()->method()->name_and_sig_as_C_string(buf, O_BUFLEN), cb->code_begin(), (address)v - cb->code_begin());
+        tty->print("%s [" INTPTR_FORMAT "+" JLONG_FORMAT "]", cb->as_nmethod_or_null()->method()->name_and_sig_as_C_string(buf, O_BUFLEN), p2i(cb->code_begin()), (jlong)((address)v - cb->code_begin()));
         return;
       }
       cb->print_value_on(tty);
@@ -590,7 +588,7 @@ static void decipher(jlong v, bool ignoreZero) {
       obj->print_value_on(tty);
       return;
     }
-    tty->print("%p [long: %d, double %f, char %c]", v, v, v, v);
+    tty->print(INTPTR_FORMAT " [long: " JLONG_FORMAT ", double %lf, char %c]",p2i((void *)v), (jlong)v, (jdouble)v, (char)v);
   }
 }
 
@@ -850,7 +848,7 @@ void GraalRuntime::parse_graal_options_file(KlassHandle hotSpotOptionsClass, TRA
       if (num_read == -1) {
         warning("Error reading file %s due to %s", path, strerror(errno));
       } else if (num_read != st.st_size) {
-        warning("Only read %d of %d bytes from %s", num_read, st.st_size, path);
+        warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, st.st_size, path);
       }
       os::close(file_handle);
       if (num_read == st.st_size) {
@@ -1026,7 +1024,7 @@ oop GraalRuntime::compute_graal_class_loader(TRAPS) {
 void GraalRuntime::abort_on_pending_exception(Handle exception, const char* message, bool dump_core) {
   Thread* THREAD = Thread::current();
   CLEAR_PENDING_EXCEPTION;
-  tty->print_cr(message);
+  tty->print_raw_cr(message);
   call_printStackTrace(exception, THREAD);
 
   // Give other aborting threads to also print their stack traces.

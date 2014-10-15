@@ -466,7 +466,7 @@ C2V_VMENTRY(jint, installCode0, (JNIEnv *jniEnv, jobject, jobject compiled_code,
       CodeCache::print_summary(&s, false);
     }
     ttyLocker ttyl;
-    tty->print_cr(s.as_string());
+    tty->print_raw_cr(s.as_string());
   }
 
   if (result != GraalEnv::ok) {

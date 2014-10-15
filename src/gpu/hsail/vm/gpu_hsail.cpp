@@ -251,7 +251,7 @@ jboolean Hsail::execute_kernel_void_1d_internal(address kernel, int dimX, jobjec
             javaArgs.push_oop((oop) NULL);
             javaArgs.push_int(mh->size_of_parameters());
             if (TraceGPUInteraction) {
-              tty->print_cr("[HSAIL] Deoptimizing to host for workitem=%d (slot=%d) with deoptId=%d, frame=" INTPTR_FORMAT ", actionAndReason=%d", workitem, k, deoptId, hsailFrame, myActionReason);
+              tty->print_cr("[HSAIL] Deoptimizing to host for workitem=%d (slot=%d) with deoptId=%d, frame=" INTPTR_FORMAT ", actionAndReason=%d", workitem, k, deoptId, p2i(hsailFrame), myActionReason);
               // show the $d registers or stack slots containing references
               int maxOopBits = hsailFrame->num_d_regs() + hsailFrame->num_stack_slots();
               HSAILOopMapHelper oopMapHelper(oop_map_array);
@@ -260,11 +260,11 @@ jboolean Hsail::execute_kernel_void_1d_internal(address kernel, int dimX, jobjec
                 if (oopMapHelper.is_oop(pc_offset, bit)) {
                   if (bit < hsailFrame->num_d_regs()) {
                     // show $d reg oop
-                    tty->print_cr("  oop $d%d = %p", bit, hsailFrame->get_oop_for_bit(bit));
+                    tty->print_cr("  oop $d%d = " INTPTR_FORMAT, bit, hsailFrame->get_oop_for_bit(bit));
                   } else {
                     // show stack slot oop
                     int stackOffset = (bit - hsailFrame->num_d_regs()) * 8;  // 8 bytes per stack slot
-                    tty->print_cr("  oop stk:%d = %p", stackOffset, hsailFrame->get_oop_for_bit(bit));
+                    tty->print_cr("  oop stk:%d = " INTPTR_FORMAT, stackOffset, hsailFrame->get_oop_for_bit(bit));
                   }
                 }
               }
@@ -460,7 +460,7 @@ bool Hsail::register_natives(JNIEnv* env) {
 void Hsail::HSAILDeoptimizationInfo::oops_do(OopClosure* f) {
   int unprocessed_deopts = num_deopts() - deopt_work_index();
   if (TraceGPUInteraction) {
-    tty->print_cr("HSAILDeoptimizationInfo::oops_do deopt_occurred=%d, total_deopts=%d, unprocessed_deopts=%d, oop_map_array=%p", _deopt_occurred, num_deopts(), unprocessed_deopts, _oop_map_array);
+    tty->print_cr("HSAILDeoptimizationInfo::oops_do deopt_occurred=%d, total_deopts=%d, unprocessed_deopts=%d, oop_map_array=" INTPTR_FORMAT, _deopt_occurred, num_deopts(), unprocessed_deopts, p2i(_oop_map_array));
   }
   if (num_deopts() == 0 || unprocessed_deopts <= 0) {
     return; // nothing to do

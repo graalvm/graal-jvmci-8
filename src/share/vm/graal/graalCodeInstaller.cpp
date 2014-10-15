@@ -155,20 +155,20 @@ static void record_metadata_reference(oop obj, jlong prim, bool compressed, OopR
   if (obj->is_a(HotSpotResolvedObjectType::klass())) {
     Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectType::javaClass(obj));
     if (compressed) {
-      assert(Klass::decode_klass((narrowKlass) prim) == klass, err_msg("%s @ %p != %p", klass->name()->as_C_string(), klass, prim));
+      assert(Klass::decode_klass((narrowKlass) prim) == klass, err_msg("%s @ " INTPTR_FORMAT " != " INTPTR_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
     } else {
-      assert((Klass*) prim == klass, err_msg("%s @ %p != %p", klass->name()->as_C_string(), klass, prim));
+      assert((Klass*) prim == klass, err_msg("%s @ " INTPTR_FORMAT " != " INTPTR_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
     }
     int index = oop_recorder->find_index(klass);
     TRACE_graal_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), klass->name()->as_C_string());
   } else if (obj->is_a(HotSpotResolvedJavaMethod::klass())) {
     Method* method = (Method*) (address) HotSpotResolvedJavaMethod::metaspaceMethod(obj);
-    assert(!compressed, err_msg("unexpected compressed method pointer %s @ %p = %p", method->name()->as_C_string(), method, prim));
+    assert(!compressed, err_msg("unexpected compressed method pointer %s @ " INTPTR_FORMAT " = " INTPTR_FORMAT, method->name()->as_C_string(), p2i(method), prim));
     int index = oop_recorder->find_index(method);
     TRACE_graal_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), method->name()->as_C_string());
   } else {
     assert(java_lang_String::is_instance(obj),
-        err_msg("unexpected metadata reference (%s) for constant %ld (%p)", obj->klass()->name()->as_C_string(), prim, prim));
+        err_msg("unexpected metadata reference (%s) for constant " JLONG_FORMAT " (" INTPTR_FORMAT ")", obj->klass()->name()->as_C_string(), prim, prim));
   }
 }
 
@@ -451,7 +451,7 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
 
   if (cb != NULL) {
     // Make sure the pre-calculated constants section size was correct.
-    guarantee((cb->code_begin() - cb->content_begin()) == _constants_size, err_msg("%d != %d", cb->code_begin() - cb->content_begin(), _constants_size));
+    guarantee((cb->code_begin() - cb->content_begin()) == _constants_size, err_msg("%d != %d", (int)(cb->code_begin() - cb->content_begin()), _constants_size));
   }
   return result;
 }

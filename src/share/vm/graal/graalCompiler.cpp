@@ -111,7 +111,7 @@ void GraalCompiler::bootstrap() {
   } while (qsize != 0);
 
   if (PrintBootstrap) {
-    tty->print_cr(" in %d ms (compiled %d methods)", os::javaTimeMillis() - start, _methodsCompiled);
+    tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methodsCompiled);
   }
   _bootstrapping = false;
 #ifndef PRODUCT

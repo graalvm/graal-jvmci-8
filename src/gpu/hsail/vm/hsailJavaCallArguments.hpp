@@ -68,8 +68,8 @@ private:
       objArrayOop objArrayArg = (objArrayOop) arg;
       oop extractedObj = objArrayArg->obj_at(_workitemid);
       if (TraceGPUInteraction) {
-        tty->print_cr("[HSAIL] HSAILJavaCallArguments, extracted obj #%d from array, 0x%08x is a %s",
-                      _workitemid, (address) extractedObj,
+        tty->print_cr("[HSAIL] HSAILJavaCallArguments, extracted obj #%d from array, " INTPTR_FORMAT " is a %s",
+                      _workitemid, p2i(extractedObj),
                       (extractedObj == NULL ? "null" : extractedObj->klass()->external_name()));
       }
       pushObject(extractedObj);
