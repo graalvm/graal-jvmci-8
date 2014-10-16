@@ -1002,7 +1002,8 @@ def _parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
         jacocoagent = mx.library("JACOCOAGENT", True)
         # Exclude all compiler tests and snippets
 
-        baseExcludes = ['com.oracle.graal.compiler.test', 'com.oracle.graal.jtt', 'com.oracle.graal.api.meta.test', 'com.oracle.truffle.api.test', 'com.oracle.truffle.api.dsl.test', 'com.oracle.graal.compiler.hsail.test']
+        baseExcludes = ['com.oracle.graal.compiler.test', 'com.oracle.graal.jtt', 'com.oracle.graal.api.meta.test', 'com.oracle.truffle.api.test', \
+                'com.oracle.truffle.api.dsl.test', 'com.oracle.graal.truffle', 'com.oracle.graal.truffle.test', 'com.oracle.graal.compiler.hsail.test']
         def _filter(l):
             # filter out specific classes which are already covered by a baseExclude package
             return [clazz for clazz in l if not any([clazz.startswith(package) for package in baseExcludes])]
