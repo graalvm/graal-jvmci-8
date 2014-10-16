@@ -466,7 +466,7 @@ IRT_ENTRY(address, InterpreterRuntime::exception_handler_for_exception(JavaThrea
 #ifdef GRAAL
   if (h_method->method_data() != NULL) {
     ResourceMark rm(thread);
-    ProfileData* pdata = h_method->method_data()->allocate_bci_to_data(current_bci, h_method());
+    ProfileData* pdata = h_method->method_data()->allocate_bci_to_data(current_bci, NULL);
     if (pdata != NULL && pdata->is_BitData()) {
       BitData* bit_data = (BitData*) pdata;
       bit_data->set_exception_seen();
