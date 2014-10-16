@@ -1365,9 +1365,11 @@ class Task:
 def ctw(args):
     """run CompileTheWorld"""
 
+    defaultCtwopts = '-Inline'
+
     parser = ArgumentParser(prog='mx ctw')
-    parser.add_argument('--ctwopts', action='store', help='space separated Graal options (without the -G: prefix) used for CTW compilations')
-    parser.add_argument('--jar', action='store', help='jar of classes to compiled instead of rt.jar')
+    parser.add_argument('--ctwopts', action='store', help='space separated Graal options used for CTW compilations (default: --ctwopts="' + defaultCtwopts + '")', default=defaultCtwopts, metavar='<options>')
+    parser.add_argument('--jar', action='store', help='jar of classes to compiled instead of rt.jar', metavar='<path>')
     parser.add_argument('vmargs', nargs=REMAINDER, metavar='VM options...')
 
     args, vmargs = parser.parse_known_args(args)
