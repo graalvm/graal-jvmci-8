@@ -1185,9 +1185,9 @@ def _unittest(args, annotations, prefixCp="", blacklist=None, whitelist=None, ve
         if len(testclasses) == 1:
             # Execute Junit directly when one test is being run. This simplifies
             # replaying the VM execution in a native debugger (e.g., gdb).
-            vm(prefixArgs + vmArgs + ['-cp', cp, 'com.oracle.graal.test.GraalJUnitCore'] + coreArgs + testclasses)
+            vm(prefixArgs + vmArgs + ['-cp', mx._separatedCygpathU2W(cp), 'com.oracle.graal.test.GraalJUnitCore'] + coreArgs + testclasses)
         else:
-            vm(prefixArgs + vmArgs + ['-cp', cp, 'com.oracle.graal.test.GraalJUnitCore'] + coreArgs + ['@' + mx._cygpathU2W(testfile)])
+            vm(prefixArgs + vmArgs + ['-cp', mx._separatedCygpathU2W(cp), 'com.oracle.graal.test.GraalJUnitCore'] + coreArgs + ['@' + mx._cygpathU2W(testfile)])
 
     try:
         _run_tests(args, harness, annotations, testfile, blacklist, whitelist, regex)
@@ -2256,7 +2256,7 @@ def findbugs(args):
     cmd = ['-jar', mx._cygpathU2W(findbugsJar), '-textui', '-low', '-maxRank', '15']
     if sys.stdout.isatty():
         cmd.append('-progress')
-    cmd = cmd + ['-auxclasspath', mx.classpath([d.name for d in _jdkDeployedDists] + [p.name for p in nonTestProjects]), '-output', mx._cygpathU2W(findbugsResults), '-exitcode'] + args + outputDirs
+    cmd = cmd + ['-auxclasspath', mx._separatedCygpathU2W(mx.classpath([d.name for d in _jdkDeployedDists] + [p.name for p in nonTestProjects])), '-output', mx._cygpathU2W(findbugsResults), '-exitcode'] + args + outputDirs
     exitcode = mx.run_java(cmd, nonZeroIsFatal=False)
     if exitcode != 0:
         with open(findbugsResults) as fp:
