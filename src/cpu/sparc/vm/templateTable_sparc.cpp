@@ -2942,6 +2942,7 @@ void TemplateTable::prepare_invoke(int byte_no,
 
 
 void TemplateTable::generate_vtable_call(Register Rrecv, Register Rindex, Register Rret) {
+  Register Rtemp = G4_scratch;
   Register Rcall = Rindex;
   assert_different_registers(Rcall, G5_method, Gargs, Rret);
 
