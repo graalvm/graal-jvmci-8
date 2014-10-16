@@ -1588,9 +1588,10 @@ def longtests(args):
     dacapo(['100', 'eclipse', '-esa'])
 
 def _igvFallbackJDK(env):
-    if mx._java_homes[0].version == mx.VersionSpec("1.8.0_20"):
+    igvHomes = [h for h in mx._java_homes if h.version < mx.VersionSpec("1.8.0_20") or h.version >= mx.VersionSpec("1.8.0_40")]
+    if igvHomes[0] != mx._java_homes[0]:
         env = dict(env)
-        fallbackJDK = mx._java_homes[1]
+        fallbackJDK = igvHomes[0]
         mx.logv("1.8.0_20 has a known javac bug (JDK-8043926), thus falling back to " + str(fallbackJDK.version))
         env['JAVA_HOME'] = str(fallbackJDK.jdk)
     return env
