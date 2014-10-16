@@ -1462,8 +1462,8 @@ def _basic_gate_body(args, tasks):
     if args.buildNonGraal:
         with Task('BuildHotSpotVarieties', tasks):
             buildvms(['--vms', 'client,server', '--builds', 'fastdebug,product'])
-            buildvms(['--vms', 'server-nograal', '--builds', 'product'])
-            buildvms(['--vms', 'server-nograal', '--builds', 'optimized'])
+            if mx.get_os() not in ['windows', 'cygwin']:
+                buildvms(['--vms', 'server-nograal', '--builds', 'product,optimized'])
 
         for vmbuild in ['product', 'fastdebug']:
             for theVm in ['client', 'server']:
