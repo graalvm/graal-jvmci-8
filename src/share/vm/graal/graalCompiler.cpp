@@ -170,6 +170,7 @@ void GraalCompiler::compile_the_world() {
   // We turn off CompileTheWorld so that Graal can
   // be compiled by C1/C2 when Graal does a CTW.
   CompileTheWorld = false;
+  HandleMark hm;
 
   JavaThread* THREAD = JavaThread::current();
   TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/HotSpotGraalRuntime", CHECK_ABORT);
