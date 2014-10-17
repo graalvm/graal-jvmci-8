@@ -75,6 +75,13 @@ void GraalCompiler::initialize() {
 #ifdef COMPILERGRAAL
 void GraalCompiler::bootstrap() {
   JavaThread* THREAD = JavaThread::current();
+#ifndef PRODUCT
+  // We turn off CompileTheWorld so that compilation requests are not ignored during bootstrap.
+  bool doCTW = CompileTheWorld;
+  if (CompileTheWorld) {
+    CompileTheWorld = false;
+  }
+#endif
   _bootstrapping = true;
   ResourceMark rm;
   HandleMark hm;
@@ -115,7 +122,7 @@ void GraalCompiler::bootstrap() {
   }
   _bootstrapping = false;
 #ifndef PRODUCT
-    if (CompileTheWorld) {
+    if (doCTW) {
       compile_the_world();
     }
 #endif
