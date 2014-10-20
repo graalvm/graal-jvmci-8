@@ -104,7 +104,6 @@ bool CompilationPolicy::must_be_compiled(methodHandle m, int comp_level) {
   if (ReplayCompiles) return false;
 
   if (m->has_compiled_code()) return false;       // already compiled
-
   if (!can_be_compiled(m, comp_level)) return false;
 
   return !UseInterpreter ||                                              // must compile all methods

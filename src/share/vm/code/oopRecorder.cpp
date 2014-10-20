@@ -36,6 +36,7 @@ template <class T> int ValueRecorder<T>::_hit_indexes      = 0;
 template <class T> int ValueRecorder<T>::_missed_indexes   = 0;
 #endif //ASSERT
 
+
 template <class T> ValueRecorder<T>::ValueRecorder(Arena* arena) {
   _handles  = NULL;
   _indexes  = NULL;

@@ -664,6 +664,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
       + round_to(handler_table->size_in_bytes(), oopSize)
       + round_to(nul_chk_table->size_in_bytes(), oopSize)
       + round_to(debug_info->data_size()       , oopSize);
+
     nm = new (nmethod_size)
     nmethod(method(), nmethod_size, compile_id, entry_bci, offsets,
             orig_pc_offset, debug_info, dependencies, code_buffer, frame_size,
@@ -934,7 +935,7 @@ nmethod::nmethod(
 #ifdef GRAAL
     _graal_installed_code = installed_code();
     _speculation_log = (instanceOop)speculation_log();
-#endif
+
     if (compiler->is_graal()) {
       // Graal might not produce any stub sections
       if (offsets->value(CodeOffsets::Exceptions) != -1) {
@@ -953,17 +954,20 @@ nmethod::nmethod(
         _deoptimize_mh_offset  = -1;
       }
     } else {
-      // Exception handler and deopt handler are in the stub section
-      assert(offsets->value(CodeOffsets::Exceptions) != -1, "must be set");
-      assert(offsets->value(CodeOffsets::Deopt     ) != -1, "must be set");
+#endif
+    // Exception handler and deopt handler are in the stub section
+    assert(offsets->value(CodeOffsets::Exceptions) != -1, "must be set");
+    assert(offsets->value(CodeOffsets::Deopt     ) != -1, "must be set");
 
-      _exception_offset        = _stub_offset          + offsets->value(CodeOffsets::Exceptions);
-      _deoptimize_offset       = _stub_offset          + offsets->value(CodeOffsets::Deopt);
-      if (offsets->value(CodeOffsets::DeoptMH) != -1) {
-        _deoptimize_mh_offset  = _stub_offset          + offsets->value(CodeOffsets::DeoptMH);
-      } else {
-        _deoptimize_mh_offset  = -1;
-      }
+    _exception_offset        = _stub_offset          + offsets->value(CodeOffsets::Exceptions);
+    _deoptimize_offset       = _stub_offset          + offsets->value(CodeOffsets::Deopt);
+    if (offsets->value(CodeOffsets::DeoptMH) != -1) {
+      _deoptimize_mh_offset  = _stub_offset          + offsets->value(CodeOffsets::DeoptMH);
+    } else {
+      _deoptimize_mh_offset  = -1;
+#ifdef GRAAL
+    }
+#endif
     }
     if (offsets->value(CodeOffsets::UnwindHandler) != -1) {
       _unwind_handler_offset = code_offset()         + offsets->value(CodeOffsets::UnwindHandler);

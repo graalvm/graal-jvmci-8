@@ -160,7 +160,6 @@
 #ifdef TARGET_OS_ARCH_bsd_zero
 # include "vmStructs_bsd_zero.hpp"
 #endif
-
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/concurrentMarkSweep/compactibleFreeListSpace.hpp"
 #include "gc_implementation/concurrentMarkSweep/concurrentMarkSweepGeneration.hpp"
@@ -404,8 +403,8 @@ typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > MetablockTreeDicti
   nonstatic_field(ObjArrayKlass,               _element_klass,                                Klass*)                                \
   nonstatic_field(ObjArrayKlass,               _bottom_klass,                                 Klass*)                                \
   volatile_nonstatic_field(Symbol,             _refcount,                                     short)                                 \
-  nonstatic_field(Symbol,                      _length,                                       unsigned short)                        \
   nonstatic_field(Symbol,                      _identity_hash,                                int)                                   \
+  nonstatic_field(Symbol,                      _length,                                       unsigned short)                        \
   unchecked_nonstatic_field(Symbol,            _body,                                         sizeof(jbyte)) /* NOTE: no type */     \
   nonstatic_field(Symbol,                      _body[0],                                      jbyte)                                 \
   nonstatic_field(TypeArrayKlass,              _max_length,                                   int)                                   \
@@ -1345,6 +1344,7 @@ typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > MetablockTreeDicti
   nonstatic_field(FreeList<FreeChunk>,         _count,                                       ssize_t)                                \
   nonstatic_field(FreeList<Metablock>,         _count,                                       ssize_t)                                \
   nonstatic_field(MetablockTreeDictionary,     _total_size,                                  size_t)
+
 
 //--------------------------------------------------------------------------------
 // VM_TYPES

@@ -393,7 +393,7 @@ DEST_JVM_DIZ       = $(DEST_SUBDIR)/$(LIBJVM_DIZ)
 install_jvm: $(LIBJVM)
 	@echo "Copying $(LIBJVM) to $(DEST_JVM)"
 ifeq ($(OS_VENDOR), Darwin)
-	-$(QUIETLY) test -d $(LIBJVM_DEBUGINFO) && \
+	$(QUIETLY) test ! -d $(LIBJVM_DEBUGINFO) || \
 	    cp -f -r $(LIBJVM_DEBUGINFO) $(DEST_JVM_DEBUGINFO)
 else
 	$(QUIETLY) test -f $(LIBJVM_DEBUGINFO) && \

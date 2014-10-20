@@ -213,7 +213,6 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
   // Create a growable array of VFrames where each VFrame represents an inlined
   // Java frame.  This storage is allocated with the usual system arena.
   assert(deoptee.is_compiled_frame(), "Wrong frame type");
-
   GrowableArray<compiledVFrame*>* chunk = new GrowableArray<compiledVFrame*>(10);
   vframe* vf = vframe::new_vframe(&deoptee, &map, thread);
   while (!vf->is_top()) {

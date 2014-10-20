@@ -824,7 +824,6 @@ address InterpreterGenerator::generate_Reference_get_entry(void) {
   return generate_accessor_entry();
 }
 
-
 //
 // Interpreter stub for calling a native method. (asm interpreter)
 // This sets up a somewhat different looking stack for calling the native method

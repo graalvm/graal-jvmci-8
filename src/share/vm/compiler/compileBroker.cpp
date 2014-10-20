@@ -824,6 +824,7 @@ void CompileBroker::compilation_init() {
     _compilers[1] = new C2Compiler();
   }
 #endif // COMPILER2
+
 #else // SHARK
   int c1_count = 0;
   int c2_count = 1;

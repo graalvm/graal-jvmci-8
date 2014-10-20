@@ -91,7 +91,7 @@ endif
 install_jsig: $(LIBJSIG)
 	@echo "Copying $(LIBJSIG) to $(DEST_JSIG)"
 ifeq ($(OS_VENDOR), Darwin)
-	-$(QUIETLY) test -d $(LIBJSIG_DEBUGINFO) && \
+	$(QUIETLY) test ! -d $(LIBJSIG_DEBUGINFO) || \
 	    cp -f -r $(LIBJSIG_DEBUGINFO) $(DEST_JSIG_DEBUGINFO)
 else
 	$(QUIETLY) test -f $(LIBJSIG_DEBUGINFO) && \

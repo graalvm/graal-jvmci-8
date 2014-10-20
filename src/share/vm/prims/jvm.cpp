@@ -1184,6 +1184,7 @@ JVM_ENTRY(jobject, JVM_GetProtectionDomain(JNIEnv *env, jclass cls))
   return (jobject) JNIHandles::make_local(env, pd);
 JVM_END
 
+
 static bool is_authorized(Handle context, instanceKlassHandle klass, TRAPS) {
   // If there is a security manager and protection domain, check the access
   // in the protection domain, otherwise it is authorized.

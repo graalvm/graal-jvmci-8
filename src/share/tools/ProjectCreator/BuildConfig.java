@@ -515,9 +515,9 @@ class BuildConfig {
                 case 'f':
                     sb.append(flavour());
                     break;
-		case 'o':
-		    sb.append(outputDir());
-		    break;
+                case 'o':
+                    sb.append(outputDir());
+                    break;
                 default:
                     sb.append(ch);
                     sb.append(ch1);

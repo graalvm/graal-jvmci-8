@@ -529,6 +529,7 @@ IRT_ENTRY(void, InterpreterRuntime::throw_IncompatibleClassChangeError(JavaThrea
   THROW(vmSymbols::java_lang_IncompatibleClassChangeError());
 IRT_END
 
+
 //------------------------------------------------------------------------------------------------------------------------
 // Fields
 //

@@ -157,7 +157,7 @@ endif
 install_saproc: $(BUILDLIBSAPROC)
 	@echo "Copying $(LIBSAPROC) to $(DEST_SAPROC)"
 ifeq ($(OS_VENDOR), Darwin)
-	-$(QUIETLY) test -d $(LIBSAPROC_DEBUGINFO) && \
+	$(QUIETLY) test ! -d $(LIBSAPROC_DEBUGINFO) || \
 	    cp -f -r $(LIBSAPROC_DEBUGINFO) $(DEST_SAPROC_DEBUGINFO)
 else
 	$(QUIETLY) test -f $(LIBSAPROC_DEBUGINFO) && \

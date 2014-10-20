@@ -3671,6 +3671,7 @@ void SharedRuntime::generate_deopt_blob() {
   __ mov(O0, O2UnrollBlock->after_save());
 
   RegisterSaver::restore_result_registers(masm);
+
   Label noException;
   __ cmp_and_br_short(G4deopt_mode, Deoptimization::Unpack_exception, Assembler::notEqual, Assembler::pt, noException);
 
