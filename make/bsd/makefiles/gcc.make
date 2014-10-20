@@ -324,7 +324,11 @@ ifeq ($(USE_CLANG), true)
   ifeq ($(shell expr $(CC_VER_MAJOR) = 5 \& \( $(CC_VER_MINOR) = 0 \| $(CC_VER_MINOR) = 1 \) ), 1)
     OPT_CFLAGS/loopTransform.o += $(OPT_CFLAGS/NOOPT)
     OPT_CFLAGS/unsafe.o += -O1
-    OPT_CFLAGS/graalCompilerToVM.o += -O1
+  endif
+  # Clang 6.x
+  ifeq ($(shell expr $(CC_VER_MAJOR) = 6), 1)
+    OPT_CFLAGS/loopTransform.o += $(OPT_CFLAGS/NOOPT)
+    OPT_CFLAGS/unsafe.o += -O1
   endif
 else
   # 6835796. Problem in GCC 4.3.0 with mulnode.o optimized compilation.
