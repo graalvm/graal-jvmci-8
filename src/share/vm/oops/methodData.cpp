@@ -1157,8 +1157,7 @@ MethodData::MethodData(methodHandle method, int size, TRAPS)
   initialize();
 }
 
-//TODO remove useless for_reprofile argument
-void MethodData::initialize(bool for_reprofile) {
+void MethodData::initialize() {
   No_Safepoint_Verifier no_safepoint;  // init function atomic wrt GC
   ResourceMark rm;
 

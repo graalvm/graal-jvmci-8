@@ -2159,7 +2159,7 @@ public:
   MethodData() : _extra_data_lock(Monitor::leaf, "MDO extra data lock") {}; // For ciMethodData
 
   bool is_methodData() const volatile { return true; }
-  void initialize(bool for_reprofile = false);
+  void initialize();
 
   // Whole-method sticky bits and flags
   enum {
