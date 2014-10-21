@@ -55,14 +55,9 @@ void GraalCompiler::initialize() {
   } else {
     set_state(initialized);
   }
-
-  {
-    HandleMark hm;
-
-    // Graal is considered as application code so we need to
-    // stop the VM deferring compilation now.
-    CompilationPolicy::completed_vm_startup();
-  }
+  // Graal is considered as application code so we need to
+  // stop the VM deferring compilation now.
+  CompilationPolicy::completed_vm_startup();
 #endif // COMPILERGRAAL
 }
 
