@@ -832,11 +832,43 @@ void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_ma
     }
 
     // Have to cast to INT (32 bits) pointer to avoid little/big-endian problem.
-    case T_INT: case T_FLOAT: // 4 bytes.
+    case T_INT: case T_FLOAT: { // 4 bytes.
       assert(value->type() == T_INT, "Agreement.");
-      val = value->get_int();
-      obj->int_at_put(index, (jint)*((jint*)&val));
+      bool big_value = false;
+      if (i + 1 < sv->field_size() && type == T_INT) {
+        if (sv->field_at(i)->is_location()) {
+          Location::Type type = ((LocationValue*) sv->field_at(i))->location().type();
+          if (type == Location::dbl || type == Location::lng) {
+            big_value = true;
+          }
+        } else if (sv->field_at(i)->is_constant_int()) {
+          ScopeValue* next_scope_field = sv->field_at(i + 1);
+          if (next_scope_field->is_constant_long() || next_scope_field->is_constant_double()) {
+            big_value = true;
+          }
+        }
+      }
+
+      if (big_value) {
+        StackValue* low = StackValue::create_stack_value(fr, reg_map, sv->field_at(++i));
+  #ifdef _LP64
+        jlong res = (jlong)low->get_int();
+  #else
+  #ifdef SPARC
+        // For SPARC we have to swap high and low words.
+        jlong res = jlong_from((jint)low->get_int(), (jint)value->get_int());
+  #else
+        jlong res = jlong_from((jint)value->get_int(), (jint)low->get_int());
+  #endif //SPARC
+  #endif
+        obj->int_at_put(index, (jint)*((jint*)&res));
+        obj->int_at_put(++index, (jint)*(((jint*)&res) + 1));
+      } else {
+        val = value->get_int();
+        obj->int_at_put(index, (jint)*((jint*)&val));
+      }
       break;
+    }
 
     case T_SHORT: case T_CHAR: // 2 bytes
       assert(value->type() == T_INT, "Agreement.");
