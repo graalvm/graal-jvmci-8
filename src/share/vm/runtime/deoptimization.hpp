@@ -77,14 +77,11 @@ class Deoptimization : AllStatic {
 #ifdef GRAAL
     Reason_aliasing,              // optimistic assumption about aliasing failed
     Reason_transfer_to_interpreter, // explicit transferToInterpreter()
+    Reason_not_compiled_exception_handler,
+    Reason_unresolved,
+    Reason_jsr_mismatch,
 #endif
     Reason_LIMIT,
-
-#ifdef GRAAL
-    Reason_not_compiled_exception_handler = Reason_unhandled,
-    Reason_unresolved                     = Reason_uninitialized,
-    Reason_jsr_mismatch                   = Reason_age,
-#endif
 
     // Note:  Keep this enum in sync. with _trap_reason_name.
     Reason_RECORDED_LIMIT = Reason_bimorphic  // some are not recorded per bc

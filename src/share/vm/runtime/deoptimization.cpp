@@ -2074,19 +2074,22 @@ const char* Deoptimization::_trap_reason_name[Reason_LIMIT] = {
   "intrinsic" GRAAL_ONLY("_or_type_checked_inlining"),
   "bimorphic" GRAAL_ONLY("_or_optimized_type_check"),
   "unloaded",
-  "uninitialized" GRAAL_ONLY("_or_unresolved"),
+  "uninitialized",
   "unreached",
-  "unhandled" GRAAL_ONLY("_or_not_compiled_exception_handler"),
+  "unhandled",
   "constraint",
   "div0_check",
-  "age" GRAAL_ONLY("_or_jsr_mismatch"),
+  "age",
   "predicate",
   "loop_limit_check",
   "speculate_class_check",
-  "rtm_state_change"
+  "rtm_state_change",
 #ifdef GRAAL
   "aliasing",
   "transfer_to_interpreter",
+  "not_compiled_exception_handler",
+  "unresolved",
+  "jsr_mismatch"
 #endif
 };
 const char* Deoptimization::_trap_action_name[Action_LIMIT] = {

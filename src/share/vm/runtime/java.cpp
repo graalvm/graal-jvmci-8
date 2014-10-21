@@ -283,7 +283,17 @@ void print_statistics() {
     IndexSet::print_statistics();
   }
 #endif // ASSERT
-#endif // COMPILER2
+#else
+#ifdef GRALL
+#ifndef COMPILER1
+  if ((TraceDeoptimization || LogVMOutput || LogCompilation) && UseCompiler) {
+    FlagSetting fs(DisplayVMOutput, DisplayVMOutput && TraceDeoptimization);
+    Deoptimization::print_statistics();
+    SharedRuntime::print_statistics();
+  }
+#endif
+#endif
+#endif
 
   if (PrintNMethodStatistics) {
     nmethod::print_statistics();
