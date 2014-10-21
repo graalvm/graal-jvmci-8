@@ -62,12 +62,6 @@ void GraalCompiler::initialize() {
     // Graal is considered as application code so we need to
     // stop the VM deferring compilation now.
     CompilationPolicy::completed_vm_startup();
-
-#ifndef PRODUCT
-    if (CompileTheWorld && !BootstrapGraal) {
-      compile_the_world();
-    }
-#endif
   }
 #endif // COMPILERGRAAL
 }
@@ -75,13 +69,6 @@ void GraalCompiler::initialize() {
 #ifdef COMPILERGRAAL
 void GraalCompiler::bootstrap() {
   JavaThread* THREAD = JavaThread::current();
-#ifndef PRODUCT
-  // We turn off CompileTheWorld so that compilation requests are not ignored during bootstrap.
-  bool doCTW = CompileTheWorld;
-  if (CompileTheWorld) {
-    CompileTheWorld = false;
-  }
-#endif
   _bootstrapping = true;
   ResourceMark rm;
   HandleMark hm;
@@ -121,11 +108,6 @@ void GraalCompiler::bootstrap() {
     tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methodsCompiled);
   }
   _bootstrapping = false;
-#ifndef PRODUCT
-    if (doCTW) {
-      compile_the_world();
-    }
-#endif
 }
 
 void GraalCompiler::compile_method(methodHandle method, int entry_bci, CompileTask* task) {
@@ -167,11 +149,7 @@ void GraalCompiler::print_timers() {
 
 #ifndef PRODUCT
 void GraalCompiler::compile_the_world() {
-  // We turn off CompileTheWorld so that Graal can
-  // be compiled by C1/C2 when Graal does a CTW.
-  CompileTheWorld = false;
   HandleMark hm;
-
   JavaThread* THREAD = JavaThread::current();
   TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/HotSpotGraalRuntime", CHECK_ABORT);
   KlassHandle klass = GraalRuntime::load_required_class(name);

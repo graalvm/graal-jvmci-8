@@ -5199,10 +5199,27 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
     *vm = (JavaVM *)(&main_vm);
     *(JNIEnv**)penv = thread->jni_environment();
 
+#if defined(GRAAL) && !defined(PRODUCT)
+    // We turn off CompileTheWorld so that compilation requests are not ignored during bootstrap or that Graal can be compiled by C1/C2.
+    bool doCTW = CompileTheWorld;
+    CompileTheWorld = false;
+#endif
+
 #ifdef COMPILERGRAAL
     // Graal is initialized on a CompilerThread
     if (FLAG_IS_DEFAULT(BootstrapGraal) ? !TieredCompilation : BootstrapGraal) {
       GraalCompiler::instance()->bootstrap();
+    }
+#elif defined(GRAAL) && !defined(PRODUCT)
+    if (doCTW) {
+      // required for hosted CTW.
+      CompilationPolicy::completed_vm_startup();
+    }
+#endif
+
+#if defined(GRAAL) && !defined(PRODUCT)
+    if (doCTW) {
+      GraalCompiler::instance()->compile_the_world();
     }
 #endif
 
@@ -5226,19 +5243,7 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
   #endif
 
     // Check if we should compile all classes on bootclasspath
-#ifdef GRAAL
-#ifndef COMPILERGRAAL
-    if (CompileTheWorld) {
-      // Graal is considered as application code so we need to
-      // stop the VM deferring compilation now.
-      CompilationPolicy::completed_vm_startup();
-
-      GraalCompiler::instance()->compile_the_world();
-    }
-#endif
-#else
     if (CompileTheWorld) ClassLoader::compile_the_world();
-#endif
     if (ReplayCompiles) ciReplay::replay(thread);
 
     // Some platforms (like Win*) need a wrapper around these test
