@@ -72,8 +72,13 @@ public class SPARCHotSpotBackend extends HotSpotHostBackend {
     }
 
     @Override
-    public FrameMap newFrameMap(RegisterConfig registerConfig) {
-        return new SPARCFrameMap(getProviders().getCodeCache(), registerConfig);
+    public FrameMapBuilder newFrameMapBuilder(RegisterConfig registerConfig) {
+        return new FrameMapBuilderImpl(this::newFrameMap, getCodeCache(), registerConfig);
+    }
+
+    @Override
+    public FrameMap newFrameMap(FrameMapBuilder frameMapBuilder) {
+        return new SPARCFrameMap(getCodeCache(), frameMapBuilder.getRegisterConfig());
     }
 
     @Override
@@ -82,8 +87,8 @@ public class SPARCHotSpotBackend extends HotSpotHostBackend {
     }
 
     @Override
-    public LIRGenerationResult newLIRGenerationResult(LIR lir, FrameMap frameMap, ResolvedJavaMethod method, Object stub) {
-        return new SPARCHotSpotLIRGenerationResult(lir, frameMap, stub);
+    public LIRGenerationResult newLIRGenerationResult(LIR lir, FrameMapBuilder frameMapBuilder, ResolvedJavaMethod method, Object stub) {
+        return new SPARCHotSpotLIRGenerationResult(lir, frameMapBuilder, stub);
     }
 
     @Override
@@ -179,9 +184,8 @@ public class SPARCHotSpotBackend extends HotSpotHostBackend {
     }
 
     @Override
-    public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenRes, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
+    public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenRes, FrameMap frameMap, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
         SPARCHotSpotLIRGenerationResult gen = (SPARCHotSpotLIRGenerationResult) lirGenRes;
-        FrameMap frameMap = gen.getFrameMap();
         LIR lir = gen.getLIR();
         assert gen.getDeoptimizationRescueSlot() == null || frameMap.frameNeedsAllocating() : "method that can deoptimize must have a frame";
 

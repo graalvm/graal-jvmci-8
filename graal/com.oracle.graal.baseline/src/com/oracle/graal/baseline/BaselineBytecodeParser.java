@@ -133,10 +133,11 @@ public class BaselineBytecodeParser extends AbstractBytecodeParser<Value, Baseli
             List<? extends AbstractBlock<?>> codeEmittingOrder = ComputeBlockOrder.computeCodeEmittingOrder(blockMap.blocks.size(), blockMap.startBlock);
             LIR lir = new LIR(cfg, linearScanOrder, codeEmittingOrder);
 
-            FrameMap frameMap = backend.newFrameMap(null);
+            RegisterConfig registerConfig = null;
+            FrameMapBuilder frameMapBuilder = backend.newFrameMapBuilder(registerConfig);
             TargetDescription target = backend.getTarget();
             CallingConvention cc = CodeUtil.getCallingConvention(backend.getProviders().getCodeCache(), CallingConvention.Type.JavaCallee, method, false);
-            this.lirGenRes = backend.newLIRGenerationResult(lir, frameMap, method, null);
+            this.lirGenRes = backend.newLIRGenerationResult(lir, frameMapBuilder, method, null);
             this.gen = backend.newLIRGenerator(cc, lirGenRes);
             this.lirBuilder = backend.newBytecodeLIRBuilder(gen, this);
 
@@ -158,7 +159,7 @@ public class BaselineBytecodeParser extends AbstractBytecodeParser<Value, Baseli
                 try (Scope s = Debug.scope("Allocator")) {
 
                     if (backend.shouldAllocateRegisters()) {
-                        LinearScan.allocate(target, lir, frameMap);
+                        LinearScan.allocate(target, lirGenRes);
                     }
                 } catch (Throwable e) {
                     throw Debug.handle(e);

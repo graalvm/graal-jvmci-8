@@ -66,8 +66,13 @@ public class AMD64HotSpotBackend extends HotSpotHostBackend {
     }
 
     @Override
-    public FrameMap newFrameMap(RegisterConfig registerConfig) {
-        return new AMD64FrameMap(getCodeCache(), registerConfig);
+    public FrameMapBuilder newFrameMapBuilder(RegisterConfig registerConfig) {
+        return new FrameMapBuilderImpl(this::newFrameMap, getCodeCache(), registerConfig);
+    }
+
+    @Override
+    public FrameMap newFrameMap(FrameMapBuilder frameMapBuilder) {
+        return new AMD64FrameMap(getCodeCache(), frameMapBuilder.getRegisterConfig());
     }
 
     @Override
@@ -76,8 +81,8 @@ public class AMD64HotSpotBackend extends HotSpotHostBackend {
     }
 
     @Override
-    public LIRGenerationResult newLIRGenerationResult(LIR lir, FrameMap frameMap, ResolvedJavaMethod method, Object stub) {
-        return new AMD64HotSpotLIRGenerationResult(lir, frameMap, stub);
+    public LIRGenerationResult newLIRGenerationResult(LIR lir, FrameMapBuilder frameMapBuilder, ResolvedJavaMethod method, Object stub) {
+        return new AMD64HotSpotLIRGenerationResult(lir, frameMapBuilder, stub);
     }
 
     @Override
@@ -206,7 +211,7 @@ public class AMD64HotSpotBackend extends HotSpotHostBackend {
     }
 
     @Override
-    public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenRen, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
+    public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenRen, FrameMap frameMap, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
         // Omit the frame if the method:
         // - has no spill slots or other slots allocated during register allocation
         // - has no callee-saved registers
@@ -214,7 +219,6 @@ public class AMD64HotSpotBackend extends HotSpotHostBackend {
         // - has no deoptimization points
         // - makes no foreign calls (which require an aligned stack)
         AMD64HotSpotLIRGenerationResult gen = (AMD64HotSpotLIRGenerationResult) lirGenRen;
-        FrameMap frameMap = gen.getFrameMap();
         LIR lir = gen.getLIR();
         assert gen.getDeoptimizationRescueSlot() == null || frameMap.frameNeedsAllocating() : "method that can deoptimize must have a frame";
         boolean omitFrame = CanOmitFrame.getValue() && !frameMap.frameNeedsAllocating() && !lir.hasArgInCallerFrame() && !gen.hasForeignCall();

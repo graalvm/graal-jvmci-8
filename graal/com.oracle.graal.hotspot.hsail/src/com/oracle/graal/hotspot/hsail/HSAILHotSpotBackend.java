@@ -383,12 +383,17 @@ public class HSAILHotSpotBackend extends HotSpotBackend {
     private static native boolean executeKernel0(HotSpotInstalledCode kernel, int jobSize, Object[] args, int numTlabs, int allocBytesPerWorkitem, int[] oopMapArray)
                     throws InvalidInstalledCodeException;
 
+    @Override
+    public FrameMapBuilder newFrameMapBuilder(RegisterConfig registerConfig) {
+        return new FrameMapBuilderImpl(this::newFrameMap, getCodeCache(), registerConfig);
+    }
+
     /**
      * Use the HSAIL register set when the compilation target is HSAIL.
      */
     @Override
-    public FrameMap newFrameMap(RegisterConfig registerConfig) {
-        return new HSAILFrameMap(getCodeCache(), registerConfig);
+    public FrameMap newFrameMap(FrameMapBuilder frameMapBuilder) {
+        return new HSAILFrameMap(getCodeCache(), frameMapBuilder.getRegisterConfig());
     }
 
     @Override
@@ -397,8 +402,8 @@ public class HSAILHotSpotBackend extends HotSpotBackend {
     }
 
     @Override
-    public LIRGenerationResult newLIRGenerationResult(LIR lir, FrameMap frameMap, ResolvedJavaMethod method, Object stub) {
-        return new HSAILHotSpotLIRGenerationResult(lir, frameMap);
+    public LIRGenerationResult newLIRGenerationResult(LIR lir, FrameMapBuilder frameMapBuilder, ResolvedJavaMethod method, Object stub) {
+        return new HSAILHotSpotLIRGenerationResult(lir, frameMapBuilder);
     }
 
     @Override
@@ -467,8 +472,7 @@ public class HSAILHotSpotBackend extends HotSpotBackend {
     }
 
     @Override
-    public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenRes, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
-        FrameMap frameMap = lirGenRes.getFrameMap();
+    public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenRes, FrameMap frameMap, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
         Assembler masm = createAssembler(frameMap);
         HotSpotFrameContext frameContext = new HotSpotFrameContext();
         // save lirGen for later use by setHostGraph

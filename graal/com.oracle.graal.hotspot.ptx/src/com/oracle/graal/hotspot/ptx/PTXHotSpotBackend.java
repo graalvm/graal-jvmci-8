@@ -49,8 +49,8 @@ import com.oracle.graal.lir.LIRInstruction.OperandMode;
 import com.oracle.graal.lir.StandardOp.LabelOp;
 import com.oracle.graal.lir.asm.*;
 import com.oracle.graal.lir.gen.*;
-import com.oracle.graal.lir.ptx.*;
 import com.oracle.graal.lir.ptx.PTXControlFlow.PTXPredicatedLIRInstruction;
+import com.oracle.graal.lir.ptx.*;
 import com.oracle.graal.lir.ptx.PTXMemOp.LoadReturnAddrOp;
 import com.oracle.graal.nodes.*;
 import com.oracle.graal.nodes.spi.*;
@@ -156,8 +156,13 @@ public class PTXHotSpotBackend extends HotSpotBackend {
     private static native long getLaunchKernelAddress();
 
     @Override
-    public FrameMap newFrameMap(RegisterConfig registerConfig) {
-        return new PTXFrameMap(getCodeCache(), registerConfig);
+    public FrameMapBuilder newFrameMapBuilder(RegisterConfig registerConfig) {
+        return new FrameMapBuilderImpl(this::newFrameMap, getCodeCache(), registerConfig);
+    }
+
+    @Override
+    public FrameMap newFrameMap(FrameMapBuilder frameMapBuilder) {
+        return new PTXFrameMap(getCodeCache(), frameMapBuilder.getRegisterConfig());
     }
 
     /**
@@ -329,13 +334,12 @@ public class PTXHotSpotBackend extends HotSpotBackend {
     }
 
     @Override
-    public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenRes, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
+    public CompilationResultBuilder newCompilationResultBuilder(LIRGenerationResult lirGenRes, FrameMap frameMap, CompilationResult compilationResult, CompilationResultBuilderFactory factory) {
         // Omit the frame of the method:
         // - has no spill slots or other slots allocated during register allocation
         // - has no callee-saved registers
         // - has no incoming arguments passed on the stack
         // - has no instructions with debug info
-        FrameMap frameMap = lirGenRes.getFrameMap();
         Assembler masm = createAssembler(frameMap);
         PTXFrameContext frameContext = new PTXFrameContext();
         CompilationResultBuilder crb = factory.createBuilder(getCodeCache(), getForeignCalls(), frameMap, masm, frameContext, compilationResult);
@@ -344,8 +348,8 @@ public class PTXHotSpotBackend extends HotSpotBackend {
     }
 
     @Override
-    public LIRGenerationResult newLIRGenerationResult(LIR lir, FrameMap frameMap, ResolvedJavaMethod method, Object stub) {
-        return new LIRGenerationResultBase(lir, frameMap);
+    public LIRGenerationResult newLIRGenerationResult(LIR lir, FrameMapBuilder frameMapBuilder, ResolvedJavaMethod method, Object stub) {
+        return new LIRGenerationResultBase(lir, frameMapBuilder);
     }
 
     @Override
