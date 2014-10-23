@@ -253,7 +253,7 @@ void graal_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(HotSpotMonitorValue)                                                                                                                             \
     oop_field(HotSpotMonitorValue, owner, "Lcom/oracle/graal/api/meta/JavaValue;")                                                                             \
-    oop_field(HotSpotMonitorValue, slot, "Lcom/oracle/graal/api/code/StackSlot;")                                                                              \
+    oop_field(HotSpotMonitorValue, slot, "Lcom/oracle/graal/api/code/StackSlotValue;")                                                                              \
     boolean_field(HotSpotMonitorValue, eliminated)                                                                                                             \
   end_class                                                                                                                                                    \
   start_class(SpeculationLog)                                                                                                                                  \
