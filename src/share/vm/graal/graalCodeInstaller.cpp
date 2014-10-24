@@ -61,14 +61,14 @@ const int MapWordBits = 64;
 
 static bool is_bit_set(oop bitset, int i) {
   jint words_idx = i / MapWordBits;
-  arrayOop words = (arrayOop) BitSet::words(bitset);
+  typeArrayOop words = BitSet::words(bitset);
   assert(words_idx >= 0 && words_idx < words->length(), "unexpected index");
-  jlong word = ((jlong*) words->base(T_LONG))[words_idx];
+  jlong word = words->long_at(words_idx);
   return (word & (1LL << (i % MapWordBits))) != 0;
 }
 
 static int bitset_size(oop bitset) {
-  arrayOop arr = (arrayOop) BitSet::words(bitset);
+  typeArrayOop arr = BitSet::words(bitset);
   return arr->length() * MapWordBits;
 }
 
@@ -129,14 +129,14 @@ static OopMap* create_oop_map(jint total_frame_size, jint parameter_count, oop d
   }
 
   if (callee_save_info != NULL) {
-    objArrayOop registers = (objArrayOop) RegisterSaveLayout::registers(callee_save_info);
-    arrayOop slots = (arrayOop) RegisterSaveLayout::slots(callee_save_info);
+    objArrayOop registers = RegisterSaveLayout::registers(callee_save_info);
+    typeArrayOop slots = RegisterSaveLayout::slots(callee_save_info);
     for (jint i = 0; i < slots->length(); i++) {
       oop graal_reg = registers->obj_at(i);
       jint graal_reg_number = code_Register::number(graal_reg);
       VMReg hotspot_reg = CodeInstaller::get_hotspot_reg(graal_reg_number);
       // HotSpot stack slots are 4 bytes
-      jint graal_slot = ((jint*) slots->base(T_INT))[i];
+      jint graal_slot = slots->int_at(i);
       jint hotspot_slot = graal_slot * VMRegImpl::slots_per_word;
       VMReg hotspot_slot_as_reg = VMRegImpl::stack2reg(hotspot_slot);
       map->set_callee_saved(hotspot_slot_as_reg, hotspot_reg);
@@ -318,10 +318,10 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
     ObjectValue* sv = new ObjectValue(id, new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror)));
     objects->append(sv);
 
-    arrayOop values = (arrayOop) VirtualObject::values(value);
+    objArrayOop values = VirtualObject::values(value);
     for (jint i = 0; i < values->length(); i++) {
       ScopeValue* cur_second = NULL;
-      oop object = ((objArrayOop) (values))->obj_at(i);
+      oop object = values->obj_at(i);
       ScopeValue* value = get_scope_value(object, total_frame_size, objects, cur_second, oop_recorder);
 
       if (isLongArray && cur_second == NULL) {
@@ -374,7 +374,7 @@ void CodeInstaller::initialize_assumptions(oop compiled_code) {
   _dependencies = new Dependencies(&_arena, _oop_recorder);
   Handle assumptions_handle = CompilationResult::assumptions(HotSpotCompiledCode::comp(compiled_code));
   if (!assumptions_handle.is_null()) {
-    objArrayHandle assumptions(Thread::current(), (objArrayOop)Assumptions::list(assumptions_handle()));
+    objArrayHandle assumptions(Thread::current(), Assumptions::list(assumptions_handle()));
     int length = assumptions->length();
     for (int i = 0; i < length; ++i) {
       Handle assumption = assumptions->obj_at(i);
@@ -479,14 +479,14 @@ void CodeInstaller::initialize_fields(oop compiled_code) {
   // Pre-calculate the constants section size.  This is required for PC-relative addressing.
   _data_section_handle = JNIHandles::make_local(HotSpotCompiledCode::dataSection(compiled_code));
   guarantee(DataSection::sectionAlignment(data_section()) <= _constants->alignment(), "Alignment inside constants section is restricted by alignment of section begin");
-  arrayHandle data = (arrayOop) DataSection::data(data_section());
+  typeArrayHandle data = DataSection::data(data_section());
   _constants_size = data->length();
   if (_constants_size > 0) {
     _constants_size = align_size_up(_constants_size, _constants->alignment());
   }
 
 #ifndef PRODUCT
-  _comments_handle = JNIHandles::make_local((arrayOop) HotSpotCompiledCode::comments(compiled_code));
+  _comments_handle = JNIHandles::make_local(HotSpotCompiledCode::comments(compiled_code));
 #endif
 
   _next_call_type = INVOKE_INVALID;
@@ -541,12 +541,12 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
 
   // copy the constant data into the newly created CodeBuffer
   address end_data = _constants->start() + _constants_size;
-  typeArrayHandle data((typeArrayOop) DataSection::data(data_section()));
+  typeArrayHandle data(DataSection::data(data_section()));
   memcpy(_constants->start(), data->base(T_BYTE), data->length());
   _constants->set_end(end_data);
 
   
-  objArrayHandle patches = (objArrayOop) DataSection::patches(data_section());
+  objArrayHandle patches = DataSection::patches(data_section());
   for (int i = 0; i < patches->length(); i++) {
     Handle patch = patches->obj_at(i);
     Handle data = CompilationResult_DataPatch::data(patch);
@@ -743,7 +743,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
     jint local_count = BytecodeFrame::numLocals(frame);
     jint expression_count = BytecodeFrame::numStack(frame);
     jint monitor_count = BytecodeFrame::numLocks(frame);
-    arrayOop values = (arrayOop) BytecodeFrame::values(frame);
+    objArrayOop values = BytecodeFrame::values(frame);
 
     assert(local_count + expression_count + monitor_count == values->length(), "unexpected values length");
 
@@ -758,7 +758,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
 
     for (jint i = 0; i < values->length(); i++) {
       ScopeValue* second = NULL;
-      oop value=((objArrayOop) (values))->obj_at(i);
+      oop value= values->obj_at(i);
       if (i < local_count) {
         ScopeValue* first = get_scope_value(value, _total_frame_size, objects, second, _oop_recorder);
         if (second != NULL) {
@@ -777,7 +777,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
       if (second != NULL) {
         i++;
         assert(i < values->length(), "double-slot value not followed by Value.ILLEGAL");
-        assert(((objArrayOop) (values))->obj_at(i) == Value::ILLEGAL(), "double-slot value not followed by Value.ILLEGAL");
+        assert(values->obj_at(i) == Value::ILLEGAL(), "double-slot value not followed by Value.ILLEGAL");
       }
     }
 

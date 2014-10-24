@@ -47,7 +47,7 @@ void graal_compute_offsets();
  *
  */
 
-#define COMPILER_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, oop_field, static_oop_field, static_int_field) \
+#define COMPILER_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, oop_field, typeArrayOop_field, objArrayOop_field, static_oop_field, static_int_field) \
   start_class(HotSpotResolvedObjectType)                                                                                                                       \
     oop_field(HotSpotResolvedObjectType, javaClass, "Ljava/lang/Class;")                                                                                       \
   end_class                                                                                                                                                    \
@@ -70,9 +70,9 @@ void graal_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledCode)                                                                                                                             \
     oop_field(HotSpotCompiledCode, comp, "Lcom/oracle/graal/api/code/CompilationResult;")                                                                      \
-    oop_field(HotSpotCompiledCode, sites, "[Lcom/oracle/graal/api/code/CompilationResult$Site;")                                                               \
-    oop_field(HotSpotCompiledCode, exceptionHandlers, "[Lcom/oracle/graal/api/code/CompilationResult$ExceptionHandler;")                                       \
-    oop_field(HotSpotCompiledCode, comments, "[Lcom/oracle/graal/hotspot/HotSpotCompiledCode$Comment;")                                                        \
+    objArrayOop_field(HotSpotCompiledCode, sites, "[Lcom/oracle/graal/api/code/CompilationResult$Site;")                                                       \
+    objArrayOop_field(HotSpotCompiledCode, exceptionHandlers, "[Lcom/oracle/graal/api/code/CompilationResult$ExceptionHandler;")                               \
+    objArrayOop_field(HotSpotCompiledCode, comments, "[Lcom/oracle/graal/hotspot/HotSpotCompiledCode$Comment;")                                                \
     oop_field(HotSpotCompiledCode, dataSection, "Lcom/oracle/graal/hotspot/data/DataSection;")                                                                 \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledCode_Comment)                                                                                                                     \
@@ -93,8 +93,8 @@ void graal_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(DataSection)                                                                                                                                     \
     int_field(DataSection, sectionAlignment)                                                                                                                   \
-    oop_field(DataSection, data, "[B")                                                                                                                         \
-    oop_field(DataSection, patches, "[Lcom/oracle/graal/api/code/CompilationResult$DataPatch;")                                                                \
+    typeArrayOop_field(DataSection, data, "[B")                                                                                                                \
+    objArrayOop_field(DataSection, patches, "[Lcom/oracle/graal/api/code/CompilationResult$DataPatch;")                                                        \
   end_class                                                                                                                                                    \
   start_class(DataSectionReference)                                                                                                                            \
     int_field(DataSectionReference, offset)                                                                                                                    \
@@ -114,12 +114,12 @@ void graal_compute_offsets();
   start_class(CompilationResult)                                                                                                                               \
     int_field(CompilationResult, totalFrameSize)                                                                                                               \
     int_field(CompilationResult, customStackAreaOffset)                                                                                                        \
-    oop_field(CompilationResult, targetCode, "[B")                                                                                                             \
+    typeArrayOop_field(CompilationResult, targetCode, "[B")                                                                                                    \
     oop_field(CompilationResult, assumptions, "Lcom/oracle/graal/api/code/Assumptions;")                                                                       \
     int_field(CompilationResult, targetCodeSize)                                                                                                               \
   end_class                                                                                                                                                    \
   start_class(Assumptions)                                                                                                                                     \
-    oop_field(Assumptions, list, "[Lcom/oracle/graal/api/code/Assumptions$Assumption;")                                                                        \
+    objArrayOop_field(Assumptions, list, "[Lcom/oracle/graal/api/code/Assumptions$Assumption;")                                                                \
   end_class                                                                                                                                                    \
   start_class(Assumptions_MethodContents)                                                                                                                      \
     oop_field(Assumptions_MethodContents, method, "Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                            \
@@ -179,14 +179,14 @@ void graal_compute_offsets();
     oop_field(HotSpotReferenceMap, frameRefMap, "Ljava/util/BitSet;")                                                                                          \
   end_class                                                                                                                                                    \
   start_class(RegisterSaveLayout)                                                                                                                              \
-    oop_field(RegisterSaveLayout, registers, "[Lcom/oracle/graal/api/code/Register;")                                                                          \
-    oop_field(RegisterSaveLayout, slots, "[I")                                                                                                                 \
+    objArrayOop_field(RegisterSaveLayout, registers, "[Lcom/oracle/graal/api/code/Register;")                                                                  \
+    typeArrayOop_field(RegisterSaveLayout, slots, "[I")                                                                                                        \
   end_class                                                                                                                                                    \
   start_class(BitSet)                                                                                                                                          \
-    oop_field(BitSet, words, "[J")                                                                                                                             \
+    typeArrayOop_field(BitSet, words, "[J")                                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(BytecodeFrame)                                                                                                                                   \
-    oop_field(BytecodeFrame, values, "[Lcom/oracle/graal/api/meta/Value;")                                                                                     \
+    objArrayOop_field(BytecodeFrame, values, "[Lcom/oracle/graal/api/meta/Value;")                                                                             \
     int_field(BytecodeFrame, numLocals)                                                                                                                        \
     int_field(BytecodeFrame, numStack)                                                                                                                         \
     int_field(BytecodeFrame, numLocks)                                                                                                                         \
@@ -259,7 +259,7 @@ void graal_compute_offsets();
   start_class(VirtualObject)                                                                                                                                   \
     int_field(VirtualObject, id)                                                                                                                               \
     oop_field(VirtualObject, type, "Lcom/oracle/graal/api/meta/ResolvedJavaType;")                                                                             \
-    oop_field(VirtualObject, values, "[Lcom/oracle/graal/api/meta/Value;")                                                                                     \
+    objArrayOop_field(VirtualObject, values, "[Lcom/oracle/graal/api/meta/Value;")                                                                             \
   end_class                                                                                                                                                    \
   start_class(HotSpotMonitorValue)                                                                                                                             \
     oop_field(HotSpotMonitorValue, owner, "Lcom/oracle/graal/api/meta/Value;")                                                                                 \
@@ -275,8 +275,8 @@ void graal_compute_offsets();
     int_field(HotSpotStackFrameReference, frameNumber)                                                                                                         \
     int_field(HotSpotStackFrameReference, bci)                                                                                                                 \
     long_field(HotSpotStackFrameReference, metaspaceMethod)                                                                                                    \
-    oop_field(HotSpotStackFrameReference, locals, "[Ljava/lang/Object;")                                                                                       \
-    oop_field(HotSpotStackFrameReference, localIsVirtual, "[Z")                                                                                                \
+    objArrayOop_field(HotSpotStackFrameReference, locals, "[Ljava/lang/Object;")                                                                               \
+    typeArrayOop_field(HotSpotStackFrameReference, localIsVirtual, "[Z")                                                                                       \
   end_class                                                                                                                                                    \
   /* end*/
 
@@ -294,21 +294,24 @@ class name : AllStatic {                                                        
 
 #define END_CLASS };
 
-#define FIELD(name, type, accessor)                                                                                                                            \
+#define FIELD(name, type, accessor, cast)                                                                                                                      \
     static int _##name##_offset;                                                                                                                               \
-    static type name(oop obj)                   { check(obj); return obj->accessor(_##name##_offset); }                                                        \
-    static type name(Handle& obj)                { check(obj()); return obj->accessor(_##name##_offset); }                                                     \
-    static type name(jobject obj)               { check(JNIHandles::resolve(obj)); return JNIHandles::resolve(obj)->accessor(_##name##_offset); }              \
+    static type name(oop obj)                   { check(obj); return cast obj->accessor(_##name##_offset); } \
+    static type name(Handle& obj)                { check(obj()); return cast obj->accessor(_##name##_offset); } \
+    static type name(jobject obj)               { check(JNIHandles::resolve(obj)); return cast JNIHandles::resolve(obj)->accessor(_##name##_offset); }              \
     static void set_##name(oop obj, type x)     { check(obj); obj->accessor##_put(_##name##_offset, x); }                                                      \
     static void set_##name(Handle& obj, type x)  { check(obj()); obj->accessor##_put(_##name##_offset, x); }                                                   \
     static void set_##name(jobject obj, type x) { check(JNIHandles::resolve(obj)); JNIHandles::resolve(obj)->accessor##_put(_##name##_offset, x); }
 
-#define CHAR_FIELD(klass, name) FIELD(name, jchar, char_field)
-#define INT_FIELD(klass, name) FIELD(name, jint, int_field)
-#define BOOLEAN_FIELD(klass, name) FIELD(name, jboolean, bool_field)
-#define LONG_FIELD(klass, name) FIELD(name, jlong, long_field)
-#define FLOAT_FIELD(klass, name) FIELD(name, jfloat, float_field)
-#define OOP_FIELD(klass, name, signature) FIELD(name, oop, obj_field)
+#define EMPTY_CAST 
+#define CHAR_FIELD(klass, name) FIELD(name, jchar, char_field, EMPTY_CAST)
+#define INT_FIELD(klass, name) FIELD(name, jint, int_field, EMPTY_CAST)
+#define BOOLEAN_FIELD(klass, name) FIELD(name, jboolean, bool_field, EMPTY_CAST)
+#define LONG_FIELD(klass, name) FIELD(name, jlong, long_field, EMPTY_CAST)
+#define FLOAT_FIELD(klass, name) FIELD(name, jfloat, float_field, EMPTY_CAST)
+#define OOP_FIELD(klass, name, signature) FIELD(name, oop, obj_field, EMPTY_CAST)
+#define OBJARRAYOOP_FIELD(klass, name, signature) FIELD(name, objArrayOop, obj_field, (objArrayOop))
+#define TYPEARRAYOOP_FIELD(klass, name, signature) FIELD(name, typeArrayOop, obj_field, (typeArrayOop))
 #define STATIC_OOP_FIELD(klassName, name, signature)                                                                                                           \
     static int _##name##_offset;                                                                                                                               \
     static oop name() {                                                                                                                                        \
@@ -341,7 +344,7 @@ class name : AllStatic {                                                        
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields());                                                 \
       *((jint *)addr) = x;                                                                                                                                     \
     }
-COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD)
+COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, TYPEARRAYOOP_FIELD, OBJARRAYOOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD)
 #undef START_CLASS
 #undef END_CLASS
 #undef FIELD
@@ -351,8 +354,11 @@ COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD
 #undef LONG_FIELD
 #undef FLOAT_FIELD
 #undef OOP_FIELD
+#undef TYPEARRAYOOP_FIELD
+#undef OBJARRAYOOP_FIELD
 #undef STATIC_OOP_FIELD
 #undef STATIC_INT_FIELD
+#undef EMPTY_CAST
 
 void compute_offset(int &dest_offset, Klass* klass, const char* name, const char* signature, bool static_field);
 

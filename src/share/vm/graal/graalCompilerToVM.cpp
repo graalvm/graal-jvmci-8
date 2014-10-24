@@ -989,7 +989,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     HotSpotStackFrameReference::set_localIsVirtual(hs_frame, NULL);
 
     // update the locals array
-    objArrayHandle array = (objArrayOop) HotSpotStackFrameReference::locals(hs_frame);
+    objArrayHandle array = HotSpotStackFrameReference::locals(hs_frame);
     StackValueCollection* locals = virtualFrames->at(last_frame_number)->locals();
     for (int i = 0; i < locals->size(); i++) {
       StackValue* var = locals->at(i);
