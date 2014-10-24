@@ -78,6 +78,13 @@ private:
   Dependencies*             _dependencies;
   ExceptionHandlerTable     _exception_handler_table;
 
+  static ConstantOopWriteValue* _oop_null_scope_value;
+  static ConstantIntValue*    _int_m1_scope_value;
+  static ConstantIntValue*    _int_0_scope_value;
+  static ConstantIntValue*    _int_1_scope_value;
+  static ConstantIntValue*    _int_2_scope_value;
+  static LocationValue*       _illegal_value;
+
   jint pd_next_offset(NativeInstruction* inst, jint pc_offset, oop method);
   void pd_patch_OopData(int pc_offset, oop data);
   void pd_patch_DataSectionReference(int pc_offset, oop data);

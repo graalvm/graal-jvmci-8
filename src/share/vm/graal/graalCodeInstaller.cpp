@@ -52,6 +52,18 @@
 # include "vmreg_ppc.inline.hpp"
 #endif
 
+
+// frequently used constants
+// Allocate them with new so they are never destroyed (otherwise, a
+// forced exit could destroy these objects while they are still in
+// use).
+ConstantOopWriteValue* CodeInstaller::_oop_null_scope_value = new (ResourceObj::C_HEAP, mtCompiler) ConstantOopWriteValue(NULL);
+ConstantIntValue*      CodeInstaller::_int_m1_scope_value = new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(-1);
+ConstantIntValue*      CodeInstaller::_int_0_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(0);
+ConstantIntValue*      CodeInstaller::_int_1_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(1);
+ConstantIntValue*      CodeInstaller::_int_2_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(2);
+LocationValue*         CodeInstaller::_illegal_value = new (ResourceObj::C_HEAP, mtCompiler) LocationValue(Location());
+
 Method* getMethodFromHotSpotMethod(oop hotspot_method) {
   assert(hotspot_method != NULL && hotspot_method->is_a(HotSpotResolvedJavaMethod::klass()), "sanity");
   return asMethod(HotSpotResolvedJavaMethod::metaspaceMethod(hotspot_method));
@@ -192,7 +204,7 @@ static void record_metadata_in_patch(oop data, OopRecorder* oop_recorder) {
 ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, OopRecorder* oop_recorder) {
   second = NULL;
   if (value == Value::ILLEGAL()) {
-    return new LocationValue(Location::new_stk_loc(Location::invalid, 0));
+    return _illegal_value;
   }
 
   oop lirKind = AbstractValue::lirKind(value);
@@ -283,17 +295,23 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
         return new ConstantLongValue(prim);
       } else if (type == T_INT || type == T_FLOAT) {
         jint prim = (jint)PrimitiveConstant::primitive(value);
-        return new ConstantIntValue(prim);
+        switch (prim) {
+          case -1: return _int_m1_scope_value;
+          case  0: return _int_0_scope_value;
+          case  1: return _int_1_scope_value;
+          case  2: return _int_2_scope_value;
+          default: return new ConstantIntValue(prim);
+        }
       } else {
         assert(type == T_LONG || type == T_DOUBLE, "unexpected primitive constant type");
         jlong prim = PrimitiveConstant::primitive(value);
-        second = new ConstantIntValue(0);
+        second = _int_1_scope_value;
         return new ConstantLongValue(prim);
       }
     } else {
         assert(reference, "unexpected object constant type");
       if (value->is_a(NullConstant::klass()) || value->is_a(HotSpotCompressedNullConstant::klass())) {
-        return new ConstantOopWriteValue(NULL);
+        return _oop_null_scope_value;
       } else {
         assert(value->is_a(HotSpotObjectConstant::klass()), "unexpected constant type");
         oop obj = HotSpotObjectConstant::object(value);
@@ -328,10 +346,10 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
         // we're trying to put ints into a long array... this isn't really valid, but it's used for some optimizations.
         // add an int 0 constant
 #ifdef VM_LITTLE_ENDIAN
-        cur_second = new ConstantIntValue(0);
+        cur_second = _int_0_scope_value;
 #else
         cur_second = value;
-        value = new ConstantIntValue(0);
+        value = _int_0_scope_value;
 #endif
       }
 
@@ -747,9 +765,9 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
 
     assert(local_count + expression_count + monitor_count == values->length(), "unexpected values length");
 
-    GrowableArray<ScopeValue*>* locals = new GrowableArray<ScopeValue*> ();
-    GrowableArray<ScopeValue*>* expressions = new GrowableArray<ScopeValue*> ();
-    GrowableArray<MonitorValue*>* monitors = new GrowableArray<MonitorValue*> ();
+    GrowableArray<ScopeValue*>* locals = local_count > 0 ? new GrowableArray<ScopeValue*> (local_count) : NULL;
+    GrowableArray<ScopeValue*>* expressions = expression_count > 0 ? new GrowableArray<ScopeValue*> (expression_count) : NULL;
+    GrowableArray<MonitorValue*>* monitors = monitor_count > 0 ? new GrowableArray<MonitorValue*> (monitor_count) : NULL;
 
     if (TraceGraal >= 2) {
       tty->print_cr("Scope at bci %d with %d values", bci, values->length());
