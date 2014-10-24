@@ -3146,9 +3146,10 @@ def checkstyle(args):
             continue
         sourceDirs = p.source_dirs()
 
-        csConfig = join(p.dir, '.checkstyle_checks.xml')
-        if not exists(csConfig):
-            abort('ERROR: Checkstyle configuration for project {} is missing: {}'.format(p.name, csConfig))
+        config = join(project(p.checkstyleProj).dir, '.checkstyle_checks.xml')
+        if not exists(config):
+            logv('[No Checkstyle configuration foudn for {0} - skipping]'.format(p))
+            continue
 
         # skip checking this Java project if its Java compliance level is "higher" than the configured JDK
         jdk = java(p.javaCompliance)
@@ -3174,26 +3175,7 @@ def checkstyle(args):
                     log('[all Java sources in {0} already checked - skipping]'.format(sourceDir))
                 continue
 
-            dotCheckstyleXML = xml.dom.minidom.parse(csConfig)
-            localCheckConfig = dotCheckstyleXML.getElementsByTagName('local-check-config')[0]
-            configLocation = localCheckConfig.getAttribute('location')
-            configType = localCheckConfig.getAttribute('type')
-            if configType == 'project':
-                # Eclipse plugin "Project Relative Configuration" format:
-                #
-                #  '/<project_name>/<suffix>'
-                #
-                if configLocation.startswith('/'):
-                    name, _, suffix = configLocation.lstrip('/').partition('/')
-                    config = join(project(name).dir, suffix)
-                else:
-                    config = join(p.dir, configLocation)
-            else:
-                logv('[unknown Checkstyle configuration type "' + configType + '" in {0} - skipping]'.format(sourceDir))
-                continue
-
             exclude = join(p.dir, '.checkstyle.exclude')
-
             if exists(exclude):
                 with open(exclude) as f:
                     # Convert patterns to OS separators

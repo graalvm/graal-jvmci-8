@@ -19,6 +19,15 @@ suite = {
       "dependencies" : ["HAMCREST"],
     },
 
+    "CHECKSTYLE" : {
+      "path" : "lib/checkstyle-6.0-all.jar",
+      "urls" : [
+        "http://lafo.ssw.uni-linz.ac.at/graal-external-deps/checkstyle-6.0-all.jar",
+        "jar:http://sourceforge.net/projects/checkstyle/files/checkstyle/6.0/checkstyle-6.0-bin.zip/download!/checkstyle-6.0/checkstyle-6.0-all.jar",
+      ],
+      "sha1" : "2bedc7feded58b5fd65595323bfaf7b9bb6a3c7a",
+    },
+
     "HAMCREST" : {
       "path" : "lib/hamcrest-core-1.3.jar",
       "urls" : [

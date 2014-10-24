@@ -1533,6 +1533,10 @@ def gate(args, gate_body=_basic_gate_body):
         with Task('BuildJavaWithJavac', tasks):
             build(['-p', '--no-native', '--force-javac'])
 
+        with Task('Checkstyle', tasks) as t:
+            if mx.checkstyle([]) != 0:
+                t.abort('Checkstyle warnings were found')
+
         with Task('Checkheaders', tasks) as t:
             if checkheaders([]) != 0:
                 t.abort('Checkheaders warnings were found')
@@ -2271,7 +2275,7 @@ def checkheaders(args):
         if p.native:
             continue
 
-        csConfig = join(mx.project(p.checkstyleProj).dir, '.checkstyle_checks.xml.disabled')
+        csConfig = join(mx.project(p.checkstyleProj).dir, '.checkstyle_checks.xml')
         dom = xml.dom.minidom.parse(csConfig)
         for module in dom.getElementsByTagName('module'):
             if module.getAttribute('name') == 'RegexpHeader':
