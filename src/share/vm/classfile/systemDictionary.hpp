@@ -195,10 +195,6 @@ class Ticks;
   GRAAL_ONLY(do_klass(HotSpotCompiledRuntimeStub_klass,      com_oracle_graal_hotspot_HotSpotCompiledRuntimeStub,          Graal)) \
   GRAAL_ONLY(do_klass(HotSpotForeignCallLinkage_klass,       com_oracle_graal_hotspot_HotSpotForeignCallLinkage,           Graal)) \
   GRAAL_ONLY(do_klass(HotSpotReferenceMap_klass,             com_oracle_graal_hotspot_HotSpotReferenceMap,                 Graal)) \
-  GRAAL_ONLY(do_klass(DataSection_klass,                     com_oracle_graal_hotspot_data_DataSection,                    Graal)) \
-  GRAAL_ONLY(do_klass(DataSectionReference_klass,            com_oracle_graal_hotspot_data_DataSectionReference,           Graal)) \
-  GRAAL_ONLY(do_klass(MetaspaceData_klass,                   com_oracle_graal_hotspot_data_MetaspaceData,                  Graal)) \
-  GRAAL_ONLY(do_klass(OopData_klass,                         com_oracle_graal_hotspot_data_OopData,                        Graal)) \
   GRAAL_ONLY(do_klass(HotSpotInstalledCode_klass,            com_oracle_graal_hotspot_meta_HotSpotInstalledCode,           Graal)) \
   GRAAL_ONLY(do_klass(HotSpotNmethod_klass,                  com_oracle_graal_hotspot_meta_HotSpotNmethod,                 Graal)) \
   GRAAL_ONLY(do_klass(HotSpotResolvedJavaMethod_klass,       com_oracle_graal_hotspot_meta_HotSpotResolvedJavaMethod,      Graal)) \
@@ -221,7 +217,9 @@ class Ticks;
   GRAAL_ONLY(do_klass(BytecodeFrame_klass,                   com_oracle_graal_api_code_BytecodeFrame,                      Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_klass,               com_oracle_graal_api_code_CompilationResult,                  Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_Call_klass,          com_oracle_graal_api_code_CompilationResult_Call,             Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_ConstantReference_klass, com_oracle_graal_api_code_CompilationResult_ConstantReference, Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_DataPatch_klass,     com_oracle_graal_api_code_CompilationResult_DataPatch,        Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_DataSectionReference_klass, com_oracle_graal_api_code_CompilationResult_DataSectionReference, Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_ExceptionHandler_klass, com_oracle_graal_api_code_CompilationResult_ExceptionHandler, Graal))\
   GRAAL_ONLY(do_klass(CompilationResult_Mark_klass,          com_oracle_graal_api_code_CompilationResult_Mark,             Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_Infopoint_klass,     com_oracle_graal_api_code_CompilationResult_Infopoint,        Graal)) \

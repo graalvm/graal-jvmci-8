@@ -58,11 +58,11 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, oop 
   }
 }
 
-void CodeInstaller::pd_patch_OopData(int pc_offset, oop data) {
+void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
   address pc = _instructions->start() + pc_offset;
-  Handle obj = OopData::object(data);
+  Handle obj = HotSpotObjectConstant::object(constant);
   jobject value = JNIHandles::make_local(obj());
-  if (OopData::compressed(data)) {
+  if (HotSpotObjectConstant::compressed(constant)) {
     address operand = Assembler::locate_operand(pc, Assembler::narrow_oop_operand);
     int oop_index = _oop_recorder->find_index(value);
     _instructions->relocate(pc, oop_Relocation::spec(oop_index), Assembler::narrow_oop_operand);
@@ -75,20 +75,19 @@ void CodeInstaller::pd_patch_OopData(int pc_offset, oop data) {
   }
 }
 
-void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, oop data) {
+void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset) {
   address pc = _instructions->start() + pc_offset;
-  jint offset = DataSectionReference::offset(data);
 
   address operand = Assembler::locate_operand(pc, Assembler::disp32_operand);
   address next_instruction = Assembler::locate_next_instruction(pc);
-  address dest = _constants->start() + offset;
+  address dest = _constants->start() + data_offset;
 
   long disp = dest - next_instruction;
   assert(disp == (jint) disp, "disp doesn't fit in 32 bits");
   *((jint*) operand) = (jint) disp;
 
   _instructions->relocate(pc, section_word_Relocation::spec((address) dest, CodeBuffer::SECT_CONSTS), Assembler::disp32_operand);
-  TRACE_graal_3("relocating at %p/%p with destination at %p (%d)", pc, operand, dest, offset);
+  TRACE_graal_3("relocating at %p/%p with destination at %p (%d)", pc, operand, dest, data_offset);
 }
 
 void CodeInstaller::pd_relocate_CodeBlob(CodeBlob* cb, NativeInstruction* inst) {

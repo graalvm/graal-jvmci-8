@@ -53,6 +53,7 @@ private:
   Arena         _arena;
 
   jobject       _data_section_handle;
+  jobject       _data_section_patches_handle;
   jobject       _sites_handle;
   jobject       _exception_handlers_handle;
   CodeOffsets   _offsets;
@@ -86,8 +87,8 @@ private:
   static LocationValue*       _illegal_value;
 
   jint pd_next_offset(NativeInstruction* inst, jint pc_offset, oop method);
-  void pd_patch_OopData(int pc_offset, oop data);
-  void pd_patch_DataSectionReference(int pc_offset, oop data);
+  void pd_patch_OopConstant(int pc_offset, Handle& constant);
+  void pd_patch_DataSectionReference(int pc_offset, int data_offset);
   void pd_relocate_CodeBlob(CodeBlob* cb, NativeInstruction* inst);
   void pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination);
   void pd_relocate_JavaMethod(oop method, jint pc_offset);
@@ -96,6 +97,7 @@ private:
   objArrayOop sites() { return (objArrayOop) JNIHandles::resolve(_sites_handle); }
   arrayOop code() { return (arrayOop) JNIHandles::resolve(_code_handle); }
   arrayOop data_section() { return (arrayOop) JNIHandles::resolve(_data_section_handle); }
+  objArrayOop data_section_patches() { return (objArrayOop) JNIHandles::resolve(_data_section_patches_handle); }
   objArrayOop exception_handlers() { return (objArrayOop) JNIHandles::resolve(_exception_handlers_handle); }
 #ifndef PRODUCT
   objArrayOop comments() { return (objArrayOop) JNIHandles::resolve(_comments_handle); }

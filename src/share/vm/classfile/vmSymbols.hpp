@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -302,10 +302,6 @@
   GRAAL_ONLY(template(com_oracle_graal_hotspot_HotSpotForeignCallLinkage,       "com/oracle/graal/hotspot/HotSpotForeignCallLinkage"))            \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_HotSpotReferenceMap,             "com/oracle/graal/hotspot/HotSpotReferenceMap"))                  \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_bridge_CompilerToVMImpl,         "com/oracle/graal/hotspot/bridge/CompilerToVMImpl"))              \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_data_DataSection,                "com/oracle/graal/hotspot/data/DataSection"))                     \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_data_DataSectionReference,       "com/oracle/graal/hotspot/data/DataSectionReference"))            \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_data_MetaspaceData,              "com/oracle/graal/hotspot/data/MetaspaceData"))                   \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_data_OopData,                    "com/oracle/graal/hotspot/data/OopData"))                         \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotInstalledCode,       "com/oracle/graal/hotspot/meta/HotSpotInstalledCode"))            \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotNmethod,             "com/oracle/graal/hotspot/meta/HotSpotNmethod"))                  \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotResolvedJavaMethod,  "com/oracle/graal/hotspot/meta/HotSpotResolvedJavaMethod"))       \
@@ -335,7 +331,9 @@
   GRAAL_ONLY(template(com_oracle_graal_api_code_Assumptions_CallSiteTargetValue,"com/oracle/graal/api/code/Assumptions$CallSiteTargetValue"))     \
   GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult,              "com/oracle/graal/api/code/CompilationResult"))                   \
   GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_Call,         "com/oracle/graal/api/code/CompilationResult$Call"))              \
+  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_ConstantReference, "com/oracle/graal/api/code/CompilationResult$ConstantReference")) \
   GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_DataPatch,    "com/oracle/graal/api/code/CompilationResult$DataPatch"))         \
+  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_DataSectionReference, "com/oracle/graal/api/code/CompilationResult$DataSectionReference")) \
   GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_ExceptionHandler, "com/oracle/graal/api/code/CompilationResult$ExceptionHandler")) \
   GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_Mark,         "com/oracle/graal/api/code/CompilationResult$Mark"))              \
   GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_Infopoint,    "com/oracle/graal/api/code/CompilationResult$Infopoint"))         \

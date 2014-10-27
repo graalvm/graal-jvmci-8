@@ -199,8 +199,8 @@ static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder)
   }
 }
 
-static void record_metadata_in_patch(oop data, OopRecorder* oop_recorder) {
-  record_metadata_reference(MetaspaceData::annotation(data), MetaspaceData::value(data), MetaspaceData::compressed(data) != 0, oop_recorder);
+static void record_metadata_in_patch(Handle& constant, OopRecorder* oop_recorder) {
+  record_metadata_reference(HotSpotMetaspaceConstant::metaspaceObject(constant), HotSpotMetaspaceConstant::primitive(constant), HotSpotMetaspaceConstant::compressed(constant), oop_recorder);
 }
 
 ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, OopRecorder* oop_recorder) {
@@ -498,12 +498,13 @@ void CodeInstaller::initialize_fields(oop compiled_code) {
 
   // Pre-calculate the constants section size.  This is required for PC-relative addressing.
   _data_section_handle = JNIHandles::make_local(HotSpotCompiledCode::dataSection(compiled_code));
-  guarantee(DataSection::sectionAlignment(data_section()) <= _constants->alignment(), "Alignment inside constants section is restricted by alignment of section begin");
-  typeArrayHandle data = DataSection::data(data_section());
-  _constants_size = data->length();
+  guarantee(HotSpotCompiledCode::dataSectionAlignment(compiled_code) <= _constants->alignment(), "Alignment inside constants section is restricted by alignment of section begin");
+  _constants_size = data_section()->length();
   if (_constants_size > 0) {
     _constants_size = align_size_up(_constants_size, _constants->alignment());
   }
+
+  _data_section_patches_handle = JNIHandles::make_local(HotSpotCompiledCode::dataSectionPatches(compiled_code));
 
 #ifndef PRODUCT
   _comments_handle = JNIHandles::make_local(HotSpotCompiledCode::comments(compiled_code));
@@ -556,30 +557,33 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
   if (!_instructions->allocates2(end_pc)) {
     return false;
   }
-  memcpy(_instructions->start(), code()->base(T_BYTE), _code_size);
+  memcpy(_instructions->start(), code()->base(T_BYTE), code()->length());
   _instructions->set_end(end_pc);
 
   // copy the constant data into the newly created CodeBuffer
   address end_data = _constants->start() + _constants_size;
-  typeArrayHandle data(DataSection::data(data_section()));
-  memcpy(_constants->start(), data->base(T_BYTE), data->length());
+  memcpy(_constants->start(), data_section()->base(T_BYTE), _constants_size);
   _constants->set_end(end_data);
 
   
-  objArrayHandle patches = DataSection::patches(data_section());
-  for (int i = 0; i < patches->length(); i++) {
-    Handle patch = patches->obj_at(i);
-    Handle data = CompilationResult_DataPatch::data(patch);
-    if (data->is_a(MetaspaceData::klass())) {
-      record_metadata_in_patch(data(), _oop_recorder);
-    } else if (data->is_a(OopData::klass())) {
-      Handle obj = OopData::object(data);
+  for (int i = 0; i < data_section_patches()->length(); i++) {
+    Handle patch = data_section_patches()->obj_at(i);
+    Handle reference = CompilationResult_DataPatch::reference(patch);
+    assert(reference->is_a(CompilationResult_ConstantReference::klass()), err_msg("patch in data section must be a ConstantReference"));
+    Handle constant = CompilationResult_ConstantReference::constant(reference);
+    if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
+      record_metadata_in_patch(constant, _oop_recorder);
+    } else if (constant->is_a(HotSpotObjectConstant::klass())) {
+      Handle obj = HotSpotObjectConstant::object(constant);
       jobject value = JNIHandles::make_local(obj());
       int oop_index = _oop_recorder->find_index(value);
 
       address dest = _constants->start() + CompilationResult_Site::pcOffset(patch);
-      assert(!OopData::compressed(data), err_msg("unexpected compressed oop in data section"));
-      _constants->relocate(dest, oop_Relocation::spec(oop_index));
+      if (HotSpotObjectConstant::compressed(constant)) {
+        fatal("unexpected compressed oop in data section");
+      } else {
+        _constants->relocate(dest, oop_Relocation::spec(oop_index));
+      }
     } else {
       ShouldNotReachHere();
     }
@@ -898,13 +902,20 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, oop site) {
 }
 
 void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, oop site) {
-  oop data = CompilationResult_DataPatch::data(site);
-  if (data->is_a(MetaspaceData::klass())) {
-    record_metadata_in_patch(data, _oop_recorder);
-  } else if (data->is_a(OopData::klass())) {
-    pd_patch_OopData(pc_offset, data);
-  } else if (data->is_a(DataSectionReference::klass())) {
-    pd_patch_DataSectionReference(pc_offset, data);
+  oop reference = CompilationResult_DataPatch::reference(site);
+  if (reference->is_a(CompilationResult_ConstantReference::klass())) {
+    Handle constant = CompilationResult_ConstantReference::constant(reference);
+    if (constant->is_a(HotSpotObjectConstant::klass())) {
+      pd_patch_OopConstant(pc_offset, constant);
+    } else if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
+      record_metadata_in_patch(constant, _oop_recorder);
+    } else {
+      fatal("unknown constant type in data patch");
+    }
+  } else if (reference->is_a(CompilationResult_DataSectionReference::klass())) {
+    int data_offset = CompilationResult_DataSectionReference::offset(reference);
+    assert(0 <= data_offset && data_offset < _constants_size, err_msg("data offset 0x%X points outside data section (size 0x%X)", data_offset, _constants_size));
+    pd_patch_DataSectionReference(pc_offset, data_offset);
   } else {
     fatal("unknown data patch type");
   }

@@ -40,11 +40,11 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, oop 
   }
 }
 
-void CodeInstaller::pd_patch_OopData(int pc_offset, oop data) {
+void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
   address pc = _instructions->start() + pc_offset;
-  Handle obj = OopData::object(data);
+  Handle obj = HotSpotObjectConstant::object(constant);
   jobject value = JNIHandles::make_local(obj());
-  if (OopData::compressed(data)) {
+  if (HotSpotObjectConstant::compressed(constant)) {
     fatal("unimplemented: narrow oop relocation");
   } else {
     NativeMovConstReg* move = nativeMovConstReg_at(pc);
@@ -58,15 +58,14 @@ void CodeInstaller::pd_patch_OopData(int pc_offset, oop data) {
   }
 }
 
-void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, oop data) {
+void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset) {
   address pc = _instructions->start() + pc_offset;
   address const_start = _constants->start();
-  jint offset = DataSectionReference::offset(data);
-  address dest = _constants->start() + offset;
+  address dest = _constants->start() + data_offset;
 
   _instructions->relocate(pc + NativeMovConstReg::sethi_offset, internal_word_Relocation::spec((address) dest));
   _instructions->relocate(pc + NativeMovConstReg::add_offset, internal_word_Relocation::spec((address) dest));
-  TRACE_graal_3("relocating at %p with destination at %p (%d)", pc, dest, offset);
+  TRACE_graal_3("relocating at %p with destination at %p (%d)", pc, dest, data_offset);
 }
 
 void CodeInstaller::pd_relocate_CodeBlob(CodeBlob* cb, NativeInstruction* inst) {
