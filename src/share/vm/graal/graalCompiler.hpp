@@ -81,6 +81,9 @@ public:
   void reset_compilation_stats();
 #endif // COMPILERGRAAL
 
+  // Print compilation timers and statistics
+  static void print_compilation_timers();
+
   static elapsedTimer* codeInstallTimer() { return &_codeInstallTimer; }
 
 #ifndef PRODUCT
