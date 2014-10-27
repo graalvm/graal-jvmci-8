@@ -580,7 +580,11 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
 
       address dest = _constants->start() + CompilationResult_Site::pcOffset(patch);
       if (HotSpotObjectConstant::compressed(constant)) {
-        fatal("unexpected compressed oop in data section");
+#ifdef _LP64
+        _constants->relocate(dest, oop_Relocation::spec(oop_index), relocInfo::narrow_oop_in_const);
+#else
+        fatal("unexpected compressed oop in 32-bit mode");
+#endif
       } else {
         _constants->relocate(dest, oop_Relocation::spec(oop_index));
       }

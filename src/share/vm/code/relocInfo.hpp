@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -446,6 +446,11 @@ class relocInfo VALUE_OBJ_CLASS_SPEC {
   };
  public:
   enum {
+#ifdef _LP64
+    // for use in format
+    // format_width must be at least 1 on _LP64
+    narrow_oop_in_const = 1,
+#endif
     // Conservatively large estimate of maximum length (in shorts)
     // of any relocation record.
     // Extended format is length prefix, data words, and tag/offset suffix.
@@ -765,6 +770,9 @@ class Relocation VALUE_OBJ_CLASS_SPEC {
   }
 
  protected:
+  // platform-independent utility for patching constant section
+  void       const_set_data_value    (address x);
+  void       const_verify_data_value (address x);
   // platform-dependent utilities for decoding and patching instructions
   void       pd_set_data_value       (address x, intptr_t off, bool verify_only = false); // a set or mem-ref
   void       pd_verify_data_value    (address x, intptr_t off) { pd_set_data_value(x, off, true); }
@@ -875,13 +883,13 @@ class DataRelocation : public Relocation {
   void        set_value(address x)             { set_value(x, offset()); }
   void        set_value(address x, intptr_t o) {
     if (addr_in_const())
-      *(address*)addr() = x;
+      const_set_data_value(x);
     else
       pd_set_data_value(x, o);
   }
   void        verify_value(address x) {
     if (addr_in_const())
-      assert(*(address*)addr() == x, "must agree");
+      const_verify_data_value(x);
     else
       pd_verify_data_value(x, offset());
   }

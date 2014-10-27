@@ -30,6 +30,7 @@
 #include "memory/resourceArea.hpp"
 #include "runtime/stubCodeGenerator.hpp"
 #include "utilities/copy.hpp"
+#include "oops/oop.inline.hpp"
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
@@ -422,6 +423,30 @@ address Relocation::value() {
 
 void Relocation::set_value(address x) {
   ShouldNotReachHere();
+}
+
+void Relocation::const_set_data_value(address x) {
+#ifdef _LP64
+  if (format() == relocInfo::narrow_oop_in_const) {
+    *(narrowOop*)addr() = oopDesc::encode_heap_oop((oop) x);
+  } else {
+#endif
+    *(address*)addr() = x;
+#ifdef _LP64
+  }
+#endif
+}
+
+void Relocation::const_verify_data_value(address x) {
+#ifdef _LP64
+  if (format() == relocInfo::narrow_oop_in_const) {
+    assert(*(narrowOop*)addr() == oopDesc::encode_heap_oop((oop) x), "must agree");
+  } else {
+#endif
+    assert(*(address*)addr() == x, "must agree");
+#ifdef _LP64
+  }
+#endif
 }
 
 
