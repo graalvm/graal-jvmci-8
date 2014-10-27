@@ -2436,6 +2436,11 @@ void CompileBroker::print_times(bool per_compiler, bool aggregate) {
   total_compile_count = osr_compile_count + standard_compile_count;
   total_compilation.add(osr_compilation);
   total_compilation.add(standard_compilation);
+
+#ifndef COMPILERGRAAL
+  // In hosted mode, print the Graal compiler specific counters manually.
+  GraalCompiler::print_compilation_timers();
+#endif
 #else
   elapsedTimer standard_compilation = CompileBroker::_t_standard_compilation;
   elapsedTimer osr_compilation = CompileBroker::_t_osr_compilation;
