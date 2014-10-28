@@ -165,7 +165,7 @@ static OopMap* create_oop_map(jint total_frame_size, jint parameter_count, oop d
   return map;
 }
 
-static void record_metadata_reference(oop obj, jlong prim, bool compressed, OopRecorder* oop_recorder) {
+static void record_metadata_reference(oop obj, jlong prim, jboolean compressed, OopRecorder* oop_recorder) {
   if (obj->is_a(HotSpotResolvedObjectType::klass())) {
     Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectType::javaClass(obj));
     if (compressed) {
