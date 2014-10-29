@@ -2098,9 +2098,12 @@ def jol(args):
     """Java Object Layout"""
     joljar = mx.library('JOL_INTERNALS').get_path(resolve=True)
     candidates = mx.findclass(args, logToConsole=False, matcher=lambda s, classname: s == classname or classname.endswith('.' + s) or classname.endswith('$' + s))
-    if len(candidates) > 10:
-        print "Found %d candidates. Please be more precise." % (len(candidates))
-        return
+
+    if len(candidates) > 0:
+        candidates = mx.select_items(list(mx.OrderedDict.fromkeys(candidates)))
+    else:
+        # mx.findclass can be mistaken, don't give up yet
+        candidates = args
 
     vm(['-javaagent:' + joljar, '-cp', os.pathsep.join([mx.classpath(), joljar]), "org.openjdk.jol.MainObjectInternals"] + candidates)
 
