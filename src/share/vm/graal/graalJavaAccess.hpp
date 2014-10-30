@@ -177,7 +177,7 @@ void graal_compute_offsets();
     typeArrayOop_field(BitSet, words, "[J")                                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(BytecodeFrame)                                                                                                                                   \
-    objArrayOop_field(BytecodeFrame, values, "[Lcom/oracle/graal/api/meta/Value;")                                                                             \
+    objArrayOop_field(BytecodeFrame, values, "[Lcom/oracle/graal/api/meta/JavaValue;")                                                                         \
     int_field(BytecodeFrame, numLocals)                                                                                                                        \
     int_field(BytecodeFrame, numStack)                                                                                                                         \
     int_field(BytecodeFrame, numLocks)                                                                                                                         \
@@ -249,10 +249,10 @@ void graal_compute_offsets();
   start_class(VirtualObject)                                                                                                                                   \
     int_field(VirtualObject, id)                                                                                                                               \
     oop_field(VirtualObject, type, "Lcom/oracle/graal/api/meta/ResolvedJavaType;")                                                                             \
-    objArrayOop_field(VirtualObject, values, "[Lcom/oracle/graal/api/meta/Value;")                                                                             \
+    objArrayOop_field(VirtualObject, values, "[Lcom/oracle/graal/api/meta/JavaValue;")                                                                         \
   end_class                                                                                                                                                    \
   start_class(HotSpotMonitorValue)                                                                                                                             \
-    oop_field(HotSpotMonitorValue, owner, "Lcom/oracle/graal/api/meta/Value;")                                                                                 \
+    oop_field(HotSpotMonitorValue, owner, "Lcom/oracle/graal/api/meta/JavaValue;")                                                                             \
     oop_field(HotSpotMonitorValue, slot, "Lcom/oracle/graal/api/code/StackSlot;")                                                                              \
     boolean_field(HotSpotMonitorValue, eliminated)                                                                                                             \
   end_class                                                                                                                                                    \
