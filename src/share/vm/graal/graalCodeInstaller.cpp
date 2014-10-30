@@ -191,7 +191,7 @@ static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder)
   if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
     oop obj = HotSpotMetaspaceConstant::metaspaceObject(constant);
     jlong prim = HotSpotMetaspaceConstant::primitive(constant);
-    assert(Kind::typeChar(Constant::kind(constant)) == 'j', "must have word kind");
+    assert(Kind::typeChar(Value::kind(constant)) == 'j', "must have word kind");
     assert(obj != NULL, "must have an object");
     assert(prim != 0, "must have a primitive value");
 
@@ -288,7 +288,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
       second = value;
     }
     return value;
-  } else if (value->is_a(Constant::klass())){
+  } else if (value->is_a(JavaConstant::klass())){
     record_metadata_in_constant(value, oop_recorder);
     if (value->is_a(PrimitiveConstant::klass())) {
       assert(!reference, "unexpected primitive constant type");

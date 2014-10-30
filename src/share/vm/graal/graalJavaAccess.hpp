@@ -190,8 +190,7 @@ void graal_compute_offsets();
     oop_field(BytecodePosition, method, "Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                                      \
     int_field(BytecodePosition, bci)                                                                                                                           \
   end_class                                                                                                                                                    \
-  start_class(Constant)                                                                                                                                        \
-    oop_field(Constant, kind, "Lcom/oracle/graal/api/meta/Kind;")                                                                                              \
+  start_class(JavaConstant)                                                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(PrimitiveConstant)                                                                                                                               \
     long_field(PrimitiveConstant, primitive)                                                                                                                   \
@@ -201,7 +200,7 @@ void graal_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(NullConstant)                                                                                                                                    \
   end_class                                                                                                                                                    \
-  start_class(HotSpotCompressedNullConstant)                                                                                                                                    \
+  start_class(HotSpotCompressedNullConstant)                                                                                                                   \
   end_class                                                                                                                                                    \
   start_class(HotSpotObjectConstant)                                                                                                                           \
     oop_field(HotSpotObjectConstant, object, "Ljava/lang/Object;")                                                                                             \

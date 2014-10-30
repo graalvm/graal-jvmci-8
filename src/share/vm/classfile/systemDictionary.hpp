@@ -233,7 +233,7 @@ class Ticks;
   GRAAL_ONLY(do_klass(StackSlot_klass,                       com_oracle_graal_api_code_StackSlot,                          Graal)) \
   GRAAL_ONLY(do_klass(VirtualObject_klass,                   com_oracle_graal_api_code_VirtualObject,                      Graal)) \
   GRAAL_ONLY(do_klass(SpeculationLog_klass,                  com_oracle_graal_api_code_SpeculationLog,                     Graal)) \
-  GRAAL_ONLY(do_klass(Constant_klass,                        com_oracle_graal_api_meta_Constant,                           Graal)) \
+  GRAAL_ONLY(do_klass(JavaConstant_klass,                    com_oracle_graal_api_meta_JavaConstant,                       Graal)) \
   GRAAL_ONLY(do_klass(PrimitiveConstant_klass,               com_oracle_graal_api_meta_PrimitiveConstant,                  Graal)) \
   GRAAL_ONLY(do_klass(RawConstant_klass,                     com_oracle_graal_api_meta_RawConstant,                        Graal)) \
   GRAAL_ONLY(do_klass(NullConstant_klass,                    com_oracle_graal_api_meta_NullConstant,                       Graal)) \
