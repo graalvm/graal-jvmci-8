@@ -190,8 +190,8 @@ void graal_compute_offsets();
     oop_field(BytecodePosition, method, "Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                                      \
     int_field(BytecodePosition, bci)                                                                                                                           \
   end_class                                                                                                                                                    \
-  start_class(AbstractConstant)                                                                                                                                \
-    oop_field(AbstractConstant, kind, "Lcom/oracle/graal/api/meta/Kind;")                                                                                      \
+  start_class(Constant)                                                                                                                                        \
+    oop_field(Constant, kind, "Lcom/oracle/graal/api/meta/Kind;")                                                                                              \
   end_class                                                                                                                                                    \
   start_class(PrimitiveConstant)                                                                                                                               \
     long_field(PrimitiveConstant, primitive)                                                                                                                   \
@@ -226,11 +226,9 @@ void graal_compute_offsets();
     int_field(LIRKind, referenceMask)                                                                                                                          \
   end_class                                                                                                                                                    \
   start_class(Value)                                                                                                                                           \
+    oop_field(Value, kind, "Lcom/oracle/graal/api/meta/Kind;")                                                                                                 \
+    oop_field(Value, lirKind, "Lcom/oracle/graal/api/meta/LIRKind;")                                                                                           \
     static_oop_field(Value, ILLEGAL, "Lcom/oracle/graal/api/meta/AllocatableValue;");                                                                          \
-  end_class                                                                                                                                                    \
-  start_class(AbstractValue)                                                                                                                                   \
-    oop_field(AbstractValue, kind, "Lcom/oracle/graal/api/meta/Kind;")                                                                                         \
-    oop_field(AbstractValue, lirKind, "Lcom/oracle/graal/api/meta/LIRKind;")                                                                                   \
   end_class                                                                                                                                                    \
   start_class(RegisterValue)                                                                                                                                   \
     oop_field(RegisterValue, reg, "Lcom/oracle/graal/api/code/Register;")                                                                                      \
