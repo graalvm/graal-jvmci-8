@@ -552,19 +552,18 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
 
   buffer.initialize_oop_recorder(_oop_recorder);
 
-  // copy the code into the newly created CodeBuffer
-  address end_pc = _instructions->start() + _code_size;
-  if (!_instructions->allocates2(end_pc)) {
-    return false;
-  }
-  memcpy(_instructions->start(), code()->base(T_BYTE), code()->length());
-  _instructions->set_end(end_pc);
-
   // copy the constant data into the newly created CodeBuffer
   address end_data = _constants->start() + _constants_size;
   memcpy(_constants->start(), data_section()->base(T_BYTE), _constants_size);
   _constants->set_end(end_data);
 
+  // copy the code into the newly created CodeBuffer
+  address end_pc = _instructions->start() + _code_size;
+  if (!_instructions->allocates2(end_pc)) {
+    return false;
+  }
+  memcpy(_instructions->start(), code()->base(T_BYTE), _code_size);
+  _instructions->set_end(end_pc);
   
   for (int i = 0; i < data_section_patches()->length(); i++) {
     Handle patch = data_section_patches()->obj_at(i);
