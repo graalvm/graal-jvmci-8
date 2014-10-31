@@ -1231,6 +1231,24 @@ void Deoptimization::deoptimize_single_frame(JavaThread* thread, frame fr, Deopt
   // Patch the nmethod so that when execution returns to it we will
   // deopt the execution state and return to the interpreter.
   fr.deoptimize(thread);
+
+  if (LogCompilation && xtty != NULL) {
+    nmethod* nm = fr.cb()->as_nmethod_or_null();
+    assert(nm != NULL, "only nmethods can deopt");
+
+    ttyLocker ttyl;
+    xtty->begin_head("deoptimized thread='" UINTX_FORMAT "' compile_id='%d'",
+               thread->osthread()->thread_id(), nm != NULL ? nm->compile_id() : -1);
+    nm->log_identity(xtty);
+    xtty->end_head();
+    for (ScopeDesc* sd = nm->scope_desc_at(fr.pc()); ; sd = sd->sender()) {
+      xtty->begin_elem("jvms bci='%d'", sd->bci());
+      xtty->method(sd->method());
+      xtty->end_elem();
+      if (sd->is_top())  break;
+    }
+    xtty->tail("deoptimized");
+  }
 }
 
 void Deoptimization::deoptimize(JavaThread* thread, frame fr, RegisterMap *map) {
