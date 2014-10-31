@@ -650,6 +650,11 @@ JRT_ENTRY(jboolean, GraalRuntime::thread_is_interrupted(JavaThread* thread, oopD
   }
 JRT_END
 
+JRT_ENTRY(jint, GraalRuntime::test_deoptimize_call_int(JavaThread* thread, int value))
+  deopt_caller();
+  return value;
+JRT_END
+
 // private static GraalRuntime Graal.initializeRuntime()
 JVM_ENTRY(jobject, JVM_GetGraalRuntime(JNIEnv *env, jclass c))
   return GraalRuntime::get_HotSpotGraalRuntime_jobject();
