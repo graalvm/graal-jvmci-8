@@ -1182,6 +1182,9 @@ def _unittest(args, annotations, prefixCp="", blacklist=None, whitelist=None, ve
             cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
             vmArgs = ['-XX:-UseGraalClassLoader'] + vmArgs
 
+        # suppress menubar and dock when running on Mac
+        vmArgs = ['-Djava.awt.headless=true'] + vmArgs
+
         if len(testclasses) == 1:
             # Execute Junit directly when one test is being run. This simplifies
             # replaying the VM execution in a native debugger (e.g., gdb).
