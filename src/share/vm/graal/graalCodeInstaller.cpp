@@ -390,8 +390,10 @@ MonitorValue* CodeInstaller::get_monitor_value(oop value, int total_frame_size, 
 }
 
 void CodeInstaller::initialize_assumptions(oop compiled_code) {
+  JavaThread* thread = JavaThread::current();
+  CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
   _oop_recorder = new OopRecorder(&_arena, true);
-  _dependencies = new Dependencies(&_arena, _oop_recorder);
+  _dependencies = new Dependencies(&_arena, _oop_recorder, compilerThread != NULL ? compilerThread->log() : NULL);
   Handle assumptions_handle = CompilationResult::assumptions(HotSpotCompiledCode::comp(compiled_code));
   if (!assumptions_handle.is_null()) {
     objArrayHandle assumptions(Thread::current(), Assumptions::list(assumptions_handle()));

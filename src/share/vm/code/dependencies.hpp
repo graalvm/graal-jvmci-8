@@ -312,7 +312,7 @@ class Dependencies: public ResourceObj {
     initialize(env);
   }
 #ifdef GRAAL
-  Dependencies(Arena* arena, OopRecorder* oop_recorder);
+  Dependencies(Arena* arena, OopRecorder* oop_recorder, CompileLog* log);
 #endif // GRAAL
 
  private:

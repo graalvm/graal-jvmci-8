@@ -428,6 +428,7 @@ bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependenci
     if (witness != NULL) {
       return false;
     }
+    deps.log_dependency();
   }
 
   return true;

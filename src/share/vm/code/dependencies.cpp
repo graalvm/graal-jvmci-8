@@ -125,9 +125,9 @@ void Dependencies::assert_call_site_target_value(ciCallSite* call_site, ciMethod
 
 #ifdef GRAAL
 
-Dependencies::Dependencies(Arena* arena, OopRecorder* oop_recorder) {
+Dependencies::Dependencies(Arena* arena, OopRecorder* oop_recorder, CompileLog* log) {
   _oop_recorder = oop_recorder;
-  _log = NULL;
+  _log = log;
   _dep_seen = new(arena) GrowableArray<int>(arena, 500, 0, 0);
   _using_dep_values = true;
   DEBUG_ONLY(_dep_values[end_marker] = NULL);
@@ -792,8 +792,14 @@ void Dependencies::DepStream::log_dependency(Klass* witness) {
     }
   }
   if (_deps != NULL && _deps->log() != NULL) {
-    Dependencies::write_dependency_to(_deps->log(),
-                                      type(), nargs, args, witness);
+    if (ciEnv::current() != NULL) {
+      Dependencies::write_dependency_to(_deps->log(),
+                                        type(), nargs, args, witness);
+    } else {
+      // Treat the CompileLog as an xmlstream instead
+      Dependencies::write_dependency_to((xmlStream*)_deps->log(),
+                                        type(), nargs, args, witness);
+    }
   } else {
     Dependencies::write_dependency_to(xtty,
                                       type(), nargs, args, witness);
