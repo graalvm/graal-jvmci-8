@@ -510,7 +510,7 @@ C2V_VMENTRY(void, notifyCompilationStatistics, (JNIEnv *jniEnv, jobject, jint id
   }
 
   if (CITimeEach) {
-    methodHandle method = asMethod(HotSpotResolvedJavaMethod::metaspaceMethod(hotspot_method));
+    methodHandle method = asMethod(HotSpotResolvedJavaMethodImpl::metaspaceMethod(hotspot_method));
     float bytes_per_sec = 1.0 * processedBytecodes / timer.seconds();
     tty->print_cr("%3d   seconds: %f bytes/sec: %f (bytes %d)",
                   id, timer.seconds(), bytes_per_sec, processedBytecodes);

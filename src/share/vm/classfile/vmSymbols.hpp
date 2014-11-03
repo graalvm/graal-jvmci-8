@@ -304,8 +304,8 @@
   GRAAL_ONLY(template(com_oracle_graal_hotspot_bridge_CompilerToVMImpl,         "com/oracle/graal/hotspot/bridge/CompilerToVMImpl"))              \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotInstalledCode,       "com/oracle/graal/hotspot/meta/HotSpotInstalledCode"))            \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotNmethod,             "com/oracle/graal/hotspot/meta/HotSpotNmethod"))                  \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotResolvedJavaMethod,  "com/oracle/graal/hotspot/meta/HotSpotResolvedJavaMethod"))       \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotResolvedObjectType,  "com/oracle/graal/hotspot/meta/HotSpotResolvedObjectType"))       \
+  GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotResolvedJavaMethodImpl, "com/oracle/graal/hotspot/meta/HotSpotResolvedJavaMethodImpl")) \
+  GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotResolvedObjectTypeImpl, "com/oracle/graal/hotspot/meta/HotSpotResolvedObjectTypeImpl")) \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotMonitorValue,        "com/oracle/graal/hotspot/meta/HotSpotMonitorValue"))             \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotCompressedNullConstant, "com/oracle/graal/hotspot/meta/HotSpotCompressedNullConstant")) \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotObjectConstant,      "com/oracle/graal/hotspot/meta/HotSpotObjectConstant"))           \
