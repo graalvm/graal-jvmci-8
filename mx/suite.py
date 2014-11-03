@@ -679,6 +679,7 @@ suite = {
         "com.oracle.graal.graph",
         "com.oracle.graal.api.replacements",
         "com.oracle.graal.lir",
+        "com.oracle.graal.bytecode",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -830,7 +831,6 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.phases",
-        "com.oracle.graal.bytecode",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
