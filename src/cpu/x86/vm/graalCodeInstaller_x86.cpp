@@ -132,7 +132,7 @@ void CodeInstaller::pd_relocate_JavaMethod(oop hotspot_method, jint pc_offset) {
 #ifdef ASSERT
   Method* method = NULL;
   // we need to check, this might also be an unresolved method
-  if (hotspot_method->is_a(HotSpotResolvedJavaMethod::klass())) {
+  if (hotspot_method->is_a(HotSpotResolvedJavaMethodImpl::klass())) {
     method = getMethodFromHotSpotMethod(hotspot_method);
   }
 #endif

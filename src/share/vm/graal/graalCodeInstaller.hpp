@@ -146,7 +146,7 @@ private:
 };
 
 /**
- * Gets the Method metaspace object from a HotSpotResolvedJavaMethod Java object.
+ * Gets the Method metaspace object from a HotSpotResolvedJavaMethodImpl Java object.
  */
 Method* getMethodFromHotSpotMethod(oop hotspot_method);
 

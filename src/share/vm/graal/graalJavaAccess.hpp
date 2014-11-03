@@ -51,8 +51,8 @@ void graal_compute_offsets();
   start_class(HotSpotResolvedObjectType)                                                                                                                       \
     oop_field(HotSpotResolvedObjectType, javaClass, "Ljava/lang/Class;")                                                                                       \
   end_class                                                                                                                                                    \
-  start_class(HotSpotResolvedJavaMethod)                                                                                                                       \
-    long_field(HotSpotResolvedJavaMethod, metaspaceMethod)                                                                                                     \
+  start_class(HotSpotResolvedJavaMethodImpl)                                                                                                                       \
+    long_field(HotSpotResolvedJavaMethodImpl, metaspaceMethod)                                                                                                     \
   end_class                                                                                                                                                    \
   start_class(InstalledCode)                                                                                                                                   \
     long_field(InstalledCode, address)                                                                                                                         \

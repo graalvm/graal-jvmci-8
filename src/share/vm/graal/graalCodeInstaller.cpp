@@ -65,8 +65,8 @@ ConstantIntValue*      CodeInstaller::_int_2_scope_value =  new (ResourceObj::C_
 LocationValue*         CodeInstaller::_illegal_value = new (ResourceObj::C_HEAP, mtCompiler) LocationValue(Location());
 
 Method* getMethodFromHotSpotMethod(oop hotspot_method) {
-  assert(hotspot_method != NULL && hotspot_method->is_a(HotSpotResolvedJavaMethod::klass()), "sanity");
-  return asMethod(HotSpotResolvedJavaMethod::metaspaceMethod(hotspot_method));
+  assert(hotspot_method != NULL && hotspot_method->is_a(HotSpotResolvedJavaMethodImpl::klass()), "sanity");
+  return asMethod(HotSpotResolvedJavaMethodImpl::metaspaceMethod(hotspot_method));
 }
 
 const int MapWordBits = 64;
@@ -175,8 +175,8 @@ static void record_metadata_reference(oop obj, jlong prim, jboolean compressed, 
     }
     int index = oop_recorder->find_index(klass);
     TRACE_graal_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), klass->name()->as_C_string());
-  } else if (obj->is_a(HotSpotResolvedJavaMethod::klass())) {
-    Method* method = (Method*) (address) HotSpotResolvedJavaMethod::metaspaceMethod(obj);
+  } else if (obj->is_a(HotSpotResolvedJavaMethodImpl::klass())) {
+    Method* method = (Method*) (address) HotSpotResolvedJavaMethodImpl::metaspaceMethod(obj);
     assert(!compressed, err_msg("unexpected compressed method pointer %s @ " INTPTR_FORMAT " = " INTPTR_FORMAT, method->name()->as_C_string(), p2i(method), prim));
     int index = oop_recorder->find_index(method);
     TRACE_graal_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), method->name()->as_C_string());
