@@ -166,8 +166,8 @@ static OopMap* create_oop_map(jint total_frame_size, jint parameter_count, oop d
 }
 
 static void record_metadata_reference(oop obj, jlong prim, jboolean compressed, OopRecorder* oop_recorder) {
-  if (obj->is_a(HotSpotResolvedObjectType::klass())) {
-    Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectType::javaClass(obj));
+  if (obj->is_a(HotSpotResolvedObjectTypeImpl::klass())) {
+    Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(obj));
     if (compressed) {
       assert(Klass::decode_klass((narrowKlass) prim) == klass, err_msg("%s @ " INTPTR_FORMAT " != " INTPTR_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
     } else {
@@ -186,7 +186,7 @@ static void record_metadata_reference(oop obj, jlong prim, jboolean compressed, 
   }
 }
 
-// Records any Metadata values embedded in a Constant (e.g., the value returned by HotSpotResolvedObjectType.klass()).
+// Records any Metadata values embedded in a Constant (e.g., the value returned by HotSpotResolvedObjectTypeImpl.klass()).
 static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder) {
   if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
     oop obj = HotSpotMetaspaceConstant::metaspaceObject(constant);
@@ -324,7 +324,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
   } else if (value->is_a(VirtualObject::klass())) {
     oop type = VirtualObject::type(value);
     int id = VirtualObject::id(value);
-    oop javaMirror = HotSpotResolvedObjectType::javaClass(type);
+    oop javaMirror = HotSpotResolvedObjectTypeImpl::javaClass(type);
     Klass* klass = java_lang_Class::as_Klass(javaMirror);
     bool isLongArray = klass == Universe::longArrayKlassObj();
 
@@ -653,15 +653,15 @@ void CodeInstaller::assumption_MethodContents(Handle assumption) {
 
 void CodeInstaller::assumption_NoFinalizableSubclass(Handle assumption) {
   Handle receiverType_handle = Assumptions_NoFinalizableSubclass::receiverType(assumption());
-  Klass* receiverType = java_lang_Class::as_Klass(HotSpotResolvedObjectType::javaClass(receiverType_handle));
+  Klass* receiverType = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(receiverType_handle));
   _dependencies->assert_has_no_finalizable_subclasses(receiverType);
 }
 
 void CodeInstaller::assumption_ConcreteSubtype(Handle assumption) {
   Handle context_handle = Assumptions_ConcreteSubtype::context(assumption());
   Handle subtype_handle = Assumptions_ConcreteSubtype::subtype(assumption());
-  Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectType::javaClass(context_handle));
-  Klass* subtype = java_lang_Class::as_Klass(HotSpotResolvedObjectType::javaClass(subtype_handle));
+  Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
+  Klass* subtype = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(subtype_handle));
 
   if (context != subtype) {
     assert(context->is_abstract(), "");
@@ -676,7 +676,7 @@ void CodeInstaller::assumption_ConcreteMethod(Handle assumption) {
   Handle context_handle = Assumptions_ConcreteMethod::context(assumption());
 
   methodHandle impl = getMethodFromHotSpotMethod(impl_handle());
-  Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectType::javaClass(context_handle));
+  Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
 
   _dependencies->assert_unique_concrete_method(context, impl());
 }

@@ -915,7 +915,7 @@ int compare(ReassignedField* left, ReassignedField* right) {
 }
 
 // Restore fields of an eliminated instance object using the same field order
-// returned by HotSpotResolvedObjectType.getInstanceFields(true)
+// returned by HotSpotResolvedObjectTypeImpl.getInstanceFields(true)
 static int reassign_fields_by_klass(InstanceKlass* klass, frame* fr, RegisterMap* reg_map, ObjectValue* sv, int svIndex, oop obj) {
   if (klass->superklass() != NULL) {
     svIndex = reassign_fields_by_klass(klass->superklass(), fr, reg_map, sv, svIndex, obj);
