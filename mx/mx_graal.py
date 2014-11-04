@@ -1098,11 +1098,13 @@ def _run_tests(args, harness, annotations, testfile, blacklist, whitelist, regex
         projectsCp = mx.classpath([pcp.name for pcp in mx.projects_opt_limit_to_suites() if pcp.javaCompliance <= mx.java().javaCompliance])
     else:
         projs = set()
+        found = False
         if len(tests) == 1 and '#' in tests[0]:
             words = tests[0].split('#')
             if len(words) != 2:
                 mx.abort("Method specification is class#method: " + tests[0])
             t, method = words
+
             for c, p in candidates.iteritems():
                 if t in c:
                     found = True
@@ -1114,7 +1116,6 @@ def _run_tests(args, harness, annotations, testfile, blacklist, whitelist, regex
             for t in tests:
                 if '#' in t:
                     mx.abort('Method specifications can only be used in a single test: ' + t)
-                found = False
                 for c, p in candidates.iteritems():
                     if t in c:
                         found = True
