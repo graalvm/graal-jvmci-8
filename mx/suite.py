@@ -761,7 +761,10 @@ suite = {
     "com.oracle.graal.compiler.amd64.test" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.compiler.test"],
+      "dependencies" : [
+        "com.oracle.graal.amd64",
+        "com.oracle.graal.compiler.test",
+      ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,AMD64,Test",
