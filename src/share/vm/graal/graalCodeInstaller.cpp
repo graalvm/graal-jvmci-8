@@ -473,7 +473,7 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
 
   if (cb != NULL) {
     // Make sure the pre-calculated constants section size was correct.
-    guarantee((cb->code_begin() - cb->content_begin()) == _constants_size, err_msg("%d != %d", (int)(cb->code_begin() - cb->content_begin()), _constants_size));
+    guarantee((cb->code_begin() - cb->content_begin()) >= _constants_size, err_msg("%d < %d", (int)(cb->code_begin() - cb->content_begin()), _constants_size));
   }
   return result;
 }
@@ -502,9 +502,6 @@ void CodeInstaller::initialize_fields(oop compiled_code) {
   _data_section_handle = JNIHandles::make_local(HotSpotCompiledCode::dataSection(compiled_code));
   guarantee(HotSpotCompiledCode::dataSectionAlignment(compiled_code) <= _constants->alignment(), "Alignment inside constants section is restricted by alignment of section begin");
   _constants_size = data_section()->length();
-  if (_constants_size > 0) {
-    _constants_size = align_size_up(_constants_size, _constants->alignment());
-  }
 
   _data_section_patches_handle = JNIHandles::make_local(HotSpotCompiledCode::dataSectionPatches(compiled_code));
 
