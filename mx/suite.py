@@ -806,7 +806,10 @@ suite = {
     "com.oracle.graal.compiler.sparc.test" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.compiler.test"],
+      "dependencies" : [
+        "com.oracle.graal.sparc",
+        "com.oracle.graal.compiler.test",
+      ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,SPARC,Test",
