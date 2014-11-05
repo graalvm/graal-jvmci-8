@@ -188,9 +188,9 @@ static void record_metadata_reference(oop obj, jlong prim, jboolean compressed, 
 
 // Records any Metadata values embedded in a Constant (e.g., the value returned by HotSpotResolvedObjectTypeImpl.klass()).
 static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder) {
-  if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
-    oop obj = HotSpotMetaspaceConstant::metaspaceObject(constant);
-    jlong prim = HotSpotMetaspaceConstant::primitive(constant);
+  if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
+    oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
+    jlong prim = HotSpotMetaspaceConstantImpl::primitive(constant);
     assert(Kind::typeChar(Value::kind(constant)) == 'j', "must have word kind");
     assert(obj != NULL, "must have an object");
     assert(prim != 0, "must have a primitive value");
@@ -200,7 +200,7 @@ static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder)
 }
 
 static void record_metadata_in_patch(Handle& constant, OopRecorder* oop_recorder) {
-  record_metadata_reference(HotSpotMetaspaceConstant::metaspaceObject(constant), HotSpotMetaspaceConstant::primitive(constant), HotSpotMetaspaceConstant::compressed(constant), oop_recorder);
+  record_metadata_reference(HotSpotMetaspaceConstantImpl::metaspaceObject(constant), HotSpotMetaspaceConstantImpl::primitive(constant), HotSpotMetaspaceConstantImpl::compressed(constant), oop_recorder);
 }
 
 ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, OopRecorder* oop_recorder) {
@@ -569,7 +569,7 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
     Handle reference = CompilationResult_DataPatch::reference(patch);
     assert(reference->is_a(CompilationResult_ConstantReference::klass()), err_msg("patch in data section must be a ConstantReference"));
     Handle constant = CompilationResult_ConstantReference::constant(reference);
-    if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
+    if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
       record_metadata_in_patch(constant, _oop_recorder);
     } else if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
       Handle obj = HotSpotObjectConstantImpl::object(constant);
@@ -909,7 +909,7 @@ void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, oop site)
     Handle constant = CompilationResult_ConstantReference::constant(reference);
     if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
       pd_patch_OopConstant(pc_offset, constant);
-    } else if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
+    } else if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
       record_metadata_in_patch(constant, _oop_recorder);
     } else {
       fatal("unknown constant type in data patch");

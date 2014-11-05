@@ -206,10 +206,10 @@ void graal_compute_offsets();
     oop_field(HotSpotObjectConstantImpl, object, "Ljava/lang/Object;")                                                                                         \
     boolean_field(HotSpotObjectConstantImpl, compressed)                                                                                                       \
   end_class                                                                                                                                                    \
-  start_class(HotSpotMetaspaceConstant)                                                                                                                        \
-    long_field(HotSpotMetaspaceConstant, primitive)                                                                                                            \
-    oop_field(HotSpotMetaspaceConstant, metaspaceObject, "Ljava/lang/Object;")                                                                                 \
-    boolean_field(HotSpotMetaspaceConstant, compressed)                                                                                                        \
+  start_class(HotSpotMetaspaceConstantImpl)                                                                                                                    \
+    long_field(HotSpotMetaspaceConstantImpl, primitive)                                                                                                        \
+    oop_field(HotSpotMetaspaceConstantImpl, metaspaceObject, "Ljava/lang/Object;")                                                                             \
+    boolean_field(HotSpotMetaspaceConstantImpl, compressed)                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(Kind)                                                                                                                                            \
     char_field(Kind, typeChar)                                                                                                                                 \
