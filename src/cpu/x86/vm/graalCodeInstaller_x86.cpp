@@ -60,9 +60,9 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, oop 
 
 void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
   address pc = _instructions->start() + pc_offset;
-  Handle obj = HotSpotObjectConstant::object(constant);
+  Handle obj = HotSpotObjectConstantImpl::object(constant);
   jobject value = JNIHandles::make_local(obj());
-  if (HotSpotObjectConstant::compressed(constant)) {
+  if (HotSpotObjectConstantImpl::compressed(constant)) {
     address operand = Assembler::locate_operand(pc, Assembler::narrow_oop_operand);
     int oop_index = _oop_recorder->find_index(value);
     _instructions->relocate(pc, oop_Relocation::spec(oop_index), Assembler::narrow_oop_operand);

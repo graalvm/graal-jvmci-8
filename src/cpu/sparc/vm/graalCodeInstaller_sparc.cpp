@@ -42,9 +42,9 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, oop 
 
 void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
   address pc = _instructions->start() + pc_offset;
-  Handle obj = HotSpotObjectConstant::object(constant);
+  Handle obj = HotSpotObjectConstantImpl::object(constant);
   jobject value = JNIHandles::make_local(obj());
-  if (HotSpotObjectConstant::compressed(constant)) {
+  if (HotSpotObjectConstantImpl::compressed(constant)) {
     fatal("unimplemented: narrow oop relocation");
   } else {
     NativeMovConstReg* move = nativeMovConstReg_at(pc);

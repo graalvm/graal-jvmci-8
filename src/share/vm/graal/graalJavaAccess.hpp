@@ -202,9 +202,9 @@ void graal_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(HotSpotCompressedNullConstant)                                                                                                                   \
   end_class                                                                                                                                                    \
-  start_class(HotSpotObjectConstant)                                                                                                                           \
-    oop_field(HotSpotObjectConstant, object, "Ljava/lang/Object;")                                                                                             \
-    boolean_field(HotSpotObjectConstant, compressed)                                                                                                           \
+  start_class(HotSpotObjectConstantImpl)                                                                                                                       \
+    oop_field(HotSpotObjectConstantImpl, object, "Ljava/lang/Object;")                                                                                         \
+    boolean_field(HotSpotObjectConstantImpl, compressed)                                                                                                       \
   end_class                                                                                                                                                    \
   start_class(HotSpotMetaspaceConstant)                                                                                                                        \
     long_field(HotSpotMetaspaceConstant, primitive)                                                                                                            \

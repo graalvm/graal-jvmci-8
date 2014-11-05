@@ -315,8 +315,8 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
       if (value->is_a(NullConstant::klass()) || value->is_a(HotSpotCompressedNullConstant::klass())) {
         return _oop_null_scope_value;
       } else {
-        assert(value->is_a(HotSpotObjectConstant::klass()), "unexpected constant type");
-        oop obj = HotSpotObjectConstant::object(value);
+        assert(value->is_a(HotSpotObjectConstantImpl::klass()), "unexpected constant type");
+        oop obj = HotSpotObjectConstantImpl::object(value);
         assert(obj != NULL, "null value must be in NullConstant");
         return new ConstantOopWriteValue(JNIHandles::make_local(obj));
       }
@@ -571,13 +571,13 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
     Handle constant = CompilationResult_ConstantReference::constant(reference);
     if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
       record_metadata_in_patch(constant, _oop_recorder);
-    } else if (constant->is_a(HotSpotObjectConstant::klass())) {
-      Handle obj = HotSpotObjectConstant::object(constant);
+    } else if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
+      Handle obj = HotSpotObjectConstantImpl::object(constant);
       jobject value = JNIHandles::make_local(obj());
       int oop_index = _oop_recorder->find_index(value);
 
       address dest = _constants->start() + CompilationResult_Site::pcOffset(patch);
-      if (HotSpotObjectConstant::compressed(constant)) {
+      if (HotSpotObjectConstantImpl::compressed(constant)) {
 #ifdef _LP64
         _constants->relocate(dest, oop_Relocation::spec(oop_index), relocInfo::narrow_oop_in_const);
 #else
@@ -907,7 +907,7 @@ void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, oop site)
   oop reference = CompilationResult_DataPatch::reference(site);
   if (reference->is_a(CompilationResult_ConstantReference::klass())) {
     Handle constant = CompilationResult_ConstantReference::constant(reference);
-    if (constant->is_a(HotSpotObjectConstant::klass())) {
+    if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
       pd_patch_OopConstant(pc_offset, constant);
     } else if (constant->is_a(HotSpotMetaspaceConstant::klass())) {
       record_metadata_in_patch(constant, _oop_recorder);

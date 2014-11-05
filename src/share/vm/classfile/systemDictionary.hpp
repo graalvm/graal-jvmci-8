@@ -201,7 +201,7 @@ class Ticks;
   GRAAL_ONLY(do_klass(HotSpotResolvedObjectTypeImpl_klass,   com_oracle_graal_hotspot_meta_HotSpotResolvedObjectTypeImpl,  Graal)) \
   GRAAL_ONLY(do_klass(HotSpotMonitorValue_klass,             com_oracle_graal_hotspot_meta_HotSpotMonitorValue,            Graal)) \
   GRAAL_ONLY(do_klass(HotSpotCompressedNullConstant_klass,   com_oracle_graal_hotspot_meta_HotSpotCompressedNullConstant,  Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotObjectConstant_klass,           com_oracle_graal_hotspot_meta_HotSpotObjectConstant,          Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotObjectConstantImpl_klass,       com_oracle_graal_hotspot_meta_HotSpotObjectConstantImpl,      Graal)) \
   GRAAL_ONLY(do_klass(HotSpotMetaspaceConstant_klass,        com_oracle_graal_hotspot_meta_HotSpotMetaspaceConstant,       Graal)) \
   GRAAL_ONLY(do_klass(HotSpotStackFrameReference_klass,      com_oracle_graal_hotspot_HotSpotStackFrameReference,          Graal)) \
   GRAAL_ONLY(do_klass(CompilationTask_klass,                 com_oracle_graal_hotspot_CompilationTask,                     Graal)) \
