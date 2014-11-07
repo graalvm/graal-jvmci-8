@@ -242,7 +242,7 @@ class Ticks;
   GRAAL_ONLY(do_klass(LIRKind_klass,                         com_oracle_graal_api_meta_LIRKind,                            Graal)) \
   GRAAL_ONLY(do_klass(JavaMethod_klass,                      com_oracle_graal_api_meta_JavaMethod,                         Graal)) \
   GRAAL_ONLY(do_klass(JavaType_klass,                        com_oracle_graal_api_meta_JavaType,                           Graal)) \
-  GRAAL_ONLY(do_klass(Value_klass,                           com_oracle_graal_api_meta_Value,                              Graal)) \
+  GRAAL_ONLY(do_klass(AbstractValue_klass,                   com_oracle_graal_api_meta_AbstractValue,                      Graal)) \
 
   /*end*/
 
@@ -263,7 +263,7 @@ class SystemDictionary : AllStatic {
 
 #ifdef GRAAL
     FIRST_GRAAL_WKID = WK_KLASS_ENUM_NAME(CompilerThread_klass),
-    LAST_GRAAL_WKID  = WK_KLASS_ENUM_NAME(Value_klass),
+    LAST_GRAAL_WKID  = WK_KLASS_ENUM_NAME(AbstractValue_klass),
 #endif
 
     FIRST_WKID = NO_WKID + 1

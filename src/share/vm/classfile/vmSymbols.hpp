@@ -321,7 +321,7 @@
   GRAAL_ONLY(template(com_oracle_graal_api_meta_JavaType,                       "com/oracle/graal/api/meta/JavaType"))                            \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Kind,                           "com/oracle/graal/api/meta/Kind"))                                \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_LIRKind,                        "com/oracle/graal/api/meta/LIRKind"))                             \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_Value,                          "com/oracle/graal/api/meta/Value"))                               \
+  GRAAL_ONLY(template(com_oracle_graal_api_meta_AbstractValue,                  "com/oracle/graal/api/meta/AbstractValue"))                       \
   GRAAL_ONLY(template(com_oracle_graal_api_code_Assumptions,                    "com/oracle/graal/api/code/Assumptions"))                         \
   GRAAL_ONLY(template(com_oracle_graal_api_code_Assumptions_MethodContents,     "com/oracle/graal/api/code/Assumptions$MethodContents"))          \
   GRAAL_ONLY(template(com_oracle_graal_api_code_Assumptions_ConcreteSubtype,    "com/oracle/graal/api/code/Assumptions$ConcreteSubtype"))         \
