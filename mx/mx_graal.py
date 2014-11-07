@@ -1955,7 +1955,7 @@ def jmh(args):
         absoluteMicro = os.path.join(jmhPath, suite)
         (pfx, exe, vm, forkedVmArgs, _) = _parseVmArgs(vmArgs)
         if pfx:
-            mx.warn("JMH ignores prefix: \"" + pfx + "\"")
+            mx.log("JMH ignores prefix: \"" + ' '.join(pfx) + "\"")
         javaArgs = ['-jar', os.path.join(absoluteMicro, "target", "microbenchmarks.jar"),
                     '--jvm', exe,
                     '--jvmArgs', ' '.join(["-" + vm] + forkedVmArgs)]
