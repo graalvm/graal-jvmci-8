@@ -36,6 +36,8 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
   static address _external_deopt_i2c_entry;
   static const char* _generated_sources_sha1;
 
+  static bool _shutdown_called;
+
   /**
    * Reads the OptionValue object from a specified static field.
    *
@@ -140,6 +142,10 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
   }
 
   static void shutdown();
+
+  static bool shutdown_called() {
+    return _shutdown_called;
+  }
 
   /**
    * Given an interface representing a Graal service (i.e. sub-interface of

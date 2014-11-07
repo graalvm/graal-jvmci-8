@@ -41,6 +41,7 @@
 address GraalRuntime::_external_deopt_i2c_entry = NULL;
 jobject GraalRuntime::_HotSpotGraalRuntime_instance = NULL;
 bool GraalRuntime::_HotSpotGraalRuntime_initialized = false;
+bool GraalRuntime::_shutdown_called = false;
 
 void GraalRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
   uintptr_t heap_end = (uintptr_t) Universe::heap()->reserved_region().end();
@@ -989,6 +990,7 @@ Handle GraalRuntime::create_Service(const char* name, TRAPS) {
 
 void GraalRuntime::shutdown() {
   if (_HotSpotGraalRuntime_instance != NULL) {
+    _shutdown_called = true;
     JavaThread* THREAD = JavaThread::current();
     HandleMark hm(THREAD);
     TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/HotSpotGraalRuntime", CHECK_ABORT);

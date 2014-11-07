@@ -1212,6 +1212,13 @@ void CompileBroker::compile_method_base(methodHandle method,
       if (!GraalRuntime::is_HotSpotGraalRuntime_initialized() && compiler(comp_level)->is_graal()) {
         blocking = false;
       }
+
+      // Don't allow blocking compilation requests if we are in GraalRuntime::shutdown
+      // to avoid deadlock between compiler thread(s) and threads run at shutdown
+      // such as the DestroyJavaVM thread.
+      if (GraalRuntime::shutdown_called()) {
+        blocking = false;
+      }
     }
     // Don't allow blocking compiles
 #endif
