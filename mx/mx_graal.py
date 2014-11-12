@@ -1146,7 +1146,7 @@ def _unittest(args, annotations, prefixCp="", blacklist=None, whitelist=None, ve
     if testfile is None:
         (_, testfile) = tempfile.mkstemp(".testclasses", "graal")
         os.close(_)
-        
+
     coreCp = mx.classpath(['com.oracle.graal.test', 'HCFDIS'])
 
     coreArgs = []
