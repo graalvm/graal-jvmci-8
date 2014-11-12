@@ -858,7 +858,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, oop site) {
   oop hotspot_method = NULL; // JavaMethod
   oop foreign_call = NULL;
 
-  if (target_klass->is_subclass_of(SystemDictionary::HotSpotForeignCallLinkage_klass())) {
+  if (target_klass->is_subclass_of(SystemDictionary::HotSpotForeignCallLinkageImpl_klass())) {
     foreign_call = target;
   } else {
     hotspot_method = target;
@@ -882,7 +882,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, oop site) {
   }
 
   if (foreign_call != NULL) {
-    jlong foreign_call_destination = HotSpotForeignCallLinkage::address(foreign_call);
+    jlong foreign_call_destination = HotSpotForeignCallLinkageImpl::address(foreign_call);
     CodeInstaller::pd_relocate_ForeignCall(inst, foreign_call_destination);
   } else { // method != NULL
     assert(hotspot_method != NULL, "unexpected JavaMethod");
