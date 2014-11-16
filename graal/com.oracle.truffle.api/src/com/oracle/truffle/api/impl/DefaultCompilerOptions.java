@@ -4,7 +4,9 @@
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -20,36 +22,20 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.truffle;
-
-import static com.oracle.graal.truffle.TruffleCompilerOptions.*;
+package com.oracle.truffle.api.impl;
 
 import com.oracle.truffle.api.*;
 
-public class CounterAndTimeBasedCompilationPolicy extends CounterBasedCompilationPolicy {
+public class DefaultCompilerOptions implements CompilerOptions {
 
-    @Override
-    public boolean shouldCompile(CompilationProfile profile, CompilerOptions options) {
-        if (super.shouldCompile(profile, options)) {
-            long threshold = TruffleTimeThreshold.getValue() * 1_000_000L;
+    public static DefaultCompilerOptions INSTANCE = new DefaultCompilerOptions();
 
-            if (options instanceof GraalCompilerOptions) {
-                threshold = Math.max(threshold, ((GraalCompilerOptions) options).getMinTimeThreshold());
-            }
+    public boolean supportsOption(String name) {
+        return false;
+    }
 
-            long time = profile.getTimestamp();
-            if (time == 0) {
-                throw new AssertionError();
-            }
-            long timeElapsed = System.nanoTime() - time;
-            if (timeElapsed > threshold) {
-                profile.deferCompilation();
-                return false;
-            }
-            return true;
-        } else {
-            return false;
-        }
+    public void setOption(String name, Object value) {
+        throw new UnsupportedOperationException(String.format("Option %s is not supported by this runtime"));
     }
 
 }

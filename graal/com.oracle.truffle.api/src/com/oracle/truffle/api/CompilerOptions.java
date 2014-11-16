@@ -1,10 +1,12 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -20,23 +22,19 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.truffle;
+package com.oracle.truffle.api;
 
-import com.oracle.truffle.api.*;
+import com.oracle.truffle.api.nodes.*;
 
-public class CounterBasedCompilationPolicy implements CompilationPolicy {
+/**
+ * Allows options to be set to control the compilation of a specific {@link RootNode}, without
+ * creating a dependency on the specific compiler used. Options can be tested for support before
+ * setting.
+ */
+public interface CompilerOptions {
 
-    private boolean compilationFailed;
+    boolean supportsOption(String name);
 
-    @Override
-    public boolean shouldCompile(CompilationProfile profile, CompilerOptions options) {
-        return !compilationFailed && profile.getInterpreterCallCount() >= profile.getCompilationCallThreshold() &&
-                        profile.getInterpreterCallAndLoopCount() >= profile.getCompilationCallAndLoopThreshold();
-    }
-
-    @Override
-    public void recordCompilationFailure(Throwable t) {
-        compilationFailed = true;
-    }
+    void setOption(String name, Object value);
 
 }
