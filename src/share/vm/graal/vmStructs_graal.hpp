@@ -40,8 +40,14 @@
 #define VM_TYPES_GRAAL(declare_type, declare_toplevel_type)                   \
 
 #define VM_INT_CONSTANTS_GRAAL(declare_constant, declare_preprocessor_constant)                   \
+  declare_constant(Deoptimization::Reason_unreached0)                                             \
+  declare_constant(Deoptimization::Reason_type_checked_inlining)                                  \
+  declare_constant(Deoptimization::Reason_optimized_type_check)                                   \
   declare_constant(Deoptimization::Reason_aliasing)                                               \
   declare_constant(Deoptimization::Reason_transfer_to_interpreter)                                \
+  declare_constant(Deoptimization::Reason_not_compiled_exception_handler)                         \
+  declare_constant(Deoptimization::Reason_unresolved)                                             \
+  declare_constant(Deoptimization::Reason_jsr_mismatch)                                           \
   declare_constant(GraalEnv::ok)                                                                  \
   declare_constant(GraalEnv::dependencies_failed)                                                 \
   declare_constant(GraalEnv::cache_full)                                                          \
