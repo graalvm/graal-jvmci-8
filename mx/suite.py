@@ -1266,6 +1266,7 @@ suite = {
       "dependencies" : [
         "com.oracle.truffle.api.dsl",
         "com.oracle.nfi",
+        "com.oracle.truffle.object.basic",
       ],
     },
 
