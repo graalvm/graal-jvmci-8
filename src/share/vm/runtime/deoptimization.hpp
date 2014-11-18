@@ -127,13 +127,13 @@ class Deoptimization : AllStatic {
   static void deoptimize(JavaThread* thread, frame fr, RegisterMap *reg_map);
   static void deoptimize(JavaThread* thread, frame fr, RegisterMap *reg_map, DeoptReason reason);
 
-  // Helper function to revoke biases of all monitors in frame if UseBiasedLocking
-  // is enabled
-  static void revoke_biases_of_monitors(JavaThread* thread, frame fr, RegisterMap* map);
-
   private:
   // Does the actual work for deoptimizing a single frame
   static void deoptimize_single_frame(JavaThread* thread, frame fr, DeoptReason reason);
+
+  // Helper function to revoke biases of all monitors in frame if UseBiasedLocking
+  // is enabled
+  static void revoke_biases_of_monitors(JavaThread* thread, frame fr, RegisterMap* map);
   // Helper function to revoke biases of all monitors in frames
   // executing in a particular CodeBlob if UseBiasedLocking is enabled
   static void revoke_biases_of_monitors(CodeBlob* cb);

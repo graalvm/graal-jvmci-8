@@ -663,9 +663,7 @@ address SharedRuntime::compute_compiled_exc_handler(nmethod* nm, address ret_pc,
       RegisterMap reg_map(thread);
       frame runtime_frame = thread->last_frame();
       frame caller_frame = runtime_frame.sender(&reg_map);
-      assert(caller_frame.is_compiled_frame() && !caller_frame.is_deoptimized_frame(),"should be called by compiled frame");
-      Deoptimization::revoke_biases_of_monitors(thread, caller_frame, &reg_map);
-
+      Deoptimization::deoptimize_frame(thread, caller_frame.id(), Deoptimization::Reason_not_compiled_exception_handler);
       return SharedRuntime::deopt_blob()->unpack_with_exception_in_tls();
     }
   }
