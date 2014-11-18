@@ -1132,6 +1132,15 @@ suite = {
       "workingSets" : "Truffle,Codegen",
     },
 
+    "com.oracle.truffle.api.object" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.truffle.api"],
+      "checkstyle" : "com.oracle.truffle.api",
+      "javaCompliance" : "1.7",
+      "workingSets" : "API,Truffle",
+    },
+
     "com.oracle.truffle.sl" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
