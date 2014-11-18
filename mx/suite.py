@@ -1162,7 +1162,10 @@ suite = {
     "com.oracle.truffle.sl" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.truffle.api.dsl"],
+      "dependencies" : [
+        "com.oracle.truffle.api.dsl",
+        "com.oracle.truffle.api.object",
+      ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "annotationProcessors" : ["com.oracle.truffle.dsl.processor"],
