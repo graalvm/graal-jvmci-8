@@ -70,7 +70,9 @@
   declare_constant(VM_Version::CPU_AVX2)                            \
   declare_constant(VM_Version::CPU_AES)                             \
   declare_constant(VM_Version::CPU_ERMS)                            \
-  declare_constant(VM_Version::CPU_CLMUL)
+  declare_constant(VM_Version::CPU_CLMUL)                           \
+  declare_constant(VM_Version::CPU_BMI1)                            \
+  declare_constant(VM_Version::CPU_BMI2)
 
 #define VM_LONG_CONSTANTS_CPU(declare_constant, declare_preprocessor_constant, declare_c1_constant, declare_c2_constant, declare_c2_preprocessor_constant)
 
