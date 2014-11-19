@@ -779,6 +779,15 @@ def build(args, vm=None):
 
     builds = [_vmbuild]
 
+    if os.environ.get('BUILDING_FROM_IDE', None) == 'true':
+        build = os.environ.get('IDE_BUILD_TARGET', None)
+        if build is None or len(build) == 0:
+            return
+        if build not in _vmbuildChoices:
+            mx.abort('VM build "' + build + '" specified by IDE_BUILD_TARGET environment variable is unknown (must be one of ' +
+                     str(_vmbuildChoices) + ')')
+        builds = [build]
+
     if vm is None:
         vm = _get_vm()
 
@@ -798,11 +807,6 @@ def build(args, vm=None):
 
     isWindows = platform.system() == 'Windows' or "CYGWIN" in platform.system()
     for build in builds:
-        if build == 'ide-build-target':
-            build = os.environ.get('IDE_BUILD_TARGET', None)
-            if build is None or len(build) == 0:
-                continue
-
         installJars = vm != 'original' and (isWindows or not opts2.java)
         jdk = _jdk(build, create=True, installJars=installJars)
 
