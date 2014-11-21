@@ -2375,7 +2375,7 @@ class JavaCompileTask:
                 if not args.error_prone:
                     javac = args.alt_javac if args.alt_javac else mainJava.javac
                     self.logCompilation('javac' if not args.alt_javac else args.alt_javac)
-                    javacCmd = [javac, '-g', '-J-Xmx1g', '-source', compliance, '-target', compliance, '-classpath', cp, '-d', outputDir, '-bootclasspath', jdk.bootclasspath(), '-endorseddirs', jdk.endorseddirs(), '-extdirs', jdk.extdirs()]
+                    javacCmd = [javac, '-g', '-J-Xmx1g', '-J-Xms1g', '-source', compliance, '-target', compliance, '-classpath', cp, '-d', outputDir, '-bootclasspath', jdk.bootclasspath(), '-endorseddirs', jdk.endorseddirs(), '-extdirs', jdk.extdirs()]
                     if jdk.debug_port is not None:
                         javacCmd += ['-J-Xdebug', '-J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + str(jdk.debug_port)]
                     javacCmd += processorArgs
@@ -2386,7 +2386,7 @@ class JavaCompileTask:
                     run(javacCmd)
                 else:
                     self.logCompilation('javac (with error-prone)')
-                    javaArgs = ['-Xmx1g']
+                    javaArgs = ['-Xmx1g', '-Xms1g']
                     javacArgs = ['-g', '-source', compliance, '-target', compliance, '-classpath', cp, '-d', outputDir, '-bootclasspath', jdk.bootclasspath(), '-endorseddirs', jdk.endorseddirs(), '-extdirs', jdk.extdirs()]
                     javacArgs += processorArgs
                     javacArgs += ['@' + argfile.name]
@@ -2396,7 +2396,7 @@ class JavaCompileTask:
             else:
                 self.logCompilation('JDT')
 
-                jdtVmArgs = ['-Xmx1g', '-jar', _cygpathU2W(self.jdtJar)]
+                jdtVmArgs = ['-Xmx1g', '-Xms1g', '-jar', _cygpathU2W(self.jdtJar)]
 
                 jdtArgs = ['-' + compliance,
                          '-cp', cp, '-g', '-enableJavadoc',
@@ -3196,7 +3196,7 @@ def checkstyle(args):
             try:
                 for chunk in _chunk_files_for_command_line(javafilelist):
                     try:
-                        run_java(['-Xmx1g', '-jar', library('CHECKSTYLE').get_path(True), '-f', 'xml', '-c', config, '-o', auditfileName] + chunk, nonZeroIsFatal=False)
+                        run_java(['-Xmx1g', '-Xms1g', '-jar', library('CHECKSTYLE').get_path(True), '-f', 'xml', '-c', config, '-o', auditfileName] + chunk, nonZeroIsFatal=False)
                     finally:
                         if exists(auditfileName):
                             errors = []
