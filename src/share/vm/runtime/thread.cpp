@@ -1431,8 +1431,9 @@ void WatcherThread::print_on(outputStream* st) const {
 
 jlong* JavaThread::_graal_old_thread_counters;
 
-bool graal_counters_include(oop threadObj) {
-  return !GraalCountersExcludeCompiler || threadObj == NULL || threadObj->klass() != SystemDictionary::CompilerThread_klass();
+bool graal_counters_include(JavaThread* thread) {
+  oop threadObj = thread->threadObj();
+  return !GraalCountersExcludeCompiler || (!thread->is_Compiler_thread() && (threadObj == NULL || threadObj->klass() != SystemDictionary::CompilerThread_klass()));
 }
 
 void JavaThread::collect_counters(typeArrayOop array) {
@@ -1442,7 +1443,7 @@ void JavaThread::collect_counters(typeArrayOop array) {
       array->long_at_put(i, _graal_old_thread_counters[i]);
     }
     for (JavaThread* tp = Threads::first(); tp != NULL; tp = tp->next()) {
-      if (graal_counters_include(tp->threadObj())) {
+      if (graal_counters_include(tp)) {
         for (int i = 0; i < array->length(); i++) {
           array->long_at_put(i, array->long_at(i) + tp->_graal_counters[i]);
         }
@@ -1696,7 +1697,7 @@ JavaThread::~JavaThread() {
 
 #ifdef GRAAL
   if (GraalCounterSize > 0) {
-    if (graal_counters_include(threadObj())) {
+    if (graal_counters_include(this)) {
       for (int i = 0; i < GraalCounterSize; i++) {
         _graal_old_thread_counters[i] += _graal_counters[i];
       }
