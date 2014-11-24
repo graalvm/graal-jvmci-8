@@ -632,7 +632,10 @@ suite = {
     "com.oracle.graal.replacements.amd64" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.replacements"],
+      "dependencies" : [
+          "com.oracle.graal.replacements",
+          "com.oracle.graal.amd64",
+          ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "annotationProcessors" : ["com.oracle.graal.service.processor"],
