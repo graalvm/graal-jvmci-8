@@ -443,8 +443,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.asm.amd64",
-        "com.oracle.graal.compiler.test",
-        "com.oracle.graal.hotspot",
+        "com.oracle.graal.hotspot.test",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
