@@ -2163,7 +2163,7 @@ public:
 
   // Whole-method sticky bits and flags
   enum {
-    _trap_hist_limit    = 19 GRAAL_ONLY(+2),   // decoupled from Deoptimization::Reason_LIMIT
+    _trap_hist_limit    = 19 GRAAL_ONLY(+5),   // decoupled from Deoptimization::Reason_LIMIT
     _trap_hist_mask     = max_jubyte,
     _extra_data_count   = 4     // extra DataLayout headers, for trap history
   }; // Public flag values
@@ -2173,11 +2173,7 @@ private:
   uint _nof_overflow_traps;         // trap count, excluding _trap_hist
   union {
     intptr_t _align;
-#ifdef GRAAL
-    u1 _array[2*_trap_hist_limit];
-#else
-    u1 _array[_trap_hist_limit];
-#endif
+    u1 _array[GRAAL_ONLY(2*)_trap_hist_limit];
   } _trap_hist;
 
   // Support for interprocedural escape analysis, from Thomas Kotzmann.
