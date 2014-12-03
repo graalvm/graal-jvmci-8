@@ -2113,7 +2113,7 @@ def jol(args):
     candidates = mx.findclass(args, logToConsole=False, matcher=lambda s, classname: s == classname or classname.endswith('.' + s) or classname.endswith('$' + s))
 
     if len(candidates) > 0:
-        candidates = mx.select_items(list(mx.OrderedDict.fromkeys(candidates)))
+        candidates = mx.select_items(sorted(candidates))
     else:
         # mx.findclass can be mistaken, don't give up yet
         candidates = args

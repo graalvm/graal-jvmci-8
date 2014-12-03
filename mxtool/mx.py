@@ -43,7 +43,7 @@ import xml.parsers.expat
 import shutil, re, xml.dom.minidom
 import pipes
 import difflib
-from collections import Callable, OrderedDict
+from collections import Callable
 from threading import Thread
 from argparse import ArgumentParser, REMAINDER
 from os.path import join, basename, dirname, exists, getmtime, isabs, expandvars, isdir, isfile
@@ -787,69 +787,6 @@ class HgConfig:
                 abort('failed to get status')
             else:
                 return None
-
-# TODO: remove this function once all repos have transitioned
-# to the new project format
-def _read_projects_file(projectsFile):
-    suite = OrderedDict()
-
-    suite['projects'] = OrderedDict()
-    suite['libraries'] = OrderedDict()
-    suite['jrelibraries'] = OrderedDict()
-    suite['distributions'] = OrderedDict()
-
-    with open(projectsFile) as f:
-        prefix = ''
-        lineNum = 0
-
-        def error(message):
-            abort(projectsFile + ':' + str(lineNum) + ': ' + message)
-
-        for line in f:
-            lineNum = lineNum + 1
-            line = line.strip()
-            if line.endswith('\\'):
-                prefix = prefix + line[:-1]
-                continue
-            if len(prefix) != 0:
-                line = prefix + line
-                prefix = ''
-            if len(line) != 0 and line[0] != '#':
-                if '=' not in line:
-                    error('non-comment line does not contain an "=" character')
-                key, value = line.split('=', 1)
-
-                parts = key.split('@')
-
-                if len(parts) == 1:
-                    if parts[0] == 'suite':
-                        suite['name'] = value
-                    elif parts[0] == 'mxversion':
-                        suite['mxversion'] = value
-                    else:
-                        error('Single part property must be "suite": ' + key)
-
-                    continue
-                if len(parts) != 3:
-                    error('Property name does not have 3 parts separated by "@": ' + key)
-                kind, name, attr = parts
-                if kind == 'project':
-                    m = suite['projects']
-                elif kind == 'library':
-                    m = suite['libraries']
-                elif kind == 'jrelibrary':
-                    m = suite['jrelibraries']
-                elif kind == 'distribution':
-                    m = suite['distributions']
-                else:
-                    error('Property name does not start with "project@", "library@" or "distribution@": ' + key)
-
-                attrs = m.get(name)
-                if attrs is None:
-                    attrs = OrderedDict()
-                    m[name] = attrs
-                attrs[attr] = value
-    return suite
 
 def _load_suite_dict(mxDir):
 
