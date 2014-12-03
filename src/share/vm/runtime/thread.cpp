@@ -1433,7 +1433,7 @@ jlong* JavaThread::_graal_old_thread_counters;
 
 bool graal_counters_include(JavaThread* thread) {
   oop threadObj = thread->threadObj();
-  return !GraalCountersExcludeCompiler || (!thread->is_Compiler_thread() && (threadObj == NULL || threadObj->klass() != SystemDictionary::CompilerThread_klass()));
+  return !GraalCountersExcludeCompiler || !thread->is_Compiler_thread();
 }
 
 void JavaThread::collect_counters(typeArrayOop array) {

@@ -1933,7 +1933,7 @@ void SystemDictionary::initialize_preloaded_classes(TRAPS) {
 
 #ifdef GRAAL
 void SystemDictionary::initialize_preloaded_graal_classes(TRAPS) {
-  assert(WK_KLASS(CompilerThread_klass) == NULL, "preloaded Graal classes should only be initialized once");
+  assert(WK_KLASS(Node_klass) == NULL, "preloaded Graal classes should only be initialized once");
   if (UseGraalClassLoader) {
     _graal_loader = GraalRuntime::compute_graal_class_loader(CHECK);
   }
