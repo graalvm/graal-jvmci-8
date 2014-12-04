@@ -880,7 +880,7 @@ def _load_suite_dict(mxDir):
                     if not existing:
                         suite[s] = additional
                     else:
-                        conflicting = additional.keys() & existing.keys()
+                        conflicting = frozenset(additional.keys()) & frozenset(existing.keys())
                         if conflicting:
                             abort(modulePath + ' redefines: ' + ', '.join(conflicting))
                         existing.update(additional)
