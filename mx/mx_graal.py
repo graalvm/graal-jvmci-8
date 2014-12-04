@@ -1438,7 +1438,7 @@ def _basic_gate_body(args, tasks):
 
     with VM('server', 'product'):  # hosted mode
         with Task('UnitTests:hosted-product', tasks):
-            unittest(['--enable-timing', '--verbose'])
+            unittest(['--enable-timing', '--verbose', '--fail-fast'])
 
     with VM('server', 'product'):  # hosted mode
         with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
