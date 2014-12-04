@@ -760,7 +760,7 @@ JVM_END
 
 void GraalRuntime::ensure_graal_class_loader_is_initialized() {
   // This initialization code is guarded by a static pointer to the Factory class.
-  // Once it is non-null, the Graal class loader and well know Graal classes are
+  // Once it is non-null, the Graal class loader and well known Graal classes are
   // guaranteed to have been initialized. By going through the static
   // initializer of Factory, we can rely on class initialization semantics to
   // synchronize threads racing to do the initialization.
@@ -782,6 +782,8 @@ void GraalRuntime::ensure_graal_class_loader_is_initialized() {
       }
     }
 
+    // We cannot use graalJavaAccess for this because we are currently in the
+    // process of initializing that mechanism.
     TempNewSymbol field_name = SymbolTable::new_symbol("useGraalClassLoader", CHECK_ABORT);
     fieldDescriptor field_desc;
     if (klass->find_field(field_name, vmSymbols::bool_signature(), &field_desc) == NULL) {
