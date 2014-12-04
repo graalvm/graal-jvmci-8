@@ -2271,13 +2271,14 @@ def findbugs(args):
     assert exists(findbugsJar)
     nonTestProjects = [p for p in mx.projects() if not p.name.endswith('.test') and not p.name.endswith('.jtt')]
     outputDirs = map(mx._cygpathU2W, [p.output_dir() for p in nonTestProjects])
+    javaCompliance = max([p.javaCompliance for p in nonTestProjects])
     findbugsResults = join(_graal_home, 'findbugs.results')
 
     cmd = ['-jar', mx._cygpathU2W(findbugsJar), '-textui', '-low', '-maxRank', '15']
     if sys.stdout.isatty():
         cmd.append('-progress')
     cmd = cmd + ['-auxclasspath', mx._separatedCygpathU2W(mx.classpath([d.name for d in _jdkDeployedDists] + [p.name for p in nonTestProjects])), '-output', mx._cygpathU2W(findbugsResults), '-exitcode'] + args + outputDirs
-    exitcode = mx.run_java(cmd, nonZeroIsFatal=False)
+    exitcode = mx.run_java(cmd, nonZeroIsFatal=False, javaConfig=mx.java(javaCompliance))
     if exitcode != 0:
         with open(findbugsResults) as fp:
             mx.log(fp.read())
