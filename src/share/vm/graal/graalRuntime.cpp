@@ -770,15 +770,25 @@ void GraalRuntime::ensure_graal_class_loader_is_initialized() {
     TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/loader/Factory", CHECK_ABORT);
     KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, THREAD);
     if (HAS_PENDING_EXCEPTION) {
-      abort_on_pending_exception(PENDING_EXCEPTION, "Graal classes are not available");
+      static volatile int seen_error = 0;
+      if (!seen_error && Atomic::cmpxchg(1, &seen_error, 0) == 0) {
+        // Only report the failure on the first thread that hits it
+        abort_on_pending_exception(PENDING_EXCEPTION, "Graal classes are not available");
+      } else {
+        CLEAR_PENDING_EXCEPTION;
+        // Give first thread time to report the error.
+        os::sleep(THREAD, 100, false);
+        vm_abort(false);
+      }
     }
-    TempNewSymbol field_name = SymbolTable::new_symbol("useGraalClassLoader", CHECK_ABORT);
 
+    TempNewSymbol field_name = SymbolTable::new_symbol("useGraalClassLoader", CHECK_ABORT);
     fieldDescriptor field_desc;
     if (klass->find_field(field_name, vmSymbols::bool_signature(), &field_desc) == NULL) {
       ResourceMark rm;
       fatal(err_msg("Invalid layout of %s at %s", field_name->as_C_string(), klass->external_name()));
     }
+
     InstanceKlass* ik = InstanceKlass::cast(klass());
     address addr = ik->static_field_addr(field_desc.offset() - InstanceMirrorKlass::offset_of_static_fields());
     *((jboolean *) addr) = (jboolean) UseGraalClassLoader;
