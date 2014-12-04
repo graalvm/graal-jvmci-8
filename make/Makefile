@@ -306,9 +306,20 @@ generic_buildgraal: $(HOTSPOT_SCRIPT) buildshared
 			$(MAKE_ARGS) $(VM_TARGET) 
 
 
+
+ifeq (, $(shell python2.7 --version 2>/dev/null && echo ok))
+  ifeq (, $(shell python2.6 --version 2>/dev/null && echo ok))
+    PYTHON=python
+  else
+    PYTHON=python2.6
+  endif
+else
+  PYTHON=python2.7
+endif
+
 # Builds code that can be shared among different build flavors
 buildshared:
-	python2.7 -u $(GAMMADIR)/mxtool/mx.py build --no-native --export-dir $(SHARED_DIR)
+	$(PYTHON) -u $(GAMMADIR)/mxtool/mx.py build --no-native --export-dir $(SHARED_DIR)
 
 # Export file rule
 generic_export: $(EXPORT_LIST)

@@ -721,7 +721,7 @@ def graal_version(dev_suffix='dev'):
                 major, minor = map(int, most_recent_tag_version.split('.'))
                 cached_graal_version = str(major) + '.' + str(minor + 1) + '-' + dev_suffix
         else:
-            cached_graal_version = 'unknown-{}-{}'.format(platform.node(), time.strftime('%Y-%m-%d_%H-%M-%S_%Z'))
+            cached_graal_version = 'unknown-{0}-{1}'.format(platform.node(), time.strftime('%Y-%m-%d_%H-%M-%S_%Z'))
 
     return cached_graal_version
 
@@ -1438,7 +1438,7 @@ def _basic_gate_body(args, tasks):
 
     with VM('server', 'product'):  # hosted mode
         with Task('UnitTests:hosted-product', tasks):
-            unittest(['--enable-timing', '--verbose'])
+            unittest(['--enable-timing', '--verbose', '--fail-fast'])
 
     with VM('server', 'product'):  # hosted mode
         with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
@@ -2113,7 +2113,7 @@ def jol(args):
     candidates = mx.findclass(args, logToConsole=False, matcher=lambda s, classname: s == classname or classname.endswith('.' + s) or classname.endswith('$' + s))
 
     if len(candidates) > 0:
-        candidates = mx.select_items(list(mx.OrderedDict.fromkeys(candidates)))
+        candidates = mx.select_items(sorted(candidates))
     else:
         # mx.findclass can be mistaken, don't give up yet
         candidates = args
@@ -2271,13 +2271,14 @@ def findbugs(args):
     assert exists(findbugsJar)
     nonTestProjects = [p for p in mx.projects() if not p.name.endswith('.test') and not p.name.endswith('.jtt')]
     outputDirs = map(mx._cygpathU2W, [p.output_dir() for p in nonTestProjects])
+    javaCompliance = max([p.javaCompliance for p in nonTestProjects])
     findbugsResults = join(_graal_home, 'findbugs.results')
 
     cmd = ['-jar', mx._cygpathU2W(findbugsJar), '-textui', '-low', '-maxRank', '15']
     if sys.stdout.isatty():
         cmd.append('-progress')
     cmd = cmd + ['-auxclasspath', mx._separatedCygpathU2W(mx.classpath([d.name for d in _jdkDeployedDists] + [p.name for p in nonTestProjects])), '-output', mx._cygpathU2W(findbugsResults), '-exitcode'] + args + outputDirs
-    exitcode = mx.run_java(cmd, nonZeroIsFatal=False)
+    exitcode = mx.run_java(cmd, nonZeroIsFatal=False, javaConfig=mx.java(javaCompliance))
     if exitcode != 0:
         with open(findbugsResults) as fp:
             mx.log(fp.read())

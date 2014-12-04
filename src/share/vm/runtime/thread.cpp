@@ -1433,7 +1433,7 @@ jlong* JavaThread::_graal_old_thread_counters;
 
 bool graal_counters_include(JavaThread* thread) {
   oop threadObj = thread->threadObj();
-  return !GraalCountersExcludeCompiler || (!thread->is_Compiler_thread() && (threadObj == NULL || threadObj->klass() != SystemDictionary::CompilerThread_klass()));
+  return !GraalCountersExcludeCompiler || !thread->is_Compiler_thread();
 }
 
 void JavaThread::collect_counters(typeArrayOop array) {
@@ -3686,11 +3686,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // set_init_completed has just been called, causing exceptions not to be shortcut
   // anymore. We call vm_exit_during_initialization directly instead.
   SystemDictionary::compute_java_system_loader(THREAD);
-#ifdef GRAAL
-  if (!HAS_PENDING_EXCEPTION) {
-    SystemDictionary::initialize_preloaded_graal_classes(THREAD);
-  }
-#endif
   if (HAS_PENDING_EXCEPTION) {
     vm_exit_during_initialization(Handle(THREAD, PENDING_EXCEPTION));
   }
