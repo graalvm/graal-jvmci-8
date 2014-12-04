@@ -185,7 +185,7 @@ class Ticks;
                                                                                                                          \
   /* Support for Graal */                                                                                                \
   do_klass(BitSet_klass,                                java_util_BitSet,                          Opt                 ) \
-  /* Graal classes */                                                                                                    \
+  /* Graal classes. These are loaded on-demand. */                                                                                 \
   GRAAL_ONLY(do_klass(Node_klass,                            com_oracle_graal_graph_Node,                                  Graal)) \
   GRAAL_ONLY(do_klass(NodeClass_klass,                       com_oracle_graal_graph_NodeClass,                             Graal)) \
   GRAAL_ONLY(do_klass(HotSpotCompiledCode_klass,             com_oracle_graal_hotspot_HotSpotCompiledCode,                 Graal)) \
@@ -537,6 +537,8 @@ public:
   // Returns the Graal loader. This will be NULL if !UseGraalClassLoader
   // in which case it's equivalent to the boot loader
   static oop graal_loader();
+  // Sets the Graal loader. This is called at most once.
+  static void init_graal_loader(oop loader);
 #endif
 
   // Compute the default system loader
@@ -703,10 +705,6 @@ private:
 
 public:
   static bool is_ext_class_loader(Handle class_loader);
-
-#ifdef GRAAL
-  static void initialize_preloaded_graal_classes(TRAPS);
-#endif
 
 private:
   static Klass* find_shared_class(Symbol* class_name);

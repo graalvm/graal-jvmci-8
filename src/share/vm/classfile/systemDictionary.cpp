@@ -96,6 +96,10 @@ oop         SystemDictionary::_graal_loader               = NULL;
 oop SystemDictionary::graal_loader() {
   return _graal_loader;
 }
+void SystemDictionary::init_graal_loader(oop loader) {
+  assert(UseGraalClassLoader == (loader != NULL), "must be");
+  _graal_loader = loader;
+}
 #endif
 
 // lazily initialized klass variables
@@ -1930,18 +1934,6 @@ void SystemDictionary::initialize_preloaded_classes(TRAPS) {
     _has_checkPackageAccess = (method != NULL);
   }
 }
-
-#ifdef GRAAL
-void SystemDictionary::initialize_preloaded_graal_classes(TRAPS) {
-  assert(WK_KLASS(Node_klass) == NULL, "preloaded Graal classes should only be initialized once");
-  if (UseGraalClassLoader) {
-    _graal_loader = GraalRuntime::compute_graal_class_loader(CHECK);
-  }
-
-  WKID scan = FIRST_GRAAL_WKID;
-  initialize_wk_klasses_through(LAST_GRAAL_WKID, scan, CHECK);
-}
-#endif
 
 // Tells if a given klass is a box (wrapper class, such as java.lang.Integer).
 // If so, returns the basic type it holds.  If not, returns T_OBJECT.

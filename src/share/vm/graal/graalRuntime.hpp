@@ -127,6 +127,11 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
 
  public:
 
+  /**
+   * Ensures that the Graal class loader is initialized and the well known Graal classes are loaded.
+   */
+  static void ensure_graal_class_loader_is_initialized();
+
   static void initialize_natives(JNIEnv *env, jclass c2vmClass);
 
   static bool is_HotSpotGraalRuntime_initialized() { return _HotSpotGraalRuntime_initialized; }
@@ -199,11 +204,6 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
    * Loads a given Graal class and aborts the VM if it fails.
    */
   static Klass* load_required_class(Symbol* name);
-
-  /**
-   * Creates a separate class loader for classes in graal.jar and graal-truffle.jar.
-   */
-  static oop compute_graal_class_loader(TRAPS);
 
   static BufferBlob* initialize_buffer_blob();
 
