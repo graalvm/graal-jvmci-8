@@ -2310,7 +2310,7 @@ def checkheaders(args):
                                         if not matcher.match(content):
                                             failures[f] = csConfig
     for n, v in failures.iteritems():
-        mx.log('{0}: header does not match RegexpHeader defined in {0}'.format(n, v))
+        mx.log('{0}: header does not match RegexpHeader defined in {1}'.format(n, v))
     return len(failures)
 
 def mx_init(suite):
