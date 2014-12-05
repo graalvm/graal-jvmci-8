@@ -679,6 +679,7 @@ JVM_END
 
 // private static TruffleRuntime Truffle.createRuntime()
 JVM_ENTRY(jobject, JVM_CreateTruffleRuntime(JNIEnv *env, jclass c))
+  GraalRuntime::ensure_graal_class_loader_is_initialized();
   TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/truffle/hotspot/HotSpotTruffleRuntime", CHECK_NULL);
   KlassHandle klass = GraalRuntime::resolve_or_fail(name, CHECK_NULL);
 
