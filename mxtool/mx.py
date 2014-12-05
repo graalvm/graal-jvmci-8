@@ -1673,6 +1673,9 @@ class ArgParser(ArgumentParser):
 
         opts = self.parse_args()
 
+        global _opts
+        _opts = opts
+
         # Give the timeout options a default value to avoid the need for hasattr() tests
         opts.__dict__.setdefault('timeout', 0)
         opts.__dict__.setdefault('ptimeout', 0)
@@ -2209,7 +2212,7 @@ def abort(codeOrMessage):
     the object's value is printed and the exit status is one.
     """
 
-    if _opts.killwithsigquit:
+    if _opts and _opts.killwithsigquit:
         _send_sigquit()
 
     def is_alive(p):
@@ -5177,9 +5180,9 @@ def main():
         abort('no primary suite found')
 
     opts, commandAndArgs = _argParser._parse_cmd_line()
+    assert _opts == opts
 
-    global _opts, _java_homes
-    _opts = opts
+    global _java_homes
     defaultJdk = JavaConfig(opts.java_home, opts.java_dbg_port)
     _java_homes = [defaultJdk]
     if opts.extra_java_homes:
