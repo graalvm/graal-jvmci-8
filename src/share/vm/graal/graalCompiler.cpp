@@ -115,6 +115,7 @@ void GraalCompiler::compile_method(methodHandle method, int entry_bci, CompileTa
       return;
   }
 
+  GraalRuntime::ensure_graal_class_loader_is_initialized();
   HandleMark hm;
   ResourceMark rm;
   JavaValue result(T_VOID);

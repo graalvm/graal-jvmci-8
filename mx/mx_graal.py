@@ -755,7 +755,7 @@ def build(args, vm=None):
         if not exists(opts2.export_dir):
             os.makedirs(opts2.export_dir)
         else:
-            assert os.path.isdir(opts2.export_dir), '{} is not a directory'.format(opts2.export_dir)
+            assert os.path.isdir(opts2.export_dir), '{0} is not a directory'.format(opts2.export_dir)
 
         defsPath = join(_graal_home, 'make', 'defs.make')
         with open(defsPath) as fp:
@@ -1438,7 +1438,7 @@ def _basic_gate_body(args, tasks):
 
     with VM('server', 'product'):  # hosted mode
         with Task('UnitTests:hosted-product', tasks):
-            unittest(['--enable-timing', '--verbose'])
+            unittest(['--enable-timing', '--verbose', '--fail-fast'])
 
     with VM('server', 'product'):  # hosted mode
         with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
@@ -1835,7 +1835,7 @@ def makejmhdeps(args):
                         deps = d['deps']
                         makejmhdep(artifactId, groupId, deps)
             except ValueError as e:
-                mx.abort('Error parsing {}:\n{}'.format(f, e))
+                mx.abort('Error parsing {0}:\n{1}'.format(f, e))
 
 def buildjmh(args):
     """build the JMH benchmarks"""
@@ -1916,7 +1916,7 @@ def jmh(args):
                 else:
                     jmhArgs[n] = v
         except ValueError as e:
-            mx.abort('error parsing JSON input: {}\n{}'.format(j, e))
+            mx.abort('error parsing JSON input: {0}\n{1}'.format(j, e))
 
     jmhPath = _get_jmh_path()
     mx.log('Using benchmarks in ' + jmhPath)
@@ -2271,13 +2271,14 @@ def findbugs(args):
     assert exists(findbugsJar)
     nonTestProjects = [p for p in mx.projects() if not p.name.endswith('.test') and not p.name.endswith('.jtt')]
     outputDirs = map(mx._cygpathU2W, [p.output_dir() for p in nonTestProjects])
+    javaCompliance = max([p.javaCompliance for p in nonTestProjects])
     findbugsResults = join(_graal_home, 'findbugs.results')
 
     cmd = ['-jar', mx._cygpathU2W(findbugsJar), '-textui', '-low', '-maxRank', '15']
     if sys.stdout.isatty():
         cmd.append('-progress')
     cmd = cmd + ['-auxclasspath', mx._separatedCygpathU2W(mx.classpath([d.name for d in _jdkDeployedDists] + [p.name for p in nonTestProjects])), '-output', mx._cygpathU2W(findbugsResults), '-exitcode'] + args + outputDirs
-    exitcode = mx.run_java(cmd, nonZeroIsFatal=False)
+    exitcode = mx.run_java(cmd, nonZeroIsFatal=False, javaConfig=mx.java(javaCompliance))
     if exitcode != 0:
         with open(findbugsResults) as fp:
             mx.log(fp.read())
@@ -2309,7 +2310,7 @@ def checkheaders(args):
                                         if not matcher.match(content):
                                             failures[f] = csConfig
     for n, v in failures.iteritems():
-        mx.log('{}: header does not match RegexpHeader defined in {}'.format(n, v))
+        mx.log('{0}: header does not match RegexpHeader defined in {1}'.format(n, v))
     return len(failures)
 
 def mx_init(suite):

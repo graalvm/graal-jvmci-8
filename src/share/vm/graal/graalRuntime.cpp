@@ -49,6 +49,8 @@ void GraalRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
   AMD64_ONLY(guarantee(heap_end < allocation_end, "heap end too close to end of address space (might lead to erroneous TLAB allocations)"));
   NOT_LP64(error("check TLAB allocation code for address space conflicts"));
 
+  ensure_graal_class_loader_is_initialized();
+
   JavaThread* THREAD = JavaThread::current();
   {
     ThreadToNativeFromVM trans(THREAD);
@@ -656,6 +658,13 @@ JRT_ENTRY(jint, GraalRuntime::test_deoptimize_call_int(JavaThread* thread, int v
   return value;
 JRT_END
 
+// private static void Factory.init()
+JVM_ENTRY(void, JVM_InitGraalClassLoader(JNIEnv *env, jclass c, jobject loader_handle))
+  SystemDictionary::init_graal_loader(JNIHandles::resolve(loader_handle));
+  SystemDictionary::WKID scan = SystemDictionary::FIRST_GRAAL_WKID;
+  SystemDictionary::initialize_wk_klasses_through(SystemDictionary::LAST_GRAAL_WKID, scan, CHECK);
+JVM_END
+
 // private static GraalRuntime Graal.initializeRuntime()
 JVM_ENTRY(jobject, JVM_GetGraalRuntime(JNIEnv *env, jclass c))
   return GraalRuntime::get_HotSpotGraalRuntime_jobject();
@@ -670,6 +679,7 @@ JVM_END
 
 // private static TruffleRuntime Truffle.createRuntime()
 JVM_ENTRY(jobject, JVM_CreateTruffleRuntime(JNIEnv *env, jclass c))
+  GraalRuntime::ensure_graal_class_loader_is_initialized();
   TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/truffle/hotspot/HotSpotTruffleRuntime", CHECK_NULL);
   KlassHandle klass = GraalRuntime::resolve_or_fail(name, CHECK_NULL);
 
@@ -748,6 +758,48 @@ JVM_ENTRY(jboolean, JVM_ParseGraalOptions(JNIEnv *env, jclass c))
   return result;
 JVM_END
 
+
+void GraalRuntime::ensure_graal_class_loader_is_initialized() {
+  // This initialization code is guarded by a static pointer to the Factory class.
+  // Once it is non-null, the Graal class loader and well known Graal classes are
+  // guaranteed to have been initialized. By going through the static
+  // initializer of Factory, we can rely on class initialization semantics to
+  // synchronize threads racing to do the initialization.
+  static Klass* _FactoryKlass = NULL;
+  if (_FactoryKlass == NULL) {
+    Thread* THREAD = Thread::current();
+    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/loader/Factory", CHECK_ABORT);
+    KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, THREAD);
+    if (HAS_PENDING_EXCEPTION) {
+      static volatile int seen_error = 0;
+      if (!seen_error && Atomic::cmpxchg(1, &seen_error, 0) == 0) {
+        // Only report the failure on the first thread that hits it
+        abort_on_pending_exception(PENDING_EXCEPTION, "Graal classes are not available");
+      } else {
+        CLEAR_PENDING_EXCEPTION;
+        // Give first thread time to report the error.
+        os::sleep(THREAD, 100, false);
+        vm_abort(false);
+      }
+    }
+
+    // We cannot use graalJavaAccess for this because we are currently in the
+    // process of initializing that mechanism.
+    TempNewSymbol field_name = SymbolTable::new_symbol("useGraalClassLoader", CHECK_ABORT);
+    fieldDescriptor field_desc;
+    if (klass->find_field(field_name, vmSymbols::bool_signature(), &field_desc) == NULL) {
+      ResourceMark rm;
+      fatal(err_msg("Invalid layout of %s at %s", field_name->as_C_string(), klass->external_name()));
+    }
+
+    InstanceKlass* ik = InstanceKlass::cast(klass());
+    address addr = ik->static_field_addr(field_desc.offset() - InstanceMirrorKlass::offset_of_static_fields());
+    *((jboolean *) addr) = (jboolean) UseGraalClassLoader;
+    klass->initialize(CHECK_ABORT);
+    _FactoryKlass = klass();
+  }
+}
+
 jint GraalRuntime::check_arguments(TRAPS) {
   KlassHandle nullHandle;
   parse_arguments(nullHandle, THREAD);
@@ -800,6 +852,7 @@ void GraalRuntime::check_required_value(const char* name, size_t name_len, const
 }
 
 void GraalRuntime::parse_argument(KlassHandle hotSpotOptionsClass, char* arg, TRAPS) {
+  ensure_graal_class_loader_is_initialized();
   char first = arg[0];
   char* name;
   size_t name_len;
@@ -1015,17 +1068,6 @@ void GraalRuntime::call_printStackTrace(Handle exception, Thread* thread) {
                           vmSymbols::printStackTrace_name(),
                           vmSymbols::void_method_signature(),
                           thread);
-}
-
-oop GraalRuntime::compute_graal_class_loader(TRAPS) {
-  assert(UseGraalClassLoader, "must be");
-  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/loader/Factory", CHECK_NULL);
-  KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, CHECK_NULL);
-
-  TempNewSymbol getClassLoader = SymbolTable::new_symbol("newClassLoader", CHECK_NULL);
-  JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, klass, getClassLoader, vmSymbols::void_classloader_signature(), CHECK_NULL);
-  return (oop) result.get_jobject();
 }
 
 void GraalRuntime::abort_on_pending_exception(Handle exception, const char* message, bool dump_core) {
