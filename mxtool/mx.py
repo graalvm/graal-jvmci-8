@@ -2472,22 +2472,6 @@ def build(args, parser=None):
     if args.java:
         ideinit([], refreshOnly=True, buildProcessorJars=False)
 
-    def prepareOutputDirs(p, clean):
-        outputDir = p.output_dir()
-        if exists(outputDir):
-            if clean:
-                log('Cleaning {0}...'.format(outputDir))
-                shutil.rmtree(outputDir)
-                os.mkdir(outputDir)
-        else:
-            os.mkdir(outputDir)
-        genDir = p.source_gen_dir()
-        if genDir != '' and exists(genDir) and clean:
-            log('Cleaning {0}...'.format(genDir))
-            for f in os.listdir(genDir):
-                shutil.rmtree(join(genDir, f))
-        return outputDir
-
     tasks = {}
     updatedAnnotationProcessorDists = set()
     for p in sortedProjects:
@@ -2511,10 +2495,15 @@ def build(args, parser=None):
         jdk = java(requiredCompliance)
         assert jdk
 
-        outputDir = prepareOutputDirs(p, args.clean)
+        outputDir = p.output_dir()
 
         sourceDirs = p.source_dirs()
-        buildReason = 'forced build' if args.force else None
+        buildReason = None
+        if args.force:
+            buildReason = 'forced build'
+        elif args.clean:
+            buildReason = 'clean'
+
         taskDeps = []
         for dep in p.all_deps([], includeLibs=False, includeAnnotationProcessors=True):
             taskDep = tasks.get(dep.name)
@@ -2523,52 +2512,14 @@ def build(args, parser=None):
                     buildReason = dep.name + ' rebuilt'
                 taskDeps.append(taskDep)
 
-        jasminAvailable = None
         javafilelist = []
+        nonjavafiletuples = []
         for sourceDir in sourceDirs:
             for root, _, files in os.walk(sourceDir):
                 javafiles = [join(root, name) for name in files if name.endswith('.java') and name != 'package-info.java']
                 javafilelist += javafiles
 
-                # Copy all non Java resources or assemble Jasmin files
-                nonjavafilelist = [join(root, name) for name in files if not name.endswith('.java')]
-                for src in nonjavafilelist:
-                    if src.endswith('.jasm'):
-                        className = None
-                        with open(src) as f:
-                            for line in f:
-                                if line.startswith('.class '):
-                                    className = line.split()[-1]
-                                    break
-
-                        if className is not None:
-                            jasminOutputDir = p.jasmin_output_dir()
-                            classFile = join(jasminOutputDir, className.replace('/', os.sep) + '.class')
-                            if exists(dirname(classFile)) and (not exists(classFile) or os.path.getmtime(classFile) < os.path.getmtime(src)):
-                                if jasminAvailable is None:
-                                    try:
-                                        with open(os.devnull) as devnull:
-                                            subprocess.call('jasmin', stdout=devnull, stderr=subprocess.STDOUT)
-                                        jasminAvailable = True
-                                    except OSError:
-                                        jasminAvailable = False
-
-                                if jasminAvailable:
-                                    log('Assembling Jasmin file ' + src)
-                                    run(['jasmin', '-d', jasminOutputDir, src])
-                                else:
-                                    log('The jasmin executable could not be found - skipping ' + src)
-                                    with file(classFile, 'a'):
-                                        os.utime(classFile, None)
-
-                        else:
-                            log('could not file .class directive in Jasmin source: ' + src)
-                    else:
-                        dst = join(outputDir, src[len(sourceDir) + 1:])
-                        if not exists(dirname(dst)):
-                            os.makedirs(dirname(dst))
-                        if exists(dirname(dst)) and (not exists(dst) or os.path.getmtime(dst) < os.path.getmtime(src)):
-                            shutil.copyfile(src, dst)
+                nonjavafiletuples += [(sourceDir, [join(root, name) for name in files if not name.endswith('.java')])]
 
                 if not buildReason:
                     for javafile in javafiles:
@@ -2583,7 +2534,10 @@ def build(args, parser=None):
 
         if not buildReason:
             logv('[all class files for {0} are up to date - skipping]'.format(p.name))
+            _handleNonJavaFiles(outputDir, p, False, nonjavafiletuples)
             continue
+
+        _handleNonJavaFiles(outputDir, p, True, nonjavafiletuples)
 
         if len(javafilelist) == 0:
             logv('[no Java sources for {0} - skipping]'.format(p.name))
@@ -2702,6 +2656,64 @@ def build(args, parser=None):
     if suppliedParser:
         return args
     return None
+
+def _handleNonJavaFiles(outputDir, p, clean, nonjavafiletuples):
+    if exists(outputDir):
+        if clean:
+            log('Cleaning {0}...'.format(outputDir))
+            shutil.rmtree(outputDir)
+            os.mkdir(outputDir)
+    else:
+        os.mkdir(outputDir)
+    genDir = p.source_gen_dir()
+    if genDir != '' and exists(genDir) and clean:
+        log('Cleaning {0}...'.format(genDir))
+        for f in os.listdir(genDir):
+            shutil.rmtree(join(genDir, f))
+
+    # Copy all non Java resources or assemble Jasmin files
+    jasminAvailable = None
+    for nonjavafiletuple in nonjavafiletuples:
+        sourceDir = nonjavafiletuple[0]
+        nonjavafilelist = nonjavafiletuple[1]
+
+        for src in nonjavafilelist:
+            if src.endswith('.jasm'):
+                className = None
+                with open(src) as f:
+                    for line in f:
+                        if line.startswith('.class '):
+                            className = line.split()[-1]
+                            break
+
+                if className is not None:
+                    jasminOutputDir = p.jasmin_output_dir()
+                    classFile = join(jasminOutputDir, className.replace('/', os.sep) + '.class')
+                    if exists(dirname(classFile)) and (not exists(classFile) or os.path.getmtime(classFile) < os.path.getmtime(src)):
+                        if jasminAvailable is None:
+                            try:
+                                with open(os.devnull) as devnull:
+                                    subprocess.call('jasmin', stdout=devnull, stderr=subprocess.STDOUT)
+                                jasminAvailable = True
+                            except OSError:
+                                jasminAvailable = False
+
+                        if jasminAvailable:
+                            log('Assembling Jasmin file ' + src)
+                            run(['jasmin', '-d', jasminOutputDir, src])
+                        else:
+                            log('The jasmin executable could not be found - skipping ' + src)
+                            with file(classFile, 'a'):
+                                os.utime(classFile, None)
+
+                else:
+                    log('could not file .class directive in Jasmin source: ' + src)
+            else:
+                dst = join(outputDir, src[len(sourceDir) + 1:])
+                if not exists(dirname(dst)):
+                    os.makedirs(dirname(dst))
+                if exists(dirname(dst)) and (not exists(dst) or os.path.getmtime(dst) < os.path.getmtime(src)):
+                    shutil.copyfile(src, dst)
 
 def _chunk_files_for_command_line(files, limit=None, pathFunction=None):
     """
