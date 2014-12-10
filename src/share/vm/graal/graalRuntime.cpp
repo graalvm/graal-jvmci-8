@@ -627,7 +627,7 @@ JRT_LEAF(void, GraalRuntime::log_primitive(JavaThread* thread, jchar typeChar, j
     case 's': tty->print("%d", (jshort) value); break;
     case 'i': tty->print("%d", (jint) value); break;
     case 'f': tty->print("%f", uu.f); break;
-    case 'j': tty->print(INT64_FORMAT, value); break;
+    case 'j': tty->print(JLONG_FORMAT, value); break;
     case 'd': tty->print("%lf", uu.d); break;
     default: assert(false, "unknown typeChar"); break;
   }
@@ -907,7 +907,7 @@ void GraalRuntime::parse_graal_options_file(KlassHandle hotSpotOptionsClass, TRA
       if (num_read == -1) {
         warning("Error reading file %s due to %s", path, strerror(errno));
       } else if (num_read != st.st_size) {
-        warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, st.st_size, path);
+        warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
       }
       os::close(file_handle);
       if (num_read == st.st_size) {
