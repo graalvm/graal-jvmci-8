@@ -73,6 +73,8 @@
   declare_constant(CodeInstaller::POLL_RETURN_NEAR)                                               \
   declare_constant(CodeInstaller::POLL_FAR)                                                       \
   declare_constant(CodeInstaller::POLL_RETURN_FAR)                                                \
+  declare_constant(CodeInstaller::CARD_TABLE_SHIFT)                                               \
+  declare_constant(CodeInstaller::CARD_TABLE_ADDRESS)                                             \
   declare_constant(CodeInstaller::INVOKE_INVALID)                                                 \
                                                                                                   \
   declare_constant(Method::invalid_vtable_index)                                                  \
