@@ -962,6 +962,9 @@ void CodeInstaller::site_Mark(CodeBuffer& buffer, jint pc_offset, oop site) {
       case POLL_RETURN_FAR:
         pd_relocate_poll(pc, id);
         break;
+      case CARD_TABLE_SHIFT:
+      case CARD_TABLE_ADDRESS:
+        break;
       default:
         ShouldNotReachHere();
         break;

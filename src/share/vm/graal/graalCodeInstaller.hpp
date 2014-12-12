@@ -47,6 +47,8 @@ private:
     POLL_RETURN_NEAR           = 12,
     POLL_FAR                   = 13,
     POLL_RETURN_FAR            = 14,
+    CARD_TABLE_ADDRESS         = 15,
+    CARD_TABLE_SHIFT           = 16,
     INVOKE_INVALID             = -1
   };
 
