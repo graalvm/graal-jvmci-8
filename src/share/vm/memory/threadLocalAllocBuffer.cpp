@@ -42,6 +42,9 @@ GlobalTLABStats* ThreadLocalAllocBuffer::_global_stats   = NULL;
 
 void ThreadLocalAllocBuffer::clear_before_allocation() {
   _slow_refill_waste += (unsigned)remaining();
+  // In debug mode we expect the storage above top to be uninitialized
+  // or filled with a padding object.
+  assert(top() == NULL || *(intptr_t*)top() != 0, "overzeroing detected");
   make_parsable(true);   // also retire the TLAB
 }
 
