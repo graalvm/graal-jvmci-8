@@ -398,7 +398,7 @@ static MethodMatcher::Mode check_mode(char name[], const char*& error_msg) {
   while (name[0] == '*') {
     match |= MethodMatcher::Suffix;
     // Copy remaining string plus NUL to the beginning
-    memcpy(name, name + 1, strlen(name + 1) + 1);
+    memmove(name, name + 1, strlen(name + 1) + 1);
   }
 
   if (strcmp(name, "*") == 0) return MethodMatcher::Any;
