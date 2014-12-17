@@ -696,12 +696,13 @@ JVM_ENTRY(jobject, JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c))
   #ifdef TARGET_ARCH_x86
   #ifdef _LP64
     backendName = "com/oracle/graal/hotspot/amd64/AMD64HotSpotBackend";
-  #endif 
+  #endif
   #endif
 
   if (backendName == NULL) {
     return NULL;
   }
+  GraalRuntime::ensure_graal_class_loader_is_initialized();
   TempNewSymbol name = SymbolTable::new_symbol(backendName, CHECK_NULL);
   KlassHandle klass = GraalRuntime::resolve_or_fail(name, CHECK_NULL);
 
