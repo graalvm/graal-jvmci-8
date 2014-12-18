@@ -1123,12 +1123,23 @@ def _run_tests(args, harness, annotations, testfile, blacklist, whitelist, regex
             t, method = words
 
             for c, p in candidates.iteritems():
-                if t in c:
+                # prefer exact matches first
+                if t == c:
                     found = True
-                    classes.append(c + '#' + method)
+                    classes.append(c)
                     projs.add(p.name)
             if not found:
+                for c, p in candidates.iteritems():
+                    if t in c:
+                        found = True
+                        classes.append(c)
+                        projs.add(p.name)
+            if not found:
                 mx.log('warning: no tests matched by substring "' + t)
+            elif len(classes) != 1:
+                mx.abort('More than one test matches substring {0} {1}'.format(t, classes))
+
+            classes = [c + "#" + method for c in classes]
         else:
             for t in tests:
                 if '#' in t:
