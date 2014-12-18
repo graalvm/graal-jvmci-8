@@ -548,17 +548,24 @@ def _update_graalRuntime_inline_hpp(dist):
         mx.update_file(graalRuntime_inline_hpp, tmp.getvalue())
 
         # Store SHA1 in generated Java class and append class to specified jar
+        javaPackageName = 'com.oracle.graal.hotspot.sourcegen'
+        javaClassName = javaPackageName + '.GeneratedSourcesSha1'
         javaSource = join(_graal_home, 'GeneratedSourcesSha1.java')
-        javaClass = join(_graal_home, 'GeneratedSourcesSha1.class')
+        javaClass = join(_graal_home, javaClassName.replace('.', os.path.sep) + '.class')
         with open(javaSource, 'w') as fp:
+            print >> fp, 'package ' + javaPackageName + ';'
             print >> fp, 'class GeneratedSourcesSha1 { private static final String value = "' + sha1 + '"; }'
         subprocess.check_call([mx.java().javac, '-d', mx._cygpathU2W(_graal_home), mx._cygpathU2W(javaSource)], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         zf = zipfile.ZipFile(dist.path, 'a')
         with open(javaClass, 'rb') as fp:
-            zf.writestr(os.path.basename(javaClass), fp.read())
+            zf.writestr(javaClassName.replace('.', '/') + '.class', fp.read())
         zf.close()
         os.unlink(javaSource)
         os.unlink(javaClass)
+        javaClassParent = os.path.dirname(javaClass)
+        while len(os.listdir(javaClassParent)) == 0:
+            os.rmdir(javaClassParent)
+            javaClassParent = os.path.dirname(javaClassParent)
 
 def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
     name = os.path.basename(src)
@@ -588,6 +595,12 @@ def _installDistInJdks(dist, ext=False):
     """
 
     if dist.name == 'GRAAL_TRUFFLE':
+        # The content in graalRuntime.inline.hpp is generated from Graal
+        # classes that implement com.oracle.graal.api.runtime.Service
+        # or contain com.oracle.graal.options.Option annotated fields.
+        # Since GRAAL_TRUFFLE is the leaf most distribution containing
+        # such classes, the generation is triggered when GRAAL_TRUFFLE
+        # is (re)built.
         _update_graalRuntime_inline_hpp(dist)
     jdks = _jdksDir()
 
@@ -1110,12 +1123,23 @@ def _run_tests(args, harness, annotations, testfile, blacklist, whitelist, regex
             t, method = words
 
             for c, p in candidates.iteritems():
-                if t in c:
+                # prefer exact matches first
+                if t == c:
                     found = True
-                    classes.append(c + '#' + method)
+                    classes.append(c)
                     projs.add(p.name)
             if not found:
+                for c, p in candidates.iteritems():
+                    if t in c:
+                        found = True
+                        classes.append(c)
+                        projs.add(p.name)
+            if not found:
                 mx.log('warning: no tests matched by substring "' + t)
+            elif len(classes) != 1:
+                mx.abort('More than one test matches substring {0} {1}'.format(t, classes))
+
+            classes = [c + "#" + method for c in classes]
         else:
             for t in tests:
                 if '#' in t:
