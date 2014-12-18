@@ -713,7 +713,7 @@ JVM_ENTRY(jobject, JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c))
 JVM_END
 
 void GraalRuntime::check_generated_sources_sha1(TRAPS) {
-  TempNewSymbol name = SymbolTable::new_symbol("GeneratedSourcesSha1", CHECK_ABORT);
+  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/sourcegen/GeneratedSourcesSha1", CHECK_ABORT);
   KlassHandle klass = load_required_class(name);
   fieldDescriptor fd;
   if (!InstanceKlass::cast(klass())->find_field(vmSymbols::value_name(), vmSymbols::string_signature(), true, &fd)) {

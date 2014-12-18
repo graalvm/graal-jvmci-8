@@ -548,17 +548,24 @@ def _update_graalRuntime_inline_hpp(dist):
         mx.update_file(graalRuntime_inline_hpp, tmp.getvalue())
 
         # Store SHA1 in generated Java class and append class to specified jar
+        javaPackageName = 'com.oracle.graal.hotspot.sourcegen'
+        javaClassName = javaPackageName + '.GeneratedSourcesSha1'
         javaSource = join(_graal_home, 'GeneratedSourcesSha1.java')
-        javaClass = join(_graal_home, 'GeneratedSourcesSha1.class')
+        javaClass = join(_graal_home, javaClassName.replace('.', os.path.sep) + '.class')
         with open(javaSource, 'w') as fp:
+            print >> fp, 'package ' + javaPackageName + ';'
             print >> fp, 'class GeneratedSourcesSha1 { private static final String value = "' + sha1 + '"; }'
         subprocess.check_call([mx.java().javac, '-d', mx._cygpathU2W(_graal_home), mx._cygpathU2W(javaSource)], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
         zf = zipfile.ZipFile(dist.path, 'a')
         with open(javaClass, 'rb') as fp:
-            zf.writestr(os.path.basename(javaClass), fp.read())
+            zf.writestr(javaClassName.replace('.', '/') + '.class', fp.read())
         zf.close()
         os.unlink(javaSource)
         os.unlink(javaClass)
+        javaClassParent = os.path.dirname(javaClass)
+        while len(os.listdir(javaClassParent)) == 0:
+            os.rmdir(javaClassParent)
+            javaClassParent = os.path.dirname(javaClassParent)
 
 def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
     name = os.path.basename(src)
