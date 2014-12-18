@@ -699,6 +699,17 @@ C2V_VMENTRY(jlong, readUnsafeKlassPointer, (JNIEnv*, jobject, jobject o))
   return klass;
 C2V_END
 
+C2V_VMENTRY(jobject, readUnsafeOop, (JNIEnv*, jobject, jobject base, jlong displacement, jboolean compressed))
+  address addr = (address)JNIHandles::resolve(base);
+  oop ret;
+  if (compressed) {
+    ret = oopDesc::load_decode_heap_oop((narrowOop*)(addr + displacement));
+  } else {
+    ret = oopDesc::load_decode_heap_oop((oop*)(addr + displacement));
+  }
+  return JNIHandles::make_local(ret);
+C2V_END
+
 C2V_VMENTRY(jlongArray, collectCounters, (JNIEnv*, jobject))
   typeArrayOop arrayOop = oopFactory::new_longArray(GraalCounterSize, CHECK_NULL);
   JavaThread::collect_counters(arrayOop);
@@ -1078,6 +1089,7 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"invalidateInstalledCode",                      CC"("INSTALLED_CODE")V",                                                  FN_PTR(invalidateInstalledCode)},
   {CC"getJavaMirror",                                CC"("METASPACE_KLASS")"CLASS,                                             FN_PTR(getJavaMirror)},
   {CC"readUnsafeKlassPointer",                       CC"("OBJECT")J",                                                          FN_PTR(readUnsafeKlassPointer)},
+  {CC"readUnsafeOop",                                CC"("OBJECT"JZ)"OBJECT,                                                   FN_PTR(readUnsafeOop)},
   {CC"collectCounters",                              CC"()[J",                                                                 FN_PTR(collectCounters)},
   {CC"getGPUs",                                      CC"()"STRING,                                                             FN_PTR(getGPUs)},
   {CC"allocateCompileId",                            CC"("METASPACE_METHOD"I)I",                                               FN_PTR(allocateCompileId)},
