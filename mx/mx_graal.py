@@ -588,6 +588,12 @@ def _installDistInJdks(dist, ext=False):
     """
 
     if dist.name == 'GRAAL_TRUFFLE':
+        # The content in graalRuntime.inline.hpp is generated from Graal
+        # classes that implement com.oracle.graal.api.runtime.Service
+        # or contain com.oracle.graal.options.Option annotated fields.
+        # Since GRAAL_TRUFFLE is the leaf most distribution containing
+        # such classes, the generation is triggered when GRAAL_TRUFFLE
+        # is (re)built.
         _update_graalRuntime_inline_hpp(dist)
     jdks = _jdksDir()
 
