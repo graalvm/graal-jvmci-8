@@ -331,7 +331,7 @@ public class RangeSlider extends JComponent implements ChangedListener<RangeSlid
 
     private int getCircleIndexFromPosition(int x) {
         int result = 0;
-        for (int i = 1; i < getPaintingModel().getPositions().size() - 1; i++) {
+        for (int i = 1; i < getPaintingModel().getPositions().size(); i++) {
             if (x > getStartXPosition(i)) {
                 result = i;
             }
