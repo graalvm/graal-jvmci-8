@@ -42,8 +42,12 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, oop 
     // mov+call instruction pair
     jint offset = pc_offset + NativeMovConstReg::instruction_size;
     u_char* call = (u_char*) (_instructions->start() + offset);
-    assert((call[0] == 0x40 || call[0] == 0x41) && call[1] == 0xFF, "expected call with rex/rexb prefix byte");
-    offset += 3; /* prefix byte + opcode byte + modrm byte */
+    if (call[0] == Assembler::REX_B) {
+      offset += 1; /* prefix byte for extended register R8-R15 */
+      call++;
+    }
+    assert(call[0] == 0xFF, "expected call");
+    offset += 2; /* opcode byte + modrm byte */
     return (offset);
   } else if (inst->is_call_reg()) {
     // the inlined vtable stub contains a "call register" instruction
