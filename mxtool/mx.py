@@ -428,7 +428,7 @@ class Project(Dependency):
 
                         if matchFound:
                             simpleClassName = name[:-len('.java')]
-                            assert pkg is not None
+                            assert pkg is not None, 'could not find package statement in file ' + name
                             if pkgRoot is None or pkg.startswith(pkgRoot):
                                 pkgOutputDir = join(outputDir, pkg.replace('.', os.path.sep))
                                 if exists(pkgOutputDir):
