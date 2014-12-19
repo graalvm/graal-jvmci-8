@@ -146,6 +146,7 @@ public final class EditorTopComponent extends TopComponent implements PropertyCh
 
     private void updateDisplayName() {
         setDisplayName(getDiagram().getName());
+        setToolTipText(getDiagram().getGraph().getGroup().getName());
     }
 
     public EditorTopComponent(Diagram diagram) {
