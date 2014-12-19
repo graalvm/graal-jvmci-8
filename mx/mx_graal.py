@@ -435,6 +435,8 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
             chmodRecursive(jdk, JDK_UNIX_PERMISSIONS_DIR)
             shutil.move(join(_vmLibDirInJdk(jdk), defaultVM), join(_vmLibDirInJdk(jdk), 'original'))
 
+            if mx.get_os() != 'windows':
+                os.chmod(jvmCfg, JDK_UNIX_PERMISSIONS_FILE)
             with open(jvmCfg, 'w') as fp:
                 for line in jvmCfgLines:
                     fp.write(line)
@@ -447,6 +449,8 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
                     for line in f:
                         releaseFileLines.append(line)
 
+                if mx.get_os() != 'windows':
+                    os.chmod(releaseFile, JDK_UNIX_PERMISSIONS_FILE)
                 with open(releaseFile, 'w') as fp:
                     for line in releaseFileLines:
                         if line.startswith("SOURCE="):
