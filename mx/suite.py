@@ -720,7 +720,6 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.phases.common",
         "com.oracle.graal.runtime",
         "JUNIT",
       ],
