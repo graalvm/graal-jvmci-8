@@ -29,6 +29,8 @@
 \.csv$
 \.iml$
 \.swp$
+\.swn$
+\.swo$
 \.class$
 \.log$
 \.bak$

@@ -716,6 +716,19 @@ suite = {
       "workingSets" : "Graal,Phases",
     },
 
+    "com.oracle.graal.phases.common.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.phases.common",
+        "com.oracle.graal.runtime",
+        "JUNIT",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Test",
+    },
+
     "com.oracle.graal.virtual" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
