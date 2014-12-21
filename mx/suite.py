@@ -1249,6 +1249,19 @@ suite = {
       "javaCompliance" : "1.8",
       "annotationProcessors" : ["com.oracle.graal.service.processor"],
       "workingSets" : "Graal,Truffle",
+    },
+
+    "com.oracle.graal.truffle.hotspot.sparc" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.truffle.hotspot",
+        "com.oracle.graal.asm.sparc",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "annotationProcessors" : ["com.oracle.graal.service.processor"],
+      "workingSets" : "Graal,Truffle,SPARC",
     }
   },
 
@@ -1294,6 +1307,7 @@ suite = {
       "dependencies" : [
         "com.oracle.graal.truffle",
         "com.oracle.graal.truffle.hotspot.amd64",
+        "com.oracle.graal.truffle.hotspot.sparc"
       ],
       "exclude" : ["FINDBUGS"],
       "distDependencies" : [
