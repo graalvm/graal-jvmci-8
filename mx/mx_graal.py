@@ -100,7 +100,7 @@ JDK_UNIX_PERMISSIONS_FILE = 0644
 JDK_UNIX_PERMISSIONS_EXEC = 0755
 
 def isVMSupported(vm):
-    if 'client' in vm and len(platform.mac_ver()[0]) != 0:
+    if 'client' == vm and len(platform.mac_ver()[0]) != 0:
         # Client VM not supported: java launcher on Mac OS X translates '-client' to '-server'
         return False
     return True
@@ -1924,7 +1924,7 @@ def jmh(args):
         mx.abort(1)
 
     vmArgs, benchmarksAndJsons = _extract_VM_args(args)
-    if '-XX:-UseGraalClassLoader' not in vmArgs:
+    if isGraalEnabled(_get_vm()) and  '-XX:-UseGraalClassLoader' not in vmArgs:
         vmArgs = ['-XX:-UseGraalClassLoader'] + vmArgs
 
     benchmarks = [b for b in benchmarksAndJsons if not b.startswith('{')]
