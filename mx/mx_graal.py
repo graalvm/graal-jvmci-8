@@ -1468,9 +1468,9 @@ def _basic_gate_body(args, tasks):
         with Task('UnitTests:hosted-product', tasks):
             unittest(['--enable-timing', '--verbose', '--fail-fast'])
 
-    with VM('server', 'product'):  # hosted mode
-        with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
-            unittest(['--enable-timing', '--verbose', '--whitelist', 'test/whitelist_baseline.txt', '-G:+UseBaselineCompiler'])
+    #with VM('server', 'product'):  # hosted mode
+    #    with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
+    #        unittest(['--enable-timing', '--verbose', '--whitelist', 'test/whitelist_baseline.txt', '-G:+UseBaselineCompiler'])
 
     for vmbuild in ['fastdebug', 'product']:
         for test in sanitycheck.getDacapos(level=sanitycheck.SanityCheckLevel.Gate, gateBuildLevel=vmbuild) + sanitycheck.getScalaDacapos(level=sanitycheck.SanityCheckLevel.Gate, gateBuildLevel=vmbuild):
