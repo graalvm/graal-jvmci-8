@@ -67,10 +67,14 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
   Handle obj = HotSpotObjectConstantImpl::object(constant);
   jobject value = JNIHandles::make_local(obj());
   if (HotSpotObjectConstantImpl::compressed(constant)) {
+#ifdef _LP64
     address operand = Assembler::locate_operand(pc, Assembler::narrow_oop_operand);
     int oop_index = _oop_recorder->find_index(value);
     _instructions->relocate(pc, oop_Relocation::spec(oop_index), Assembler::narrow_oop_operand);
     TRACE_graal_3("relocating (narrow oop constant) at %p/%p", pc, operand);
+#else
+    fatal("compressed oop on 32bit");
+#endif
   } else {
     address operand = Assembler::locate_operand(pc, Assembler::imm_operand);
     *((jobject*) operand) = value;
