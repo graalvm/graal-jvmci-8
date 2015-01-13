@@ -169,20 +169,20 @@ static void record_metadata_reference(oop obj, jlong prim, jboolean compressed, 
   if (obj->is_a(HotSpotResolvedObjectTypeImpl::klass())) {
     Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(obj));
     if (compressed) {
-      assert(Klass::decode_klass((narrowKlass) prim) == klass, err_msg("%s @ " INTPTR_FORMAT " != " INTPTR_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
+      assert(Klass::decode_klass((narrowKlass) prim) == klass, err_msg("%s @ " INTPTR_FORMAT " != " PTR64_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
     } else {
-      assert((Klass*) prim == klass, err_msg("%s @ " INTPTR_FORMAT " != " INTPTR_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
+      assert((Klass*) prim == klass, err_msg("%s @ " INTPTR_FORMAT " != " PTR64_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
     }
     int index = oop_recorder->find_index(klass);
     TRACE_graal_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), klass->name()->as_C_string());
   } else if (obj->is_a(HotSpotResolvedJavaMethodImpl::klass())) {
     Method* method = (Method*) (address) HotSpotResolvedJavaMethodImpl::metaspaceMethod(obj);
-    assert(!compressed, err_msg("unexpected compressed method pointer %s @ " INTPTR_FORMAT " = " INTPTR_FORMAT, method->name()->as_C_string(), p2i(method), prim));
+    assert(!compressed, err_msg("unexpected compressed method pointer %s @ " INTPTR_FORMAT " = " PTR64_FORMAT, method->name()->as_C_string(), p2i(method), prim));
     int index = oop_recorder->find_index(method);
     TRACE_graal_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), method->name()->as_C_string());
   } else {
     assert(java_lang_String::is_instance(obj),
-        err_msg("unexpected metadata reference (%s) for constant " JLONG_FORMAT " (" INTPTR_FORMAT ")", obj->klass()->name()->as_C_string(), prim, prim));
+        err_msg("unexpected metadata reference (%s) for constant " JLONG_FORMAT " (" PTR64_FORMAT ")", obj->klass()->name()->as_C_string(), prim, prim));
   }
 }
 
@@ -563,7 +563,7 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
   }
   memcpy(_instructions->start(), code()->base(T_BYTE), _code_size);
   _instructions->set_end(end_pc);
-  
+
   for (int i = 0; i < data_section_patches()->length(); i++) {
     Handle patch = data_section_patches()->obj_at(i);
     Handle reference = CompilationResult_DataPatch::reference(patch);
@@ -870,7 +870,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, oop site) {
 
   NativeInstruction* inst = nativeInstruction_at(_instructions->start() + pc_offset);
   jint next_pc_offset = CodeInstaller::pd_next_offset(inst, pc_offset, hotspot_method);
-  
+
   if (debug_info != NULL) {
     oop frame = DebugInfo::bytecodePosition(debug_info);
     _debug_recorder->add_safepoint(next_pc_offset, create_oop_map(_total_frame_size, _parameter_count, debug_info));

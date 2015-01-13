@@ -99,7 +99,8 @@ public:
         max_tlab_infos = 8 * _num_tlabs;   // an arbitrary multiple
       }
       if (TraceGPUInteraction) {
-        tty->print_cr("heapFree = %ld, newTlabSize=%ld, tlabInfos allocated = %ld", heap_bytes_free, new_tlab_size, max_tlab_infos);
+        tty->print_cr("heapFree = " SIZE_FORMAT ", newTlabSize=" SIZE_FORMAT ", tlabInfos allocated = " SIZE_FORMAT,
+          heap_bytes_free, new_tlab_size, max_tlab_infos);
       }
     }
 
@@ -108,7 +109,7 @@ public:
     _tlab_infos_pool_next = &_tlab_infos_pool_start[_num_tlabs];
     _tlab_infos_pool_end = &_tlab_infos_pool_start[max_tlab_infos];
     _tlab_align_reserve_bytes = ThreadLocalAllocBuffer::alignment_reserve_in_bytes();
-      
+
     // we will fill the first N tlabInfos from the gpu_hsail_tlabs
     for (int i = 0; i < _num_tlabs; i++) {
       ThreadLocalAllocBuffer* tlab = thread->get_gpu_hsail_tlab_at(i);
@@ -116,7 +117,7 @@ public:
         tty->print("gpu_hsail_tlab %d at %p -> ", i, tlab);
         printTlabInfoFromThread(tlab);
       }
-      
+
       // Here we try to get a new tlab if current one is null. Note:
       // eventually we may want to test if the size is too small based
       // on some heuristic where we see how much this kernel tends to
@@ -165,7 +166,7 @@ public:
     }
     for (HSAILTlabInfo* tlabInfo = _tlab_infos_pool_start; tlabInfo < _tlab_infos_pool_next; tlabInfo++) {
       if (TraceGPUInteraction) {
-        tty->print_cr("postprocess tlabInfo %p, start=%p, top=%p, end=%p, last_good_top=%p", tlabInfo, 
+        tty->print_cr("postprocess tlabInfo %p, start=%p, top=%p, end=%p, last_good_top=%p", tlabInfo,
                       tlabInfo->start(), tlabInfo->top(), tlabInfo->end(), tlabInfo->last_good_top());
       }
       ThreadLocalAllocBuffer* tlab = tlabInfo->tlab();
@@ -177,7 +178,7 @@ public:
           anyOverflows = true;
           overflowed = true;
           if (TraceGPUInteraction) {
-            long overflowAmount = (long) tlabInfo->top() - (long) tlabInfo->last_good_top(); 
+            long overflowAmount = (long) tlabInfo->top() - (long) tlabInfo->last_good_top();
             tty->print_cr("tlabInfo %p (tlab = %p) overflowed by %ld bytes, setting last good top to %p", tlabInfo, tlab, overflowAmount, tlabInfo->last_good_top());
           }
           tlabInfo->_top = tlabInfo->last_good_top();
@@ -192,17 +193,17 @@ public:
         if (overflowed) {
           tlab->make_parsable(true);
         }
-        
+
         size_t delta = (long)(tlabInfo->top()) - (long)(tlabInfo->original_top());
         if (TraceGPUInteraction) {
-          tty->print_cr("%ld bytes were allocated by tlabInfo %p (start %p, top %p, end %p", delta, tlabInfo,
-                        tlabInfo->start(), tlabInfo->top(), tlabInfo->end());
+          tty->print_cr(SIZE_FORMAT " bytes were allocated by tlabInfo %p (start %p, top %p, end %p",
+            delta, tlabInfo, tlabInfo->start(), tlabInfo->top(), tlabInfo->end());
         }
         bytesAllocated += delta;
       }
     }
     if (TraceGPUInteraction) {
-      tty->print_cr("%ld total bytes were allocated in this kernel", bytesAllocated);
+      tty->print_cr(SIZE_FORMAT" total bytes were allocated in this kernel", bytesAllocated);
     }
     if (anyOverflows) {
       // Hsail::kernelStats.incOverflows();
@@ -219,14 +220,14 @@ private:
   bool getNewGpuHsailTlab(ThreadLocalAllocBuffer* tlab) {
 
     tlab->clear_before_allocation();    // fill and retire old tlab (will also check for null)
-    
+
     // get a size for a new tlab that is based on the desired_size
     size_t new_tlab_size = tlab->compute_size(0);
     if (new_tlab_size == 0) return false;
-    
+
     HeapWord* tlab_start = Universe::heap()->allocate_new_tlab(new_tlab_size);
     if (tlab_start == NULL) return false;
-    
+
     // ..and clear it if required
     if (ZeroTLAB) {
       Copy::zero_to_words(tlab_start, new_tlab_size);
@@ -235,7 +236,7 @@ private:
     tlab->fill(tlab_start, tlab_start, new_tlab_size);
     return true;
   }
-  
+
   void printTlabInfoFromThread (ThreadLocalAllocBuffer* tlab) {
     HeapWord* start = tlab->start();
     HeapWord* top = tlab->top();
@@ -245,9 +246,10 @@ private:
     size_t tlabUsed = tlab->used() * HeapWordSize;
     size_t tlabSize = tlabFree + tlabUsed;
     double freePct = 100.0 * (double) tlabFree/(double) tlabSize;
-    tty->print_cr("(%p, %p, %p), siz=%ld, free=%ld (%f%%)", start, top, end, tlabSize, tlabFree, freePct);
+    tty->print_cr("(%p, %p, %p), siz=" SIZE_FORMAT ", free=" SIZE_FORMAT " (%f%%)",
+      start, top, end, tlabSize, tlabFree, freePct);
   }
-  
+
 };
-  
+
 #endif // GPU_HSAIL_VM_GPU_HSAIL_TLAB_HPP

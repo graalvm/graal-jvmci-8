@@ -37,13 +37,13 @@ struct HSAILKernelStats {
   int _deopts;
   int _overflows;
   bool _changeSeen;
-  
+
 public:
   HSAILKernelStats() {
     _dispatches = _deopts = _overflows = 0;
     _changeSeen = false;
   }
-  
+
   void incDeopts() {
     _deopts++;
     _changeSeen = true;
@@ -52,7 +52,7 @@ public:
     _overflows++;
     _changeSeen = true;
   }
-  
+
   void finishDispatch() {
     _dispatches++;
     if (_changeSeen) {
@@ -60,7 +60,7 @@ public:
       _changeSeen = false;
     }
   }
-  
+
   void print() {
     tty->print_cr("Disp=%d, Deopts=%d, Ovflows=%d", _dispatches, _deopts, _overflows);
   }
@@ -108,7 +108,7 @@ class Hsail : public Gpu {
     char _ignore;
     jobject _oop_map_array;
     // keep a pointer last so save area following it is word aligned
-    jboolean* _never_ran_array; 
+    jboolean* _never_ran_array;
 
    public:
     // static HSAILKernelStats kernelStats;
@@ -134,7 +134,8 @@ class Hsail : public Gpu {
       _oop_map_array = oop_map_array;
       _deopt_span = sizeof(HSAILKernelDeoptimization) + sizeof(HSAILFrame) + bytesPerSaveArea;
       if (TraceGPUInteraction) {
-        tty->print_cr("HSAILDeoptimizationInfo allocated, %d slots of size %d, total size = 0x%lx bytes", _num_slots, _deopt_span, (_num_slots * _deopt_span + sizeof(HSAILDeoptimizationInfo)));
+        tty->print_cr("HSAILDeoptimizationInfo allocated, %d slots of size %d total size = " SIZE_FORMAT_HEX " bytes",
+            _num_slots, _deopt_span, (_num_slots * _deopt_span + sizeof(HSAILDeoptimizationInfo)));
       }
     }
 
@@ -248,7 +249,7 @@ public:
   static okra_clear_args_func_t                 _okra_clear_args;
   static okra_dispose_kernel_func_t             _okra_dispose_kernel;
   static okra_dispose_context_func_t            _okra_dispose_context;
-  
+
 protected:
   static void* _device_context;
 

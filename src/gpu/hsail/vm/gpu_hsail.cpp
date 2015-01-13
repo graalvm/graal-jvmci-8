@@ -147,7 +147,7 @@ jboolean Hsail::execute_kernel_void_1d_internal(address kernel, int dimX, jobjec
   // We avoid HSAILAllocationInfo logic if kernel does not allocate
   // in which case the num_tlabs passed in will be 0
   HSAILAllocationInfo* allocInfo = (num_tlabs == 0 ?  NULL : new HSAILAllocationInfo(num_tlabs, dimX, allocBytesPerWorkitem));
-  
+
   // Reset the kernel arguments
   _okra_clear_args(kernel);
 
@@ -260,11 +260,11 @@ jboolean Hsail::execute_kernel_void_1d_internal(address kernel, int dimX, jobjec
                 if (oopMapHelper.is_oop(pc_offset, bit)) {
                   if (bit < hsailFrame->num_d_regs()) {
                     // show $d reg oop
-                    tty->print_cr("  oop $d%d = " INTPTR_FORMAT, bit, hsailFrame->get_oop_for_bit(bit));
+                    tty->print_cr("  oop $d%d = " PTR64_FORMAT, bit, hsailFrame->get_oop_for_bit(bit));
                   } else {
                     // show stack slot oop
                     int stackOffset = (bit - hsailFrame->num_d_regs()) * 8;  // 8 bytes per stack slot
-                    tty->print_cr("  oop stk:%d = " INTPTR_FORMAT, stackOffset, hsailFrame->get_oop_for_bit(bit));
+                    tty->print_cr("  oop stk:%d = " PTR64_FORMAT, stackOffset, hsailFrame->get_oop_for_bit(bit));
                   }
                 }
               }
@@ -281,7 +281,7 @@ jboolean Hsail::execute_kernel_void_1d_internal(address kernel, int dimX, jobjec
     }
     // when we are done with the deopts, we don't need to oops_do anything
     // in the saved state anymore
-    thread->set_gpu_hsail_deopt_info(NULL);  
+    thread->set_gpu_hsail_deopt_info(NULL);
 
     // Handle any never_ran workitems if there were any
     {
@@ -345,7 +345,7 @@ GPU_ENTRY(jlong, Hsail::generate_kernel, (JNIEnv* env, jclass, jbyteArray code_h
   env->GetByteArrayRegion(code_handle, 0, code_len, (jbyte*) code);
   env->GetStringUTFRegion(name_handle, 0, name_len, name);
 
-  // The kernel entrypoint is always run for the time being  
+  // The kernel entrypoint is always run for the time being
   const char* entryPointName = "&run";
   jlong okra_kernel;
   {
@@ -400,7 +400,7 @@ GPU_ENTRY(jboolean, Hsail::initialize, (JNIEnv* env, jclass))
   // If Okra library is not already loaded, load it here
   if (okra_lib_handle == NULL) {
     okra_lib_handle = os::dll_load(okra_library_name, ebuf, O_BUFLEN);
-  }  
+  }
   if (okra_lib_handle == NULL) {
     // Unable to open Okra library
     if (TraceGPUInteraction) {
@@ -408,7 +408,7 @@ GPU_ENTRY(jboolean, Hsail::initialize, (JNIEnv* env, jclass))
     }
     return false;
   }
-  
+
   guarantee(_okra_get_context == NULL, "cannot repeat GPU initialization");
 
   // At this point we know  okra_lib_handle is valid whether we loaded
