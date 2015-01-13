@@ -101,18 +101,18 @@ private:
   static JNINativeMethod PTX_methods[];
 
   // static native boolean initialize();
-  JNIEXPORT static jboolean initialize(JNIEnv* env, jclass);
+  JNIEXPORT static jboolean JNICALL initialize(JNIEnv* env, jclass);
 
   // static native long generateKernel(byte[] targetCode, String name);
-  JNIEXPORT static jlong generate_kernel(JNIEnv *env, jclass, jbyteArray code_handle, jstring name_handle);
+  JNIEXPORT static jlong JNICALL generate_kernel(JNIEnv *env, jclass, jbyteArray code_handle, jstring name_handle);
 
   // static native long getLaunchKernelAddress();
-  JNIEXPORT static jlong get_execute_kernel_from_vm_address(JNIEnv *env, jclass);
+  JNIEXPORT static jlong JNICALL get_execute_kernel_from_vm_address(JNIEnv *env, jclass);
 
   // static native int getAvailableProcessors0();
-  JNIEXPORT static jint get_total_cores(JNIEnv *env, jobject);
+  JNIEXPORT static jint JNICALL get_total_cores(JNIEnv *env, jobject);
 
-  JNIEXPORT static void destroy_ptx_context();
+  JNIEXPORT static void JNICALL destroy_ptx_context();
 
   // Links the CUDA driver library functions
   static bool link();

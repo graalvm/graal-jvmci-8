@@ -179,13 +179,13 @@ private:
   static JNINativeMethod HSAIL_methods[];
 
   // static native boolean initialize();
-  JNIEXPORT static jboolean initialize(JNIEnv* env, jclass);
+  JNIEXPORT static jboolean JNICALL initialize(JNIEnv* env, jclass);
 
   // static native long generateKernel(byte[] targetCode, String name);
-  JNIEXPORT static jlong generate_kernel(JNIEnv* env, jclass, jbyteArray code_handle, jstring name_handle);
+  JNIEXPORT static jlong JNICALL generate_kernel(JNIEnv* env, jclass, jbyteArray code_handle, jstring name_handle);
 
   // static native boolean executeKernel0(HotSpotInstalledCode kernel, int jobSize, Object[] args);
-  JNIEXPORT static jboolean execute_kernel_void_1d(JNIEnv* env, jclass, jobject hotspotInstalledCode, jint dimX, jobject args,
+  JNIEXPORT static jboolean JNICALL execute_kernel_void_1d(JNIEnv* env, jclass, jobject hotspotInstalledCode, jint dimX, jobject args,
                                                    jint num_tlabs, int allocBytesPerWorkitem, jobject oop_map_array);
 
   static jboolean execute_kernel_void_1d_internal(address kernel, int dimX, jobject args, methodHandle& mh, nmethod* nm,
