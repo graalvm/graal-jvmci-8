@@ -213,7 +213,7 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
 }
 
 
-address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state, int step) {
+address InterpreterGenerator::generate_deopt_entry_for(TosState state, int step) {
   address entry = __ pc();
 
   // In SSE mode, FP results are in xmm0

@@ -183,7 +183,7 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
   return entry;
 }
 
-address TemplateInterpreterGenerator::generate_deopt_entry_for(TosState state, int step) {
+address InterpreterGenerator::generate_deopt_entry_for(TosState state, int step) {
   address entry = __ pc();
   // If state != vtos, we're returning from a native method, which put it's result
   // into the result register. So move the value out of the return register back
