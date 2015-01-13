@@ -130,7 +130,7 @@ extern "C" {
   void     JNICALL JVM_InitGraalClassLoader(JNIEnv *env, jclass c, jobject loader);
   void     JNICALL JVM_InitializeGraalNatives(JNIEnv *env, jclass compilerToVMClass);
   jobject  JNICALL JVM_GetGraalRuntime(JNIEnv *env, jclass c);
-  jobject  JNICALL JVM_GetGraalServiceImpls(JNIEnv *env, jclass c);
+  jobject  JNICALL JVM_GetGraalServiceImpls(JNIEnv *env, jclass c, jclass serviceClass);
   jobject  JNICALL JVM_CreateTruffleRuntime(JNIEnv *env, jclass c);
   jobject  JNICALL JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c);
   jboolean JNICALL JVM_ParseGraalOptions(JNIEnv *env, jclass hotspotOptionsClass);
