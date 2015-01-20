@@ -1869,6 +1869,8 @@ def run(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, e
 
     if env is None:
         env = os.environ
+        
+    env['MX_SUBPROCESS_COMMAND'] = '|'.join(args)
 
     if _opts.verbose:
         if _opts.very_verbose:
