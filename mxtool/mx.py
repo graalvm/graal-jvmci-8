@@ -1868,9 +1868,19 @@ def run(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, e
         assert isinstance(arg, types.StringTypes), 'argument is not a string: ' + str(arg)
 
     if env is None:
-        env = os.environ
+        env = os.environ.copy()
 
-    env['MX_SUBPROCESS_COMMAND'] = '|'.join(args)
+    # Ideally the command line could be communicated directly in an environment
+    # variable. However, since environment variables share the same resource
+    # space as the command line itself (on Unix at least), this would cause the
+    # limit to be exceeded too easily.  
+    _, subprocessCommandFile = tempfile.mkstemp(suffix='', prefix='mx_subprocess_command.')
+    with open(subprocessCommandFile, 'w') as fp:
+        for arg in args:
+            # TODO: handle newlines in args once there's a use case
+            assert '\n' not in arg
+            print >> fp, arg
+    env['MX_SUBPROCESS_COMMAND_FILE'] = subprocessCommandFile
 
     if _opts.verbose:
         if _opts.very_verbose:
@@ -1932,6 +1942,7 @@ def run(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, e
         abort(1)
     finally:
         _removeSubprocess(sub)
+        os.remove(subprocessCommandFile)
 
     if retcode and nonZeroIsFatal:
         if _opts.verbose:
