@@ -169,6 +169,13 @@ suite = {
         "https://search.maven.org/remotecontent?filepath=java3d/vecmath/1.3.1/vecmath-1.3.1.jar",
       ],
       "sha1" : "a0ae4f51da409fa0c20fa0ca59e6bbc9413ae71d",
+    },
+
+    "JMH" : {
+      "path" : "lib/jmh-runner-1.4.2.jar",
+      "sha1" : "f44bffaf237305512002303a306fc5ce3fa63f76",
+      "urls" : ["http://lafo.ssw.uni-linz.ac.at/jmh/jmh-runner-1.4.2.jar"],
+      "annotationProcessor" : "true"
     }
   },
 

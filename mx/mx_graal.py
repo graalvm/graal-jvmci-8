@@ -3,7 +3,7 @@
 #
 # ----------------------------------------------------------------------------------------------------
 #
-# Copyright (c) 2007, 2012, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -1337,6 +1337,46 @@ def shortunittest(args):
     args = ['--whitelist', 'test/whitelist_shortunittest.txt'] + args
     unittest(args)
 
+def microbench(args):
+    """run JMH microbenchmark projects"""
+    vmArgs, jmhArgs = _extract_VM_args(args, useDoubleDash=True)
+
+    # look for -f in JMH arguments
+    containsF = False
+    forking = True
+    for i in range(len(jmhArgs)):
+        arg = jmhArgs[i]
+        if arg.startswith('-f'):
+            containsF = True
+            if arg == '-f' and (i+1) < len(jmhArgs):
+                arg += jmhArgs[i+1]
+            try:
+                if int(arg[2:]) == 0:
+                    forking = False
+            except ValueError:
+                pass
+
+    # default to -f1 if not specified otherwise
+    if not containsF:
+        jmhArgs += ['-f1']
+
+    # find all projects with the JMH dependency
+    jmhProjects = []
+    for p in mx.projects():
+        if 'JMH' in p.deps:
+            jmhProjects.append(p.name)
+    cp = mx.classpath(jmhProjects)
+
+    # execute JMH runner
+    (_, _, jvm, forkedVmArgs, _) = _parseVmArgs(vmArgs)
+    args = ['-cp', cp]
+    if not forking:
+        args += forkedVmArgs
+    args += ['org.openjdk.jmh.Main']
+    if forking:
+        args += ['--jvmArgsPrepend', ' '.join(['-' + jvm] + forkedVmArgs)]
+    vm(args + jmhArgs)
+
 def buildvms(args):
     """build one or more VMs in various configurations"""
 
@@ -2398,6 +2438,7 @@ def mx_init(suite):
         'specjbb2005': [specjbb2005, '[VM options] [-- [SPECjbb2005 options]]'],
         'gate' : [gate, '[-options]'],
         'bench' : [bench, '[-resultfile file] [all(default)|dacapo|specjvm2008|bootstrap]'],
+        'microbench' : [microbench, '[VM options] [-- [JMH options]]'],
         'unittest' : [unittest, '[unittest options] [--] [VM options] [filters...]', _unittestHelpSuffix],
         'makejmhdeps' : [makejmhdeps, ''],
         'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', _unittestHelpSuffix],
