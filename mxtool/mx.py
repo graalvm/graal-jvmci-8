@@ -1880,7 +1880,7 @@ def run(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, e
     # Ideally the command line could be communicated directly in an environment
     # variable. However, since environment variables share the same resource
     # space as the command line itself (on Unix at least), this would cause the
-    # limit to be exceeded too easily.  
+    # limit to be exceeded too easily.
     _, subprocessCommandFile = tempfile.mkstemp(suffix='', prefix='mx_subprocess_command.')
     with open(subprocessCommandFile, 'w') as fp:
         for arg in args:
