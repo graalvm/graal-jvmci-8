@@ -246,6 +246,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "API,Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.api.code" : {
@@ -626,6 +627,7 @@ suite = {
         "com.oracle.graal.service.processor",
       ],
       "workingSets" : "Graal,Replacements",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.replacements.amd64" : {
@@ -660,6 +662,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Replacements,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.replacements.verifier" : {
@@ -940,6 +943,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.jtt" : {
@@ -952,6 +956,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.asm" : {
@@ -1059,6 +1064,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.asm.hsail" : {
@@ -1113,6 +1119,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.7",
       "workingSets" : "API,Truffle,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.truffle.api.dsl" : {
@@ -1135,6 +1142,7 @@ suite = {
       "javaCompliance" : "1.7",
       "annotationProcessors" : ["com.oracle.truffle.dsl.processor"],
       "workingSets" : "API,Truffle,Codegen,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.truffle.dsl.processor" : {
@@ -1219,6 +1227,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Truffle",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.truffle.test" : {
@@ -1232,6 +1241,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Truffle,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.truffle.hotspot" : {

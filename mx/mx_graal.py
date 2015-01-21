@@ -1023,8 +1023,15 @@ def _parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
         jacocoagent = mx.library("JACOCOAGENT", True)
         # Exclude all compiler tests and snippets
 
-        baseExcludes = ['com.oracle.graal.compiler.test', 'com.oracle.graal.jtt', 'com.oracle.graal.api.meta.test', 'com.oracle.truffle.api.test', \
-                'com.oracle.truffle.api.dsl.test', 'com.oracle.graal.truffle', 'com.oracle.graal.truffle.test', 'com.oracle.graal.compiler.hsail.test']
+        includes = ['com.oracle.graal.*']
+        baseExcludes = []
+        for p in mx.projects():
+            projsetting = getattr(p, 'jacoco', '')
+            if projsetting == 'exclude':
+                baseExcludes.append(p.name)
+            if projsetting == 'include':
+                includes.append(p.name + '.*')
+
         def _filter(l):
             # filter out specific classes which are already covered by a baseExclude package
             return [clazz for clazz in l if not any([clazz.startswith(package) for package in baseExcludes])]
@@ -1034,7 +1041,6 @@ def _parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
             excludes += _filter(p.find_classes_with_matching_source_line(None, lambda line: 'JaCoCo Exclude' in line, includeInnerClasses=True).keys())
 
         excludes += [package + '.*' for package in baseExcludes]
-        includes = ['com.oracle.graal.*']
         agentOptions = {
                         'append' : 'true' if _jacoco == 'append' else 'false',
                         'bootclasspath' : 'true',
@@ -2133,7 +2139,25 @@ def jacocoreport(args):
         out = args[0]
     elif len(args) > 1:
         mx.abort('jacocoreport takes only one argument : an output directory')
-    mx.run_java(['-jar', jacocoreport.get_path(True), '--in', 'jacoco.exec', '--out', out] + [p.dir for p in mx.projects()])
+
+    includes = ['com.oracle.graal']
+    for p in mx.projects():
+        projsetting = getattr(p, 'jacoco', '')
+        if projsetting == 'include':
+            includes.append(p.name)
+
+    includedirs = set()
+    for p in mx.projects():
+        for include in includes:
+            if include in p.dir:
+                includedirs.add(p.dir)
+
+    for i in includedirs:
+        bindir = i + '/bin'
+        if not os.path.exists(bindir):
+            os.makedirs(bindir)
+
+    mx.run_java(['-jar', jacocoreport.get_path(True), '--in', 'jacoco.exec', '--out', out] + sorted(includedirs))
 
 def sl(args):
     """run an SL program"""
