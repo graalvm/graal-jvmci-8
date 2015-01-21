@@ -2136,6 +2136,12 @@ class JavaConfig:
 
     def __cmp__(self, other):
         if isinstance(other, JavaConfig):
+            compilanceCmp = cmp(self.javaCompliance, other.javaCompliance)
+            if compilanceCmp:
+                return compilanceCmp
+            versionCmp = cmp(self.version, other.version)
+            if versionCmp:
+                return versionCmp
             return cmp(self.jdk, other.jdk)
         raise TypeError()
 
