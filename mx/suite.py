@@ -747,6 +747,15 @@ suite = {
       "workingSets" : "Graal,Phases",
     },
 
+    "com.oracle.graal.virtual.bench" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["JMH"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Bench",
+    },
+
     "com.oracle.graal.loop" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
