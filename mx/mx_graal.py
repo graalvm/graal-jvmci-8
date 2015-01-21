@@ -1633,8 +1633,14 @@ def longtests(args):
     dacapo(['100', 'eclipse', '-esa'])
 
 def _igvFallbackJDK(env):
-    igvHomes = [h for h in mx._java_homes if h.version < mx.VersionSpec("1.8.0_20") or h.version >= mx.VersionSpec("1.8.0_40")]
-    if igvHomes[0] != mx._java_homes[0]:
+    v8u20 = mx.VersionSpec("1.8.0_20")
+    v8u40 = mx.VersionSpec("1.8.0_40")
+    v8 = mx.VersionSpec("1.8")
+    igvHomes = [h for h in mx._java_homes if h.version >= v8 and (h.version < v8u20 or h.version >= v8u40)]
+    defaultJava = mx.java()
+    if defaultJava not in igvHomes:
+        if not igvHomes:
+            mx.abort("No JDK available for building IGV. Must have JDK >= 1.8 and < 1.8.0u20 or >= 1.8.0u40 in JAVA_HOME or EXTRA_JAVA_HOMES")
         env = dict(env)
         fallbackJDK = igvHomes[0]
         mx.logv("1.8.0_20 has a known javac bug (JDK-8043926), thus falling back to " + str(fallbackJDK.version))
@@ -1643,7 +1649,8 @@ def _igvFallbackJDK(env):
 
 def igv(args):
     """run the Ideal Graph Visualizer"""
-    with open(join(_graal_home, '.ideal_graph_visualizer.log'), 'w') as fp:
+    logFile = '.ideal_graph_visualizer.log'
+    with open(join(_graal_home, logFile), 'w') as fp:
         # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
         env = dict(os.environ)
         proxy = os.environ.get('http_proxy')
@@ -1673,7 +1680,8 @@ def igv(args):
 
         if not exists(nbplatform):
             mx.logv('[This execution may take a while as the NetBeans platform needs to be downloaded]')
-        mx.run(['ant', '-f', mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env)
+        if mx.run(['ant', '-f', mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env, nonZeroIsFatal=False):
+            mx.abort("IGV ant build & launch failed. Check '" + logFile + "'. You can also try to delete 'src/share/tools/IdealGraphVisualizer/nbplatform'.")
 
 def maven_install_truffle(args):
     """install Truffle into your local Maven repository"""

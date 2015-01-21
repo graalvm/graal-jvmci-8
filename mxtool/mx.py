@@ -2125,12 +2125,18 @@ class JavaConfig:
         self._extdirs = _filter_non_existant_paths(self._extdirs)
         self._endorseddirs = _filter_non_existant_paths(self._endorseddirs)
 
+    def __repr__(self):
+        return "JavaConfig(" + str(self.jdk) + ", " + str(self.debug_port) + ")"
+
+    def __str__(self):
+        return "Java " + str(self.version) + " (" + str(self.javaCompliance) + ") from " + str(self.jdk)
+
     def __hash__(self):
         return hash(self.jdk)
 
     def __cmp__(self, other):
         if isinstance(other, JavaConfig):
-            return cmp(self.javaCompliance, other.javaCompliance)
+            return cmp(self.jdk, other.jdk)
         raise TypeError()
 
     def format_cmd(self, args, addDefaultArgs):
