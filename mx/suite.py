@@ -169,6 +169,13 @@ suite = {
         "https://search.maven.org/remotecontent?filepath=java3d/vecmath/1.3.1/vecmath-1.3.1.jar",
       ],
       "sha1" : "a0ae4f51da409fa0c20fa0ca59e6bbc9413ae71d",
+    },
+
+    "JMH" : {
+      "path" : "lib/jmh-runner-1.4.2.jar",
+      "sha1" : "f44bffaf237305512002303a306fc5ce3fa63f76",
+      "urls" : ["http://lafo.ssw.uni-linz.ac.at/jmh/jmh-runner-1.4.2.jar"],
+      "annotationProcessor" : "true"
     }
   },
 
@@ -246,6 +253,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "API,Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.api.code" : {
@@ -626,6 +634,7 @@ suite = {
         "com.oracle.graal.service.processor",
       ],
       "workingSets" : "Graal,Replacements",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.replacements.amd64" : {
@@ -660,6 +669,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Replacements,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.replacements.verifier" : {
@@ -735,6 +745,15 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Phases",
+    },
+
+    "com.oracle.graal.virtual.bench" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["JMH"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Bench",
     },
 
     "com.oracle.graal.loop" : {
@@ -940,6 +959,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.jtt" : {
@@ -952,6 +972,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.asm" : {
@@ -1059,6 +1080,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.asm.hsail" : {
@@ -1113,6 +1135,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.7",
       "workingSets" : "API,Truffle,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.truffle.api.dsl" : {
@@ -1135,6 +1158,7 @@ suite = {
       "javaCompliance" : "1.7",
       "annotationProcessors" : ["com.oracle.truffle.dsl.processor"],
       "workingSets" : "API,Truffle,Codegen,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.truffle.dsl.processor" : {
@@ -1219,6 +1243,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Truffle",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.truffle.test" : {
@@ -1232,6 +1257,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Truffle,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.truffle.hotspot" : {
