@@ -1368,13 +1368,13 @@ def microbench(args):
     cp = mx.classpath(jmhProjects)
 
     # execute JMH runner
-    (_, _, jvm, forkedVmArgs, _) = _parseVmArgs(vmArgs)
     args = ['-cp', cp]
     if not forking:
-        args += forkedVmArgs
+        args += vmArgs
     args += ['org.openjdk.jmh.Main']
     if forking:
-        args += ['--jvmArgsPrepend', ' '.join(['-' + jvm] + forkedVmArgs)]
+        (_, _, jvm, _, _) = _parseVmArgs(vmArgs)
+        args += ['--jvmArgsPrepend', ' '.join(['-' + jvm] + vmArgs)]
     vm(args + jmhArgs)
 
 def buildvms(args):
