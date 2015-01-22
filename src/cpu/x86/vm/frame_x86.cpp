@@ -704,8 +704,8 @@ void frame::describe_pd(FrameValues& values, int frame_no) {
     for (int i = 0; i < entry_frame_after_call_words; i++) {
       values.describe(frame_no, fp() - i, err_msg("call_stub word fp - %d", i));
     }
-  }
 #endif // AMD64
+  }
 }
 #endif // !PRODUCT
 
