@@ -1881,8 +1881,8 @@ def run(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, e
     # variable. However, since environment variables share the same resource
     # space as the command line itself (on Unix at least), this would cause the
     # limit to be exceeded too easily.
-    _, subprocessCommandFile = tempfile.mkstemp(suffix='', prefix='mx_subprocess_command.')
-    with open(subprocessCommandFile, 'w') as fp:
+    with tempfile.NamedTemporaryFile(suffix='', prefix='mx_subprocess_command.', mode='w', delete=False) as fp:
+        subprocessCommandFile = fp.name
         for arg in args:
             # TODO: handle newlines in args once there's a use case
             assert '\n' not in arg
