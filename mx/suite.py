@@ -820,33 +820,11 @@ suite = {
       "workingSets" : "Graal,Java",
     },
 
-    "com.oracle.graal.java.decompiler" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.java"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal",
-    },
-
-    "com.oracle.graal.java.decompiler.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "JUNIT",
-        "com.oracle.graal.printer",
-        "com.oracle.graal.runtime",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Test",
-    },
-
     "com.oracle.graal.printer" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.java.decompiler",
+        "com.oracle.graal.java",
         "com.oracle.graal.compiler",
       ],
       "checkstyle" : "com.oracle.graal.graph",
