@@ -66,7 +66,6 @@ void graal_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(HotSpotNmethod)                                                                                                                                  \
     boolean_field(HotSpotNmethod, isDefault)                                                                                                                   \
-    boolean_field(HotSpotNmethod, isExternal)                                                                                                                  \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledCode)                                                                                                                             \
     oop_field(HotSpotCompiledCode, comp, "Lcom/oracle/graal/api/code/CompilationResult;")                                                                      \
@@ -92,9 +91,6 @@ void graal_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(HotSpotForeignCallLinkageImpl)                                                                                                                   \
     long_field(HotSpotForeignCallLinkageImpl, address)                                                                                                         \
-  end_class                                                                                                                                                    \
-  start_class(ExternalCompilationResult)                                                                                                                       \
-    long_field(ExternalCompilationResult, entryPoint)                                                                                                          \
   end_class                                                                                                                                                    \
   start_class(CompilationResult)                                                                                                                               \
     int_field(CompilationResult, totalFrameSize)                                                                                                               \

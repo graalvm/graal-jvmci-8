@@ -54,10 +54,6 @@
 #include "runtime/deoptimization.hpp"
 #include "runtime/fprofiler.hpp"
 #include "runtime/frame.inline.hpp"
-#include "runtime/gpu.hpp"
-#ifdef GRAAL
-# include "hsail/vm/gpu_hsail.hpp"
-#endif
 #include "runtime/init.hpp"
 #include "runtime/interfaceSupport.hpp"
 #include "runtime/java.hpp"
@@ -1479,13 +1475,6 @@ void JavaThread::initialize() {
   clear_must_deopt_id();
   set_monitor_chunks(NULL);
   set_next(NULL);
-#ifdef GRAAL
-  set_gpu_exception_bci(0);
-  set_gpu_exception_method(NULL);  
-  set_gpu_hsail_deopt_info(NULL);
-  _gpu_hsail_tlabs_count = 0;
-  _gpu_hsail_tlabs = NULL;
-#endif
   set_thread_state(_thread_new);
 #if INCLUDE_NMT
   set_recorder(NULL);
@@ -1704,8 +1693,6 @@ JavaThread::~JavaThread() {
     }
     FREE_C_HEAP_ARRAY(jlong, _graal_counters, mtInternal);
   }
-
-  delete_gpu_hsail_tlabs();
 #endif // GRAAL
 }
 
@@ -1980,7 +1967,7 @@ void JavaThread::exit(bool destroy_vm, ExitType exit_type) {
   remove_stack_guard_pages();
 
   if (UseTLAB) {
-    tlabs_make_parsable(true);   // retire TLABs, if any
+    tlab().make_parsable(true);  // retire TLAB
   }
 
   if (JvmtiEnv::environments_might_exist()) {
@@ -2059,7 +2046,7 @@ void JavaThread::cleanup_failed_attach_current_thread() {
   remove_stack_guard_pages();
 
   if (UseTLAB) {
-    tlabs_make_parsable(true);   // retire TLABs, if any
+    tlab().make_parsable(true);  // retire TLAB, if any
   }
 
 #if INCLUDE_ALL_GCS
@@ -2865,13 +2852,6 @@ void JavaThread::oops_do(OopClosure* f, CLDToOopClosure* cld_f, CodeBlobClosure*
     // a scan.
     cf->do_code_blob(_scanned_nmethod);
   }
-
-#ifdef GRAAL
-  Hsail::HSAILDeoptimizationInfo* gpu_hsail_deopt_info = (Hsail::HSAILDeoptimizationInfo*) get_gpu_hsail_deopt_info();
-  if (gpu_hsail_deopt_info != NULL) {
-    gpu_hsail_deopt_info->oops_do(f);
-  }
-#endif
 }
 
 void JavaThread::nmethods_do(CodeBlobClosure* cf) {
@@ -4791,54 +4771,3 @@ void Threads::verify() {
   VMThread* thread = VMThread::vm_thread();
   if (thread != NULL) thread->verify();
 }
-
-void JavaThread::tlabs_make_parsable(bool retire) {
-  // do the primary tlab for this thread
-  tlab().make_parsable(retire);
-#ifdef GRAAL
-  // do the gpu_hsail tlabs if any
-  gpu_hsail_tlabs_make_parsable(retire);
-#endif
-}
-
-
-#ifdef GRAAL
-void JavaThread::initialize_gpu_hsail_tlabs(jint count) {
-  if (!UseTLAB) return;
-  // create tlabs
-  _gpu_hsail_tlabs = NEW_C_HEAP_ARRAY(ThreadLocalAllocBuffer*, count, mtInternal);
-  // initialize
-  for (jint i = 0; i < count; i++) {
-    _gpu_hsail_tlabs[i] = new ThreadLocalAllocBuffer();
-    _gpu_hsail_tlabs[i]->initialize(Thread::current());
-  }
-  _gpu_hsail_tlabs_count = count;
-}
-
-ThreadLocalAllocBuffer* JavaThread::get_gpu_hsail_tlab_at(jint idx) {
-  assert(idx >= 0 && idx < get_gpu_hsail_tlabs_count(), "illegal gpu tlab index");
-  return _gpu_hsail_tlabs[idx];
-}
-
-void JavaThread::gpu_hsail_tlabs_make_parsable(bool retire) {
-  for (jint i = 0; i < get_gpu_hsail_tlabs_count(); i++) {
-    get_gpu_hsail_tlab_at(i)->make_parsable(retire);
-  }
-}
-
-void JavaThread::delete_gpu_hsail_tlabs() {
-  if (!UseTLAB) return;
-  if (_gpu_hsail_tlabs_count == 0) return;
-
-  gpu_hsail_tlabs_make_parsable(true);
-  for (jint i = 0; i < get_gpu_hsail_tlabs_count(); i++) {
-    delete get_gpu_hsail_tlab_at(i);
-  }
-  FREE_C_HEAP_ARRAY(ThreadLocalAllocBuffer*, _gpu_hsail_tlabs, mtInternal);
-  _gpu_hsail_tlabs = NULL;
-  _gpu_hsail_tlabs_count = 0;
-}
-
-
-#endif
-

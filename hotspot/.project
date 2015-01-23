@@ -111,11 +111,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/build/linux/linux_amd64_graal/generated</locationURI>
 		</link>
 		<link>
-			<name>hsail</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/gpu/hsail/vm</locationURI>
-		</link>
-		<link>
 			<name>linux</name>
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/os/linux/vm</locationURI>
@@ -134,11 +129,6 @@
 			<name>make</name>
 			<type>2</type>
 			<locationURI>WORKSPACE_LOC/make</locationURI>
-		</link>
-		<link>
-			<name>ptx</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/gpu/ptx/vm</locationURI>
 		</link>
 		<link>
 			<name>sparc</name>

@@ -349,7 +349,6 @@
   GRAAL_ONLY(template(com_oracle_graal_api_code_RegisterSaveLayout,             "com/oracle/graal/api/code/RegisterSaveLayout"))                  \
   GRAAL_ONLY(template(com_oracle_graal_api_code_InvalidInstalledCodeException,  "com/oracle/graal/api/code/InvalidInstalledCodeException"))       \
   GRAAL_ONLY(template(com_oracle_graal_api_code_SpeculationLog,                 "com/oracle/graal/api/code/SpeculationLog"))                      \
-  GRAAL_ONLY(template(com_oracle_graal_gpu_ExternalCompilationResult,           "com/oracle/graal/gpu/ExternalCompilationResult"))                \
   GRAAL_ONLY(template(compileMetaspaceMethod_name,               "compileMetaspaceMethod"))                                                       \
   GRAAL_ONLY(template(compileMetaspaceMethod_signature,          "(JIJI)V"))                                                                      \
   GRAAL_ONLY(template(graal_mirror_name,                         "graal_mirror"))                                                                 \
