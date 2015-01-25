@@ -339,19 +339,26 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
 
   CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
 
-  // Verify the arguments
+#ifdef GRAAL
+  nmethod* nm = args->alternative_target();
+  if (nm == NULL) {
+#endif
+// Verify the arguments
 
   if (CheckJNICalls)  {
     args->verify(method, result->get_type(), thread);
   }
   else debug_only(args->verify(method, result->get_type(), thread));
+#ifdef GRAAL
+  }
+#else
 
   // Ignore call if method is empty
   if (method->is_empty_method()) {
     assert(result->get_type() == T_VOID, "an empty method must return a void value");
     return;
   }
-
+#endif
 
 #ifdef ASSERT
   { InstanceKlass* holder = method->method_holder();
@@ -408,7 +415,6 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
   }
 
 #ifdef GRAAL
-  nmethod* nm = args->alternative_target();
   if (nm != NULL) {
     if (nm->is_alive()) {
       ((JavaThread*) THREAD)->set_graal_alternate_call_target(nm->verified_entry_point());
