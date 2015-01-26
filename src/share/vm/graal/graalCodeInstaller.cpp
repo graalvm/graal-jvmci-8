@@ -347,12 +347,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
       if (isLongArray && cur_second == NULL) {
         // we're trying to put ints into a long array... this isn't really valid, but it's used for some optimizations.
         // add an int 0 constant
-#ifdef VM_LITTLE_ENDIAN
         cur_second = _int_0_scope_value;
-#else
-        cur_second = value;
-        value = _int_0_scope_value;
-#endif
       }
 
       if (cur_second != NULL) {
