@@ -54,13 +54,6 @@ void ThreadLocalAllocBuffer::accumulate_statistics_before_gc() {
   for (JavaThread *thread = Threads::first(); thread != NULL; thread = thread->next()) {
     thread->tlab().accumulate_statistics();
     thread->tlab().initialize_statistics();
-#ifdef GRAAL
-    for (jint i = 0; i < thread->get_gpu_hsail_tlabs_count(); i++) {
-      thread->get_gpu_hsail_tlab_at(i)->accumulate_statistics();
-      thread->get_gpu_hsail_tlab_at(i)->initialize_statistics();
-    }
-#endif
-
   }
 
   // Publish new stats if some allocation occurred.
@@ -147,11 +140,6 @@ void ThreadLocalAllocBuffer::resize_all_tlabs() {
   if (ResizeTLAB) {
     for (JavaThread *thread = Threads::first(); thread != NULL; thread = thread->next()) {
       thread->tlab().resize();
-#ifdef GRAAL
-      for (jint i = 0; i < thread->get_gpu_hsail_tlabs_count(); i++) {
-        thread->get_gpu_hsail_tlab_at(i)->resize();
-      }
-#endif
     }
   }
 }
@@ -209,12 +197,11 @@ void ThreadLocalAllocBuffer::initialize(HeapWord* start,
   invariants();
 }
 
-void ThreadLocalAllocBuffer::initialize(Thread* owning_thread) {
+void ThreadLocalAllocBuffer::initialize() {
   initialize(NULL,                    // start
              NULL,                    // top
              NULL);                   // end
 
-  _owning_thread = owning_thread;
   set_desired_size(initial_desired_size());
 
   // Following check is needed because at startup the main (primordial)
@@ -243,7 +230,7 @@ void ThreadLocalAllocBuffer::startup_initialization() {
   // During jvm startup, the main (primordial) thread is initialized
   // before the heap is initialized.  So reinitialize it now.
   guarantee(Thread::current()->is_Java_thread(), "tlab initialization thread not Java thread");
-  Thread::current()->tlab().initialize(Thread::current());
+  Thread::current()->tlab().initialize();
 
   if (PrintTLAB && Verbose) {
     gclog_or_tty->print("TLAB min: " SIZE_FORMAT " initial: " SIZE_FORMAT " max: " SIZE_FORMAT "\n",
@@ -307,7 +294,9 @@ void ThreadLocalAllocBuffer::verify() {
 }
 
 Thread* ThreadLocalAllocBuffer::myThread() {
-  return _owning_thread;
+  return (Thread*)(((char *)this) +
+                   in_bytes(start_offset()) -
+                   in_bytes(Thread::tlab_start_offset()));
 }
 
 

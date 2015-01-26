@@ -123,6 +123,11 @@ public class Graph {
             }
             return false;
         }
+
+        @Override
+        public String toString() {
+            return node.toString();
+        }
     }
 
     /**
@@ -500,7 +505,7 @@ public class Graph {
             Node minCountNode = null;
             for (Node input : node.inputs()) {
                 if (input != null) {
-                    int estimate = input.getUsageCountUpperBound();
+                    int estimate = input.getUsageCount();
                     if (estimate == 0) {
                         return null;
                     } else if (estimate < minCount) {
@@ -744,6 +749,9 @@ public class Graph {
         node.id = id;
         if (nodeEventListener != null) {
             nodeEventListener.nodeAdded(node);
+        }
+        if (Fingerprint.ENABLED) {
+            Fingerprint.submit("%s: %s", NodeEvent.NODE_ADDED, node);
         }
     }
 

@@ -182,7 +182,6 @@ class nmethod : public CodeBlob {
   unsigned int _has_method_handle_invokes:1; // Has this method MethodHandle invokes?
   unsigned int _lazy_critical_native:1;      // Lazy JNI critical native
   unsigned int _has_wide_vectors:1;          // Preserve wide vectors at safepoints
-  unsigned int _external_method:1;           // Set for GPU methods
 
   // Protected by Patching_lock
   volatile unsigned char _state;             // {alive, not_entrant, zombie, unloaded}
@@ -476,9 +475,6 @@ class nmethod : public CodeBlob {
 
   bool  has_method_handle_invokes() const         { return _has_method_handle_invokes; }
   void  set_has_method_handle_invokes(bool z)     { _has_method_handle_invokes = z; }
-
-  bool  is_external_method() const                { return _external_method; }
-  void  set_external_method(bool z)               { _external_method = z; }
 
   bool  is_lazy_critical_native() const           { return _lazy_critical_native; }
   void  set_lazy_critical_native(bool z)          { _lazy_critical_native = z; }

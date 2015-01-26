@@ -48,7 +48,7 @@
 // -----------------------------------------------------
 // Implementation of JavaCallWrapper
 
-JavaCallWrapper::JavaCallWrapper(methodHandle callee_method, JavaValue* result, TRAPS) {
+JavaCallWrapper::JavaCallWrapper(methodHandle callee_method, Handle receiver, JavaValue* result, TRAPS) {
   JavaThread* thread = (JavaThread *)THREAD;
   bool clear_pending_exception = true;
 
@@ -79,9 +79,10 @@ JavaCallWrapper::JavaCallWrapper(methodHandle callee_method, JavaValue* result, 
   // Make sure to set the oop's after the thread transition - since we can block there. No one is GC'ing
   // the JavaCallWrapper before the entry frame is on the stack.
   _callee_method = callee_method();
+  _receiver = receiver();
 
 #ifdef CHECK_UNHANDLED_OOPS
-  // THREAD->allow_unhandled_oop(&_receiver);
+  THREAD->allow_unhandled_oop(&_receiver);
 #endif // CHECK_UNHANDLED_OOPS
 
   _thread       = (JavaThread *)thread;
@@ -145,6 +146,7 @@ JavaCallWrapper::~JavaCallWrapper() {
 
 
 void JavaCallWrapper::oops_do(OopClosure* f) {
+  f->do_oop((oop*)&_receiver);
   handles()->oops_do(f);
 }
 
@@ -321,7 +323,7 @@ void JavaCalls::call(JavaValue* result, methodHandle method, JavaCallArguments* 
   // Check if we need to wrap a potential OS exception handler around thread
   // This is used for e.g. Win32 structured exception handlers
   assert(THREAD->is_Java_thread(), "only JavaThreads can make JavaCalls");
-  // Need to wrap each and everytime, since there might be native code down the
+  // Need to wrap each and every time, since there might be native code down the
   // stack that has installed its own exception handlers
   os::os_exception_wrapper(call_helper, result, &method, args, THREAD);
 }
@@ -341,7 +343,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
   nmethod* nm = args->alternative_target();
   if (nm == NULL) {
 #endif
-  // Verify the arguments
+// Verify the arguments
 
   if (CheckJNICalls)  {
     args->verify(method, result->get_type(), thread);
@@ -350,6 +352,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
 #ifdef GRAAL
   }
 #else
+
   // Ignore call if method is empty
   if (method->is_empty_method()) {
     assert(result->get_type() == T_VOID, "an empty method must return a void value");
@@ -357,13 +360,12 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
   }
 #endif
 
-
 #ifdef ASSERT
   { InstanceKlass* holder = method->method_holder();
     // A klass might not be initialized since JavaCall's might be used during the executing of
     // the <clinit>. For example, a Thread.start might start executing on an object that is
     // not fully initialized! (bad Java programming style)
-    assert(holder->is_linked(), "rewritting must have taken place");
+    assert(holder->is_linked(), "rewriting must have taken place");
   }
 #endif
 
@@ -392,6 +394,9 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
   // the call to call_stub, the optimizer produces wrong code.
   intptr_t* result_val_address = (intptr_t*)(result->get_value_addr());
 
+  // Find receiver
+  Handle receiver = (!method->is_static()) ? args->receiver() : Handle();
+
   // When we reenter Java, we need to reenable the yellow zone which
   // might already be disabled when we are in VM.
   if (thread->stack_yellow_zone_disabled()) {
@@ -413,12 +418,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
   if (nm != NULL) {
     if (nm->is_alive()) {
       ((JavaThread*) THREAD)->set_graal_alternate_call_target(nm->verified_entry_point());
-      oop graalInstalledCode = nm->graal_installed_code();
-      if (graalInstalledCode != NULL && graalInstalledCode->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isExternal(graalInstalledCode)) {
-        entry_point = GraalRuntime::get_external_deopt_i2c_entry();
-      } else {
-        entry_point = method->adapter()->get_i2c_entry();
-      }
+      entry_point = method->adapter()->get_i2c_entry();
     } else {
       THROW(vmSymbols::com_oracle_graal_api_code_InvalidInstalledCodeException());
     }
@@ -426,7 +426,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
 #endif
   
   // do call
-  { JavaCallWrapper link(method, result, CHECK);
+  { JavaCallWrapper link(method, receiver, result, CHECK);
     { HandleMark hm(thread);  // HandleMark used by HandleMarkCleaner
 
       StubRoutines::call_stub()(

@@ -343,7 +343,7 @@ class CFGPrinter extends CompilationPrinter {
         out.println("=== Succesors ===");
         printNamedNodes(node, node.successors().iterator(), "", "\n", null);
         out.println("=== Usages ===");
-        if (!node.usages().isEmpty()) {
+        if (!node.hasNoUsages()) {
             for (Node usage : node.usages()) {
                 out.print(nodeToString(usage)).print(" ");
             }
@@ -579,7 +579,7 @@ class CFGPrinter extends CompilationPrinter {
         printedNodes = null;
     }
 
-    private void printScheduledBlock(Block block, List<ScheduledNode> nodesFor) {
+    private void printScheduledBlock(Block block, List<ValueNode> nodesFor) {
         printBlockProlog(block);
         begin("IR");
         out.println("HIR");

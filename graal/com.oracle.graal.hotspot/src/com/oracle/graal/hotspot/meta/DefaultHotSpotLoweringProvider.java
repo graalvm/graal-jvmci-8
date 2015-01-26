@@ -41,7 +41,6 @@ import com.oracle.graal.hotspot.nodes.*;
 import com.oracle.graal.hotspot.nodes.type.*;
 import com.oracle.graal.hotspot.replacements.*;
 import com.oracle.graal.hotspot.replacements.arraycopy.*;
-import com.oracle.graal.java.*;
 import com.oracle.graal.nodes.*;
 import com.oracle.graal.nodes.HeapAccess.BarrierType;
 import com.oracle.graal.nodes.calc.*;
@@ -354,7 +353,7 @@ public class DefaultHotSpotLoweringProvider extends DefaultJavaLoweringProvider 
             // mirroring the calculations in c1_GraphBuilder.cpp (setup_osr_entry_block)
             int localsOffset = (graph.method().getMaxLocals() - 1) * 8;
             for (OSRLocalNode osrLocal : graph.getNodes(OSRLocalNode.class)) {
-                int size = HIRFrameStateBuilder.stackSlots(osrLocal.getKind());
+                int size = osrLocal.getKind().getSlotCount();
                 int offset = localsOffset - (osrLocal.index() + size - 1) * 8;
                 IndexedLocationNode location = graph.unique(new IndexedLocationNode(ANY_LOCATION, offset, ConstantNode.forLong(0, graph), 1));
                 ReadNode load = graph.add(new ReadNode(buffer, location, osrLocal.stamp(), BarrierType.NONE));

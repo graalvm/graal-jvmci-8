@@ -38,9 +38,6 @@ class GlobalTLABStats;
 //            used to make it available for such multiplexing.
 class ThreadLocalAllocBuffer: public CHeapObj<mtThread> {
   friend class VMStructs;
-#ifdef GRAAL
-  friend class HSAILAllocationInfo;
-#endif
 private:
   HeapWord* _start;                              // address of TLAB
   HeapWord* _top;                                // address after last allocation
@@ -58,7 +55,6 @@ private:
   unsigned  _slow_refill_waste;
   unsigned  _gc_waste;
   unsigned  _slow_allocations;
-  Thread*   _owning_thread;
 
   AdaptiveWeightedAverage _allocation_fraction;  // fraction of eden allocated in tlabs
 
@@ -160,7 +156,7 @@ public:
   static void resize_all_tlabs();
 
   void fill(HeapWord* start, HeapWord* top, size_t new_size);
-  void initialize(Thread* owning_thread);
+  void initialize();
 
   static size_t refill_waste_limit_increment()   { return TLABWasteIncrement; }
 
