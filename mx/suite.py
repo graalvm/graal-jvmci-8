@@ -176,8 +176,14 @@ suite = {
       "sha1" : "f44bffaf237305512002303a306fc5ce3fa63f76",
       "urls" : ["http://lafo.ssw.uni-linz.ac.at/jmh/jmh-runner-1.4.2.jar"],
       "annotationProcessor" : "true"
+    },
+
+    "BATIK" : {
+      "path" : "lib/batik-all-1.7.jar",
+      "sha1" : "122b87ca88e41a415cf8b523fd3d03b4325134a3",
+      "urls" : ["http://lafo.ssw.uni-linz.ac.at/graal-external-deps/batik-all-1.7.jar"],
     }
-  },
+},
 
   "jrelibraries" : {
     "JFR" : {

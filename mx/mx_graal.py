@@ -1726,6 +1726,8 @@ def igv(args):
 
         if not exists(nbplatform):
             mx.logv('[This execution may take a while as the NetBeans platform needs to be downloaded]')
+        # make the jar for Batik 1.7 available.
+        env['IGV_BATIK_JAR'] = mx.library('BATIK').get_path(True)
         if mx.run(['ant', '-f', mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env, nonZeroIsFatal=False):
             mx.abort("IGV ant build & launch failed. Check '" + logFile + "'. You can also try to delete 'src/share/tools/IdealGraphVisualizer/nbplatform'.")
 
