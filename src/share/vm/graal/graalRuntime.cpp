@@ -684,7 +684,7 @@ JVM_ENTRY(jobject, JVM_CreateTruffleRuntime(JNIEnv *env, jclass c))
   KlassHandle klass = GraalRuntime::resolve_or_fail(name, CHECK_NULL);
 
   TempNewSymbol makeInstance = SymbolTable::new_symbol("makeInstance", CHECK_NULL);
-  TempNewSymbol sig = SymbolTable::new_symbol("()Lcom/oracle/graal/truffle/hotspot/HotSpotTruffleRuntime;", CHECK_NULL);
+  TempNewSymbol sig = SymbolTable::new_symbol("()Lcom/oracle/truffle/api/TruffleRuntime;", CHECK_NULL);
   JavaValue result(T_OBJECT);
   JavaCalls::call_static(&result, klass, makeInstance, sig, CHECK_NULL);
   return JNIHandles::make_local((oop) result.get_jobject());
