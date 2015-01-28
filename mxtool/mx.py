@@ -3440,7 +3440,10 @@ def projectgraph(args, suite=None):
     print 'node [shape=rect];'
     for p in projects():
         for dep in p.canonical_deps():
-            print '"' + p.name + '"->"' + dep + '"'
+            print '"' + p.name + '"->"' + dep + '";'
+        if hasattr(p, '_declaredAnnotationProcessors'):
+            for ap in p._declaredAnnotationProcessors:
+                print '"' + p.name + '"->"' + ap + '" [style="dashed"];'
     print '}'
 
 def _source_locator_memento(deps):
