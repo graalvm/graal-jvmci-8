@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,39 +22,23 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.source;
+package com.oracle.truffle.api.instrument.impl;
 
-import java.util.*;
+import com.oracle.truffle.api.instrument.*;
+import com.oracle.truffle.api.source.*;
 
-/**
- * A specification for a location in guest language source, expressed as a line number in a specific
- * instance of {@link Source}, suitable for hash table keys with equality defined in terms of
- * content.
- */
-public interface LineLocation {
+public abstract class DefaultProbeListener implements ProbeListener {
 
-    Source getSource();
+    public void startASTProbing(Source source) {
+    }
 
-    /**
-     * Gets the 1-based number of a line in the source.
-     */
-    int getLineNumber();
+    public void newProbeInserted(Probe probe) {
+    }
 
-    String getShortDescription();
+    public void probeTaggedAs(Probe probe, SyntaxTag tag, Object tagValue) {
+    }
 
-    /**
-     * Default comparator by (1) textual path name, (2) line number.
-     */
-    Comparator<LineLocation> COMPARATOR = new Comparator<LineLocation>() {
-
-        public int compare(LineLocation l1, LineLocation l2) {
-            final int sourceResult = l1.getSource().getPath().compareTo(l2.getSource().getPath());
-            if (sourceResult != 0) {
-                return sourceResult;
-            }
-            return Integer.compare(l1.getLineNumber(), l2.getLineNumber());
-        }
-
-    };
+    public void endASTProbing(Source source) {
+    }
 
 }

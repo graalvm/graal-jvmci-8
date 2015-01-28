@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,39 +22,31 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.source;
+package com.oracle.truffle.api.instrument;
 
-import java.util.*;
+import com.oracle.truffle.api.instrument.ProbeFailure.Reason;
+import com.oracle.truffle.api.nodes.*;
 
 /**
- * A specification for a location in guest language source, expressed as a line number in a specific
- * instance of {@link Source}, suitable for hash table keys with equality defined in terms of
- * content.
+ * An exception thrown when {@link Node#probe()} fails because of an implementation failure.
+ * <p>
+ * Language and tool implementations should ensure that clients of tools never see this exception.
  */
-public interface LineLocation {
+public class ProbeException extends RuntimeException {
+    static final long serialVersionUID = 1L;
+    private final ProbeFailure failure;
 
-    Source getSource();
+    public ProbeException(Reason reason, Node parent, Node child, Object wrapper) {
+        this.failure = new ProbeFailure(reason, parent, child, wrapper);
+    }
 
-    /**
-     * Gets the 1-based number of a line in the source.
-     */
-    int getLineNumber();
+    public ProbeFailure getFailure() {
+        return failure;
+    }
 
-    String getShortDescription();
-
-    /**
-     * Default comparator by (1) textual path name, (2) line number.
-     */
-    Comparator<LineLocation> COMPARATOR = new Comparator<LineLocation>() {
-
-        public int compare(LineLocation l1, LineLocation l2) {
-            final int sourceResult = l1.getSource().getPath().compareTo(l2.getSource().getPath());
-            if (sourceResult != 0) {
-                return sourceResult;
-            }
-            return Integer.compare(l1.getLineNumber(), l2.getLineNumber());
-        }
-
-    };
+    @Override
+    public String toString() {
+        return failure.getMessage();
+    }
 
 }
