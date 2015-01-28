@@ -33,7 +33,6 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
 
   static jobject _HotSpotGraalRuntime_instance;
   static bool _HotSpotGraalRuntime_initialized;
-  static address _external_deopt_i2c_entry;
   static const char* _generated_sources_sha1;
 
   static bool _shutdown_called;
@@ -222,11 +221,6 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
   static bool parse_arguments(KlassHandle hotSpotOptionsClass, TRAPS);
 
   static BasicType kindToBasicType(jchar ch);
-  static address create_external_deopt_i2c();
-  static address get_external_deopt_i2c_entry() {
-    guarantee(_external_deopt_i2c_entry != NULL, "unsupported");
-    return _external_deopt_i2c_entry;
-  }
 
   // The following routines are all called from compiled Graal code
 
