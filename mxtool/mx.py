@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------------------------------
 #
-# Copyright (c) 2007, 2012, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -34,7 +34,6 @@ Full documentation can be found at https://wiki.openjdk.java.net/display/Graal/T
 """
 
 import sys, os, errno, time, subprocess, shlex, types, StringIO, zipfile, signal, xml.sax.saxutils, tempfile, fnmatch, platform
-import multiprocessing
 import textwrap
 import socket
 import tarfile
@@ -61,6 +60,22 @@ def check_output(*popenargs, **kwargs):
         error.output = output
         raise error
     return output
+
+# Support for jython
+def is_jython():
+    return sys.platform.startswith('java')
+
+if not is_jython():
+    import multiprocessing
+
+def cpu_count():
+    if is_jython():
+        from java.lang import Runtime
+        runtime = Runtime.getRuntime()
+        return runtime.availableProcessors()
+    else:
+        return multiprocessing.cpu_count()
+
 
 try: subprocess.check_output
 except: subprocess.check_output = check_output
@@ -251,6 +266,9 @@ class Dependency:
         self.name = name
         self.suite = suite
 
+    def __cmp__(self, other):
+        return cmp(self.name, other.name)
+
     def __str__(self):
         return self.name
 
@@ -307,7 +325,7 @@ class Project(Dependency):
         Add the transitive set of dependencies for this project, including
         libraries if 'includeLibs' is true, to the 'deps' list.
         """
-        return self._all_deps_helper(deps, [], includeLibs, includeSelf, includeJreLibs, includeAnnotationProcessors)
+        return sorted(self._all_deps_helper(deps, [], includeLibs, includeSelf, includeJreLibs, includeAnnotationProcessors))
 
     def _all_deps_helper(self, deps, dependants, includeLibs, includeSelf=True, includeJreLibs=False, includeAnnotationProcessors=False):
         if self in dependants:
@@ -527,7 +545,7 @@ class Project(Dependency):
                 # Inherit annotation processors from dependencies
                 aps.update(p.annotation_processors())
 
-            self._annotationProcessors = list(aps)
+            self._annotationProcessors = sorted(list(aps))
         return self._annotationProcessors
 
     """
@@ -536,9 +554,16 @@ class Project(Dependency):
     """
     def annotation_processors_path(self):
         aps = [project(ap) for ap in self.annotation_processors()]
-        if len(aps):
-            return os.pathsep.join([ap.definedAnnotationProcessorsDist.path for ap in aps if ap.definedAnnotationProcessorsDist])
+        libAps = [dep for dep in self.all_deps([], includeLibs=True, includeSelf=False) if dep.isLibrary() and hasattr(dep, 'annotationProcessor') and getattr(dep, 'annotationProcessor').lower() == 'true']
+        if len(aps) + len(libAps):
+            return os.pathsep.join([ap.definedAnnotationProcessorsDist.path for ap in aps if ap.definedAnnotationProcessorsDist] + [lib.get_path(False) for lib in libAps])
         return None
+
+    def uses_annotation_processor_library(self):
+        for dep in self.all_deps([], includeLibs=True, includeSelf=False):
+            if dep.isLibrary() and hasattr(dep, 'annotationProcessor'):
+                return True
+        return False
 
     def update_current_annotation_processors_file(self):
         aps = self.annotation_processors()
@@ -589,8 +614,9 @@ def sha1OfFile(path):
         return d.hexdigest()
 
 def download_file_with_sha1(name, path, urls, sha1, sha1path, resolve, mustExist, sources=False, canSymlink=True):
+    canSymlink = canSymlink and not (get_os() == 'windows' or get_os() == 'cygwin')
     def _download_lib():
-        cacheDir = get_env('MX_CACHE_DIR', join(_opts.user_home, '.mx', 'cache'))
+        cacheDir = _cygpathW2U(get_env('MX_CACHE_DIR', join(_opts.user_home, '.mx', 'cache')))
         if not exists(cacheDir):
             os.makedirs(cacheDir)
         base = basename(path)
@@ -680,7 +706,7 @@ class JreLibrary(BaseLibrary):
         """
         if includeJreLibs and includeSelf and not self in deps:
             deps.append(self)
-        return deps
+        return sorted(deps)
 
 class Library(BaseLibrary):
     def __init__(self, suite, name, path, optional, urls, sha1, sourcePath, sourceUrls, sourceSha1, deps):
@@ -753,10 +779,10 @@ class Library(BaseLibrary):
         Add the transitive set of dependencies for this library to the 'deps' list.
         """
         if not includeLibs:
-            return deps
+            return sorted(deps)
         childDeps = list(self.deps)
         if self in deps:
-            return deps
+            return sorted(deps)
         for name in childDeps:
             assert name != self.name
             dep = library(name)
@@ -764,7 +790,7 @@ class Library(BaseLibrary):
                 dep.all_deps(deps, includeLibs=includeLibs, includeJreLibs=includeJreLibs, includeAnnotationProcessors=includeAnnotationProcessors)
         if not self in deps and includeSelf:
             deps.append(self)
-        return deps
+        return sorted(deps)
 
 class HgConfig:
     """
@@ -961,7 +987,7 @@ class Suite:
                 abort('Attribute "' + name + '" for ' + context + ' must be a list')
             return v
 
-        for name, attrs in projsMap.iteritems():
+        for name, attrs in sorted(projsMap.iteritems()):
             context = 'project ' + name
             srcDirs = pop_list(attrs, 'sourceDirs', context)
             deps = pop_list(attrs, 'dependencies', context)
@@ -983,14 +1009,14 @@ class Suite:
             p.__dict__.update(attrs)
             self.projects.append(p)
 
-        for name, attrs in jreLibsMap.iteritems():
+        for name, attrs in sorted(jreLibsMap.iteritems()):
             jar = attrs.pop('jar')
             # JRE libraries are optional by default
             optional = attrs.pop('optional', 'true') != 'false'
             l = JreLibrary(self, name, jar, optional)
             self.jreLibs.append(l)
 
-        for name, attrs in libsMap.iteritems():
+        for name, attrs in sorted(libsMap.iteritems()):
             context = 'library ' + name
             if "|" in name:
                 if name.count('|') != 2:
@@ -1011,7 +1037,7 @@ class Suite:
             l.__dict__.update(attrs)
             self.libs.append(l)
 
-        for name, attrs in distsMap.iteritems():
+        for name, attrs in sorted(distsMap.iteritems()):
             context = 'distribution ' + name
             path = attrs.pop('path')
             sourcesPath = attrs.pop('sourcesPath', None)
@@ -1289,11 +1315,29 @@ class XMLDoc(xml.dom.minidom.Document):
             result = result.replace('encoding="UTF-8"?>', 'encoding="UTF-8" standalone="' + str(standalone) + '"?>')
         return result
 
+def get_jython_os():
+    from java.lang import System as System
+    os_name = System.getProperty('os.name').lower()
+    if System.getProperty('isCygwin'):
+        return 'cygwin'
+    elif os_name.startswith('mac'):
+        return 'darwin'
+    elif os_name.startswith('linux'):
+        return 'linux'
+    elif os_name.startswith('sunos'):
+        return 'solaris'
+    elif os_name.startswith('win'):
+        return 'windows'
+    else:
+        abort('Unknown operating system ' + os_name)
+
 def get_os():
     """
     Get a canonical form of sys.platform.
     """
-    if sys.platform.startswith('darwin'):
+    if is_jython():
+        return get_jython_os()
+    elif sys.platform.startswith('darwin'):
         return 'darwin'
     elif sys.platform.startswith('linux'):
         return 'linux'
@@ -1313,7 +1357,7 @@ def _cygpathU2W(p):
     """
     if p is None or get_os() != "cygwin":
         return p
-    return subprocess.check_output(['cygpath', '-w', p]).strip()
+    return subprocess.check_output(['cygpath', '-a', '-w', p]).strip()
 
 def _cygpathW2U(p):
     """
@@ -1322,7 +1366,7 @@ def _cygpathW2U(p):
     """
     if p is None or get_os() != "cygwin":
         return p
-    return subprocess.check_output(['cygpath', '-u', p]).strip()
+    return subprocess.check_output(['cygpath', '-a', '-u', p]).strip()
 
 def _separatedCygpathU2W(p):
     """
@@ -1593,9 +1637,21 @@ def sorted_project_deps(projects, includeLibs=False, includeJreLibs=False, inclu
         p.all_deps(deps, includeLibs=includeLibs, includeJreLibs=includeJreLibs, includeAnnotationProcessors=includeAnnotationProcessors)
     return deps
 
-def _handle_missing_java_home():
+def _handle_lookup_java_home(jdk):
+    return _handle_lookup_jdk(jdk, 'JAVA_HOME', '--java-home', False)
+
+def _handle_lookup_extra_java_homes(jdk):
+    return _handle_lookup_jdk(jdk, 'EXTRA_JAVA_HOMES', '--extra-java-homes', True)
+
+def _handle_lookup_jdk(jdk, varName, flagName, allowMultiple):
+    if jdk != None and jdk != '':
+        return jdk
+    jdk = os.environ.get(varName)
+    if jdk != None and jdk != '':
+        return jdk
+
     if not sys.stdout.isatty():
-        abort('Could not find bootstrap JDK. Use --java-home option or ensure JAVA_HOME environment variable is set.')
+        abort('Could not find bootstrap {0}. Use {1} option or ensure {2} environment variable is set.'.format(varName, flagName, varName))
 
     candidateJdks = []
     if get_os() == 'darwin':
@@ -1613,12 +1669,15 @@ def _handle_missing_java_home():
 
     javaHome = None
     if len(candidateJdks) != 0:
-        javaHome = select_items(candidateJdks + ['<other>'], allowMultiple=False)
+        log('Missing value for {0}.'.format(varName))
+        javaHome = select_items(candidateJdks + ['<other>'], allowMultiple=allowMultiple)
         if javaHome == '<other>':
             javaHome = None
+        if javaHome != None and allowMultiple:
+            javaHome = os.pathsep.join(javaHome)
 
     while javaHome is None:
-        javaHome = raw_input('Enter path of bootstrap JDK: ')
+        javaHome = raw_input('Enter path of JDK for {0}: '.format(varName))
         rtJarPath = join(javaHome, 'jre', 'lib', 'rt.jar')
         if not exists(rtJarPath):
             log('Does not appear to be a valid JDK as ' + rtJarPath + ' does not exist')
@@ -1627,9 +1686,9 @@ def _handle_missing_java_home():
             break
 
     envPath = join(_primary_suite.mxDir, 'env')
-    if ask_yes_no('Persist this setting by adding "JAVA_HOME=' + javaHome + '" to ' + envPath, 'y'):
+    if ask_yes_no('Persist this setting by adding "{0}={1}" to {2}'.format(varName, javaHome, envPath), 'y'):
         with open(envPath, 'a') as fp:
-            print >> fp, 'JAVA_HOME=' + javaHome
+            print >> fp, varName + '=' + javaHome
 
     return javaHome
 
@@ -1650,6 +1709,7 @@ class ArgParser(ArgumentParser):
         self.add_argument('-p', '--primary-suite-path', help='set the primary suite directory', metavar='<path>')
         self.add_argument('--dbg', type=int, dest='java_dbg_port', help='make Java processes wait on <port> for a debugger', metavar='<port>')
         self.add_argument('-d', action='store_const', const=8000, dest='java_dbg_port', help='alias for "-dbg 8000"')
+        self.add_argument('--backup-modified', action='store_true', help='backup generated files if they pre-existed and are modified')
         self.add_argument('--cp-pfx', dest='cp_prefix', help='class path prefix', metavar='<arg>')
         self.add_argument('--cp-sfx', dest='cp_suffix', help='class path suffix', metavar='<arg>')
         self.add_argument('--J', dest='java_args', help='Java VM arguments (e.g. --J @-dsa)', metavar='@<args>')
@@ -1683,13 +1743,8 @@ class ArgParser(ArgumentParser):
         if opts.very_verbose:
             opts.verbose = True
 
-        if opts.java_home is None:
-            opts.java_home = os.environ.get('JAVA_HOME')
-        if opts.extra_java_homes is None:
-            opts.extra_java_homes = os.environ.get('EXTRA_JAVA_HOMES')
-
-        if opts.java_home is None or opts.java_home == '':
-            opts.java_home = _handle_missing_java_home()
+        opts.java_home = _handle_lookup_java_home(opts.java_home)
+        opts.extra_java_homes = _handle_lookup_extra_java_homes(opts.extra_java_homes)
 
         if opts.user_home is None or opts.user_home == '':
             abort('Could not find user home. Use --user-home option or ensure HOME environment variable is set.')
@@ -1820,7 +1875,19 @@ def run(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, e
         assert isinstance(arg, types.StringTypes), 'argument is not a string: ' + str(arg)
 
     if env is None:
-        env = os.environ
+        env = os.environ.copy()
+
+    # Ideally the command line could be communicated directly in an environment
+    # variable. However, since environment variables share the same resource
+    # space as the command line itself (on Unix at least), this would cause the
+    # limit to be exceeded too easily.
+    with tempfile.NamedTemporaryFile(suffix='', prefix='mx_subprocess_command.', mode='w', delete=False) as fp:
+        subprocessCommandFile = fp.name
+        for arg in args:
+            # TODO: handle newlines in args once there's a use case
+            assert '\n' not in arg
+            print >> fp, arg
+    env['MX_SUBPROCESS_COMMAND_FILE'] = subprocessCommandFile
 
     if _opts.verbose:
         if _opts.very_verbose:
@@ -1838,11 +1905,11 @@ def run(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, e
         # can use os.killpg() to kill the whole subprocess group
         preexec_fn = None
         creationflags = 0
-        if get_os() == 'windows':
-            creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
-        else:
-            preexec_fn = os.setsid
-
+        if not is_jython():
+            if get_os() == 'windows':
+                creationflags = subprocess.CREATE_NEW_PROCESS_GROUP
+            else:
+                preexec_fn = os.setsid
         def redirect(stream, f):
             for line in iter(stream.readline, ''):
                 f(line)
@@ -1882,6 +1949,7 @@ def run(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, e
         abort(1)
     finally:
         _removeSubprocess(sub)
+        os.remove(subprocessCommandFile)
 
     if retcode and nonZeroIsFatal:
         if _opts.verbose:
@@ -2070,19 +2138,31 @@ class JavaConfig:
         javaSource = join(myDir, 'ClasspathDump.java')
         if not exists(join(outDir, 'ClasspathDump.class')):
             subprocess.check_call([self.javac, '-d', _cygpathU2W(outDir), _cygpathU2W(javaSource)], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        self._bootclasspath, self._extdirs, self._endorseddirs = [x if x != 'null' else None for x in subprocess.check_output([self.java, '-cp', _separatedCygpathU2W(outDir), 'ClasspathDump'], stderr=subprocess.PIPE).split('|')]
+        self._bootclasspath, self._extdirs, self._endorseddirs = [x if x != 'null' else None for x in subprocess.check_output([self.java, '-cp', _cygpathU2W(outDir), 'ClasspathDump'], stderr=subprocess.PIPE).split('|')]
         if not self._bootclasspath or not self._extdirs or not self._endorseddirs:
             warn("Could not find all classpaths: boot='" + str(self._bootclasspath) + "' extdirs='" + str(self._extdirs) + "' endorseddirs='" + str(self._endorseddirs) + "'")
         self._bootclasspath = _filter_non_existant_paths(self._bootclasspath)
         self._extdirs = _filter_non_existant_paths(self._extdirs)
         self._endorseddirs = _filter_non_existant_paths(self._endorseddirs)
 
+    def __repr__(self):
+        return "JavaConfig(" + str(self.jdk) + ", " + str(self.debug_port) + ")"
+
+    def __str__(self):
+        return "Java " + str(self.version) + " (" + str(self.javaCompliance) + ") from " + str(self.jdk)
+
     def __hash__(self):
         return hash(self.jdk)
 
     def __cmp__(self, other):
         if isinstance(other, JavaConfig):
-            return cmp(self.javaCompliance, other.javaCompliance)
+            compilanceCmp = cmp(self.javaCompliance, other.javaCompliance)
+            if compilanceCmp:
+                return compilanceCmp
+            versionCmp = cmp(self.version, other.version)
+            if versionCmp:
+                return versionCmp
+            return cmp(self.jdk, other.jdk)
         raise TypeError()
 
     def format_cmd(self, args, addDefaultArgs):
@@ -2218,7 +2298,7 @@ def abort(codeOrMessage):
     def is_alive(p):
         if isinstance(p, subprocess.Popen):
             return p.poll() is None
-        assert isinstance(p, multiprocessing.Process), p
+        assert is_jython() or isinstance(p, multiprocessing.Process), p
         return p.is_alive()
 
     for p, args in _currentSubprocesses:
@@ -2277,6 +2357,9 @@ def update_file(path, content):
 
         if old == content:
             return False
+
+        if existed and _opts.backup_modified:
+            shutil.move(path, path + '.orig')
 
         with open(path, 'wb') as f:
             f.write(content)
@@ -2381,7 +2464,10 @@ class JavaCompileTask:
                     with open(jdtProperties) as fp:
                         origContent = fp.read()
                         content = origContent
-                        if args.jdt_warning_as_error:
+                        if self.proj.uses_annotation_processor_library():
+                            # unfortunately, the command line compiler doesn't let us ignore warnings for generated files only
+                            content = content.replace('=warning', '=ignore')
+                        elif args.jdt_warning_as_error:
                             content = content.replace('=warning', '=error')
                         if not args.jdt_show_task_tags:
                             content = content + '\norg.eclipse.jdt.core.compiler.problem.tasks=ignore'
@@ -2424,7 +2510,7 @@ def build(args, parser=None):
     parser = parser if parser is not None else ArgumentParser(prog='mx build')
     parser.add_argument('-f', action='store_true', dest='force', help='force build (disables timestamp checking)')
     parser.add_argument('-c', action='store_true', dest='clean', help='removes existing build output')
-    parser.add_argument('-p', action='store_true', dest='parallelize', help='parallelizes Java compilation')
+    parser.add_argument('-p', action='store_true', dest='parallelize', help='parallelizes Java compilation if possible')
     parser.add_argument('--source', dest='compliance', help='Java compliance level for projects without an explicit one')
     parser.add_argument('--Wapi', action='store_true', dest='warnAPI', help='show warnings about using internal APIs')
     parser.add_argument('--projects', action='store', help='comma separated projects to build (omit to build all projects)')
@@ -2443,6 +2529,11 @@ def build(args, parser=None):
         parser.add_argument('remainder', nargs=REMAINDER, metavar='...')
 
     args = parser.parse_args(args)
+
+    if is_jython():
+        if args.parallelize:
+            logv('[multiprocessing not available in jython]')
+            args.parallelize = False
 
     jdtJar = None
     if not args.javac and args.jdt is not None:
@@ -2600,7 +2691,7 @@ def build(args, parser=None):
                 t._d = None
             return sorted(tasks, compareTasks)
 
-        cpus = multiprocessing.cpu_count()
+        cpus = cpu_count()
         worklist = sortWorklist(tasks.values())
         active = []
         failed = []
@@ -3523,11 +3614,19 @@ def _eclipseinit_project(p, files=None, libFiles=None):
             os.mkdir(srcDir)
         out.element('classpathentry', {'kind' : 'src', 'path' : src})
 
-    if len(p.annotation_processors()) > 0:
+    processorPath = p.annotation_processors_path()
+    if processorPath:
         genDir = p.source_gen_dir()
         if not exists(genDir):
             os.mkdir(genDir)
-        out.element('classpathentry', {'kind' : 'src', 'path' : 'src_gen'})
+        out.open('classpathentry', {'kind' : 'src', 'path' : 'src_gen'})
+        if p.uses_annotation_processor_library():
+            # ignore warnings produced by third-party annotation processors
+            out.open('attributes')
+            out.element('attribute', {'name' : 'ignore_optional_problems', 'value' : 'true'})
+            out.close('attributes')
+        out.close('classpathentry')
+
         if files:
             files.append(genDir)
 
@@ -3554,10 +3653,10 @@ def _eclipseinit_project(p, files=None, libFiles=None):
         elif dep.isProject():
             projectDeps.add(dep)
 
-    for dep in containerDeps:
+    for dep in sorted(containerDeps):
         out.element('classpathentry', {'exported' : 'true', 'kind' : 'con', 'path' : dep})
 
-    for dep in libraryDeps:
+    for dep in sorted(libraryDeps):
         path = dep.path
         dep.get_path(resolve=True)
 
@@ -3575,7 +3674,7 @@ def _eclipseinit_project(p, files=None, libFiles=None):
         if libFiles:
             libFiles.append(path)
 
-    for dep in projectDeps:
+    for dep in sorted(projectDeps):
         out.element('classpathentry', {'combineaccessrules' : 'false', 'exported' : 'true', 'kind' : 'src', 'path' : '/' + dep.name})
 
     out.element('classpathentry', {'kind' : 'output', 'path' : getattr(p, 'eclipse.output', 'bin')})
@@ -3707,19 +3806,18 @@ def _eclipseinit_project(p, files=None, libFiles=None):
     # copy a possibly modified file to the project's .settings directory
     for name, path in esdict.iteritems():
         # ignore this file altogether if this project has no annotation processors
-        if name == "org.eclipse.jdt.apt.core.prefs" and not len(p.annotation_processors()) > 0:
+        if name == "org.eclipse.jdt.apt.core.prefs" and not processorPath:
             continue
 
         with open(path) as f:
             content = f.read()
         content = content.replace('${javaCompliance}', str(p.javaCompliance))
-        if len(p.annotation_processors()) > 0:
+        if processorPath:
             content = content.replace('org.eclipse.jdt.core.compiler.processAnnotations=disabled', 'org.eclipse.jdt.core.compiler.processAnnotations=enabled')
         update_file(join(settingsDir, name), content)
         if files:
             files.append(join(settingsDir, name))
 
-    processorPath = p.annotation_processors_path()
     if processorPath:
         out = XMLDoc()
         out.open('factorypath')
@@ -4451,7 +4549,7 @@ def _intellij_suite(args, suite, refreshOnly=False):
 
     if annotationProcessorProfiles:
         compilerXml.open('annotationProcessing')
-        for processors, modules in annotationProcessorProfiles.items():
+        for processors, modules in sorted(annotationProcessorProfiles.iteritems()):
             compilerXml.open('profile', attributes={'default': 'false', 'name': '-'.join(processors), 'enabled': 'true'})
             compilerXml.element('sourceOutputDir', attributes={'name': 'src_gen'})  # TODO use p.source_gen_dir() ?
             compilerXml.element('outputRelativeToContentRoot', attributes={'value': 'true'})
@@ -5226,11 +5324,12 @@ def main():
     c, _ = _commands[command][:2]
     def term_handler(signum, frame):
         abort(1)
-    signal.signal(signal.SIGTERM, term_handler)
+    if not is_jython():
+        signal.signal(signal.SIGTERM, term_handler)
 
     def quit_handler(signum, frame):
         _send_sigquit()
-    if get_os() != 'windows':
+    if not is_jython() and get_os() != 'windows':
         signal.signal(signal.SIGQUIT, quit_handler)
 
     try:

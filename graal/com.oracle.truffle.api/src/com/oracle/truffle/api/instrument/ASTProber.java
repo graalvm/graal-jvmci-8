@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,13 +31,14 @@ import com.oracle.truffle.api.nodes.*;
  * not yet executed) AST.
  *
  * @see Probe
- * @see Probe#addProbeListener(com.oracle.truffle.api.instrument.Probe.ProbeListener)
+ * @see Probe#addProbeListener(ProbeListener)
  */
 public interface ASTProber {
 
     /**
      * Walk the AST starting at a node and enable instrumentation at selected nodes by attaching
-     * {@linkplain Probe Probes} to them.
+     * {@linkplain Probe Probes} to them. Ignore {@linkplain Node#isInstrumentable()
+     * non-instrumentable} nodes.
      */
     void probeAST(Node node);
 

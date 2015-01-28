@@ -223,7 +223,6 @@ class Ticks;
   GRAAL_ONLY(do_klass(CompilationResult_Mark_klass,          com_oracle_graal_api_code_CompilationResult_Mark,             Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_Infopoint_klass,     com_oracle_graal_api_code_CompilationResult_Infopoint,        Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_Site_klass,          com_oracle_graal_api_code_CompilationResult_Site,             Graal)) \
-  GRAAL_ONLY(do_klass(ExternalCompilationResult_klass,       com_oracle_graal_gpu_ExternalCompilationResult,               Graal)) \
   GRAAL_ONLY(do_klass(InfopointReason_klass,                 com_oracle_graal_api_code_InfopointReason,                    Graal)) \
   GRAAL_ONLY(do_klass(InstalledCode_klass,                   com_oracle_graal_api_code_InstalledCode,                      Graal)) \
   GRAAL_ONLY(do_klass(code_Register_klass,                   com_oracle_graal_api_code_Register,                           Graal)) \

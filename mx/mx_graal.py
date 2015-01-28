@@ -3,7 +3,7 @@
 #
 # ----------------------------------------------------------------------------------------------------
 #
-# Copyright (c) 2007, 2012, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2007, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -26,7 +26,7 @@
 #
 # ----------------------------------------------------------------------------------------------------
 
-import os, stat, errno, sys, shutil, zipfile, tarfile, tempfile, re, time, datetime, platform, subprocess, multiprocessing, StringIO, socket
+import os, stat, errno, sys, shutil, zipfile, tarfile, tempfile, re, time, datetime, platform, subprocess, StringIO, socket
 from os.path import join, exists, dirname, basename
 from argparse import ArgumentParser, RawDescriptionHelpFormatter, REMAINDER
 from outputparser import OutputParser, ValuesMatcher
@@ -697,7 +697,7 @@ def buildvars(args):
     buildVars = {
         'ALT_BOOTDIR' : 'The location of the bootstrap JDK installation (default: ' + mx.java().jdk + ')',
         'ALT_OUTPUTDIR' : 'Build directory',
-        'HOTSPOT_BUILD_JOBS' : 'Number of CPUs used by make (default: ' + str(multiprocessing.cpu_count()) + ')',
+        'HOTSPOT_BUILD_JOBS' : 'Number of CPUs used by make (default: ' + str(mx.cpu_count()) + ')',
         'INSTALL' : 'Install the built VM into the JDK? (default: y)',
         'ZIP_DEBUGINFO_FILES' : 'Install zipped debug symbols file? (default: 0)',
     }
@@ -888,7 +888,7 @@ def build(args, vm=None):
                 mx.log('Error building project')
                 return
         else:
-            cpus = multiprocessing.cpu_count()
+            cpus = mx.cpu_count()
             makeDir = join(_graal_home, 'make')
             runCmd = [mx.gmake_cmd(), '-C', makeDir]
 
@@ -1023,8 +1023,15 @@ def _parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
         jacocoagent = mx.library("JACOCOAGENT", True)
         # Exclude all compiler tests and snippets
 
-        baseExcludes = ['com.oracle.graal.compiler.test', 'com.oracle.graal.jtt', 'com.oracle.graal.api.meta.test', 'com.oracle.truffle.api.test', \
-                'com.oracle.truffle.api.dsl.test', 'com.oracle.graal.truffle', 'com.oracle.graal.truffle.test', 'com.oracle.graal.compiler.hsail.test']
+        includes = ['com.oracle.graal.*']
+        baseExcludes = []
+        for p in mx.projects():
+            projsetting = getattr(p, 'jacoco', '')
+            if projsetting == 'exclude':
+                baseExcludes.append(p.name)
+            if projsetting == 'include':
+                includes.append(p.name + '.*')
+
         def _filter(l):
             # filter out specific classes which are already covered by a baseExclude package
             return [clazz for clazz in l if not any([clazz.startswith(package) for package in baseExcludes])]
@@ -1034,7 +1041,6 @@ def _parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
             excludes += _filter(p.find_classes_with_matching_source_line(None, lambda line: 'JaCoCo Exclude' in line, includeInnerClasses=True).keys())
 
         excludes += [package + '.*' for package in baseExcludes]
-        includes = ['com.oracle.graal.*']
         agentOptions = {
                         'append' : 'true' if _jacoco == 'append' else 'false',
                         'bootclasspath' : 'true',
@@ -1330,6 +1336,46 @@ def shortunittest(args):
 
     args = ['--whitelist', 'test/whitelist_shortunittest.txt'] + args
     unittest(args)
+
+def microbench(args):
+    """run JMH microbenchmark projects"""
+    vmArgs, jmhArgs = _extract_VM_args(args, useDoubleDash=True)
+
+    # look for -f in JMH arguments
+    containsF = False
+    forking = True
+    for i in range(len(jmhArgs)):
+        arg = jmhArgs[i]
+        if arg.startswith('-f'):
+            containsF = True
+            if arg == '-f' and (i+1) < len(jmhArgs):
+                arg += jmhArgs[i+1]
+            try:
+                if int(arg[2:]) == 0:
+                    forking = False
+            except ValueError:
+                pass
+
+    # default to -f1 if not specified otherwise
+    if not containsF:
+        jmhArgs += ['-f1']
+
+    # find all projects with the JMH dependency
+    jmhProjects = []
+    for p in mx.projects():
+        if 'JMH' in p.deps:
+            jmhProjects.append(p.name)
+    cp = mx.classpath(jmhProjects)
+
+    # execute JMH runner
+    args = ['-cp', cp]
+    if not forking:
+        args += vmArgs
+    args += ['org.openjdk.jmh.Main']
+    if forking:
+        (_, _, jvm, _, _) = _parseVmArgs(vmArgs)
+        args += ['--jvmArgsPrepend', ' '.join(['-' + jvm] + vmArgs)]
+    vm(args + jmhArgs)
 
 def buildvms(args):
     """build one or more VMs in various configurations"""
@@ -1633,8 +1679,14 @@ def longtests(args):
     dacapo(['100', 'eclipse', '-esa'])
 
 def _igvFallbackJDK(env):
-    igvHomes = [h for h in mx._java_homes if h.version < mx.VersionSpec("1.8.0_20") or h.version >= mx.VersionSpec("1.8.0_40")]
-    if igvHomes[0] != mx._java_homes[0]:
+    v8u20 = mx.VersionSpec("1.8.0_20")
+    v8u40 = mx.VersionSpec("1.8.0_40")
+    v8 = mx.VersionSpec("1.8")
+    igvHomes = [h for h in mx._java_homes if h.version >= v8 and (h.version < v8u20 or h.version >= v8u40)]
+    defaultJava = mx.java()
+    if defaultJava not in igvHomes:
+        if not igvHomes:
+            mx.abort("No JDK available for building IGV. Must have JDK >= 1.8 and < 1.8.0u20 or >= 1.8.0u40 in JAVA_HOME or EXTRA_JAVA_HOMES")
         env = dict(env)
         fallbackJDK = igvHomes[0]
         mx.logv("1.8.0_20 has a known javac bug (JDK-8043926), thus falling back to " + str(fallbackJDK.version))
@@ -1643,7 +1695,8 @@ def _igvFallbackJDK(env):
 
 def igv(args):
     """run the Ideal Graph Visualizer"""
-    with open(join(_graal_home, '.ideal_graph_visualizer.log'), 'w') as fp:
+    logFile = '.ideal_graph_visualizer.log'
+    with open(join(_graal_home, logFile), 'w') as fp:
         # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
         env = dict(os.environ)
         proxy = os.environ.get('http_proxy')
@@ -1673,7 +1726,10 @@ def igv(args):
 
         if not exists(nbplatform):
             mx.logv('[This execution may take a while as the NetBeans platform needs to be downloaded]')
-        mx.run(['ant', '-f', mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env)
+        # make the jar for Batik 1.7 available.
+        env['IGV_BATIK_JAR'] = mx.library('BATIK').get_path(True)
+        if mx.run(['ant', '-f', mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env, nonZeroIsFatal=False):
+            mx.abort("IGV ant build & launch failed. Check '" + logFile + "'. You can also try to delete 'src/share/tools/IdealGraphVisualizer/nbplatform'.")
 
 def maven_install_truffle(args):
     """install Truffle into your local Maven repository"""
@@ -2125,7 +2181,25 @@ def jacocoreport(args):
         out = args[0]
     elif len(args) > 1:
         mx.abort('jacocoreport takes only one argument : an output directory')
-    mx.run_java(['-jar', jacocoreport.get_path(True), '--in', 'jacoco.exec', '--out', out] + [p.dir for p in mx.projects()])
+
+    includes = ['com.oracle.graal']
+    for p in mx.projects():
+        projsetting = getattr(p, 'jacoco', '')
+        if projsetting == 'include':
+            includes.append(p.name)
+
+    includedirs = set()
+    for p in mx.projects():
+        for include in includes:
+            if include in p.dir:
+                includedirs.add(p.dir)
+
+    for i in includedirs:
+        bindir = i + '/bin'
+        if not os.path.exists(bindir):
+            os.makedirs(bindir)
+
+    mx.run_java(['-jar', jacocoreport.get_path(True), '--in', 'jacoco.exec', '--out', out] + sorted(includedirs))
 
 def sl(args):
     """run an SL program"""
@@ -2366,6 +2440,7 @@ def mx_init(suite):
         'specjbb2005': [specjbb2005, '[VM options] [-- [SPECjbb2005 options]]'],
         'gate' : [gate, '[-options]'],
         'bench' : [bench, '[-resultfile file] [all(default)|dacapo|specjvm2008|bootstrap]'],
+        'microbench' : [microbench, '[VM options] [-- [JMH options]]'],
         'unittest' : [unittest, '[unittest options] [--] [VM options] [filters...]', _unittestHelpSuffix],
         'makejmhdeps' : [makejmhdeps, ''],
         'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', _unittestHelpSuffix],
@@ -2392,6 +2467,7 @@ def mx_init(suite):
         mx.add_argument('--ecl', action='store_true', dest='make_eclipse_launch', help='create launch configuration for running VM execution(s) in Eclipse')
         mx.add_argument('--vmprefix', action='store', dest='vm_prefix', help='prefix for running the VM (e.g. "/usr/bin/gdb --args")', metavar='<prefix>')
         mx.add_argument('--gdb', action='store_const', const='/usr/bin/gdb --args', dest='vm_prefix', help='alias for --vmprefix "/usr/bin/gdb --args"')
+        mx.add_argument('--lldb', action='store_const', const='lldb --', dest='vm_prefix', help='alias for --vmprefix "lldb --"')
 
         commands.update({
             'export': [export, '[-options] [zipfile]'],

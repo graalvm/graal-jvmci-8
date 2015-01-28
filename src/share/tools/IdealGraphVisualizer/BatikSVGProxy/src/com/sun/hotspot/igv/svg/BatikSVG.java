@@ -25,9 +25,13 @@ package com.sun.hotspot.igv.svg;
 
 import java.awt.Graphics2D;
 import java.io.Writer;
+import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import org.w3c.dom.DOMImplementation;
 
 /**
@@ -53,7 +57,13 @@ public class BatikSVG {
     public static Graphics2D createGraphicsObject() {
         try {
             if (SVGGraphics2DConstructor == null) {
-                ClassLoader cl = BatikSVG.class.getClassLoader();
+                String batikJar = System.getenv().get("IGV_BATIK_JAR");
+                if (batikJar == null) {
+                    return null;
+                }
+		// Load batik in it's own class loader since some it's support jars interfere with the JDK
+                URL url = new File(batikJar).toURI().toURL();
+                ClassLoader cl = new URLClassLoader(new URL[] { url });
                 Class<?> classGenericDOMImplementation = cl.loadClass("org.apache.batik.dom.GenericDOMImplementation");
                 Class<?> classSVGGeneratorContext = cl.loadClass("org.apache.batik.svggen.SVGGeneratorContext");
                 classSVGGraphics2D = cl.loadClass("org.apache.batik.svggen.SVGGraphics2D");
@@ -78,6 +88,8 @@ public class BatikSVG {
         } catch (InvocationTargetException e) {
             return null;
         } catch (InstantiationException e) {
+            return null;
+        } catch (MalformedURLException e) {
             return null;
         }
     }

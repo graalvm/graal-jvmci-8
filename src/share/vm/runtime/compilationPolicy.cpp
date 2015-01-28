@@ -45,9 +45,6 @@
 #include "runtime/vm_operations.hpp"
 #include "utilities/events.hpp"
 #include "utilities/globalDefinitions.hpp"
-#ifdef GRAAL
-#include "runtime/gpu.hpp"
-#endif
 
 CompilationPolicy* CompilationPolicy::_policy;
 elapsedTimer       CompilationPolicy::_accumulated_time;

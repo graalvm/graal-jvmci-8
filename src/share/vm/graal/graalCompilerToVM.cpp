@@ -43,7 +43,6 @@
 #include "runtime/vframe.hpp"
 #include "runtime/vframe_hp.hpp"
 #include "runtime/vmStructs.hpp"
-#include "runtime/gpu.hpp"
 
 
 // Entry to native method implementation that transitions current thread to '_thread_in_vm'.
@@ -477,12 +476,7 @@ C2V_VMENTRY(jint, installCode0, (JNIEnv *jniEnv, jobject, jobject compiled_code,
       InstalledCode::set_address(installed_code_handle, (jlong) cb);
       InstalledCode::set_version(installed_code_handle, InstalledCode::version(installed_code_handle) + 1);
       oop comp_result = HotSpotCompiledCode::comp(compiled_code_handle);
-      if (comp_result->is_a(ExternalCompilationResult::klass())) {
-        if (TraceGPUInteraction) {
-          tty->print_cr("installCode0: ExternalCompilationResult");
-        }
-        HotSpotInstalledCode::set_codeStart(installed_code_handle, ExternalCompilationResult::entryPoint(comp_result));
-      } else if (installed_code_handle->is_a(HotSpotInstalledCode::klass())) {
+      if (installed_code_handle->is_a(HotSpotInstalledCode::klass())) {
         HotSpotInstalledCode::set_size(installed_code_handle, cb->size());
         HotSpotInstalledCode::set_codeStart(installed_code_handle, (jlong) cb->code_begin());
         HotSpotInstalledCode::set_codeSize(installed_code_handle, cb->code_size());
@@ -715,18 +709,6 @@ C2V_VMENTRY(jlongArray, collectCounters, (JNIEnv*, jobject))
   JavaThread::collect_counters(arrayOop);
   return (jlongArray) JNIHandles::make_local(arrayOop);
 C2V_END
-
-// In general we should avoid using regular JNI methods to interact with the JVM but this
-// particular case is just about registering JNI methods so it should be a regular native
-// method.
-JNIEXPORT jobject JNICALL c2v_getGPUs (JNIEnv* env, jobject) {
-  TRACE_graal_3("CompilerToVM::getGPUs" );
-#if defined(TARGET_OS_FAMILY_bsd) || defined(TARGET_OS_FAMILY_linux) || defined(TARGET_OS_FAMILY_windows)
-  return Gpu::probe_gpus(env);
-#else
-  return env->NewStringUTF("");
-#endif
-}
 
 C2V_VMENTRY(int, allocateCompileId, (JNIEnv*, jobject, jlong metaspace_method, int entry_bci))
   HandleMark hm;
@@ -1091,7 +1073,6 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"readUnsafeKlassPointer",                       CC"("OBJECT")J",                                                          FN_PTR(readUnsafeKlassPointer)},
   {CC"readUnsafeOop",                                CC"("OBJECT"JZ)"OBJECT,                                                   FN_PTR(readUnsafeOop)},
   {CC"collectCounters",                              CC"()[J",                                                                 FN_PTR(collectCounters)},
-  {CC"getGPUs",                                      CC"()"STRING,                                                             FN_PTR(getGPUs)},
   {CC"allocateCompileId",                            CC"("METASPACE_METHOD"I)I",                                               FN_PTR(allocateCompileId)},
   {CC"isMature",                                     CC"("METASPACE_METHOD_DATA")Z",                                           FN_PTR(isMature)},
   {CC"hasCompiledCodeForOSR",                        CC"("METASPACE_METHOD"II)Z",                                              FN_PTR(hasCompiledCodeForOSR)},

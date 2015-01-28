@@ -432,7 +432,7 @@ class Thread: public ThreadShadow {
   ThreadLocalAllocBuffer& tlab()                 { return _tlab; }
   void initialize_tlab() {
     if (UseTLAB) {
-      tlab().initialize(this);
+      tlab().initialize();
     }
   }
 
@@ -944,36 +944,7 @@ class JavaThread: public Thread {
   volatile address _exception_handler_pc;        // PC for handler of exception
   volatile int     _is_method_handle_return;     // true (== 1) if the current exception PC is a MethodHandle call site.
 
-#ifdef GRAAL
-  // Record the method and bci from a gpu kernel exception so
-  // it can be added into the exception stack trace
-  jint    _gpu_exception_bci;
-  Method* _gpu_exception_method;
-  // Record the hsailDeoptimization info so gc oops_do processing can find it
-  void*   _gpu_hsail_deopt_info;
-  jint    _gpu_hsail_tlabs_count;
-  ThreadLocalAllocBuffer** _gpu_hsail_tlabs;
-#endif
-
- public:
-#ifdef GRAAL
-  void set_gpu_exception_bci(jint bci)           { _gpu_exception_bci = bci; } 
-  jint get_gpu_exception_bci()                   { return _gpu_exception_bci; }
-  void set_gpu_exception_method(Method* method)  { _gpu_exception_method = method; }
-  Method* get_gpu_exception_method()             { return _gpu_exception_method; }
-  void set_gpu_hsail_deopt_info(void * deoptInfo) { _gpu_hsail_deopt_info = deoptInfo; }
-  void* get_gpu_hsail_deopt_info()               { return _gpu_hsail_deopt_info; }
-  jint  get_gpu_hsail_tlabs_count()              { return _gpu_hsail_tlabs_count; }
-
-  void  initialize_gpu_hsail_tlabs(jint count);
-  ThreadLocalAllocBuffer* get_gpu_hsail_tlab_at(jint idx);
-  void gpu_hsail_tlabs_make_parsable(bool retire);
-  void  delete_gpu_hsail_tlabs();
-#endif
-
  private:  
-  void tlabs_make_parsable(bool retire);
-
   // support for JNI critical regions
   jint    _jni_active_critical;                  // count of entries into JNI critical region
 

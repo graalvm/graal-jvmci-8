@@ -542,7 +542,7 @@ public abstract class Source {
         private long timeStamp;      // timestamp of the cache in the file system
 
         public FileSource(File file, String name, String path) {
-            this.file = file;
+            this.file = file.getAbsoluteFile();
             this.name = name;
             this.path = path;
         }
@@ -594,7 +594,8 @@ public abstract class Source {
             try {
                 return new FileReader(file);
             } catch (FileNotFoundException e) {
-                throw new RuntimeException("Can't find file " + path);
+
+                throw new RuntimeException("Can't find file " + path, e);
             }
         }
 

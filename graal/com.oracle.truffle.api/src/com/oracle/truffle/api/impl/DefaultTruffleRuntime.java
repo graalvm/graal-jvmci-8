@@ -39,14 +39,11 @@ import com.oracle.truffle.api.nodes.*;
  */
 public final class DefaultTruffleRuntime implements TruffleRuntime {
 
-    private ThreadLocal<LinkedList<FrameInstance>> stackTraces = new ThreadLocal<>();
-    private ThreadLocal<FrameInstance> currentFrames = new ThreadLocal<>();
+    private final ThreadLocal<LinkedList<FrameInstance>> stackTraces = new ThreadLocal<>();
+    private final ThreadLocal<FrameInstance> currentFrames = new ThreadLocal<>();
     private final Map<RootCallTarget, Void> callTargets = Collections.synchronizedMap(new WeakHashMap<RootCallTarget, Void>());
 
     public DefaultTruffleRuntime() {
-        if (Truffle.getRuntime() != null) {
-            throw new IllegalArgumentException("Cannot instantiate DefaultTruffleRuntime. Use Truffle.getRuntime() instead.");
-        }
     }
 
     @Override

@@ -56,7 +56,6 @@ ProjectCreatorIncludesPRIVATE=\
         -relativeInclude src\os\windows\vm \
         -relativeInclude src\os_cpu\windows_$(Platform_arch)\vm \
         -relativeInclude src\cpu\$(Platform_arch)\vm \
-        -relativeInclude src\gpu \
         -relativeInclude graal\com.oracle.graal.hotspot\src_gen\hotspot \
         -absoluteInclude $(HOTSPOTBUILDSPACE)/%f/generated \
         -relativeSrcInclude src \

@@ -169,8 +169,21 @@ suite = {
         "https://search.maven.org/remotecontent?filepath=java3d/vecmath/1.3.1/vecmath-1.3.1.jar",
       ],
       "sha1" : "a0ae4f51da409fa0c20fa0ca59e6bbc9413ae71d",
+    },
+
+    "JMH" : {
+      "path" : "lib/jmh-runner-1.4.2.jar",
+      "sha1" : "f44bffaf237305512002303a306fc5ce3fa63f76",
+      "urls" : ["http://lafo.ssw.uni-linz.ac.at/jmh/jmh-runner-1.4.2.jar"],
+      "annotationProcessor" : "true"
+    },
+
+    "BATIK" : {
+      "path" : "lib/batik-all-1.7.jar",
+      "sha1" : "122b87ca88e41a415cf8b523fd3d03b4325134a3",
+      "urls" : ["http://lafo.ssw.uni-linz.ac.at/graal-external-deps/batik-all-1.7.jar"],
     }
-  },
+},
 
   "jrelibraries" : {
     "JFR" : {
@@ -246,6 +259,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "API,Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.api.code" : {
@@ -282,15 +296,6 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,AMD64",
-    },
-
-    "com.oracle.graal.ptx" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.api.code"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,PTX",
     },
 
     "com.oracle.graal.sparc" : {
@@ -386,35 +391,6 @@ suite = {
       "annotationProcessors" : ["com.oracle.graal.service.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot,SPARC",
-    },
-
-    "com.oracle.graal.hotspot.ptx" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.ptx",
-        "com.oracle.graal.compiler.ptx",
-        "com.oracle.graal.hotspot",
-        "com.oracle.graal.gpu",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["com.oracle.graal.service.processor"],
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,HotSpot,PTX",
-    },
-
-    "com.oracle.graal.hotspot.hsail" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.replacements.hsail",
-        "com.oracle.graal.hotspot",
-        "com.oracle.graal.gpu",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["com.oracle.graal.service.processor"],
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,HotSpot,PTX",
     },
 
     "com.oracle.graal.hotspot.server" : {
@@ -575,15 +551,6 @@ suite = {
       "workingSets" : "Graal,LIR,AMD64",
     },
 
-    "com.oracle.graal.lir.ptx" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.asm.ptx"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,LIR,PTX",
-    },
-
     "com.oracle.graal.lir.sparc" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -626,6 +593,7 @@ suite = {
         "com.oracle.graal.service.processor",
       ],
       "workingSets" : "Graal,Replacements",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.replacements.amd64" : {
@@ -641,15 +609,6 @@ suite = {
       "workingSets" : "Graal,Replacements,AMD64",
     },
 
-    "com.oracle.graal.replacements.hsail" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.compiler.hsail"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Replacements,HSAIL",
-    },
-
     "com.oracle.graal.replacements.test" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -660,6 +619,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Replacements,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.replacements.verifier" : {
@@ -737,6 +697,15 @@ suite = {
       "workingSets" : "Graal,Phases",
     },
 
+    "com.oracle.graal.virtual.bench" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["JMH"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Bench",
+    },
+
     "com.oracle.graal.loop" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -782,30 +751,6 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,AMD64,Test",
-    },
-
-    "com.oracle.graal.compiler.ptx" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.lir.ptx",
-        "com.oracle.graal.compiler",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,PTX",
-    },
-
-    "com.oracle.graal.compiler.ptx.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.hotspot.ptx",
-        "com.oracle.graal.compiler.test",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,PTX,Test",
     },
 
     "com.oracle.graal.compiler.sparc" : {
@@ -881,33 +826,11 @@ suite = {
       "workingSets" : "Graal,Java",
     },
 
-    "com.oracle.graal.java.decompiler" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.java"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal",
-    },
-
-    "com.oracle.graal.java.decompiler.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "JUNIT",
-        "com.oracle.graal.printer",
-        "com.oracle.graal.runtime",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Test",
-    },
-
     "com.oracle.graal.printer" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.java.decompiler",
+        "com.oracle.graal.java",
         "com.oracle.graal.compiler",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -940,6 +863,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.jtt" : {
@@ -952,6 +876,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.asm" : {
@@ -999,90 +924,6 @@ suite = {
       "workingSets" : "Graal,Assembler,AMD64,Test",
     },
 
-    "com.oracle.graal.gpu" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.nodes"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-    },
-
-    "com.oracle.graal.hsail" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.api.code"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-    },
-
-    "com.oracle.graal.lir.hsail" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.lir",
-        "com.oracle.graal.asm.hsail",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-    },
-
-    "com.oracle.graal.compiler.hsail" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.compiler",
-        "com.oracle.graal.lir.hsail",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-    },
-
-    "com.oracle.graal.compiler.hsail.test.infra" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.test",
-        "com.oracle.graal.hotspot.hsail",
-        "OKRA_WITH_SIM",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-    },
-
-    "com.oracle.graal.compiler.hsail.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.compiler.hsail.test.infra",
-        "com.oracle.graal.compiler.test",
-        "VECMATH",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-    },
-
-    "com.oracle.graal.asm.hsail" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.hsail",
-        "OKRA",
-        "com.oracle.graal.asm",
-        "com.oracle.graal.compiler.common",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-    },
-
-    "com.oracle.graal.asm.ptx" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.lir"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Assembler,PTX",
-    },
-
     "com.oracle.graal.asm.sparc" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -1113,6 +954,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.7",
       "workingSets" : "API,Truffle,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.truffle.api.dsl" : {
@@ -1135,6 +977,7 @@ suite = {
       "javaCompliance" : "1.7",
       "annotationProcessors" : ["com.oracle.truffle.dsl.processor"],
       "workingSets" : "API,Truffle,Codegen,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.truffle.dsl.processor" : {
@@ -1219,6 +1062,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Truffle",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.truffle.test" : {
@@ -1232,6 +1076,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Truffle,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.truffle.hotspot" : {
@@ -1281,11 +1126,9 @@ suite = {
       "sourcesPath" : "build/graal.src.zip",
       "dependencies" : [
         "com.oracle.graal.hotspot.amd64",
-        "com.oracle.graal.hotspot.ptx",
         "com.oracle.graal.hotspot.sparc",
         "com.oracle.graal.hotspot",
         "com.oracle.graal.hotspot.jfr",
-        "com.oracle.graal.hotspot.hsail",
       ],
       "exclude" : ["FINDBUGS"],
     },
