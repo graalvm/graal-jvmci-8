@@ -220,6 +220,14 @@ suite = {
       "workingSets" : "API,Graal",
     },
 
+    "com.oracle.graal.api.directives" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,Graal",
+    },
+
     "com.oracle.graal.api.runtime" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -582,6 +590,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.graal.api.directives",
         "com.oracle.graal.compiler",
         "com.oracle.graal.java",
         "com.oracle.graal.word",
@@ -854,6 +863,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.graal.api.directives",
         "com.oracle.graal.test",
         "com.oracle.graal.printer",
         "com.oracle.graal.runtime",
