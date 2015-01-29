@@ -228,6 +228,17 @@ suite = {
       "workingSets" : "API,Graal",
     },
 
+    "com.oracle.graal.api.directives.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "dependencies" : [
+        "com.oracle.graal.compiler.test",
+      ],
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,Graal",
+    },
+
     "com.oracle.graal.api.runtime" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
