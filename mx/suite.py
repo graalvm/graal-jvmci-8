@@ -818,6 +818,7 @@ suite = {
         "com.oracle.graal.phases",
       ],
       "checkstyle" : "com.oracle.graal.graph",
+      "annotationProcessors" : ["com.oracle.graal.service.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Java",
     },
