@@ -1360,7 +1360,7 @@ def microbench(args):
     if not containsF:
         jmhArgs += ['-f1']
 
-    # find all projects with the JMH dependency
+    # find all projects with a direct JMH dependency
     jmhProjects = []
     for p in mx.projects():
         if 'JMH' in p.deps:
