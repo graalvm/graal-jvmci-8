@@ -1,5 +1,4 @@
 com.oracle.graal.replacements.test.StandardMethodSubstitutionsTest
 com.oracle.graal.hotspot.amd64.test.CompressedNullCheckTest
-com.oracle.graal.compiler.test.ea.UnsafeEATest
-com.oracle.graal.truffle.test.SimplePartialEvaluationTest
-com.oracle.graal.replacements.test.ArraysSubstitutionsTest
+com.oracle.graal.hotspot.test.HotSpotCryptoSubstitutionTest
+
