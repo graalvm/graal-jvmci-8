@@ -490,7 +490,6 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.nodeinfo",
-        "com.oracle.graal.debug",
         "com.oracle.graal.compiler.common",
         "com.oracle.graal.api.collections",
         "com.oracle.graal.api.runtime",
@@ -539,7 +538,6 @@ suite = {
       "dependencies" : [
         "com.oracle.graal.compiler.common",
         "com.oracle.graal.asm",
-        "com.oracle.graal.debug",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -577,15 +575,6 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,LIR,SPARC",
-    },
-
-    "com.oracle.graal.alloc" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.compiler.common"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal",
     },
 
     "com.oracle.graal.word" : {
@@ -740,7 +729,6 @@ suite = {
       "dependencies" : [
         "com.oracle.graal.virtual",
         "com.oracle.graal.loop",
-        "com.oracle.graal.alloc",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -829,6 +817,7 @@ suite = {
       "dependencies" : [
         "com.oracle.graal.api.code",
         "com.oracle.graal.options",
+        "com.oracle.graal.debug",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
