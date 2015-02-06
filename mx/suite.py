@@ -577,15 +577,6 @@ suite = {
       "workingSets" : "Graal,LIR,SPARC",
     },
 
-    "com.oracle.graal.alloc" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.compiler.common"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal",
-    },
-
     "com.oracle.graal.word" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -738,7 +729,6 @@ suite = {
       "dependencies" : [
         "com.oracle.graal.virtual",
         "com.oracle.graal.loop",
-        "com.oracle.graal.alloc",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
