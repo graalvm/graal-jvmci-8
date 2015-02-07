@@ -1481,7 +1481,22 @@ def ctw(args):
     vm(vmargs)
 
 def _basic_gate_body(args, tasks):
-    with Task('BuildHotSpotGraal: fastdebug,product', tasks):
+    # Build server-hosted-graal now so we can run the unit tests
+    with Task('BuildHotSpotGraalHosted: product', tasks):
+        buildvms(['--vms', 'server', '--builds', 'product'])
+
+    # Run unit tests on server-hosted-graal
+    with VM('server', 'product'):
+        with Task('UnitTests:hosted-product', tasks):
+            unittest(['--enable-timing', '--verbose', '--fail-fast'])
+
+    # Run baseline unit tests on server-hosted-graal
+    with VM('server', 'product'):
+        with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
+            unittest(['--enable-timing', '--verbose', '--whitelist', 'test/whitelist_baseline.txt', '-G:+UseBaselineCompiler'])
+
+    # Build the other VM flavors
+    with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks):
         buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product'])
 
     with VM('graal', 'fastdebug'):
@@ -1509,14 +1524,6 @@ def _basic_gate_body(args, tasks):
     with VM('graal', 'product'):
         with Task('BootstrapWithImmutableCode:product', tasks):
             vm(['-XX:-TieredCompilation', '-G:+ImmutableCode', '-G:+VerifyPhases', '-esa', '-version'])
-
-    with VM('server', 'product'):  # hosted mode
-        with Task('UnitTests:hosted-product', tasks):
-            unittest(['--enable-timing', '--verbose', '--fail-fast'])
-
-    with VM('server', 'product'):  # hosted mode
-        with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
-            unittest(['--enable-timing', '--verbose', '--whitelist', 'test/whitelist_baseline.txt', '-G:+UseBaselineCompiler'])
 
     for vmbuild in ['fastdebug', 'product']:
         for test in sanitycheck.getDacapos(level=sanitycheck.SanityCheckLevel.Gate, gateBuildLevel=vmbuild) + sanitycheck.getScalaDacapos(level=sanitycheck.SanityCheckLevel.Gate, gateBuildLevel=vmbuild):
@@ -2273,7 +2280,7 @@ def generateZshCompletion(args):
     complt += '\t(args)\n'
     # TODO: improve matcher: if mx args are given, this doesn't work
     complt += '\t\tcase $line[1] in\n'
-    complt += '\t\t\t(vm)\n'
+    complt += '\t\t\t(vm | vmg | vmfg | unittest | jmh | dacapo | scaladacapo | specjvm2008 | specjbb2013 | specjbb2005)\n'
     complt += '\t\t\t\tnoglob \\\n'
     complt += '\t\t\t\t\t_arguments -s -S \\\n'
     complt += _appendOptions("graal", r"G\:")
@@ -2340,7 +2347,7 @@ def _parseVMOptions(optionType):
 
     # gather graal options
     output = StringIO.StringIO()
-    vm(['-XX:-BootstrapGraal', '-G:+PrintFlags' if optionType == "graal" else '-XX:+PrintFlagsWithComments'],
+    vm(['-XX:-BootstrapGraal', '-XX:+UnlockDiagnosticVMOptions', '-G:+PrintFlags' if optionType == "graal" else '-XX:+PrintFlagsWithComments'],
        vm="graal",
        vmbuild="optimized",
        nonZeroIsFatal=False,

@@ -3585,6 +3585,12 @@ jint Arguments::parse(const JavaVMInitArgs* args) {
     if (match_option(option, "-XX:-IgnoreUnrecognizedVMOptions", &tail)) {
       IgnoreUnrecognizedVMOptions = false;
     }
+    if (match_option(option, "-XX:+UnlockDiagnosticVMOptions", &tail)) {
+      UnlockDiagnosticVMOptions = true;
+    }
+    if (match_option(option, "-XX:-UnlockDiagnosticVMOptions", &tail)) {
+      UnlockDiagnosticVMOptions = false;
+    }
     if (match_option(option, "-XX:+PrintFlagsInitial", &tail)) {
       CommandLineFlags::printFlags(tty, false);
       vm_exit(0);
