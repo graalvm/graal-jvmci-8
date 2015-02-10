@@ -1,4 +1,2 @@
 com.oracle.graal.replacements.test.StandardMethodSubstitutionsTest
 com.oracle.graal.hotspot.amd64.test.CompressedNullCheckTest
-com.oracle.graal.hotspot.test.HotSpotCryptoSubstitutionTest
-

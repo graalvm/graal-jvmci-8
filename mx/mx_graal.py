@@ -2280,7 +2280,7 @@ def generateZshCompletion(args):
     complt += '\t(args)\n'
     # TODO: improve matcher: if mx args are given, this doesn't work
     complt += '\t\tcase $line[1] in\n'
-    complt += '\t\t\t(vm)\n'
+    complt += '\t\t\t(vm | vmg | vmfg | unittest | jmh | dacapo | scaladacapo | specjvm2008 | specjbb2013 | specjbb2005)\n'
     complt += '\t\t\t\tnoglob \\\n'
     complt += '\t\t\t\t\t_arguments -s -S \\\n'
     complt += _appendOptions("graal", r"G\:")
@@ -2347,7 +2347,7 @@ def _parseVMOptions(optionType):
 
     # gather graal options
     output = StringIO.StringIO()
-    vm(['-XX:-BootstrapGraal', '-G:+PrintFlags' if optionType == "graal" else '-XX:+PrintFlagsWithComments'],
+    vm(['-XX:-BootstrapGraal', '-XX:+UnlockDiagnosticVMOptions', '-G:+PrintFlags' if optionType == "graal" else '-XX:+PrintFlagsWithComments'],
        vm="graal",
        vmbuild="optimized",
        nonZeroIsFatal=False,
