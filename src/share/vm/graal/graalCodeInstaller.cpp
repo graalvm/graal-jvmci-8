@@ -389,9 +389,8 @@ void CodeInstaller::initialize_assumptions(oop compiled_code) {
   CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
   _oop_recorder = new OopRecorder(&_arena, true);
   _dependencies = new Dependencies(&_arena, _oop_recorder, compilerThread != NULL ? compilerThread->log() : NULL);
-  Handle assumptions_handle = CompilationResult::assumptions(HotSpotCompiledCode::comp(compiled_code));
-  if (!assumptions_handle.is_null()) {
-    objArrayHandle assumptions(Thread::current(), Assumptions::list(assumptions_handle()));
+  objArrayHandle assumptions = CompilationResult::assumptions(HotSpotCompiledCode::comp(compiled_code));
+  if (!assumptions.is_null()) {
     int length = assumptions->length();
     for (int i = 0; i < length; ++i) {
       Handle assumption = assumptions->obj_at(i);
