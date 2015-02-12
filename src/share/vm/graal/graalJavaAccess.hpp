@@ -84,7 +84,7 @@ void graal_compute_offsets();
     oop_field(HotSpotCompiledNmethod, method, "Lcom/oracle/graal/hotspot/meta/HotSpotResolvedJavaMethod;")                                                     \
     int_field(HotSpotCompiledNmethod, entryBCI)                                                                                                                \
     int_field(HotSpotCompiledNmethod, id)                                                                                                                      \
-    long_field(HotSpotCompiledNmethod, ctask)                                                                                                                  \
+    long_field(HotSpotCompiledNmethod, graalEnv)                                                                                                               \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledRuntimeStub)                                                                                                                      \
     oop_field(HotSpotCompiledRuntimeStub, stubName, "Ljava/lang/String;")                                                                                      \
@@ -96,14 +96,9 @@ void graal_compute_offsets();
     int_field(CompilationResult, totalFrameSize)                                                                                                               \
     int_field(CompilationResult, customStackAreaOffset)                                                                                                        \
     typeArrayOop_field(CompilationResult, targetCode, "[B")                                                                                                    \
-    oop_field(CompilationResult, assumptions, "Lcom/oracle/graal/api/code/Assumptions;")                                                                       \
+    objArrayOop_field(CompilationResult, assumptions, "[Lcom/oracle/graal/api/code/Assumptions$Assumption;")                                                   \
+    objArrayOop_field(CompilationResult, methods, "[Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                           \
     int_field(CompilationResult, targetCodeSize)                                                                                                               \
-  end_class                                                                                                                                                    \
-  start_class(Assumptions)                                                                                                                                     \
-    objArrayOop_field(Assumptions, list, "[Lcom/oracle/graal/api/code/Assumptions$Assumption;")                                                                \
-  end_class                                                                                                                                                    \
-  start_class(Assumptions_MethodContents)                                                                                                                      \
-    oop_field(Assumptions_MethodContents, method, "Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                            \
   end_class                                                                                                                                                    \
   start_class(Assumptions_NoFinalizableSubclass)                                                                                                               \
     oop_field(Assumptions_NoFinalizableSubclass, receiverType, "Lcom/oracle/graal/api/meta/ResolvedJavaType;")                                                 \

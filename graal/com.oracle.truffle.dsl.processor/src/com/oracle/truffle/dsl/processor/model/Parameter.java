@@ -22,23 +22,23 @@
  */
 package com.oracle.truffle.dsl.processor.model;
 
+import javax.lang.model.element.*;
 import javax.lang.model.type.*;
-
-import com.oracle.truffle.dsl.processor.java.*;
 
 public final class Parameter {
 
     private final ParameterSpec specification;
     private TypeData typeSystemType;
     private TemplateMethod method;
-    private final String localName;
+    private String localName;
     private final int specificationVarArgsIndex;
     private final int typeVarArgsIndex;
-    private final TypeMirror actualType;
 
-    public Parameter(ParameterSpec specification, TypeMirror actualType, int specificationVarArgsIndex, int typeVarArgsIndex) {
+    private final VariableElement variableElement;
+
+    public Parameter(ParameterSpec specification, VariableElement variableElement, int specificationVarArgsIndex, int typeVarArgsIndex) {
         this.specification = specification;
-        this.actualType = actualType;
+        this.variableElement = variableElement;
         this.typeSystemType = null;
 
         this.specificationVarArgsIndex = specificationVarArgsIndex;
@@ -51,22 +51,30 @@ public final class Parameter {
         this.localName = valueName;
     }
 
-    public Parameter(ParameterSpec specification, TypeData actualType, int specificationIndex, int varArgsIndex) {
-        this(specification, actualType.getPrimitiveType(), specificationIndex, varArgsIndex);
+    public Parameter(ParameterSpec specification, TypeData actualType, VariableElement variableElement, int specificationIndex, int varArgsIndex) {
+        this(specification, variableElement, specificationIndex, varArgsIndex);
         this.typeSystemType = actualType;
     }
 
     public Parameter(Parameter parameter, TypeData otherType) {
-        this(parameter.specification, otherType, parameter.specificationVarArgsIndex, parameter.typeVarArgsIndex);
+        this(parameter.specification, otherType, parameter.variableElement, parameter.specificationVarArgsIndex, parameter.typeVarArgsIndex);
     }
 
     public Parameter(Parameter parameter) {
         this.specification = parameter.specification;
-        this.actualType = parameter.actualType;
         this.typeSystemType = parameter.typeSystemType;
         this.specificationVarArgsIndex = parameter.specificationVarArgsIndex;
         this.localName = parameter.localName;
         this.typeVarArgsIndex = parameter.typeVarArgsIndex;
+        this.variableElement = parameter.variableElement;
+    }
+
+    public void setLocalName(String localName) {
+        this.localName = localName;
+    }
+
+    public VariableElement getVariableElement() {
+        return variableElement;
     }
 
     public int getTypeVarArgsIndex() {
@@ -94,7 +102,7 @@ public final class Parameter {
     }
 
     public TypeMirror getType() {
-        return actualType;
+        return variableElement.asType();
     }
 
     public TypeData getTypeSystemType() {
@@ -111,6 +119,7 @@ public final class Parameter {
 
     @Override
     public String toString() {
-        return ElementUtils.getSimpleName(actualType);
+        return "Parameter [localName=" + localName + ", type=" + getType() + ", variableElement=" + variableElement + "]";
     }
+
 }

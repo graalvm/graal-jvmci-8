@@ -42,7 +42,6 @@ public class NodeData extends Template implements Comparable<NodeData> {
     private final List<NodeChildData> children;
     private final List<NodeExecutionData> childExecutions;
     private final List<NodeFieldData> fields;
-    private final List<String> assumptions;
 
     private ParameterSpec instanceParameterSpec;
 
@@ -64,7 +63,6 @@ public class NodeData extends Template implements Comparable<NodeData> {
         this.fields = new ArrayList<>();
         this.children = new ArrayList<>();
         this.childExecutions = new ArrayList<>();
-        this.assumptions = new ArrayList<>();
         this.thisExecution = new NodeExecutionData(new NodeChildData(null, null, "this", getNodeType(), getNodeType(), null, Cardinality.ONE), -1, false);
         this.thisExecution.getChild().setNode(this);
         this.generateFactory = generateFactory;
@@ -148,15 +146,11 @@ public class NodeData extends Template implements Comparable<NodeData> {
             if (!specialization.isReachable()) {
                 continue;
             }
-            if (specialization.isFrameUsedByGuard()) {
+            if (specialization.isFrameUsed()) {
                 return true;
             }
         }
         return false;
-    }
-
-    public boolean isPolymorphic(ProcessorContext context) {
-        return needsRewrites(context);
     }
 
     public List<CreateCastData> getCasts() {
@@ -221,10 +215,6 @@ public class NodeData extends Template implements Comparable<NodeData> {
         return getTemplateType().asType();
     }
 
-    public List<String> getAssumptions() {
-        return assumptions;
-    }
-
     public boolean needsFactory() {
         if (specializations == null) {
             return false;
@@ -243,7 +233,7 @@ public class NodeData extends Template implements Comparable<NodeData> {
     public boolean supportsFrame() {
         if (executableTypes != null) {
             for (ExecutableTypeData execType : getExecutableTypes(-1)) {
-                if (execType.findParameter("frameValue") == null) {
+                if (execType.findParameter(TemplateMethod.FRAME_NAME) == null) {
                     return false;
                 }
             }
@@ -431,7 +421,6 @@ public class NodeData extends Template implements Comparable<NodeData> {
         dumpProperty(builder, indent, "fields", getChildren());
         dumpProperty(builder, indent, "executableTypes", getExecutableTypes());
         dumpProperty(builder, indent, "specializations", getSpecializations());
-        dumpProperty(builder, indent, "assumptions", getAssumptions());
         dumpProperty(builder, indent, "casts", getCasts());
         dumpProperty(builder, indent, "messages", collectMessages());
         if (getEnclosingNodes().size() > 0) {

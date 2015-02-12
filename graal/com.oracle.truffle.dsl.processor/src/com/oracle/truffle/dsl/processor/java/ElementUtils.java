@@ -119,16 +119,6 @@ public class ElementUtils {
         return b.toString();
     }
 
-    public static VariableElement findVariableElement(DeclaredType type, String name) {
-        List<? extends VariableElement> elements = ElementFilter.fieldsIn(type.asElement().getEnclosedElements());
-        for (VariableElement variableElement : elements) {
-            if (variableElement.getSimpleName().toString().equals(name)) {
-                return variableElement;
-            }
-        }
-        return null;
-    }
-
     public static TypeMirror boxType(ProcessorContext context, TypeMirror primitiveType) {
         TypeMirror boxedType = primitiveType;
         if (boxedType.getKind().isPrimitive()) {
@@ -191,8 +181,17 @@ public class ElementUtils {
     }
 
     public static String getReadableSignature(ExecutableElement method) {
-        // TODO toString does not guarantee a good signature
-        return method.toString();
+        StringBuilder builder = new StringBuilder();
+        builder.append(method.getSimpleName().toString());
+        builder.append("(");
+        String sep = "";
+        for (VariableElement var : method.getParameters()) {
+            builder.append(sep);
+            builder.append(getSimpleName(var.asType()));
+            sep = ", ";
+        }
+        builder.append(")");
+        return builder.toString();
     }
 
     public static boolean hasError(TypeMirror mirror) {
@@ -570,7 +569,7 @@ public class ElementUtils {
     public static TypeElement findNearestEnclosingType(Element element) {
         List<Element> elements = getElementHierarchy(element);
         for (Element e : elements) {
-            if (e.getKind().isClass()) {
+            if (e.getKind().isClass() || e.getKind().isInterface()) {
                 return (TypeElement) e;
             }
         }
@@ -586,29 +585,6 @@ public class ElementUtils {
         }
 
         return types;
-    }
-
-    public static List<TypeMirror> getAssignableTypes(ProcessorContext context, TypeMirror type) {
-        if (isPrimitive(type)) {
-            return Arrays.asList(type, boxType(context, type), context.getType(Object.class));
-        } else if (type.getKind() == TypeKind.ARRAY) {
-            return Arrays.asList(type, context.getType(Object.class));
-        } else if (type.getKind() == TypeKind.DECLARED) {
-            DeclaredType declaredType = (DeclaredType) type;
-            TypeElement typeElement = fromTypeMirror(declaredType);
-            List<TypeElement> types = getSuperTypes(typeElement);
-            List<TypeMirror> mirrors = new ArrayList<>(types.size());
-            mirrors.add(type);
-            for (TypeElement superTypeElement : types) {
-                mirrors.add(superTypeElement.asType());
-            }
-            if (typeElement.getKind().isInterface()) {
-                mirrors.add(getType(context.getEnvironment(), Object.class));
-            }
-            return mirrors;
-        } else {
-            return Collections.emptyList();
-        }
     }
 
     /**
@@ -690,6 +666,8 @@ public class ElementUtils {
                 return pack.getQualifiedName().toString();
             case ARRAY:
                 return getSimpleName(((ArrayType) mirror).getComponentType());
+            case EXECUTABLE:
+                return null;
             default:
                 throw new RuntimeException("Unknown type specified " + mirror.getKind());
         }
@@ -854,14 +832,16 @@ public class ElementUtils {
 
     public static AnnotationMirror findAnnotationMirror(ProcessingEnvironment processingEnv, List<? extends AnnotationMirror> mirrors, Class<?> annotationClass) {
         TypeElement expectedAnnotationType = processingEnv.getElementUtils().getTypeElement(annotationClass.getCanonicalName());
-        return findAnnotationMirror(mirrors, expectedAnnotationType);
+        return findAnnotationMirror(mirrors, expectedAnnotationType.asType());
     }
 
     public static AnnotationMirror findAnnotationMirror(List<? extends AnnotationMirror> mirrors, TypeElement expectedAnnotationType) {
+        return findAnnotationMirror(mirrors, expectedAnnotationType.asType());
+    }
+
+    public static AnnotationMirror findAnnotationMirror(List<? extends AnnotationMirror> mirrors, TypeMirror expectedAnnotationType) {
         for (AnnotationMirror mirror : mirrors) {
-            DeclaredType annotationType = mirror.getAnnotationType();
-            TypeElement actualAnnotationType = (TypeElement) annotationType.asElement();
-            if (actualAnnotationType.equals(expectedAnnotationType)) {
+            if (typeEquals(mirror.getAnnotationType(), expectedAnnotationType)) {
                 return mirror;
             }
         }
@@ -1079,42 +1059,53 @@ public class ElementUtils {
         return new DeclaredCodeTypeMirror((TypeElement) declaredType.asElement());
     }
 
-    public static ExecutableElement findMethod(TypeElement type, Set<Modifier> includeModifiers, Set<Modifier> excludeModifiers, String methodName, List<TypeMirror> types) {
-        outer: for (ExecutableElement executable : ElementFilter.methodsIn(type.getEnclosedElements())) {
-            if (includeModifiers != null) {
-                if (!executable.getModifiers().containsAll(includeModifiers)) {
-                    continue;
-                }
-            }
-            if (excludeModifiers != null) {
-                if (executable.getModifiers().containsAll(excludeModifiers)) {
-                    continue;
-                }
-            }
-            if (!executable.getSimpleName().toString().equals(methodName)) {
-                continue;
-            }
-            if (types.size() != executable.getParameters().size()) {
-                continue;
-            }
-            for (int i = 0; i < types.size(); i++) {
-                TypeMirror var1 = types.get(i);
-                VariableElement var2 = executable.getParameters().get(i);
-                if (ElementUtils.typeEquals(var1, var2.asType())) {
-                    continue outer;
-                }
-            }
-            return executable;
+    public static boolean variableEquals(VariableElement var1, VariableElement var2) {
+        if (!var1.getSimpleName().equals(var2.getSimpleName())) {
+            return false;
         }
-        return null;
+        if (!ElementUtils.typeEquals(var1.asType(), var2.asType())) {
+            return false;
+        }
+        if (!ElementUtils.elementEquals(var1.getEnclosingElement(), var2.getEnclosingElement())) {
+            return false;
+        }
+        return true;
     }
 
-    public static List<TypeMirror> asTypes(List<? extends Element> elements) {
-        List<TypeMirror> types = new ArrayList<>(elements.size());
-        for (Element element : elements) {
-            types.add(element.asType());
+    public static boolean executableEquals(ExecutableElement var1, ExecutableElement var2) {
+        if (!var1.getSimpleName().equals(var2.getSimpleName())) {
+            return false;
         }
-        return types;
+        if (var1.getParameters().size() != var2.getParameters().size()) {
+            return false;
+        }
+        if (!ElementUtils.typeEquals(var1.asType(), var2.asType())) {
+            return false;
+        }
+        if (!ElementUtils.elementEquals(var1.getEnclosingElement(), var2.getEnclosingElement())) {
+            return false;
+        }
+        for (int i = 0; i < var1.getParameters().size(); i++) {
+            if (!typeEquals(var1.getParameters().get(i).asType(), var2.getParameters().get(i).asType())) {
+                return false;
+            }
+        }
+        return true;
     }
 
+    public static boolean elementEquals(Element element1, Element element2) {
+        if (element1.getKind() != element2.getKind()) {
+            return false;
+        } else if (element1 instanceof VariableElement) {
+            return variableEquals((VariableElement) element1, (VariableElement) element2);
+        } else if (element1 instanceof ExecutableElement) {
+            return executableEquals((ExecutableElement) element1, (ExecutableElement) element2);
+        } else if (element1 instanceof TypeElement) {
+            return typeEquals(element1.asType(), element2.asType());
+        } else if (element1 instanceof PackageElement) {
+            return element1.getSimpleName().equals(element2.getSimpleName());
+        } else {
+            throw new AssertionError("unsupported element type");
+        }
+    }
 }

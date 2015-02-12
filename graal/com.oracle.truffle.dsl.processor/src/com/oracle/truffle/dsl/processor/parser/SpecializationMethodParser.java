@@ -42,7 +42,9 @@ public class SpecializationMethodParser extends NodeMethodParser<SpecializationD
 
     @Override
     public MethodSpec createSpecification(ExecutableElement method, AnnotationMirror mirror) {
-        return createDefaultMethodSpec(method, mirror, true, null);
+        MethodSpec spec = createDefaultMethodSpec(method, mirror, true, null);
+        spec.getAnnotations().add(new AnnotatedParameterSpec(getContext().getDeclaredType(Cached.class)));
+        return spec;
     }
 
     @Override
@@ -92,13 +94,6 @@ public class SpecializationMethodParser extends NodeMethodParser<SpecializationD
             specialization.setInsertBeforeName(insertBeforeName);
         }
 
-        List<String> guardDefs = ElementUtils.getAnnotationValueList(String.class, specialization.getMarkerAnnotation(), "guards");
-        List<GuardExpression> guardExpressions = new ArrayList<>();
-        for (String guardDef : guardDefs) {
-            guardExpressions.add(new GuardExpression(guardDef, true));
-        }
-        specialization.setGuards(guardExpressions);
-
         List<String> containsDefs = ElementUtils.getAnnotationValueList(String.class, specialization.getMarkerAnnotation(), "contains");
         Set<String> containsNames = specialization.getContainsNames();
         containsNames.clear();
@@ -112,15 +107,6 @@ public class SpecializationMethodParser extends NodeMethodParser<SpecializationD
                 }
             }
 
-        }
-
-        List<String> assumptionDefs = ElementUtils.getAnnotationValueList(String.class, specialization.getMarkerAnnotation(), "assumptions");
-        specialization.setAssumptions(assumptionDefs);
-
-        for (String assumption : assumptionDefs) {
-            if (!getNode().getAssumptions().contains(assumption)) {
-                specialization.addError("Undeclared assumption '%s' used. Use @NodeAssumptions to declare them.", assumption);
-            }
         }
 
         return specialization;

@@ -105,7 +105,7 @@ void GraalCompiler::bootstrap() {
   _bootstrapping = false;
 }
 
-void GraalCompiler::compile_method(methodHandle method, int entry_bci, CompileTask* task) {
+void GraalCompiler::compile_method(methodHandle method, int entry_bci, GraalEnv* env) {
   GRAAL_EXCEPTION_CONTEXT
 
   bool is_osr = entry_bci != InvocationEntryBci;
@@ -122,8 +122,8 @@ void GraalCompiler::compile_method(methodHandle method, int entry_bci, CompileTa
   JavaCallArguments args;
   args.push_long((jlong) (address) method());
   args.push_int(entry_bci);
-  args.push_long((jlong) (address) task);
-  args.push_int(task->compile_id());
+  args.push_long((jlong) (address) env);
+  args.push_int(env->task()->compile_id());
   JavaCalls::call_static(&result, SystemDictionary::CompilationTask_klass(), vmSymbols::compileMetaspaceMethod_name(), vmSymbols::compileMetaspaceMethod_signature(), &args, CHECK_ABORT);
 
   _methodsCompiled++;

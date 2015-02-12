@@ -50,7 +50,7 @@ class CompileTask;
 //
 // This class is the top level broker for requests from the compiler
 // to the VM.
-class GraalEnv : AllStatic {
+class GraalEnv : StackObj {
   CI_PACKAGE_ACCESS_TO
 
   friend class CompileBroker;
@@ -92,7 +92,16 @@ public:
                                  int method_index, Bytecodes::Code bc,
                                  instanceKlassHandle& loading_klass);
 
+  GraalEnv(CompileTask* task, int system_dictionary_modification_counter);
+
 private:
+  CompileTask*     _task;
+  int              _system_dictionary_modification_counter;
+
+  // Cache JVMTI state
+  bool  _jvmti_can_hotswap_or_post_breakpoint;
+  bool  _jvmti_can_access_local_variables;
+  bool  _jvmti_can_post_on_exceptions;
 
   // Implementation methods for loading and constant pool access.
   static KlassHandle get_klass_by_name_impl(KlassHandle& accessing_klass,
@@ -124,9 +133,11 @@ private:
 
   // Helper routine for determining the validity of a compilation
   // with respect to concurrent class loading.
-  static bool check_for_system_dictionary_modification(Dependencies* target);
+  static bool check_for_system_dictionary_modification(Dependencies* target, GraalEnv* env);
 
 public:
+  CompileTask* task() { return _task; }
+
   // Register the result of a compilation.
   static GraalEnv::CodeInstallResult register_method(
                        methodHandle&             target,
@@ -141,7 +152,7 @@ public:
                        AbstractCompiler*         compiler,
                        DebugInformationRecorder* debug_info,
                        Dependencies*             dependencies,
-                       CompileTask*              task,
+                       GraalEnv*                 env,
                        int                       compile_id,
                        bool                      has_unsafe_access,
                        Handle                    installed_code,
