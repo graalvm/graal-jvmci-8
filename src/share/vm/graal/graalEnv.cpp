@@ -45,6 +45,18 @@
 #include "graal/graalRuntime.hpp"
 #include "graal/graalJavaAccess.hpp"
 
+GraalEnv::GraalEnv(CompileTask* task, int system_dictionary_modification_counter) {
+  _task = task;
+  _system_dictionary_modification_counter = system_dictionary_modification_counter;
+  {
+    // Get Jvmti capabilities under lock to get consistent values.
+    MutexLocker mu(JvmtiThreadState_lock);
+    _jvmti_can_hotswap_or_post_breakpoint = JvmtiExport::can_hotswap_or_post_breakpoint();
+    _jvmti_can_access_local_variables     = JvmtiExport::can_access_local_variables();
+    _jvmti_can_post_on_exceptions         = JvmtiExport::can_post_on_exceptions();
+  }
+}
+
 // ------------------------------------------------------------------
 // Note: the logic of this method should mirror the logic of
 // constantPoolOopDesc::verify_constant_pool_resolve.
@@ -409,19 +421,23 @@ methodHandle GraalEnv::get_method_by_index(constantPoolHandle& cpool,
 // ------------------------------------------------------------------
 // Check for changes to the system dictionary during compilation
 // class loads, evolution, breakpoints
-bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependencies) {
-  // Dependencies must be checked when the system dictionary changes.
-  // If logging is enabled all violated dependences will be recorded in
-  // the log.  In debug mode check dependencies even if the system
-  // dictionary hasn't changed to verify that no invalid dependencies
-  // were inserted.  Any violated dependences in this case are dumped to
-  // the tty.
+bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependencies, GraalEnv* env) {
+  // If JVMTI capabilities were enabled during compile, the compilation is invalidated.
+  if (env != NULL) {
+    if (!env->_jvmti_can_hotswap_or_post_breakpoint && JvmtiExport::can_hotswap_or_post_breakpoint()) {
+      // Hotswapping or breakpointing was enabled during compilation
+      return false;
+    }
+  }
 
-  // TODO (thomaswue): Always check dependency for now.
-  //bool counter_changed = system_dictionary_modification_counter_changed();
-  //bool test_deps = counter_changed;
-  //DEBUG_ONLY(test_deps = true);
-  //if (!test_deps)  return;
+  // Dependencies must be checked when the system dictionary changes
+  // or if we don't know whether it has changed (i.e., env == NULL).
+  // In debug mode, always check dependencies.
+  bool counter_changed = env != NULL && env->_system_dictionary_modification_counter != SystemDictionary::number_of_modifications();
+  bool verify_deps = env == NULL || trueInDebug;
+  if (!counter_changed && !verify_deps) {
+    return true;
+  }
 
   for (Dependencies::DepStream deps(dependencies); deps.next(); ) {
     Klass*  witness = deps.check_dependency();
@@ -450,7 +466,7 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
                                 AbstractCompiler* compiler,
                                 DebugInformationRecorder* debug_info,
                                 Dependencies* dependencies,
-                                CompileTask* task,
+                                GraalEnv* env,
                                 int compile_id,
                                 bool has_unsafe_access,
                                 Handle installed_code,
@@ -471,7 +487,7 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
     dependencies->encode_content_bytes();
 
     // Check for {class loads, evolution, breakpoints} during compilation
-    if (!check_for_system_dictionary_modification(dependencies)) {
+    if (!check_for_system_dictionary_modification(dependencies, env)) {
       // While not a true deoptimization, it is a preemptive decompile.
       MethodData* mdp = method()->method_data();
       if (mdp != NULL) {
@@ -516,6 +532,7 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
 
       // Record successful registration.
       // (Put nm into the task handle *before* publishing to the Java heap.)
+      CompileTask* task = env == NULL ? NULL : env->task();
       if (task != NULL)  task->set_code(nm);
 
       if (installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(installed_code())) {

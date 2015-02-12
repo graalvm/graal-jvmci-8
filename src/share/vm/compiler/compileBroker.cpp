@@ -1987,6 +1987,11 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   int compilable = ciEnv::MethodCompilable;
   AbstractCompiler *comp = compiler(task_level);
 
+  int system_dictionary_modification_counter;
+  {
+    MutexLocker locker(Compile_lock, thread);
+    system_dictionary_modification_counter = SystemDictionary::number_of_modifications();
+  }
 #ifdef COMPILERGRAAL
   if (comp != NULL && comp->is_graal()) {
     GraalCompiler* graal = (GraalCompiler*) comp;
@@ -1994,17 +1999,13 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     TraceTime t1("compilation", &time);
     EventCompilation event;
 
-    graal->compile_method(target_handle, osr_bci, task);
+    GraalEnv env(task, system_dictionary_modification_counter);
+    graal->compile_method(target_handle, osr_bci, &env);
 
     post_compile(thread, task, event, task->code() != NULL, NULL);
   } else
 #endif // COMPILERGRAAL
   {
-    int system_dictionary_modification_counter;
-    {
-      MutexLocker locker(Compile_lock, thread);
-      system_dictionary_modification_counter = SystemDictionary::number_of_modifications();
-    }
 
     NoHandleMark  nhm;
     ThreadToNativeFromVM ttn(thread);
