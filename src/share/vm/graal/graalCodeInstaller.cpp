@@ -384,7 +384,7 @@ MonitorValue* CodeInstaller::get_monitor_value(oop value, int total_frame_size, 
   return new MonitorValue(owner_value, lock_data_loc, eliminated);
 }
 
-void CodeInstaller::initialize_assumptions(oop compiled_code) {
+void CodeInstaller::initialize_dependencies(oop compiled_code) {
   JavaThread* thread = JavaThread::current();
   CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
   _oop_recorder = new OopRecorder(&_arena, true);
@@ -395,9 +395,7 @@ void CodeInstaller::initialize_assumptions(oop compiled_code) {
     for (int i = 0; i < length; ++i) {
       Handle assumption = assumptions->obj_at(i);
       if (!assumption.is_null()) {
-        if (assumption->klass() == Assumptions_MethodContents::klass()) {
-          assumption_MethodContents(assumption);
-        } else if (assumption->klass() == Assumptions_NoFinalizableSubclass::klass()) {
+        if (assumption->klass() == Assumptions_NoFinalizableSubclass::klass()) {
           assumption_NoFinalizableSubclass(assumption);
         } else if (assumption->klass() == Assumptions_ConcreteSubtype::klass()) {
           assumption_ConcreteSubtype(assumption);
@@ -412,6 +410,15 @@ void CodeInstaller::initialize_assumptions(oop compiled_code) {
       }
     }
   }
+  objArrayHandle methods = CompilationResult::methods(HotSpotCompiledCode::comp(compiled_code));
+  if (!methods.is_null()) {
+    int length = methods->length();
+    for (int i = 0; i < length; ++i) {
+      Handle method_handle = methods->obj_at(i);
+      methodHandle method = getMethodFromHotSpotMethod(method_handle());
+      _dependencies->assert_evol_method(method());
+    }
+  }
 }
 
 // constructor used to create a method
@@ -423,7 +430,7 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
 
   CodeBuffer buffer(buffer_blob);
   jobject compiled_code_obj = JNIHandles::make_local(compiled_code());
-  initialize_assumptions(JNIHandles::resolve(compiled_code_obj));
+  initialize_dependencies(JNIHandles::resolve(compiled_code_obj));
 
   // Get instructions and constants CodeSections early because we need it.
   _instructions = buffer.insts();
@@ -636,12 +643,6 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
   }
 #endif
   return true;
-}
-
-void CodeInstaller::assumption_MethodContents(Handle assumption) {
-  Handle method_handle = Assumptions_MethodContents::method(assumption());
-  methodHandle method = getMethodFromHotSpotMethod(method_handle());
-  _dependencies->assert_evol_method(method());
 }
 
 void CodeInstaller::assumption_NoFinalizableSubclass(Handle assumption) {

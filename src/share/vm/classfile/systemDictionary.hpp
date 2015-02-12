@@ -207,7 +207,6 @@ class Ticks;
   GRAAL_ONLY(do_klass(Assumptions_ConcreteMethod_klass,      com_oracle_graal_api_code_Assumptions_ConcreteMethod,         Graal)) \
   GRAAL_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, com_oracle_graal_api_code_Assumptions_NoFinalizableSubclass, Graal))\
   GRAAL_ONLY(do_klass(Assumptions_ConcreteSubtype_klass,     com_oracle_graal_api_code_Assumptions_ConcreteSubtype,        Graal)) \
-  GRAAL_ONLY(do_klass(Assumptions_MethodContents_klass,      com_oracle_graal_api_code_Assumptions_MethodContents,         Graal)) \
   GRAAL_ONLY(do_klass(Assumptions_CallSiteTargetValue_klass, com_oracle_graal_api_code_Assumptions_CallSiteTargetValue,    Graal)) \
   GRAAL_ONLY(do_klass(BytecodePosition_klass,                com_oracle_graal_api_code_BytecodePosition,                   Graal)) \
   GRAAL_ONLY(do_klass(DebugInfo_klass,                       com_oracle_graal_api_code_DebugInfo,                          Graal)) \
