@@ -343,7 +343,6 @@ suite = {
         "com.oracle.graal.replacements",
         "com.oracle.graal.runtime",
         "com.oracle.graal.printer",
-        "com.oracle.graal.baseline",
         "com.oracle.graal.hotspotvmconfig",
         "com.oracle.nfi",
       ],
@@ -824,18 +823,6 @@ suite = {
       "workingSets" : "Graal,Java",
     },
 
-    "com.oracle.graal.baseline" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.compiler",
-        "com.oracle.graal.java",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Java",
-    },
-
     "com.oracle.graal.printer" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -867,7 +854,6 @@ suite = {
         "com.oracle.graal.test",
         "com.oracle.graal.printer",
         "com.oracle.graal.runtime",
-        "com.oracle.graal.baseline",
         "JAVA_ALLOCATION_INSTRUMENTER",
       ],
       "checkstyle" : "com.oracle.graal.graph",

@@ -1490,11 +1490,6 @@ def _basic_gate_body(args, tasks):
         with Task('UnitTests:hosted-product', tasks):
             unittest(['--enable-timing', '--verbose', '--fail-fast'])
 
-    # Run baseline unit tests on server-hosted-graal
-    with VM('server', 'product'):
-        with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
-            unittest(['--enable-timing', '--verbose', '--whitelist', 'test/whitelist_baseline.txt', '-G:+UseBaselineCompiler'])
-
     # Build the other VM flavors
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks):
         buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product'])
