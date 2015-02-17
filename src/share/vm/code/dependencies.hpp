@@ -508,7 +508,7 @@ class Dependencies: public ResourceObj {
                                   Klass* witness = NULL);
   static void print_dependency(DepType dept,
                                int nargs, DepArgument args[],
-                               Klass* witness = NULL);
+                               Klass* witness = NULL, outputStream* st = tty);
 
  private:
   // helper for encoding common context types as zero:
@@ -605,7 +605,7 @@ class Dependencies: public ResourceObj {
     void log_dependency(Klass* witness = NULL);
 
     // Print the current dependency to tty.
-    void print_dependency(Klass* witness = NULL, bool verbose = false);
+    void print_dependency(Klass* witness = NULL, bool verbose = false, outputStream* st = tty);
   };
   friend class Dependencies::DepStream;
 

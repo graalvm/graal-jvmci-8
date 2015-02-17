@@ -468,7 +468,7 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
       id = CompileBroker::assign_compile_id_unlocked(Thread::current(), method, entry_bci);
     }
     result = GraalEnv::register_method(method, nm, entry_bci, &_offsets, _custom_stack_area_offset, &buffer, stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
-        GraalCompiler::instance(), _debug_recorder, _dependencies, env, id, false, installed_code, speculation_log);
+        GraalCompiler::instance(), _debug_recorder, _dependencies, env, id, false, installed_code, compiled_code, speculation_log);
     cb = nm;
   }
 
