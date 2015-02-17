@@ -4147,9 +4147,10 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
         tty->print("[Loaded %s from %s]\n", this_klass->external_name(),
                    InstanceKlass::cast(class_loader->klass())->external_name());
       }
-      // uncomment and use -verbose:class to investigate
-      // why each class is loaded
-      JavaThread::current()->print_stack_on(tty);
+      if (WizardMode) {
+        // useful when investigating why a class is loaded
+        JavaThread::current()->print_stack_on(tty);
+      }
     }
 
     if (TraceClassResolution) {
