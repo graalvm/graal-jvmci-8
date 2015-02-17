@@ -1717,14 +1717,19 @@ def igv(args):
 
         # Remove NetBeans platform if it is earlier than the current supported version
         if exists(nbplatform):
-            dom = xml.dom.minidom.parse(join(nbplatform, 'platform', 'update_tracking', 'org-netbeans-core.xml'))
-            currentVersion = mx.VersionSpec(dom.getElementsByTagName('module_version')[0].getAttribute('specification_version'))
-            supportedVersion = mx.VersionSpec('3.43.1')
-            if currentVersion < supportedVersion:
-                mx.log('Replacing NetBeans platform version ' + str(currentVersion) + ' with version ' + str(supportedVersion))
+            updateTrackingFile = join(nbplatform, 'platform', 'update_tracking', 'org-netbeans-core.xml')
+            if not exists(updateTrackingFile):
+                mx.log('Could not find \'' + updateTrackingFile + '\', removing NetBeans platform')
                 shutil.rmtree(nbplatform)
-            elif supportedVersion < currentVersion:
-                mx.log('Supported NetBeans version in igv command should be updated to ' + str(currentVersion))
+            else:
+                dom = xml.dom.minidom.parse(updateTrackingFile)
+                currentVersion = mx.VersionSpec(dom.getElementsByTagName('module_version')[0].getAttribute('specification_version'))
+                supportedVersion = mx.VersionSpec('3.43.1')
+                if currentVersion < supportedVersion:
+                    mx.log('Replacing NetBeans platform version ' + str(currentVersion) + ' with version ' + str(supportedVersion))
+                    shutil.rmtree(nbplatform)
+                elif supportedVersion < currentVersion:
+                    mx.log('Supported NetBeans version in igv command should be updated to ' + str(currentVersion))
 
         if not exists(nbplatform):
             mx.logv('[This execution may take a while as the NetBeans platform needs to be downloaded]')
