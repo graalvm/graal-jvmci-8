@@ -249,7 +249,7 @@ C2V_VMENTRY(jlong, lookupType, (JNIEnv*, jobject, jstring jname, jclass accessin
       // Call recursive to keep scope of strippedsym.
       TempNewSymbol strippedsym = SymbolTable::new_symbol(class_name->as_utf8()+1,
                                                           class_name->utf8_length()-2,
-                                                          CHECK_NULL);
+                                                          CHECK_0);
       resolved_klass = SystemDictionary::find(strippedsym, class_loader, protection_domain, CHECK_0);
     } else if (FieldType::is_array(class_name)) {
       FieldArrayInfo fd;
