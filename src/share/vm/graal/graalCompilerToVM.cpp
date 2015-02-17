@@ -241,7 +241,7 @@ C2V_VMENTRY(jlong, lookupType, (JNIEnv*, jobject, jstring jname, jclass accessin
   protection_domain = accessing_klass->protection_domain();
 
   if (resolve) {
-    resolved_klass = SystemDictionary::resolve_or_null(class_name, class_loader, protection_domain, CHECK_NULL);
+    resolved_klass = SystemDictionary::resolve_or_null(class_name, class_loader, protection_domain, CHECK_0);
   } else {
     if (class_name->byte_at(0) == 'L' &&
       class_name->byte_at(class_name->utf8_length()-1) == ';') {
@@ -250,27 +250,27 @@ C2V_VMENTRY(jlong, lookupType, (JNIEnv*, jobject, jstring jname, jclass accessin
       TempNewSymbol strippedsym = SymbolTable::new_symbol(class_name->as_utf8()+1,
                                                           class_name->utf8_length()-2,
                                                           CHECK_NULL);
-      resolved_klass = SystemDictionary::find(strippedsym, class_loader, protection_domain, CHECK_NULL);
+      resolved_klass = SystemDictionary::find(strippedsym, class_loader, protection_domain, CHECK_0);
     } else if (FieldType::is_array(class_name)) {
       FieldArrayInfo fd;
       // dimension and object_key in FieldArrayInfo are assigned as a side-effect
       // of this call
-      BasicType t = FieldType::get_array_info(class_name, fd, CHECK_NULL);
+      BasicType t = FieldType::get_array_info(class_name, fd, CHECK_0);
       if (t == T_OBJECT) {
         TempNewSymbol strippedsym = SymbolTable::new_symbol(class_name->as_utf8()+1+fd.dimension(),
                                                             class_name->utf8_length()-2-fd.dimension(),
-                                                            CHECK_NULL);
+                                                            CHECK_0);
         // naked oop "k" is OK here -- we assign back into it
         resolved_klass = SystemDictionary::find(strippedsym,
                                                              class_loader,
                                                              protection_domain,
-                                                             CHECK_NULL);
+                                                             CHECK_0);
         if (resolved_klass != NULL) {
-          resolved_klass = resolved_klass->array_klass(fd.dimension(), CHECK_NULL);
+          resolved_klass = resolved_klass->array_klass(fd.dimension(), CHECK_0);
         }
       } else {
         resolved_klass = Universe::typeArrayKlassObj(t);
-        resolved_klass = TypeArrayKlass::cast(resolved_klass)->array_klass(fd.dimension(), CHECK_NULL);
+        resolved_klass = TypeArrayKlass::cast(resolved_klass)->array_klass(fd.dimension(), CHECK_0);
       }
     }
   }
