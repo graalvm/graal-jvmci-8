@@ -421,11 +421,12 @@ methodHandle GraalEnv::get_method_by_index(constantPoolHandle& cpool,
 // ------------------------------------------------------------------
 // Check for changes to the system dictionary during compilation
 // class loads, evolution, breakpoints
-bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependencies, GraalEnv* env) {
+bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependencies, Handle compiled_code, GraalEnv* env, TRAPS) {
   // If JVMTI capabilities were enabled during compile, the compilation is invalidated.
   if (env != NULL) {
     if (!env->_jvmti_can_hotswap_or_post_breakpoint && JvmtiExport::can_hotswap_or_post_breakpoint()) {
-      // Hotswapping or breakpointing was enabled during compilation
+      Handle message = java_lang_String::create_from_str("Hotswapping or breakpointing was enabled during compilation", THREAD);
+      HotSpotCompiledNmethod::set_installationFailureMessage(compiled_code, message());
       return false;
     }
   }
@@ -440,8 +441,13 @@ bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependenci
   }
 
   for (Dependencies::DepStream deps(dependencies); deps.next(); ) {
-    Klass*  witness = deps.check_dependency();
+    Klass* witness = deps.check_dependency();
     if (witness != NULL) {
+      ResourceMark rm;
+      stringStream st;
+      deps.print_dependency(witness, true, &st);
+      Handle message = java_lang_String::create_from_str(st.as_string(), THREAD);
+      HotSpotCompiledNmethod::set_installationFailureMessage(compiled_code, message());
       return false;
     }
     if (LogCompilation) {
@@ -470,6 +476,7 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
                                 int compile_id,
                                 bool has_unsafe_access,
                                 Handle installed_code,
+                                Handle compiled_code,
                                 Handle speculation_log) {
   GRAAL_EXCEPTION_CONTEXT;
   NMethodSweeper::possibly_sweep();
@@ -487,7 +494,7 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
     dependencies->encode_content_bytes();
 
     // Check for {class loads, evolution, breakpoints} during compilation
-    if (!check_for_system_dictionary_modification(dependencies, env)) {
+    if (!check_for_system_dictionary_modification(dependencies, compiled_code, env, THREAD)) {
       // While not a true deoptimization, it is a preemptive decompile.
       MethodData* mdp = method()->method_data();
       if (mdp != NULL) {
