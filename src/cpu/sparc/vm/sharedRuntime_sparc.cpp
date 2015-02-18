@@ -3521,6 +3521,9 @@ void SharedRuntime::generate_deopt_blob() {
   //__ add(G0, 0x321, O7);
   __ add(O7, -8, O7);
   //__ st_ptr(I7, SP, I7->sp_offset_in_saved_window()*wordSize + STACK_BIAS);
+
+  int uncommon_trap_offset = __ offset() - start;
+
   // Save everything in sight.
   masm->block_comment("save_live_regs");
   (void) RegisterSaver::save_live_registers(masm, 0, &frame_size_words);
@@ -3729,6 +3732,7 @@ void SharedRuntime::generate_deopt_blob() {
   _deopt_blob = DeoptimizationBlob::create(&buffer, oop_maps, 0, exception_offset, reexecute_offset, frame_size_words);
   _deopt_blob->set_unpack_with_exception_in_tls_offset(exception_in_tls_offset);
 #ifdef GRAAL
+  _deopt_blob->set_uncommon_trap_offset(uncommon_trap_offset);
   _deopt_blob->set_implicit_exception_uncommon_trap_offset(implicit_exception_uncommon_trap_offset);
 #endif
 }
