@@ -421,12 +421,11 @@ methodHandle GraalEnv::get_method_by_index(constantPoolHandle& cpool,
 // ------------------------------------------------------------------
 // Check for changes to the system dictionary during compilation
 // class loads, evolution, breakpoints
-bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependencies, Handle compiled_code, GraalEnv* env, TRAPS) {
+bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependencies, Handle compiled_code, GraalEnv* env, char** failure_detail) {
   // If JVMTI capabilities were enabled during compile, the compilation is invalidated.
   if (env != NULL) {
     if (!env->_jvmti_can_hotswap_or_post_breakpoint && JvmtiExport::can_hotswap_or_post_breakpoint()) {
-      Handle message = java_lang_String::create_from_str("Hotswapping or breakpointing was enabled during compilation", THREAD);
-      HotSpotCompiledNmethod::set_installationFailureMessage(compiled_code, message());
+      *failure_detail = (char*) "Hotswapping or breakpointing was enabled during compilation";
       return false;
     }
   }
@@ -443,11 +442,12 @@ bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependenci
   for (Dependencies::DepStream deps(dependencies); deps.next(); ) {
     Klass* witness = deps.check_dependency();
     if (witness != NULL) {
-      ResourceMark rm;
-      stringStream st;
+      // Use a fixed size buffer to prevent the string stream from
+      // resizing in the context of an inner resource mark.
+      char* buffer = NEW_RESOURCE_ARRAY(char, O_BUFLEN);
+      stringStream st(buffer, O_BUFLEN);
       deps.print_dependency(witness, true, &st);
-      Handle message = java_lang_String::create_from_str(st.as_string(), THREAD);
-      HotSpotCompiledNmethod::set_installationFailureMessage(compiled_code, message());
+      *failure_detail = st.as_string();
       return false;
     }
     if (LogCompilation) {
@@ -482,6 +482,8 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
   NMethodSweeper::possibly_sweep();
   nm = NULL;
   int comp_level = CompLevel_full_optimization;
+  char* failure_detail = NULL;
+  GraalEnv::CodeInstallResult result;
   {
     // To prevent compile queue updates.
     MutexLocker locker(MethodCompileQueue_lock, THREAD);
@@ -494,7 +496,7 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
     dependencies->encode_content_bytes();
 
     // Check for {class loads, evolution, breakpoints} during compilation
-    if (!check_for_system_dictionary_modification(dependencies, compiled_code, env, THREAD)) {
+    if (!check_for_system_dictionary_modification(dependencies, compiled_code, env, &failure_detail)) {
       // While not a true deoptimization, it is a preemptive decompile.
       MethodData* mdp = method()->method_data();
       if (mdp != NULL) {
@@ -511,83 +513,91 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
       // If the code buffer is created on each compile attempt
       // as in C2, then it must be freed.
       //code_buffer->free_blob();
-      return GraalEnv::dependencies_failed;
-    }
-    ImplicitExceptionTable implicit_tbl;
-    nm =  nmethod::new_nmethod(method,
-                               compile_id,
-                               entry_bci,
-                               offsets,
-                               orig_pc_offset,
-                               debug_info, dependencies, code_buffer,
-                               frame_words, oop_map_set,
-                               handler_table, &implicit_tbl,
-                               compiler, comp_level, installed_code, speculation_log);
-
-    // Free codeBlobs
-    //code_buffer->free_blob();
-
-    if (nm == NULL) {
-      // The CodeCache is full.  Print out warning and disable compilation.
-      {
-        MutexUnlocker ml(Compile_lock);
-        MutexUnlocker locker(MethodCompileQueue_lock);
-        CompileBroker::handle_full_code_cache();
-      }
+      result = GraalEnv::dependencies_failed;
     } else {
-      nm->set_has_unsafe_access(has_unsafe_access);
+      ImplicitExceptionTable implicit_tbl;
+      nm =  nmethod::new_nmethod(method,
+                                 compile_id,
+                                 entry_bci,
+                                 offsets,
+                                 orig_pc_offset,
+                                 debug_info, dependencies, code_buffer,
+                                 frame_words, oop_map_set,
+                                 handler_table, &implicit_tbl,
+                                 compiler, comp_level, installed_code, speculation_log);
 
-      // Record successful registration.
-      // (Put nm into the task handle *before* publishing to the Java heap.)
-      CompileTask* task = env == NULL ? NULL : env->task();
-      if (task != NULL)  task->set_code(nm);
+      // Free codeBlobs
+      //code_buffer->free_blob();
 
-      if (installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(installed_code())) {
-        if (entry_bci == InvocationEntryBci) {
-          if (TieredCompilation) {
-            // If there is an old version we're done with it
-            nmethod* old = method->code();
-            if (TraceMethodReplacement && old != NULL) {
+      if (nm == NULL) {
+        // The CodeCache is full.  Print out warning and disable compilation.
+        {
+          MutexUnlocker ml(Compile_lock);
+          MutexUnlocker locker(MethodCompileQueue_lock);
+          CompileBroker::handle_full_code_cache();
+        }
+      } else {
+        nm->set_has_unsafe_access(has_unsafe_access);
+
+        // Record successful registration.
+        // (Put nm into the task handle *before* publishing to the Java heap.)
+        CompileTask* task = env == NULL ? NULL : env->task();
+        if (task != NULL)  task->set_code(nm);
+
+        if (installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(installed_code())) {
+          if (entry_bci == InvocationEntryBci) {
+            if (TieredCompilation) {
+              // If there is an old version we're done with it
+              nmethod* old = method->code();
+              if (TraceMethodReplacement && old != NULL) {
+                ResourceMark rm;
+                char *method_name = method->name_and_sig_as_C_string();
+                tty->print_cr("Replacing method %s", method_name);
+              }
+              if (old != NULL ) {
+                old->make_not_entrant();
+              }
+            }
+            if (TraceNMethodInstalls) {
               ResourceMark rm;
               char *method_name = method->name_and_sig_as_C_string();
-              tty->print_cr("Replacing method %s", method_name);
+              ttyLocker ttyl;
+              tty->print_cr("Installing method (%d) %s [entry point: %p]",
+                            comp_level,
+                            method_name, nm->entry_point());
             }
-            if (old != NULL ) {
-              old->make_not_entrant();
+            // Allow the code to be executed
+            method->set_code(method, nm);
+          } else {
+            if (TraceNMethodInstalls ) {
+              ResourceMark rm;
+              char *method_name = method->name_and_sig_as_C_string();
+              ttyLocker ttyl;
+              tty->print_cr("Installing osr method (%d) %s @ %d",
+                            comp_level,
+                            method_name,
+                            entry_bci);
             }
+            InstanceKlass::cast(method->method_holder())->add_osr_nmethod(nm);
           }
-          if (TraceNMethodInstalls) {
-            ResourceMark rm;
-            char *method_name = method->name_and_sig_as_C_string();
-            ttyLocker ttyl;
-            tty->print_cr("Installing method (%d) %s [entry point: %p]",
-                          comp_level,
-                          method_name, nm->entry_point());
-          }
-          // Allow the code to be executed
-          method->set_code(method, nm);
-        } else {
-          if (TraceNMethodInstalls ) {
-            ResourceMark rm;
-            char *method_name = method->name_and_sig_as_C_string();
-            ttyLocker ttyl;
-            tty->print_cr("Installing osr method (%d) %s @ %d",
-                          comp_level,
-                          method_name,
-                          entry_bci);
-          }
-          InstanceKlass::cast(method->method_holder())->add_osr_nmethod(nm);
-
         }
       }
+      result = nm != NULL ? GraalEnv::ok :GraalEnv::cache_full;
     }
   }
+
+  // String creation must be done outside lock
+  if (failure_detail != NULL) {
+    // A failure to allocate the string is silently ignored.
+    Handle message = java_lang_String::create_from_str(failure_detail, THREAD);
+    HotSpotCompiledNmethod::set_installationFailureMessage(compiled_code, message());
+  }
+
   // JVMTI -- compiled method notification (must be done outside lock)
   if (nm != NULL) {
     nm->post_compiled_method_load_event();
-    return GraalEnv::ok;
   }
 
-  return GraalEnv::cache_full;
+  return result;
 }
 
