@@ -197,9 +197,9 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
             private boolean controlFlowSplit;
 
             private FixedWithNextNode[] firstInstructionArray;
-            private AbstractFrameStateBuilder<?, ?>[] entryStateArray;
+            private HIRFrameStateBuilder[] entryStateArray;
             private FixedWithNextNode[][] firstInstructionMatrix;
-            private AbstractFrameStateBuilder<?, ?>[][] entryStateMatrix;
+            private HIRFrameStateBuilder[][] entryStateMatrix;
 
             /**
              * @param isReplacement specifies if this object is being used to parse a method that
@@ -253,7 +253,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     BciBlockMapping newMapping = BciBlockMapping.create(stream, method);
                     this.blockMap = newMapping;
                     this.firstInstructionArray = new FixedWithNextNode[blockMap.getBlockCount()];
-                    this.entryStateArray = new AbstractFrameStateBuilder<?, ?>[blockMap.getBlockCount()];
+                    this.entryStateArray = new HIRFrameStateBuilder[blockMap.getBlockCount()];
 
                     if (graphBuilderConfig.doLivenessAnalysis()) {
                         try (Scope s = Debug.scope("LivenessAnalysis")) {
@@ -1103,11 +1103,23 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
             @Override
             protected void genIntegerSwitch(ValueNode value, ArrayList<BciBlock> actualSuccessors, int[] keys, double[] keyProbabilities, int[] keySuccessors) {
-                this.controlFlowSplit = true;
-                double[] successorProbabilities = successorProbabilites(actualSuccessors.size(), keySuccessors, keyProbabilities);
-                IntegerSwitchNode switchNode = append(new IntegerSwitchNode(value, actualSuccessors.size(), keys, keyProbabilities, keySuccessors));
-                for (int i = 0; i < actualSuccessors.size(); i++) {
-                    switchNode.setBlockSuccessor(i, createBlockTarget(successorProbabilities[i], actualSuccessors.get(i), frameState));
+                if (value.isConstant()) {
+                    JavaConstant constant = (JavaConstant) value.asConstant();
+                    int constantValue = constant.asInt();
+                    for (int i = 0; i < keys.length; ++i) {
+                        if (keys[i] == constantValue) {
+                            appendGoto(actualSuccessors.get(keySuccessors[i]));
+                            return;
+                        }
+                    }
+                    appendGoto(actualSuccessors.get(keySuccessors[keys.length]));
+                } else {
+                    this.controlFlowSplit = true;
+                    double[] successorProbabilities = successorProbabilites(actualSuccessors.size(), keySuccessors, keyProbabilities);
+                    IntegerSwitchNode switchNode = append(new IntegerSwitchNode(value, actualSuccessors.size(), keys, keyProbabilities, keySuccessors));
+                    for (int i = 0; i < actualSuccessors.size(); i++) {
+                        switchNode.setBlockSuccessor(i, createBlockTarget(successorProbabilities[i], actualSuccessors.get(i), frameState));
+                    }
                 }
             }
 
@@ -1248,7 +1260,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 }
             }
 
-            private void setEntryState(BciBlock block, int dimension, AbstractFrameStateBuilder<?, ?> entryState) {
+            private void setEntryState(BciBlock block, int dimension, HIRFrameStateBuilder entryState) {
                 int id = block.id;
                 if (dimension == 0) {
                     this.entryStateArray[id] = entryState;
@@ -1257,9 +1269,9 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 }
             }
 
-            private void setEntryStateMultiDimension(int dimension, AbstractFrameStateBuilder<?, ?> entryState, int id) {
+            private void setEntryStateMultiDimension(int dimension, HIRFrameStateBuilder entryState, int id) {
                 if (entryStateMatrix == null) {
-                    entryStateMatrix = new AbstractFrameStateBuilder<?, ?>[4][];
+                    entryStateMatrix = new HIRFrameStateBuilder[4][];
                 }
                 if (dimension - 1 < entryStateMatrix.length) {
                     // We are within bounds.
@@ -1268,7 +1280,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     entryStateMatrix = Arrays.copyOf(entryStateMatrix, Math.max(entryStateMatrix.length * 2, dimension));
                 }
                 if (entryStateMatrix[dimension - 1] == null) {
-                    entryStateMatrix[dimension - 1] = new AbstractFrameStateBuilder<?, ?>[blockMap.getBlockCount()];
+                    entryStateMatrix[dimension - 1] = new HIRFrameStateBuilder[blockMap.getBlockCount()];
                 }
                 entryStateMatrix[dimension - 1][id] = entryState;
             }
@@ -1355,7 +1367,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     targetNode = getFirstInstruction(block, operatingDimension);
                     Target target = checkLoopExit(targetNode, block, state);
                     FixedNode result = target.fixed;
-                    AbstractFrameStateBuilder<?, ?> currentEntryState = target.state == state ? state.copy() : target.state;
+                    HIRFrameStateBuilder currentEntryState = target.state == state ? state.copy() : target.state;
                     setEntryState(block, operatingDimension, currentEntryState);
                     currentEntryState.clearNonLiveLocals(block, liveness, true);
 
@@ -1394,7 +1406,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     AbstractBeginNode placeholder = (AbstractBeginNode) getFirstInstruction(block, operatingDimension);
 
                     // The EndNode for the already existing edge.
-                    AbstractEndNode end = currentGraph.add(new EndNode());
+                    EndNode end = currentGraph.add(new EndNode());
                     // The MergeNode that replaces the placeholder.
                     AbstractMergeNode mergeNode = currentGraph.add(new MergeNode());
                     FixedNode next = placeholder.next();
@@ -1415,7 +1427,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 AbstractMergeNode mergeNode = (AbstractMergeNode) getFirstInstruction(block, operatingDimension);
 
                 // The EndNode for the newly merged edge.
-                AbstractEndNode newEnd = currentGraph.add(new EndNode());
+                EndNode newEnd = currentGraph.add(new EndNode());
                 Target target = checkLoopExit(newEnd, block, state);
                 FixedNode result = target.fixed;
                 ((HIRFrameStateBuilder) getEntryState(block, operatingDimension)).merge(mergeNode, target.state);
@@ -1445,7 +1457,12 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                             // iteration.
                             context.targetPeelIteration = nextPeelIteration++;
                             if (nextPeelIteration > MaximumLoopExplosionCount.getValue()) {
-                                throw new BailoutException("too many loop explosion interations - does the explosion not terminate?");
+                                String message = "too many loop explosion interations - does the explosion not terminate for method " + method + "?";
+                                if (FailedLoopExplosionIsFatal.getValue()) {
+                                    throw new RuntimeException(message);
+                                } else {
+                                    throw new BailoutException(message);
+                                }
                             }
                         }
 
@@ -1635,7 +1652,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     // Create the loop header block, which later will merge the backward branches of
                     // the loop.
                     controlFlowSplit = true;
-                    AbstractEndNode preLoopEnd = currentGraph.add(new EndNode());
+                    EndNode preLoopEnd = currentGraph.add(new EndNode());
                     LoopBeginNode loopBegin = currentGraph.add(new LoopBeginNode());
                     lastInstr.setNext(preLoopEnd);
                     // Add the single non-loop predecessor of the loop header.
