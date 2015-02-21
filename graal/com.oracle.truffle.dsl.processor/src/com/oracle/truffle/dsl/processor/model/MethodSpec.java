@@ -33,6 +33,7 @@ public class MethodSpec {
     private final ParameterSpec returnType;
     private final List<ParameterSpec> optional = new ArrayList<>();
     private final List<ParameterSpec> required = new ArrayList<>();
+    private final List<ParameterSpec> annotations = new ArrayList<>();
 
     private boolean ignoreAdditionalParameters;
     private boolean ignoreAdditionalSpecifications;
@@ -69,6 +70,10 @@ public class MethodSpec {
         return spec;
     }
 
+    public List<ParameterSpec> getAnnotations() {
+        return annotations;
+    }
+
     public ParameterSpec getReturnType() {
         return returnType;
     }
@@ -87,15 +92,6 @@ public class MethodSpec {
         specs.addAll(getOptional());
         specs.addAll(getRequired());
         return specs;
-    }
-
-    public ParameterSpec findParameterSpec(String name) {
-        for (ParameterSpec spec : getAll()) {
-            if (spec.getName().equals(name)) {
-                return spec;
-            }
-        }
-        return null;
     }
 
     public void applyTypeDefinitions(String prefix) {

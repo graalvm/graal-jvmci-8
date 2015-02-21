@@ -44,8 +44,6 @@ import com.oracle.truffle.api.source.*;
  */
 public final class TruffleTypes {
 
-    public static final String OPTION_DETAILED_REWRITE_REASONS = "DetailedRewriteReasons";
-
     private final DeclaredType node;
     private final ArrayType nodeArray;
     private final TypeMirror unexpectedValueException;
@@ -68,7 +66,6 @@ public final class TruffleTypes {
     private final DeclaredType nodeFactory;
     private final DeclaredType nodeFactoryBase;
     private final DeclaredType dslMetadata;
-    private final DeclaredType implies;
     private final DeclaredType generateNodeFactory;
     private final TypeElement expectError;
 
@@ -97,17 +94,12 @@ public final class TruffleTypes {
         nodeFactory = getRequired(context, NodeFactory.class);
         nodeFactoryBase = getRequired(context, NodeFactoryBase.class);
         dslMetadata = getRequired(context, DSLMetadata.class);
-        implies = getRequired(context, Implies.class);
         expectError = (TypeElement) getRequired(context, ExpectError.class).asElement();
         generateNodeFactory = getRequired(context, GenerateNodeFactory.class);
     }
 
     public DeclaredType getGenerateNodeFactory() {
         return generateNodeFactory;
-    }
-
-    public DeclaredType getImplies() {
-        return implies;
     }
 
     public DeclaredType getDslMetadata() {

@@ -182,7 +182,7 @@ public class ReachabilityTest {
             return false;
         }
 
-        @Specialization(guards = "foo")
+        @Specialization(guards = "foo()")
         int do2() {
             return 1;
         }
@@ -206,7 +206,7 @@ public class ReachabilityTest {
         }
 
         @ExpectError("Specialization is not reachable. It is shadowed by do2().")
-        @Specialization(guards = "foo")
+        @Specialization(guards = "foo()")
         int do1() {
             return 1;
         }
@@ -219,7 +219,7 @@ public class ReachabilityTest {
             return false;
         }
 
-        @Specialization(guards = "foo")
+        @Specialization(guards = "foo()")
         int do2() {
             return 1;
         }
@@ -237,106 +237,13 @@ public class ReachabilityTest {
             return false;
         }
 
-        @Specialization(guards = "foo")
+        @Specialization(guards = "foo()")
         int do2() {
             return 1;
         }
 
         @ExpectError("Specialization is not reachable. It is shadowed by do2().")
-        @Specialization(guards = "foo")
-        int do1() {
-            return 2;
-        }
-
-    }
-
-    @NodeAssumptions({"a1"})
-    static class ReachabilityAssumption1 extends ValueNode {
-
-        @Specialization(assumptions = "a1")
-        int do2() {
-            return 1;
-        }
-
-        @Specialization
-        int do1() {
-            return 2;
-        }
-
-    }
-
-    @NodeAssumptions({"a1"})
-    static class ReachabilityAssumption2 extends ValueNode {
-
-        @Specialization(assumptions = "a1")
-        int do2() {
-            return 1;
-        }
-
-        @ExpectError("Specialization is not reachable. It is shadowed by do2().")
-        @Specialization(assumptions = "a1")
-        int do1() {
-            return 2;
-        }
-
-    }
-
-    @NodeAssumptions({"a1", "a2"})
-    static class ReachabilityAssumption3 extends ValueNode {
-
-        @Specialization(assumptions = {"a1", "a2"})
-        int do2() {
-            return 1;
-        }
-
-        @Specialization(assumptions = "a1")
-        int do1() {
-            return 2;
-        }
-
-    }
-
-    @NodeAssumptions({"a1", "a2"})
-    static class ReachabilityAssumption4 extends ValueNode {
-
-        @Specialization(assumptions = "a1")
-        int do2() {
-            return 1;
-        }
-
-        @Specialization(assumptions = "a2")
-        int do1() {
-            return 2;
-        }
-
-    }
-
-    @NodeAssumptions({"a1", "a2"})
-    static class ReachabilityAssumption5 extends ValueNode {
-
-        @Specialization
-        int do2() {
-            return 1;
-        }
-
-        @ExpectError("Specialization is not reachable. It is shadowed by do2().")
-        @Specialization(assumptions = "a2")
-        int do1() {
-            return 2;
-        }
-
-    }
-
-    @NodeAssumptions({"a1", "a2"})
-    static class ReachabilityAssumption6 extends ValueNode {
-
-        @Specialization(assumptions = {"a1"})
-        int do2() {
-            return 1;
-        }
-
-        @ExpectError("Specialization is not reachable. It is shadowed by do2().")
-        @Specialization(assumptions = {"a1", "a2"})
+        @Specialization(guards = "foo()")
         int do1() {
             return 2;
         }

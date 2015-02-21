@@ -85,12 +85,4 @@ public class ExecutableTypeData extends TemplateMethod {
         return super.equals(obj);
     }
 
-    public boolean hasFrame() {
-        return getFrame() != null;
-    }
-
-    public Parameter getFrame() {
-        return findParameter("frameValue");
-    }
-
 }

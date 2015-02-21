@@ -3409,6 +3409,8 @@ void SharedRuntime::generate_deopt_blob() {
 
   __ pushptr(Address(r15_thread, in_bytes(JavaThread::graal_implicit_exception_pc_offset())));
 
+  int uncommon_trap_offset = __ pc() - start;
+
   // Save everything in sight.
   RegisterSaver::save_live_registers(masm, 0, &frame_size_in_words);
   // fetch_unroll_info needs to call last_java_frame()
@@ -3692,6 +3694,7 @@ void SharedRuntime::generate_deopt_blob() {
   _deopt_blob = DeoptimizationBlob::create(&buffer, oop_maps, 0, exception_offset, reexecute_offset, frame_size_in_words);
   _deopt_blob->set_unpack_with_exception_in_tls_offset(exception_in_tls_offset);
 #ifdef GRAAL
+  _deopt_blob->set_uncommon_trap_offset(uncommon_trap_offset);
   _deopt_blob->set_implicit_exception_uncommon_trap_offset(implicit_exception_uncommon_trap_offset);
 #endif
 }

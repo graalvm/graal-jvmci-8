@@ -24,120 +24,63 @@ package com.oracle.truffle.dsl.processor.model;
 
 import java.util.*;
 
-public final class GuardExpression {
+import javax.lang.model.element.*;
 
-    private GuardData resolvedGuard;
-    private NodeExecutionData[] resolvedChildren;
+import com.oracle.truffle.dsl.processor.expression.*;
+import com.oracle.truffle.dsl.processor.expression.DSLExpression.Negate;
+import com.oracle.truffle.dsl.processor.java.*;
 
-    private final String guardName;
-    private final boolean negated;
-    private final String[] childNames;
+public final class GuardExpression extends MessageContainer {
 
-    public GuardExpression(String expression, boolean allowArguments) {
-        String exp = expression;
-        if (exp.startsWith("!")) {
-            exp = exp.substring(1, exp.length());
+    private final TemplateMethod source;
+    private final DSLExpression expression;
+
+    public GuardExpression(TemplateMethod source, DSLExpression expression) {
+        this.source = source;
+        this.expression = expression;
+    }
+
+    @Override
+    public Element getMessageElement() {
+        return source.getMessageElement();
+    }
+
+    @Override
+    public AnnotationMirror getMessageAnnotation() {
+        return source.getMessageAnnotation();
+    }
+
+    @Override
+    public AnnotationValue getMessageAnnotationValue() {
+        return ElementUtils.getAnnotationValue(getMessageAnnotation(), "guards");
+    }
+
+    public DSLExpression getExpression() {
+        return expression;
+    }
+
+    public boolean equalsNegated(GuardExpression other) {
+        boolean negated = false;
+        DSLExpression thisExpression = expression;
+        if (thisExpression instanceof Negate) {
             negated = true;
-        } else {
-            negated = false;
+            thisExpression = ((Negate) thisExpression).getReceiver();
         }
 
-        int argumentStart = exp.indexOf('(');
-        int endIndex = exp.lastIndexOf(')');
-        if (allowArguments && argumentStart != -1 && endIndex != -1) {
-            guardName = exp.substring(0, argumentStart).trim();
-            String arguments = exp.substring(argumentStart + 1, endIndex);
-            String[] children = arguments.split(",");
-            for (int i = 0; i < children.length; i++) {
-                children[i] = children[i].trim();
-            }
-            if (children.length == 1 && children[0].isEmpty()) {
-                childNames = new String[0];
-            } else {
-                childNames = children;
-            }
-        } else {
-            guardName = exp;
-            childNames = null;
+        boolean otherNegated = false;
+        DSLExpression otherExpression = other.expression;
+        if (otherExpression instanceof Negate) {
+            otherNegated = true;
+            otherExpression = ((Negate) otherExpression).getReceiver();
         }
-    }
-
-    public String[] getChildNames() {
-        return childNames;
-    }
-
-    public boolean isResolved() {
-        return resolvedGuard != null;
-    }
-
-    public String getGuardName() {
-        return guardName;
-    }
-
-    public NodeExecutionData[] getResolvedChildren() {
-        return resolvedChildren;
-    }
-
-    public void setResolvedChildren(NodeExecutionData[] resolvedChildren) {
-        this.resolvedChildren = resolvedChildren;
-    }
-
-    public void setResolvedGuard(GuardData guard) {
-        this.resolvedGuard = guard;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj instanceof GuardExpression) {
-            GuardExpression other = (GuardExpression) obj;
-            if (isResolved() && other.isResolved()) {
-                return resolvedGuard.equals(other.resolvedGuard) && negated == other.negated && Arrays.equals(resolvedChildren, other.resolvedChildren);
-            } else {
-                boolean equal = guardName.equals(other.guardName) && negated == other.negated;
-                if (childNames != null && other.childNames != null) {
-                    equal &= Arrays.equals(childNames, other.childNames);
-                }
-                return equal;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(guardName, negated, resolvedGuard, resolvedChildren);
+        return Objects.equals(thisExpression, otherExpression) && negated != otherNegated;
     }
 
     public boolean implies(GuardExpression other) {
-        if (equals(other)) {
+        if (Objects.equals(expression, other.expression)) {
             return true;
         }
-
-        if (isResolved() && other.isResolved()) {
-            for (GuardExpression implies : getResolvedGuard().getImpliesExpressions()) {
-                if (implies.getGuardName().equals(other.getGuardName())) {
-                    if (implies.isNegated() == other.isNegated()) {
-                        return true;
-                    }
-                }
-            }
-        }
         return false;
-    }
-
-    @Override
-    public String toString() {
-        return (negated ? "!" : "") + guardName;
-    }
-
-    public boolean isNegated() {
-        return negated;
-    }
-
-    public GuardData getResolvedGuard() {
-        return resolvedGuard;
     }
 
 }

@@ -737,10 +737,10 @@ void Dependencies::write_dependency_to(xmlStream* xtty,
 }
 
 void Dependencies::print_dependency(DepType dept, int nargs, DepArgument args[],
-                                    Klass* witness) {
+                                    Klass* witness, outputStream* st) {
   ResourceMark rm;
   ttyLocker ttyl;   // keep the following output all in one block
-  tty->print_cr("%s of type %s",
+  st->print_cr("%s of type %s",
                 (witness == NULL)? "Dependency": "Failed dependency",
                 dep_name(dept));
   // print arguments
@@ -762,18 +762,18 @@ void Dependencies::print_dependency(DepType dept, int nargs, DepArgument args[],
     } else {
       what = "object ";
     }
-    tty->print("  %s = %s", what, (put_star? "*": ""));
+    st->print("  %s = %s", what, (put_star? "*": ""));
     if (arg.is_klass())
-      tty->print("%s", ((Klass*)arg.metadata_value())->external_name());
+      st->print("%s", ((Klass*)arg.metadata_value())->external_name());
     else if (arg.is_method())
-      ((Method*)arg.metadata_value())->print_value();
+      ((Method*)arg.metadata_value())->print_value_on(st);
     else
       ShouldNotReachHere(); // Provide impl for this type.
-    tty->cr();
+    st->cr();
   }
   if (witness != NULL) {
     bool put_star = !Dependencies::is_concrete_klass(witness);
-    tty->print_cr("  witness = %s%s",
+    st->print_cr("  witness = %s%s",
                   (put_star? "*": ""),
                   witness->external_name());
   }
@@ -806,18 +806,18 @@ void Dependencies::DepStream::log_dependency(Klass* witness) {
   }
 }
 
-void Dependencies::DepStream::print_dependency(Klass* witness, bool verbose) {
+void Dependencies::DepStream::print_dependency(Klass* witness, bool verbose, outputStream* st) {
   int nargs = argument_count();
   DepArgument args[max_arg_count];
   for (int j = 0; j < nargs; j++) {
     args[j] = argument(j);
   }
-  Dependencies::print_dependency(type(), nargs, args, witness);
+  Dependencies::print_dependency(type(), nargs, args, witness, st);
   if (verbose) {
     if (_code != NULL) {
-      tty->print("  code: ");
-      _code->print_value_on(tty);
-      tty->cr();
+      st->print("  code: ");
+      _code->print_value_on(st);
+      st->cr();
     }
   }
 }

@@ -35,6 +35,7 @@ import com.oracle.truffle.dsl.processor.util.*;
  */
 public class TemplateMethod extends MessageContainer implements Comparable<TemplateMethod> {
 
+    public static final String FRAME_NAME = "frameValue";
     public static final int NO_NATURAL_ORDER = -1;
 
     private String id;
@@ -66,6 +67,10 @@ public class TemplateMethod extends MessageContainer implements Comparable<Templ
             parameterCache.put(returnType.getLocalName(), returnType);
         }
         this.id = id;
+    }
+
+    public final Parameter getFrame() {
+        return findParameter(FRAME_NAME);
     }
 
     public String createReferenceName() {
@@ -135,16 +140,6 @@ public class TemplateMethod extends MessageContainer implements Comparable<Templ
         }
     }
 
-    public List<Parameter> getRequiredParameters() {
-        List<Parameter> requiredParameters = new ArrayList<>();
-        for (Parameter parameter : getParameters()) {
-            if (getSpecification().getRequired().contains(parameter.getSpecification())) {
-                requiredParameters.add(parameter);
-            }
-        }
-        return requiredParameters;
-    }
-
     public Iterable<Parameter> getSignatureParameters() {
         return new FilteredIterable<>(getParameters(), new Predicate<Parameter>() {
             public boolean evaluate(Parameter value) {
@@ -155,16 +150,6 @@ public class TemplateMethod extends MessageContainer implements Comparable<Templ
 
     public List<Parameter> getParameters() {
         return parameters;
-    }
-
-    public List<Parameter> findParameters(ParameterSpec spec) {
-        List<Parameter> foundParameters = new ArrayList<>();
-        for (Parameter param : getReturnTypeAndParameters()) {
-            if (param.getSpecification().getName().equals(spec.getName())) {
-                foundParameters.add(param);
-            }
-        }
-        return foundParameters;
     }
 
     public Parameter findParameterOrDie(NodeExecutionData execution) {
@@ -198,11 +183,6 @@ public class TemplateMethod extends MessageContainer implements Comparable<Templ
         }
         allParameters.addAll(getParameters());
         return Collections.unmodifiableList(allParameters);
-    }
-
-    public boolean canBeAccessedByInstanceOf(TypeMirror type) {
-        TypeMirror methodType = ElementUtils.findNearestEnclosingType(getMethod()).asType();
-        return ElementUtils.isAssignable(type, methodType) || ElementUtils.isAssignable(methodType, type);
     }
 
     public ExecutableElement getMethod() {
@@ -258,20 +238,6 @@ public class TemplateMethod extends MessageContainer implements Comparable<Templ
         return signature;
     }
 
-    public Parameter getSignatureParameter(int searchIndex) {
-        int index = 0;
-        for (Parameter parameter : getParameters()) {
-            if (!parameter.getSpecification().isSignature()) {
-                continue;
-            }
-            if (index == searchIndex) {
-                return parameter;
-            }
-            index++;
-        }
-        return null;
-    }
-
     public void updateSignature(TypeSignature signature) {
         // TODO(CH): fails in normal usage - output ok though
         // assert signature.size() >= 1;
@@ -309,19 +275,6 @@ public class TemplateMethod extends MessageContainer implements Comparable<Templ
             compare = enclosingType1.getQualifiedName().toString().compareTo(enclosingType2.getQualifiedName().toString());
         }
         return compare;
-    }
-
-    public List<Parameter> getParametersAfter(Parameter genericParameter) {
-        boolean found = false;
-        List<Parameter> foundParameters = new ArrayList<>();
-        for (Parameter param : getParameters()) {
-            if (param.getLocalName().equals(genericParameter.getLocalName())) {
-                found = true;
-            } else if (found) {
-                foundParameters.add(param);
-            }
-        }
-        return foundParameters;
     }
 
     public int compareBySignature(TemplateMethod compareMethod) {

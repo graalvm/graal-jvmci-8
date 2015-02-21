@@ -343,7 +343,6 @@ suite = {
         "com.oracle.graal.replacements",
         "com.oracle.graal.runtime",
         "com.oracle.graal.printer",
-        "com.oracle.graal.baseline",
         "com.oracle.graal.hotspotvmconfig",
         "com.oracle.nfi",
       ],
@@ -592,6 +591,7 @@ suite = {
       "dependencies" : [
         "com.oracle.graal.compiler",
         "com.oracle.graal.java",
+        "com.oracle.graal.api.directives",
         "com.oracle.graal.word",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -802,7 +802,6 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.api.directives",
         "com.oracle.graal.phases",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -818,18 +817,6 @@ suite = {
         "com.oracle.graal.api.code",
         "com.oracle.graal.options",
         "com.oracle.graal.debug",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Java",
-    },
-
-    "com.oracle.graal.baseline" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.compiler",
-        "com.oracle.graal.java",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -864,10 +851,10 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.graal.api.directives",
         "com.oracle.graal.test",
         "com.oracle.graal.printer",
         "com.oracle.graal.runtime",
-        "com.oracle.graal.baseline",
         "JAVA_ALLOCATION_INSTRUMENTER",
       ],
       "checkstyle" : "com.oracle.graal.graph",

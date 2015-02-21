@@ -1490,11 +1490,6 @@ def _basic_gate_body(args, tasks):
         with Task('UnitTests:hosted-product', tasks):
             unittest(['--enable-timing', '--verbose', '--fail-fast'])
 
-    # Run baseline unit tests on server-hosted-graal
-    with VM('server', 'product'):
-        with Task('UnitTests-BaselineCompiler:hosted-product', tasks):
-            unittest(['--enable-timing', '--verbose', '--whitelist', 'test/whitelist_baseline.txt', '-G:+UseBaselineCompiler'])
-
     # Build the other VM flavors
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks):
         buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product'])
@@ -1722,14 +1717,19 @@ def igv(args):
 
         # Remove NetBeans platform if it is earlier than the current supported version
         if exists(nbplatform):
-            dom = xml.dom.minidom.parse(join(nbplatform, 'platform', 'update_tracking', 'org-netbeans-core.xml'))
-            currentVersion = mx.VersionSpec(dom.getElementsByTagName('module_version')[0].getAttribute('specification_version'))
-            supportedVersion = mx.VersionSpec('3.43.1')
-            if currentVersion < supportedVersion:
-                mx.log('Replacing NetBeans platform version ' + str(currentVersion) + ' with version ' + str(supportedVersion))
+            updateTrackingFile = join(nbplatform, 'platform', 'update_tracking', 'org-netbeans-core.xml')
+            if not exists(updateTrackingFile):
+                mx.log('Could not find \'' + updateTrackingFile + '\', removing NetBeans platform')
                 shutil.rmtree(nbplatform)
-            elif supportedVersion < currentVersion:
-                mx.log('Supported NetBeans version in igv command should be updated to ' + str(currentVersion))
+            else:
+                dom = xml.dom.minidom.parse(updateTrackingFile)
+                currentVersion = mx.VersionSpec(dom.getElementsByTagName('module_version')[0].getAttribute('specification_version'))
+                supportedVersion = mx.VersionSpec('3.43.1')
+                if currentVersion < supportedVersion:
+                    mx.log('Replacing NetBeans platform version ' + str(currentVersion) + ' with version ' + str(supportedVersion))
+                    shutil.rmtree(nbplatform)
+                elif supportedVersion < currentVersion:
+                    mx.log('Supported NetBeans version in igv command should be updated to ' + str(currentVersion))
 
         if not exists(nbplatform):
             mx.logv('[This execution may take a while as the NetBeans platform needs to be downloaded]')

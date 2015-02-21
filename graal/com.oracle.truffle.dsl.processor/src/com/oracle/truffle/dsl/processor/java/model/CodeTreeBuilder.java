@@ -77,11 +77,11 @@ public class CodeTreeBuilder {
     }
 
     public static CodeTree singleString(String s) {
-        return new CodeTreeBuilder(null).string(s).getTree();
+        return createBuilder().string(s).build();
     }
 
     public static CodeTree singleType(TypeMirror s) {
-        return new CodeTreeBuilder(null).type(s).getTree();
+        return createBuilder().type(s).build();
     }
 
     private CodeTreeBuilder push(CodeTreeKind kind) {
@@ -322,10 +322,6 @@ public class CodeTreeBuilder {
             string(chunks[i]);
         }
         return end();
-    }
-
-    public CodeTreeBuilder dot() {
-        return string(".");
     }
 
     public CodeTreeBuilder newLine() {
@@ -576,17 +572,6 @@ public class CodeTreeBuilder {
         return declaration(type, name, init.getTree());
     }
 
-    public CodeTreeBuilder declaration(String type, String name, CodeTreeBuilder init) {
-        if (init == this) {
-            throw new IllegalArgumentException("Recursive builder usage.");
-        }
-        return declaration(type, name, init.getTree());
-    }
-
-    public CodeTreeBuilder declaration(TypeMirror type, String name) {
-        return declaration(type, name, (CodeTree) null);
-    }
-
     public CodeTreeBuilder create() {
         return new CodeTreeBuilder(this);
     }
@@ -620,11 +605,6 @@ public class CodeTreeBuilder {
 
     public CodeTree build() {
         return root;
-    }
-
-    public CodeTreeBuilder cast(String baseClassName) {
-        string("(").string(baseClassName).string(") ");
-        return this;
     }
 
     public CodeTreeBuilder cast(TypeMirror type) {
@@ -671,20 +651,8 @@ public class CodeTreeBuilder {
         return startReturn().string("true").end();
     }
 
-    public CodeTreeBuilder instanceOf(CodeTree var, CodeTree type) {
-        return tree(var).string(" instanceof ").tree(type);
-    }
-
     public CodeTreeBuilder instanceOf(CodeTree var, TypeMirror type) {
         return tree(var).string(" instanceof ").type(type);
-    }
-
-    public CodeTreeBuilder instanceOf(String var, String type) {
-        return instanceOf(singleString(var), singleString(type));
-    }
-
-    public CodeTreeBuilder instanceOf(String var, TypeMirror type) {
-        return instanceOf(singleString(var), singleType(type));
     }
 
     public CodeTreeBuilder defaultValue(TypeMirror mirror) {
@@ -715,26 +683,6 @@ public class CodeTreeBuilder {
             default:
                 throw new AssertionError();
         }
-    }
-
-    public CodeTreeBuilder assertFalse() {
-        return startAssert().string("false").end();
-    }
-
-    public CodeTreeBuilder breakStatement() {
-        return statement("break");
-    }
-
-    public CodeTreeBuilder isNull() {
-        return string(" == null");
-    }
-
-    public CodeTreeBuilder isNotNull() {
-        return string(" != null");
-    }
-
-    public CodeTreeBuilder is(CodeTree tree) {
-        return string(" == ").tree(tree);
     }
 
     public CodeTreeBuilder startTryBlock() {

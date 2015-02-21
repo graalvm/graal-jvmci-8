@@ -122,14 +122,13 @@ protected:
 private:
   // extract the fields of the CompilationResult
   void initialize_fields(oop target_method);
-  void initialize_assumptions(oop target_method);
+  void initialize_dependencies(oop target_method);
   
   int estimate_stub_entries();
   
   // perform data and call relocation on the CodeBuffer
   bool initialize_buffer(CodeBuffer& buffer);
 
-  void assumption_MethodContents(Handle assumption);
   void assumption_NoFinalizableSubclass(Handle assumption);
   void assumption_ConcreteSubtype(Handle assumption);
   void assumption_ConcreteMethod(Handle assumption);

@@ -25,6 +25,7 @@
 #define SHARE_VM_GRAAL_GRAAL_COMPILER_HPP
 
 #include "compiler/abstractCompiler.hpp"
+#include "graal/graalEnv.hpp"
 
 class GraalCompiler : public AbstractCompiler {
 
@@ -72,7 +73,7 @@ public:
   // Compilation entry point for methods
   virtual void compile_method(ciEnv* env, ciMethod* target, int entry_bci);
 
-  void compile_method(methodHandle target, int entry_bci, CompileTask* task);
+  void compile_method(methodHandle target, int entry_bci, GraalEnv* env);
 
   // Print compilation timers and statistics
   virtual void print_timers();

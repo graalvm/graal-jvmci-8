@@ -384,21 +384,18 @@ MonitorValue* CodeInstaller::get_monitor_value(oop value, int total_frame_size, 
   return new MonitorValue(owner_value, lock_data_loc, eliminated);
 }
 
-void CodeInstaller::initialize_assumptions(oop compiled_code) {
+void CodeInstaller::initialize_dependencies(oop compiled_code) {
   JavaThread* thread = JavaThread::current();
   CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
   _oop_recorder = new OopRecorder(&_arena, true);
   _dependencies = new Dependencies(&_arena, _oop_recorder, compilerThread != NULL ? compilerThread->log() : NULL);
-  Handle assumptions_handle = CompilationResult::assumptions(HotSpotCompiledCode::comp(compiled_code));
-  if (!assumptions_handle.is_null()) {
-    objArrayHandle assumptions(Thread::current(), Assumptions::list(assumptions_handle()));
+  objArrayHandle assumptions = CompilationResult::assumptions(HotSpotCompiledCode::comp(compiled_code));
+  if (!assumptions.is_null()) {
     int length = assumptions->length();
     for (int i = 0; i < length; ++i) {
       Handle assumption = assumptions->obj_at(i);
       if (!assumption.is_null()) {
-        if (assumption->klass() == Assumptions_MethodContents::klass()) {
-          assumption_MethodContents(assumption);
-        } else if (assumption->klass() == Assumptions_NoFinalizableSubclass::klass()) {
+        if (assumption->klass() == Assumptions_NoFinalizableSubclass::klass()) {
           assumption_NoFinalizableSubclass(assumption);
         } else if (assumption->klass() == Assumptions_ConcreteSubtype::klass()) {
           assumption_ConcreteSubtype(assumption);
@@ -413,6 +410,15 @@ void CodeInstaller::initialize_assumptions(oop compiled_code) {
       }
     }
   }
+  objArrayHandle methods = CompilationResult::methods(HotSpotCompiledCode::comp(compiled_code));
+  if (!methods.is_null()) {
+    int length = methods->length();
+    for (int i = 0; i < length; ++i) {
+      Handle method_handle = methods->obj_at(i);
+      methodHandle method = getMethodFromHotSpotMethod(method_handle());
+      _dependencies->assert_evol_method(method());
+    }
+  }
 }
 
 // constructor used to create a method
@@ -424,7 +430,7 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
 
   CodeBuffer buffer(buffer_blob);
   jobject compiled_code_obj = JNIHandles::make_local(compiled_code());
-  initialize_assumptions(JNIHandles::resolve(compiled_code_obj));
+  initialize_dependencies(JNIHandles::resolve(compiled_code_obj));
 
   // Get instructions and constants CodeSections early because we need it.
   _instructions = buffer.insts();
@@ -456,13 +462,13 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
     methodHandle method = getMethodFromHotSpotMethod(HotSpotCompiledNmethod::method(compiled_code));
     jint entry_bci = HotSpotCompiledNmethod::entryBCI(compiled_code);
     jint id = HotSpotCompiledNmethod::id(compiled_code);
-    CompileTask* task = (CompileTask*) (address) HotSpotCompiledNmethod::ctask(compiled_code);
+    GraalEnv* env = (GraalEnv*) (address) HotSpotCompiledNmethod::graalEnv(compiled_code);
     if (id == -1) {
       // Make sure a valid compile_id is associated with every compile
       id = CompileBroker::assign_compile_id_unlocked(Thread::current(), method, entry_bci);
     }
     result = GraalEnv::register_method(method, nm, entry_bci, &_offsets, _custom_stack_area_offset, &buffer, stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
-        GraalCompiler::instance(), _debug_recorder, _dependencies, task, id, false, installed_code, speculation_log);
+        GraalCompiler::instance(), _debug_recorder, _dependencies, env, id, false, installed_code, compiled_code, speculation_log);
     cb = nm;
   }
 
@@ -637,12 +643,6 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
   }
 #endif
   return true;
-}
-
-void CodeInstaller::assumption_MethodContents(Handle assumption) {
-  Handle method_handle = Assumptions_MethodContents::method(assumption());
-  methodHandle method = getMethodFromHotSpotMethod(method_handle());
-  _dependencies->assert_evol_method(method());
 }
 
 void CodeInstaller::assumption_NoFinalizableSubclass(Handle assumption) {
