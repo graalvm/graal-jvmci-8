@@ -2749,7 +2749,10 @@ void nmethod::print_scopes() {
       continue;
 
     ScopeDesc* sd = scope_desc_at(p->real_pc(this));
-    sd->print_on(tty, p);
+    while (sd != NULL) {
+      sd->print_on(tty, p);
+      sd = sd->sender();
+    }
   }
 }
 
