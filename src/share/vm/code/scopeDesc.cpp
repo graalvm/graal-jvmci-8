@@ -230,7 +230,7 @@ void ScopeDesc::print_on(outputStream* st, PcDesc* pd) const {
   if (NOT_GRAAL(DoEscapeAnalysis &&) is_top() && _objects != NULL) {
     tty->print_cr("Objects");
     for (int i = 0; i < _objects->length(); i++) {
-      ObjectValue* sv = (ObjectValue*) _objects->at(i);
+      ObjectValue* sv = _objects->at(i)->as_ObjectValue();
       tty->print(" - %d: ", sv->id());
       sv->print_fields_on(tty);
       tty->cr();

@@ -305,7 +305,6 @@
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotNmethod,             "com/oracle/graal/hotspot/meta/HotSpotNmethod"))                  \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotResolvedJavaMethodImpl, "com/oracle/graal/hotspot/meta/HotSpotResolvedJavaMethodImpl")) \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotResolvedObjectTypeImpl, "com/oracle/graal/hotspot/meta/HotSpotResolvedObjectTypeImpl")) \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotMonitorValue,        "com/oracle/graal/hotspot/meta/HotSpotMonitorValue"))             \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotCompressedNullConstant, "com/oracle/graal/hotspot/meta/HotSpotCompressedNullConstant")) \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotObjectConstantImpl,  "com/oracle/graal/hotspot/meta/HotSpotObjectConstantImpl"))       \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_meta_HotSpotMetaspaceConstantImpl,"com/oracle/graal/hotspot/meta/HotSpotMetaspaceConstantImpl"))   \
@@ -343,6 +342,7 @@
   GRAAL_ONLY(template(com_oracle_graal_api_code_RegisterValue,                  "com/oracle/graal/api/code/RegisterValue"))                       \
   GRAAL_ONLY(template(com_oracle_graal_api_code_Register_RegisterCategory,      "com/oracle/graal/api/code/Register$RegisterCategory"))           \
   GRAAL_ONLY(template(com_oracle_graal_api_code_StackSlot,                      "com/oracle/graal/api/code/StackSlot"))                           \
+  GRAAL_ONLY(template(com_oracle_graal_api_code_StackLockValue,                 "com/oracle/graal/api/code/StackLockValue"))                      \
   GRAAL_ONLY(template(com_oracle_graal_api_code_VirtualObject,                  "com/oracle/graal/api/code/VirtualObject"))                       \
   GRAAL_ONLY(template(com_oracle_graal_api_code_RegisterSaveLayout,             "com/oracle/graal/api/code/RegisterSaveLayout"))                  \
   GRAAL_ONLY(template(com_oracle_graal_api_code_InvalidInstalledCodeException,  "com/oracle/graal/api/code/InvalidInstalledCodeException"))       \
