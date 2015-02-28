@@ -100,19 +100,19 @@ public class BytecodeInterpreterPartialEvaluationTest extends PartialEvaluationT
                 switch (bc) {
                     case Bytecode.CONST:
                         value = bytecodes[bci + 1];
-                        trace("%d: CONST %s", bci, value);
+                        trace("%d (%d): CONST %s", bci, topOfStack, value);
                         setInt(frame, ++topOfStack, value);
                         bci = bci + 2;
                         continue;
 
                     case Bytecode.RETURN:
-                        trace("%d: RETURN", bci);
+                        trace("%d (%d): RETURN", bci, topOfStack);
                         return getInt(frame, topOfStack);
 
                     case Bytecode.ADD: {
                         int left = getInt(frame, topOfStack);
                         int right = getInt(frame, topOfStack - 1);
-                        trace("%d: ADD %d %d", bci, left, right);
+                        trace("%d (%d): ADD %d %d", bci, topOfStack, left, right);
                         setInt(frame, topOfStack - 1, left + right);
                         topOfStack--;
                         bci = bci + 1;
@@ -120,7 +120,7 @@ public class BytecodeInterpreterPartialEvaluationTest extends PartialEvaluationT
                     }
 
                     case Bytecode.IFZERO:
-                        trace("%d: IFZERO", bci);
+                        trace("%d (%d): IFZERO", bci, topOfStack);
                         if (getInt(frame, topOfStack--) == 0) {
                             bci = bytecodes[bci + 1];
                             continue;
@@ -130,18 +130,18 @@ public class BytecodeInterpreterPartialEvaluationTest extends PartialEvaluationT
                         }
 
                     case Bytecode.POP:
-                        trace("%d: POP", bci);
+                        trace("%d (%d): POP", bci, topOfStack);
                         topOfStack--;
                         bci++;
                         continue;
 
                     case Bytecode.JMP:
-                        trace("%d: JMP", bci);
+                        trace("%d (%d): JMP", bci, topOfStack);
                         bci = bytecodes[bci + 1];
                         continue;
 
                     case Bytecode.DUP:
-                        trace("%d: DUP", bci);
+                        trace("%d (%d): DUP", bci, topOfStack);
                         setInt(frame, topOfStack + 1, getInt(frame, topOfStack));
                         topOfStack++;
                         bci++;
@@ -217,7 +217,6 @@ public class BytecodeInterpreterPartialEvaluationTest extends PartialEvaluationT
     }
 
     @Test
-    @Ignore
     public void simpleLoopProgram() {
         byte[] bytecodes = new byte[]{
         /* 0: */Bytecode.CONST,
@@ -234,7 +233,38 @@ public class BytecodeInterpreterPartialEvaluationTest extends PartialEvaluationT
         /* 11: */4,
         /* 12: */Bytecode.POP,
         /* 13: */Bytecode.RETURN};
-        assertPartialEvalEqualsAndRunsCorrect(new Program("ifAndPopProgram", bytecodes, 0, 3));
+        assertPartialEvalEqualsAndRunsCorrect(new Program("simpleLoopProgram", bytecodes, 0, 3));
+    }
+
+    @Test
+    public void nestedLoopsProgram() {
+        byte[] bytecodes = new byte[]{
+        /* 0: */Bytecode.CONST,
+        /* 1: */42,
+        /* 2: */Bytecode.CONST,
+        /* 3: */-2,
+        /* 4: */Bytecode.CONST,
+        /* 5: */1,
+        /* 6: */Bytecode.ADD,
+        /* 7: */Bytecode.DUP,
+        /* 8: */Bytecode.CONST,
+        /* 9: */-2,
+        /* 10: */Bytecode.CONST,
+        /* 11: */1,
+        /* 12: */Bytecode.ADD,
+        /* 13: */Bytecode.DUP,
+        /* 14: */Bytecode.IFZERO,
+        /* 15: */18,
+        /* 16: */Bytecode.JMP,
+        /* 17: */10,
+        /* 18: */Bytecode.POP,
+        /* 19: */Bytecode.IFZERO,
+        /* 20: */23,
+        /* 21: */Bytecode.JMP,
+        /* 22: */4,
+        /* 23: */Bytecode.POP,
+        /* 24: */Bytecode.RETURN};
+        assertPartialEvalEqualsAndRunsCorrect(new Program("nestedLoopsProgram", bytecodes, 0, 6));
     }
 
     @Test(timeout = 1000)

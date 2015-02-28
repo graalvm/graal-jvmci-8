@@ -322,11 +322,11 @@ public final class SchedulePhase extends Phase {
     @Override
     protected void run(StructuredGraph graph) {
         assert GraphOrder.assertNonCyclicGraph(graph);
-        cfg = ControlFlowGraph.compute(graph, true, true, true, true);
+        cfg = ControlFlowGraph.compute(graph, true, true, true, false);
         earliestCache = graph.createNodeMap();
         blockToNodesMap = new BlockMap<>(cfg);
 
-        if (selectedStrategy != SchedulingStrategy.EARLIEST) {
+        if (selectedStrategy != SchedulingStrategy.EARLIEST && graph.isAfterFloatingReadPhase()) {
             blockToKillSet = new BlockMap<>(cfg);
         }
 
@@ -359,7 +359,6 @@ public final class SchedulePhase extends Phase {
         for (Block b : getCFG().getBlocks()) {
             buf.format("==== b: %s (loopDepth: %s). ", b, b.getLoopDepth());
             buf.format("dom: %s. ", b.getDominator());
-            buf.format("post-dom: %s. ", b.getPostdominator());
             buf.format("preds: %s. ", b.getPredecessors());
             buf.format("succs: %s ====%n", b.getSuccessors());
             BlockMap<LocationSet> killSets = blockToKillSet;
@@ -1083,9 +1082,8 @@ public final class SchedulePhase extends Phase {
         addUnscheduledToLatestSorting(stateAfter, state);
 
         // Now predecessors and inputs are scheduled => we can add this node.
-        if (!state.containsInstruction(i)) {
-            state.addInstruction(i);
-        }
+        assert !state.containsInstruction(i);
+        state.addInstruction(i);
 
         if (state.readsSize() != 0 && i instanceof FloatingReadNode) {
             state.removeRead(i);
