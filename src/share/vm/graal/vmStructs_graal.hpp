@@ -39,6 +39,7 @@
   nonstatic_field(GraalEnv,      _jvmti_can_hotswap_or_post_breakpoint, bool) \
 
 #define VM_TYPES_GRAAL(declare_type, declare_toplevel_type)                   \
+  declare_toplevel_type(GraalEnv)                                             \
 
 #define VM_INT_CONSTANTS_GRAAL(declare_constant, declare_preprocessor_constant)                   \
   declare_constant(Deoptimization::Reason_unreached0)                                             \
