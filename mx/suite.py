@@ -591,6 +591,7 @@ suite = {
       "dependencies" : [
         "com.oracle.graal.compiler",
         "com.oracle.graal.java",
+        "com.oracle.graal.api.directives",
         "com.oracle.graal.word",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -801,7 +802,6 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.api.directives",
         "com.oracle.graal.phases",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -851,6 +851,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.graal.api.directives",
         "com.oracle.graal.test",
         "com.oracle.graal.printer",
         "com.oracle.graal.runtime",

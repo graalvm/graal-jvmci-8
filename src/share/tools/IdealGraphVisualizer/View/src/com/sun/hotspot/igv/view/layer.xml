@@ -67,7 +67,7 @@
         <folder name="Nodes">
             <attr name="command" stringvalue="n"/>
             <attr name="position" intvalue="0"/>
-            <file name="com-sun-hotspot-igv-view-NodeQuickSearch.instance" />
+            <file name="com-sun-hotspot-igv-view-NodeQuickSearch.instance"/>
         </folder>
     </folder>
     
@@ -76,5 +76,13 @@
             <attr name="originalFile" stringvalue="Actions/Edit/org-netbeans-modules-quicksearch-QuickSearchAction.instance"/>
             
         </file>    
+    </folder>
+    <folder name="Windows2">
+        <folder name="Modes">
+            <folder name="properties">
+                <file name="properties.wstcref" url="propertiesWstcref.xml"/>
+            </folder>
+            <file name="properties.wsmode" url="propertiesWsmode.xml"/>
+        </folder>
     </folder>
 </filesystem>

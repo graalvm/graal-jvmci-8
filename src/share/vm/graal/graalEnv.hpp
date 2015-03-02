@@ -133,7 +133,7 @@ private:
 
   // Helper routine for determining the validity of a compilation
   // with respect to concurrent class loading.
-  static bool check_for_system_dictionary_modification(Dependencies* target, GraalEnv* env);
+  static bool check_for_system_dictionary_modification(Dependencies* target, Handle compiled_code, GraalEnv* env, char** failure_detail);
 
 public:
   CompileTask* task() { return _task; }
@@ -156,6 +156,7 @@ public:
                        int                       compile_id,
                        bool                      has_unsafe_access,
                        Handle                    installed_code,
+                       Handle                    compiled_code,
                        Handle                    speculation_log);
 
   // converts the Klass* representing the holder of a method into a

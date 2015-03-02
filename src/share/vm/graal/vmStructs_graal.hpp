@@ -31,7 +31,6 @@
 #include "graal/graalEnv.hpp"
 
 #define VM_STRUCTS_GRAAL(nonstatic_field, static_field)                       \
-  nonstatic_field(InstanceKlass, _graal_node_class, oop)                      \
   nonstatic_field(ThreadShadow,  _pending_deoptimization, int)                \
   nonstatic_field(ThreadShadow,  _pending_failed_speculation, oop)            \
   nonstatic_field(ThreadShadow,  _pending_transfer_to_interpreter, bool)      \
@@ -40,6 +39,7 @@
   nonstatic_field(GraalEnv,      _jvmti_can_hotswap_or_post_breakpoint, bool) \
 
 #define VM_TYPES_GRAAL(declare_type, declare_toplevel_type)                   \
+  declare_toplevel_type(GraalEnv)                                             \
 
 #define VM_INT_CONSTANTS_GRAAL(declare_constant, declare_preprocessor_constant)                   \
   declare_constant(Deoptimization::Reason_unreached0)                                             \

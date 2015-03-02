@@ -392,7 +392,7 @@ void DebugInformationRecorder::dump_object_pool(GrowableArray<ScopeValue*>* obje
   PcDesc* last_pd = &_pcs[_pcs_length-1];
   if (objects != NULL) {
     for (int i = objects->length() - 1; i >= 0; i--) {
-      ((ObjectValue*) objects->at(i))->set_visited(false);
+      objects->at(i)->as_ObjectValue()->set_visited(false);
     }
   }
   int offset = serialize_scope_values(objects);

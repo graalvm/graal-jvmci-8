@@ -365,19 +365,19 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
 }
 
 MonitorValue* CodeInstaller::get_monitor_value(oop value, int total_frame_size, GrowableArray<ScopeValue*>* objects, OopRecorder* oop_recorder) {
-  guarantee(value->is_a(HotSpotMonitorValue::klass()), "Monitors must be of type MonitorValue");
+  guarantee(value->is_a(StackLockValue::klass()), "Monitors must be of type MonitorValue");
 
   ScopeValue* second = NULL;
-  ScopeValue* owner_value = get_scope_value(HotSpotMonitorValue::owner(value), total_frame_size, objects, second, oop_recorder);
+  ScopeValue* owner_value = get_scope_value(StackLockValue::owner(value), total_frame_size, objects, second, oop_recorder);
   assert(second == NULL, "monitor cannot occupy two stack slots");
 
-  ScopeValue* lock_data_value = get_scope_value(HotSpotMonitorValue::slot(value), total_frame_size, objects, second, oop_recorder);
+  ScopeValue* lock_data_value = get_scope_value(StackLockValue::slot(value), total_frame_size, objects, second, oop_recorder);
   assert(second == lock_data_value, "monitor is LONG value that occupies two stack slots");
   assert(lock_data_value->is_location(), "invalid monitor location");
   Location lock_data_loc = ((LocationValue*)lock_data_value)->location();
 
   bool eliminated = false;
-  if (HotSpotMonitorValue::eliminated(value)) {
+  if (StackLockValue::eliminated(value)) {
     eliminated = true;
   }
 
@@ -468,7 +468,7 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
       id = CompileBroker::assign_compile_id_unlocked(Thread::current(), method, entry_bci);
     }
     result = GraalEnv::register_method(method, nm, entry_bci, &_offsets, _custom_stack_area_offset, &buffer, stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
-        GraalCompiler::instance(), _debug_recorder, _dependencies, env, id, false, installed_code, speculation_log);
+        GraalCompiler::instance(), _debug_recorder, _dependencies, env, id, false, installed_code, compiled_code, speculation_log);
     cb = nm;
   }
 
