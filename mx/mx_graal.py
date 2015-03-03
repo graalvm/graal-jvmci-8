@@ -2107,6 +2107,8 @@ def hsdis(args, copyToDir=None):
     flavor = 'intel'
     if 'att' in args:
         flavor = 'att'
+    if mx.get_arch() == "sparcv9":
+        flavor = "sparcv9"
     lib = mx.add_lib_suffix('hsdis-' + mx.get_arch())
     path = join(_graal_home, 'lib', lib)
 
@@ -2116,6 +2118,7 @@ def hsdis(args, copyToDir=None):
         'intel/hsdis-amd64.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
         'intel/hsdis-amd64.so' : '844ed9ffed64fe9599638f29a8450c50140e3192',
         'intel/hsdis-amd64.dylib' : 'fdb13ef0d7d23d93dacaae9c98837bea0d4fc5a2',
+        'sparcv9/hsdis-sparcv9.so': '5f79c312b3dcc55bad551dbb710b11f0048a4ce7',
     }
 
     flavoredLib = flavor + "/" + lib
