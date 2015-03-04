@@ -25,7 +25,6 @@ package com.oracle.graal.lir.sparc;
 import static com.oracle.graal.api.code.ValueUtil.*;
 
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.asm.sparc.SPARCAssembler.*;
 import com.oracle.graal.asm.sparc.*;
 import com.oracle.graal.compiler.common.*;
 import com.oracle.graal.lir.*;
@@ -63,10 +62,10 @@ public final class SPARCMathIntrinsicOp extends SPARCLIRInstruction implements S
             case SQRT:
                 switch (inputKind) {
                     case Float:
-                        new Fsqrts(asFloatReg(input), asFloatReg(result)).emit(masm);
+                        masm.fsqrts(asFloatReg(input), asFloatReg(result));
                         break;
                     case Double:
-                        new Fsqrtd(asDoubleReg(input), asDoubleReg(result)).emit(masm);
+                        masm.fsqrtd(asDoubleReg(input), asDoubleReg(result));
                         break;
                     default:
                         GraalInternalError.shouldNotReachHere();
@@ -75,10 +74,10 @@ public final class SPARCMathIntrinsicOp extends SPARCLIRInstruction implements S
             case ABS:
                 switch (inputKind) {
                     case Float:
-                        new Fabss(asFloatReg(input), asFloatReg(result)).emit(masm);
+                        masm.fabss(asFloatReg(input), asFloatReg(result));
                         break;
                     case Double:
-                        new Fabsd(asDoubleReg(input), asDoubleReg(result)).emit(masm);
+                        masm.fabsd(asDoubleReg(input), asDoubleReg(result));
                         break;
                     default:
                         GraalInternalError.shouldNotReachHere();

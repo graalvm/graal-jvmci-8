@@ -31,11 +31,6 @@ import com.oracle.graal.api.meta.*;
 import com.oracle.graal.asm.sparc.*;
 import com.oracle.graal.asm.sparc.SPARCAssembler.CC;
 import com.oracle.graal.asm.sparc.SPARCAssembler.ConditionFlag;
-import com.oracle.graal.asm.sparc.SPARCAssembler.Jmpl;
-import com.oracle.graal.asm.sparc.SPARCAssembler.Lduw;
-import com.oracle.graal.asm.sparc.SPARCAssembler.Movcc;
-import com.oracle.graal.asm.sparc.SPARCMacroAssembler.Cmp;
-import com.oracle.graal.asm.sparc.SPARCMacroAssembler.Nop;
 import com.oracle.graal.lir.*;
 import com.oracle.graal.lir.asm.*;
 import com.oracle.graal.sparc.*;
@@ -67,21 +62,21 @@ final class SPARCHotSpotJumpToExceptionHandlerInCallerOp extends SPARCHotSpotEpi
     @Override
     public void emitCode(CompilationResultBuilder crb, SPARCMacroAssembler masm) {
         // Move the values up one level to be the input for the next call.
-        new SPARCMacroAssembler.Mov(asRegister(handlerInCallerPc), i2).emit(masm);
-        new SPARCMacroAssembler.Mov(asRegister(exception), i0).emit(masm);
-        new SPARCMacroAssembler.Mov(asRegister(exceptionPc), i1).emit(masm);
+        masm.mov(asRegister(handlerInCallerPc), i2);
+        masm.mov(asRegister(exception), i0);
+        masm.mov(asRegister(exceptionPc), i1);
         leaveFrame(crb);
 
         // Restore SP from L7 if the exception PC is a method handle call site.
         SPARCAddress dst = new SPARCAddress(thread, isMethodHandleReturnOffset);
         try (SPARCScratchRegister scratch = SPARCScratchRegister.get()) {
             Register scratchReg = scratch.getRegister();
-            new Lduw(dst, scratchReg).emit(masm);
-            new Cmp(scratchReg, scratchReg).emit(masm);
-            new Movcc(ConditionFlag.NotZero, CC.Icc, l7, sp).emit(masm);
+            masm.lduw(dst, scratchReg);
+            masm.cmp(scratchReg, scratchReg);
+            masm.movcc(ConditionFlag.NotZero, CC.Icc, l7, sp);
         }
 
-        new Jmpl(asRegister(handlerInCallerPc), 0, g0).emit(masm);
-        new Nop().emit(masm);
+        masm.jmpl(asRegister(handlerInCallerPc), 0, g0);
+        masm.nop();
     }
 }

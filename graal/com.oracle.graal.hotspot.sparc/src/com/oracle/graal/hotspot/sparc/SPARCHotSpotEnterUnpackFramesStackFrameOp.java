@@ -22,18 +22,17 @@
  */
 package com.oracle.graal.hotspot.sparc;
 
-import static com.oracle.graal.sparc.SPARC.*;
 import static com.oracle.graal.api.code.ValueUtil.*;
-import static com.oracle.graal.asm.sparc.SPARCMacroAssembler.*;
 import static com.oracle.graal.lir.LIRInstruction.OperandFlag.*;
+import static com.oracle.graal.sparc.SPARC.*;
 
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.api.meta.*;
 import com.oracle.graal.asm.sparc.*;
 import com.oracle.graal.hotspot.*;
 import com.oracle.graal.lir.*;
-import com.oracle.graal.lir.sparc.*;
 import com.oracle.graal.lir.asm.*;
+import com.oracle.graal.lir.sparc.*;
 
 /**
  * Emits code that enters a stack frame which is tailored to call the C++ method
@@ -68,32 +67,32 @@ final class SPARCHotSpotEnterUnpackFramesStackFrameOp extends SPARCLIRInstructio
         Register scratchRegister = asRegister(scratch);
 
         // Save final sender SP to O5_savedSP.
-        new Mov(senderSpRegister, o5).emit(masm);
+        masm.mov(senderSpRegister, o5);
 
         // Load final frame PC.
-        new Mov(framePcRegister, o7).emit(masm);
+        masm.mov(framePcRegister, o7);
 
         // Allocate a full sized frame.
-        new Save(sp, -totalFrameSize, sp).emit(masm);
+        masm.save(sp, -totalFrameSize, sp);
 
-        new Mov(i0, o0).emit(masm);
-        new Mov(i1, o1).emit(masm);
-        new Mov(i2, o2).emit(masm);
-        new Mov(i3, o3).emit(masm);
-        new Mov(i4, o4).emit(masm);
+        masm.mov(i0, o0);
+        masm.mov(i1, o1);
+        masm.mov(i2, o2);
+        masm.mov(i3, o3);
+        masm.mov(i4, o4);
 
         // Set up last Java values.
-        new Add(sp, STACK_BIAS, scratchRegister).emit(masm);
-        new Stx(scratchRegister, new SPARCAddress(thread, threadLastJavaSpOffset)).emit(masm);
+        masm.add(sp, STACK_BIAS, scratchRegister);
+        masm.stx(scratchRegister, new SPARCAddress(thread, threadLastJavaSpOffset));
 
         // Clear last Java PC.
-        new Stx(g0, new SPARCAddress(thread, threadLastJavaPcOffset)).emit(masm);
+        masm.stx(g0, new SPARCAddress(thread, threadLastJavaPcOffset));
 
         /*
          * Safe thread register manually since we are not using LEAF_SP for {@link
          * DeoptimizationStub#UNPACK_FRAMES}.
          */
-        new Mov(thread, l7).emit(masm);
+        masm.mov(thread, l7);
     }
 
     @Override

@@ -218,7 +218,7 @@ public abstract class SPARCLIRGenerator extends LIRGenerator {
                     double trueDestinationProbability) {
         Variable left;
         Value right;
-        Condition actualCondition = null;
+        Condition actualCondition;
         if (isConstant(x)) {
             left = load(y);
             right = loadNonConst(x);
@@ -228,7 +228,7 @@ public abstract class SPARCLIRGenerator extends LIRGenerator {
             right = loadNonConst(y);
             actualCondition = cond;
         }
-        SPARCCompare opcode = null;
+        SPARCCompare opcode;
         Kind kind = left.getKind().getStackKind();
         switch (kind) {
             case Object:
@@ -250,7 +250,7 @@ public abstract class SPARCLIRGenerator extends LIRGenerator {
                 opcode = DCMP;
                 break;
             default:
-                GraalInternalError.shouldNotReachHere(kind.toString());
+                throw GraalInternalError.shouldNotReachHere(kind.toString());
         }
         append(new SPARCControlFlow.CompareBranchOp(opcode, left, right, actualCondition, trueDestination, falseDestination, kind, unorderedIsTrue, trueDestinationProbability));
     }
@@ -258,13 +258,13 @@ public abstract class SPARCLIRGenerator extends LIRGenerator {
     @Override
     public void emitOverflowCheckBranch(LabelRef overflow, LabelRef noOverflow, LIRKind cmpLIRKind, double overflowProbability) {
         Kind cmpKind = (Kind) cmpLIRKind.getPlatformKind();
-        append(new BranchOp(ConditionFlag.OverflowSet, overflow, noOverflow, cmpKind));
+        append(new BranchOp(ConditionFlag.OverflowSet, overflow, noOverflow, cmpKind, overflowProbability));
     }
 
     @Override
     public void emitIntegerTestBranch(Value left, Value right, LabelRef trueDestination, LabelRef falseDestination, double trueDestinationProbability) {
         emitIntegerTest(left, right);
-        append(new BranchOp(Condition.EQ, trueDestination, falseDestination, left.getKind().getStackKind()));
+        append(new BranchOp(ConditionFlag.Equal, trueDestination, falseDestination, left.getKind().getStackKind(), trueDestinationProbability));
     }
 
     private void emitIntegerTest(Value a, Value b) {
