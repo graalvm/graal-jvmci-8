@@ -660,9 +660,8 @@ void CodeInstaller::assumption_ConcreteSubtype(Handle assumption) {
   if (context != subtype) {
     assert(context->is_abstract(), "");
     _dependencies->assert_abstract_with_unique_concrete_subtype(context, subtype);
-  } else {
-    _dependencies->assert_leaf_type(subtype);
   }
+  _dependencies->assert_leaf_type(subtype);
 }
 
 void CodeInstaller::assumption_ConcreteMethod(Handle assumption) {
