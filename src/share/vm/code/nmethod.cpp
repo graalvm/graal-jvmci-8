@@ -856,7 +856,8 @@ nmethod::nmethod(
     CodeCache::commit(this);
   }
 
-  if (PrintNMethods || PrintDebugInfo || PrintRelocations || PrintDependencies) {
+  bool printnmethods = PrintNMethods || PrintNMethodsAtLevel == _comp_level;
+  if (printnmethods || PrintDebugInfo || PrintRelocations || PrintDependencies) {
     ttyLocker ttyl;  // keep the following output all in one block
     // This output goes directly to the tty, not the compiler log.
     // To enable tools to match it up with the compilation activity,
@@ -870,7 +871,7 @@ nmethod::nmethod(
     // print the header part first
     print();
     // then print the requested information
-    if (PrintNMethods) {
+    if (printnmethods) {
       print_code();
     }
     if (PrintRelocations) {
@@ -1014,7 +1015,7 @@ nmethod::nmethod(
            " entry points must be same for static methods and vice versa");
   }
 
-  bool printnmethods = PrintNMethods
+  bool printnmethods = PrintNMethods || PrintNMethodsAtLevel == _comp_level
     || CompilerOracle::should_print(_method)
     || CompilerOracle::has_option_string(_method, "PrintNMethods");
   if (printnmethods || PrintDebugInfo || PrintRelocations || PrintDependencies || PrintExceptionHandlers) {
