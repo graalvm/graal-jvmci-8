@@ -212,6 +212,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
   oop lirKind = AbstractValue::lirKind(value);
   oop platformKind = LIRKind::platformKind(lirKind);
   jint referenceMask = LIRKind::referenceMask(lirKind);
+  assert(referenceMask != -1, "derived pointers are not allowed");
   assert(referenceMask == 0 || referenceMask == 1, "unexpected referenceMask");
   bool reference = referenceMask == 1;
 
