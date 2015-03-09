@@ -212,6 +212,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
   oop lirKind = AbstractValue::lirKind(value);
   oop platformKind = LIRKind::platformKind(lirKind);
   jint referenceMask = LIRKind::referenceMask(lirKind);
+  assert(referenceMask != -1, "derived pointers are not allowed");
   assert(referenceMask == 0 || referenceMask == 1, "unexpected referenceMask");
   bool reference = referenceMask == 1;
 
@@ -660,9 +661,8 @@ void CodeInstaller::assumption_ConcreteSubtype(Handle assumption) {
   if (context != subtype) {
     assert(context->is_abstract(), "");
     _dependencies->assert_abstract_with_unique_concrete_subtype(context, subtype);
-  } else {
-    _dependencies->assert_leaf_type(subtype);
   }
+  _dependencies->assert_leaf_type(subtype);
 }
 
 void CodeInstaller::assumption_ConcreteMethod(Handle assumption) {
