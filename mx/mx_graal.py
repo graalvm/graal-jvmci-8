@@ -940,8 +940,7 @@ def build(args, vm=None):
             # This removes the need to unzip the *.diz files before debugging in gdb
             setMakeVar('ZIP_DEBUGINFO_FILES', '0', env=env)
 
-            # Clear these 2 variables as having them set can cause very confusing build problems
-            env.pop('LD_LIBRARY_PATH', None)
+            # Clear this variable as having it set can cause very confusing build problems
             env.pop('CLASSPATH', None)
 
             # Issue an env prefix that can be used to run the make on the command line
