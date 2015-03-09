@@ -1105,13 +1105,13 @@ void nmethod::print_nmethod(bool printmethod) {
       oop_maps()->print();
     }
   }
-  if (PrintDebugInfo) {
+  if (PrintDebugInfo || CompilerOracle::has_option_string(_method, "PrintDebugInfo")) {
     print_scopes();
   }
-  if (PrintRelocations) {
+  if (PrintRelocations || CompilerOracle::has_option_string(_method, "PrintRelocations")) {
     print_relocations();
   }
-  if (PrintDependencies) {
+  if (PrintDependencies || CompilerOracle::has_option_string(_method, "PrintDependencies")) {
     print_dependencies();
   }
   if (PrintExceptionHandlers) {
