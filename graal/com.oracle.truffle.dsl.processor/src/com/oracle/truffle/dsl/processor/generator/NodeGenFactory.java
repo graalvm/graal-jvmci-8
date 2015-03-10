@@ -447,6 +447,7 @@ public class NodeGenFactory {
         clazz.addOptional(createSpecializationCreateMethod(specialization, constructor));
         clazz.addOptional(createMergeMethod(specialization));
         clazz.addOptional(createIsSameMethod(specialization));
+        clazz.addOptional(createIsIdenticalMethod(specialization));
 
         TypeData returnType = specialization.getReturnType().getTypeSystemType();
         int signatureSize = specialization.getSignatureSize();
@@ -493,6 +494,36 @@ public class NodeGenFactory {
         return executable;
     }
 
+    private Element createIsIdenticalMethod(SpecializationData specialization) {
+        boolean cacheBoundGuard = specialization.hasMultipleInstances();
+        if (!cacheBoundGuard) {
+            return null;
+        }
+
+        LocalContext currentLocals = LocalContext.load(this, node.getSignatureSize(), varArgsThreshold);
+        currentLocals.loadFastPathState(specialization);
+
+        CodeExecutableElement method = new CodeExecutableElement(modifiers(PUBLIC), getType(boolean.class), "isIdentical");
+        method.addParameter(new CodeVariableElement(getType(SpecializationNode.class), "other"));
+        currentLocals.addParametersTo(method, FRAME_VALUE);
+        method.getAnnotationMirrors().add(new CodeAnnotationMirror(context.getDeclaredType(Override.class)));
+        final CodeTreeBuilder builder = method.createBuilder();
+
+        SpecializationGroup group = SpecializationGroup.create(specialization);
+        SpecializationBody executionFactory = new SpecializationBody(true, false) {
+            @Override
+            public CodeTree createBody(SpecializationData s, LocalContext values) {
+                return builder.create().returnTrue().build();
+            }
+        };
+
+        builder.startIf().string("isSame(other)").end().startBlock();
+        builder.tree(createGuardAndCast(group, typeSystem.getGenericTypeData(), currentLocals, executionFactory));
+        builder.end();
+        builder.returnFalse();
+        return method;
+    }
+
     private CodeExecutableElement createIsSameMethod(SpecializationData specialization) {
         if (!specialization.isSpecialized() || !options.implicitCastOptimization().isDuplicateTail()) {
             return null;
@@ -532,18 +563,29 @@ public class NodeGenFactory {
     }
 
     private Element createMergeMethod(SpecializationData specialization) {
-        boolean cacheBoundGuard = specialization.hasMultipleInstances();
-        if (specialization.getExcludedBy().isEmpty() && !specialization.isPolymorphic() && !cacheBoundGuard) {
+        if (specialization.getExcludedBy().isEmpty() && !specialization.isPolymorphic()) {
             return null;
         }
         TypeMirror specializationNodeType = getType(SpecializationNode.class);
+        LocalContext currentLocals = LocalContext.load(this, node.getSignatureSize(), varArgsThreshold);
+
         CodeExecutableElement executable = new CodeExecutableElement(modifiers(PUBLIC), specializationNodeType, "merge");
         executable.addParameter(new CodeVariableElement(specializationNodeType, "newNode"));
+        currentLocals.addParametersTo(executable, FRAME_VALUE);
         executable.getAnnotationMirrors().add(new CodeAnnotationMirror(context.getDeclaredType(Override.class)));
         CodeTreeBuilder builder = executable.createBuilder();
 
         if (specialization.isPolymorphic()) {
-            builder.statement("return polymorphicMerge(newNode)");
+            builder.startReturn();
+            builder.startCall("polymorphicMerge");
+            builder.string("newNode");
+            builder.startCall("super", "merge");
+            builder.string("newNode");
+            currentLocals.addReferencesTo(builder, FRAME_VALUE);
+            builder.end();
+            builder.end();
+            builder.end();
+
         } else {
             boolean elseIf = false;
             for (SpecializationData containedSpecialization : specialization.getExcludedBy()) {
@@ -554,11 +596,12 @@ public class NodeGenFactory {
                 builder.statement("removeSame(\"Contained by " + containedSpecialization.createReferenceName() + "\")");
                 builder.end();
             }
-            if (cacheBoundGuard) {
-                builder.statement("return super.mergeNoSame(newNode)");
-            } else {
-                builder.statement("return super.merge(newNode)");
-            }
+            builder.startReturn();
+            builder.startCall("super", "merge");
+            builder.string("newNode");
+            currentLocals.addReferencesTo(builder, FRAME_VALUE);
+            builder.end();
+            builder.end();
         }
 
         return executable;
@@ -638,17 +681,14 @@ public class NodeGenFactory {
 
         CodeTreeBuilder builder = method.createBuilder();
         SpecializationGroup group = createSpecializationGroups();
-        CodeTree execution = createGuardAndCast(group, genericType, locals, new SpecializationExecution() {
-            public CodeTree createExecute(SpecializationData specialization, LocalContext values) {
+        CodeTree execution = createGuardAndCast(group, genericType, locals, new SpecializationBody(false, false) {
+            @Override
+            public CodeTree createBody(SpecializationData specialization, LocalContext values) {
                 CodeTypeElement generatedType = specializationClasses.get(specialization);
                 if (generatedType == null) {
                     throw new AssertionError("No generated type for " + specialization);
                 }
                 return createSlowPathExecute(specialization, values);
-            }
-
-            public boolean isFastPath() {
-                return false;
             }
         });
 
@@ -867,18 +907,27 @@ public class NodeGenFactory {
             locals.addReferencesTo(executeBuilder);
             executeBuilder.end();
 
+            boolean hasExecutedUnexpected = executedType != null && !executedType.isGeneric() && !executedType.isVoid();
+
             CodeTreeBuilder contentBuilder = builder.create();
             contentBuilder.startReturn();
-            contentBuilder.tree(TypeSystemCodeGenerator.expect(executedType, returnType, executeBuilder.build()));
+            if (!hasExecutedUnexpected && !execType.hasUnexpectedValue(context)) {
+                if (executedType == null || executedType.needsCastTo(returnType)) {
+                    contentBuilder.cast(returnType.getPrimitiveType(), executeBuilder.build());
+                } else {
+                    contentBuilder.tree(executeBuilder.build());
+                }
+            } else {
+                contentBuilder.tree(TypeSystemCodeGenerator.expect(executedType, returnType, executeBuilder.build()));
+            }
             contentBuilder.end();
             // try catch assert if unexpected value is not expected
             CodeTree content = contentBuilder.build();
-            if (!execType.hasUnexpectedValue(context) && !returnType.isGeneric() && !returnType.isVoid()) {
+            if (!execType.hasUnexpectedValue(context) && hasExecutedUnexpected) {
                 content = wrapTryCatchUnexpected(content);
             }
             builder.tree(content);
         }
-
         return method;
     }
 
@@ -1078,7 +1127,7 @@ public class NodeGenFactory {
                 String varName = name + specialization.getIndex();
                 TypeMirror type = assumption.getExpression().getResolvedType();
                 builder.declaration(type, varName, assumptions);
-                currentValues.set(name, new LocalVariable(null, type, varName, null));
+                currentValues.set(name, new LocalVariable(null, type, varName, null, null));
             }
 
             builder.startIf();
@@ -1244,8 +1293,11 @@ public class NodeGenFactory {
             for (Parameter p : specialization.getSignatureParameters()) {
                 CodeVariableElement var = createImplicitProfileParameter(p.getSpecification().getExecution(), p.getTypeSystemType());
                 if (var != null) {
-                    // we need the original name here
-                    builder.tree(LocalVariable.fromParameter(p).createReference());
+                    LocalVariable variable = currentValues.get(p.getLocalName());
+                    if (variable == null) {
+                        throw new AssertionError("Could not bind cached value " + p.getLocalName() + ": " + currentValues);
+                    }
+                    builder.tree(variable.original().createReference());
                 }
             }
             for (CacheExpression cache : specialization.getCaches()) {
@@ -1513,13 +1565,10 @@ public class NodeGenFactory {
         } else {
             final TypeData finalType = type;
             SpecializationGroup group = SpecializationGroup.create(specialization);
-            SpecializationExecution executionFactory = new SpecializationExecution() {
-                public CodeTree createExecute(SpecializationData s, LocalContext values) {
+            SpecializationBody executionFactory = new SpecializationBody(true, true) {
+                @Override
+                public CodeTree createBody(SpecializationData s, LocalContext values) {
                     return createFastPathExecute(builder, finalType, s, values);
-                }
-
-                public boolean isFastPath() {
-                    return true;
                 }
             };
             builder.tree(createGuardAndCast(group, type, currentLocals, executionFactory));
@@ -1609,11 +1658,11 @@ public class NodeGenFactory {
         return builder.build();
     }
 
-    private CodeTree createGuardAndCast(SpecializationGroup group, TypeData forType, LocalContext currentValues, SpecializationExecution execution) {
+    private CodeTree createGuardAndCast(SpecializationGroup group, TypeData forType, LocalContext currentValues, SpecializationBody execution) {
         CodeTreeBuilder builder = CodeTreeBuilder.createBuilder();
 
         Set<TypeGuard> castGuards;
-        if (execution.isFastPath()) {
+        if (execution.needsCastedValues()) {
             castGuards = null; // cast all
         } else {
             castGuards = new HashSet<>();
@@ -1667,7 +1716,7 @@ public class NodeGenFactory {
                 builder.tree(createGuardAndCast(child, forType, currentValues.copy(), execution));
             }
             if (specialization != null) {
-                builder.tree(execution.createExecute(specialization, currentValues));
+                builder.tree(execution.createBody(specialization, currentValues));
             }
         }
         builder.end(ifCount);
@@ -2195,7 +2244,7 @@ public class NodeGenFactory {
     }
 
     private CodeTree[] createTypeCheckAndLocals(SpecializationData specialization, List<TypeGuard> typeGuards, Set<TypeGuard> castGuards, LocalContext currentValues,
-                    SpecializationExecution specializationExecution) {
+                    SpecializationBody specializationExecution) {
         CodeTreeBuilder checksBuilder = CodeTreeBuilder.createBuilder();
         CodeTreeBuilder localsBuilder = CodeTreeBuilder.createBuilder();
         for (TypeGuard typeGuard : typeGuards) {
@@ -2282,7 +2331,7 @@ public class NodeGenFactory {
         String varName = name + specialization.getIndex();
         TypeMirror type = cache.getParameter().getType();
         builder.declaration(type, varName, initializer);
-        currentValues.set(name, new LocalVariable(null, type, varName, null));
+        currentValues.set(name, new LocalVariable(null, type, varName, null, null));
     }
 
     public static final class LocalContext {
@@ -2298,13 +2347,13 @@ public class NodeGenFactory {
             for (CacheExpression cache : specialization.getCaches()) {
                 Parameter cacheParameter = cache.getParameter();
                 String name = cacheParameter.getVariableElement().getSimpleName().toString();
-                set(cacheParameter.getLocalName(), new LocalVariable(cacheParameter.getTypeSystemType(), cacheParameter.getType(), name, CodeTreeBuilder.singleString("this." + name)));
+                set(cacheParameter.getLocalName(), new LocalVariable(cacheParameter.getTypeSystemType(), cacheParameter.getType(), name, CodeTreeBuilder.singleString("this." + name), null));
             }
 
             for (AssumptionExpression assumption : specialization.getAssumptionExpressions()) {
                 String name = assumptionName(assumption);
                 TypeMirror type = assumption.getExpression().getResolvedType();
-                set(name, new LocalVariable(null, type, name, CodeTreeBuilder.singleString("this." + name)));
+                set(name, new LocalVariable(null, type, name, CodeTreeBuilder.singleString("this." + name), null));
             }
         }
 
@@ -2336,11 +2385,11 @@ public class NodeGenFactory {
 
         @SuppressWarnings("static-method")
         public LocalVariable createValue(NodeExecutionData execution, TypeData type) {
-            return new LocalVariable(type, type.getPrimitiveType(), valueName(execution), null);
+            return new LocalVariable(type, type.getPrimitiveType(), valueName(execution), null, null);
         }
 
         public LocalVariable createShortCircuitValue(NodeExecutionData execution) {
-            return new LocalVariable(factory.typeSystem.getBooleanType(), factory.getType(boolean.class), shortCircuitName(execution), null);
+            return new LocalVariable(factory.typeSystem.getBooleanType(), factory.getType(boolean.class), shortCircuitName(execution), null, null);
         }
 
         private static String valueName(NodeExecutionData execution) {
@@ -2411,11 +2460,11 @@ public class NodeGenFactory {
         }
 
         private void loadValues(int evaluatedArguments, int varargsThreshold) {
-            values.put(FRAME_VALUE, new LocalVariable(null, factory.getType(Frame.class), FRAME_VALUE, null));
+            values.put(FRAME_VALUE, new LocalVariable(null, factory.getType(Frame.class), FRAME_VALUE, null, null));
 
             for (NodeFieldData field : factory.node.getFields()) {
                 String fieldName = fieldValueName(field);
-                values.put(fieldName, new LocalVariable(null, field.getType(), fieldName, factory.accessParent(field.getName())));
+                values.put(fieldName, new LocalVariable(null, field.getType(), fieldName, factory.accessParent(field.getName()), null));
             }
 
             boolean varargs = needsVarargs(false, varargsThreshold);
@@ -2430,13 +2479,13 @@ public class NodeGenFactory {
                     if (varargs) {
                         shortCircuit = shortCircuit.accessWith(createReadVarargs(i));
                     }
-                    values.put(shortCircuit.getName(), shortCircuit);
+                    values.put(shortCircuit.getName(), shortCircuit.makeOriginal());
                 }
                 LocalVariable value = createValue(execution, factory.genericType);
                 if (varargs) {
                     value = value.accessWith(createReadVarargs(i));
                 }
-                values.put(value.getName(), value);
+                values.put(value.getName(), value.makeOriginal());
             }
         }
 
@@ -2519,6 +2568,7 @@ public class NodeGenFactory {
         private final TypeMirror typeMirror;
         private final CodeTree accessorTree;
         private final String name;
+        private final LocalVariable previous;
 
         public static LocalVariable fromParameter(Parameter parameter) {
             NodeExecutionData execution = parameter.getSpecification().getExecution();
@@ -2528,15 +2578,16 @@ public class NodeGenFactory {
             } else {
                 name = createName(execution);
             }
-            return new LocalVariable(parameter.getTypeSystemType(), parameter.getType(), name, null);
+            return new LocalVariable(parameter.getTypeSystemType(), parameter.getType(), name, null, null);
         }
 
-        private LocalVariable(TypeData type, TypeMirror typeMirror, String name, CodeTree accessorTree) {
+        private LocalVariable(TypeData type, TypeMirror typeMirror, String name, CodeTree accessorTree, LocalVariable previous) {
             Objects.requireNonNull(typeMirror);
             this.typeMirror = typeMirror;
             this.accessorTree = accessorTree;
             this.type = type;
             this.name = name;
+            this.previous = previous;
         }
 
         public TypeData getType() {
@@ -2583,19 +2634,31 @@ public class NodeGenFactory {
         }
 
         public LocalVariable newType(TypeData newType) {
-            return new LocalVariable(newType, newType.getPrimitiveType(), name, accessorTree);
+            return new LocalVariable(newType, newType.getPrimitiveType(), name, accessorTree, this);
         }
 
         public LocalVariable newType(TypeMirror newType) {
-            return new LocalVariable(type, newType, name, accessorTree);
+            return new LocalVariable(type, newType, name, accessorTree, this);
         }
 
         public LocalVariable accessWith(CodeTree tree) {
-            return new LocalVariable(type, typeMirror, name, tree);
+            return new LocalVariable(type, typeMirror, name, tree, this);
         }
 
         public LocalVariable nextName() {
-            return new LocalVariable(type, typeMirror, createNextName(name), accessorTree);
+            return new LocalVariable(type, typeMirror, createNextName(name), accessorTree, this);
+        }
+
+        public LocalVariable makeOriginal() {
+            return new LocalVariable(type, typeMirror, name, accessorTree, null);
+        }
+
+        public LocalVariable original() {
+            LocalVariable variable = this;
+            while (variable.previous != null) {
+                variable = variable.previous;
+            }
+            return variable;
         }
 
         public LocalVariable makeGeneric() {
@@ -2609,11 +2672,25 @@ public class NodeGenFactory {
 
     }
 
-    private interface SpecializationExecution {
+    private abstract class SpecializationBody {
 
-        boolean isFastPath();
+        private final boolean fastPath;
+        private final boolean needsCastedValues;
 
-        CodeTree createExecute(SpecializationData specialization, LocalContext currentValues);
+        public SpecializationBody(boolean fastPath, boolean needsCastedValues) {
+            this.fastPath = fastPath;
+            this.needsCastedValues = needsCastedValues;
+        }
+
+        public final boolean isFastPath() {
+            return fastPath;
+        }
+
+        public final boolean needsCastedValues() {
+            return needsCastedValues;
+        }
+
+        public abstract CodeTree createBody(SpecializationData specialization, LocalContext currentValues);
 
     }
 

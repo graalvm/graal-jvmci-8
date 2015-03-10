@@ -856,7 +856,8 @@ nmethod::nmethod(
     CodeCache::commit(this);
   }
 
-  if (PrintNMethods || PrintDebugInfo || PrintRelocations || PrintDependencies) {
+  bool printnmethods = PrintNMethods || PrintNMethodsAtLevel == _comp_level;
+  if (printnmethods || PrintDebugInfo || PrintRelocations || PrintDependencies) {
     ttyLocker ttyl;  // keep the following output all in one block
     // This output goes directly to the tty, not the compiler log.
     // To enable tools to match it up with the compilation activity,
@@ -870,7 +871,7 @@ nmethod::nmethod(
     // print the header part first
     print();
     // then print the requested information
-    if (PrintNMethods) {
+    if (printnmethods) {
       print_code();
     }
     if (PrintRelocations) {
@@ -1014,7 +1015,7 @@ nmethod::nmethod(
            " entry points must be same for static methods and vice versa");
   }
 
-  bool printnmethods = PrintNMethods
+  bool printnmethods = PrintNMethods || PrintNMethodsAtLevel == _comp_level
     || CompilerOracle::should_print(_method)
     || CompilerOracle::has_option_string(_method, "PrintNMethods");
   if (printnmethods || PrintDebugInfo || PrintRelocations || PrintDependencies || PrintExceptionHandlers) {
@@ -1105,13 +1106,13 @@ void nmethod::print_nmethod(bool printmethod) {
       oop_maps()->print();
     }
   }
-  if (PrintDebugInfo) {
+  if (PrintDebugInfo || CompilerOracle::has_option_string(_method, "PrintDebugInfo")) {
     print_scopes();
   }
-  if (PrintRelocations) {
+  if (PrintRelocations || CompilerOracle::has_option_string(_method, "PrintRelocations")) {
     print_relocations();
   }
-  if (PrintDependencies) {
+  if (PrintDependencies || CompilerOracle::has_option_string(_method, "PrintDependencies")) {
     print_dependencies();
   }
   if (PrintExceptionHandlers) {
@@ -2749,7 +2750,10 @@ void nmethod::print_scopes() {
       continue;
 
     ScopeDesc* sd = scope_desc_at(p->real_pc(this));
-    sd->print_on(tty, p);
+    while (sd != NULL) {
+      sd->print_on(tty, p);
+      sd = sd->sender();
+    }
   }
 }
 

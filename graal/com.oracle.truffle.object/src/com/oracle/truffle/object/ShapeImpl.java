@@ -275,8 +275,7 @@ public abstract class ShapeImpl extends Shape {
      */
     @Override
     @TruffleBoundary
-    public final Property getProperty(Object key) {
-        // return this.propertyMap.get(propertyName);
+    public Property getProperty(Object key) {
         PropertyMap current = this.propertyMap;
         while (current.getLastProperty() != null) {
             if (current.getLastProperty().getKey().equals(key)) {
@@ -284,7 +283,6 @@ public abstract class ShapeImpl extends Shape {
             }
             current = current.getParentMap();
         }
-
         return null;
     }
 
@@ -355,9 +353,9 @@ public abstract class ShapeImpl extends Shape {
      */
     private ShapeImpl addPropertyInternal(Property prop) {
         CompilerAsserts.neverPartOfCompilation();
-        assert prop.isShadow() || !(this.hasProperty(prop.getKey())) : "duplicate property";
-        assert !getPropertyListInternal(false).contains(prop);
-        // invalidatePropertyAssumption(prop.getName());
+        assert prop.isShadow() || !(this.hasProperty(prop.getKey())) : "duplicate property " + prop.getKey();
+        // assertion caused performance issues on e.g. testv8 regress-619.js
+        // assert !getPropertyListInternal(false).contains(prop);
 
         AddPropertyTransition addTransition = new AddPropertyTransition(prop);
         ShapeImpl cachedShape = queryTransition(addTransition);
@@ -655,7 +653,7 @@ public abstract class ShapeImpl extends Shape {
                 newShape = newShape.applyTransition(previous, true);
             }
 
-            getTransitionMapForWrite().put(transition, newShape);
+            addIndirectTransition(transition, newShape);
             return newShape;
         } else {
             return null;
@@ -901,7 +899,7 @@ public abstract class ShapeImpl extends Shape {
     private Property[] createPropertiesArray() {
         propertyListAllocCount.inc();
         Property[] propertiesArray = new Property[getPropertyCount()];
-        List<Property> ownProperties = getPropertyList(ALL);
+        List<Property> ownProperties = getPropertyList();
         assert ownProperties.size() == getPropertyCount();
         for (int i = 0; i < getPropertyCount(); i++) {
             propertiesArray[i] = ownProperties.get(i);
@@ -1101,7 +1099,7 @@ public abstract class ShapeImpl extends Shape {
     /**
      * Match all filter.
      */
-    public static final Pred<Property> ALL = new Pred<Property>() {
+    private static final Pred<Property> ALL = new Pred<Property>() {
         public boolean test(Property t) {
             return true;
         }

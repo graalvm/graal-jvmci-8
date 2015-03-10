@@ -940,8 +940,7 @@ def build(args, vm=None):
             # This removes the need to unzip the *.diz files before debugging in gdb
             setMakeVar('ZIP_DEBUGINFO_FILES', '0', env=env)
 
-            # Clear these 2 variables as having them set can cause very confusing build problems
-            env.pop('LD_LIBRARY_PATH', None)
+            # Clear this variable as having it set can cause very confusing build problems
             env.pop('CLASSPATH', None)
 
             # Issue an env prefix that can be used to run the make on the command line
@@ -2107,6 +2106,8 @@ def hsdis(args, copyToDir=None):
     flavor = 'intel'
     if 'att' in args:
         flavor = 'att'
+    if mx.get_arch() == "sparcv9":
+        flavor = "sparcv9"
     lib = mx.add_lib_suffix('hsdis-' + mx.get_arch())
     path = join(_graal_home, 'lib', lib)
 
@@ -2116,6 +2117,7 @@ def hsdis(args, copyToDir=None):
         'intel/hsdis-amd64.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
         'intel/hsdis-amd64.so' : '844ed9ffed64fe9599638f29a8450c50140e3192',
         'intel/hsdis-amd64.dylib' : 'fdb13ef0d7d23d93dacaae9c98837bea0d4fc5a2',
+        'sparcv9/hsdis-sparcv9.so': '5f79c312b3dcc55bad551dbb710b11f0048a4ce7',
     }
 
     flavoredLib = flavor + "/" + lib

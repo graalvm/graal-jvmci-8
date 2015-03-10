@@ -169,7 +169,7 @@ void graal_compute_offsets();
     typeArrayOop_field(BitSet, words, "[J")                                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(BytecodeFrame)                                                                                                                                   \
-    objArrayOop_field(BytecodeFrame, values, "[Lcom/oracle/graal/api/meta/JavaValue;")                                                                         \
+    objArrayOop_field(BytecodeFrame, values, "[Lcom/oracle/graal/api/meta/Value;")                                                                             \
     int_field(BytecodeFrame, numLocals)                                                                                                                        \
     int_field(BytecodeFrame, numStack)                                                                                                                         \
     int_field(BytecodeFrame, numLocks)                                                                                                                         \
@@ -241,12 +241,12 @@ void graal_compute_offsets();
   start_class(VirtualObject)                                                                                                                                   \
     int_field(VirtualObject, id)                                                                                                                               \
     oop_field(VirtualObject, type, "Lcom/oracle/graal/api/meta/ResolvedJavaType;")                                                                             \
-    objArrayOop_field(VirtualObject, values, "[Lcom/oracle/graal/api/meta/JavaValue;")                                                                         \
+    objArrayOop_field(VirtualObject, values, "[Lcom/oracle/graal/api/meta/Value;")                                                                             \
   end_class                                                                                                                                                    \
-  start_class(HotSpotMonitorValue)                                                                                                                             \
-    oop_field(HotSpotMonitorValue, owner, "Lcom/oracle/graal/api/meta/JavaValue;")                                                                             \
-    oop_field(HotSpotMonitorValue, slot, "Lcom/oracle/graal/api/code/StackSlotValue;")                                                                              \
-    boolean_field(HotSpotMonitorValue, eliminated)                                                                                                             \
+  start_class(StackLockValue)                                                                                                                                  \
+    oop_field(StackLockValue, owner, "Lcom/oracle/graal/api/meta/Value;")                                                                                      \
+    oop_field(StackLockValue, slot, "Lcom/oracle/graal/api/code/StackSlotValue;")                                                                              \
+    boolean_field(StackLockValue, eliminated)                                                                                                                  \
   end_class                                                                                                                                                    \
   start_class(SpeculationLog)                                                                                                                                  \
     oop_field(SpeculationLog, lastFailed, "Ljava/lang/Object;")                                                                                                \

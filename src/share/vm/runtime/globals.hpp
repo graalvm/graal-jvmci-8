@@ -993,6 +993,9 @@ class CommandLineFlags {
   diagnostic(bool, PrintNMethods, false,                                    \
           "Print assembly code for nmethods when generated")                \
                                                                             \
+  diagnostic(intx, PrintNMethodsAtLevel, -1,                                \
+          "Only print code for nmethods at the given compilation level")    \
+                                                                            \
   diagnostic(bool, PrintNativeNMethods, false,                              \
           "Print assembly code for native nmethods when generated")         \
                                                                             \

@@ -212,6 +212,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
   oop lirKind = AbstractValue::lirKind(value);
   oop platformKind = LIRKind::platformKind(lirKind);
   jint referenceMask = LIRKind::referenceMask(lirKind);
+  assert(referenceMask != -1, "derived pointers are not allowed");
   assert(referenceMask == 0 || referenceMask == 1, "unexpected referenceMask");
   bool reference = referenceMask == 1;
 
@@ -365,19 +366,19 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
 }
 
 MonitorValue* CodeInstaller::get_monitor_value(oop value, int total_frame_size, GrowableArray<ScopeValue*>* objects, OopRecorder* oop_recorder) {
-  guarantee(value->is_a(HotSpotMonitorValue::klass()), "Monitors must be of type MonitorValue");
+  guarantee(value->is_a(StackLockValue::klass()), "Monitors must be of type MonitorValue");
 
   ScopeValue* second = NULL;
-  ScopeValue* owner_value = get_scope_value(HotSpotMonitorValue::owner(value), total_frame_size, objects, second, oop_recorder);
+  ScopeValue* owner_value = get_scope_value(StackLockValue::owner(value), total_frame_size, objects, second, oop_recorder);
   assert(second == NULL, "monitor cannot occupy two stack slots");
 
-  ScopeValue* lock_data_value = get_scope_value(HotSpotMonitorValue::slot(value), total_frame_size, objects, second, oop_recorder);
+  ScopeValue* lock_data_value = get_scope_value(StackLockValue::slot(value), total_frame_size, objects, second, oop_recorder);
   assert(second == lock_data_value, "monitor is LONG value that occupies two stack slots");
   assert(lock_data_value->is_location(), "invalid monitor location");
   Location lock_data_loc = ((LocationValue*)lock_data_value)->location();
 
   bool eliminated = false;
-  if (HotSpotMonitorValue::eliminated(value)) {
+  if (StackLockValue::eliminated(value)) {
     eliminated = true;
   }
 
@@ -660,9 +661,8 @@ void CodeInstaller::assumption_ConcreteSubtype(Handle assumption) {
   if (context != subtype) {
     assert(context->is_abstract(), "");
     _dependencies->assert_abstract_with_unique_concrete_subtype(context, subtype);
-  } else {
-    _dependencies->assert_leaf_type(subtype);
   }
+  _dependencies->assert_leaf_type(subtype);
 }
 
 void CodeInstaller::assumption_ConcreteMethod(Handle assumption) {
