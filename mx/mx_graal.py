@@ -1499,7 +1499,7 @@ def _basic_gate_body(args, tasks):
 
     with VM('graal', 'fastdebug'):
         with Task('BootstrapEconomyWithSystemAssertions:fastdebug', tasks):
-            vm(['-esa', '-XX:-TieredCompilation -G:CompilerConfiguration=economy', '-version'])
+            vm(['-esa', '-XX:-TieredCompilation', '-G:CompilerConfiguration=economy', '-version'])
 
     with VM('graal', 'fastdebug'):
         with Task('BootstrapWithSystemAssertionsNoCoop:fastdebug', tasks):
