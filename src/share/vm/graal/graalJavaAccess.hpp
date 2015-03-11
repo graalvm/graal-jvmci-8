@@ -317,20 +317,21 @@ class name : AllStatic {                                                        
         oop_store((oop*)addr, x);                                                                              \
       }                                                                                                        \
     }
-#define STATIC_PRIMITIVE_FIELD(klassName, name, typename, jtypename)                                           \
+#define STATIC_PRIMITIVE_FIELD(klassName, name, typename, jtypename, boolCompare)                                           \
     static int _##name##_offset;                                                                               \
     static typename name() {                                                                                   \
       InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
-      return *((jtypename *)addr);                                                                             \
+      return *((jtypename *)addr) boolCompare;                                                                             \
     }                                                                                                          \
     static void set_##name(typename x) {                                                                       \
       InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       *((jtypename *)addr) = x;                                                                                \
     }
-#define STATIC_INT_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, int, jint)
-#define STATIC_BOOLEAN_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, bool, jboolean)
+
+#define STATIC_INT_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, int, jint,)
+#define STATIC_BOOLEAN_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, bool, jboolean, != 0)
 
 COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, TYPEARRAYOOP_FIELD, OBJARRAYOOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
 #undef START_CLASS
