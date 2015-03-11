@@ -186,6 +186,7 @@ class Ticks;
   /* Support for Graal */                                                                                                \
   do_klass(BitSet_klass,                                java_util_BitSet,                          Opt                 ) \
   /* Graal classes. These are loaded on-demand. */                                                                                 \
+  GRAAL_ONLY(do_klass(Debug_klass,                           com_oracle_graal_debug_Debug,                                 Graal)) \
   GRAAL_ONLY(do_klass(Node_klass,                            com_oracle_graal_graph_Node,                                  Graal)) \
   GRAAL_ONLY(do_klass(NodeClass_klass,                       com_oracle_graal_graph_NodeClass,                             Graal)) \
   GRAAL_ONLY(do_klass(HotSpotCompiledCode_klass,             com_oracle_graal_hotspot_HotSpotCompiledCode,                 Graal)) \
@@ -258,7 +259,7 @@ class SystemDictionary : AllStatic {
     WKID_LIMIT,
 
 #ifdef GRAAL
-    FIRST_GRAAL_WKID = WK_KLASS_ENUM_NAME(Node_klass),
+    FIRST_GRAAL_WKID = WK_KLASS_ENUM_NAME(Debug_klass),
     LAST_GRAAL_WKID  = WK_KLASS_ENUM_NAME(AbstractValue_klass),
 #endif
 

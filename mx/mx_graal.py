@@ -1498,6 +1498,10 @@ def _basic_gate_body(args, tasks):
             vm(['-esa', '-XX:-TieredCompilation', '-version'])
 
     with VM('graal', 'fastdebug'):
+        with Task('BootstrapEconomyWithSystemAssertions:fastdebug', tasks):
+            vm(['-esa', '-XX:-TieredCompilation', '-G:CompilerConfiguration=economy', '-version'])
+
+    with VM('graal', 'fastdebug'):
         with Task('BootstrapWithSystemAssertionsNoCoop:fastdebug', tasks):
             vm(['-esa', '-XX:-TieredCompilation', '-XX:-UseCompressedOops', '-version'])
 

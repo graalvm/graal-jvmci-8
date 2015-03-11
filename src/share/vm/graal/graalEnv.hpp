@@ -61,6 +61,7 @@ public:
   enum CodeInstallResult {
      ok,
      dependencies_failed,
+     dependencies_invalid,
      cache_full,
      code_too_large
   };
@@ -133,7 +134,8 @@ private:
 
   // Helper routine for determining the validity of a compilation
   // with respect to concurrent class loading.
-  static bool check_for_system_dictionary_modification(Dependencies* target, Handle compiled_code, GraalEnv* env, char** failure_detail);
+  static GraalEnv::CodeInstallResult check_for_system_dictionary_modification(Dependencies* target, Handle compiled_code,
+                                                                              GraalEnv* env, char** failure_detail);
 
 public:
   CompileTask* task() { return _task; }

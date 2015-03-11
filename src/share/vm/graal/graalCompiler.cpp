@@ -85,12 +85,15 @@ void GraalCompiler::bootstrap() {
   }
 
   int qsize;
-  jlong sleep_time = 1000;
+  bool first_round = true;
   int z = 0;
   do {
-    os::sleep(THREAD, sleep_time, true);
-    sleep_time = 100;
-    qsize = CompileBroker::queue_size(CompLevel_full_optimization);
+    // Loop until there is something in the queue.
+    do {
+      os::sleep(THREAD, 100, true);
+      qsize = CompileBroker::queue_size(CompLevel_full_optimization);
+    } while (first_round && qsize == 0);
+    first_round = false;
     if (PrintBootstrap) {
       while (z < (_methodsCompiled / 100)) {
         ++z;
