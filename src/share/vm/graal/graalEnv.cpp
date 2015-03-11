@@ -421,12 +421,13 @@ methodHandle GraalEnv::get_method_by_index(constantPoolHandle& cpool,
 // ------------------------------------------------------------------
 // Check for changes to the system dictionary during compilation
 // class loads, evolution, breakpoints
-bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependencies, Handle compiled_code, GraalEnv* env, char** failure_detail) {
+GraalEnv::CodeInstallResult GraalEnv::check_for_system_dictionary_modification(Dependencies* dependencies, Handle compiled_code,
+                                                                               GraalEnv* env, char** failure_detail) {
   // If JVMTI capabilities were enabled during compile, the compilation is invalidated.
   if (env != NULL) {
     if (!env->_jvmti_can_hotswap_or_post_breakpoint && JvmtiExport::can_hotswap_or_post_breakpoint()) {
       *failure_detail = (char*) "Hotswapping or breakpointing was enabled during compilation";
-      return false;
+      return GraalEnv::dependencies_failed;
     }
   }
 
@@ -434,9 +435,9 @@ bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependenci
   // or if we don't know whether it has changed (i.e., env == NULL).
   // In debug mode, always check dependencies.
   bool counter_changed = env != NULL && env->_system_dictionary_modification_counter != SystemDictionary::number_of_modifications();
-  bool verify_deps = env == NULL || trueInDebug;
+  bool verify_deps = env == NULL || trueInDebug || Debug::ENABLED();
   if (!counter_changed && !verify_deps) {
-    return true;
+    return GraalEnv::ok;
   }
 
   for (Dependencies::DepStream deps(dependencies); deps.next(); ) {
@@ -448,14 +449,21 @@ bool GraalEnv::check_for_system_dictionary_modification(Dependencies* dependenci
       stringStream st(buffer, O_BUFLEN);
       deps.print_dependency(witness, true, &st);
       *failure_detail = st.as_string();
-      return false;
+      if (env == NULL || counter_changed) {
+        return GraalEnv::dependencies_failed;
+      } else {
+        // The dependencies were invalid at the time of installation
+        // without any intervening modification of the system
+        // dictionary.  That means they were invalidly constructed.
+        return GraalEnv::dependencies_invalid;
+      }
     }
     if (LogCompilation) {
       deps.log_dependency();
     }
   }
 
-  return true;
+  return GraalEnv::ok;
 }
 
 // ------------------------------------------------------------------
@@ -496,7 +504,8 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
     dependencies->encode_content_bytes();
 
     // Check for {class loads, evolution, breakpoints} during compilation
-    if (!check_for_system_dictionary_modification(dependencies, compiled_code, env, &failure_detail)) {
+    result = check_for_system_dictionary_modification(dependencies, compiled_code, env, &failure_detail);
+    if (result != GraalEnv::ok) {
       // While not a true deoptimization, it is a preemptive decompile.
       MethodData* mdp = method()->method_data();
       if (mdp != NULL) {
@@ -513,7 +522,6 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
       // If the code buffer is created on each compile attempt
       // as in C2, then it must be freed.
       //code_buffer->free_blob();
-      result = GraalEnv::dependencies_failed;
     } else {
       ImplicitExceptionTable implicit_tbl;
       nm =  nmethod::new_nmethod(method,

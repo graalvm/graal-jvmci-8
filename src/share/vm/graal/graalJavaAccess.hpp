@@ -47,7 +47,7 @@ void graal_compute_offsets();
  *
  */
 
-#define COMPILER_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, oop_field, typeArrayOop_field, objArrayOop_field, static_oop_field, static_int_field) \
+#define COMPILER_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, oop_field, typeArrayOop_field, objArrayOop_field, static_oop_field, static_int_field, static_boolean_field) \
   start_class(HotSpotResolvedObjectTypeImpl)                                                                                                                       \
     oop_field(HotSpotResolvedObjectTypeImpl, javaClass, "Ljava/lang/Class;")                                                                                       \
   end_class                                                                                                                                                    \
@@ -260,6 +260,9 @@ void graal_compute_offsets();
     objArrayOop_field(HotSpotStackFrameReference, locals, "[Ljava/lang/Object;")                                                                               \
     typeArrayOop_field(HotSpotStackFrameReference, localIsVirtual, "[Z")                                                                                       \
   end_class                                                                                                                                                    \
+  start_class(Debug)                                                                                                                                           \
+    static_boolean_field(Debug, ENABLED)                                                                                                                       \
+  end_class                                                                                                                                                    \
   /* end*/
 
 #define START_CLASS(name)                                                                                                                                      \
@@ -294,39 +297,42 @@ class name : AllStatic {                                                        
 #define OOP_FIELD(klass, name, signature) FIELD(name, oop, obj_field, EMPTY_CAST)
 #define OBJARRAYOOP_FIELD(klass, name, signature) FIELD(name, objArrayOop, obj_field, (objArrayOop))
 #define TYPEARRAYOOP_FIELD(klass, name, signature) FIELD(name, typeArrayOop, obj_field, (typeArrayOop))
-#define STATIC_OOP_FIELD(klassName, name, signature)                                                                                                           \
-    static int _##name##_offset;                                                                                                                               \
-    static oop name() {                                                                                                                                        \
-      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                                                                             \
-      address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields());                                                 \
-      if (UseCompressedOops) {                                                                                                                                 \
-        return oopDesc::load_decode_heap_oop((narrowOop *)addr);                                                                                               \
-      } else {                                                                                                                                                 \
-        return oopDesc::load_decode_heap_oop((oop*)addr);                                                                                                      \
-      }                                                                                                                                                        \
-    }                                                                                                                                                          \
-    static void set_##name(oop x) {                                                                                                                            \
-      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                                                                             \
-      address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields());                                                 \
-      if (UseCompressedOops) {                                                                                                                                 \
-        oop_store((narrowOop *)addr, x);                                                                                                                       \
-      } else {                                                                                                                                                 \
-        oop_store((oop*)addr, x);                                                                                                                              \
-      }                                                                                                                                                        \
+#define STATIC_OOP_FIELD(klassName, name, signature)                                                           \
+    static int _##name##_offset;                                                                               \
+    static oop name() {                                                                                        \
+      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
+      address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
+      if (UseCompressedOops) {                                                                                 \
+        return oopDesc::load_decode_heap_oop((narrowOop *)addr);                                               \
+      } else {                                                                                                 \
+        return oopDesc::load_decode_heap_oop((oop*)addr);                                                      \
+      }                                                                                                        \
+    }                                                                                                          \
+    static void set_##name(oop x) {                                                                            \
+      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
+      address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
+      if (UseCompressedOops) {                                                                                 \
+        oop_store((narrowOop *)addr, x);                                                                       \
+      } else {                                                                                                 \
+        oop_store((oop*)addr, x);                                                                              \
+      }                                                                                                        \
     }
-#define STATIC_INT_FIELD(klassName, name)                                                                                                                      \
-    static int _##name##_offset;                                                                                                                               \
-    static int name() {                                                                                                                                        \
-      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                                                                             \
-      address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields());                                                 \
-      return *((jint *)addr);                                                                                                                                  \
-    }                                                                                                                                                          \
-    static void set_##name(int x) {                                                                                                                            \
-      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                                                                             \
-      address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields());                                                 \
-      *((jint *)addr) = x;                                                                                                                                     \
+#define STATIC_PRIMITIVE_FIELD(klassName, name, typename, jtypename)                                           \
+    static int _##name##_offset;                                                                               \
+    static typename name() {                                                                                   \
+      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
+      address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
+      return *((jtypename *)addr);                                                                             \
+    }                                                                                                          \
+    static void set_##name(typename x) {                                                                       \
+      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
+      address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
+      *((jtypename *)addr) = x;                                                                                \
     }
-COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, TYPEARRAYOOP_FIELD, OBJARRAYOOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD)
+#define STATIC_INT_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, int, jint)
+#define STATIC_BOOLEAN_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, bool, jboolean)
+
+COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, TYPEARRAYOOP_FIELD, OBJARRAYOOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
 #undef START_CLASS
 #undef END_CLASS
 #undef FIELD
@@ -340,6 +346,7 @@ COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD
 #undef OBJARRAYOOP_FIELD
 #undef STATIC_OOP_FIELD
 #undef STATIC_INT_FIELD
+#undef STATIC_BOOLEAN_FIELD
 #undef EMPTY_CAST
 
 void compute_offset(int &dest_offset, Klass* klass, const char* name, const char* signature, bool static_field);

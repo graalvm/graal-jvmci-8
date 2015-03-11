@@ -52,6 +52,7 @@
   declare_constant(Deoptimization::Reason_jsr_mismatch)                                           \
   declare_constant(GraalEnv::ok)                                                                  \
   declare_constant(GraalEnv::dependencies_failed)                                                 \
+  declare_constant(GraalEnv::dependencies_invalid)                                                \
   declare_constant(GraalEnv::cache_full)                                                          \
   declare_constant(GraalEnv::code_too_large)                                                      \
                                                                                                   \
