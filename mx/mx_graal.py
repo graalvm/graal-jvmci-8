@@ -2203,6 +2203,9 @@ def jacocoreport(args):
 
     includedirs = set()
     for p in mx.projects():
+        projsetting = getattr(p, 'jacoco', '')
+        if projsetting == 'exclude':
+            continue
         for include in includes:
             if include in p.dir:
                 includedirs.add(p.dir)
