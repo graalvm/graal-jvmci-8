@@ -2806,7 +2806,7 @@ def _handleNonJavaFiles(outputDir, p, clean, nonjavafiletuples):
                 if exists(dirname(dst)) and (not exists(dst) or os.path.getmtime(dst) < os.path.getmtime(src)):
                     shutil.copyfile(src, dst)
 
-def _chunk_files_for_command_line(files, limit=None, pathFunction=None):
+def _chunk_files_for_command_line(files, limit=None, pathFunction=lambda f: f):
     """
     Returns a generator for splitting up a list of files into chunks such that the
     size of the space separated file paths in a chunk is less than a given limit.
@@ -2824,9 +2824,11 @@ def _chunk_files_for_command_line(files, limit=None, pathFunction=None):
             # Using just SC_ARG_MAX without extra downwards adjustment
             # results in "[Errno 7] Argument list too long" on MacOS.
             syslimit = os.sysconf('SC_ARG_MAX') - 20000
+            if syslimit == -1:
+                syslimit = 262144 # we could use sys.maxint but we prefer a more robust smaller value
             limit = syslimit - commandLinePrefixAllowance
     for i in range(len(files)):
-        path = files[i] if pathFunction is None else pathFunction(files[i])
+        path = pathFunction(files[i])
         size = len(path) + 1
         if chunkSize + size < limit:
             chunkSize += size
