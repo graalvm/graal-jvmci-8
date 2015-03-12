@@ -97,7 +97,7 @@ void graal_compute_offsets();
     int_field(CompilationResult, totalFrameSize)                                                                                                               \
     int_field(CompilationResult, customStackAreaOffset)                                                                                                        \
     typeArrayOop_field(CompilationResult, targetCode, "[B")                                                                                                    \
-    objArrayOop_field(CompilationResult, assumptions, "[Lcom/oracle/graal/api/code/Assumptions$Assumption;")                                                   \
+    objArrayOop_field(CompilationResult, assumptions, "[Lcom/oracle/graal/api/meta/Assumptions$Assumption;")                                                   \
     objArrayOop_field(CompilationResult, methods, "[Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                           \
     int_field(CompilationResult, targetCodeSize)                                                                                                               \
   end_class                                                                                                                                                    \
@@ -107,6 +107,9 @@ void graal_compute_offsets();
   start_class(Assumptions_ConcreteSubtype)                                                                                                                     \
     oop_field(Assumptions_ConcreteSubtype, context, "Lcom/oracle/graal/api/meta/ResolvedJavaType;")                                                            \
     oop_field(Assumptions_ConcreteSubtype, subtype, "Lcom/oracle/graal/api/meta/ResolvedJavaType;")                                                            \
+  end_class                                                                                                                                                    \
+  start_class(Assumptions_LeafType)                                                                                                                            \
+    oop_field(Assumptions_LeafType, context, "Lcom/oracle/graal/api/meta/ResolvedJavaType;")                                                                   \
   end_class                                                                                                                                                    \
   start_class(Assumptions_ConcreteMethod)                                                                                                                      \
     oop_field(Assumptions_ConcreteMethod, method, "Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                            \
@@ -317,21 +320,21 @@ class name : AllStatic {                                                        
         oop_store((oop*)addr, x);                                                                              \
       }                                                                                                        \
     }
-#define STATIC_PRIMITIVE_FIELD(klassName, name, typename, jtypename, boolCompare)                                           \
+#define STATIC_PRIMITIVE_FIELD(klassName, name, jtypename)                                                     \
     static int _##name##_offset;                                                                               \
-    static typename name() {                                                                                   \
+    static jtypename name() {                                                                                  \
       InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
-      return *((jtypename *)addr) boolCompare;                                                                             \
+      return *((jtypename *)addr);                                                                             \
     }                                                                                                          \
-    static void set_##name(typename x) {                                                                       \
+    static void set_##name(jtypename x) {                                                                      \
       InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       *((jtypename *)addr) = x;                                                                                \
     }
 
-#define STATIC_INT_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, int, jint,)
-#define STATIC_BOOLEAN_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, bool, jboolean, != 0)
+#define STATIC_INT_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, jint)
+#define STATIC_BOOLEAN_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, jboolean)
 
 COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, TYPEARRAYOOP_FIELD, OBJARRAYOOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
 #undef START_CLASS

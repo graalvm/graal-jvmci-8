@@ -400,6 +400,8 @@ void CodeInstaller::initialize_dependencies(oop compiled_code) {
           assumption_NoFinalizableSubclass(assumption);
         } else if (assumption->klass() == Assumptions_ConcreteSubtype::klass()) {
           assumption_ConcreteSubtype(assumption);
+        } else if (assumption->klass() == Assumptions_LeafType::klass()) {
+          assumption_LeafType(assumption);
         } else if (assumption->klass() == Assumptions_ConcreteMethod::klass()) {
           assumption_ConcreteMethod(assumption);
         } else if (assumption->klass() == Assumptions_CallSiteTargetValue::klass()) {
@@ -658,11 +660,15 @@ void CodeInstaller::assumption_ConcreteSubtype(Handle assumption) {
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
   Klass* subtype = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(subtype_handle));
 
-  if (context != subtype) {
-    assert(context->is_abstract(), "");
-    _dependencies->assert_abstract_with_unique_concrete_subtype(context, subtype);
-  }
-  _dependencies->assert_leaf_type(subtype);
+  assert(context->is_abstract(), "");
+  _dependencies->assert_abstract_with_unique_concrete_subtype(context, subtype);
+}
+
+void CodeInstaller::assumption_LeafType(Handle assumption) {
+  Handle context_handle = Assumptions_LeafType::context(assumption());
+  Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
+
+  _dependencies->assert_leaf_type(context);
 }
 
 void CodeInstaller::assumption_ConcreteMethod(Handle assumption) {
