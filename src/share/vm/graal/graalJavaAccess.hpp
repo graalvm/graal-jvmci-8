@@ -97,7 +97,7 @@ void graal_compute_offsets();
     int_field(CompilationResult, totalFrameSize)                                                                                                               \
     int_field(CompilationResult, customStackAreaOffset)                                                                                                        \
     typeArrayOop_field(CompilationResult, targetCode, "[B")                                                                                                    \
-    objArrayOop_field(CompilationResult, assumptions, "[Lcom/oracle/graal/api/code/Assumptions$Assumption;")                                                   \
+    objArrayOop_field(CompilationResult, assumptions, "[Lcom/oracle/graal/api/meta/Assumptions$Assumption;")                                                   \
     objArrayOop_field(CompilationResult, methods, "[Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                           \
     int_field(CompilationResult, targetCodeSize)                                                                                                               \
   end_class                                                                                                                                                    \
