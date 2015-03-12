@@ -322,6 +322,7 @@
   GRAAL_ONLY(template(com_oracle_graal_api_meta_LIRKind,                        "com/oracle/graal/api/meta/LIRKind"))                             \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_AbstractValue,                  "com/oracle/graal/api/meta/AbstractValue"))                       \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_ConcreteSubtype,    "com/oracle/graal/api/meta/Assumptions$ConcreteSubtype"))         \
+  GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_LeafType,           "com/oracle/graal/api/meta/Assumptions$LeafType"))                \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_NoFinalizableSubclass, "com/oracle/graal/api/meta/Assumptions$NoFinalizableSubclass")) \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_ConcreteMethod,     "com/oracle/graal/api/meta/Assumptions$ConcreteMethod"))          \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_CallSiteTargetValue,"com/oracle/graal/api/meta/Assumptions$CallSiteTargetValue"))     \
