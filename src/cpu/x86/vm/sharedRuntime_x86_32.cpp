@@ -715,7 +715,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
                                     int total_args_passed,
                                     int comp_args_on_stack,
                                     const BasicType *sig_bt,
-                                    const VMRegPair *regs
+                                    const VMRegPair *regs,
                                     int frame_extension_argument) {
   assert(frame_extension_argument == -1, "unsupported");
 
