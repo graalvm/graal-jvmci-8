@@ -121,6 +121,16 @@
 			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/linux_sparc/vm</locationURI>
 		</link>
 		<link>
+			<name>solaris_sparc</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/solaris_sparc/vm</locationURI>
+		</link>
+		<link>
+			<name>solaris</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/src/os/solaris/vm</locationURI>
+		</link>
+		<link>
 			<name>linux_x86</name>
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/linux_x86/vm</locationURI>
