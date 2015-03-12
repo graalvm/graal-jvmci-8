@@ -131,6 +131,7 @@ private:
 
   void assumption_NoFinalizableSubclass(Handle assumption);
   void assumption_ConcreteSubtype(Handle assumption);
+  void assumption_LeafType(Handle assumption);
   void assumption_ConcreteMethod(Handle assumption);
   void assumption_CallSiteTargetValue(Handle assumption);
 
