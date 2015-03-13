@@ -27,6 +27,7 @@ import static com.oracle.graal.api.code.TypeCheckHints.*;
 import static com.oracle.graal.api.meta.DeoptimizationReason.*;
 import static com.oracle.graal.bytecode.Bytecodes.*;
 import static com.oracle.graal.java.AbstractBytecodeParser.Options.*;
+
 import java.util.*;
 
 import com.oracle.graal.api.code.*;
@@ -37,6 +38,7 @@ import com.oracle.graal.compiler.common.*;
 import com.oracle.graal.compiler.common.calc.*;
 import com.oracle.graal.debug.*;
 import com.oracle.graal.java.BciBlockMapping.BciBlock;
+import com.oracle.graal.java.GraphBuilderContext.Replacement;
 import com.oracle.graal.java.GraphBuilderPhase.Instance.BytecodeParser;
 import com.oracle.graal.java.GraphBuilderPlugin.LoadFieldPlugin;
 import com.oracle.graal.java.GraphBuilderPlugin.LoadIndexedPlugin;
@@ -51,17 +53,26 @@ public abstract class AbstractBytecodeParser {
         @Option(help = "The trace level for the bytecode parser used when building a graph from bytecode", type = OptionType.Debug)
         public static final OptionValue<Integer> TraceBytecodeParserLevel = new OptionValue<>(0);
 
-        @Option(help = "Inlines trivial methods during parsing of the bytecodes.", type = OptionType.Expert)
+        @Option(help = "Inlines trivial methods during bytecode parsing.", type = OptionType.Expert)
         public static final StableOptionValue<Boolean> InlineDuringParsing = new StableOptionValue<>(false);
 
-        @Option(help = "Traces inlining eagerly performed during bytecode parsing", type = OptionType.Debug)
+        @Option(help = "Traces inlining performed during bytecode parsing.", type = OptionType.Debug)
         public static final StableOptionValue<Boolean> TraceInlineDuringParsing = new StableOptionValue<>(false);
 
-        @Option(help = "Traces use of bytecode parser plugins", type = OptionType.Debug)
+        @Option(help = "Traces use of plugins during bytecode parsing.", type = OptionType.Debug)
         public static final StableOptionValue<Boolean> TraceParserPlugins = new StableOptionValue<>(false);
 
-        @Option(help = "Maximum depth when inlining during parsing.", type = OptionType.Debug)
+        @Option(help = "Maximum depth when inlining during bytecode parsing.", type = OptionType.Debug)
         public static final StableOptionValue<Integer> InlineDuringParsingMaxDepth = new StableOptionValue<>(10);
+
+        @Option(help = "Dump graphs after non-trivial changes during bytecode parsing.", type = OptionType.Debug)
+        public static final StableOptionValue<Boolean> DumpDuringGraphBuilding = new StableOptionValue<>(false);
+
+        @Option(help = "Max number of loop explosions per method.", type = OptionType.Debug)
+        public static final OptionValue<Integer> MaximumLoopExplosionCount = new OptionValue<>(10000);
+
+        @Option(help = "Do not bail out but throw an exception on failed loop explosion.", type = OptionType.Debug)
+        public static final OptionValue<Boolean> FailedLoopExplosionIsFatal = new OptionValue<>(false);
 
         // @formatter:on
     }
@@ -71,7 +82,7 @@ public abstract class AbstractBytecodeParser {
      * happen when a call to a {@link MethodSubstitution} is encountered or the root of compilation
      * is a {@link MethodSubstitution} or a snippet.
      */
-    static class ReplacementContext {
+    static class ReplacementContext implements Replacement {
         /**
          * The method being replaced.
          */
@@ -85,6 +96,18 @@ public abstract class AbstractBytecodeParser {
         public ReplacementContext(ResolvedJavaMethod method, ResolvedJavaMethod substitute) {
             this.method = method;
             this.replacement = substitute;
+        }
+
+        public ResolvedJavaMethod getOriginalMethod() {
+            return method;
+        }
+
+        public ResolvedJavaMethod getReplacementMethod() {
+            return replacement;
+        }
+
+        public boolean isIntrinsic() {
+            return false;
         }
 
         /**
@@ -102,7 +125,7 @@ public abstract class AbstractBytecodeParser {
 
     /**
      * Context for a replacement being inlined as a compiler intrinsic. Deoptimization within a
-     * compiler intrinic must replay the intrinsified call. This context object retains the
+     * compiler intrinsic must replay the intrinsified call. This context object retains the
      * information required to build a frame state denoting the JVM state just before the
      * intrinsified call.
      */
@@ -125,6 +148,11 @@ public abstract class AbstractBytecodeParser {
             super(method, substitute);
             this.invokeArgs = invokeArgs;
             this.invokeBci = invokeBci;
+        }
+
+        @Override
+        public boolean isIntrinsic() {
+            return true;
         }
 
         /**

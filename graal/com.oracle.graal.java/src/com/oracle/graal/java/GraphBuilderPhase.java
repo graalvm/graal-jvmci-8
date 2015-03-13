@@ -461,7 +461,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 for (int i = loopBegins.size() - 1; i >= 0; --i) {
                     LoopBeginNode loopBegin = loopBegins.get(i);
                     insertLoopExits(loopBegin, innerLoopsMap);
-                    if (GraalOptions.DumpDuringGraphBuilding.getValue()) {
+                    if (DumpDuringGraphBuilding.getValue()) {
                         Debug.dump(currentGraph, "After building loop exits for %s.", loopBegin);
                     }
                 }
@@ -527,7 +527,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
                 for (LoopBeginNode inner : innerLoopBegins) {
                     addLoopExits(loopBegin, inner, innerLoopsMap, visited);
-                    if (GraalOptions.DumpDuringGraphBuilding.getValue()) {
+                    if (DumpDuringGraphBuilding.getValue()) {
                         Debug.dump(currentGraph, "After adding loop exits for %s.", inner);
                     }
                 }
@@ -1210,9 +1210,10 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 }
                 ReplacementContext context = this.replacementContext;
                 if (context != null && context.isCallToOriginal(targetMethod)) {
+                    assert context.asIntrinsic() == null : "intrinsic cannot call the method it is intrinsifying";
                     // Self recursive replacement means the original
                     // method should be called.
-                    if (targetMethod.hasBytecodes()) {
+                    if (context.method.hasBytecodes()) {
                         parseAndInlineCallee(context.method, args, null);
                     } else {
                         return false;
@@ -1225,9 +1226,13 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                             context = new ReplacementContext(targetMethod, inlinedMethod);
                         }
                     }
-                    parseAndInlineCallee(inlinedMethod, args, context);
-                    if (plugin != null) {
-                        plugin.postInline(inlinedMethod);
+                    if (inlinedMethod.hasBytecodes()) {
+                        parseAndInlineCallee(inlinedMethod, args, context);
+                        if (plugin != null) {
+                            plugin.postInline(inlinedMethod);
+                        }
+                    } else {
+                        return false;
                     }
                 }
                 return true;
@@ -2348,6 +2353,10 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
             public int getDepth() {
                 return parent == null ? 0 : 1 + parent.getDepth();
+            }
+
+            public Replacement getReplacement() {
+                return replacementContext;
             }
 
             public ResolvedJavaMethod getRootMethod() {

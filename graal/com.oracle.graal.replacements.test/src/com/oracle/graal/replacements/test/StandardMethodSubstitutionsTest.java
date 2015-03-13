@@ -57,42 +57,68 @@ public class StandardMethodSubstitutionsTest extends MethodSubstitutionTest {
         test("mathAll", value);
     }
 
-    @SuppressWarnings("all")
+    @Test
+    public void testMathPow() {
+        double a = 34567.891D;
+        double b = 4.6D;
+        test("mathPow", a, b);
+
+        // Test the values directly handled by the substitution
+
+        // If the second argument is positive or negative zero, then the result is 1.0.
+        test("mathPow", a, 0.0D);
+        test("mathPow", a, -0.0D);
+        // If the second argument is 1.0, then the result is the same as the first argument.
+        test("mathPow", a, 1.0D);
+        // If the second argument is NaN, then the result is NaN.
+        test("mathPow", a, Double.NaN);
+        // If the first argument is NaN and the second argument is nonzero, then the result is NaN.
+        test("mathPow", Double.NaN, b);
+        test("mathPow", Double.NaN, 0.0D);
+        // x**-1 = 1/x
+        test("mathPow", a, -1.0D);
+        // x**2 = x*x
+        test("mathPow", a, 2.0D);
+        // x**0.5 = sqrt(x)
+        test("mathPow", a, 0.5D);
+    }
+
+    public static double mathPow(double a, double b) {
+        return mathPow0(a, b);
+    }
+
+    public static double mathPow0(double a, double b) {
+        return Math.pow(a, b);
+    }
+
     public static double mathAbs(double value) {
         return Math.abs(value);
     }
 
-    @SuppressWarnings("all")
     public static double mathSqrt(double value) {
         return Math.sqrt(value);
     }
 
-    @SuppressWarnings("all")
     public static double mathLog(double value) {
         return Math.log(value);
     }
 
-    @SuppressWarnings("all")
     public static double mathLog10(double value) {
         return Math.log10(value);
     }
 
-    @SuppressWarnings("all")
     public static double mathSin(double value) {
         return Math.sin(value);
     }
 
-    @SuppressWarnings("all")
     public static double mathCos(double value) {
         return Math.cos(value);
     }
 
-    @SuppressWarnings("all")
     public static double mathTan(double value) {
         return Math.tan(value);
     }
 
-    @SuppressWarnings("all")
     public static double mathAll(double value) {
         return Math.sqrt(value) + Math.log(value) + Math.log10(value) + Math.sin(value) + Math.cos(value) + Math.tan(value);
     }
@@ -130,22 +156,18 @@ public class StandardMethodSubstitutionsTest extends MethodSubstitutionTest {
         testSubstitution("integerBitCount", BitCountNode.class, Integer.class, "bitCount", true, args);
     }
 
-    @SuppressWarnings("all")
     public static int integerReverseBytes(int value) {
         return Integer.reverseBytes(value);
     }
 
-    @SuppressWarnings("all")
     public static int integerNumberOfLeadingZeros(int value) {
         return Integer.numberOfLeadingZeros(value);
     }
 
-    @SuppressWarnings("all")
     public static int integerNumberOfTrailingZeros(int value) {
         return Integer.numberOfTrailingZeros(value);
     }
 
-    @SuppressWarnings("all")
     public static int integerBitCount(int value) {
         return Integer.bitCount(value);
     }
@@ -160,22 +182,18 @@ public class StandardMethodSubstitutionsTest extends MethodSubstitutionTest {
         testSubstitution("longBitCount", BitCountNode.class, Long.class, "bitCount", true, args);
     }
 
-    @SuppressWarnings("all")
     public static long longReverseBytes(long value) {
         return Long.reverseBytes(value);
     }
 
-    @SuppressWarnings("all")
     public static int longNumberOfLeadingZeros(long value) {
         return Long.numberOfLeadingZeros(value);
     }
 
-    @SuppressWarnings("all")
     public static int longNumberOfTrailingZeros(long value) {
         return Long.numberOfTrailingZeros(value);
     }
 
-    @SuppressWarnings("all")
     public static int longBitCount(long value) {
         return Long.bitCount(value);
     }
@@ -186,12 +204,10 @@ public class StandardMethodSubstitutionsTest extends MethodSubstitutionTest {
         testGraph("intBitsToFloat");
     }
 
-    @SuppressWarnings("all")
     public static int floatToIntBits(float value) {
         return Float.floatToIntBits(value);
     }
 
-    @SuppressWarnings("all")
     public static float intBitsToFloat(int value) {
         return Float.intBitsToFloat(value);
     }
@@ -202,22 +218,18 @@ public class StandardMethodSubstitutionsTest extends MethodSubstitutionTest {
         testGraph("longBitsToDouble");
     }
 
-    @SuppressWarnings("all")
     public static long doubleToLongBits(double value) {
         return Double.doubleToLongBits(value);
     }
 
-    @SuppressWarnings("all")
     public static double longBitsToDouble(long value) {
         return Double.longBitsToDouble(value);
     }
 
-    @SuppressWarnings("all")
     public static boolean isInstance(Class<?> clazz, Object object) {
         return clazz.isInstance(object);
     }
 
-    @SuppressWarnings("all")
     public static boolean isAssignableFrom(Class<?> clazz, Class<?> other) {
         return clazz.isAssignableFrom(other);
     }
