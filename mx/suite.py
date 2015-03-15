@@ -803,9 +803,21 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.phases",
+        "com.oracle.graal.graphbuilderconf"
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : ["com.oracle.graal.service.processor"],
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Java",
+    },
+
+    "com.oracle.graal.graphbuilderconf" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.nodes",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Java",
     },
