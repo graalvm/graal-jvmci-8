@@ -61,6 +61,9 @@
   COMPILERGRAAL_PRESENT(product(intx, GraalThreads, 1,                      \
           "Force number of Graal compiler threads to use"))                 \
                                                                             \
+  COMPILERGRAAL_PRESENT(product(intx, GraalHostThreads, 1,                  \
+          "Force number of compiler threads for Graal host compiler"))      \
+                                                                            \
   GRAAL_ONLY(product(bool, CodeInstallSafepointChecks, true,                \
           "Perform explicit safepoint checks while installing code"))       \
                                                                             \
