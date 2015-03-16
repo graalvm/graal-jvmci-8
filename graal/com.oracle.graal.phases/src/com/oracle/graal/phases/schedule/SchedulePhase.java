@@ -547,8 +547,9 @@ public final class SchedulePhase extends Phase {
             if (n instanceof FloatingReadNode) {
                 FloatingReadNode floatingReadNode = (FloatingReadNode) n;
                 LocationIdentity locationIdentity = floatingReadNode.getLocationIdentity();
-                if (locationIdentity.isMutable()) {
-                    ValueNode lastAccessLocation = floatingReadNode.getLastLocationAccess().asNode();
+                MemoryNode lastLocationAccess = floatingReadNode.getLastLocationAccess();
+                if (locationIdentity.isMutable() && lastLocationAccess != null) {
+                    ValueNode lastAccessLocation = lastLocationAccess.asNode();
                     if (nodeToBlock.get(lastAccessLocation) == b && lastAccessLocation != beginNode) {
                         // This node's last access location is within this block. Add to watch list
                         // when processing the last access location.
@@ -588,7 +589,7 @@ public final class SchedulePhase extends Phase {
                 newList.add(n);
             } else {
                 // This node was pulled up.
-                assert !(n instanceof FixedNode);
+                assert !(n instanceof FixedNode) : n;
             }
         }
 
@@ -627,12 +628,16 @@ public final class SchedulePhase extends Phase {
                         }
                     }
                 } else {
-                    for (Node input : current.inputs()) {
-                        if (current instanceof FrameState && input instanceof StateSplit && ((StateSplit) input).stateAfter() == current) {
-                            // Ignore the cycle.
-                        } else {
-                            stack.push(input);
+                    if (current instanceof FrameState) {
+                        for (Node input : current.inputs()) {
+                            if (input instanceof StateSplit && ((StateSplit) input).stateAfter() == current) {
+                                // Ignore the cycle.
+                            } else {
+                                stack.push(input);
+                            }
                         }
+                    } else {
+                        current.pushInputs(stack);
                     }
                 }
             } else {
