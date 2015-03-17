@@ -2674,8 +2674,6 @@ int os::Solaris::commit_memory_impl(char* addr, size_t bytes, bool exec) {
 
   if (!recoverable_mmap_error(err)) {
     warn_fail_commit_memory(addr, bytes, exec, err);
-    // Introduced temporarily to debug the memory allocation issues on Solaris
-    tty->print_cr("GRAAL_DEBUG: unrecoverable error during mmap got errno %d", err);
     vm_exit_out_of_memory(bytes, OOM_MMAP_ERROR, "committing reserved memory.");
   }
 
