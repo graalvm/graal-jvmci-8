@@ -2823,13 +2823,16 @@ def _chunk_files_for_command_line(files, limit=None, pathFunction=lambda f: f):
         else:
             # Using just SC_ARG_MAX without extra downwards adjustment
             # results in "[Errno 7] Argument list too long" on MacOS.
-            syslimit = os.sysconf('SC_ARG_MAX') - 20000
+            commandLinePrefixAllowance -= 20000
+            syslimit = os.sysconf('SC_ARG_MAX')
             if syslimit == -1:
                 syslimit = 262144 # we could use sys.maxint but we prefer a more robust smaller value
             limit = syslimit - commandLinePrefixAllowance
+            assert limit > 0
     for i in range(len(files)):
         path = pathFunction(files[i])
         size = len(path) + 1
+        assert size < limit
         if chunkSize + size < limit:
             chunkSize += size
         else:
@@ -4172,6 +4175,31 @@ def _netbeansinit_project(p, jdks=None, files=None, libFiles=None):
     out.open('project', {'name' : p.name, 'default' : 'default', 'basedir' : '.'})
     out.element('description', data='Builds, tests, and runs the project ' + p.name + '.')
     out.element('import', {'file' : 'nbproject/build-impl.xml'})
+    out.open('target', {'name' : '-post-init'})
+    out.open('pathconvert', {'property' : 'comma.javac.classpath', 'pathsep' : ','})
+    out.element('path', {'path' : '${javac.classpath}'})
+    out.close('pathconvert')
+
+    out.open('restrict', {'id' : 'missing.javac.classpath'})
+    out.element('filelist', {'dir' : '${basedir}', 'files' : '${comma.javac.classpath}'})
+    out.open('not')
+    out.element('exists')
+    out.close('not')
+    out.close('restrict')
+
+    out.element('property', {'name' : 'missing.javac.classpath', 'refid' : 'missing.javac.classpath'})
+
+    out.open('condition', {'property' : 'no.dependencies', 'value' : 'true'})
+    out.element('equals', {'arg1' : '${missing.javac.classpath}', 'arg2' : ''})
+    out.close('condition')
+
+    out.element('property', {'name' : 'no.dependencies', 'value' : 'false'})
+
+    out.open('condition', {'property' : 'no.deps'})
+    out.element('equals', {'arg1' : '${no.dependencies}', 'arg2' : 'true'})
+    out.close('condition')
+
+    out.close('target')
     out.open('target', {'name' : '-post-compile'})
     out.open('exec', {'executable' : sys.executable})
     out.element('env', {'key' : 'JAVA_HOME', 'value' : jdk.jdk})
