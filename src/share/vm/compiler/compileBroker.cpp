@@ -801,12 +801,6 @@ void CompileBroker::compilation_init() {
   GraalCompiler* graal = new GraalCompiler();
 #endif
 
-#ifdef COMPILER1
-  if (c1_count > 0) {
-    _compilers[0] = new Compiler();
-  }
-#endif // COMPILER1
-
 #if defined(COMPILERGRAAL)
   _compilers[1] = graal;
   if (FLAG_IS_DEFAULT(GraalThreads)) {
@@ -817,7 +811,17 @@ void CompileBroker::compilation_init() {
   } else {
     c2_count = GraalThreads;
   }
+  if (FLAG_IS_DEFAULT(GraalHostThreads)) {
+  } else {
+    c1_count = GraalHostThreads;
+  }
 #endif // COMPILERGRAAL
+
+#ifdef COMPILER1
+  if (c1_count > 0) {
+    _compilers[0] = new Compiler();
+  }
+#endif // COMPILER1
 
 #ifdef COMPILER2
   if (c2_count > 0) {
