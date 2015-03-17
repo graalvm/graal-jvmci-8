@@ -204,6 +204,7 @@ public class PartialEvaluator {
             if (replacements != null && (replacements.getMethodSubstitutionMethod(original) != null || replacements.getMacroSubstitution(original) != null)) {
                 return null;
             }
+            assert !builder.parsingReplacement();
             if (original.equals(callSiteProxyMethod)) {
                 ValueNode arg1 = arguments[0];
                 if (!arg1.isConstant()) {
@@ -221,10 +222,10 @@ public class PartialEvaluator {
                 if (decision != null && decision.isInline()) {
                     inlining.push(decision);
                     builder.getAssumptions().record(new AssumptionValidAssumption((OptimizedAssumption) decision.getTarget().getNodeRewritingAssumption()));
-                    return new InlineInfo(callInlinedMethod, false);
+                    return new InlineInfo(callInlinedMethod, false, false);
                 }
             }
-            return new InlineInfo(original, false);
+            return new InlineInfo(original, false, false);
         }
 
         public void postInline(ResolvedJavaMethod inlinedTargetMethod) {
@@ -261,6 +262,7 @@ public class PartialEvaluator {
         plugins.setInlineInvokePlugin(new InlineInvokePlugin(callTarget.getInlining(), providers.getReplacements()));
         plugins.setLoopExplosionPlugin(new LoopExplosionPlugin());
         TruffleGraphBuilderPlugins.registerInvocationPlugins(providers.getMetaAccess(), newConfig.getPlugins().getInvocationPlugins());
+
         new GraphBuilderPhase.Instance(providers.getMetaAccess(), providers.getStampProvider(), this.snippetReflection, providers.getConstantReflection(), newConfig,
                         TruffleCompilerImpl.Optimizations, null).apply(graph);
         Debug.dump(graph, "After FastPE");

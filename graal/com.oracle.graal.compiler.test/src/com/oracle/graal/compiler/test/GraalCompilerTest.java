@@ -305,7 +305,6 @@ public abstract class GraalCompilerTest extends GraalTest {
 
     protected static String getCanonicalGraphString(StructuredGraph graph, boolean excludeVirtual, boolean checkConstants) {
         SchedulePhase schedule = new SchedulePhase(SchedulingStrategy.EARLIEST);
-        schedule.setScheduleConstants(true);
         schedule.apply(graph);
 
         NodeMap<Integer> canonicalId = graph.createNodeMap();
@@ -325,7 +324,7 @@ public abstract class GraalCompilerTest extends GraalTest {
             }
             result.append("\n");
             for (Node node : schedule.getBlockToNodesMap().get(block)) {
-                if (node.isAlive()) {
+                if (node instanceof ValueNode && node.isAlive()) {
                     if (!excludeVirtual || !(node instanceof VirtualObjectNode || node instanceof ProxyNode)) {
                         if (node instanceof ConstantNode) {
                             String name = checkConstants ? node.toString(Verbosity.Name) : node.getClass().getSimpleName();
