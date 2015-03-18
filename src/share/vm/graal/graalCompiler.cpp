@@ -65,6 +65,9 @@ void GraalCompiler::initialize() {
 void GraalCompiler::bootstrap() {
   JavaThread* THREAD = JavaThread::current();
   _bootstrapping = true;
+  // Allow bootstrap to perform Graal compilations of itself
+  bool c1only = GraalCompileWithC1Only;
+  GraalCompileWithC1Only = false;
   ResourceMark rm;
   HandleMark hm;
   if (PrintBootstrap) {
@@ -105,6 +108,7 @@ void GraalCompiler::bootstrap() {
   if (PrintBootstrap) {
     tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methodsCompiled);
   }
+  GraalCompileWithC1Only = c1only;
   _bootstrapping = false;
 }
 

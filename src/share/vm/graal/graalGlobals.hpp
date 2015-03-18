@@ -82,6 +82,12 @@
   product(bool, GraalHProfEnabled, false,                                   \
           "Is Heap  Profiler enabled")                                      \
                                                                             \
+  product(bool, GraalCompileWithC1Only, true,                               \
+          "Only compile Graal classes with C1")                             \
+                                                                            \
+  product(bool, GraalCompileAppFirst, false,                                \
+          "Prioritize application compilations over Graal compilations")    \
+                                                                            \
   develop(bool, GraalUseFastLocking, true,                                  \
           "Use fast inlined locking code")                                  \
                                                                             \

@@ -157,6 +157,9 @@ bool AdvancedThresholdPolicy::is_method_profiled(Method* method) {
 
 // Called with the queue locked and with at least one element
 CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
+#ifdef COMPILERGRAAL
+  CompileTask *max_non_graal_task = NULL;
+#endif
   CompileTask *max_task = NULL;
   Method* max_method = NULL;
   jlong t = os::javaTimeMillis();
@@ -189,8 +192,29 @@ CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
         max_method = method;
       }
     }
+#ifdef COMPILERGRAAL
+    if (GraalCompileAppFirst && (task->comp_level() == CompLevel_full_optimization || !method->has_compiled_code()) &&
+        SystemDictionary::graal_loader() != NULL &&
+        method->method_holder()->class_loader() != SystemDictionary::graal_loader()) {
+      if (max_non_graal_task == NULL) {
+        max_non_graal_task = task;
+      } else {
+        // Select a method with a higher rate
+        if (compare_methods(method, max_non_graal_task->method())) {
+          max_non_graal_task = task;
+        }
+      }
+    }
+#endif
     task = next_task;
   }
+
+#ifdef COMPILERGRAAL
+  if (max_non_graal_task != NULL) {
+    max_task = max_non_graal_task;
+    max_method = max_task->method();
+  }
+#endif
 
   if (max_task->comp_level() == CompLevel_full_profile && TieredStopAtLevel > CompLevel_full_profile
       && is_method_profiled(max_method)) {
