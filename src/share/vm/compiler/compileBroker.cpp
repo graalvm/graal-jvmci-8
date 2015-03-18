@@ -558,6 +558,24 @@ void CompileTask::log_task_queued() {
 
 
 // ------------------------------------------------------------------
+// CompileTask::log_task_dequeued
+void CompileTask::log_task_dequeued(const char* comment) {
+  if (LogCompilation && xtty != NULL) {
+    Thread* thread = Thread::current();
+    ttyLocker ttyl;
+    ResourceMark rm(thread);
+
+    xtty->begin_elem("task_dequeued");
+    log_task(xtty);
+    if (comment != NULL) {
+      xtty->print(" comment='%s'", comment);
+    }
+    xtty->end_elem();
+  }
+}
+
+
+// ------------------------------------------------------------------
 // CompileTask::log_task_start
 void CompileTask::log_task_start(CompileLog* log)   {
   log->begin_head("task");

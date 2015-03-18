@@ -175,6 +175,7 @@ CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
         if (PrintTieredEvents) {
           print_event(REMOVE_FROM_QUEUE, method, method, task->osr_bci(), (CompLevel)task->comp_level());
         }
+        task->log_task_dequeued("stale");
         CompileTaskWrapper ctw(task); // Frees the task
         compile_queue->remove(task);
         method->clear_queued_for_compilation();
