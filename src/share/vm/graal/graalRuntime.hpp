@@ -138,12 +138,28 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
   /**
    * Gets the singleton HotSpotGraalRuntime instance, initializing it if necessary
    */
-  static Handle get_HotSpotGraalRuntime();
+  static Handle get_HotSpotGraalRuntime() {
+    initialize_Graal();
+    return Handle(JNIHandles::resolve_non_null(_HotSpotGraalRuntime_instance));
+  }
 
   static jobject get_HotSpotGraalRuntime_jobject() {
-    get_HotSpotGraalRuntime();
+    initialize_Graal();
+    assert(_HotSpotGraalRuntime_initialized, "must be");
     return _HotSpotGraalRuntime_instance;
   }
+
+  static Handle callInitializer(const char* className, const char* methodName, const char* returnType);
+
+  /**
+   * Trigger initialization of HotSpotGraalRuntime through Graal.runtime()
+   */
+  static void initialize_Graal();
+
+  /**
+   * Explicitly initialize HotSpotGraalRuntime itself
+   */
+  static void initialize_HotSpotGraalRuntime();
 
   static void shutdown();
 

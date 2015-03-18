@@ -626,6 +626,7 @@ JVM_END
 
 // private static GraalRuntime Graal.initializeRuntime()
 JVM_ENTRY(jobject, JVM_GetGraalRuntime(JNIEnv *env, jclass c))
+  GraalRuntime::initialize_HotSpotGraalRuntime();
   return GraalRuntime::get_HotSpotGraalRuntime_jobject();
 JVM_END
 
@@ -688,21 +689,43 @@ void GraalRuntime::check_generated_sources_sha1(TRAPS) {
   }
 }
 
-Handle GraalRuntime::get_HotSpotGraalRuntime() {
+Handle GraalRuntime::callInitializer(const char* className, const char* methodName, const char* returnType) {
+  guarantee(!_HotSpotGraalRuntime_initialized, "cannot reinitialize HotSpotGraalRuntime");
+  Thread* THREAD = Thread::current();
+  check_generated_sources_sha1(CHECK_ABORT_(Handle()));
+
+  TempNewSymbol name = SymbolTable::new_symbol(className, CHECK_ABORT_(Handle()));
+  KlassHandle klass = load_required_class(name);
+  TempNewSymbol runtime = SymbolTable::new_symbol(methodName, CHECK_ABORT_(Handle()));
+  TempNewSymbol sig = SymbolTable::new_symbol(returnType, CHECK_ABORT_(Handle()));
+  JavaValue result(T_OBJECT);
+  JavaCalls::call_static(&result, klass, runtime, sig, CHECK_ABORT_(Handle()));
+  return Handle((oop)result.get_jobject());
+}
+
+void GraalRuntime::initialize_HotSpotGraalRuntime() {
   if (JNIHandles::resolve(_HotSpotGraalRuntime_instance) == NULL) {
-    guarantee(!_HotSpotGraalRuntime_initialized, "cannot reinitialize HotSpotGraalRuntime");
+#ifdef ASSERT
+    // This should only be called in the context of the Graal class being initialized
     Thread* THREAD = Thread::current();
-    check_generated_sources_sha1(CHECK_ABORT_(Handle()));
-    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/HotSpotGraalRuntime", CHECK_ABORT_(Handle()));
-    KlassHandle klass = load_required_class(name);
-    TempNewSymbol runtime = SymbolTable::new_symbol("runtime", CHECK_ABORT_(Handle()));
-    TempNewSymbol sig = SymbolTable::new_symbol("()Lcom/oracle/graal/hotspot/HotSpotGraalRuntime;", CHECK_ABORT_(Handle()));
-    JavaValue result(T_OBJECT);
-    JavaCalls::call_static(&result, klass, runtime, sig, CHECK_ABORT_(Handle()));
-    _HotSpotGraalRuntime_instance = JNIHandles::make_global((oop) result.get_jobject());
+    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/api/runtime/Graal", CHECK_ABORT);
+    instanceKlassHandle klass = InstanceKlass::cast(load_required_class(name));
+    assert(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
+           "HotSpotGraalRuntime initialization should only be triggered through Graal initialization");
+#endif
+
+    Handle result = callInitializer("com/oracle/graal/hotspot/HotSpotGraalRuntime", "runtime",
+                                    "()Lcom/oracle/graal/hotspot/HotSpotGraalRuntime;");
     _HotSpotGraalRuntime_initialized = true;
+    _HotSpotGraalRuntime_instance = JNIHandles::make_global(result());
   }
-  return Handle(JNIHandles::resolve_non_null(_HotSpotGraalRuntime_instance));
+}
+
+void GraalRuntime::initialize_Graal() {
+  if (JNIHandles::resolve(_HotSpotGraalRuntime_instance) == NULL) {
+    callInitializer("com/oracle/graal/api/runtime/Graal",     "getRuntime",      "()Lcom/oracle/graal/api/runtime/GraalRuntime;");
+  }
+  assert(_HotSpotGraalRuntime_initialized == true, "what?");
 }
 
 // private static void CompilerToVMImpl.init()
