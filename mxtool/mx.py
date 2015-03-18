@@ -2823,7 +2823,7 @@ def _chunk_files_for_command_line(files, limit=None, pathFunction=lambda f: f):
         else:
             # Using just SC_ARG_MAX without extra downwards adjustment
             # results in "[Errno 7] Argument list too long" on MacOS.
-            commandLinePrefixAllowance -= 20000
+            commandLinePrefixAllowance = 20000
             syslimit = os.sysconf('SC_ARG_MAX')
             if syslimit == -1:
                 syslimit = 262144 # we could use sys.maxint but we prefer a more robust smaller value
