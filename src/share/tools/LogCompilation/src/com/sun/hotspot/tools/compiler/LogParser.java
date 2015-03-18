@@ -204,7 +204,7 @@ public class LogParser extends DefaultHandler implements ErrorHandler, Constants
                     }
                 } else {
                     if (c == null) {
-                        throw new InternalError("can't find compilation " + ble.getId() + " for " + ble);
+                        // throw new InternalError("can't find compilation " + ble.getId() + " for " + ble);
                     }
                 }
             }
@@ -363,6 +363,17 @@ public class LogParser extends DefaultHandler implements ErrorHandler, Constants
             scopes.peek().last().setReason(search(atts, "reason"));
         } else if (qname.equals("failure")) {
             failureReason = search(atts, "reason");
+        } else if (qname.equals("task_queued")) {
+            String id = makeId(atts);
+            int level = Integer.parseInt(search(atts, "level"));
+            TaskEvent t = new TaskEvent(Double.parseDouble(search(atts, "stamp")), id, level, TaskEvent.Kind.Enqueue);
+            events.add(t);
+        } else if (qname.equals("task_dequeued")) {
+            String id = makeId(atts);
+            int level = Integer.parseInt(search(atts, "level"));
+            TaskEvent t = new TaskEvent(Double.parseDouble(search(atts, "stamp")), id, level, TaskEvent.Kind.Dequeue);
+            t.setComment(search(atts, "comment"));
+            events.add(t);
         } else if (qname.equals("task_done")) {
             compile.setEnd(Double.parseDouble(search(atts, "stamp")));
             if (Integer.parseInt(search(atts, "success")) == 0) {
@@ -425,6 +436,12 @@ public class LogParser extends DefaultHandler implements ErrorHandler, Constants
                                      parseLong(atts.getValue("size")));
             nmethods.put(id, nm);
             events.add(nm);
+
+            int level = Integer.parseInt(search(atts, "level"));
+            if (level > 0) {
+                TaskEvent t = new TaskEvent(Double.parseDouble(search(atts, "stamp")), id, level, TaskEvent.Kind.Finish);
+                events.add(t);
+            }
         } else if (qname.equals("parse")) {
             Method m = method(search(atts, "method"));
             if (scopes.size() == 0) {

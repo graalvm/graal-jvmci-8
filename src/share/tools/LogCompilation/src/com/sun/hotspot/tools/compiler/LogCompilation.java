@@ -45,6 +45,7 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
         System.out.println("  -e:   sort events by elapsed time");
         System.out.println("  -n:   sort events by name and start");
         System.out.println("  -L:   print eliminated locks");
+        System.out.println("  -Q:   print compile queue activity");
         System.exit(exitcode);
     }
 
@@ -54,6 +55,7 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
         boolean printInlining = false;
         boolean cleanup = false;
         boolean printEliminatedLocks = false;
+        boolean printCompileQueue = false;
         int index = 0;
 
         while (args.length > index) {
@@ -80,6 +82,9 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
             } else if (args[index].equals("-L")) {
                 printEliminatedLocks = true;
                 index++;
+            } else if (args[index].equals("-Q")) {
+                printCompileQueue = true;
+                index++;
             } else {
                 break;
             }
@@ -92,32 +97,17 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
         while (index < args.length) {
             ArrayList<LogEvent> events = LogParser.parse(args[index], cleanup);
 
-            if (printEliminatedLocks) {
-                Collections.sort(events, defaultSort);
-                for (LogEvent e : events) {
-                    if (e instanceof Compilation) {
-                        Compilation c = (Compilation) e;
-                        List<JVMState> eliminated = c.getEliminatedLocks();
-                        if (!eliminated.isEmpty()) {
-                            c.print(System.out);
-                            System.out.println("  Eliminated locks");
-                            for (JVMState jvms : eliminated) {
-                                System.err.print("   ");
-                                while (jvms != null) {
-                                    System.out.printf(" %s.%s@%d", jvms.method.getHolder().replace('/', '.'), jvms.method.getName(), jvms.bci);
-                                    jvms = jvms.outer;
-                                }
-                                System.out.println();
-                            }
-                        }
-                    }
-                }
+            if (printCompileQueue) {
+                printCompileQueue(events, System.out);
+            } else if (printEliminatedLocks) {
+                printEliminatedLocks(events, System.out, defaultSort);
             } else if (statistics) {
                 printStatistics(events, System.out);
             } else {
                 Collections.sort(events, defaultSort);
                 for (LogEvent c : events) {
                     if (c instanceof NMethod) continue;
+                    if (c instanceof TaskEvent) continue;
 
                     System.out.printf("%f ", c.getStart());
                     if (printInlining && c instanceof Compilation) {
@@ -131,7 +121,81 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
             index++;
         }
     }
+    
+    public static void printCompileQueue(ArrayList<LogEvent> events, PrintStream out) {
+        int[] levels = new int[5];
+        HashMap<String, TaskEvent> tasks = new HashMap<String, TaskEvent>();
+        
+        out.printf("%7s ", "Stamp");
+        for (int i = 1; i <= 4; i++) {
+            out.printf(" Level%d", i);
+        }
+        out.printf("   %10s", "Kind");
+        out.println();
+        for (LogEvent e : events) {
+            if (e instanceof TaskEvent) {
+                boolean demoted = false;
+                TaskEvent t = (TaskEvent) e;
+                TaskEvent start = tasks.get(t.getId());
+                switch (t.getKind()) {
+                case Enqueue:
+                    assert start == null;
+                    levels[t.getLevel()] = levels[t.getLevel()] + 1;
+                    tasks.put(t.getId(), t);
+                    break;
+                    
+                case Finish:
+                case Dequeue:
+                    if (start != null && start.getLevel() != t.getLevel()) {
+                        // Sometimes tasks are moved to a lower
+                        // compilation level when the queue fills.
+                        demoted = true;
+                        levels[start.getLevel()] = levels[start.getLevel()] - 1;
+                    } else {
+                        levels[t.getLevel()] = levels[t.getLevel()] - 1;
+                    }
+                    break;
+                default:
+                    throw new InternalError();
+                }
+                out.printf("%7.3f ", t.getStart());
+                for (int i = 1; i <= 4; i++) {
+                    out.printf(" %6d", levels[i]);
+                }
+                out.printf("   %10s", t.getKind());
+                if (t.getComment() != null) {
+                    out.printf(" %s", t.getComment());
+                }
+                if (demoted) {
+                    out.printf("  %d->%d", start.getLevel(), t.getLevel());
+                }
+                out.println();
+            }
+        }
+    }
 
+    public static void printEliminatedLocks(ArrayList<LogEvent> events, PrintStream out, Comparator<LogEvent> defaultSort) {
+        Collections.sort(events, defaultSort);
+        for (LogEvent e : events) {
+            if (e instanceof Compilation) {
+                Compilation c = (Compilation) e;
+                List<JVMState> eliminated = c.getEliminatedLocks();
+                if (!eliminated.isEmpty()) {
+                    c.print(out);
+                    out.println("  Eliminated locks");
+                    for (JVMState jvms : eliminated) {
+                        System.err.print("   ");
+                        while (jvms != null) {
+                            out.printf(" %s.%s@%d", jvms.method.getHolder().replace('/', '.'), jvms.method.getName(), jvms.bci);
+                            jvms = jvms.outer;
+                        }
+                        out.println();
+                    }
+                }
+            }
+        }
+    }
+    
     public static void printStatistics(ArrayList<LogEvent> events, PrintStream out) {
         long cacheSize = 0;
         long maxCacheSize = 0;
