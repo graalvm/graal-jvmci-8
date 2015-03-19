@@ -558,6 +558,24 @@ void CompileTask::log_task_queued() {
 
 
 // ------------------------------------------------------------------
+// CompileTask::log_task_dequeued
+void CompileTask::log_task_dequeued(const char* comment) {
+  if (LogCompilation && xtty != NULL) {
+    Thread* thread = Thread::current();
+    ttyLocker ttyl;
+    ResourceMark rm(thread);
+
+    xtty->begin_elem("task_dequeued");
+    log_task(xtty);
+    if (comment != NULL) {
+      xtty->print(" comment='%s'", comment);
+    }
+    xtty->end_elem();
+  }
+}
+
+
+// ------------------------------------------------------------------
 // CompileTask::log_task_start
 void CompileTask::log_task_start(CompileLog* log)   {
   log->begin_head("task");
@@ -1202,10 +1220,12 @@ void CompileBroker::compile_method_base(methodHandle method,
         blocking = false;
       }
 
-      // Don't allow blocking compiles if inside a class initializer
+      // Don't allow blocking compiles if inside a class initializer or while performing class loading
       vframeStream vfst((JavaThread*) thread);
       for (; !vfst.at_end(); vfst.next()) {
-        if (vfst.method()->is_static_initializer()) {
+        if (vfst.method()->is_static_initializer() ||
+            (vfst.method()->method_holder()->is_subclass_of(SystemDictionary::ClassLoader_klass()) &&
+             vfst.method()->name() == vmSymbols::loadClass_name())) {
           blocking = false;
           break;
         }

@@ -55,6 +55,13 @@ bool SimpleThresholdPolicy::loop_predicate_helper(int i, int b, double scale) {
 // Determine if a given method is such a case.
 bool SimpleThresholdPolicy::is_trivial(Method* method) {
   if (method->is_accessor()) return true;
+#ifdef COMPILERGRAAL
+  if (TieredCompilation && GraalCompileWithC1Only &&
+      SystemDictionary::graal_loader() != NULL &&
+      method->method_holder()->class_loader() == SystemDictionary::graal_loader()) {
+    return true;
+  }
+#endif
   if (method->code() != NULL) {
     MethodData* mdo = method->method_data();
     if (mdo != NULL && mdo->num_loops() == 0 &&
