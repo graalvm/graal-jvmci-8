@@ -18,15 +18,11 @@
             <attr name="enabled" boolvalue="false"/>
         </file>
         
-        <file name="Graal Reduce Begin-End" url="filters/beginend.filter">
+        <file name="Graal Reduce Edges" url="filters/reduceEdges.filter">
             <attr name="enabled" boolvalue="false"/>
         </file>
         
         <file name="Graal Remove FrameState" url="filters/noframestate.filter">
-            <attr name="enabled" boolvalue="false"/>
-        </file>
-        
-        <file name="Graal Mark FrameState With Lock" url="filters/framestatelocks.filter">
             <attr name="enabled" boolvalue="false"/>
         </file>
         

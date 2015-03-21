@@ -34,7 +34,7 @@ import javax.swing.Icon;
  */
 public class ColorIcon implements Icon {
 
-    private Color color;
+    private final Color color;
 
     public ColorIcon(Color c) {
         color = c;
@@ -42,8 +42,10 @@ public class ColorIcon implements Icon {
 
     @Override
     public void paintIcon(Component c, Graphics g, int x, int y) {
+        Color oldColor = g.getColor();
         g.setColor(color);
         g.fillRect(x, y, 16, 16);
+        g.setColor(oldColor);
     }
 
     @Override

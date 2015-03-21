@@ -706,7 +706,8 @@ public class BinaryParser implements GraphParser {
     private void parseNodes(InputGraph graph) throws IOException {
         int count = readInt();
         Map<String, Object> props = new HashMap<>();
-        List<Edge> edges = new LinkedList<>();
+        List<Edge> inputEdges = new ArrayList<>(count);
+        List<Edge> succEdges = new ArrayList<>(count);
         for (int i = 0; i < count; i++) {
             int id = readInt();
             InputNode node = new InputNode(id);
@@ -733,7 +734,7 @@ public class BinaryParser implements GraphParser {
                     props.put(key, value);
                 }
             }
-            int edgesStart = edges.size();
+            ArrayList<Edge> currentEdges = new ArrayList<>();
             int portNum = 0;
             for (TypedPort p : nodeClass.inputs) {
                 if (p.isList) {
@@ -741,14 +742,18 @@ public class BinaryParser implements GraphParser {
                     for (int j = 0; j < size; j++) {
                         int in = readInt();
                         if (in >= 0) {
-                            edges.add(new Edge(in, id, (char) (preds + portNum), p.name + "[" + j + "]", p.type.toString(Length.S), true));
+                            Edge e = new Edge(in, id, (char) (preds + portNum), p.name + "[" + j + "]", p.type.toString(Length.S), true);
+                            currentEdges.add(e);
+                            inputEdges.add(e);
                             portNum++;
                         }
                     }
                 } else {
                     int in = readInt();
                     if (in >= 0) {
-                        edges.add(new Edge(in, id, (char) (preds + portNum), p.name, p.type.toString(Length.S), true));
+                        Edge e = new Edge(in, id, (char) (preds + portNum), p.name, p.type.toString(Length.S), true);
+                        currentEdges.add(e);
+                        inputEdges.add(e);
                         portNum++;
                     }
                 }
@@ -761,19 +766,23 @@ public class BinaryParser implements GraphParser {
                     for (int j = 0; j < size; j++) {
                         int sux = readInt();
                         if (sux >= 0) {
-                            edges.add(new Edge(id, sux, (char) portNum, p.name + "[" + j + "]", "Successor", false));
+                            Edge e = new Edge(id, sux, (char) portNum, p.name + "[" + j + "]", "Successor", false);
+                            currentEdges.add(e);
+                            succEdges.add(e);
                             portNum++;
                         }
                     }
                 } else {
                     int sux = readInt();
                     if (sux >= 0) {
-                        edges.add(new Edge(id, sux, (char) portNum, p.name, "Successor", false));
+                        Edge e = new Edge(id, sux, (char) portNum, p.name, "Successor", false);
+                        currentEdges.add(e);
+                        succEdges.add(e);
                         portNum++;
                     }
                 }
             }
-            properties.setProperty("name", createName(edges.subList(edgesStart, edges.size()), props, nodeClass.nameTemplate));
+            properties.setProperty("name", createName(currentEdges, props, nodeClass.nameTemplate));
             properties.setProperty("class", nodeClass.className);
             switch (nodeClass.className) {
                 case "BeginNode":
@@ -786,9 +795,20 @@ public class BinaryParser implements GraphParser {
             graph.addNode(node);
             props.clear();
         }
-        for (Edge e : edges) {
-            char fromIndex = e.input ? 1 : e.num;
-            char toIndex = e.input ? e.num : 0;
+        
+        Set<InputNode> nodesWithSuccessor = new HashSet<>();
+        
+        for (Edge e : succEdges) {
+            assert !e.input;
+            char fromIndex = e.num;
+            nodesWithSuccessor.add(graph.getNode(e.from));
+            char toIndex = 0;
+            graph.addEdge(InputEdge.createImmutable(fromIndex, toIndex, e.from, e.to, e.label, e.type));
+        }
+        for (Edge e : inputEdges) {
+            assert e.input;
+            char fromIndex = (char) (nodesWithSuccessor.contains(graph.getNode(e.from)) ? 1 : 0);
+            char toIndex = e.num;
             graph.addEdge(InputEdge.createImmutable(fromIndex, toIndex, e.from, e.to, e.label, e.type));
         }
     }

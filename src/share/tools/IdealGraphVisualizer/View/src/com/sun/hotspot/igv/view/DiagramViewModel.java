@@ -246,7 +246,7 @@ public class DiagramViewModel extends RangeSliderModel implements ChangedListene
                         if (last == null) {
                             curColor = Color.green;
                         } else {
-                            if (last.equals(cur)) {
+                            if (last.equals(cur) && last.getProperties().equals(cur.getProperties())) {
                                 if (curColor == Color.black) {
                                     curColor = Color.white;
                                 }
@@ -268,7 +268,6 @@ public class DiagramViewModel extends RangeSliderModel implements ChangedListene
     }
 
     public void showNot(final Set<Integer> nodes) {
-        System.out.println("Shownot called with " + nodes);
         setHiddenNodes(nodes);
     }
 

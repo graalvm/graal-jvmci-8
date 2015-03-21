@@ -271,7 +271,7 @@ public class Properties implements Serializable, Iterable<Property> {
             } else {
                 sb.append(", ");
             }
-            sb.append(p[0] + "=" + p[1]);
+            sb.append(p[0]).append("=").append(p[1]);
         }
         return sb.append("]").toString();
     }

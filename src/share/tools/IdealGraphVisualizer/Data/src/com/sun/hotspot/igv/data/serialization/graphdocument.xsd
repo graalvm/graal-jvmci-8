@@ -109,6 +109,7 @@
         <xsd:attribute name="from" type="xsd:int" use="required" />
         <xsd:attribute name="to" type="xsd:int" use="required" />
         <xsd:attribute name="label" type="xsd:string" use="optional" />
+        <xsd:attribute name="type" type="xsd:string" use="optional" />
         <xsd:attribute name="fromIndex" type="xsd:int" use="optional" />
         
         <!-- These are aliases and should be mutually exclusive -->
