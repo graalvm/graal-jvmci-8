@@ -137,7 +137,7 @@ public abstract class SlotWidget extends Widget implements DoubleClickHandler {
                     g.fillOval(w / 2 - r, Figure.SLOT_START - r, 2 * r, 2 * r);
                 }
             } else {
-                // Do not paint a slot without connections.
+                // Do not paint a slot with connections.
             }
         }
     }
