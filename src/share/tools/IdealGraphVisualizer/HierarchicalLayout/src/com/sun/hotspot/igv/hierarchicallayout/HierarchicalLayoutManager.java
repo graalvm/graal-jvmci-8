@@ -526,7 +526,7 @@ public class HierarchicalLayoutManager implements LayoutManager {
                 }
             }
             int n2VIP = 0;
-            for (LayoutEdge e : n1.preds) {
+            for (LayoutEdge e : n2.preds) {
                 if (e.vip) {
                     n2VIP++;
                 }
@@ -563,7 +563,7 @@ public class HierarchicalLayoutManager implements LayoutManager {
                 }
             }
             int n2VIP = 0;
-            for (LayoutEdge e : n1.succs) {
+            for (LayoutEdge e : n2.succs) {
                 if (e.vip) {
                     n2VIP++;
                 }
