@@ -825,7 +825,7 @@ public class BinaryParser implements GraphParser {
                 case "i":
                     StringBuilder inputString = new StringBuilder();
                     for(Edge edge : edges) {
-                        if (name.equals(edge.label)) {
+                        if (edge.label.startsWith(name) && (name.length() == edge.label.length() || edge.label.charAt(name.length()) == '[')) {
                             if (inputString.length() > 0) {
                                 inputString.append(", ");
                             }

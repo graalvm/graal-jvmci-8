@@ -657,15 +657,31 @@ public class HierarchicalLayoutManager implements LayoutManager {
             if (size == 0) {
                 return n.x;
             }
-            int[] values = new int[size];
-            for (int i = 0; i < size; i++) {
-                LayoutEdge e = n.preds.get(i);
-                values[i] = e.from.x + e.relativeFrom - e.relativeTo;
+            int vipCount = 0;
+            for (LayoutEdge e : n.preds) {
                 if (e.vip) {
-                    return values[i];
+                    vipCount++;
                 }
             }
-            return median(values);
+
+            if (vipCount == 0) {
+                int[] values = new int[size];
+                for (int i = 0; i < size; i++) {
+                    LayoutEdge e = n.preds.get(i);
+                    values[i] = e.from.x + e.relativeFrom - e.relativeTo;
+                }
+                return median(values);
+            } else {
+                int z = 0;
+                int[] values = new int[vipCount];
+                for (int i = 0; i < size; i++) {
+                    LayoutEdge e = n.preds.get(i);
+                    if (e.vip) {
+                        values[z++] = e.from.x + e.relativeFrom - e.relativeTo;
+                    }
+                }
+                return median(values);
+            }
         }
 
         private int calculateOptimalBoth(LayoutNode n) {
@@ -1698,6 +1714,13 @@ public class HierarchicalLayoutManager implements LayoutManager {
 
         @Override
         public int compare(Link l1, Link l2) {
+            if (l1.isVIP() && !l2.isVIP()) {
+                return -1;
+            }
+            
+            if (!l1.isVIP() && l2.isVIP()) {
+                return 1;
+            }
 
             int result = l1.getFrom().getVertex().compareTo(l2.getFrom().getVertex());
             if (result != 0) {
@@ -1746,9 +1769,9 @@ public class HierarchicalLayoutManager implements LayoutManager {
                 edge.relativeFrom = l.getFrom().getRelativePosition().x;
                 edge.relativeTo = l.getTo().getRelativePosition().x;
                 edge.link = l;
+                edge.vip = l.isVIP();
                 edge.from.succs.add(edge);
                 edge.to.preds.add(edge);
-                edge.vip = l.isVIP();
                 //assert edge.from != edge.to; // No self-loops allowed
             }
 
