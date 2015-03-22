@@ -1,5 +1,5 @@
 colorize("name", ".*", white);
-colorize("name", "Begin|EndNode|LoopBegin|LoopEnd|LoopExit|Return", orange);
+colorize("name", "Begin|KillingBegin|EndNode|LoopBegin|LoopEnd|LoopExit|Return", orange);
 colorize("name", "Phi.*|ValueProxy", magenta);
 colorize("name", "FrameState@.*", new java.awt.Color(0.5, 0.8, 1.0));
 colorize("name", "If|Merge", pink);
