@@ -59,17 +59,16 @@ public abstract class SlotWidget extends Widget implements DoubleClickHandler {
         this.setToolTipText("<HTML>" + slot.getToolTipText() + "</HTML>");
         this.setCheckClipping(true);
         parent.addChild(this);
-        
+
         //this.setPreferredBounds(this.calculateClientArea());
     }
-    
-    
+
     @Override
     protected void notifyStateChanged(ObjectState previousState, ObjectState state) {
         super.notifyStateChanged(previousState, state);
-	repaint();
+        repaint();
     }
-    
+
     public Slot getSlot() {
         return slot;
     }
@@ -86,58 +85,59 @@ public abstract class SlotWidget extends Widget implements DoubleClickHandler {
         }
 
         Graphics2D g = this.getGraphics();
-       // g.setColor(Color.DARK_GRAY);
+        // g.setColor(Color.DARK_GRAY);
         int w = this.getBounds().width;
         int h = this.getBounds().height;
 
-        if(getSlot().getSource().getSourceNodes().size() > 0) {
+        if (getSlot().getSource().getSourceNodes().size() > 0) {
             final int SMALLER = 0;
             g.setColor(getSlot().getColor());
 
             int FONT_OFFSET = 2;
-            
+
             int s = h - SMALLER;
             int rectW = s;
-            
+
             Font font = this.getSlot().getFigure().getDiagram().getSlotFont();
-            if(this.getState().isSelected()) {
+            if (this.getState().isSelected()) {
                 font = font.deriveFont(Font.BOLD);
             }
-            
+
             if (getSlot().getShortName() != null && getSlot().getShortName().length() > 0) {
                 g.setFont(font);
                 Rectangle2D r1 = g.getFontMetrics().getStringBounds(getSlot().getShortName(), g);
-                rectW = (int)r1.getWidth() + FONT_OFFSET * 2;
+                rectW = (int) r1.getWidth() + FONT_OFFSET * 2;
             }
-            g.fillRect(w/2 - rectW/2, 0, rectW-1, s-1);
-            
-            if(this.getState().isHighlighted()) {
+            g.fillRect(w / 2 - rectW / 2, 0, rectW - 1, s - 1);
+
+            if (this.getState().isHighlighted()) {
                 g.setColor(Color.BLUE);
             } else {
                 g.setColor(Color.BLACK);
             }
-            g.drawRect(w/2 - rectW/2, 0, rectW-1, s-1);
-            
-            
+            g.drawRect(w / 2 - rectW / 2, 0, rectW - 1, s - 1);
+
             if (getSlot().getShortName() != null && getSlot().getShortName().length() > 0 && getScene().getZoomFactor() >= TEXT_ZOOM_FACTOR) {
                 Rectangle2D r1 = g.getFontMetrics().getStringBounds(getSlot().getShortName(), g);
-                g.drawString(getSlot().getShortName(), (int) (w - r1.getWidth()) / 2, g.getFontMetrics().getAscent()-1);//(int) (r1.getHeight()));
+                g.drawString(getSlot().getShortName(), (int) (w - r1.getWidth()) / 2, g.getFontMetrics().getAscent() - 1);//(int) (r1.getHeight()));
             }
-            
+
         } else {
 
-            if(this.getState().isHighlighted()) {
-                g.setColor(Color.BLUE);
+            if (this.getSlot().getConnections().isEmpty()) {
+                if (this.getState().isHighlighted()) {
+                    g.setColor(Color.BLUE);
+                } else {
+                    g.setColor(Color.BLACK);
+                }
+                int r = 2;
+                if (slot instanceof OutputSlot) {
+                    g.fillOval(w / 2 - r, Figure.SLOT_WIDTH - Figure.SLOT_START - r, 2 * r, 2 * r);
+                } else {
+                    g.fillOval(w / 2 - r, Figure.SLOT_START - r, 2 * r, 2 * r);
+                }
             } else {
-                g.setColor(Color.BLACK);
-            }
-            int r = 2;
-            if (slot instanceof OutputSlot) {
-                g.fillOval(w/2-r, Figure.SLOT_WIDTH - Figure.SLOT_START - r, 2*r, 2*r);
-                //g.fillArc(w / 2 - r, -r, 2*r, 2*r, 180, 180);
-            } else {
-                g.fillOval(w/2-r, Figure.SLOT_START - r, 2*r, 2*r);
-                //g.fillArc(w / 2 - r, h - r, 2*r, 2*r, 0, 180);
+                // Do not paint a slot with connections.
             }
         }
     }
@@ -146,9 +146,9 @@ public abstract class SlotWidget extends Widget implements DoubleClickHandler {
     protected Rectangle calculateClientArea() {
         return new Rectangle(0, 0, slot.getWidth(), Figure.SLOT_WIDTH);
     }
- 
+
     protected abstract int calculateSlotWidth();
-    
+
     protected int calculateWidth(int count) {
         return getFigureWidget().getFigure().getWidth() / count;
     }
@@ -158,19 +158,19 @@ public abstract class SlotWidget extends Widget implements DoubleClickHandler {
         Set<Integer> hiddenNodes = new HashSet<>(diagramScene.getModel().getHiddenNodes());
         if (diagramScene.isAllVisible()) {
             hiddenNodes = new HashSet<>(diagramScene.getModel().getGraphToView().getGroup().getAllNodes());
-        } 
+        }
 
         boolean progress = false;
-        for(Figure f : diagramScene.getModel().getDiagramToView().getFigures()) {
-            for(Slot s : f.getSlots()) {
-                if(DiagramScene.doesIntersect(s.getSource().getSourceNodesAsSet(), slot.getSource().getSourceNodesAsSet())) {
+        for (Figure f : diagramScene.getModel().getDiagramToView().getFigures()) {
+            for (Slot s : f.getSlots()) {
+                if (DiagramScene.doesIntersect(s.getSource().getSourceNodesAsSet(), slot.getSource().getSourceNodesAsSet())) {
                     progress = true;
                     hiddenNodes.removeAll(f.getSource().getSourceNodesAsSet());
                 }
             }
         }
 
-        if(progress) {
+        if (progress) {
             this.diagramScene.getModel().showNot(hiddenNodes);
         }
     }

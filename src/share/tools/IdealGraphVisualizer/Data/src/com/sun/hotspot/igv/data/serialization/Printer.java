@@ -240,6 +240,7 @@ public class Printer {
         }
         p.setProperty(Parser.TO_PROPERTY, Integer.toString(edge.getTo()));
         p.setProperty(Parser.FROM_PROPERTY, Integer.toString(edge.getFrom()));
+        p.setProperty(Parser.TYPE_PROPERTY, edge.getType());
         return p;
     }
 }

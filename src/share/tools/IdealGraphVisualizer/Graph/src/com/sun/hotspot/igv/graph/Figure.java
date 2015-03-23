@@ -33,14 +33,10 @@ import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.*;
 
-/**
- *
- * @author Thomas Wuerthinger
- */
 public class Figure extends Properties.Entity implements Source.Provider, Vertex {
 
-    public static final int INSET = 12;
-    public static int SLOT_WIDTH = 12;
+    public static final int INSET = 8;
+    public static int SLOT_WIDTH = 10;
     public static final int OVERLAPPING = 6;
     public static final int SLOT_START = 4;
     public static final int SLOT_OFFSET = 8;

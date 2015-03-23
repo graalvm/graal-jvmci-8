@@ -71,6 +71,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     private Lookup lookup;
     private InstanceContent content;
     private Action[] actions;
+    private Action[] actionsWithSelection;
     private LayerWidget connectionLayer;
     private JScrollPane scrollPane;
     private UndoRedo.Manager undoRedoManager;
@@ -100,7 +101,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     public static final float ZOOM_MAX_FACTOR = 3.0f;
     public static final float ZOOM_MIN_FACTOR = 0.0f;//0.15f;
     public static final float ZOOM_INCREMENT = 1.5f;
-    public static final int SLOT_OFFSET = 6;
+    public static final int SLOT_OFFSET = 8;
     public static final int ANIMATION_LIMIT = 40;
     
     private PopupMenuProvider popupMenuProvider = new PopupMenuProvider() {
@@ -374,9 +375,10 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
         }
     };
 
-    public DiagramScene(Action[] actions, DiagramViewModel model) {
+    public DiagramScene(Action[] actions, Action[] actionsWithSelection, DiagramViewModel model) {
 
         this.actions = actions;
+        this.actionsWithSelection = actionsWithSelection;
 
         content = new InstanceContent();
         lookup = new AbstractLookup(content);
@@ -399,6 +401,9 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
         blockLayer = new LayerWidget(this);
         this.addChild(blockLayer);
 
+        connectionLayer = new LayerWidget(this);
+        this.addChild(connectionLayer);
+
         mainLayer = new LayerWidget(this);
         this.addChild(mainLayer);
 
@@ -409,9 +414,6 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
         bottomRight = new Widget(this);
         bottomRight.setPreferredLocation(new Point(-BORDER_SIZE, -BORDER_SIZE));
         this.addChild(bottomRight);
-
-        connectionLayer = new LayerWidget(this);
-        this.addChild(connectionLayer);
 
         LayerWidget selectionLayer = new LayerWidget(this);
         this.addChild(selectionLayer);
@@ -451,12 +453,21 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     }
     
     public boolean isAllVisible() {
-        return getModel().getHiddenNodes().size() == 0;
+        return getModel().getHiddenNodes().isEmpty();
     }
 
     public Action createGotoAction(final Figure f) {
         final DiagramScene diagramScene = this;
-        Action a = new AbstractAction() {
+        String name = f.getLines()[0];
+
+        name += " (";
+
+        final boolean hidden = !this.getWidget(f, FigureWidget.class).isVisible();
+        if (hidden) {
+            name += "hidden";
+        }
+        name += ")";
+        Action a = new AbstractAction(name, new ColorIcon(f.getColor())) {
 
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -465,16 +476,6 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
         };
 
         a.setEnabled(true);
-        a.putValue(Action.SMALL_ICON, new ColorIcon(f.getColor()));
-        String name = f.getLines()[0];
-
-        name += " (";
-
-        if (!this.getWidget(f, FigureWidget.class).isVisible()) {
-            name += "hidden";
-        }
-        name += ")";
-        a.putValue(Action.NAME, name);
         return a;
     }
 
@@ -538,8 +539,6 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     }
 
     private void smallUpdate(boolean relayout) {
-
-        System.out.println("smallUpdate " + relayout);
         this.updateHiddenNodes(model.getHiddenNodes(), relayout);
         boolean b = this.getUndoRedoEnabled();
         this.setUndoRedoEnabled(false);
@@ -559,8 +558,6 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     }
 
     private void relayout(Set<Widget> oldVisibleWidgets) {
-        System.out.println("relayout called with old visible widgets: " + oldVisibleWidgets);
-
         Diagram diagram = getModel().getDiagramToView();
 
         HashSet<Figure> figures = new HashSet<>();
@@ -588,8 +585,6 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     private Set<Pair<Point, Point>> lineCache = new HashSet<>();
 
     private void relayoutWithoutLayout(Set<Widget> oldVisibleWidgets) {
-
-        System.out.println("relayout without layout with visible widgets: " + oldVisibleWidgets);
 
         Diagram diagram = getModel().getDiagramToView();
 
@@ -958,8 +953,6 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
 
     private void updateHiddenNodes(Set<Integer> newHiddenNodes, boolean doRelayout) {
 
-        System.out.println("newHiddenNodes: " + newHiddenNodes);
-
         Diagram diagram = getModel().getDiagramToView();
         assert diagram != null;
 
@@ -1027,7 +1020,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     private void showFigure(Figure f) {
         HashSet<Integer> newHiddenNodes = new HashSet<>(getModel().getHiddenNodes());
         newHiddenNodes.removeAll(f.getSource().getSourceNodesAsSet());
-        updateHiddenNodes(newHiddenNodes, true);
+        this.model.setHiddenNodes(newHiddenNodes);
     }
 
     public void show(final Figure f) {
@@ -1062,7 +1055,12 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
 
     public JPopupMenu createPopupMenu() {
         JPopupMenu menu = new JPopupMenu();
-        for (Action a : actions) {
+        
+        Action[] currentActions = actionsWithSelection;
+        if (this.getSelectedObjects().isEmpty()) {
+            currentActions = actions;
+        }
+        for (Action a : currentActions) {
             if (a == null) {
                 menu.addSeparator();
             } else {

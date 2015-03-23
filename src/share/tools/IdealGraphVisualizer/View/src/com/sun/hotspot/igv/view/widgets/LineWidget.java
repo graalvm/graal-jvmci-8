@@ -109,7 +109,6 @@ public class LineWidget extends Widget implements PopupMenuProvider {
         if (connections.size() > 0) {
             color = connections.get(0).getColor();
         }
-
         this.setToolTipText("<HTML>" + generateToolTipText(this.connections) + "</HTML>");
 
         this.setCheckClipping(true);
@@ -203,7 +202,7 @@ public class LineWidget extends Widget implements PopupMenuProvider {
         g.drawLine(from.x, from.y, to.x, to.y);
 
         boolean sameFrom = false;
-        boolean sameTo = successors.size() == 0;
+        boolean sameTo = successors.isEmpty();
         for (LineWidget w : successors) {
             if (w.getFrom().equals(getTo())) {
                 sameTo = true;

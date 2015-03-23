@@ -33,7 +33,7 @@ public interface LayoutManager {
 
     public void doLayout(LayoutGraph graph);
 
-    public void doLayout(LayoutGraph graph, Set<? extends Vertex> firstLayerHint, Set<? extends Vertex> lastLayerHint, Set<? extends Link> importantLinks);
+    public void doLayout(LayoutGraph graph, Set<? extends Link> importantLinks);
 
     public void doRouting(LayoutGraph graph);
 }

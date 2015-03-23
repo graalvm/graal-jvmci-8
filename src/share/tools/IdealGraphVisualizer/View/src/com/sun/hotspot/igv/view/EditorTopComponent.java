@@ -178,11 +178,16 @@ public final class EditorTopComponent extends TopComponent implements PropertyCh
             null,
             ZoomInAction.get(ZoomInAction.class),
             ZoomOutAction.get(ZoomOutAction.class),
+        };
+
+        
+        Action[] actionsWithSelection = new Action[]{
+            ExtractAction.get(ExtractAction.class),
+            ShowAllAction.get(HideAction.class),
             null,
             ExpandPredecessorsAction.get(ExpandPredecessorsAction.class),
             ExpandSuccessorsAction.get(ExpandSuccessorsAction.class)
         };
-
 
         initComponents();
 
@@ -201,7 +206,7 @@ public final class EditorTopComponent extends TopComponent implements PropertyCh
         JScrollPane pane = new JScrollPane(rangeSlider, ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         container.add(BorderLayout.CENTER, pane);
 
-        scene = new DiagramScene(actions, rangeSliderModel);
+        scene = new DiagramScene(actions, actionsWithSelection, rangeSliderModel);
         content = new InstanceContent();
         graphContent = new InstanceContent();
         this.associateLookup(new ProxyLookup(new Lookup[]{scene.getLookup(), new AbstractLookup(graphContent), new AbstractLookup(content)}));

@@ -75,6 +75,7 @@ public class Parser implements GraphParser {
     public static final String NODE_ID_PROPERTY = "id";
     public static final String FROM_PROPERTY = "from";
     public static final String TO_PROPERTY = "to";
+    public static final String TYPE_PROPERTY = "type";
     public static final String PROPERTY_NAME_PROPERTY = "name";
     public static final String GRAPH_NAME_PROPERTY = "name";
     public static final String FROM_INDEX_PROPERTY = "fromIndex";
@@ -387,6 +388,7 @@ public class Parser implements GraphParser {
             int from = -1;
             int to = -1;
             String label = null;
+            String type = null;
 
             try {
                 String fromIndexString = readAttribute(FROM_INDEX_PROPERTY);
@@ -403,6 +405,7 @@ public class Parser implements GraphParser {
                 }
 
                 label = readAttribute(LABEL_PROPERTY);
+                type = readAttribute(TYPE_PROPERTY);
 
                 from = lookupID(readRequiredAttribute(FROM_PROPERTY));
                 to = lookupID(readRequiredAttribute(TO_PROPERTY));
@@ -410,7 +413,7 @@ public class Parser implements GraphParser {
                 throw new SAXException(e);
             }
 
-            InputEdge conn = new InputEdge((char) fromIndex, (char) toIndex, from, to, label, "");
+            InputEdge conn = new InputEdge((char) fromIndex, (char) toIndex, from, to, label, type == null ? "" : type);
             return start(conn);
         }
 

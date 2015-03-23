@@ -33,7 +33,6 @@ import com.sun.hotspot.igv.graph.InputSlot;
 import java.awt.Color;
 import java.util.HashMap;
 import java.util.List;
-import java.util.regex.Pattern;
 
 /**
  * Filter that colors usage and successor edges differently.
@@ -42,7 +41,7 @@ import java.util.regex.Pattern;
  */
 public class GraalEdgeColorFilter extends AbstractFilter {
 
-    private HashMap<String,Color> usageColor = new HashMap<>();
+    private final HashMap<String,Color> usageColor = new HashMap<>();
     private Color otherUsageColor = Color.BLACK;
 
     public GraalEdgeColorFilter() {
