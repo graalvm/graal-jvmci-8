@@ -41,8 +41,9 @@ public class Diagram {
     private InputGraph graph;
     private int curId;
     private String nodeText;
-    private Font font;
-    private Font slotFont;
+    private final Font font;
+    private final Font slotFont;
+    private final Font boldFont;
 
     public Font getFont() {
         return font;
@@ -51,12 +52,17 @@ public class Diagram {
     public Font getSlotFont() {
         return slotFont;
     }
+
+    public Font getBoldFont() {
+        return boldFont;
+    }
     
     private Diagram() {
         figures = new ArrayList<>();
         this.nodeText = "";
-        this.font = new Font("Arial", Font.PLAIN, 13);
+        this.font = new Font("Arial", Font.PLAIN, 12);
         this.slotFont = new Font("Arial", Font.PLAIN, 10);
+        this.boldFont = this.font.deriveFont(Font.BOLD);
     }
 
     public String getNodeText() {
