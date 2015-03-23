@@ -1434,7 +1434,7 @@ class Task:
     def __init__(self, title, tasks=None):
         self.tasks = tasks
         self.title = title
-        self.skipped = Task.filters is not None and not any([f in title for f in Task.filters])
+        self.skipped = tasks is not None and Task.filters is not None and not any([f in title for f in Task.filters])
         if not self.skipped:
             self.start = time.time()
             self.end = None
