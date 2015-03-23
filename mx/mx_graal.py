@@ -1428,7 +1428,7 @@ class Task:
     # None or a list of strings. If not None, only tasks whose title
     # matches at least one of the substrings in this list will return
     # a non-None value from __enter__. The body of a 'with Task(...) as t'
-    # statement should check 't' and exit immediately if it is None. 
+    # statement should check 't' and exit immediately if it is None.
     filters = None
 
     def __init__(self, title, tasks=None):
