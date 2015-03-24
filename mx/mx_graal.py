@@ -1488,6 +1488,10 @@ def ctw(args):
         vmargs += ['-G:CompileTheWorldClasspath=' + jar]
     else:
         vmargs += ['-Xbootclasspath/p:' + jar]
+
+    # suppress menubar and dock when running on Mac
+    vmargs = ['-Djava.awt.headless=true'] + vmargs
+
     vm(vmargs)
 
 def _basic_gate_body(args, tasks):
