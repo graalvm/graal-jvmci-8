@@ -1504,6 +1504,11 @@ def _basic_gate_body(args, tasks):
         with Task('UnitTests:hosted-product', tasks) as t:
             if t: unittest(['--enable-timing', '--verbose', '--fail-fast'])
 
+    # Run ctw against rt.jar on server-hosted-graal
+    with VM('server', 'product'):
+        with Task('CTW:hosted-product', tasks) as t:
+            if t: ctw(['--ctwopts', '-Inline +ExitVMOnException', '-esa', '-G:+CompileTheWorldMultiThreaded', '-G:-CompileTheWorldVerbose'])
+
     # Build the other VM flavors
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks) as t:
         if t: buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product'])
