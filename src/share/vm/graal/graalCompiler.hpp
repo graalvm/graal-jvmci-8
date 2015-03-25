@@ -87,9 +87,7 @@ public:
 
   static elapsedTimer* codeInstallTimer() { return &_codeInstallTimer; }
 
-#ifndef PRODUCT
   void compile_the_world();
-#endif
 };
 
 #endif // SHARE_VM_GRAAL_GRAAL_COMPILER_HPP

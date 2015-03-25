@@ -155,7 +155,6 @@ void GraalCompiler::print_compilation_timers() {
   tty->print_cr("       Graal code install time:        %6.3f s",    _codeInstallTimer.seconds());
 }
 
-#ifndef PRODUCT
 void GraalCompiler::compile_the_world() {
   HandleMark hm;
   JavaThread* THREAD = JavaThread::current();
@@ -167,4 +166,3 @@ void GraalCompiler::compile_the_world() {
   args.push_oop(GraalRuntime::get_HotSpotGraalRuntime());
   JavaCalls::call_special(&result, klass, compileTheWorld, vmSymbols::void_method_signature(), &args, CHECK_ABORT);
 }
-#endif
