@@ -687,8 +687,17 @@ public class BinaryParser implements GraphParser {
             int nodeCount = readInt();
             for (int j = 0; j < nodeCount; j++) {
                 int nodeId = readInt();
-                block.addNode(nodeId);
-                graph.getNode(nodeId).getProperties().setProperty("block", name);
+                if (nodeId < 0) {
+                    continue;
+                }
+                final Properties properties = graph.getNode(nodeId).getProperties();
+                final String oldBlock = properties.get("block");
+                if(oldBlock != null) {
+                    properties.setProperty("block", oldBlock + ", " + name);
+                } else {
+                    block.addNode(nodeId);
+                    properties.setProperty("block", name);
+                }
             }
             int edgeCount = readInt();
             for (int j = 0; j < edgeCount; j++) {
