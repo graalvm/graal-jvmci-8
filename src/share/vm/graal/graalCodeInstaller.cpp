@@ -203,7 +203,7 @@ static void record_metadata_in_patch(Handle& constant, OopRecorder* oop_recorder
   record_metadata_reference(HotSpotMetaspaceConstantImpl::metaspaceObject(constant), HotSpotMetaspaceConstantImpl::primitive(constant), HotSpotMetaspaceConstantImpl::compressed(constant), oop_recorder);
 }
 
-ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, OopRecorder* oop_recorder) {
+ScopeValue* CodeInstaller::get_scope_value(oop value, GrowableArray<ScopeValue*>* objects, ScopeValue* &second) {
   second = NULL;
   if (value == AbstractValue::ILLEGAL()) {
     return _illegal_value;
@@ -282,7 +282,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
     }
 #endif
     if (StackSlot::addFrameSize(value)) {
-      offset += total_frame_size;
+      offset += _total_frame_size;
     }
     ScopeValue* value = new LocationValue(Location::new_stk_loc(locationType, offset));
     if (type == T_DOUBLE || (type == T_LONG && !reference)) {
@@ -290,7 +290,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
     }
     return value;
   } else if (value->is_a(JavaConstant::klass())){
-    record_metadata_in_constant(value, oop_recorder);
+    record_metadata_in_constant(value, _oop_recorder);
     if (value->is_a(PrimitiveConstant::klass())) {
       assert(!reference, "unexpected primitive constant type");
       if(value->is_a(RawConstant::klass())) {
@@ -323,40 +323,10 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
       }
     }
   } else if (value->is_a(VirtualObject::klass())) {
-    oop type = VirtualObject::type(value);
     int id = VirtualObject::id(value);
-    oop javaMirror = HotSpotResolvedObjectTypeImpl::javaClass(type);
-    Klass* klass = java_lang_Class::as_Klass(javaMirror);
-    bool isLongArray = klass == Universe::longArrayKlassObj();
-
-    for (jint i = 0; i < objects->length(); i++) {
-      ObjectValue* obj = (ObjectValue*) objects->at(i);
-      if (obj->id() == id) {
-        return obj;
-      }
-    }
-
-    ObjectValue* sv = new ObjectValue(id, new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror)));
-    objects->append(sv);
-
-    objArrayOop values = VirtualObject::values(value);
-    for (jint i = 0; i < values->length(); i++) {
-      ScopeValue* cur_second = NULL;
-      oop object = values->obj_at(i);
-      ScopeValue* value = get_scope_value(object, total_frame_size, objects, cur_second, oop_recorder);
-
-      if (isLongArray && cur_second == NULL) {
-        // we're trying to put ints into a long array... this isn't really valid, but it's used for some optimizations.
-        // add an int 0 constant
-        cur_second = _int_0_scope_value;
-      }
-
-      if (cur_second != NULL) {
-        sv->field_values()->append(cur_second);
-      }
-      sv->field_values()->append(value);
-    }
-    return sv;
+    ScopeValue* object = objects->at(id);
+    assert(object != NULL, "missing value");
+    return object;
   } else {
     value->klass()->print();
     value->print();
@@ -365,14 +335,41 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, int total_frame_size, Grow
   return NULL;
 }
 
-MonitorValue* CodeInstaller::get_monitor_value(oop value, int total_frame_size, GrowableArray<ScopeValue*>* objects, OopRecorder* oop_recorder) {
+void CodeInstaller::record_object_value(ObjectValue* sv, oop value, GrowableArray<ScopeValue*>* objects) {
+  oop type = VirtualObject::type(value);
+  int id = VirtualObject::id(value);
+  oop javaMirror = HotSpotResolvedObjectTypeImpl::javaClass(type);
+  Klass* klass = java_lang_Class::as_Klass(javaMirror);
+  bool isLongArray = klass == Universe::longArrayKlassObj();
+
+  objArrayOop values = VirtualObject::values(value);
+  for (jint i = 0; i < values->length(); i++) {
+    ScopeValue* cur_second = NULL;
+    oop object = values->obj_at(i);
+    ScopeValue* value = get_scope_value(object, objects, cur_second);
+
+    if (isLongArray && cur_second == NULL) {
+      // we're trying to put ints into a long array... this isn't really valid, but it's used for some optimizations.
+      // add an int 0 constant
+      cur_second = _int_0_scope_value;
+    }
+
+    if (cur_second != NULL) {
+      sv->field_values()->append(cur_second);
+    }
+    assert(value != NULL, "missing value");
+    sv->field_values()->append(value);
+  }
+}
+
+MonitorValue* CodeInstaller::get_monitor_value(oop value, GrowableArray<ScopeValue*>* objects) {
   guarantee(value->is_a(StackLockValue::klass()), "Monitors must be of type MonitorValue");
 
   ScopeValue* second = NULL;
-  ScopeValue* owner_value = get_scope_value(StackLockValue::owner(value), total_frame_size, objects, second, oop_recorder);
+  ScopeValue* owner_value = get_scope_value(StackLockValue::owner(value), objects, second);
   assert(second == NULL, "monitor cannot occupy two stack slots");
 
-  ScopeValue* lock_data_value = get_scope_value(StackLockValue::slot(value), total_frame_size, objects, second, oop_recorder);
+  ScopeValue* lock_data_value = get_scope_value(StackLockValue::slot(value), objects, second);
   assert(second == lock_data_value, "monitor is LONG value that occupies two stack slots");
   assert(lock_data_value->is_location(), "invalid monitor location");
   Location lock_data_loc = ((LocationValue*)lock_data_value)->location();
@@ -727,6 +724,44 @@ static bool bytecode_should_reexecute(Bytecodes::Code code) {
   return true;
 }
 
+GrowableArray<ScopeValue*>* CodeInstaller::record_virtual_objects(oop debug_info) {
+  objArrayOop virtualObjects = DebugInfo::virtualObjectMapping(debug_info);
+  if (virtualObjects == NULL) {
+    return NULL;
+  }
+  GrowableArray<ScopeValue*>* objects = new GrowableArray<ScopeValue*>(virtualObjects->length(), virtualObjects->length(), NULL);
+  // Create the unique ObjectValues
+  for (int i = 0; i < virtualObjects->length(); i++) {
+    oop value = virtualObjects->obj_at(i);
+    int id = VirtualObject::id(value);
+    oop type = VirtualObject::type(value);
+    oop javaMirror = HotSpotResolvedObjectTypeImpl::javaClass(type);
+    ObjectValue* sv = new ObjectValue(id, new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror)));
+    assert(objects->at(id) == NULL, "once");
+    objects->at_put(id, sv);
+  }
+  // All the values which could be referenced by the VirtualObjects
+  // exist, so now describe all the VirtualObjects themselves.
+  for (int i = 0; i < virtualObjects->length(); i++) {
+    oop value = virtualObjects->obj_at(i);
+    int id = VirtualObject::id(value);
+    record_object_value(objects->at(id)->as_ObjectValue(), value, objects);
+  }
+  _debug_recorder->dump_object_pool(objects);
+  return objects;
+}
+
+void CodeInstaller::record_scope(jint pc_offset, oop debug_info) {
+  oop position = DebugInfo::bytecodePosition(debug_info);
+  if (position == NULL) {
+    // Stubs do not record scope info, just oop maps
+    return;
+  }
+  
+  GrowableArray<ScopeValue*>* objectMapping = record_virtual_objects(debug_info);
+  record_scope(pc_offset, position, objectMapping);
+}
+
 void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<ScopeValue*>* objects) {
   oop frame = NULL;
   if (position->is_a(BytecodeFrame::klass())) {
@@ -785,21 +820,21 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
 
     for (jint i = 0; i < values->length(); i++) {
       ScopeValue* second = NULL;
-      oop value= values->obj_at(i);
+      oop value = values->obj_at(i);
       if (i < local_count) {
-        ScopeValue* first = get_scope_value(value, _total_frame_size, objects, second, _oop_recorder);
+        ScopeValue* first = get_scope_value(value, objects, second);
         if (second != NULL) {
           locals->append(second);
         }
         locals->append(first);
       } else if (i < local_count + expression_count) {
-        ScopeValue* first = get_scope_value(value, _total_frame_size, objects, second, _oop_recorder);
+        ScopeValue* first = get_scope_value(value, objects, second);
         if (second != NULL) {
           expressions->append(second);
         }
         expressions->append(first);
       } else {
-        monitors->append(get_monitor_value(value, _total_frame_size, objects, _oop_recorder));
+        monitors->append(get_monitor_value(value, objects));
       }
       if (second != NULL) {
         i++;
@@ -808,8 +843,6 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
       }
     }
 
-    _debug_recorder->dump_object_pool(objects);
-
     locals_token = _debug_recorder->create_scope_values(locals);
     expressions_token = _debug_recorder->create_scope_values(expressions);
     monitors_token = _debug_recorder->create_monitor_values(monitors);
@@ -817,7 +850,8 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
     throw_exception = BytecodeFrame::rethrowException(frame) == JNI_TRUE;
   }
 
-  _debug_recorder->describe_scope(pc_offset, method, NULL, bci, reexecute, throw_exception, false, false, locals_token, expressions_token, monitors_token);
+  _debug_recorder->describe_scope(pc_offset, method, NULL, bci, reexecute, throw_exception, false, false,
+                                  locals_token, expressions_token, monitors_token);
 }
 
 void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, oop site) {
@@ -827,14 +861,7 @@ void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, oop site)
   // address instruction = _instructions->start() + pc_offset;
   // jint next_pc_offset = Assembler::locate_next_instruction(instruction) - _instructions->start();
   _debug_recorder->add_safepoint(pc_offset, create_oop_map(_total_frame_size, _parameter_count, debug_info));
-
-  oop frame = DebugInfo::bytecodePosition(debug_info);
-  if (frame != NULL) {
-    record_scope(pc_offset, frame, new GrowableArray<ScopeValue*>());
-  } else {
-    // Stubs do not record scope info, just oop maps
-  }
-
+  record_scope(pc_offset, debug_info);
   _debug_recorder->end_safepoint(pc_offset);
 }
 
@@ -843,12 +870,7 @@ void CodeInstaller::site_Infopoint(CodeBuffer& buffer, jint pc_offset, oop site)
   assert(debug_info != NULL, "debug info expected");
 
   _debug_recorder->add_non_safepoint(pc_offset);
-
-  oop position = DebugInfo::bytecodePosition(debug_info);
-  if (position != NULL) {
-    record_scope(pc_offset, position, NULL);
-  }
-
+  record_scope(pc_offset, debug_info);
   _debug_recorder->end_non_safepoint(pc_offset);
 }
 
@@ -873,13 +895,8 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, oop site) {
   jint next_pc_offset = CodeInstaller::pd_next_offset(inst, pc_offset, hotspot_method);
 
   if (debug_info != NULL) {
-    oop frame = DebugInfo::bytecodePosition(debug_info);
     _debug_recorder->add_safepoint(next_pc_offset, create_oop_map(_total_frame_size, _parameter_count, debug_info));
-    if (frame != NULL) {
-      record_scope(next_pc_offset, frame, new GrowableArray<ScopeValue*>());
-    } else {
-      // Stubs do not record scope info, just oop maps
-    }
+    record_scope(next_pc_offset, debug_info);
   }
 
   if (foreign_call != NULL) {

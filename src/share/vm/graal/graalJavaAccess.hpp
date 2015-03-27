@@ -159,6 +159,7 @@ void graal_compute_offsets();
     oop_field(DebugInfo, bytecodePosition, "Lcom/oracle/graal/api/code/BytecodePosition;")                                                                     \
     oop_field(DebugInfo, referenceMap, "Lcom/oracle/graal/api/code/ReferenceMap;")                                                                             \
     oop_field(DebugInfo, calleeSaveInfo, "Lcom/oracle/graal/api/code/RegisterSaveLayout;")                                                                     \
+    objArrayOop_field(DebugInfo, virtualObjectMapping, "[Lcom/oracle/graal/api/meta/Value;")                                                                   \
   end_class                                                                                                                                                    \
   start_class(HotSpotReferenceMap)                                                                                                                             \
     oop_field(HotSpotReferenceMap, registerRefMap, "Ljava/util/BitSet;")                                                                                       \

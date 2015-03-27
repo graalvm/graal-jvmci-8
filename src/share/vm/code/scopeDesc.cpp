@@ -232,6 +232,7 @@ void ScopeDesc::print_on(outputStream* st, PcDesc* pd) const {
     for (int i = 0; i < _objects->length(); i++) {
       ObjectValue* sv = _objects->at(i)->as_ObjectValue();
       tty->print(" - %d: ", sv->id());
+      tty->print("%s ", java_lang_Class::as_Klass(sv->klass()->as_ConstantOopReadValue()->value()())->external_name());
       sv->print_fields_on(tty);
       tty->cr();
     }
