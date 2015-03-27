@@ -1,15 +1,11 @@
 colorize("name", ".*", white);
 colorize("name", "Begin|KillingBegin|EndNode|LoopBegin|LoopEnd|LoopExit|Return", orange);
-colorize("name", "Phi.*|ValueProxy", magenta);
-colorize("name", "FrameState@.*", new java.awt.Color(0.5, 0.8, 1.0));
-colorize("name", "If|Merge", pink);
-colorize("name", "const.*", new java.awt.Color(0.7, 0.7, 0.7));
-colorize("name", "Param", new java.awt.Color(0.85, 0.85, 0.85));
+colorize("class", "FrameState", new java.awt.Color(0.5, 0.8, 1.0));
+colorize("name", "If|Merge|(Integer|Type)Switch", pink);
 colorize("name", "\\+|-|\\*|/|&|\\||<<|>>|>>>", cyan);
-colorize("name", "Comp .*", yellow);
 colorize("name", "Virtual.*", green);
-
-colorize("name", "ValuePhi.*|ValueProxy", magenta);
-colorize("name", "Const.*", new java.awt.Color(0.7, 0.7, 0.7));
-colorize("name", "Param.*", new java.awt.Color(0.85, 0.85, 0.85));
-colorize("stamp", "Condition", yellow);
+colorize("name", "(Φ|Proxy)\(.*\)", magenta);
+colorize("name", "(Φ|Proxy)\(.*\) Identity\(.*\)", green);
+colorize("name", "C\(.*\)", new java.awt.Color(0.7, 0.7, 0.7));
+colorize("name", "P\(.*\)", new java.awt.Color(0.85, 0.85, 0.85));
+colorize("name", "==|<|InstanceOf", yellow);
