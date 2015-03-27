@@ -538,15 +538,9 @@ public class HierarchicalLayoutManager implements LayoutManager {
                 if (n2.vertex == null) {
                     return 0;
                 }
-                if (n1.preds.size() == 1 && n1.preds.get(0).from.vertex != null) {
-                    return 1;
-                }
                 return -1;
             }
             if (n2.vertex == null) {
-                if (n2.preds.size() == 1 && n2.preds.get(0).from.vertex != null) {
-                    return -1;
-                }
                 return 1;
             }
             return n1.preds.size() - n2.preds.size();
@@ -568,23 +562,17 @@ public class HierarchicalLayoutManager implements LayoutManager {
                     n2VIP++;
                 }
             }
+            if (n1VIP != n2VIP) {
+                return n2VIP - n1VIP;
+            }
             if (n1.vertex == null) {
                 if (n2.vertex == null) {
                     return 0;
                 }
-                if (n1.succs.size() == 1 && n1.succs.get(0).to.vertex != null) {
-                    return 1;
-                }
                 return -1;
             }
             if (n2.vertex == null) {
-                if (n2.succs.size() == 1 && n2.succs.get(0).to.vertex != null) {
-                    return -1;
-                }
                 return 1;
-            }
-            if (n1VIP != n2VIP) {
-                return n2VIP - n1VIP;
             }
             return n1.succs.size() - n2.succs.size();
         }
@@ -634,11 +622,13 @@ public class HierarchicalLayoutManager implements LayoutManager {
             for (int i = 0; i < SWEEP_ITERATIONS; i++) {
                 sweepDown();
                 adjustSpace();
-                sweepUp();
+                sweepUp(false);
                 adjustSpace();
             }
 
             sweepDown();
+            adjustSpace();
+            sweepUp(true);
         }
 
         private void adjustSpace() {
@@ -730,7 +720,7 @@ public class HierarchicalLayoutManager implements LayoutManager {
             }
         }
 
-        private void sweepUp() {
+        private void sweepUp(boolean onlyDummies) {
             for (int i = layers.length - 1; i >= 0; i--) {
                 NodeRow r = new NodeRow(space[i]);
                 for (LayoutNode n : upProcessingOrder[i]) {
