@@ -139,21 +139,6 @@ suite = {
       ],
     },
 
-    "ASM" : {
-      "path" : "lib/asm-5.0.3.jar",
-      "urls" : [
-        "http://lafo.ssw.uni-linz.ac.at/graal-external-deps/asm-5.0.3.jar",
-        "https://search.maven.org/remotecontent?filepath=org/ow2/asm/asm/5.0.3/asm-5.0.3.jar",
-      ],
-      "sha1" : "dcc2193db20e19e1feca8b1240dbbc4e190824fa",
-      "sourcePath" : "lib/asm-5.0.3-sources.jar",
-      "sourceSha1" : "f0f24f6666c1a15c7e202e91610476bd4ce59368",
-      "sourceUrls" : [
-        "http://lafo.ssw.uni-linz.ac.at/graal-external-deps/asm-5.0.3-sources.jar",
-        "https://search.maven.org/remotecontent?filepath=org/ow2/asm/asm/5.0.3/asm-5.0.3-sources.jar",
-      ],
-    },
-
     "JAVA_ALLOCATION_INSTRUMENTER" : {
       "path" : "lib/java-allocation-instrumenter.jar",
       "sourcePath" : "lib/java-allocation-instrumenter.jar",
@@ -880,7 +865,6 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.compiler.test",
-        "ASM",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -1079,6 +1063,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.truffle",
+        "com.oracle.graal.graph.test",
         "com.oracle.graal.compiler.test",
         "com.oracle.truffle.sl.test",
       ],

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,18 +20,31 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.truffle.substitutions;
+package com.oracle.graal.graph.test.matchers;
 
-import com.oracle.graal.api.replacements.*;
-import com.oracle.graal.truffle.nodes.asserts.*;
-import com.oracle.truffle.api.*;
+import org.hamcrest.*;
 
-@ClassSubstitution(CompilerAsserts.class)
-public class CompilerAssertsSubstitutions {
+import com.oracle.graal.graph.iterators.*;
 
-    @MethodSubstitution
-    public static void neverPartOfCompilation(@SuppressWarnings("unused") String message) {
-        NeverPartOfCompilationNode.apply("Never part of compilation");
+public class NodeIterableCount extends TypeSafeDiagnosingMatcher<NodeIterable<?>> {
+    private int count;
+
+    public NodeIterableCount(int count) {
+        this.count = count;
     }
 
+    @Override
+    public void describeTo(Description description) {
+        description.appendText("is a NodeIterable containing ").appendValue(count).appendText(" elements");
+    }
+
+    public static NodeIterableCount hasCount(int count) {
+        return new NodeIterableCount(count);
+    }
+
+    @Override
+    protected boolean matchesSafely(NodeIterable<?> iterable, Description mismatchDescription) {
+        mismatchDescription.appendText("is a NodeIterable containing ").appendValue(iterable.count()).appendText(" elements");
+        return iterable.count() == count;
+    }
 }

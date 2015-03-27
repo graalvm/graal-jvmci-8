@@ -296,7 +296,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
             private final boolean explodeLoops;
             private final boolean mergeExplosions;
             private final Map<HIRFrameStateBuilder, Integer> mergeExplosionsMap;
-            private Stack<ExplodedLoopContext> explodeLoopsContext;
+            private Deque<ExplodedLoopContext> explodeLoopsContext;
             private int nextPeelIteration = 1;
             private boolean controlFlowSplit;
             private final InvocationPluginReceiver invocationPluginReceiver = new InvocationPluginReceiver(this);
@@ -452,7 +452,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
             private void detectLoops(FixedNode startInstruction) {
                 NodeBitMap visited = currentGraph.createNodeBitMap();
                 NodeBitMap active = currentGraph.createNodeBitMap();
-                Stack<Node> stack = new Stack<>();
+                Deque<Node> stack = new ArrayDeque<>();
                 stack.add(startInstruction);
                 visited.mark(startInstruction);
                 while (!stack.isEmpty()) {
@@ -498,7 +498,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
             private void insertLoopEnds(FixedNode startInstruction) {
                 NodeBitMap visited = currentGraph.createNodeBitMap();
-                Stack<Node> stack = new Stack<>();
+                Deque<Node> stack = new ArrayDeque<>();
                 stack.add(startInstruction);
                 visited.mark(startInstruction);
                 List<LoopBeginNode> loopBegins = new ArrayList<>();
@@ -538,7 +538,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
             private void insertLoopExits(LoopBeginNode loopBegin, IdentityHashMap<LoopBeginNode, List<LoopBeginNode>> innerLoopsMap) {
                 NodeBitMap visited = currentGraph.createNodeBitMap();
-                Stack<Node> stack = new Stack<>();
+                Deque<Node> stack = new ArrayDeque<>();
                 for (LoopEndNode loopEnd : loopBegin.loopEnds()) {
                     stack.push(loopEnd);
                     visited.mark(loopEnd);
@@ -622,7 +622,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
             private int iterateExplodedLoopHeader(BciBlock[] blocks, BciBlock header) {
                 if (explodeLoopsContext == null) {
-                    explodeLoopsContext = new Stack<>();
+                    explodeLoopsContext = new ArrayDeque<>();
                 }
 
                 ExplodedLoopContext context = new ExplodedLoopContext();
@@ -823,9 +823,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
             @Override
             protected void genStoreIndexed(ValueNode array, ValueNode index, Kind kind, ValueNode value) {
-                StoreIndexedNode storeIndexed = new StoreIndexedNode(array, index, kind, value);
-                append(storeIndexed);
-                storeIndexed.setStateAfter(this.createStateAfter());
+                add(new StoreIndexedNode(array, index, kind, value));
             }
 
             @Override
@@ -1145,6 +1143,21 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 }
             }
 
+            private InvokeKind currentInvokeKind;
+            private JavaType currentInvokeReturnType;
+
+            public InvokeKind getInvokeKind() {
+                return currentInvokeKind;
+            }
+
+            public JavaType getInvokeReturnType() {
+                return currentInvokeReturnType;
+            }
+
+            public void handleReplacedInvoke(InvokeKind invokeKind, ResolvedJavaMethod targetMethod, ValueNode[] args) {
+                appendInvoke(invokeKind, targetMethod, args);
+            }
+
             private void appendInvoke(InvokeKind initialInvokeKind, ResolvedJavaMethod initialTargetMethod, ValueNode[] args) {
                 ResolvedJavaMethod targetMethod = initialTargetMethod;
                 InvokeKind invokeKind = initialInvokeKind;
@@ -1181,22 +1194,29 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     }
                 }
 
-                if (tryGenericInvocationPlugin(args, targetMethod)) {
-                    if (TraceParserPlugins.getValue()) {
-                        traceWithContext("used generic invocation plugin for %s", targetMethod.format("%h.%n(%p)"));
+                try {
+                    currentInvokeReturnType = returnType;
+                    currentInvokeKind = invokeKind;
+                    if (tryGenericInvocationPlugin(args, targetMethod)) {
+                        if (TraceParserPlugins.getValue()) {
+                            traceWithContext("used generic invocation plugin for %s", targetMethod.format("%h.%n(%p)"));
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                if (tryInvocationPlugin(args, targetMethod, resultType)) {
-                    if (TraceParserPlugins.getValue()) {
-                        traceWithContext("used invocation plugin for %s", targetMethod.format("%h.%n(%p)"));
+                    if (tryInvocationPlugin(args, targetMethod, resultType)) {
+                        if (TraceParserPlugins.getValue()) {
+                            traceWithContext("used invocation plugin for %s", targetMethod.format("%h.%n(%p)"));
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                if (tryInline(args, targetMethod, invokeKind, returnType)) {
-                    return;
+                    if (tryInline(args, targetMethod, invokeKind, returnType)) {
+                        return;
+                    }
+                } finally {
+                    currentInvokeReturnType = null;
+                    currentInvokeKind = null;
                 }
 
                 MethodCallTargetNode callTarget = currentGraph.add(createMethodCallTarget(invokeKind, targetMethod, args, returnType));
@@ -1254,7 +1274,8 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
                 boolean check(boolean pluginResult) {
                     if (pluginResult == true) {
-                        assert beforeStackSize + resultType.getSlotCount() == frameState.stackSize : error("plugin manipulated the stack incorrectly");
+                        int expectedStackSize = beforeStackSize + resultType.getSlotCount();
+                        assert expectedStackSize == frameState.stackSize : error("plugin manipulated the stack incorrectly: expected=%d, actual=%d", expectedStackSize, frameState.stackSize);
                         NodeIterable<Node> newNodes = currentGraph.getNewNodes(mark);
                         assert !needsNullCheck || isPointerNonNull(args[0].stamp()) : error("plugin needs to null check the receiver of %s: receiver=%s", targetMethod.format("%H.%n(%p)"), args[0]);
                         for (Node n : newNodes) {
@@ -1280,6 +1301,15 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
             private boolean tryInvocationPlugin(ValueNode[] args, ResolvedJavaMethod targetMethod, Kind resultType) {
                 InvocationPlugin plugin = graphBuilderConfig.getPlugins().getInvocationPlugins().lookupInvocation(targetMethod);
                 if (plugin != null) {
+
+                    ReplacementContext context = this.replacementContext;
+                    if (context != null && context.isCallToOriginal(targetMethod)) {
+                        // Self recursive replacement means the original
+                        // method should be called.
+                        assert !targetMethod.hasBytecodes() : "TODO: when does this happen?";
+                        return false;
+                    }
+
                     InvocationPluginAssertions assertions = assertionsEnabled() ? new InvocationPluginAssertions(plugin, args, targetMethod, resultType) : null;
                     if (InvocationPlugin.execute(this, targetMethod, plugin, invocationPluginReceiver.init(targetMethod, args), args)) {
                         assert assertions.check(true);
@@ -1307,7 +1337,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 return false;
             }
 
-            boolean inline(InlineInvokePlugin plugin, ResolvedJavaMethod targetMethod, InlineInfo inlineInfo, ValueNode[] args) {
+            public boolean inline(InlineInvokePlugin plugin, ResolvedJavaMethod targetMethod, InlineInfo inlineInfo, ValueNode[] args) {
                 int bci = bci();
                 ResolvedJavaMethod inlinedMethod = inlineInfo.methodToInline;
                 if (TraceInlineDuringParsing.getValue() || TraceParserPlugins.getValue()) {
@@ -1872,9 +1902,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
             }
 
             private int findOperatingDimensionWithLoopExplosion(BciBlock block, HIRFrameStateBuilder state) {
-                int i;
-                for (i = explodeLoopsContext.size() - 1; i >= 0; --i) {
-                    ExplodedLoopContext context = explodeLoopsContext.elementAt(i);
+                for (ExplodedLoopContext context : explodeLoopsContext) {
                     if (context.header == block) {
 
                         if (this.mergeExplosions) {
@@ -2415,6 +2443,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
             }
 
             public void push(Kind kind, ValueNode value) {
+                assert value.isAlive();
                 assert kind == kind.getStackKind();
                 frameState.push(kind, value);
             }

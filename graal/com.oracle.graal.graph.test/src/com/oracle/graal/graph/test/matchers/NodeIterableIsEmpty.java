@@ -27,12 +27,14 @@ import org.hamcrest.core.*;
 
 import com.oracle.graal.graph.iterators.*;
 
-public class NodeIterableIsEmpty extends BaseMatcher<NodeIterable<?>> {
+public class NodeIterableIsEmpty extends TypeSafeDiagnosingMatcher<NodeIterable<?>> {
 
     private static final NodeIterableIsEmpty INSTANCE = new NodeIterableIsEmpty();
 
-    public boolean matches(Object iterable) {
-        return iterable instanceof NodeIterable<?> && ((NodeIterable<?>) iterable).isEmpty();
+    @Override
+    public boolean matchesSafely(NodeIterable<?> iterable, Description mismatchDescription) {
+        mismatchDescription.appendText("is a non-empty NodeIterable");
+        return iterable.isEmpty();
     }
 
     public void describeTo(Description description) {

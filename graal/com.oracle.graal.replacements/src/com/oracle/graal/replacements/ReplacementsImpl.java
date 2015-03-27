@@ -25,7 +25,9 @@ package com.oracle.graal.replacements;
 import static com.oracle.graal.api.meta.MetaUtil.*;
 import static com.oracle.graal.compiler.GraalCompiler.*;
 import static com.oracle.graal.compiler.common.GraalOptions.*;
+import static com.oracle.graal.java.AbstractBytecodeParser.Options.*;
 import static com.oracle.graal.phases.common.DeadCodeEliminationPhase.Optionality.*;
+import static java.lang.String.*;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -42,8 +44,11 @@ import com.oracle.graal.compiler.common.*;
 import com.oracle.graal.debug.*;
 import com.oracle.graal.debug.Debug.Scope;
 import com.oracle.graal.graph.*;
+import com.oracle.graal.graph.Node.NodeIntrinsic;
 import com.oracle.graal.graphbuilderconf.*;
 import com.oracle.graal.graphbuilderconf.GraphBuilderConfiguration.Plugins;
+import com.oracle.graal.graphbuilderconf.GraphBuilderContext.*;
+import com.oracle.graal.graphbuilderconf.InlineInvokePlugin.InlineInfo;
 import com.oracle.graal.java.AbstractBytecodeParser.IntrinsicContext;
 import com.oracle.graal.java.AbstractBytecodeParser.ReplacementContext;
 import com.oracle.graal.java.*;
@@ -56,8 +61,9 @@ import com.oracle.graal.phases.*;
 import com.oracle.graal.phases.common.*;
 import com.oracle.graal.phases.tiers.*;
 import com.oracle.graal.phases.util.*;
+import com.oracle.graal.word.*;
 
-public class ReplacementsImpl implements Replacements {
+public class ReplacementsImpl implements Replacements, InlineInvokePlugin {
 
     public final Providers providers;
     public final SnippetReflectionProvider snippetReflection;
@@ -75,12 +81,61 @@ public class ReplacementsImpl implements Replacements {
         this.graphBuilderPlugins = plugins;
     }
 
+    protected boolean hasGenericInvocationPluginAnnotation(ResolvedJavaMethod method) {
+        return nodeIntrinsificationPhase.getIntrinsic(method) != null || method.getAnnotation(Word.Operation.class) != null || nodeIntrinsificationPhase.isFoldable(method);
+    }
+
+    private static final int MAX_GRAPH_INLINING_DEPTH = 100; // more than enough
+
+    /**
+     * Determines whether a given method should be inlined based on whether it has a substitution or
+     * whether the inlining context is already within a substitution.
+     *
+     * @return an {@link InlineInfo} object specifying how {@code method} is to be inlined or null
+     *         if it should not be inlined based on substitution related criteria
+     */
+    public InlineInfo getInlineInfo(GraphBuilderContext b, ResolvedJavaMethod method, ValueNode[] args, JavaType returnType) {
+        ResolvedJavaMethod subst = getMethodSubstitutionMethod(method);
+        if (subst != null) {
+            if (b.parsingReplacement() || InlineDuringParsing.getValue()) {
+                // Forced inlining of intrinsics
+                return new InlineInfo(subst, true, true);
+            }
+            return null;
+        }
+        if (b.parsingReplacement()) {
+            assert !hasGenericInvocationPluginAnnotation(method) : format("%s should have been handled by %s", method.format("%H.%n(%p)"), DefaultGenericInvocationPlugin.class.getName());
+
+            assert b.getDepth() < MAX_GRAPH_INLINING_DEPTH : "inlining limit exceeded";
+
+            if (method.getName().startsWith("$jacoco")) {
+                throw new GraalInternalError("Found call to JaCoCo instrumentation method " + method.format("%H.%n(%p)") + ". Placing \"//JaCoCo Exclude\" anywhere in " +
+                                b.getMethod().getDeclaringClass().getSourceFileName() + " should fix this.");
+            }
+
+            // Force inlining when parsing replacements
+            return new InlineInfo(method, true, true);
+        } else {
+            assert nodeIntrinsificationPhase.getIntrinsic(method) == null : String.format("@%s method %s must only be called from within a replacement%n%s", NodeIntrinsic.class.getSimpleName(),
+                            method.format("%h.%n"), b);
+        }
+        return null;
+    }
+
+    public void notifyOfNoninlinedInvoke(GraphBuilderContext b, ResolvedJavaMethod method, Invoke invoke) {
+        if (b.parsingReplacement()) {
+            boolean compilingSnippet = b.getRootMethod().getAnnotation(Snippet.class) != null;
+            Replacement replacement = b.getReplacement();
+            assert compilingSnippet : format("All calls in the replacement %s must be inlined or intrinsified: found call to %s", replacement.getReplacementMethod().format("%H.%n(%p)"),
+                            method.format("%h.%n(%p)"));
+        }
+    }
+
     /**
      * Encapsulates method and macro substitutions for a single class.
      */
     protected class ClassReplacements {
         public final Map<ResolvedJavaMethod, ResolvedJavaMethod> methodSubstitutions = CollectionsFactory.newMap();
-        public final Map<ResolvedJavaMethod, Class<? extends FixedWithNextNode>> macroSubstitutions = CollectionsFactory.newMap();
         public final Set<ResolvedJavaMethod> forcedSubstitutions = new HashSet<>();
 
         public ClassReplacements(Class<?>[] substitutionClasses, AtomicReference<ClassReplacements> ref) {
@@ -94,8 +149,7 @@ public class ReplacementsImpl implements Replacements {
                         return;
                     }
                     MethodSubstitution methodSubstitution = substituteMethod.getAnnotation(MethodSubstitution.class);
-                    MacroSubstitution macroSubstitution = substituteMethod.getAnnotation(MacroSubstitution.class);
-                    if (methodSubstitution == null && macroSubstitution == null) {
+                    if (methodSubstitution == null) {
                         continue;
                     }
 
@@ -110,9 +164,6 @@ public class ReplacementsImpl implements Replacements {
                             guard = defaultGuard;
                         }
 
-                        if (macroSubstitution != null && macroSubstitution.isStatic() != methodSubstitution.isStatic()) {
-                            throw new GraalInternalError("Macro and method substitution must agree on isStatic attribute: " + substituteMethod);
-                        }
                         if (Modifier.isAbstract(modifiers) || Modifier.isNative(modifiers)) {
                             throw new GraalInternalError("Substitution method must not be abstract or native: " + substituteMethod);
                         }
@@ -126,21 +177,6 @@ public class ReplacementsImpl implements Replacements {
                                     if (original != null && methodSubstitution.forced() && shouldIntrinsify(original)) {
                                         forcedSubstitutions.add(original);
                                     }
-                                }
-                            }
-                        }
-                    }
-                    // We don't have per method guards for macro substitutions but at
-                    // least respect the defaultGuard if there is one.
-                    if (macroSubstitution != null && (defaultGuard == null || defaultGuard.execute())) {
-                        String originalName = originalName(substituteMethod, macroSubstitution.value());
-                        JavaSignature originalSignature = originalSignature(substituteMethod, macroSubstitution.signature(), macroSubstitution.isStatic());
-                        Executable[] originalMethods = originalMethods(classSubstitution, macroSubstitution.optional(), originalName, originalSignature);
-                        for (Executable originalMethod : originalMethods) {
-                            if (originalMethod != null) {
-                                ResolvedJavaMethod original = registerMacroSubstitution(this, originalMethod, macroSubstitution.macro());
-                                if (original != null && macroSubstitution.forced() && shouldIntrinsify(original)) {
-                                    forcedSubstitutions.add(original);
                                 }
                             }
                         }
@@ -321,11 +357,6 @@ public class ReplacementsImpl implements Replacements {
 
     }
 
-    public Class<? extends FixedWithNextNode> getMacroSubstitution(ResolvedJavaMethod method) {
-        ClassReplacements cr = getClassReplacements(method.getDeclaringClass().getName());
-        return cr == null ? null : cr.macroSubstitutions.get(method);
-    }
-
     private SubstitutionGuard getGuard(Class<? extends SubstitutionGuard> guardClass) {
         if (guardClass != SubstitutionGuard.class) {
             Constructor<?>[] constructors = guardClass.getConstructors();
@@ -406,20 +437,6 @@ public class ReplacementsImpl implements Replacements {
 
         cr.methodSubstitutions.put(original, substitute);
         return original;
-    }
-
-    /**
-     * Registers a macro substitution.
-     *
-     * @param originalMethod a method or constructor being substituted
-     * @param macro the substitute macro node class
-     * @return the original method
-     */
-    protected ResolvedJavaMethod registerMacroSubstitution(ClassReplacements cr, Executable originalMethod, Class<? extends FixedWithNextNode> macro) {
-        MetaAccessProvider metaAccess = providers.getMetaAccess();
-        ResolvedJavaMethod originalJavaMethod = metaAccess.lookupJavaMethod(originalMethod);
-        cr.macroSubstitutions.put(originalJavaMethod, macro);
-        return originalJavaMethod;
     }
 
     /**
@@ -770,7 +787,6 @@ public class ReplacementsImpl implements Replacements {
         for (String internalName : classReplacements.keySet()) {
             ClassReplacements cr = getClassReplacements(internalName);
             result.addAll(cr.methodSubstitutions.keySet());
-            result.addAll(cr.macroSubstitutions.keySet());
         }
         return result;
     }

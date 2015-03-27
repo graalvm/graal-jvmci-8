@@ -114,12 +114,10 @@ public:
   static VMReg get_hotspot_reg(jint graalRegisterNumber);
   static bool is_general_purpose_reg(VMReg hotspotRegister);
 
-protected:
-
-  virtual ScopeValue* get_scope_value(oop value, int total_frame_size, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, OopRecorder* oop_recorder);
-  virtual MonitorValue* get_monitor_value(oop value, int total_frame_size, GrowableArray<ScopeValue*>* objects, OopRecorder* oop_recorder);
-
 private:
+  ScopeValue* get_scope_value(oop value, GrowableArray<ScopeValue*>* objects, ScopeValue* &second);
+  MonitorValue* get_monitor_value(oop value, GrowableArray<ScopeValue*>* objects);
+
   // extract the fields of the CompilationResult
   void initialize_fields(oop target_method);
   void initialize_dependencies(oop target_method);
@@ -141,7 +139,11 @@ private:
   void site_DataPatch(CodeBuffer& buffer, jint pc_offset, oop site);
   void site_Mark(CodeBuffer& buffer, jint pc_offset, oop site);
 
+  void record_scope(jint pc_offset, oop debug_info);
   void record_scope(jint pc_offset, oop code_pos, GrowableArray<ScopeValue*>* objects);
+  void record_object_value(ObjectValue* sv, oop value, GrowableArray<ScopeValue*>* objects);
+
+  GrowableArray<ScopeValue*>* record_virtual_objects(oop debug_info);
 
   void process_exception_handlers();
   int estimateStubSpace(int static_call_stubs);

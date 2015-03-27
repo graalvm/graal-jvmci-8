@@ -88,12 +88,10 @@ public class InputBlock {
     }
 
     public void addNode(int id) {
-        InputNode n = graph.getNode(id);
-        assert n != null;
-        graph.setBlock(n, this);
-        final InputNode node = graph.getNode(id);
+        InputNode node = graph.getNode(id);
         assert node != null;
         assert !nodes.contains(node) : "duplicate : " + node;
+        graph.setBlock(node, this);
         nodes.add(node);
     }
 

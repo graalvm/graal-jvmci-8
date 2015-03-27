@@ -79,10 +79,10 @@ class HotSpotWordOperationPlugin extends WordOperationPlugin {
                 assert right.stamp() instanceof MetaspacePointerStamp : right + " " + right.stamp();
                 assert opcode == POINTER_EQ || opcode == POINTER_NE;
 
-                PointerEqualsNode comparison = b.append(new PointerEqualsNode(left, right));
-                ValueNode eqValue = b.append(forBoolean(opcode == POINTER_EQ));
-                ValueNode neValue = b.append(forBoolean(opcode == POINTER_NE));
-                b.push(returnStackKind, b.append(new ConditionalNode(comparison, eqValue, neValue)));
+                PointerEqualsNode comparison = b.add(new PointerEqualsNode(left, right));
+                ValueNode eqValue = b.add(forBoolean(opcode == POINTER_EQ));
+                ValueNode neValue = b.add(forBoolean(opcode == POINTER_NE));
+                b.addPush(returnStackKind, new ConditionalNode(comparison, eqValue, neValue));
                 break;
 
             case IS_NULL:
@@ -90,23 +90,23 @@ class HotSpotWordOperationPlugin extends WordOperationPlugin {
                 ValueNode pointer = args[0];
                 assert pointer.stamp() instanceof MetaspacePointerStamp;
 
-                IsNullNode isNull = b.append(new IsNullNode(pointer));
-                b.push(returnStackKind, b.append(new ConditionalNode(isNull, b.append(forBoolean(true)), b.append(forBoolean(false)))));
+                IsNullNode isNull = b.add(new IsNullNode(pointer));
+                b.addPush(returnStackKind, new ConditionalNode(isNull, b.add(forBoolean(true)), b.add(forBoolean(false))));
                 break;
 
             case FROM_POINTER:
                 assert args.length == 1;
-                b.push(returnStackKind, b.append(new PointerCastNode(StampFactory.forKind(wordKind), args[0])));
+                b.addPush(returnStackKind, new PointerCastNode(StampFactory.forKind(wordKind), args[0]));
                 break;
 
             case TO_KLASS_POINTER:
                 assert args.length == 1;
-                b.push(returnStackKind, b.append(new PointerCastNode(KlassPointerStamp.klass(), args[0])));
+                b.addPush(returnStackKind, new PointerCastNode(KlassPointerStamp.klass(), args[0]));
                 break;
 
             case TO_METHOD_POINTER:
                 assert args.length == 1;
-                b.push(returnStackKind, b.append(new PointerCastNode(MethodPointerStamp.method(), args[0])));
+                b.addPush(returnStackKind, new PointerCastNode(MethodPointerStamp.method(), args[0]));
                 break;
 
             case READ_KLASS_POINTER:
@@ -118,7 +118,7 @@ class HotSpotWordOperationPlugin extends WordOperationPlugin {
                 } else {
                     location = makeLocation(b, args[1], args[2]);
                 }
-                ReadNode read = b.append(new ReadNode(args[0], location, readStamp, BarrierType.NONE));
+                ReadNode read = b.add(new ReadNode(args[0], location, readStamp, BarrierType.NONE));
                 /*
                  * The read must not float outside its block otherwise it may float above an
                  * explicit zero check on its base address.

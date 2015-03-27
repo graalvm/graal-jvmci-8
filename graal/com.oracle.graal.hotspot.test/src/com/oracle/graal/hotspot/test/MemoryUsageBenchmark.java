@@ -63,7 +63,7 @@ public class MemoryUsageBenchmark extends HotSpotGraalCompilerTest {
             return cs.hashCode();
         }
 
-        if (cs instanceof StringBuffer) {
+        if (cs instanceof StringBuilder) {
             int[] hash = {0};
             cs.chars().forEach(c -> hash[0] += c);
             return hash[0];
@@ -180,7 +180,7 @@ public class MemoryUsageBenchmark extends HotSpotGraalCompilerTest {
         compileAndTime("complex");
         if (CompileTheWorldClasspath.getValue() != SUN_BOOT_CLASS_PATH) {
             CompileTheWorld ctw = new CompileTheWorld(CompileTheWorldClasspath.getValue(), new Config(CompileTheWorldConfig.getValue()), CompileTheWorldStartAt.getValue(),
-                            CompileTheWorldStopAt.getValue(), CompileTheWorldVerbose.getValue());
+                            CompileTheWorldStopAt.getValue(), CompileTheWorldMethodFilter.getValue(), CompileTheWorldVerbose.getValue());
             try {
                 ctw.compile();
             } catch (Throwable e) {

@@ -5199,7 +5199,7 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
     *vm = (JavaVM *)(&main_vm);
     *(JNIEnv**)penv = thread->jni_environment();
 
-#if defined(GRAAL) && !defined(PRODUCT)
+#if defined(GRAAL)
     // We turn off CompileTheWorld so that compilation requests are not ignored during bootstrap or that Graal can be compiled by C1/C2.
     bool doCTW = CompileTheWorld;
     CompileTheWorld = false;
@@ -5210,14 +5210,14 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
     if (FLAG_IS_DEFAULT(BootstrapGraal) ? !TieredCompilation : BootstrapGraal) {
       GraalCompiler::instance()->bootstrap();
     }
-#elif defined(GRAAL) && !defined(PRODUCT)
+#elif defined(GRAAL)
     if (doCTW) {
       // required for hosted CTW.
       CompilationPolicy::completed_vm_startup();
     }
 #endif
 
-#if defined(GRAAL) && !defined(PRODUCT)
+#if defined(GRAAL)
     if (doCTW) {
       GraalCompiler::instance()->compile_the_world();
     }

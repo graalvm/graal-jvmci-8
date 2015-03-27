@@ -162,8 +162,8 @@ public class PartialEvaluator {
 
         public boolean apply(GraphBuilderContext builder, ResolvedJavaField staticField) {
             if (TruffleCompilerOptions.TruffleExcludeAssertions.getValue() && staticField.getName().equals("$assertionsDisabled")) {
-                ConstantNode trueNode = builder.append(ConstantNode.forBoolean(true));
-                builder.push(trueNode.getKind().getStackKind(), trueNode);
+                ConstantNode trueNode = builder.add(ConstantNode.forBoolean(true));
+                builder.addPush(trueNode);
                 return true;
             }
             return tryConstantFold(builder, providers.getMetaAccess(), providers.getConstantReflection(), staticField, null);
@@ -209,7 +209,7 @@ public class PartialEvaluator {
                     return inlineInfo;
                 }
             }
-            if (replacements != null && (replacements.getMethodSubstitutionMethod(original) != null || replacements.getMacroSubstitution(original) != null)) {
+            if (replacements != null && replacements.getMethodSubstitutionMethod(original) != null) {
                 return null;
             }
             assert !builder.parsingReplacement();
@@ -268,6 +268,9 @@ public class PartialEvaluator {
             if (targetMethod != null) {
                 // TODO maybe cast arguments
 
+                if (!targetMethod.canBeInlined()) {
+                    return null;
+                }
                 if (targetMethod.canBeStaticallyBound()) {
                     return new InlineInfo(targetMethod, false, false);
                 }
@@ -337,14 +340,9 @@ public class PartialEvaluator {
         new ConvertDeoptimizeToGuardPhase().apply(graph, tierContext);
 
         for (MethodCallTargetNode methodCallTargetNode : graph.getNodes(MethodCallTargetNode.TYPE)) {
-            Class<? extends FixedWithNextNode> macroSubstitution = providers.getReplacements().getMacroSubstitution(methodCallTargetNode.targetMethod());
-            if (macroSubstitution != null) {
-                InliningUtil.inlineMacroNode(methodCallTargetNode.invoke(), methodCallTargetNode.targetMethod(), macroSubstitution);
-            } else {
-                StructuredGraph inlineGraph = providers.getReplacements().getMethodSubstitution(methodCallTargetNode.targetMethod());
-                if (inlineGraph != null) {
-                    InliningUtil.inline(methodCallTargetNode.invoke(), inlineGraph, true, null);
-                }
+            StructuredGraph inlineGraph = providers.getReplacements().getMethodSubstitution(methodCallTargetNode.targetMethod());
+            if (inlineGraph != null) {
+                InliningUtil.inline(methodCallTargetNode.invoke(), inlineGraph, true, null);
             }
         }
 
@@ -359,6 +357,9 @@ public class PartialEvaluator {
         } catch (Throwable t) {
             Debug.handle(t);
         }
+
+        // recompute loop frequencies now that BranchProbabilities have had time to canonicalize
+        ComputeLoopFrequenciesClosure.compute(graph);
     }
 
     private void partialEvaluation(final OptimizedCallTarget callTarget, final StructuredGraph graph, PhaseContext baseContext, HighTierContext tierContext) {
@@ -513,12 +514,6 @@ public class PartialEvaluator {
                         }
 
                         Replacements replacements = providers.getReplacements();
-                        Class<? extends FixedWithNextNode> macroSubstitution = replacements.getMacroSubstitution(methodCallTargetNode.targetMethod());
-                        if (macroSubstitution != null) {
-                            InliningUtil.inlineMacroNode(methodCallTargetNode.invoke(), methodCallTargetNode.targetMethod(), macroSubstitution);
-                            changed = changedInIteration = true;
-                            continue;
-                        }
                         StructuredGraph inlineGraph = replacements.getMethodSubstitution(methodCallTargetNode.targetMethod());
 
                         ResolvedJavaMethod targetMethod = methodCallTargetNode.targetMethod();
