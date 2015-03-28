@@ -1063,6 +1063,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.truffle",
+        "com.oracle.graal.graph.test",
         "com.oracle.graal.compiler.test",
         "com.oracle.truffle.sl.test",
       ],
