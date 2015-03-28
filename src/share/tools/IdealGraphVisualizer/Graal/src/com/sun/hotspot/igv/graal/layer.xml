@@ -5,6 +5,11 @@
         <file name="Coloring" url="filters/color.filter">
             <attr name="enabled" boolvalue="true"/>
         </file>
+        
+        
+        <file name="Stamp Coloring" url="filters/stampColor.filter">
+            <attr name="enabled" boolvalue="false"/>
+        </file>
       
         <file name="Probability Coloring" url="filters/probability.filter">
             <attr name="enabled" boolvalue="false"/>
