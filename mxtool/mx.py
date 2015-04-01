@@ -836,10 +836,12 @@ class HgConfig:
                 abort('failed to get status')
             else:
                 return None
-            
-    def locate(self, sDir, patterns=[], abortOnError=True):
+
+    def locate(self, sDir, patterns=None, abortOnError=True):
         try:
-            if not isinstance(patterns, list):
+            if patterns is None:
+                patterns = []
+            elif not isinstance(patterns, list):
                 patterns = [patterns]
             return subprocess.check_output(['hg', 'locate', '-R', sDir] + patterns).split('\n')
         except OSError:
