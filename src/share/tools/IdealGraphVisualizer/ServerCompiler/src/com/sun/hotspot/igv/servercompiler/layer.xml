@@ -2,6 +2,7 @@
 <!DOCTYPE filesystem PUBLIC "-//NetBeans//DTD Filesystem 1.1//EN" "http://www.netbeans.org/dtds/filesystem-1_1.dtd">
 <filesystem>
       <folder name="Filters">
+          <!--
         <file name="C2 Basic Coloring" url="filters/color.filter">
             <attr name="enabled" boolvalue="false"/>
         </file>
@@ -25,5 +26,6 @@
             <attr name="enabled" boolvalue="false"/>
             <attr name="after" stringvalue="C2 Remove Filter"/>
         </file>
+        -->
     </folder>	
 </filesystem>
