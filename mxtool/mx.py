@@ -1660,6 +1660,8 @@ def _handle_lookup_jdk(jdk, varName, flagName, allowMultiple):
     elif get_os() == 'linux':
         base = '/usr/lib/jvm'
         candidateJdks = [join(base, n) for n in os.listdir(base) if exists(join(base, n, 'jre/lib/rt.jar'))]
+        base = '/usr/java'
+        candidateJdks += [join(base, n) for n in os.listdir(base) if exists(join(base, n, 'jre/lib/rt.jar'))]
     elif get_os() == 'solaris':
         base = '/usr/jdk/instances'
         candidateJdks = [join(base, n) for n in os.listdir(base) if exists(join(base, n, 'jre/lib/rt.jar'))]
@@ -5331,7 +5333,7 @@ def main():
     if opts.extra_java_homes:
         for java_home in opts.extra_java_homes.split(os.pathsep):
             extraJdk = JavaConfig(java_home, opts.java_dbg_port)
-            if extraJdk > defaultJdk:
+            if extraJdk.javaCompliance > defaultJdk.javaCompliance:
                 abort('Secondary JDK ' + extraJdk.jdk + ' has higher compliance level than default JDK ' + defaultJdk.jdk)
             _java_homes.append(extraJdk)
 
