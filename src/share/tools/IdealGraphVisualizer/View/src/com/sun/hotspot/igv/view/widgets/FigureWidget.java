@@ -32,8 +32,10 @@ import com.sun.hotspot.igv.util.DoubleClickHandler;
 import com.sun.hotspot.igv.util.PropertiesSheet;
 import com.sun.hotspot.igv.view.DiagramScene;
 import java.awt.*;
+import java.awt.color.ColorSpace;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.AbstractAction;
@@ -130,7 +132,15 @@ public class FigureWidget extends Widget implements Properties.Provider, PopupMe
             middleWidget.addChild(lw);
             lw.setLabel(displayString);
             lw.setFont(figure.getDiagram().getFont());
-            lw.setForeground(Color.BLACK);
+            
+            Color bg = f.getColor();
+            double brightness = bg.getRed() * 0.21 + bg.getGreen() * 0.72 + bg.getBlue() * 0.07;
+            if (brightness < 150) {
+                lw.setForeground(Color.WHITE);
+            } else {
+                lw.setForeground(Color.BLACK);
+            }
+            
             lw.setAlignment(LabelWidget.Alignment.CENTER);
             lw.setVerticalAlignment(LabelWidget.VerticalAlignment.CENTER);
             lw.setBorder(BorderFactory.createEmptyBorder());
