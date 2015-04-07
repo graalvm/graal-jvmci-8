@@ -1050,6 +1050,7 @@ suite = {
         "com.oracle.truffle.api",
         "com.oracle.graal.runtime",
         "com.oracle.graal.printer",
+        "com.oracle.graal.replacements",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
