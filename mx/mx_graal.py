@@ -84,7 +84,7 @@ _make_eclipse_launch = False
 _minVersion = mx.VersionSpec('1.8')
 
 # max version (first _unsupported_ version)
-_untilVersion = mx.VersionSpec('1.8.0_40')
+_untilVersion = None
 
 class JDKDeployedDist:
     def __init__(self, name, isExtension):
@@ -2531,7 +2531,7 @@ def mx_post_parse_cmd_line(opts):  #
     # TODO _minVersion check could probably be part of a Suite in mx?
     if mx.java().version < _minVersion:
         mx.abort('Requires Java version ' + str(_minVersion) + ' or greater for JAVA_HOME, got version ' + str(mx.java().version))
-    if mx.java().version >= _untilVersion:
+    if _untilVersion and mx.java().version >= _untilVersion:
         mx.abort('Requires Java version strictly before ' + str(_untilVersion) + ' for JAVA_HOME, got version ' + str(mx.java().version))
 
     if _vmSourcesAvailable:
