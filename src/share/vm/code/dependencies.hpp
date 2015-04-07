@@ -249,6 +249,10 @@ class Dependencies: public ResourceObj {
   // State for writing a new set of dependencies:
   GrowableArray<int>*       _dep_seen;  // (seen[h->ident] & (1<<dept))
   GrowableArray<ciBaseObject*>*  _deps[TYPE_LIMIT];
+#ifdef GRAAL
+  bool _using_dep_values;
+  GrowableArray<DepValue>*  _dep_values[TYPE_LIMIT];
+#endif
 
   static const char* _dep_name[TYPE_LIMIT];
   static int         _dep_args[TYPE_LIMIT];

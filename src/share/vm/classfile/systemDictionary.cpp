@@ -1728,7 +1728,7 @@ void SystemDictionary::roots_oops_do(OopClosure* strong, OopClosure* weak) {
   strong->do_oop(&_java_system_loader);
   strong->do_oop(&_system_loader_lock_obj);
   CDS_ONLY(SystemDictionaryShared::roots_oops_do(strong);)
-  GRAAL_ONLY(blk->do_oop(&_graal_loader);)
+  GRAAL_ONLY(strong->do_oop(&_graal_loader);)
 
   // Adjust dictionary
   dictionary()->roots_oops_do(strong, weak);

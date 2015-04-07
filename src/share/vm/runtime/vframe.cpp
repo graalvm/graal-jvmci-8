@@ -327,46 +327,46 @@ static void stack_expressions(StackValueCollection* result,
 
     StackValue* const sv = create_stack_value_from_oop_map(oop_mask,
                                                            i + max_locals,
+                                                           addr);
+    assert(sv != NULL, "sanity check");
 
-StackValueCollection*  interpretedVFrame::expressions() const {
-  int length = fr().interpreter_frame_expression_stack_size();
-  if (method()->is_native()) {
-    // If the method is native, there is no expression stack
-    length = 0;
+    result->add(sv);
   }
+}
 
-  int nof_locals = method()->max_locals();
-  StackValueCollection* result = new StackValueCollection(length);
+StackValueCollection* interpretedVFrame::locals() const {
+  return stack_data(false);
+}
+
+StackValueCollection* interpretedVFrame::expressions() const {
+  return stack_data(true);
+}
+
+/*
+ * Worker routine for fetching references and/or values
+ * for a particular bci in the interpretedVFrame.
+ *
+ * Returns data for either "locals" or "expressions",
+ * using bci relative oop_map (oop_mask) information.
+ *
+ * @param expressions  bool switch controlling what data to return
+                       (false == locals / true == expressions)
+ *
+ */
+StackValueCollection* interpretedVFrame::stack_data(bool expressions) const {
 
   InterpreterOopMap oop_mask;
-  // Get oopmap describing oops and int for current bci
-  if (TraceDeoptimization && Verbose) {
-    methodHandle m_h(method());
+  // oopmap for current bci
+  if ((TraceDeoptimization && Verbose) GRAAL_ONLY( || PrintDeoptimizationDetails)) {
+    methodHandle m_h(Thread::current(), method());
     OopMapCache::compute_one_oop_map(m_h, bci(), &oop_mask);
   } else {
     method()->mask_for(bci(), &oop_mask);
   }
-  // handle expressions
-  for(int i=0; i < length; i++) {
-    // Find stack location
-    intptr_t *addr = fr().interpreter_frame_expression_stack_at(i);
 
-    // Depending on oop/int put it in the right package
-    StackValue *sv;
-    if (oop_mask.is_oop(i + nof_locals)) {
-      // oop value
-      Handle h(*(oop *)addr);
-      sv = new StackValue(h);
-    } else {
-      // integer
-      sv = new StackValue(*addr);
-    }
-    assert(sv != NULL, "sanity check");
-    result->add(sv);
-  }
-  return result;
-}
+  const int mask_len = oop_mask.number_of_entries();
 
+  // If the method is native, method()->max_locals() is not telling the truth.
   // For our purposes, max locals instead equals the size of parameters.
   const int max_locals = method()->is_native() ?
     method()->size_of_parameters() : method()->max_locals();
