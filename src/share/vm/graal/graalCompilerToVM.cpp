@@ -720,14 +720,8 @@ C2V_VMENTRY(jlong, readUnsafeKlassPointer, (JNIEnv*, jobject, jobject o))
   return klass;
 C2V_END
 
-C2V_VMENTRY(jobject, readUnsafeOop, (JNIEnv*, jobject, jobject base, jlong displacement, jboolean compressed))
-  address addr = (address)JNIHandles::resolve(base);
-  oop ret;
-  if (compressed) {
-    ret = oopDesc::load_decode_heap_oop((narrowOop*)(addr + displacement));
-  } else {
-    ret = oopDesc::load_decode_heap_oop((oop*)(addr + displacement));
-  }
+C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv*, jobject, jlong addr))
+  oop ret = oopDesc::load_decode_heap_oop((oop*)(address)addr);
   return JNIHandles::make_local(ret);
 C2V_END
 
@@ -1098,7 +1092,7 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"invalidateInstalledCode",                      CC"("INSTALLED_CODE")V",                                                  FN_PTR(invalidateInstalledCode)},
   {CC"getJavaMirror",                                CC"("METASPACE_KLASS")"CLASS,                                             FN_PTR(getJavaMirror)},
   {CC"readUnsafeKlassPointer",                       CC"("OBJECT")J",                                                          FN_PTR(readUnsafeKlassPointer)},
-  {CC"readUnsafeOop",                                CC"("OBJECT"JZ)"OBJECT,                                                   FN_PTR(readUnsafeOop)},
+  {CC"readUncompressedOop",                          CC"(J)"OBJECT,                                                            FN_PTR(readUncompressedOop)},
   {CC"collectCounters",                              CC"()[J",                                                                 FN_PTR(collectCounters)},
   {CC"allocateCompileId",                            CC"("METASPACE_METHOD"I)I",                                               FN_PTR(allocateCompileId)},
   {CC"isMature",                                     CC"("METASPACE_METHOD_DATA")Z",                                           FN_PTR(isMature)},
