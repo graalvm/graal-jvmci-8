@@ -1674,18 +1674,23 @@ def _handle_lookup_jdk(jdk, varName, flagName, allowMultiple):
     candidateJdks = []
     if get_os() == 'darwin':
         base = '/Library/Java/JavaVirtualMachines'
-        candidateJdks = [join(base, n, 'Contents/Home') for n in os.listdir(base) if exists(join(base, n, 'Contents/Home'))]
+        if exists(base):
+            candidateJdks = [join(base, n, 'Contents/Home') for n in os.listdir(base) if exists(join(base, n, 'Contents/Home'))]
     elif get_os() == 'linux':
         base = '/usr/lib/jvm'
-        candidateJdks = [join(base, n) for n in os.listdir(base) if exists(join(base, n, 'jre/lib/rt.jar'))]
+        if exists(base):
+            candidateJdks = [join(base, n) for n in os.listdir(base) if exists(join(base, n, 'jre/lib/rt.jar'))]
         base = '/usr/java'
-        candidateJdks += [join(base, n) for n in os.listdir(base) if exists(join(base, n, 'jre/lib/rt.jar'))]
+        if exists(base):
+            candidateJdks += [join(base, n) for n in os.listdir(base) if exists(join(base, n, 'jre/lib/rt.jar'))]
     elif get_os() == 'solaris':
         base = '/usr/jdk/instances'
-        candidateJdks = [join(base, n) for n in os.listdir(base) if exists(join(base, n, 'jre/lib/rt.jar'))]
+        if exists(base):
+            candidateJdks = [join(base, n) for n in os.listdir(base) if exists(join(base, n, 'jre/lib/rt.jar'))]
     elif get_os() == 'windows':
         base = r'C:\Program Files\Java'
-        candidateJdks = [join(base, n) for n in os.listdir(base) if exists(join(base, n, r'jre\lib\rt.jar'))]
+        if exists(base):
+            candidateJdks = [join(base, n) for n in os.listdir(base) if exists(join(base, n, r'jre\lib\rt.jar'))]
 
     javaHome = None
     if len(candidateJdks) != 0:
