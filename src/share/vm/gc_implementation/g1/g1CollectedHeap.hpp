@@ -665,11 +665,6 @@ public:
   virtual void gc_prologue(bool full);
   virtual void gc_epilogue(bool full);
 
-  #ifdef GRAAL
-    HeapWord** top_addr() const;
-    HeapWord** end_addr() const;
-  #endif
-
   inline void set_humongous_is_live(oop obj);
 
   bool humongous_is_live(uint region) {
