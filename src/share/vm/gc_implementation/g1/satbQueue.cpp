@@ -39,7 +39,7 @@ void ObjPtrQueue::flush() {
   // first before we flush it, otherwise we might end up with an
   // enqueued buffer with refs into the CSet which breaks our invariants.
   filter();
-  PtrQueue::flush();
+  flush_impl();
 }
 
 // This method removes entries from an SATB buffer that will not be
@@ -283,37 +283,6 @@ void SATBMarkQueueSet::set_closure(ObjectClosure* closure) {
 void SATBMarkQueueSet::set_par_closure(int i, ObjectClosure* par_closure) {
   assert(ParallelGCThreads > 0 && _par_closures != NULL, "Precondition");
   _par_closures[i] = par_closure;
-}
-
-void SATBMarkQueueSet::iterate_closure_all_threads() {
-  for(JavaThread* t = Threads::first(); t; t = t->next()) {
-    t->satb_mark_queue().apply_closure_and_empty(_closure);
-  }
-  shared_satb_queue()->apply_closure_and_empty(_closure);
-}
-
-void SATBMarkQueueSet::par_iterate_closure_all_threads(uint worker) {
-  SharedHeap* sh = SharedHeap::heap();
-  int parity = sh->strong_roots_parity();
-
-  for(JavaThread* t = Threads::first(); t; t = t->next()) {
-    if (t->claim_oops_do(true, parity)) {
-      t->satb_mark_queue().apply_closure_and_empty(_par_closures[worker]);
-    }
-  }
-
-  // We also need to claim the VMThread so that its parity is updated
-  // otherwise the next call to Thread::possibly_parallel_oops_do inside
-  // a StrongRootsScope might skip the VMThread because it has a stale
-  // parity that matches the parity set by the StrongRootsScope
-  //
-  // Whichever worker succeeds in claiming the VMThread gets to do
-  // the shared queue.
-
-  VMThread* vmt = VMThread::vm_thread();
-  if (vmt->claim_oops_do(true, parity)) {
-    shared_satb_queue()->apply_closure_and_empty(_par_closures[worker]);
-  }
 }
 
 bool SATBMarkQueueSet::apply_closure_to_completed_buffer_work(bool par,

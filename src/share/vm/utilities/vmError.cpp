@@ -22,6 +22,7 @@
  *
  */
 
+#include <fcntl.h>
 #include "precompiled.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
@@ -31,7 +32,7 @@
 #include "runtime/frame.inline.hpp"
 #include "runtime/init.hpp"
 #include "runtime/os.hpp"
-#include "runtime/thread.hpp"
+#include "runtime/thread.inline.hpp"
 #include "runtime/vmThread.hpp"
 #include "runtime/vm_operations.hpp"
 #include "services/memTracker.hpp"
@@ -799,6 +800,11 @@ void VMError::report(outputStream* st) {
        st->cr();
      }
 
+  STEP(228, "(Native Memory Tracking)" )
+     if (_verbose) {
+       MemTracker::error_report(st);
+     }
+
   STEP(230, "" )
 
      if (_verbose) {
@@ -863,7 +869,8 @@ fdStream VMError::log; // error log used by VMError::report_and_die()
 static int expand_and_open(const char* pattern, char* buf, size_t buflen, size_t pos) {
   int fd = -1;
   if (Arguments::copy_expand_pid(pattern, strlen(pattern), &buf[pos], buflen - pos)) {
-    fd = open(buf, O_RDWR | O_CREAT | O_TRUNC, 0666);
+    // the O_EXCL flag will cause the open to fail if the file exists
+    fd = open(buf, O_RDWR | O_CREAT | O_EXCL, 0666);
   }
   return fd;
 }
@@ -921,9 +928,6 @@ void VMError::report_and_die() {
   static bool out_done = false;         // done printing to standard out
   static bool log_done = false;         // done saving error log
   static bool transmit_report_done = false; // done error reporting
-
-  // disble NMT to avoid further exception
-  MemTracker::shutdown(MemTracker::NMT_error_reporting);
 
   if (SuppressFatalErrorMessage) {
       os::abort();

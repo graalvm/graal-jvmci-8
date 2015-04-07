@@ -260,73 +260,73 @@ Method* interpretedVFrame::method() const {
   return fr().interpreter_frame_method();
 }
 
-StackValueCollection* interpretedVFrame::locals() const {
-  int length = method()->max_locals();
+static StackValue* create_stack_value_from_oop_map(const InterpreterOopMap& oop_mask,
+                                                   int index,
+                                                   const intptr_t* const addr) {
 
-  if (method()->is_native()) {
-    // If the method is native, max_locals is not telling the truth.
-    // maxlocals then equals the size of parameters
-    length = method()->size_of_parameters();
+  assert(index >= 0 &&
+         index < oop_mask.number_of_entries(), "invariant");
+
+  // categorize using oop_mask
+  if (oop_mask.is_oop(index)) {
+    // reference (oop) "r"
+    Handle h(addr != NULL ? (*(oop*)addr) : (oop)NULL);
+    return new StackValue(h);
+  }
+  // value (integer) "v"
+  return new StackValue(addr != NULL ? *addr : 0);
+}
+
+static bool is_in_expression_stack(const frame& fr, const intptr_t* const addr) {
+  assert(addr != NULL, "invariant");
+
+  // Ensure to be 'inside' the expresion stack (i.e., addr >= sp for Intel).
+  // In case of exceptions, the expression stack is invalid and the sp
+  // will be reset to express this condition.
+  if (frame::interpreter_frame_expression_stack_direction() > 0) {
+    return addr <= fr.interpreter_frame_tos_address();
   }
 
-  StackValueCollection* result = new StackValueCollection(length);
+  return addr >= fr.interpreter_frame_tos_address();
+}
 
-  // Get oopmap describing oops and int for current bci
-  InterpreterOopMap oop_mask;
-  if ((TraceDeoptimization && Verbose) GRAAL_ONLY( || PrintDeoptimizationDetails)) {
-    methodHandle m_h(Thread::current(), method());
-    OopMapCache::compute_one_oop_map(m_h, bci(), &oop_mask);
-  } else {
-    method()->mask_for(bci(), &oop_mask);
-  }
-  // handle locals
-  for(int i=0; i < length; i++) {
-    // Find stack location
-    intptr_t *addr = locals_addr_at(i);
+static void stack_locals(StackValueCollection* result,
+                         int length,
+                         const InterpreterOopMap& oop_mask,
+                         const frame& fr) {
 
-    // Depending on oop/int put it in the right package
-    StackValue *sv;
-    if (oop_mask.is_oop(i)) {
-      // oop value
-      Handle h(*(oop *)addr);
-      sv = new StackValue(h);
-    } else {
-      // integer
-      sv = new StackValue(*addr);
-    }
+  assert(result != NULL, "invariant");
+
+  for (int i = 0; i < length; ++i) {
+    const intptr_t* const addr = fr.interpreter_frame_local_at(i);
+    assert(addr != NULL, "invariant");
+    assert(addr >= fr.sp(), "must be inside the frame");
+
+    StackValue* const sv = create_stack_value_from_oop_map(oop_mask, i, addr);
     assert(sv != NULL, "sanity check");
+
     result->add(sv);
   }
-  return result;
 }
 
-void interpretedVFrame::set_locals(StackValueCollection* values) const {
-  if (values == NULL || values->size() == 0) return;
+static void stack_expressions(StackValueCollection* result,
+                              int length,
+                              int max_locals,
+                              const InterpreterOopMap& oop_mask,
+                              const frame& fr) {
 
-  int length = method()->max_locals();
-  if (method()->is_native()) {
-    // If the method is native, max_locals is not telling the truth.
-    // maxlocals then equals the size of parameters
-    length = method()->size_of_parameters();
-  }
+  assert(result != NULL, "invariant");
 
-  assert(length == values->size(), "Mismatch between actual stack format and supplied data");
-
-  // handle locals
-  for (int i = 0; i < length; i++) {
-    // Find stack location
-    intptr_t *addr = locals_addr_at(i);
-
-    // Depending on oop/int put it in the right package
-    StackValue *sv = values->at(i);
-    assert(sv != NULL, "sanity check");
-    if (sv->type() == T_OBJECT) {
-      *(oop *) addr = (sv->get_obj())();
-    } else {                   // integer
-      *addr = sv->get_int();
+  for (int i = 0; i < length; ++i) {
+    const intptr_t* addr = fr.interpreter_frame_expression_stack_at(i);
+    assert(addr != NULL, "invariant");
+    if (!is_in_expression_stack(fr, addr)) {
+      // Need to ensure no bogus escapes.
+      addr = NULL;
     }
-  }
-}
+
+    StackValue* const sv = create_stack_value_from_oop_map(oop_mask,
+                                                           i + max_locals,
 
 StackValueCollection*  interpretedVFrame::expressions() const {
   int length = fr().interpreter_frame_expression_stack_size();
@@ -340,7 +340,7 @@ StackValueCollection*  interpretedVFrame::expressions() const {
 
   InterpreterOopMap oop_mask;
   // Get oopmap describing oops and int for current bci
-  if ((TraceDeoptimization && Verbose) GRAAL_ONLY( || PrintDeoptimizationDetails)) {
+  if (TraceDeoptimization && Verbose) {
     methodHandle m_h(method());
     OopMapCache::compute_one_oop_map(m_h, bci(), &oop_mask);
   } else {
@@ -367,6 +367,57 @@ StackValueCollection*  interpretedVFrame::expressions() const {
   return result;
 }
 
+  // For our purposes, max locals instead equals the size of parameters.
+  const int max_locals = method()->is_native() ?
+    method()->size_of_parameters() : method()->max_locals();
+
+  assert(mask_len >= max_locals, "invariant");
+
+  const int length = expressions ? mask_len - max_locals : max_locals;
+  assert(length >= 0, "invariant");
+
+  StackValueCollection* const result = new StackValueCollection(length);
+
+  if (0 == length) {
+    return result;
+  }
+
+  if (expressions) {
+    stack_expressions(result, length, max_locals, oop_mask, fr());
+  } else {
+    stack_locals(result, length, oop_mask, fr());
+  }
+
+  assert(length == result->size(), "invariant");
+
+  return result;
+}
+
+void interpretedVFrame::set_locals(StackValueCollection* values) const {
+  if (values == NULL || values->size() == 0) return;
+
+  // If the method is native, max_locals is not telling the truth.
+  // maxlocals then equals the size of parameters
+  const int max_locals = method()->is_native() ?
+    method()->size_of_parameters() : method()->max_locals();
+
+  assert(max_locals == values->size(), "Mismatch between actual stack format and supplied data");
+
+  // handle locals
+  for (int i = 0; i < max_locals; i++) {
+    // Find stack location
+    intptr_t *addr = locals_addr_at(i);
+
+    // Depending on oop/int put it in the right package
+    const StackValue* const sv = values->at(i);
+    assert(sv != NULL, "sanity check");
+    if (sv->type() == T_OBJECT) {
+      *(oop *) addr = (sv->get_obj())();
+    } else {                   // integer
+      *addr = sv->get_int();
+    }
+  }
+}
 
 // ------------- cChunk --------------
 
