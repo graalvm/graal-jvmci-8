@@ -389,7 +389,10 @@ suite = {
     "com.oracle.graal.hotspot.sparc" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.compiler.sparc"],
+      "dependencies" : [
+        "com.oracle.graal.compiler.sparc",
+        "com.oracle.graal.replacements.sparc",
+      ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : ["com.oracle.graal.service.processor"],
       "javaCompliance" : "1.8",
@@ -600,6 +603,18 @@ suite = {
       "javaCompliance" : "1.8",
       "annotationProcessors" : ["com.oracle.graal.service.processor"],
       "workingSets" : "Graal,Replacements,AMD64",
+    },
+
+    "com.oracle.graal.replacements.sparc" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+          "com.oracle.graal.replacements",
+          "com.oracle.graal.sparc",
+          ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Replacements,SPARC",
     },
 
     "com.oracle.graal.replacements.test" : {
