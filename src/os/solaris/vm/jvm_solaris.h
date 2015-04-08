@@ -40,8 +40,9 @@
  * This file is currently collecting system-specific dregs for the
  * JNI conversion, which should be sorted out later.
  */
-
+#define __USE_LEGACY_PROTOTYPES__
 #include <dirent.h>             /* For DIR */
+#undef __USE_LEGACY_PROTOTYPES__
 #include <sys/param.h>          /* For MAXPATHLEN */
 #include <sys/socket.h>         /* For socklen_t */
 #include <unistd.h>             /* For F_OK, R_OK, W_OK */
