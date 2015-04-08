@@ -210,7 +210,7 @@ define_pd_global(uint64_t,MaxRAM,                    1ULL*G);
 #define CI_COMPILER_COUNT 0
 #else
 
-#ifdef COMPILER2
+#if defined(COMPILER2) || defined(COMPILERGRAAL)
 #define CI_COMPILER_COUNT 2
 #else
 #define CI_COMPILER_COUNT 1
