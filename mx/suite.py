@@ -598,6 +598,7 @@ suite = {
       "dependencies" : [
           "com.oracle.graal.replacements",
           "com.oracle.graal.amd64",
+          "com.oracle.graal.lir.amd64",
           ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
