@@ -2093,6 +2093,27 @@ bool nmethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_
     unloading_occurred = true;
   }
 
+#ifdef GRAAL
+  // Follow Graal method
+  if (_graal_installed_code != NULL) {
+    if (_graal_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_graal_installed_code)) {
+      if (!is_alive->do_object_b(_graal_installed_code)) {
+        _graal_installed_code = NULL;
+      }
+    } else {
+      if (can_unload(is_alive, (oop*)&_graal_installed_code, unloading_occurred)) {
+        return false;
+      }
+    }
+  }
+
+  if (_speculation_log != NULL) {
+    if (!is_alive->do_object_b(_speculation_log)) {
+      _speculation_log = NULL;
+    }
+  }
+#endif
+
   // When class redefinition is used all metadata in the CodeCache has to be recorded,
   // so that unused "previous versions" can be purged. Since walking the CodeCache can
   // be expensive, the "mark on stack" is piggy-backed on this parallel unloading code.
