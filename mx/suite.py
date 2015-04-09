@@ -329,7 +329,6 @@ suite = {
         "com.oracle.graal.runtime",
         "com.oracle.graal.printer",
         "com.oracle.graal.hotspotvmconfig",
-        "com.oracle.nfi",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : [
@@ -1079,6 +1078,7 @@ suite = {
       "dependencies" : [
         "com.oracle.graal.truffle",
         "com.oracle.graal.hotspot",
+        "com.oracle.nfi",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -1091,7 +1091,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.truffle.hotspot",
-        "com.oracle.graal.asm.amd64",
+        "com.oracle.graal.hotspot.amd64",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
