@@ -107,7 +107,7 @@ private:
 
 public:
 
-  CodeInstaller() : _arena(Arena(mtCompiler)) {}
+  CodeInstaller() : _arena(mtCompiler) {}
   GraalEnv::CodeInstallResult install(Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log);
 
   static address runtime_call_target_address(oop runtime_call);
