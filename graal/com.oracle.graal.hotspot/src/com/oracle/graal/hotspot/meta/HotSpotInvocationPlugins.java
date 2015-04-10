@@ -61,19 +61,6 @@ final class HotSpotInvocationPlugins extends InvocationPlugins {
                 return;
             }
         }
-        if (!config.useCountLeadingZerosInstruction) {
-            if (name.equals("numberOfLeadingZeros")) {
-                assert declaringClass.equals(Integer.class) || declaringClass.equals(Long.class);
-                return;
-            }
-        }
-        if (!config.useCountTrailingZerosInstruction) {
-            if (name.equals("numberOfTrailingZeros")) {
-                assert declaringClass.equals(Integer.class);
-                return;
-            }
-        }
-
         if (config.useHeapProfiler) {
             if (plugin instanceof BoxPlugin) {
                 // The heap profiler wants to see all allocations related to boxing
@@ -150,7 +137,7 @@ final class HotSpotInvocationPlugins extends InvocationPlugins {
     public void checkNewNodes(GraphBuilderContext b, InvocationPlugin plugin, NodeIterable<Node> newNodes) {
         if (GraalOptions.ImmutableCode.getValue()) {
             for (Node node : newNodes) {
-                if (node instanceof ConstantNode) {
+                if (node.hasUsages() && node instanceof ConstantNode) {
                     ConstantNode c = (ConstantNode) node;
                     if (c.getKind() == Kind.Object && !AheadOfTimeVerificationPhase.isLegalObjectConstant(c)) {
                         throw new AssertionError("illegal constant node in AOT: " + node);

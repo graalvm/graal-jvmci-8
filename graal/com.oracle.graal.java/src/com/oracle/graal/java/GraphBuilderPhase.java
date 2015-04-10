@@ -37,7 +37,6 @@ import java.util.*;
 
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.api.replacements.*;
 import com.oracle.graal.bytecode.*;
 import com.oracle.graal.compiler.common.*;
 import com.oracle.graal.compiler.common.calc.*;
@@ -50,7 +49,7 @@ import com.oracle.graal.graph.Node.ValueNumberable;
 import com.oracle.graal.graph.iterators.*;
 import com.oracle.graal.graphbuilderconf.*;
 import com.oracle.graal.graphbuilderconf.InlineInvokePlugin.InlineInfo;
-import com.oracle.graal.graphbuilderconf.InvocationPlugins.Receiver;
+import com.oracle.graal.graphbuilderconf.InvocationPlugins.InvocationPluginReceiver;
 import com.oracle.graal.java.AbstractBytecodeParser.ReplacementContext;
 import com.oracle.graal.java.BciBlockMapping.BciBlock;
 import com.oracle.graal.java.BciBlockMapping.ExceptionDispatchBlock;
@@ -79,7 +78,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
     @Override
     protected void run(StructuredGraph graph, HighTierContext context) {
-        new Instance(context.getMetaAccess(), context.getStampProvider(), null, context.getConstantReflection(), graphBuilderConfig, context.getOptimisticOptimizations(), null).run(graph);
+        new Instance(context.getMetaAccess(), context.getStampProvider(), context.getConstantReflection(), graphBuilderConfig, context.getOptimisticOptimizations(), null).run(graph);
     }
 
     public GraphBuilderConfiguration getGraphBuilderConfig() {
@@ -99,24 +98,17 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
         private final OptimisticOptimizations optimisticOpts;
         private final StampProvider stampProvider;
         private final ConstantReflectionProvider constantReflection;
-        private final SnippetReflectionProvider snippetReflectionProvider;
 
-        public Instance(MetaAccessProvider metaAccess, StampProvider stampProvider, SnippetReflectionProvider snippetReflectionProvider, ConstantReflectionProvider constantReflection,
-                        GraphBuilderConfiguration graphBuilderConfig, OptimisticOptimizations optimisticOpts, ReplacementContext initialReplacementContext) {
+        public Instance(MetaAccessProvider metaAccess, StampProvider stampProvider, ConstantReflectionProvider constantReflection, GraphBuilderConfiguration graphBuilderConfig,
+                        OptimisticOptimizations optimisticOpts, ReplacementContext initialReplacementContext) {
             this.graphBuilderConfig = graphBuilderConfig;
             this.optimisticOpts = optimisticOpts;
             this.metaAccess = metaAccess;
             this.stampProvider = stampProvider;
             this.constantReflection = constantReflection;
-            this.snippetReflectionProvider = snippetReflectionProvider;
             this.initialReplacementContext = initialReplacementContext;
 
             assert metaAccess != null;
-        }
-
-        public Instance(MetaAccessProvider metaAccess, StampProvider stampProvider, ConstantReflectionProvider constantReflection, GraphBuilderConfiguration graphBuilderConfig,
-                        OptimisticOptimizations optimisticOpts, ReplacementContext initialReplacementContext) {
-            this(metaAccess, stampProvider, null, constantReflection, graphBuilderConfig, optimisticOpts, initialReplacementContext);
         }
 
         @Override
@@ -133,7 +125,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 frameState.initializeForMethodStart(graphBuilderConfig.eagerResolving() || replacementContext != null, graphBuilderConfig.getPlugins().getParameterPlugin());
                 parser.build(graph.start(), frameState);
 
-                parser.connectLoopEndToBegin();
+                connectLoopEndToBegin(graph);
 
                 // Remove dead parameters.
                 for (ParameterNode param : graph.getNodes(ParameterNode.TYPE)) {
@@ -225,42 +217,6 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
 
             public BytecodeParserError(String msg, Object... args) {
                 super(msg, args);
-            }
-        }
-
-        static class InvocationPluginReceiver implements Receiver {
-            final BytecodeParser parser;
-            ValueNode[] args;
-            ValueNode value;
-
-            public InvocationPluginReceiver(BytecodeParser parser) {
-                this.parser = parser;
-            }
-
-            @Override
-            public ValueNode get() {
-                assert args != null : "Cannot get the receiver of a static method";
-                if (value == null) {
-                    value = parser.nullCheckedValue(args[0]);
-                    if (value != args[0]) {
-                        args[0] = value;
-                    }
-                }
-                return value;
-            }
-
-            @Override
-            public boolean isConstant() {
-                return args[0].isConstant();
-            }
-
-            InvocationPluginReceiver init(ResolvedJavaMethod targetMethod, ValueNode[] newArgs) {
-                if (!targetMethod.isStatic()) {
-                    this.args = newArgs;
-                    this.value = null;
-                    return this;
-                }
-                return null;
             }
         }
 
@@ -415,28 +371,6 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                         Debug.dump(graph, "Bytecodes parsed: " + method.getDeclaringClass().getUnqualifiedName() + "." + method.getName());
                     }
                 }
-            }
-
-            /**
-             * Gets a version of a given value that has a
-             * {@linkplain StampTool#isPointerNonNull(ValueNode) non-null} stamp.
-             */
-            ValueNode nullCheckedValue(ValueNode value) {
-                if (!StampTool.isPointerNonNull(value.stamp())) {
-                    IsNullNode condition = graph.unique(new IsNullNode(value));
-                    ObjectStamp receiverStamp = (ObjectStamp) value.stamp();
-                    Stamp stamp = receiverStamp.join(objectNonNull());
-                    FixedGuardNode fixedGuard = append(new FixedGuardNode(condition, NullCheckException, InvalidateReprofile, true));
-                    PiNode nonNullReceiver = graph.unique(new PiNode(value, stamp));
-                    nonNullReceiver.setGuard(fixedGuard);
-                    // TODO: Propogating the non-null into the frame state would
-                    // remove subsequent null-checks on the same value. However,
-                    // it currently causes an assertion failure when merging states.
-                    //
-                    // frameState.replace(value, nonNullReceiver);
-                    return nonNullReceiver;
-                }
-                return value;
             }
 
             private void detectLoops(FixedNode startInstruction) {
@@ -1194,15 +1128,17 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                         return;
                     }
 
-                    if (tryInvocationPlugin(args, targetMethod, resultType)) {
-                        if (TraceParserPlugins.getValue()) {
-                            traceWithContext("used invocation plugin for %s", targetMethod.format("%h.%n(%p)"));
+                    if (invokeKind.isDirect()) {
+                        if (tryInvocationPlugin(args, targetMethod, resultType)) {
+                            if (TraceParserPlugins.getValue()) {
+                                traceWithContext("used invocation plugin for %s", targetMethod.format("%h.%n(%p)"));
+                            }
+                            return;
                         }
-                        return;
-                    }
 
-                    if (tryInline(args, targetMethod, invokeKind, returnType)) {
-                        return;
+                        if (tryInline(args, targetMethod, returnType)) {
+                            return;
+                        }
                     }
                 } finally {
                     currentInvokeReturnType = null;
@@ -1301,7 +1237,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     }
 
                     InvocationPluginAssertions assertions = assertionsEnabled() ? new InvocationPluginAssertions(plugin, args, targetMethod, resultType) : null;
-                    if (InvocationPlugin.execute(this, targetMethod, plugin, invocationPluginReceiver.init(targetMethod, args), args)) {
+                    if (plugin.execute(this, targetMethod, invocationPluginReceiver.init(targetMethod, args), args)) {
                         assert assertions.check(true);
                         return true;
                     }
@@ -1315,22 +1251,26 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 return plugin != null && plugin.apply(this, targetMethod, args);
             }
 
-            private boolean tryInline(ValueNode[] args, ResolvedJavaMethod targetMethod, InvokeKind invokeKind, JavaType returnType) {
+            private boolean tryInline(ValueNode[] args, ResolvedJavaMethod targetMethod, JavaType returnType) {
                 InlineInvokePlugin plugin = graphBuilderConfig.getPlugins().getInlineInvokePlugin();
                 boolean canBeInlined = parsingReplacement() || targetMethod.canBeInlined();
-                if (plugin == null || !invokeKind.isDirect() || !canBeInlined) {
+                if (plugin == null || !canBeInlined) {
                     return false;
                 }
                 InlineInfo inlineInfo = plugin.getInlineInfo(this, targetMethod, args, returnType);
                 if (inlineInfo != null) {
-                    return inline(plugin, targetMethod, inlineInfo, args);
+                    return inline(plugin, targetMethod, inlineInfo.methodToInline, inlineInfo.isReplacement, inlineInfo.isIntrinsic, args);
                 }
                 return false;
             }
 
-            public boolean inline(InlineInvokePlugin plugin, ResolvedJavaMethod targetMethod, InlineInfo inlineInfo, ValueNode[] args) {
+            public void intrinsify(ResolvedJavaMethod targetMethod, ResolvedJavaMethod substitute, ValueNode[] args) {
+                boolean res = inline(null, targetMethod, substitute, true, true, args);
+                assert res : "failed to inline " + substitute;
+            }
+
+            private boolean inline(InlineInvokePlugin plugin, ResolvedJavaMethod targetMethod, ResolvedJavaMethod inlinedMethod, boolean isReplacement, boolean isIntrinsic, ValueNode[] args) {
                 int bci = bci();
-                ResolvedJavaMethod inlinedMethod = inlineInfo.methodToInline;
                 if (TraceInlineDuringParsing.getValue() || TraceParserPlugins.getValue()) {
                     if (targetMethod.equals(inlinedMethod)) {
                         traceWithContext("inlining call to %s", inlinedMethod.format("%h.%n(%p)"));
@@ -1366,9 +1306,9 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                         }
                     }
                 } else {
-                    if (context == null && inlineInfo.isReplacement) {
+                    if (context == null && isReplacement) {
                         assert !inlinedMethod.equals(targetMethod);
-                        if (inlineInfo.isIntrinsic) {
+                        if (isIntrinsic) {
                             context = new IntrinsicContext(targetMethod, inlinedMethod, args, bci);
                         } else {
                             context = new ReplacementContext(targetMethod, inlinedMethod);
@@ -2023,30 +1963,6 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 }
             }
 
-            /**
-             * Remove loop header without loop ends. This can happen with degenerated loops like
-             * this one:
-             *
-             * <pre>
-             * for (;;) {
-             *     try {
-             *         break;
-             *     } catch (UnresolvedException iioe) {
-             *     }
-             * }
-             * </pre>
-             */
-            private void connectLoopEndToBegin() {
-                for (LoopBeginNode begin : graph.getNodes(LoopBeginNode.TYPE)) {
-                    if (begin.loopEnds().isEmpty()) {
-                        assert begin.forwardEndCount() == 1;
-                        graph.reduceDegenerateLoopBegin(begin);
-                    } else {
-                        GraphUtil.normalizeLoopBegin(begin);
-                    }
-                }
-            }
-
             private void createUnwind() {
                 assert frameState.stackSize() == 1 : frameState;
                 ValueNode exception = frameState.apop();
@@ -2447,10 +2363,6 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                 return constantReflection;
             }
 
-            public SnippetReflectionProvider getSnippetReflection() {
-                return snippetReflectionProvider;
-            }
-
             /**
              * Gets the graph being processed by this builder.
              */
@@ -2512,5 +2424,28 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
         boolean assertionsEnabled = false;
         assert assertionsEnabled = true;
         return assertionsEnabled;
+    }
+
+    /**
+     * Remove loop header without loop ends. This can happen with degenerated loops like this one:
+     *
+     * <pre>
+     * for (;;) {
+     *     try {
+     *         break;
+     *     } catch (UnresolvedException iioe) {
+     *     }
+     * }
+     * </pre>
+     */
+    public static void connectLoopEndToBegin(StructuredGraph graph) {
+        for (LoopBeginNode begin : graph.getNodes(LoopBeginNode.TYPE)) {
+            if (begin.loopEnds().isEmpty()) {
+                assert begin.forwardEndCount() == 1;
+                graph.reduceDegenerateLoopBegin(begin);
+            } else {
+                GraphUtil.normalizeLoopBegin(begin);
+            }
+        }
     }
 }

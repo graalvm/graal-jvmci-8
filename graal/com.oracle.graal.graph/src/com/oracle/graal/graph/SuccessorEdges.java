@@ -35,7 +35,7 @@ public final class SuccessorEdges extends Edges {
     }
 
     @Override
-    protected void update(Node node, Node oldValue, Node newValue) {
+    public void update(Node node, Node oldValue, Node newValue) {
         node.updatePredecessor(oldValue, newValue);
     }
 }

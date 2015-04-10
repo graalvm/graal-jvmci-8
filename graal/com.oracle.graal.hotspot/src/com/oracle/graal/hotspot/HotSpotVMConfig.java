@@ -1255,8 +1255,8 @@ public class HotSpotVMConfig extends CompilerObject {
     @HotSpotVMType(name = "BasicLock", get = HotSpotVMType.Type.SIZE) @Stable public int basicLockSize;
     @HotSpotVMField(name = "BasicLock::_displaced_header", type = "markOop", get = HotSpotVMField.Type.OFFSET) @Stable public int basicLockDisplacedHeaderOffset;
 
-    @HotSpotVMValue(expression = "Universe::heap()->end_addr()", get = HotSpotVMValue.Type.ADDRESS) @Stable public long heapEndAddress;
-    @HotSpotVMValue(expression = "Universe::heap()->top_addr()", get = HotSpotVMValue.Type.ADDRESS) @Stable public long heapTopAddress;
+    @HotSpotVMValue(expression = "Universe::heap()->supports_inline_contig_alloc() ? Universe::heap()->end_addr() : (HeapWord**)-1", get = HotSpotVMValue.Type.ADDRESS) @Stable public long heapEndAddress;
+    @HotSpotVMValue(expression = "Universe::heap()->supports_inline_contig_alloc() ? Universe::heap()->top_addr() : (HeapWord**)-1", get = HotSpotVMValue.Type.ADDRESS) @Stable public long heapTopAddress;
 
     @HotSpotVMField(name = "Thread::_allocated_bytes", type = "jlong", get = HotSpotVMField.Type.OFFSET) @Stable public int threadAllocatedBytesOffset;
 
@@ -1444,6 +1444,9 @@ public class HotSpotVMConfig extends CompilerObject {
     @HotSpotVMValue(expression = "SharedRuntime::dsin", get = HotSpotVMValue.Type.ADDRESS) @Stable public long arithmeticSinAddress;
     @HotSpotVMValue(expression = "SharedRuntime::dcos", get = HotSpotVMValue.Type.ADDRESS) @Stable public long arithmeticCosAddress;
     @HotSpotVMValue(expression = "SharedRuntime::dtan", get = HotSpotVMValue.Type.ADDRESS) @Stable public long arithmeticTanAddress;
+    @HotSpotVMValue(expression = "SharedRuntime::dexp", get = HotSpotVMValue.Type.ADDRESS) @Stable public long arithmeticExpAddress;
+    @HotSpotVMValue(expression = "SharedRuntime::dlog", get = HotSpotVMValue.Type.ADDRESS) @Stable public long arithmeticLogAddress;
+    @HotSpotVMValue(expression = "SharedRuntime::dlog10", get = HotSpotVMValue.Type.ADDRESS) @Stable public long arithmeticLog10Address;
     @HotSpotVMValue(expression = "SharedRuntime::dpow", get = HotSpotVMValue.Type.ADDRESS) @Stable public long arithmeticPowAddress;
 
     @HotSpotVMValue(expression = "(jint) GraalCounterSize") @Stable public int graalCountersSize;

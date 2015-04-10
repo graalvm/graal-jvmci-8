@@ -720,14 +720,8 @@ C2V_VMENTRY(jlong, readUnsafeKlassPointer, (JNIEnv*, jobject, jobject o))
   return klass;
 C2V_END
 
-C2V_VMENTRY(jobject, readUnsafeOop, (JNIEnv*, jobject, jobject base, jlong displacement, jboolean compressed))
-  address addr = (address)JNIHandles::resolve(base);
-  oop ret;
-  if (compressed) {
-    ret = oopDesc::load_decode_heap_oop((narrowOop*)(addr + displacement));
-  } else {
-    ret = oopDesc::load_decode_heap_oop((oop*)(addr + displacement));
-  }
+C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv*, jobject, jlong addr))
+  oop ret = oopDesc::load_decode_heap_oop((oop*)(address)addr);
   return JNIHandles::make_local(ret);
 C2V_END
 
@@ -837,9 +831,7 @@ C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject 
             bool reallocated = false;
             if (objects != NULL) {
               reallocated = Deoptimization::realloc_objects(thread, fst.current(), objects, THREAD);
-              if (reallocated) {
-                Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects);
-              }
+              Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, reallocated);
 
               GrowableArray<ScopeValue*>* local_values = cvf->scope()->locals();
               typeArrayHandle array = oopFactory::new_boolArray(local_values->length(), thread);
@@ -984,38 +976,36 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
   }
 
   bool reallocated = Deoptimization::realloc_objects(thread, fst.current(), objects, THREAD);
-  if (reallocated) {
-    Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects);
+  Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, reallocated);
 
-    for (int frame_index = 0; frame_index < virtualFrames->length(); frame_index++) {
-      compiledVFrame* cvf = virtualFrames->at(frame_index);
+  for (int frame_index = 0; frame_index < virtualFrames->length(); frame_index++) {
+    compiledVFrame* cvf = virtualFrames->at(frame_index);
 
-      GrowableArray<ScopeValue*>* scopeLocals = cvf->scope()->locals();
-      StackValueCollection* locals = cvf->locals();
+    GrowableArray<ScopeValue*>* scopeLocals = cvf->scope()->locals();
+    StackValueCollection* locals = cvf->locals();
 
-      if (locals != NULL) {
-        for (int i2 = 0; i2 < locals->size(); i2++) {
-          StackValue* var = locals->at(i2);
-          if (var->type() == T_OBJECT && scopeLocals->at(i2)->is_object()) {
-            jvalue val;
-            val.l = (jobject) locals->at(i2)->get_obj()();
-            cvf->update_local(T_OBJECT, i2, val);
-          }
+    if (locals != NULL) {
+      for (int i2 = 0; i2 < locals->size(); i2++) {
+        StackValue* var = locals->at(i2);
+        if (var->type() == T_OBJECT && scopeLocals->at(i2)->is_object()) {
+          jvalue val;
+          val.l = (jobject) locals->at(i2)->get_obj()();
+          cvf->update_local(T_OBJECT, i2, val);
         }
       }
     }
+  }
 
-    // all locals are materialized by now
-    HotSpotStackFrameReference::set_localIsVirtual(hs_frame, NULL);
+  // all locals are materialized by now
+  HotSpotStackFrameReference::set_localIsVirtual(hs_frame, NULL);
 
-    // update the locals array
-    objArrayHandle array = HotSpotStackFrameReference::locals(hs_frame);
-    StackValueCollection* locals = virtualFrames->at(last_frame_number)->locals();
-    for (int i = 0; i < locals->size(); i++) {
-      StackValue* var = locals->at(i);
-      if (var->type() == T_OBJECT) {
-        array->obj_at_put(i, locals->at(i)->get_obj()());
-      }
+  // update the locals array
+  objArrayHandle array = HotSpotStackFrameReference::locals(hs_frame);
+  StackValueCollection* locals = virtualFrames->at(last_frame_number)->locals();
+  for (int i = 0; i < locals->size(); i++) {
+    StackValue* var = locals->at(i);
+    if (var->type() == T_OBJECT) {
+      array->obj_at_put(i, locals->at(i)->get_obj()());
     }
   }
 C2V_END
@@ -1098,7 +1088,7 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"invalidateInstalledCode",                      CC"("INSTALLED_CODE")V",                                                  FN_PTR(invalidateInstalledCode)},
   {CC"getJavaMirror",                                CC"("METASPACE_KLASS")"CLASS,                                             FN_PTR(getJavaMirror)},
   {CC"readUnsafeKlassPointer",                       CC"("OBJECT")J",                                                          FN_PTR(readUnsafeKlassPointer)},
-  {CC"readUnsafeOop",                                CC"("OBJECT"JZ)"OBJECT,                                                   FN_PTR(readUnsafeOop)},
+  {CC"readUncompressedOop",                          CC"(J)"OBJECT,                                                            FN_PTR(readUncompressedOop)},
   {CC"collectCounters",                              CC"()[J",                                                                 FN_PTR(collectCounters)},
   {CC"allocateCompileId",                            CC"("METASPACE_METHOD"I)I",                                               FN_PTR(allocateCompileId)},
   {CC"isMature",                                     CC"("METASPACE_METHOD_DATA")Z",                                           FN_PTR(isMature)},

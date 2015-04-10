@@ -24,6 +24,7 @@
 
 // no precompiled headers
 #include "asm/macroAssembler.hpp"
+#include "macroAssembler_sparc.hpp"
 #include "classfile/classLoader.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
@@ -482,6 +483,15 @@ JVM_handle_solaris_signal(int sig, siginfo_t* info, void* ucVoid,
         pc = (address)uc->uc_mcontext.gregs[REG_O7];
       }
 #endif  // COMPILER2
+
+#ifdef GRAAL
+      else if (sig == SIGILL && info->si_trapno == 0x100 + ST_RESERVED_FOR_USER_0) {
+	printf("SIGILL 0x%x 0x%x\n", info->si_trapno, ST_RESERVED_FOR_USER_0);
+	uc->uc_mcontext.gregs[REG_PC] = (greg_t)pc+4;
+	uc->uc_mcontext.gregs[REG_nPC] = (greg_t)npc + 4;
+	return true;
+      }
+#endif // GRAAL
 
       else if (sig == SIGSEGV && info->si_code > 0 && !MacroAssembler::needs_explicit_null_check((intptr_t)info->si_addr)) {
         // Determination of interpreter/vtable stub/compiled code null exception

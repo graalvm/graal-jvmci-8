@@ -22,12 +22,18 @@
  */
 package com.oracle.graal.graphbuilderconf;
 
+import static com.oracle.graal.api.meta.DeoptimizationAction.*;
+import static com.oracle.graal.api.meta.DeoptimizationReason.*;
+import static com.oracle.graal.compiler.common.type.StampFactory.*;
+
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.api.replacements.*;
+import com.oracle.graal.compiler.common.type.*;
 import com.oracle.graal.nodes.CallTargetNode.InvokeKind;
 import com.oracle.graal.nodes.*;
+import com.oracle.graal.nodes.calc.*;
 import com.oracle.graal.nodes.spi.*;
+import com.oracle.graal.nodes.type.*;
 
 /**
  * Used by a {@link GraphBuilderPlugin} to interface with a graph builder object.
@@ -161,6 +167,16 @@ public interface GraphBuilderContext {
      */
     void handleReplacedInvoke(InvokeKind invokeKind, ResolvedJavaMethod targetMethod, ValueNode[] args);
 
+    /**
+     * Intrinsifies an invocation of a given method by inlining the bytecodes of a given
+     * substitution method.
+     *
+     * @param targetMethod the method being intrinsified
+     * @param substitute the intrinsic implementation
+     * @param args the arguments with which to inline the invocation
+     */
+    void intrinsify(ResolvedJavaMethod targetMethod, ResolvedJavaMethod substitute, ValueNode[] args);
+
     StampProvider getStampProvider();
 
     MetaAccessProvider getMetaAccess();
@@ -170,8 +186,6 @@ public interface GraphBuilderContext {
     }
 
     ConstantReflectionProvider getConstantReflection();
-
-    SnippetReflectionProvider getSnippetReflection();
 
     /**
      * Gets the graph being constructed.
@@ -222,7 +236,7 @@ public interface GraphBuilderContext {
      * Determines if the current parsing context is a snippet or method substitution.
      */
     default boolean parsingReplacement() {
-        return getReplacement() == null;
+        return getReplacement() != null;
     }
 
     /**
@@ -232,4 +246,27 @@ public interface GraphBuilderContext {
     Replacement getReplacement();
 
     BailoutException bailout(String string);
+
+    /**
+     * Gets a version of a given value that has a {@linkplain StampTool#isPointerNonNull(ValueNode)
+     * non-null} stamp.
+     */
+    default ValueNode nullCheckedValue(ValueNode value) {
+        if (!StampTool.isPointerNonNull(value.stamp())) {
+            IsNullNode condition = getGraph().unique(new IsNullNode(value));
+            ObjectStamp receiverStamp = (ObjectStamp) value.stamp();
+            Stamp stamp = receiverStamp.join(objectNonNull());
+            FixedGuardNode fixedGuard = append(new FixedGuardNode(condition, NullCheckException, InvalidateReprofile, true));
+            PiNode nonNullReceiver = getGraph().unique(new PiNode(value, stamp));
+            nonNullReceiver.setGuard(fixedGuard);
+            // TODO: Propogating the non-null into the frame state would
+            // remove subsequent null-checks on the same value. However,
+            // it currently causes an assertion failure when merging states.
+            //
+            // frameState.replace(value, nonNullReceiver);
+            return nonNullReceiver;
+        }
+        return value;
+    }
+
 }

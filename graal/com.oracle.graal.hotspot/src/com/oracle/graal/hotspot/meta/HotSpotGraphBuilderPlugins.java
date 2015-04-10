@@ -23,6 +23,7 @@
 package com.oracle.graal.hotspot.meta;
 
 import static com.oracle.graal.hotspot.replacements.HotSpotReplacementsUtil.*;
+import static com.oracle.graal.hotspot.replacements.SystemSubstitutions.*;
 
 import java.lang.invoke.*;
 
@@ -31,9 +32,8 @@ import sun.reflect.*;
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.api.meta.*;
 import com.oracle.graal.api.replacements.*;
-import com.oracle.graal.compiler.common.type.*;
-import com.oracle.graal.graphbuilderconf.GraphBuilderConfiguration.Plugins;
 import com.oracle.graal.graphbuilderconf.*;
+import com.oracle.graal.graphbuilderconf.GraphBuilderConfiguration.Plugins;
 import com.oracle.graal.graphbuilderconf.InvocationPlugins.Receiver;
 import com.oracle.graal.graphbuilderconf.InvocationPlugins.Registration;
 import com.oracle.graal.hotspot.*;
@@ -65,7 +65,7 @@ public class HotSpotGraphBuilderPlugins {
      * @param stampProvider
      */
     public static Plugins create(HotSpotVMConfig config, HotSpotWordTypes wordTypes, MetaAccessProvider metaAccess, ConstantReflectionProvider constantReflection,
-                    SnippetReflectionProvider snippetReflection, ForeignCallsProvider foreignCalls, StampProvider stampProvider, ReplacementsImpl replacements, Architecture arch) {
+                    SnippetReflectionProvider snippetReflection, ForeignCallsProvider foreignCalls, StampProvider stampProvider, ReplacementsImpl replacements) {
         InvocationPlugins invocationPlugins = new HotSpotInvocationPlugins(config, metaAccess, constantReflection.getMethodHandleAccess());
 
         Plugins plugins = new Plugins(invocationPlugins);
@@ -85,7 +85,8 @@ public class HotSpotGraphBuilderPlugins {
         registerCallSitePlugins(invocationPlugins);
         registerReflectionPlugins(invocationPlugins);
         registerStableOptionPlugins(invocationPlugins);
-        StandardGraphBuilderPlugins.registerInvocationPlugins(metaAccess, arch, invocationPlugins, !config.useHeapProfiler);
+        registerAESPlugins(invocationPlugins, config);
+        StandardGraphBuilderPlugins.registerInvocationPlugins(metaAccess, invocationPlugins, !config.useHeapProfiler);
 
         return plugins;
     }
@@ -99,6 +100,7 @@ public class HotSpotGraphBuilderPlugins {
                 return true;
             }
         });
+        r.registerMethodSubstitution(ObjectSubstitutions.class, "hashCode", Receiver.class);
     }
 
     private static void registerClassPlugins(InvocationPlugins plugins) {
@@ -162,21 +164,11 @@ public class HotSpotGraphBuilderPlugins {
 
     private static void registerSystemPlugins(InvocationPlugins plugins, ForeignCallsProvider foreignCalls) {
         Registration r = new Registration(plugins, System.class);
-        r.register0("currentTimeMillis", new InvocationPlugin() {
-            public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver) {
-                b.addPush(Kind.Long, new ForeignCallNode(foreignCalls, SystemSubstitutions.JAVA_TIME_MILLIS, StampFactory.forKind(Kind.Long)));
-                return true;
-            }
-        });
-        r.register0("nanoTime", new InvocationPlugin() {
-            public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver) {
-                b.addPush(Kind.Long, new ForeignCallNode(foreignCalls, SystemSubstitutions.JAVA_TIME_NANOS, StampFactory.forKind(Kind.Long)));
-                return true;
-            }
-        });
+        r.register0("currentTimeMillis", new ForeignCallPlugin(foreignCalls, JAVA_TIME_MILLIS));
+        r.register0("nanoTime", new ForeignCallPlugin(foreignCalls, JAVA_TIME_NANOS));
         r.register1("identityHashCode", Object.class, new InvocationPlugin() {
             public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode object) {
-                b.addPush(new SystemIdentityHashCodeNode(b.getInvokeKind(), targetMethod, b.bci(), b.getInvokeReturnType(), object));
+                b.addPush(new IdentityHashCodeNode(b.getInvokeKind(), targetMethod, b.bci(), b.getInvokeReturnType(), object));
                 return true;
             }
         });
@@ -217,5 +209,26 @@ public class HotSpotGraphBuilderPlugins {
                 return false;
             }
         });
+    }
+
+    private static void registerAESPlugins(InvocationPlugins plugins, HotSpotVMConfig config) {
+        if (config.useAESIntrinsics) {
+            assert config.aescryptEncryptBlockStub != 0L;
+            assert config.aescryptDecryptBlockStub != 0L;
+            assert config.cipherBlockChainingEncryptAESCryptStub != 0L;
+            assert config.cipherBlockChainingDecryptAESCryptStub != 0L;
+            Class<?> c = MethodSubstitutionPlugin.resolveClass("com.sun.crypto.provider.CipherBlockChaining", true);
+            if (c != null) {
+                Registration r = new Registration(plugins, c);
+                r.registerMethodSubstitution(CipherBlockChainingSubstitutions.class, "encrypt", Receiver.class, byte[].class, int.class, int.class, byte[].class, int.class);
+                r.registerMethodSubstitution(CipherBlockChainingSubstitutions.class, "decrypt", Receiver.class, byte[].class, int.class, int.class, byte[].class, int.class);
+            }
+            c = MethodSubstitutionPlugin.resolveClass("com.sun.crypto.provider.AESCrypt", true);
+            if (c != null) {
+                Registration r = new Registration(plugins, c);
+                r.registerMethodSubstitution(AESCryptSubstitutions.class, "encryptBlock", Receiver.class, byte[].class, int.class, byte[].class, int.class);
+                r.registerMethodSubstitution(AESCryptSubstitutions.class, "decryptBlock", Receiver.class, byte[].class, int.class, byte[].class, int.class);
+            }
+        }
     }
 }

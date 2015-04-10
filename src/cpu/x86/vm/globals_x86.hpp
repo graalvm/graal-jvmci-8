@@ -131,16 +131,16 @@ define_pd_global(uintx, TypeProfileLevel, GRAAL_ONLY(0) NOT_GRAAL(111));
           "Use fast-string operation for zeroing: rep stosb")               \
                                                                             \
   /* Use Restricted Transactional Memory for lock eliding */                \
-  experimental(bool, UseRTMLocking, false,                                  \
+  product(bool, UseRTMLocking, false,                                       \
           "Enable RTM lock eliding for inflated locks in compiled code")    \
                                                                             \
   experimental(bool, UseRTMForStackLocks, false,                            \
           "Enable RTM lock eliding for stack locks in compiled code")       \
                                                                             \
-  experimental(bool, UseRTMDeopt, false,                                    \
+  product(bool, UseRTMDeopt, false,                                         \
           "Perform deopt and recompilation based on RTM abort ratio")       \
                                                                             \
-  experimental(uintx, RTMRetryCount, 5,                                     \
+  product(uintx, RTMRetryCount, 5,                                          \
           "Number of RTM retries on lock abort or busy")                    \
                                                                             \
   experimental(intx, RTMSpinLoopCount, 100,                                 \
@@ -177,6 +177,8 @@ define_pd_global(uintx, TypeProfileLevel, GRAAL_ONLY(0) NOT_GRAAL(111));
           "Use count trailing zeros instruction")                           \
                                                                             \
   product(bool, UseBMI1Instructions, false,                                 \
-          "Use BMI instructions")
-
+          "Use BMI1 instructions")                                          \
+                                                                            \
+  product(bool, UseBMI2Instructions, false,                                 \
+          "Use BMI2 instructions")
 #endif // CPU_X86_VM_GLOBALS_X86_HPP

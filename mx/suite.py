@@ -329,7 +329,6 @@ suite = {
         "com.oracle.graal.runtime",
         "com.oracle.graal.printer",
         "com.oracle.graal.hotspotvmconfig",
-        "com.oracle.nfi",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : [
@@ -389,7 +388,10 @@ suite = {
     "com.oracle.graal.hotspot.sparc" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.compiler.sparc"],
+      "dependencies" : [
+        "com.oracle.graal.compiler.sparc",
+        "com.oracle.graal.replacements.sparc",
+      ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : ["com.oracle.graal.service.processor"],
       "javaCompliance" : "1.8",
@@ -594,12 +596,23 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
           "com.oracle.graal.replacements",
-          "com.oracle.graal.amd64",
+          "com.oracle.graal.lir.amd64",
           ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "annotationProcessors" : ["com.oracle.graal.service.processor"],
       "workingSets" : "Graal,Replacements,AMD64",
+    },
+
+    "com.oracle.graal.replacements.sparc" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+          "com.oracle.graal.replacements",
+          ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Replacements,SPARC",
     },
 
     "com.oracle.graal.replacements.test" : {
@@ -1050,6 +1063,7 @@ suite = {
         "com.oracle.truffle.api",
         "com.oracle.graal.runtime",
         "com.oracle.graal.printer",
+        "com.oracle.graal.replacements",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -1078,6 +1092,7 @@ suite = {
       "dependencies" : [
         "com.oracle.graal.truffle",
         "com.oracle.graal.hotspot",
+        "com.oracle.nfi",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -1090,7 +1105,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.truffle.hotspot",
-        "com.oracle.graal.asm.amd64",
+        "com.oracle.graal.hotspot.amd64",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",

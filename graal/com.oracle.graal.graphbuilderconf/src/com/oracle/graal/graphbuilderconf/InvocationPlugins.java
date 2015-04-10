@@ -63,6 +63,42 @@ public class InvocationPlugins {
         }
     }
 
+    public static class InvocationPluginReceiver implements Receiver {
+        private final GraphBuilderContext parser;
+        private ValueNode[] args;
+        private ValueNode value;
+
+        public InvocationPluginReceiver(GraphBuilderContext parser) {
+            this.parser = parser;
+        }
+
+        @Override
+        public ValueNode get() {
+            assert args != null : "Cannot get the receiver of a static method";
+            if (value == null) {
+                value = parser.nullCheckedValue(args[0]);
+                if (value != args[0]) {
+                    args[0] = value;
+                }
+            }
+            return value;
+        }
+
+        @Override
+        public boolean isConstant() {
+            return args[0].isConstant();
+        }
+
+        public InvocationPluginReceiver init(ResolvedJavaMethod targetMethod, ValueNode[] newArgs) {
+            if (!targetMethod.isStatic()) {
+                this.args = newArgs;
+                this.value = null;
+                return this;
+            }
+            return null;
+        }
+    }
+
     /**
      * Utility for
      * {@linkplain InvocationPlugins#register(InvocationPlugin, Class, String, Class...)
@@ -145,6 +181,18 @@ public class InvocationPlugins {
         public void register5(String name, Class<?> arg1, Class<?> arg2, Class<?> arg3, Class<?> arg4, Class<?> arg5, InvocationPlugin plugin) {
             plugins.register(plugin, declaringClass, name, arg1, arg2, arg3, arg4, arg5);
         }
+
+        /**
+         * Registers a plugin that implements a method based on the bytecode of a substitute method.
+         *
+         * @param substituteDeclaringClass the class declaring the substitute method
+         * @param name the name of both the original and substitute method
+         * @param argumentTypes the parameter types of the substitute
+         */
+        public void registerMethodSubstitution(Class<?> substituteDeclaringClass, String name, Class<?>... argumentTypes) {
+            MethodSubstitutionPlugin plugin = new MethodSubstitutionPlugin(substituteDeclaringClass, name, argumentTypes);
+            plugins.register(plugin, declaringClass, name, argumentTypes);
+        }
     }
 
     static final class MethodInfo {
@@ -165,6 +213,7 @@ public class InvocationPlugins {
             if (!isStatic) {
                 argumentTypes[0] = declaringClass;
             }
+            assert resolveJava() != null;
         }
 
         @Override
@@ -185,16 +234,20 @@ public class InvocationPlugins {
         }
 
         ResolvedJavaMethod resolve(MetaAccessProvider metaAccess) {
+            return metaAccess.lookupJavaMethod(resolveJava());
+        }
+
+        Executable resolveJava() {
             try {
-                ResolvedJavaMethod method;
+                Executable res;
                 Class<?>[] parameterTypes = isStatic ? argumentTypes : Arrays.copyOfRange(argumentTypes, 1, argumentTypes.length);
                 if (name.equals("<init>")) {
-                    method = metaAccess.lookupJavaMethod(declaringClass.getDeclaredConstructor(parameterTypes));
+                    res = declaringClass.getDeclaredConstructor(parameterTypes);
                 } else {
-                    method = metaAccess.lookupJavaMethod(declaringClass.getDeclaredMethod(name, parameterTypes));
+                    res = declaringClass.getDeclaredMethod(name, parameterTypes);
                 }
-                assert method.isStatic() == isStatic;
-                return method;
+                assert Modifier.isStatic(res.getModifiers()) == isStatic;
+                return res;
             } catch (NoSuchMethodException | SecurityException e) {
                 throw new GraalInternalError(e);
             }
@@ -372,6 +425,14 @@ public class InvocationPlugins {
             while (p != null) {
                 assert !p.registrations.contains(method) : "a plugin is already registered for " + method;
                 p = p.parent;
+            }
+            if (plugin instanceof ForeignCallPlugin) {
+                return true;
+            }
+            if (plugin instanceof MethodSubstitutionPlugin) {
+                MethodSubstitutionPlugin msplugin = (MethodSubstitutionPlugin) plugin;
+                msplugin.getJavaSubstitute();
+                return true;
             }
             int arguments = method.isStatic ? method.argumentTypes.length : method.argumentTypes.length - 1;
             assert arguments < SIGS.length : format("need to extend %s to support method with %d arguments: %s", InvocationPlugin.class.getSimpleName(), arguments, method);

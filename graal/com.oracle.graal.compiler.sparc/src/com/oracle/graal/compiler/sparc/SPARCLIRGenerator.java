@@ -44,6 +44,7 @@ import com.oracle.graal.lir.sparc.SPARCArithmetic.BinaryRegConst;
 import com.oracle.graal.lir.sparc.SPARCArithmetic.BinaryRegReg;
 import com.oracle.graal.lir.sparc.SPARCArithmetic.MulHighOp;
 import com.oracle.graal.lir.sparc.SPARCArithmetic.RemOp;
+import com.oracle.graal.lir.sparc.SPARCArithmetic.SPARCLMulccOp;
 import com.oracle.graal.lir.sparc.SPARCArithmetic.Unary2Op;
 import com.oracle.graal.lir.sparc.SPARCCompare.CompareOp;
 import com.oracle.graal.lir.sparc.SPARCControlFlow.BranchOp;
@@ -467,34 +468,6 @@ public abstract class SPARCLIRGenerator extends LIRGenerator {
     }
 
     @Override
-    public Value emitMathLog(Value input, boolean base10) {
-        Variable result = newVariable(LIRKind.derive(input));
-        append(new SPARCMathIntrinsicOp(LOG, result, asAllocatable(input)));
-        return result;
-    }
-
-    @Override
-    public Value emitMathCos(Value input) {
-        Variable result = newVariable(LIRKind.derive(input));
-        append(new SPARCMathIntrinsicOp(COS, result, asAllocatable(input)));
-        return result;
-    }
-
-    @Override
-    public Value emitMathSin(Value input) {
-        Variable result = newVariable(LIRKind.derive(input));
-        append(new SPARCMathIntrinsicOp(SIN, result, asAllocatable(input)));
-        return result;
-    }
-
-    @Override
-    public Value emitMathTan(Value input) {
-        Variable result = newVariable(LIRKind.derive(input));
-        append(new SPARCMathIntrinsicOp(TAN, result, asAllocatable(input)));
-        return result;
-    }
-
-    @Override
     public Variable emitByteSwap(Value input) {
         Variable result = newVariable(LIRKind.derive(input));
         append(new SPARCByteSwapOp(this, result, input));
@@ -626,7 +599,7 @@ public abstract class SPARCLIRGenerator extends LIRGenerator {
             case Long:
                 if (setFlags) {
                     Variable result = newVariable(LIRKind.derive(a, b));
-                    append(new SPARCLMulccOp(result, a, b, this));
+                    append(new SPARCLMulccOp(result, load(a), load(b), this));
                     return result;
                 } else {
                     return emitBinary(LMUL, true, a, b);

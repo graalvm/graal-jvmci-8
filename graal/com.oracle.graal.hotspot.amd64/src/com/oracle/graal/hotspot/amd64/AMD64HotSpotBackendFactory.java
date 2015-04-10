@@ -36,6 +36,7 @@ import com.oracle.graal.hotspot.*;
 import com.oracle.graal.hotspot.meta.*;
 import com.oracle.graal.hotspot.word.*;
 import com.oracle.graal.phases.util.*;
+import com.oracle.graal.replacements.amd64.*;
 
 @ServiceProvider(HotSpotBackendFactory.class)
 public class AMD64HotSpotBackendFactory implements HotSpotBackendFactory {
@@ -187,7 +188,9 @@ public class AMD64HotSpotBackendFactory implements HotSpotBackendFactory {
     protected Plugins createGraphBuilderPlugins(HotSpotGraalRuntimeProvider runtime, TargetDescription target, HotSpotConstantReflectionProvider constantReflection,
                     HotSpotHostForeignCallsProvider foreignCalls, HotSpotMetaAccessProvider metaAccess, HotSpotSnippetReflectionProvider snippetReflection, HotSpotReplacementsImpl replacements,
                     HotSpotWordTypes wordTypes, HotSpotStampProvider stampProvider) {
-        return HotSpotGraphBuilderPlugins.create(runtime.getConfig(), wordTypes, metaAccess, constantReflection, snippetReflection, foreignCalls, stampProvider, replacements, target.arch);
+        Plugins plugins = HotSpotGraphBuilderPlugins.create(runtime.getConfig(), wordTypes, metaAccess, constantReflection, snippetReflection, foreignCalls, stampProvider, replacements);
+        AMD64GraphBuilderPlugins.register(plugins, foreignCalls, (AMD64) target.arch);
+        return plugins;
     }
 
     protected AMD64HotSpotBackend createBackend(HotSpotGraalRuntimeProvider runtime, HotSpotProviders providers) {

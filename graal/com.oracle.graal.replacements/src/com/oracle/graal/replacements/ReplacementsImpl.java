@@ -337,17 +337,23 @@ public class ReplacementsImpl implements Replacements, InlineInvokePlugin {
 
     @Override
     public StructuredGraph getSubstitution(ResolvedJavaMethod original, boolean fromBytecodeOnly) {
+        ResolvedJavaMethod substitute = null;
         if (!fromBytecodeOnly) {
             InvocationPlugin plugin = graphBuilderPlugins.getInvocationPlugins().lookupInvocation(original);
-            if (plugin != null) {
-                StructuredGraph graph = new IntrinsicGraphBuilder(providers, snippetReflection, original).buildGraph(plugin);
+            if (plugin instanceof MethodSubstitutionPlugin) {
+                MethodSubstitutionPlugin msplugin = (MethodSubstitutionPlugin) plugin;
+                substitute = msplugin.getSubstitute(providers.getMetaAccess());
+            } else if (plugin != null) {
+                StructuredGraph graph = new IntrinsicGraphBuilder(providers.getMetaAccess(), providers.getConstantReflection(), providers.getStampProvider(), original).buildGraph(plugin);
                 if (graph != null) {
                     return graph;
                 }
             }
         }
-        ClassReplacements cr = getClassReplacements(original.getDeclaringClass().getName());
-        ResolvedJavaMethod substitute = cr == null ? null : cr.methodSubstitutions.get(original);
+        if (substitute == null) {
+            ClassReplacements cr = getClassReplacements(original.getDeclaringClass().getName());
+            substitute = cr == null ? null : cr.methodSubstitutions.get(original);
+        }
         if (substitute == null) {
             return null;
         }
@@ -661,12 +667,11 @@ public class ReplacementsImpl implements Replacements, InlineInvokePlugin {
         protected Instance createGraphBuilder(MetaAccessProvider metaAccess, StampProvider stampProvider, ConstantReflectionProvider constantReflection, GraphBuilderConfiguration graphBuilderConfig,
                         OptimisticOptimizations optimisticOpts) {
             ReplacementContext initialReplacementContext = null;
-            if (method.getAnnotation(MethodSubstitution.class) != null) {
+            if (method.getAnnotation(Snippet.class) == null) {
                 // Late inlined intrinsic
                 initialReplacementContext = new IntrinsicContext(substitutedMethod, method, null, -1);
             } else {
                 // Snippet
-                assert method.getAnnotation(Snippet.class) != null;
                 ResolvedJavaMethod original = substitutedMethod != null ? substitutedMethod : method;
                 initialReplacementContext = new ReplacementContext(original, method);
             }

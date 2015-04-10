@@ -25,6 +25,7 @@
 #ifndef SHARE_VM_MEMORY_REFERENCEPROCESSOR_HPP
 #define SHARE_VM_MEMORY_REFERENCEPROCESSOR_HPP
 
+#include "gc_implementation/shared/gcTrace.hpp"
 #include "memory/referencePolicy.hpp"
 #include "memory/referenceProcessorStats.hpp"
 #include "memory/referenceType.hpp"
@@ -263,9 +264,10 @@ class ReferenceProcessor : public CHeapObj<mtGC> {
   DiscoveredList* _discoveredWeakRefs;
   DiscoveredList* _discoveredFinalRefs;
   DiscoveredList* _discoveredPhantomRefs;
+  DiscoveredList* _discoveredCleanerRefs;
 
  public:
-  static int number_of_subclasses_of_ref() { return (REF_PHANTOM - REF_OTHER); }
+  static int number_of_subclasses_of_ref() { return (REF_CLEANER - REF_OTHER); }
 
   uint num_q()                             { return _num_q; }
   uint max_num_q()                         { return _max_num_q; }
@@ -349,7 +351,8 @@ class ReferenceProcessor : public CHeapObj<mtGC> {
                                       OopClosure*        keep_alive,
                                       VoidClosure*       complete_gc,
                                       YieldClosure*      yield,
-                                      GCTimer*           gc_timer);
+                                      GCTimer*           gc_timer,
+                                      GCId               gc_id);
 
   // Delete entries in the discovered lists that have
   // either a null referent or are not active. Such
@@ -480,7 +483,8 @@ class ReferenceProcessor : public CHeapObj<mtGC> {
                                 OopClosure*                  keep_alive,
                                 VoidClosure*                 complete_gc,
                                 AbstractRefProcTaskExecutor* task_executor,
-                                GCTimer *gc_timer);
+                                GCTimer *gc_timer,
+                                GCId    gc_id);
 
   // Enqueue references at end of GC (called by the garbage collector)
   bool enqueue_discovered_references(AbstractRefProcTaskExecutor* task_executor = NULL);

@@ -65,7 +65,7 @@ public class GraphEffectList extends EffectList {
             assert position.isAlive();
             if (!node.isAlive()) {
                 graph.addWithoutUniqueWithInputs(node);
-                if (node instanceof FixedNode) {
+                if (node instanceof FixedWithNextNode) {
                     graph.addBeforeFixed(position, (FixedWithNextNode) node);
                 }
             }
@@ -144,6 +144,19 @@ public class GraphEffectList extends EffectList {
         add("kill if branch", new Effect() {
             public void apply(StructuredGraph graph, ArrayList<Node> obsoleteNodes) {
                 graph.removeSplitPropagate(ifNode, ifNode.getSuccessor(constantCondition));
+            }
+
+            public boolean isCfgKill() {
+                return true;
+            }
+        });
+    }
+
+    public void replaceWithSink(FixedWithNextNode node, ControlSinkNode sink) {
+        add("kill if branch", new Effect() {
+            public void apply(StructuredGraph graph, ArrayList<Node> obsoleteNodes) {
+                node.replaceAtPredecessor(sink);
+                GraphUtil.killCFG(node);
             }
 
             public boolean isCfgKill() {

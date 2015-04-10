@@ -327,7 +327,7 @@ typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > MetablockTreeDicti
   nonstatic_field(InstanceKlass,               _jni_ids,                                      JNIid*)                                \
   nonstatic_field(InstanceKlass,               _osr_nmethods_head,                            nmethod*)                              \
   nonstatic_field(InstanceKlass,               _breakpoints,                                  BreakpointInfo*)                       \
-  nonstatic_field(InstanceKlass,               _generic_signature_index,                           u2)                               \
+  nonstatic_field(InstanceKlass,               _generic_signature_index,                      u2)                                    \
   nonstatic_field(InstanceKlass,               _methods_jmethod_ids,                          jmethodID*)                            \
   volatile_nonstatic_field(InstanceKlass,      _idnum_allocated_count,                        u2)                                    \
   nonstatic_field(InstanceKlass,               _annotations,                                  Annotations*)                          \
@@ -675,11 +675,13 @@ typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > MetablockTreeDicti
       static_field(SystemDictionary,            WK_KLASS(StackOverflowError_klass),            Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(ProtectionDomain_klass),              Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(AccessControlContext_klass),          Klass*)                               \
+      static_field(SystemDictionary,            WK_KLASS(SecureClassLoader_klass),             Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(Reference_klass),                     Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(SoftReference_klass),                 Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(WeakReference_klass),                 Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(FinalReference_klass),                Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(PhantomReference_klass),              Klass*)                               \
+      static_field(SystemDictionary,            WK_KLASS(Cleaner_klass),                       Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(Finalizer_klass),                     Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(Thread_klass),                        Klass*)                               \
       static_field(SystemDictionary,            WK_KLASS(ThreadGroup_klass),                   Klass*)                               \
@@ -823,6 +825,7 @@ typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > MetablockTreeDicti
      static_field(StubRoutines,                _cipherBlockChaining_decryptAESCrypt,          address)                               \
      static_field(StubRoutines,                _updateBytesCRC32,                             address)                               \
      static_field(StubRoutines,                _crc_table_adr,                                address)                               \
+     static_field(StubRoutines,                _multiplyToLen,                                address)                               \
      static_field(StubRoutines,                _jbyte_arraycopy,                              address)                               \
      static_field(StubRoutines,                _jshort_arraycopy,                             address)                               \
      static_field(StubRoutines,                _jint_arraycopy,                               address)                               \
@@ -2598,6 +2601,7 @@ typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > MetablockTreeDicti
   declare_constant(Deoptimization::Reason_age)                            \
   declare_constant(Deoptimization::Reason_predicate)                      \
   declare_constant(Deoptimization::Reason_loop_limit_check)               \
+  declare_constant(Deoptimization::Reason_unstable_if)                    \
   declare_constant(Deoptimization::Reason_LIMIT)                          \
   declare_constant(Deoptimization::Reason_RECORDED_LIMIT)                 \
                                                                           \

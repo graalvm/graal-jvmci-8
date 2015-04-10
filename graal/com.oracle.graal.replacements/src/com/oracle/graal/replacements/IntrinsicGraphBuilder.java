@@ -24,7 +24,6 @@ package com.oracle.graal.replacements;
 
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.api.replacements.*;
 import com.oracle.graal.compiler.common.*;
 import com.oracle.graal.compiler.common.type.*;
 import com.oracle.graal.graphbuilderconf.*;
@@ -34,7 +33,6 @@ import com.oracle.graal.nodes.*;
 import com.oracle.graal.nodes.StructuredGraph.AllowAssumptions;
 import com.oracle.graal.nodes.calc.*;
 import com.oracle.graal.nodes.spi.*;
-import com.oracle.graal.phases.util.*;
 
 /**
  * Implementation of {@link GraphBuilderContext} used to produce a graph for a method based on an
@@ -42,17 +40,19 @@ import com.oracle.graal.phases.util.*;
  */
 public class IntrinsicGraphBuilder implements GraphBuilderContext, Receiver {
 
-    private final Providers providers;
-    private final SnippetReflectionProvider snippetReflection;
+    private final MetaAccessProvider metaAccess;
+    private final ConstantReflectionProvider constantReflection;
+    private final StampProvider stampProvider;
     private final StructuredGraph graph;
     private final ResolvedJavaMethod method;
     private FixedWithNextNode lastInstr;
     private ValueNode[] arguments;
     private ValueNode returnValue;
 
-    public IntrinsicGraphBuilder(Providers providers, SnippetReflectionProvider snippetReflection, ResolvedJavaMethod method) {
-        this.providers = providers;
-        this.snippetReflection = snippetReflection;
+    public IntrinsicGraphBuilder(MetaAccessProvider metaAccess, ConstantReflectionProvider constantReflection, StampProvider stampProvider, ResolvedJavaMethod method) {
+        this.metaAccess = metaAccess;
+        this.constantReflection = constantReflection;
+        this.stampProvider = stampProvider;
         this.graph = new StructuredGraph(method, AllowAssumptions.YES);
         this.method = method;
         this.lastInstr = graph.start();
@@ -135,19 +135,15 @@ public class IntrinsicGraphBuilder implements GraphBuilderContext, Receiver {
     }
 
     public StampProvider getStampProvider() {
-        return providers.getStampProvider();
+        return stampProvider;
     }
 
     public MetaAccessProvider getMetaAccess() {
-        return providers.getMetaAccess();
+        return metaAccess;
     }
 
     public ConstantReflectionProvider getConstantReflection() {
-        return providers.getConstantReflection();
-    }
-
-    public SnippetReflectionProvider getSnippetReflection() {
-        return snippetReflection;
+        return constantReflection;
     }
 
     public StructuredGraph getGraph() {
@@ -200,11 +196,20 @@ public class IntrinsicGraphBuilder implements GraphBuilderContext, Receiver {
 
     public StructuredGraph buildGraph(InvocationPlugin plugin) {
         Receiver receiver = method.isStatic() ? null : this;
-        if (InvocationPlugin.execute(this, method, plugin, receiver, arguments)) {
+        if (plugin.execute(this, method, receiver, arguments)) {
             assert (returnValue != null) == (method.getSignature().getReturnKind() != Kind.Void) : method;
             append(new ReturnNode(returnValue));
             return graph;
         }
         return null;
+    }
+
+    public void intrinsify(ResolvedJavaMethod targetMethod, ResolvedJavaMethod substitute, ValueNode[] args) {
+        throw GraalInternalError.shouldNotReachHere();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s:intrinsic", method.format("%H.%n(%p)"));
     }
 }

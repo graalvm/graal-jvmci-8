@@ -34,6 +34,7 @@
 #include "runtime/compilationPolicy.hpp"
 #include "runtime/deoptimization.hpp"
 #include "runtime/handles.inline.hpp"
+#include "runtime/orderAccess.inline.hpp"
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
@@ -1233,9 +1234,8 @@ void MethodData::init() {
   _backedge_counter_start = 0;
   _num_loops = 0;
   _num_blocks = 0;
-  _highest_comp_level = 0;
-  _highest_osr_comp_level = 0;
-  _would_profile = true;
+  _would_profile = unknown;
+
 #ifdef GRAAL
   _graal_node_count = 0;
 #endif

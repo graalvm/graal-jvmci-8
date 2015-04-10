@@ -111,6 +111,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/build/linux/linux_amd64_graal/generated</locationURI>
 		</link>
 		<link>
+			<name>generated_java_processor</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/graal/com.oracle.graal.hotspot/src_gen/hotspot</locationURI>
+		</link>
+		<link>
 			<name>linux</name>
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/os/linux/vm</locationURI>
@@ -121,16 +126,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/linux_sparc/vm</locationURI>
 		</link>
 		<link>
-			<name>solaris_sparc</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/solaris_sparc/vm</locationURI>
-		</link>
-		<link>
-			<name>solaris</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os/solaris/vm</locationURI>
-		</link>
-		<link>
 			<name>linux_x86</name>
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/linux_x86/vm</locationURI>
@@ -139,6 +134,16 @@
 			<name>make</name>
 			<type>2</type>
 			<locationURI>WORKSPACE_LOC/make</locationURI>
+		</link>
+		<link>
+			<name>solaris</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/src/os/solaris/vm</locationURI>
+		</link>
+		<link>
+			<name>solaris_sparc</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/solaris_sparc/vm</locationURI>
 		</link>
 		<link>
 			<name>sparc</name>

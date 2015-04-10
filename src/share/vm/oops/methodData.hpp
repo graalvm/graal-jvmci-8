@@ -542,6 +542,7 @@ protected:
     // null_seen:
     //  saw a null operand (cast/aastore/instanceof)
       null_seen_flag              = DataLayout::first_flag + 0
+
 #ifdef GRAAL
     // bytecode threw any exception
     , exception_seen_flag         = null_seen_flag + 1
@@ -568,6 +569,7 @@ public:
   // Consulting it allows the compiler to avoid setting up null_check traps.
   bool null_seen()     { return flag_at(null_seen_flag); }
   void set_null_seen()    { set_flag_at(null_seen_flag); }
+
 #ifdef GRAAL
   // true if an exception was thrown at the specific BCI
   bool exception_seen() { return flag_at(exception_seen_flag); }
@@ -2163,7 +2165,7 @@ public:
 
   // Whole-method sticky bits and flags
   enum {
-    _trap_hist_limit    = 19 GRAAL_ONLY(+5),   // decoupled from Deoptimization::Reason_LIMIT
+    _trap_hist_limit    = 20 GRAAL_ONLY(+5),   // decoupled from Deoptimization::Reason_LIMIT
     _trap_hist_mask     = max_jubyte,
     _extra_data_count   = 4     // extra DataLayout headers, for trap history
   }; // Public flag values
@@ -2173,7 +2175,7 @@ private:
   uint _nof_overflow_traps;         // trap count, excluding _trap_hist
   union {
     intptr_t _align;
-    u1 _array[GRAAL_ONLY(2*)_trap_hist_limit];
+    u1 _array[_trap_hist_limit];
   } _trap_hist;
 
   // Support for interprocedural escape analysis, from Thomas Kotzmann.
@@ -2204,12 +2206,9 @@ private:
   // time with C1. It is used to determine if method is trivial.
   short             _num_loops;
   short             _num_blocks;
-  // Highest compile level this method has ever seen.
-  u1                _highest_comp_level;
-  // Same for OSR level
-  u1                _highest_osr_comp_level;
   // Does this method contain anything worth profiling?
-  bool              _would_profile;
+  enum WouldProfile {unknown, no_profile, profile};
+  WouldProfile      _would_profile;
 
 #ifdef GRAAL
   // Support for HotSpotMethodData.setCompiledGraphSize(int)
@@ -2383,13 +2382,8 @@ public:
   }
 #endif
 
-  void set_would_profile(bool p)              { _would_profile = p;    }
-  bool would_profile() const                  { return _would_profile; }
-
-  int highest_comp_level() const              { return _highest_comp_level;      }
-  void set_highest_comp_level(int level)      { _highest_comp_level = level;     }
-  int highest_osr_comp_level() const          { return _highest_osr_comp_level;  }
-  void set_highest_osr_comp_level(int level)  { _highest_osr_comp_level = level; }
+  void set_would_profile(bool p)              { _would_profile = p ? profile : no_profile; }
+  bool would_profile() const                  { return _would_profile != no_profile; }
 
   int num_loops() const                       { return _num_loops;  }
   void set_num_loops(int n)                   { _num_loops = n;     }

@@ -23,12 +23,17 @@
 package com.oracle.graal.replacements;
 
 import static com.oracle.graal.api.code.MemoryBarriers.*;
-import static com.oracle.graal.replacements.nodes.MathIntrinsicNode.Operation.*;
+import static com.oracle.graal.compiler.common.GraalOptions.*;
+
+import java.lang.reflect.*;
+import java.util.*;
+
 import sun.misc.*;
 
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.api.directives.*;
 import com.oracle.graal.api.meta.*;
+import com.oracle.graal.compiler.common.*;
 import com.oracle.graal.compiler.common.calc.*;
 import com.oracle.graal.compiler.common.type.*;
 import com.oracle.graal.graph.*;
@@ -43,6 +48,7 @@ import com.oracle.graal.nodes.java.*;
 import com.oracle.graal.nodes.util.*;
 import com.oracle.graal.options.*;
 import com.oracle.graal.replacements.nodes.*;
+import com.oracle.graal.replacements.nodes.arithmetic.*;
 
 /**
  * Provides non-runtime specific {@link InvocationPlugin}s.
@@ -56,10 +62,10 @@ public class StandardGraphBuilderPlugins {
     }
     // @formatter:on
 
-    public static void registerInvocationPlugins(MetaAccessProvider metaAccess, Architecture arch, InvocationPlugins plugins, boolean useBoxingPlugins) {
+    public static void registerInvocationPlugins(MetaAccessProvider metaAccess, InvocationPlugins plugins, boolean useBoxingPlugins) {
         registerObjectPlugins(plugins);
         registerClassPlugins(plugins);
-        registerMathPlugins(arch, plugins);
+        registerMathPlugins(plugins);
         registerUnsignedMathPlugins(plugins);
         registerCharacterPlugins(plugins);
         registerShortPlugins(plugins);
@@ -67,7 +73,10 @@ public class StandardGraphBuilderPlugins {
         registerIntegerLongPlugins(plugins, Kind.Long);
         registerFloatPlugins(plugins);
         registerDoublePlugins(plugins);
-        registerUnsafePlugins(arch, plugins);
+        registerStringPlugins(plugins);
+        registerArraysPlugins(plugins);
+        registerArrayPlugins(plugins);
+        registerUnsafePlugins(plugins);
         registerEdgesPlugins(metaAccess, plugins);
         registerGraalDirectivesPlugins(plugins);
         if (useBoxingPlugins) {
@@ -78,7 +87,54 @@ public class StandardGraphBuilderPlugins {
         }
     }
 
-    private static void registerUnsafePlugins(Architecture arch, InvocationPlugins plugins) {
+    private static final Field STRING_VALUE_FIELD;
+    static {
+        try {
+            STRING_VALUE_FIELD = String.class.getDeclaredField("value");
+        } catch (NoSuchFieldException e) {
+            throw new GraalInternalError(e);
+        }
+    }
+
+    private static void registerStringPlugins(InvocationPlugins plugins) {
+        /*
+         * AMD64's String.equals substitution needs about 8 registers so we disable it if there is
+         * some artificial register pressure.
+         */
+        if (RegisterPressure.getValue() == null) {
+            Registration r = new Registration(plugins, String.class);
+            r.registerMethodSubstitution(StringSubstitutions.class, "equals", Receiver.class, Object.class);
+
+            r = new Registration(plugins, StringSubstitutions.class);
+            r.register1("getValue", String.class, new InvocationPlugin() {
+                public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode value) {
+                    ResolvedJavaField field = b.getMetaAccess().lookupJavaField(STRING_VALUE_FIELD);
+                    b.addPush(new LoadFieldNode(value, field));
+                    return true;
+                }
+            });
+        }
+    }
+
+    private static void registerArraysPlugins(InvocationPlugins plugins) {
+        Registration r = new Registration(plugins, Arrays.class);
+        r.registerMethodSubstitution(ArraysSubstitutions.class, "equals", boolean[].class, boolean[].class);
+        r.registerMethodSubstitution(ArraysSubstitutions.class, "equals", byte[].class, byte[].class);
+        r.registerMethodSubstitution(ArraysSubstitutions.class, "equals", short[].class, short[].class);
+        r.registerMethodSubstitution(ArraysSubstitutions.class, "equals", char[].class, char[].class);
+        r.registerMethodSubstitution(ArraysSubstitutions.class, "equals", int[].class, int[].class);
+        r.registerMethodSubstitution(ArraysSubstitutions.class, "equals", float[].class, float[].class);
+        r.registerMethodSubstitution(ArraysSubstitutions.class, "equals", long[].class, long[].class);
+        r.registerMethodSubstitution(ArraysSubstitutions.class, "equals", double[].class, double[].class);
+    }
+
+    private static void registerArrayPlugins(InvocationPlugins plugins) {
+        Registration r = new Registration(plugins, Array.class);
+        r.registerMethodSubstitution(ArraySubstitutions.class, "newInstance", Class.class, int.class);
+        r.registerMethodSubstitution(ArraySubstitutions.class, "getLength", Object.class);
+    }
+
+    private static void registerUnsafePlugins(InvocationPlugins plugins) {
         Registration r = new Registration(plugins, Unsafe.class);
         for (Kind kind : Kind.values()) {
             if ((kind.isPrimitive() && kind != Kind.Void) || kind == Kind.Object) {
@@ -118,37 +174,7 @@ public class StandardGraphBuilderPlugins {
                     return true;
                 }
             });
-
-            if (getAndSetEnabled(arch)) {
-                r.register4("getAndSet" + kind.name(), Receiver.class, Object.class, long.class, javaClass, new InvocationPlugin() {
-                    public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver unsafe, ValueNode object, ValueNode offset, ValueNode value) {
-                        // Emits a null-check for the otherwise unused receiver
-                        unsafe.get();
-                        b.addPush(kind.getStackKind(), new AtomicReadAndWriteNode(object, offset, value, kind, LocationIdentity.any()));
-                        return true;
-                    }
-                });
-                if (kind != Kind.Object) {
-                    r.register4("getAndAdd" + kind.name(), Receiver.class, Object.class, long.class, javaClass, new InvocationPlugin() {
-                        public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver unsafe, ValueNode object, ValueNode offset, ValueNode delta) {
-                            // Emits a null-check for the otherwise unused receiver
-                            unsafe.get();
-                            b.addPush(kind.getStackKind(), new AtomicReadAndAddNode(object, offset, delta, LocationIdentity.any()));
-                            return true;
-                        }
-                    });
-                }
-            }
         }
-    }
-
-    /**
-     * Determines if the platform includes such for intrinsifying the {@link Unsafe#getAndSetInt}
-     * method family.
-     */
-    public static boolean getAndSetEnabled(Architecture arch) {
-        // FIXME should return whether the current compilation target supports these
-        return arch.getName().equals("AMD64");
     }
 
     private static void registerIntegerLongPlugins(InvocationPlugins plugins, Kind kind) {
@@ -175,7 +201,7 @@ public class StandardGraphBuilderPlugins {
         });
         r.register2("remainderUnsigned", type, type, new InvocationPlugin() {
             public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode dividend, ValueNode divisor) {
-                b.push(kind, b.recursiveAppend(new UnsignedDivNode(dividend, divisor).canonical(null, dividend, divisor)));
+                b.push(kind, b.recursiveAppend(new UnsignedRemNode(dividend, divisor).canonical(null, dividend, divisor)));
                 return true;
             }
         });
@@ -241,8 +267,29 @@ public class StandardGraphBuilderPlugins {
         });
     }
 
-    private static void registerMathPlugins(Architecture arch, InvocationPlugins plugins) {
+    private static void registerMathPlugins(InvocationPlugins plugins) {
         Registration r = new Registration(plugins, Math.class);
+        for (Kind kind : new Kind[]{Kind.Int, Kind.Long}) {
+            Class<?> type = kind.toJavaClass();
+            r.register2("addExact", type, type, new InvocationPlugin() {
+                public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode x, ValueNode y) {
+                    b.addPush(kind.getStackKind(), new IntegerAddExactNode(x, y));
+                    return true;
+                }
+            });
+            r.register2("subtractExact", type, type, new InvocationPlugin() {
+                public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode x, ValueNode y) {
+                    b.addPush(kind.getStackKind(), new IntegerSubExactNode(x, y));
+                    return true;
+                }
+            });
+            r.register2("multiplyExact", type, type, new InvocationPlugin() {
+                public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode x, ValueNode y) {
+                    b.addPush(kind.getStackKind(), new IntegerMulExactNode(x, y));
+                    return true;
+                }
+            });
+        }
         r.register1("abs", Float.TYPE, new InvocationPlugin() {
             public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode value) {
                 b.push(Kind.Float, b.recursiveAppend(new AbsNode(value).canonical(null, value)));
@@ -261,31 +308,6 @@ public class StandardGraphBuilderPlugins {
                 return true;
             }
         });
-        r.register2("pow", Double.TYPE, Double.TYPE, new InvocationPlugin() {
-            public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode x, ValueNode y) {
-                ValueNode folded = MathPowNode.tryFold(x, y);
-                if (folded != null) {
-                    b.addPush(Kind.Double, folded);
-                } else {
-                    b.addPush(Kind.Double, new MathPowNode(b.getInvokeKind(), targetMethod, b.bci(), b.getInvokeReturnType(), x, y));
-                }
-                return true;
-            }
-        });
-        if (getAndSetEnabled(arch)) {
-            r.register1("log", Double.TYPE, new InvocationPlugin() {
-                public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode value) {
-                    b.push(Kind.Double, b.recursiveAppend(MathIntrinsicNode.create(value, LOG)));
-                    return true;
-                }
-            });
-            r.register1("log10", Double.TYPE, new InvocationPlugin() {
-                public boolean apply(GraphBuilderContext b, ResolvedJavaMethod targetMethod, Receiver receiver, ValueNode value) {
-                    b.push(Kind.Double, b.recursiveAppend(MathIntrinsicNode.create(value, LOG10)));
-                    return true;
-                }
-            });
-        }
     }
 
     public static class UnsignedMathPlugin implements InvocationPlugin {
@@ -623,7 +645,7 @@ public class StandardGraphBuilderPlugins {
         String[] names = {"org.openjdk.jmh.infra.Blackhole", "org.openjdk.jmh.logic.BlackHole"};
         for (String name : names) {
             Class<?> blackholeClass;
-            blackholeClass = ReplacementsImpl.resolveClass(name, true);
+            blackholeClass = MethodSubstitutionPlugin.resolveClass(name, true);
             if (blackholeClass != null) {
                 Registration r = new Registration(plugins, blackholeClass);
                 for (Kind kind : Kind.values()) {
