@@ -154,7 +154,7 @@ C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jlong metaspace_method)
     }
   }
 
-  return (jbyteArray) JNIHandles::make_local(reconstituted_code);
+  return (jbyteArray) JNIHandles::make_local(THREAD, reconstituted_code);
 C2V_END
 
 C2V_VMENTRY(jint, exceptionTableLength, (JNIEnv *, jobject, jlong metaspace_method))
@@ -576,7 +576,7 @@ C2V_VMENTRY(jobject, disassembleCodeBlob, (JNIEnv *jniEnv, jobject, jlong codeBl
   }
 
   Handle result = java_lang_String::create_from_platform_dependent_str(st.as_string(), CHECK_NULL);
-  return JNIHandles::make_local(result());
+  return JNIHandles::make_local(THREAD, result());
 C2V_END
 
 C2V_VMENTRY(jobject, getStackTraceElement, (JNIEnv*, jobject, jlong metaspace_method, int bci))
@@ -585,7 +585,7 @@ C2V_VMENTRY(jobject, getStackTraceElement, (JNIEnv*, jobject, jlong metaspace_me
 
   methodHandle method = asMethod(metaspace_method);
   oop element = java_lang_StackTraceElement::create(method, bci, CHECK_NULL);
-  return JNIHandles::make_local(element);
+  return JNIHandles::make_local(THREAD, element);
 C2V_END
 
 C2V_VMENTRY(jobject, executeCompiledMethodVarargs, (JNIEnv*, jobject, jobject args, jobject hotspotInstalledCode))
@@ -609,7 +609,7 @@ C2V_VMENTRY(jobject, executeCompiledMethodVarargs, (JNIEnv*, jobject, jobject ar
   if (jap.get_ret_type() == T_VOID) {
     return NULL;
   } else if (jap.get_ret_type() == T_OBJECT || jap.get_ret_type() == T_ARRAY) {
-    return JNIHandles::make_local((oop) result.get_jobject());
+    return JNIHandles::make_local(THREAD, (oop) result.get_jobject());
   } else {
     jvalue *value = (jvalue *) result.get_value_addr();
     // Narrow the value down if required (Important on big endian machines)
@@ -628,7 +628,7 @@ C2V_VMENTRY(jobject, executeCompiledMethodVarargs, (JNIEnv*, jobject, jobject ar
        break;
      }
     oop o = java_lang_boxing_object::create(jap.get_ret_type(), value, CHECK_NULL);
-    return JNIHandles::make_local(o);
+    return JNIHandles::make_local(THREAD, o);
   }
 C2V_END
 
@@ -656,7 +656,7 @@ C2V_VMENTRY(jlongArray, getLineNumberTable, (JNIEnv *, jobject, jlong metaspace_
     i += 2;
   }
 
-  return (jlongArray) JNIHandles::make_local(result);
+  return (jlongArray) JNIHandles::make_local(THREAD, result);
 C2V_END
 
 C2V_VMENTRY(jlong, getLocalVariableTableStart, (JNIEnv *, jobject, jlong metaspace_method))
@@ -709,9 +709,9 @@ C2V_VMENTRY(void, invalidateInstalledCode, (JNIEnv*, jobject, jobject hotspotIns
   InstalledCode::set_address(hotspotInstalledCode, 0);
 C2V_END
 
-C2V_VMENTRY(jobject, getJavaMirror, (JNIEnv*, jobject, jlong metaspace_klass))
+C2V_VMENTRY(jobject, getJavaMirror, (JNIEnv* env, jobject, jlong metaspace_klass))
   Klass* klass = asKlass(metaspace_klass);
-  return JNIHandles::make_local(klass->java_mirror());
+  return JNIHandles::make_local(THREAD, klass->java_mirror());
 C2V_END
 
 C2V_VMENTRY(jlong, readUnsafeKlassPointer, (JNIEnv*, jobject, jobject o))
@@ -722,13 +722,13 @@ C2V_END
 
 C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv*, jobject, jlong addr))
   oop ret = oopDesc::load_decode_heap_oop((oop*)(address)addr);
-  return JNIHandles::make_local(ret);
+  return JNIHandles::make_local(THREAD, ret);
 C2V_END
 
 C2V_VMENTRY(jlongArray, collectCounters, (JNIEnv*, jobject))
   typeArrayOop arrayOop = oopFactory::new_longArray(GraalCounterSize, CHECK_NULL);
   JavaThread::collect_counters(arrayOop);
-  return (jlongArray) JNIHandles::make_local(arrayOop);
+  return (jlongArray) JNIHandles::make_local(THREAD, arrayOop);
 C2V_END
 
 C2V_VMENTRY(int, allocateCompileId, (JNIEnv*, jobject, jlong metaspace_method, int entry_bci))
