@@ -22,33 +22,24 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.instrument;
+package com.oracle.truffle.api.instrument.impl;
+
+import com.oracle.truffle.api.instrument.*;
 
 /**
- * A listener of Truffle execution events that can collect information on behalf of an external
- * tool. Contextual information about the source of the event, if not stored in the implementation
- * of the listener, can be obtained via access to the {@link Probe} that generates the event.
+ * A listener for Truffle execution events that provides a no-op implementation of every event.
  */
-public interface InstrumentListener {
+public class DefaultSimpleInstrumentListener implements SimpleInstrumentListener {
 
-    /**
-     * Receive notification that an AST node's execute method is about to be called.
-     */
-    void enter(Probe probe);
+    public void enter(Probe probe) {
+    }
 
-    /**
-     * Receive notification that an AST Node's {@code void}-valued execute method has just returned.
-     */
-    void returnVoid(Probe probe);
+    public void returnVoid(Probe probe) {
+    }
 
-    /**
-     * Receive notification that an AST Node's execute method has just returned a value (boxed if
-     * primitive).
-     */
-    void returnValue(Probe probe, Object result);
+    public void returnValue(Probe probe, Object result) {
+    }
 
-    /**
-     * Receive notification that an AST Node's execute method has just thrown an exception.
-     */
-    void returnExceptional(Probe probe, Exception exception);
+    public void returnExceptional(Probe probe, Exception exception) {
+    }
 }

@@ -647,7 +647,7 @@ JVM_ENTRY(jobject, JVM_CreateTruffleRuntime(JNIEnv *env, jclass c))
   TempNewSymbol sig = SymbolTable::new_symbol("()Lcom/oracle/truffle/api/TruffleRuntime;", CHECK_NULL);
   JavaValue result(T_OBJECT);
   JavaCalls::call_static(&result, klass, makeInstance, sig, CHECK_NULL);
-  return JNIHandles::make_local((oop) result.get_jobject());
+  return JNIHandles::make_local(THREAD, (oop) result.get_jobject());
 JVM_END
 
 // private static NativeFunctionInterfaceRuntime.createInterface()
@@ -660,7 +660,7 @@ JVM_ENTRY(jobject, JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c))
   TempNewSymbol sig = SymbolTable::new_symbol("()Lcom/oracle/nfi/api/NativeFunctionInterface;", CHECK_NULL);
   JavaValue result(T_OBJECT);
   JavaCalls::call_static(&result, klass, makeInstance, sig, CHECK_NULL);
-  return JNIHandles::make_local((oop) result.get_jobject());
+  return JNIHandles::make_local(THREAD, (oop) result.get_jobject());
 JVM_END
 
 void GraalRuntime::check_generated_sources_sha1(TRAPS) {
