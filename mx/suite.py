@@ -1037,6 +1037,7 @@ suite = {
       "dependencies" : [
         "com.oracle.truffle.api.dsl",
         "com.oracle.truffle.api.object",
+        "FINDBUGS"
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
