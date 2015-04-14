@@ -22,36 +22,28 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.instrument;
+package com.oracle.truffle.api.instrument.impl;
 
 import com.oracle.truffle.api.frame.*;
+import com.oracle.truffle.api.instrument.*;
 import com.oracle.truffle.api.nodes.*;
 
 /**
- * A listener of Truffle AST runtime execution events that can collect information, examine the
- * execution state at a particular node, and possibly intervene on behalf of an external tool.
+ * A listener for AST {@linkplain StandardInstrumentListener execution events} that provides a no-op
+ * implementation of every event.
  */
-public interface ASTInstrumentListener {
+public class DefaultStandardInstrumentListener implements StandardInstrumentListener {
 
-    /**
-     * Receive notification that an AST node's execute method is about to be called.
-     */
-    void enter(Probe probe, Node node, VirtualFrame vFrame);
+    public void enter(Probe probe, Node node, VirtualFrame vFrame) {
+    }
 
-    /**
-     * Receive notification that an AST Node's {@code void}-valued execute method has just returned.
-     */
-    void returnVoid(Probe probe, Node node, VirtualFrame vFrame);
+    public void returnVoid(Probe probe, Node node, VirtualFrame vFrame) {
+    }
 
-    /**
-     * Receive notification that an AST Node's execute method has just returned a value (boxed if
-     * primitive).
-     */
-    void returnValue(Probe probe, Node node, VirtualFrame vFrame, Object result);
+    public void returnValue(Probe probe, Node node, VirtualFrame vFrame, Object result) {
+    }
 
-    /**
-     * Receive notification that an AST Node's execute method has just thrown an exception.
-     */
-    void returnExceptional(Probe probe, Node node, VirtualFrame vFrame, Exception exception);
+    public void returnExceptional(Probe probe, Node node, VirtualFrame vFrame, Exception exception) {
+    }
 
 }

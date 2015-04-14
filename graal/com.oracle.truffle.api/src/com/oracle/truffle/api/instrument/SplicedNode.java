@@ -24,31 +24,32 @@
  */
 package com.oracle.truffle.api.instrument;
 
+import com.oracle.truffle.api.frame.*;
+import com.oracle.truffle.api.nodes.*;
+
 /**
- * A listener of Truffle execution events that can collect information on behalf of an external
- * tool. Contextual information about the source of the event, if not stored in the implementation
- * of the listener, can be obtained via access to the {@link Probe} that generates the event.
+ * Root of a client-provided AST fragment that can be spliced directly into an executing AST via
+ * {@link Instrument#create(SpliceInstrumentListener, String)}.
+ * <p>
+ * <strong>Note:</strong> Instances of this class will in some situations be cloned by the
+ * instrumentation platform for attachment at equivalent locations in cloned ASTs.
  */
-public interface InstrumentListener {
+public abstract class SplicedNode extends Node implements InstrumentationNode.TruffleEvents, InstrumentationNode {
 
-    /**
-     * Receive notification that an AST node's execute method is about to be called.
-     */
-    void enter(Probe probe);
+    public void enter(Node node, VirtualFrame vFrame) {
+    }
 
-    /**
-     * Receive notification that an AST Node's {@code void}-valued execute method has just returned.
-     */
-    void returnVoid(Probe probe);
+    public void returnVoid(Node node, VirtualFrame vFrame) {
+    }
 
-    /**
-     * Receive notification that an AST Node's execute method has just returned a value (boxed if
-     * primitive).
-     */
-    void returnValue(Probe probe, Object result);
+    public void returnValue(Node node, VirtualFrame vFrame, Object result) {
+    }
 
-    /**
-     * Receive notification that an AST Node's execute method has just thrown an exception.
-     */
-    void returnExceptional(Probe probe, Exception exception);
+    public void returnExceptional(Node node, VirtualFrame vFrame, Exception exception) {
+    }
+
+    public String instrumentationInfo() {
+        return null;
+    }
+
 }

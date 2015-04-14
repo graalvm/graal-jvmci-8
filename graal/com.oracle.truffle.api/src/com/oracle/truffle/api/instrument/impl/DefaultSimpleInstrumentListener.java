@@ -22,34 +22,24 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.instrument;
+package com.oracle.truffle.api.instrument.impl;
 
-import com.oracle.truffle.api.frame.*;
-import com.oracle.truffle.api.nodes.*;
+import com.oracle.truffle.api.instrument.*;
 
 /**
- * Root of a tool-provided AST fragment that can be attached directly into an executing AST via
- * {@link Instrument#create(ToolNodeInstrumentListener, String)}.
- * <p>
- * <strong>Note:</strong> Instances of this class will in some situations be cloned by the
- * instrumentation platform for attachment at equivalent locations in cloned parent ASTs.
+ * A listener for Truffle execution events that provides a no-op implementation of every event.
  */
-public abstract class ToolNode extends Node implements InstrumentationNode.TruffleEvents, InstrumentationNode {
+public class DefaultSimpleInstrumentListener implements SimpleInstrumentListener {
 
-    public void enter(Node node, VirtualFrame vFrame) {
+    public void enter(Probe probe) {
     }
 
-    public void returnVoid(Node node, VirtualFrame vFrame) {
+    public void returnVoid(Probe probe) {
     }
 
-    public void returnValue(Node node, VirtualFrame vFrame, Object result) {
+    public void returnValue(Probe probe, Object result) {
     }
 
-    public void returnExceptional(Node node, VirtualFrame vFrame, Exception exception) {
+    public void returnExceptional(Probe probe, Exception exception) {
     }
-
-    public String instrumentationInfo() {
-        return null;
-    }
-
 }

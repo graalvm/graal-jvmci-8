@@ -157,7 +157,6 @@ public class InstrumentationTest {
 
         // Check that the "probed" AST still executes correctly
         assertEquals(13, callTarget1.call());
-
     }
 
     @Test
@@ -178,11 +177,10 @@ public class InstrumentationTest {
 
         // Check instrumentation with the simplest kind of counters.
         // They should all be removed when the check is finished.
-        checkCounters(probe, callTarget, rootNode, new TestInstrumentCounter(), new TestInstrumentCounter(), new TestInstrumentCounter());
+        checkCounters(probe, callTarget, rootNode, new TestSimpleInstrumentCounter(), new TestSimpleInstrumentCounter(), new TestSimpleInstrumentCounter());
 
         // Now try with the more complex flavor of listener
-        checkCounters(probe, callTarget, rootNode, new TestASTInstrumentCounter(), new TestASTInstrumentCounter(), new TestASTInstrumentCounter());
-
+        checkCounters(probe, callTarget, rootNode, new TestStandardInstrumentCounter(), new TestStandardInstrumentCounter(), new TestStandardInstrumentCounter());
     }
 
     private static void checkCounters(Probe probe, CallTarget callTarget, RootNode rootNode, TestCounter counterA, TestCounter counterB, TestCounter counterC) {
@@ -280,12 +278,10 @@ public class InstrumentationTest {
         assertEquals(counterB.leaveCount(), 8);
         assertEquals(counterC.enterCount(), 2);
         assertEquals(counterC.leaveCount(), 2);
-
     }
 
     @Test
     public void testTagging() {
-
         // Applies appropriate tags
         final TestASTProber astProber = new TestASTProber();
         Probe.registerASTProber(astProber);
@@ -341,7 +337,6 @@ public class InstrumentationTest {
         assertEquals(valueCounter.count, 2);
 
         Probe.unregisterASTProber(astProber);
-
     }
 
     private interface TestCounter {
@@ -353,92 +348,107 @@ public class InstrumentationTest {
         void attach(Probe probe);
 
         void dispose();
-
     }
 
     /**
-     * A counter for the number of times execution enters and leaves a probed AST node, using the
-     * simplest kind of listener.
+     * A counter for the number of times execution enters and leaves a probed AST node.
      */
-    private class TestInstrumentCounter implements TestCounter {
+    private class TestSimpleInstrumentCounter implements TestCounter {
 
         public int enterCount = 0;
         public int leaveCount = 0;
         public final Instrument instrument;
 
-        public TestInstrumentCounter() {
+        public TestSimpleInstrumentCounter() {
             this.instrument = Instrument.create(new SimpleInstrumentListener() {
 
-                @Override
                 public void enter(Probe probe) {
                     enterCount++;
                 }
 
-                @Override
-                public void returnAny(Probe probe) {
+                public void returnVoid(Probe probe) {
+                    leaveCount++;
+                }
+
+                public void returnValue(Probe probe, Object result) {
+                    leaveCount++;
+                }
+
+                public void returnExceptional(Probe probe, Exception exception) {
                     leaveCount++;
                 }
 
             }, "Instrumentation Test Counter");
-
         }
 
+        @Override
         public int enterCount() {
             return enterCount;
         }
 
+        @Override
         public int leaveCount() {
             return leaveCount;
         }
 
+        @Override
         public void attach(Probe probe) {
             probe.attach(instrument);
         }
 
+        @Override
         public void dispose() {
             instrument.dispose();
         }
     }
 
     /**
-     * A counter for the number of times execution enters and leaves a probed AST node, using the
-     * simplest kind of listener.
+     * A counter for the number of times execution enters and leaves a probed AST node.
      */
-    private class TestASTInstrumentCounter implements TestCounter {
+    private class TestStandardInstrumentCounter implements TestCounter {
 
         public int enterCount = 0;
         public int leaveCount = 0;
         public final Instrument instrument;
 
-        public TestASTInstrumentCounter() {
-            this.instrument = Instrument.create(new SimpleASTInstrumentListener() {
+        public TestStandardInstrumentCounter() {
+            this.instrument = Instrument.create(new StandardInstrumentListener() {
 
-                @Override
                 public void enter(Probe probe, Node node, VirtualFrame vFrame) {
                     enterCount++;
                 }
 
-                @Override
-                public void returnAny(Probe probe, Node node, VirtualFrame vFrame) {
+                public void returnVoid(Probe probe, Node node, VirtualFrame vFrame) {
+                    leaveCount++;
+                }
+
+                public void returnValue(Probe probe, Node node, VirtualFrame vFrame, Object result) {
+                    leaveCount++;
+                }
+
+                public void returnExceptional(Probe probe, Node node, VirtualFrame vFrame, Exception exception) {
                     leaveCount++;
                 }
 
             }, "Instrumentation Test Counter");
-
         }
 
+        @Override
         public int enterCount() {
             return enterCount;
         }
 
+        @Override
         public int leaveCount() {
             return leaveCount;
         }
 
+        @Override
         public void attach(Probe probe) {
             probe.attach(instrument);
         }
 
+        @Override
         public void dispose() {
             instrument.dispose();
         }
@@ -475,7 +485,7 @@ public class InstrumentationTest {
     /**
      * Counts the number of "enter" events at probed nodes using the simplest AST listener.
      */
-    static final class TestInstrumentListener extends DefaultInstrumentListener {
+    static final class TestSimpleInstrumentListener extends DefaultSimpleInstrumentListener {
 
         public int counter = 0;
 
@@ -483,13 +493,12 @@ public class InstrumentationTest {
         public void enter(Probe probe) {
             counter++;
         }
-
     }
 
     /**
      * Counts the number of "enter" events at probed nodes using the AST listener.
      */
-    static final class TestASTInstrumentListener extends DefaultASTInstrumentListener {
+    static final class TestASTInstrumentListener extends DefaultStandardInstrumentListener {
 
         public int counter = 0;
 
@@ -497,7 +506,6 @@ public class InstrumentationTest {
         public void enter(Probe probe, Node node, VirtualFrame vFrame) {
             counter++;
         }
-
     }
 
     /**
@@ -514,7 +522,7 @@ public class InstrumentationTest {
             // where we want to count executions.
             // it will get copied when ASTs cloned, so
             // keep the count in this outer class.
-            probe.attach(Instrument.create(new DefaultInstrumentListener() {
+            probe.attach(Instrument.create(new DefaultSimpleInstrumentListener() {
 
                 @Override
                 public void enter(Probe p) {
@@ -539,5 +547,4 @@ public class InstrumentationTest {
             tagCount++;
         }
     }
-
 }
