@@ -1587,7 +1587,7 @@ def _basic_gate_body(args, tasks):
         for vmbuild in ['product', 'fastdebug']:
             for theVm in ['client', 'server']:
                 if not isVMSupported(theVm):
-                    mx.log('The' + theVm + ' VM is not supported on this platform')
+                    mx.log('The ' + theVm + ' VM is not supported on this platform')
                     continue
                 with VM(theVm, vmbuild):
                     with Task('DaCapo_pmd:' + theVm + ':' + vmbuild, tasks) as t:
