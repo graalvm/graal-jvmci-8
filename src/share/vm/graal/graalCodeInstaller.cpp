@@ -689,12 +689,6 @@ void CodeInstaller::assumption_CallSiteTargetValue(Handle assumption) {
 }
 
 void CodeInstaller::process_exception_handlers() {
-  // allocate some arrays for use by the collection code.
-  const int num_handlers = 5;
-  GrowableArray<intptr_t>* bcis = new GrowableArray<intptr_t> (num_handlers);
-  GrowableArray<intptr_t>* scope_depths = new GrowableArray<intptr_t> (num_handlers);
-  GrowableArray<intptr_t>* pcos = new GrowableArray<intptr_t> (num_handlers);
-
   if (exception_handlers() != NULL) {
     objArrayOop handlers = exception_handlers();
     for (int i = 0; i < handlers->length(); i++) {
