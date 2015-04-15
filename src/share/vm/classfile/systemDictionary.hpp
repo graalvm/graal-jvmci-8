@@ -208,6 +208,7 @@ class Ticks;
   GRAAL_ONLY(do_klass(HotSpotCompiledRuntimeStub_klass,      com_oracle_graal_hotspot_HotSpotCompiledRuntimeStub,          Graal)) \
   GRAAL_ONLY(do_klass(HotSpotForeignCallLinkageImpl_klass,   com_oracle_graal_hotspot_HotSpotForeignCallLinkageImpl,       Graal)) \
   GRAAL_ONLY(do_klass(HotSpotReferenceMap_klass,             com_oracle_graal_hotspot_HotSpotReferenceMap,                 Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotOopMap_klass,                   com_oracle_graal_hotspot_HotSpotReferenceMap_HotSpotOopMap,   Graal)) \
   GRAAL_ONLY(do_klass(HotSpotInstalledCode_klass,            com_oracle_graal_hotspot_meta_HotSpotInstalledCode,           Graal)) \
   GRAAL_ONLY(do_klass(HotSpotNmethod_klass,                  com_oracle_graal_hotspot_meta_HotSpotNmethod,                 Graal)) \
   GRAAL_ONLY(do_klass(HotSpotResolvedJavaMethodImpl_klass,   com_oracle_graal_hotspot_meta_HotSpotResolvedJavaMethodImpl,  Graal)) \
