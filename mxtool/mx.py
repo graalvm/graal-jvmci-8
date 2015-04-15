@@ -2115,6 +2115,7 @@ class JavaConfig:
         self.javadoc = exe_suffix(join(self.jdk, 'bin', 'javadoc'))
         self.pack200 = exe_suffix(join(self.jdk, 'bin', 'pack200'))
         self.toolsjar = join(self.jdk, 'lib', 'tools.jar')
+        self._classpaths_initialized = False
         self._bootclasspath = None
         self._extdirs = None
         self._endorseddirs = None
@@ -2158,22 +2159,24 @@ class JavaConfig:
             self.java_args += ['-Xdebug', '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + str(self.debug_port)]
 
     def _init_classpaths(self):
-        myDir = dirname(__file__)
-        outDir = join(dirname(__file__), '.jdk' + str(self.version))
-        if not exists(outDir):
-            os.makedirs(outDir)
-        javaSource = join(myDir, 'ClasspathDump.java')
-        javaClass = join(outDir, 'ClasspathDump.class')
-        if not exists(javaClass) or getmtime(javaClass) < getmtime(javaSource):
-            subprocess.check_call([self.javac, '-d', _cygpathU2W(outDir), _cygpathU2W(javaSource)], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        self._bootclasspath, self._extdirs, self._endorseddirs = [x if x != 'null' else None for x in subprocess.check_output([self.java, '-cp', _cygpathU2W(outDir), 'ClasspathDump'], stderr=subprocess.PIPE).split('|')]
-        if self.javaCompliance <= JavaCompliance('1.8'):
-            # All 3 system properties accessed by ClasspathDump are expected to exist
-            if not self._bootclasspath or not self._extdirs or not self._endorseddirs:
-                warn("Could not find all classpaths: boot='" + str(self._bootclasspath) + "' extdirs='" + str(self._extdirs) + "' endorseddirs='" + str(self._endorseddirs) + "'")
-        self._bootclasspath = _filter_non_existant_paths(self._bootclasspath)
-        self._extdirs = _filter_non_existant_paths(self._extdirs)
-        self._endorseddirs = _filter_non_existant_paths(self._endorseddirs)
+        if not self._classpaths_initialized:
+            myDir = dirname(__file__)
+            outDir = join(dirname(__file__), '.jdk' + str(self.version))
+            if not exists(outDir):
+                os.makedirs(outDir)
+            javaSource = join(myDir, 'ClasspathDump.java')
+            javaClass = join(outDir, 'ClasspathDump.class')
+            if not exists(javaClass) or getmtime(javaClass) < getmtime(javaSource):
+                subprocess.check_call([self.javac, '-d', _cygpathU2W(outDir), _cygpathU2W(javaSource)], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+            self._bootclasspath, self._extdirs, self._endorseddirs = [x if x != 'null' else None for x in subprocess.check_output([self.java, '-cp', _cygpathU2W(outDir), 'ClasspathDump'], stderr=subprocess.PIPE).split('|')]
+            if self.javaCompliance <= JavaCompliance('1.8'):
+                # All 3 system properties accessed by ClasspathDump are expected to exist
+                if not self._bootclasspath or not self._extdirs or not self._endorseddirs:
+                    warn("Could not find all classpaths: boot='" + str(self._bootclasspath) + "' extdirs='" + str(self._extdirs) + "' endorseddirs='" + str(self._endorseddirs) + "'")
+            self._bootclasspath = _filter_non_existant_paths(self._bootclasspath)
+            self._extdirs = _filter_non_existant_paths(self._extdirs)
+            self._endorseddirs = _filter_non_existant_paths(self._endorseddirs)
+            self._classpaths_initialized = True
 
     def __repr__(self):
         return "JavaConfig(" + str(self.jdk) + ", " + str(self.debug_port) + ")"
@@ -2205,35 +2208,23 @@ class JavaConfig:
         return self.java_args_pfx + self.java_args + self.java_args_sfx + args
 
     def bootclasspath(self):
-        if self._bootclasspath is None:
-            self._init_classpaths()
+        self._init_classpaths()
         return _separatedCygpathU2W(self._bootclasspath)
 
-    def extdirs(self):
-        if self._extdirs is None:
-            self._init_classpaths()
-        return _separatedCygpathU2W(self._extdirs)
-
-    def endorseddirs(self):
-        if self._endorseddirs is None:
-            self._init_classpaths()
-        return _separatedCygpathU2W(self._endorseddirs)
 
     """
     Add javadoc style options for the library paths of this JDK.
     """
     def javadocLibOptions(self, args):
+        self._init_classpaths()
         if args is None:
             args = []
-        if self.bootclasspath():
+        if self._bootclasspath:
             args.append('-bootclasspath')
-            args.append(self.bootclasspath())
-        if self.endorseddirs():
-            args.append('-endorseddirs')
-            args.append(self.endorseddirs())
-        if self.extdirs():
+            args.append(self._bootclasspath)
+        if self._extdirs:
             args.append('-extdirs')
-            args.append(self.extdirs())
+            args.append(self._extdirs)
         return args
 
     """
@@ -2241,24 +2232,26 @@ class JavaConfig:
     """
     def javacLibOptions(self, args):
         args = self.javadocLibOptions(args)
-        if self.endorseddirs():
+        if self._endorseddirs:
             args.append('-endorseddirs')
-            args.append(self.endorseddirs())
+            args.append(self._endorseddirs)
         return args
 
     def containsJar(self, jar):
-        if self._bootclasspath is None:
-            self._init_classpaths()
+        self._init_classpaths()
 
-        for e in self._bootclasspath.split(os.pathsep):
-            if basename(e) == jar:
-                return True
-        for d in self._extdirs.split(os.pathsep):
-            if len(d) and jar in os.listdir(d):
-                return True
-        for d in self._endorseddirs.split(os.pathsep):
-            if len(d) and jar in os.listdir(d):
-                return True
+        if self._bootclasspath:
+            for e in self._bootclasspath.split(os.pathsep):
+                if basename(e) == jar:
+                    return True
+        if self._extdirs:
+            for d in self._extdirs.split(os.pathsep):
+                if len(d) and jar in os.listdir(d):
+                    return True
+        if self._endorseddirs:
+            for d in self._endorseddirs.split(os.pathsep):
+                if len(d) and jar in os.listdir(d):
+                    return True
         return False
 
 def check_get_env(key):
@@ -4873,7 +4866,7 @@ def javadoc(args, parser=None, docDir='javadoc', includeDeps=True, stdDoclet=Tru
                      '-overview', overviewFile,
                      '-sourcepath', sp,
                      '-source', str(projectJava.javaCompliance)] +
-                     projectJava.javadocLibOptions() +
+                     projectJava.javadocLibOptions([]) +
                      ([] if projectJava.javaCompliance < JavaCompliance('1.8') else ['-Xdoclint:none']) +
                      links +
                      extraArgs +
