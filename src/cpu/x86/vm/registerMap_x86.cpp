@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,19 +22,27 @@
  *
  */
 
-#ifndef CPU_X86_VM_REGISTERMAP_X86_HPP
-#define CPU_X86_VM_REGISTERMAP_X86_HPP
+#include <runtime/registerMap.hpp>
+#include "vmreg_x86.inline.hpp"
 
-// machine-dependent implemention for register maps
-  friend class frame;
-
- private:
-  // This is the hook for finding a register in an "well-known" location,
-  // such as a register block of a predetermined format.
-  address pd_location(VMReg reg) const;
-  // no PD state to clear or copy:
-  void pd_clear() {}
-  void pd_initialize() {}
-  void pd_initialize_from(const RegisterMap* map) {}
-
-#endif // CPU_X86_VM_REGISTERMAP_X86_HPP
+address RegisterMap::pd_location(VMReg reg) const {
+  if (reg->is_XMMRegister()) {
+    int regBase = reg->value() - ConcreteRegisterImpl::max_fpr;
+    if (regBase % 4 == 0) {
+      // Reads of the low and high 16 byte parts should be handled by location itself
+      return NULL;
+    }
+    VMReg baseReg = as_XMMRegister(regBase >> 3)->as_VMReg();
+    intptr_t offset = (reg->value() - baseReg->value()) * 4;
+    if (offset >= 16) {
+      // The high part of YMM registers are saved in a their own area in the frame
+      baseReg = baseReg->next()->next()->next()->next();
+      offset -= 16;
+    }
+    address baseLocation = location(baseReg);
+    if (baseLocation != NULL) {
+      return baseLocation + offset;
+    }
+  }
+  return NULL;
+}
