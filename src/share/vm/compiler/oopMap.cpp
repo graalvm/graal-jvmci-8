@@ -388,68 +388,71 @@ void OopMapSet::all_do(const frame *fr, const RegisterMap *reg_map,
       do {
         omv = oms.current();
         oop* loc = fr->oopmapreg_to_location(omv.reg(),reg_map);
-        if ( loc != NULL ) {
-          oop *base_loc    = fr->oopmapreg_to_location(omv.content_reg(), reg_map);
-          oop *derived_loc = loc;
-          oop val = *base_loc;
-          if (val == (oop)NULL || Universe::is_narrow_oop_base(val)) {
-            // Ignore NULL oops and decoded NULL narrow oops which
-            // equal to Universe::narrow_oop_base when a narrow oop
-            // implicit null check is used in compiled code.
-            // The narrow_oop_base could be NULL or be the address
-            // of the page below heap depending on compressed oops mode.
-          } else
-            derived_oop_fn(base_loc, derived_loc);
+        guarantee(loc != NULL, "missing saved register");
+        oop *base_loc    = fr->oopmapreg_to_location(omv.content_reg(), reg_map);
+        oop *derived_loc = loc;
+        oop val = *base_loc;
+        if (val == (oop)NULL || Universe::is_narrow_oop_base(val)) {
+          // Ignore NULL oops and decoded NULL narrow oops which
+          // equal to Universe::narrow_oop_base when a narrow oop
+          // implicit null check is used in compiled code.
+          // The narrow_oop_base could be NULL or be the address
+          // of the page below heap depending on compressed oops mode.
+        } else {
+          derived_oop_fn(base_loc, derived_loc);
         }
         oms.next();
       }  while (!oms.is_done());
     }
   }
 
-  // We want coop, value and oop oop_types
+  // We want narrowoop and oop oop_types
   int mask = OopMapValue::oop_value | OopMapValue::narrowoop_value;
   {
     for (OopMapStream oms(map,mask); !oms.is_done(); oms.next()) {
       omv = oms.current();
       oop* loc = fr->oopmapreg_to_location(omv.reg(),reg_map);
-      if ( loc != NULL ) {
-        if ( omv.type() == OopMapValue::oop_value ) {
-          oop val = *loc;
-          if (val == (oop)NULL || Universe::is_narrow_oop_base(val)) {
-            // Ignore NULL oops and decoded NULL narrow oops which
-            // equal to Universe::narrow_oop_base when a narrow oop
-            // implicit null check is used in compiled code.
-            // The narrow_oop_base could be NULL or be the address
-            // of the page below heap depending on compressed oops mode.
-            continue;
-          }
-#ifdef ASSERT
-          if ((((uintptr_t)loc & (sizeof(*loc)-1)) != 0) ||
-             !Universe::heap()->is_in_or_null(*loc)) {
-            tty->print_cr("# Found non oop pointer.  Dumping state at failure");
-            // try to dump out some helpful debugging information
-            trace_codeblob_maps(fr, reg_map);
-            omv.print();
-            tty->print_cr("register r");
-            omv.reg()->print();
-            tty->print_cr("loc = %p *loc = %p\n", loc, (address)*loc);
-            // do the real assert.
-            assert(Universe::heap()->is_in_or_null(*loc), "found non oop pointer");
-          }
-#endif // ASSERT
-          oop_fn->do_oop(loc);
-        } else if ( omv.type() == OopMapValue::narrowoop_value ) {
-          narrowOop *nl = (narrowOop*)loc;
-#ifndef VM_LITTLE_ENDIAN
-          if (!omv.reg()->is_stack()) {
-            // compressed oops in registers only take up 4 bytes of an
-            // 8 byte register but they are in the wrong part of the
-            // word so adjust loc to point at the right place.
-            nl = (narrowOop*)((address)nl + 4);
-          }
-#endif
-          oop_fn->do_oop(nl);
+      // It should be an error if no location can be found for a
+      // register mentioned as contained an oop of some kind.  Maybe
+      // this was allowed previously because value_value items might
+      // be missing?
+      guarantee(loc != NULL, "missing saved register");
+      if ( omv.type() == OopMapValue::oop_value ) {
+        oop val = *loc;
+        if (val == (oop)NULL || Universe::is_narrow_oop_base(val)) {
+          // Ignore NULL oops and decoded NULL narrow oops which
+          // equal to Universe::narrow_oop_base when a narrow oop
+          // implicit null check is used in compiled code.
+          // The narrow_oop_base could be NULL or be the address
+          // of the page below heap depending on compressed oops mode.
+          continue;
         }
+#ifdef ASSERT
+        if ((((uintptr_t)loc & (sizeof(*loc)-1)) != 0) ||
+            !Universe::heap()->is_in_or_null(*loc)) {
+          tty->print_cr("# Found non oop pointer.  Dumping state at failure");
+          // try to dump out some helpful debugging information
+          trace_codeblob_maps(fr, reg_map);
+          omv.print();
+          tty->print_cr("register r");
+          omv.reg()->print();
+          tty->print_cr("loc = %p *loc = %p\n", loc, (address)*loc);
+          // do the real assert.
+          assert(Universe::heap()->is_in_or_null(*loc), "found non oop pointer");
+        }
+#endif // ASSERT
+        oop_fn->do_oop(loc);
+      } else if ( omv.type() == OopMapValue::narrowoop_value ) {
+        narrowOop *nl = (narrowOop*)loc;
+#ifndef VM_LITTLE_ENDIAN
+        if (!omv.reg()->is_stack()) {
+          // compressed oops in registers only take up 4 bytes of an
+          // 8 byte register but they are in the wrong part of the
+          // word so adjust loc to point at the right place.
+          nl = (narrowOop*)((address)nl + 4);
+        }
+#endif
+        oop_fn->do_oop(nl);
       }
     }
   }
