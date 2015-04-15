@@ -87,15 +87,16 @@ _minVersion = mx.VersionSpec('1.8')
 _untilVersion = None
 
 class JDKDeployedDist:
-    def __init__(self, name, isExtension):
+    def __init__(self, name, isExtension = False, isGraalClassLoader = False):
         self.name = name
         self.isExtension = isExtension
+        self.isGraalClassLoader = isGraalClassLoader
 
 _jdkDeployedDists = [
-    JDKDeployedDist('TRUFFLE', isExtension=False),
-    JDKDeployedDist('GRAAL_LOADER', isExtension=False),
-    JDKDeployedDist('GRAAL', isExtension=False),
-    JDKDeployedDist('GRAAL_TRUFFLE', isExtension=False)
+    JDKDeployedDist('TRUFFLE'),
+    JDKDeployedDist('GRAAL_LOADER'),
+    JDKDeployedDist('GRAAL', isGraalClassLoader=True),
+    JDKDeployedDist('GRAAL_TRUFFLE', isGraalClassLoader=True)
 ]
 
 JDK_UNIX_PERMISSIONS_DIR = 0755
@@ -483,7 +484,7 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
         for jdkDist in _jdkDeployedDists:
             dist = mx.distribution(jdkDist.name)
             if exists(dist.path):
-                _installDistInJdks(dist, jdkDist.isExtension)
+                _installDistInJdks(jdkDist)
 
     if vmToCheck is not None:
         jvmCfg = _vmCfgInJdk(jdk)
@@ -593,13 +594,12 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _installDistInJdksExt(dist):
-    _installDistInJdks(dist, True)
-
-def _installDistInJdks(dist, ext=False):
+def _installDistInJdks(deployableDist):
     """
     Installs the jar(s) for a given Distribution into all existing Graal JDKs
     """
+
+    dist = mx.distribution(deployableDist.name)
 
     if dist.name == 'GRAAL_TRUFFLE':
         # The content in graalRuntime.inline.hpp is generated from Graal
@@ -614,12 +614,28 @@ def _installDistInJdks(dist, ext=False):
     if exists(jdks):
         for e in os.listdir(jdks):
             jreLibDir = join(jdks, e, 'jre', 'lib')
-            if ext:
+            if deployableDist.isExtension:
                 jreLibDir = join(jreLibDir, 'ext')
             if exists(jreLibDir):
                 _copyToJdk(dist.path, jreLibDir)
                 if dist.sourcesPath:
                     _copyToJdk(dist.sourcesPath, join(jdks, e))
+                if deployableDist.isGraalClassLoader:
+                    assert not deployableDist.isExtension
+                    # deploy services files
+                    jreGraalServicesDir = join(jreLibDir, 'graal', 'services')
+                    if not exists(jreGraalServicesDir):
+                        os.makedirs(jreGraalServicesDir)
+                    with zipfile.ZipFile(dist.path) as zf:
+                        for member in zf.namelist():
+                            if not member.startswith('META-INF/services'):
+                                continue
+                            serviceName = basename(member)
+                            # we don't handle directories
+                            assert serviceName
+                            target = join(jreGraalServicesDir, serviceName)
+                            with zf.open(member) as serviceFile, open(target, "w+") as targetFile:
+                                shutil.copyfileobj(serviceFile, targetFile)
 
 # run a command in the windows SDK Debug Shell
 def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):
@@ -2556,7 +2572,10 @@ def mx_post_parse_cmd_line(opts):  #
     _vm_prefix = opts.vm_prefix
 
     for jdkDist in _jdkDeployedDists:
-        if jdkDist.isExtension:
-            mx.distribution(jdkDist.name).add_update_listener(_installDistInJdksExt)
-        else:
-            mx.distribution(jdkDist.name).add_update_listener(_installDistInJdks)
+        def _close(jdkDeployable):
+            def _install(dist):
+                mx.log("install " + dist.name)
+                assert dist.name == jdkDeployable.name, dist.name + "!=" + jdkDeployable.name
+                _installDistInJdks(jdkDeployable)
+            return _install
+        mx.distribution(jdkDist.name).add_update_listener(_close(jdkDist))

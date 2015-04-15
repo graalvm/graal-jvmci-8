@@ -630,9 +630,10 @@ JVM_ENTRY(jobject, JVM_GetGraalRuntime(JNIEnv *env, jclass c))
   return GraalRuntime::get_HotSpotGraalRuntime_jobject();
 JVM_END
 
-// private static String[] Graal.getServiceImpls(Class service)
+// private static String[] Services.getServiceImpls(Class service)
 JVM_ENTRY(jobject, JVM_GetGraalServiceImpls(JNIEnv *env, jclass c, jclass serviceClass))
   HandleMark hm;
+  ResourceMark rm;
   KlassHandle serviceKlass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(serviceClass)));
   return JNIHandles::make_local(THREAD, GraalRuntime::get_service_impls(serviceKlass, THREAD)());
 JVM_END
@@ -1072,6 +1073,67 @@ Klass* GraalRuntime::load_required_class(Symbol* name) {
     vm_abort(false);
   }
   return klass;
+}
+
+Handle GraalRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
+  const char* home = Arguments::get_java_home();
+  const char* serviceName = serviceKlass->external_name();
+  size_t path_len = strlen(home) + strlen("/lib/graal/services/") + strlen(serviceName) + 1;
+  char* path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
+  char sep = os::file_separator()[0];
+  sprintf(path, "%s%clib%cgraal%cservices%c%s", home, sep, sep, sep, sep, serviceName);
+  struct stat st;
+  if (os::stat(path, &st) == 0) {
+    int file_handle = os::open(path, 0, 0);
+    if (file_handle != -1) {
+      char* buffer = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, st.st_size + 1);
+      int num_read = (int) os::read(file_handle, (char*) buffer, st.st_size);
+      if (num_read == -1) {
+        warning("Error reading file %s due to %s", path, strerror(errno));
+      } else if (num_read != st.st_size) {
+        warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
+      }
+      os::close(file_handle);
+      if (num_read == st.st_size) {
+        buffer[num_read] = '\0';
+        GrowableArray<char*>* implNames = new GrowableArray<char*>();
+        char* line = buffer;
+        while (line - buffer < num_read) {
+          char* nl = strchr(line, '\n');
+          if (nl != NULL) {
+            *nl = '\0';
+          }
+          // Turn all '.'s into '/'s
+          for (size_t index = 0; line[index] != '\0'; index++) {
+            if (line[index] == '.') {
+              line[index] = '/';
+            }
+          }
+          implNames->append(line);
+          if (nl != NULL) {
+            line = nl + 1;
+          } else {
+            // File without newline at the end
+            break;
+          }
+        }
+
+        objArrayOop servicesOop = oopFactory::new_objArray(serviceKlass(), implNames->length(), CHECK_NH);
+        objArrayHandle services(THREAD, servicesOop);
+        for (int i = 0; i < implNames->length(); ++i) {
+          char* implName = implNames->at(i);
+          Handle service = create_Service(implName, CHECK_NH);
+          services->obj_at_put(i, service());
+        }
+        return services;
+      }
+    } else {
+      warning("Error opening file %s due to %s", path, strerror(errno));
+    }
+  } else {
+    warning("Error opening file %s due to %s", path, strerror(errno));
+  }
+  return Handle();
 }
 
 #include "graalRuntime.inline.hpp"
