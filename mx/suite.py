@@ -465,7 +465,6 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "dependencies" : [
         "com.oracle.graal.nodeinfo",
-        "com.oracle.truffle.dsl.processor",
       ],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Graph",
@@ -1037,6 +1036,7 @@ suite = {
       "dependencies" : [
         "com.oracle.truffle.api.dsl",
         "com.oracle.truffle.api.object",
+        "FINDBUGS"
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",

@@ -1482,6 +1482,7 @@ def ctw(args):
         jar = os.path.abspath(args.jar)
     else:
         jar = join(_jdk(installJars=False), 'jre', 'lib', 'rt.jar')
+        vmargs.append('-G:CompileTheWorldExcludeMethodFilter=sun.awt.X11.*.*')
 
     vmargs += ['-XX:+CompileTheWorld']
     vm_ = _get_vm()
@@ -1492,7 +1493,7 @@ def ctw(args):
     else:
         vmargs += ['-Xbootclasspath/p:' + jar]
 
-    # suppress menubar and dock when running on Mac
+    # suppress menubar and dock when running on Mac; exclude x11 classes as they may cause vm crashes (on Solaris)
     vmargs = ['-Djava.awt.headless=true'] + vmargs
 
     vm(vmargs)

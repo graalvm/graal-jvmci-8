@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,32 +19,30 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
+ *
  */
-package com.oracle.truffle.dsl.processor.model;
 
-import javax.lang.model.type.*;
+#include <runtime/registerMap.hpp>
+#include "vmreg_x86.inline.hpp"
 
-public class ImplicitCastData extends TemplateMethod {
-
-    private final TypeMirror sourceType;
-    private final TypeMirror targetType;
-
-    public ImplicitCastData(TemplateMethod method, TypeMirror sourceType, TypeMirror targetType) {
-        super(method);
-        this.sourceType = sourceType;
-        this.targetType = targetType;
+address RegisterMap::pd_location(VMReg reg) const {
+  if (reg->is_XMMRegister()) {
+    int regBase = reg->value() - ConcreteRegisterImpl::max_fpr;
+    if (regBase % 4 == 0) {
+      // Reads of the low and high 16 byte parts should be handled by location itself
+      return NULL;
     }
-
-    public TypeMirror getSourceType() {
-        return sourceType;
+    VMReg baseReg = as_XMMRegister(regBase >> 3)->as_VMReg();
+    intptr_t offset = (reg->value() - baseReg->value()) * 4;
+    if (offset >= 16) {
+      // The high part of YMM registers are saved in a their own area in the frame
+      baseReg = baseReg->next()->next()->next()->next();
+      offset -= 16;
     }
-
-    public TypeMirror getTargetType() {
-        return targetType;
+    address baseLocation = location(baseReg);
+    if (baseLocation != NULL) {
+      return baseLocation + offset;
     }
-
-    @Override
-    public int compareTo(TemplateMethod o) {
-        return super.compareTo(o);
-    }
+  }
+  return NULL;
 }
