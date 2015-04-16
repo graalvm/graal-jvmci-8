@@ -48,8 +48,9 @@ void VMRegImpl::set_regName() {
 
   XMMRegister xreg = ::as_XMMRegister(0);
   for ( ; i < ConcreteRegisterImpl::max_xmm ; ) {
-    for (int j = 0 ; j < 8 ; j++) {
-      regName[i++] = xreg->name();
+    regName[i++] = xreg->name();
+    for (int j = 1 ; j < 8 ; j++) {
+      regName[i++] = xreg->sub_word_name(j);
     }
     xreg = xreg->successor();
   }

@@ -111,9 +111,14 @@ void SharedRuntime::generate_stubs() {
   _resolve_virtual_call_blob           = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_virtual_call_C),       "resolve_virtual_call");
   _resolve_static_call_blob            = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_static_call_C),        "resolve_static_call");
 
+#if defined(COMPILER2) || defined(GRAAL)
+  // Vectors are generated only by C2 and Graal.
 #ifdef COMPILER2
-  // Vectors are generated only by C2.
-  if (is_wide_vector(MaxVectorSize)) {
+  bool support_wide = is_wide_vector(MaxVectorSize) || IS_GRAAL_DEFINED;
+#else
+  bool support_wide = true;
+#endif
+  if (support_wide) {
     _polling_page_vectors_safepoint_handler_blob = generate_handler_blob(CAST_FROM_FN_PTR(address, SafepointSynchronize::handle_polling_page_exception), POLL_AT_VECTOR_LOOP);
   }
 #endif // COMPILER2

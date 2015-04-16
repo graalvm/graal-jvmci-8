@@ -71,35 +71,39 @@ Method* getMethodFromHotSpotMethod(oop hotspot_method) {
 
 const int MapWordBits = 64;
 
-static bool is_bit_set(typeArrayOop words, int i) {
+static int entry_value(typeArrayOop words, int i) {
   jint words_idx = i / MapWordBits;
   assert(words_idx >= 0 && words_idx < words->length(), "unexpected index");
   jlong word = words->long_at(words_idx);
-  return (word & (1LL << (i % MapWordBits))) != 0;
+  return (word >> (i % MapWordBits)) & 15LL;
 }
 
-static int bitset_size(oop bitset) {
-  typeArrayOop arr = BitSet::words(bitset);
+static int fixedmap_size(oop bitset) {
+  typeArrayOop arr = HotSpotOopMap::words(bitset);
   return arr->length() * MapWordBits;
 }
 
 static void set_vmreg_oops(OopMap* map, VMReg reg, typeArrayOop words, int idx) {
-  bool is_oop = is_bit_set(words, 3 * idx);
-  if (is_oop) {
-    bool narrow1 = is_bit_set(words, 3 * idx + 1);
-    bool narrow2 = is_bit_set(words, 3 * idx + 2);
-    if (narrow1 || narrow2) {
-      if (narrow1) {
-        map->set_narrowoop(reg);
-      }
-      if (narrow2) {
-        map->set_narrowoop(reg->next());
-      }
-    } else {
+  int value = entry_value(words, 4 * idx);
+  switch (value) {
+    case 10:
       map->set_oop(reg);
-    }
-  } else {
-    map->set_value(reg);
+      break;
+    case 5:
+      map->set_narrowoop(reg);
+      map->set_narrowoop(reg->next());
+      break;
+    case 1:
+      map->set_narrowoop(reg);
+      break;
+    case 4:
+      map->set_narrowoop(reg->next());
+      break;
+    case 0:
+      break;
+    default:
+      assert(false, err_msg("unexpected bit pattern at %d = 0x%x", idx, value));
+      ShouldNotReachHere();
   }
 }
 
@@ -112,30 +116,30 @@ static OopMap* create_oop_map(jint total_frame_size, jint parameter_count, oop d
   oop callee_save_info = (oop) DebugInfo::calleeSaveInfo(debug_info);
 
   if (register_map != NULL) {
-    typeArrayOop words = BitSet::words(register_map);
+    typeArrayOop words = HotSpotOopMap::words(register_map);
+    int mapIdx = 0;
     for (jint i = 0; i < RegisterImpl::number_of_registers; i++) {
-      set_vmreg_oops(map, as_Register(i)->as_VMReg(), words, i);
+      set_vmreg_oops(map, as_Register(i)->as_VMReg(), words, mapIdx);
+      mapIdx++;
     }
 #ifdef TARGET_ARCH_x86
     for (jint i = 0; i < XMMRegisterImpl::number_of_registers; i++) {
       VMReg reg = as_XMMRegister(i)->as_VMReg();
-      int idx = RegisterImpl::number_of_registers + 4 * i;
       for (jint j = 0; j < 4; j++) {
-        set_vmreg_oops(map, reg->next(2 * j), words, idx + j);
+        set_vmreg_oops(map, reg->next(2 * j), words, mapIdx++);
       }
     }
 #endif
 #ifdef TARGET_ARCH_sparc
     for (jint i = 0; i < FloatRegisterImpl::number_of_registers; i++) {
       VMReg reg = as_FloatRegister(i)->as_VMReg();
-      int idx = RegisterImpl::number_of_registers + i;
-      set_vmreg_oops(map, reg, words, idx);
+      set_vmreg_oops(map, reg, words, mapIdx++);
     }
 #endif
   }
 
-  typeArrayOop words = BitSet::words(frame_map);
-  int size = bitset_size(frame_map) / 3;
+  typeArrayOop words = HotSpotOopMap::words(frame_map);
+  int size = fixedmap_size(frame_map) / 4;
   for (jint i = 0; i < size; i++) {
     // HotSpot stack slots are 4 bytes
     VMReg reg = VMRegImpl::stack2reg(i * VMRegImpl::slots_per_word);
@@ -161,7 +165,6 @@ static OopMap* create_oop_map(jint total_frame_size, jint parameter_count, oop d
 #endif
     }
   }
-
   return map;
 }
 

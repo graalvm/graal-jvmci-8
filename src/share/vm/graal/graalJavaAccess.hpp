@@ -162,15 +162,15 @@ void graal_compute_offsets();
     objArrayOop_field(DebugInfo, virtualObjectMapping, "[Lcom/oracle/graal/api/meta/Value;")                                                                   \
   end_class                                                                                                                                                    \
   start_class(HotSpotReferenceMap)                                                                                                                             \
-    oop_field(HotSpotReferenceMap, registerRefMap, "Ljava/util/BitSet;")                                                                                       \
-    oop_field(HotSpotReferenceMap, frameRefMap, "Ljava/util/BitSet;")                                                                                          \
+    oop_field(HotSpotReferenceMap, registerRefMap, "Lcom/oracle/graal/hotspot/HotSpotReferenceMap$HotSpotOopMap;")                                             \
+    oop_field(HotSpotReferenceMap, frameRefMap, "Lcom/oracle/graal/hotspot/HotSpotReferenceMap$HotSpotOopMap;")                                                \
   end_class                                                                                                                                                    \
   start_class(RegisterSaveLayout)                                                                                                                              \
     objArrayOop_field(RegisterSaveLayout, registers, "[Lcom/oracle/graal/api/code/Register;")                                                                  \
     typeArrayOop_field(RegisterSaveLayout, slots, "[I")                                                                                                        \
   end_class                                                                                                                                                    \
-  start_class(BitSet)                                                                                                                                          \
-    typeArrayOop_field(BitSet, words, "[J")                                                                                                                    \
+  start_class(HotSpotOopMap)                                                                                                                                   \
+    typeArrayOop_field(HotSpotOopMap, words, "[J")                                                                                                             \
   end_class                                                                                                                                                    \
   start_class(BytecodeFrame)                                                                                                                                   \
     objArrayOop_field(BytecodeFrame, values, "[Lcom/oracle/graal/api/meta/Value;")                                                                             \

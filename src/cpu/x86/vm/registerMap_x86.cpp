@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -19,21 +19,31 @@
  * Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
  * or visit www.oracle.com if you need additional information or have any
  * questions.
+ *
  */
-package com.oracle.graal.lir;
 
-/**
- * Iterator for iterating over a list of {@linkplain ValuePosition value positions}.
- */
-@FunctionalInterface
-public interface ValuePositionProcedure {
+#include "precompiled.hpp"
+#include <runtime/registerMap.hpp>
+#include "vmreg_x86.inline.hpp"
 
-    /**
-     * Iterator method to be overwritten. This version of the iterator does not take additional
-     * parameters to keep the signature short.
-     *
-     * @param instruction The current instruction.
-     * @param position The position of the value that is iterated.
-     */
-    void doValue(LIRInstruction instruction, ValuePosition position);
+address RegisterMap::pd_location(VMReg reg) const {
+  if (reg->is_XMMRegister()) {
+    int regBase = reg->value() - ConcreteRegisterImpl::max_fpr;
+    if (regBase % 4 == 0) {
+      // Reads of the low and high 16 byte parts should be handled by location itself
+      return NULL;
+    }
+    VMReg baseReg = as_XMMRegister(regBase >> 3)->as_VMReg();
+    intptr_t offset = (reg->value() - baseReg->value()) * 4;
+    if (offset >= 16) {
+      // The high part of YMM registers are saved in a their own area in the frame
+      baseReg = baseReg->next()->next()->next()->next();
+      offset -= 16;
+    }
+    address baseLocation = location(baseReg);
+    if (baseLocation != NULL) {
+      return baseLocation + offset;
+    }
+  }
+  return NULL;
 }

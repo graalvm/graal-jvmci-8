@@ -1543,7 +1543,7 @@ def _basic_gate_body(args, tasks):
 
     with VM('graal', 'product'):
         with Task('BootstrapWithRegisterPressure:product', tasks) as t:
-            if t: 
+            if t:
                 registers = 'o0,o1,o2,o3,f8,f9,d32,d34' if platform.processor() == 'sparc' else 'rbx,r11,r10,r14,xmm3,xmm11,xmm14'
                 vm(['-XX:-TieredCompilation', '-G:RegisterPressure=' + registers, '-esa', '-version'])
 
@@ -2160,7 +2160,7 @@ def hsdis(args, copyToDir=None):
         'intel/hsdis-amd64.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
         'intel/hsdis-amd64.so' : '844ed9ffed64fe9599638f29a8450c50140e3192',
         'intel/hsdis-amd64.dylib' : 'fdb13ef0d7d23d93dacaae9c98837bea0d4fc5a2',
-        'sparcv9/hsdis-sparcv9.so': '5f79c312b3dcc55bad551dbb710b11f0048a4ce7',
+        'sparcv9/hsdis-sparcv9.so': '970640a9af0bd63641f9063c11275b371a59ee60',
     }
 
     flavoredLib = flavor + "/" + lib
