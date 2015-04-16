@@ -1574,7 +1574,7 @@ def _basic_gate_body(args, tasks):
     _jacoco = 'off'
 
     with Task('CleanAndBuildIdealGraphVisualizer', tasks) as t:
-        if t:
+        if t and platform.processor() != 'sparc':
             env = _igvFallbackJDK(os.environ)
             buildxml = mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml'))
             mx.run(['ant', '-f', buildxml, '-q', 'clean', 'build'], env=env)
