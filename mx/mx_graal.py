@@ -1543,7 +1543,9 @@ def _basic_gate_body(args, tasks):
 
     with VM('graal', 'product'):
         with Task('BootstrapWithRegisterPressure:product', tasks) as t:
-            if t: vm(['-XX:-TieredCompilation', '-G:RegisterPressure=rbx,r11,r10,r14,xmm3,xmm11,xmm14', '-esa', '-version'])
+            if t: 
+                registers = 'o0,o1,o2,o3,f8,f9,d32,d34' if platform.processor() == 'sparc' else 'rbx,r11,r10,r14,xmm3,xmm11,xmm14'
+                vm(['-XX:-TieredCompilation', '-G:RegisterPressure=' + registers, '-esa', '-version'])
 
     with VM('graal', 'product'):
         with Task('BootstrapWithImmutableCode:product', tasks) as t:
