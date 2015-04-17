@@ -6355,17 +6355,18 @@ instruct prefetchAlloc( memory mem ) %{
   ins_pipe(iload_mem);
 %}
 
-// Use BIS instruction to prefetch for allocation.
+// Use PREFETCHA instruction to prefetch for allocation.
 // Could fault, need space at the end of TLAB.
 instruct prefetchAlloc_bis( iRegP dst ) %{
   predicate(AllocatePrefetchInstr == 1);
   match( PrefetchAllocation dst );
   ins_cost(MEMORY_REF_COST);
   size(4);
-
-  format %{ "STXA   [$dst]\t! // Prefetch allocation using BIS" %}
+  // Using prefetcha insteadof stxa. Because stxa does write to the tlab 32 bytes with zero, which leads to an overzero of 
+  // TLAB which triggers assertion error in ThreadLocalAllocBuffer::clear_before_allocation
+  format %{ "PREFETCHA   [$dst] #ASI_BLK_INIT_QUAD_LDD_P, severalWritesAndPossiblyReads\t! // Prefetch allocation using PREFETCHA" %}
   ins_encode %{
-    __ stxa(G0, $dst$$Register, G0, Assembler::ASI_ST_BLKINIT_PRIMARY);
+    __ prefetcha($dst$$Register, G0, Assembler::ASI_ST_BLKINIT_PRIMARY,  Assembler::severalWritesAndPossiblyReads);
   %}
   ins_pipe(istore_mem_reg);
 %}

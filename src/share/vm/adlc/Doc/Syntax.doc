@@ -33,7 +33,7 @@ HotSpot Architecture Description Language.  This language is used to describe
 the architecture of a processor, and is the input to the ADL Compiler.  The
 ADL Compiler compiles an ADL file into code which is incorporated into the
 Optimizing Just In Time Compiler (OJIT) to generate efficient and correct code
-for the target architecture.  The ADL describes three bassic different types
+for the target architecture.  The ADL describes three basic different types
 of architectural features.  It describes the instruction set (and associated
 operands) of the target architecture.  It describes the register set of the
 target architecture along with relevant information for the register allocator.
