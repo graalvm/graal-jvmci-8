@@ -87,7 +87,7 @@ _minVersion = mx.VersionSpec('1.8')
 _untilVersion = None
 
 class JDKDeployedDist:
-    def __init__(self, name, isExtension = False, isGraalClassLoader = False):
+    def __init__(self, name, isExtension=False, isGraalClassLoader=False):
         self.name = name
         self.isExtension = isExtension
         self.isGraalClassLoader = isGraalClassLoader
