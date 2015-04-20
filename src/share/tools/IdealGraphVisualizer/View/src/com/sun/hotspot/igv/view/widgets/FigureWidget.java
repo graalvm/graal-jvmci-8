@@ -112,13 +112,12 @@ public class FigureWidget extends Widget implements Properties.Provider, PopupMe
         middleWidget.getActions().addAction(new DoubleClickAction(this));
         middleWidget.setCheckClipping(true);
 
-        labelWidgets = new ArrayList<>();
-
-        String[] strings = figure.getLines();
-
         dummyTop = new Widget(scene);
         dummyTop.setMinimumSize(new Dimension(Figure.INSET / 2, 1));
         middleWidget.addChild(dummyTop);
+
+        String[] strings = figure.getLines();
+        labelWidgets = new ArrayList<>(strings.length);
 
         for (String displayString : strings) {
             LabelWidget lw = new LabelWidget(scene);
