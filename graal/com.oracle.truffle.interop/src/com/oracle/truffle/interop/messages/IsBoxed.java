@@ -1,10 +1,12 @@
 /*
- * Copyright (c) 2012, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.
+ * published by the Free Software Foundation.  Oracle designates this
+ * particular file as subject to the "Classpath" exception as provided
+ * by Oracle in the LICENSE file that accompanied this code.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -20,18 +22,25 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.replacements;
+package com.oracle.truffle.interop.messages;
 
-import static com.oracle.graal.hotspot.replacements.HotSpotReplacementsUtil.*;
+import com.oracle.truffle.api.interop.messages.*;
 
-// JaCoCo Exclude
+public final class IsBoxed extends UnaryMessage {
+    public static IsBoxed create(Receiver receiver) {
+        return new IsBoxed(receiver);
+    }
 
-/**
- * Substitutions for {@link java.lang.Object} methods.
- */
-public class ObjectSubstitutions {
+    public static IsBoxed create(Message receiver) {
+        return new IsBoxed(receiver);
+    }
 
-    public static int hashCode(final Object thisObj) {
-        return computeHashCode(thisObj);
+    private IsBoxed(Object receiver) {
+        super(receiver);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("IsBoxed(%s)", receiver.toString());
     }
 }

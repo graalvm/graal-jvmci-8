@@ -587,7 +587,6 @@ suite = {
         "com.oracle.graal.service.processor",
       ],
       "workingSets" : "Graal,Replacements",
-      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.replacements.amd64" : {
@@ -1003,6 +1002,15 @@ suite = {
       "workingSets" : "API,Truffle",
     },
 
+    "com.oracle.truffle.interop" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.truffle.api.interop"],
+      "javaCompliance" : "1.7",
+      "workingSets" : "Truffle",
+      "checkstyle" : "com.oracle.truffle.api",
+    },
+
     "com.oracle.truffle.api.object" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -1156,6 +1164,7 @@ suite = {
       "dependencies" : [
         "com.oracle.truffle.api.dsl",
         "com.oracle.nfi",
+        "com.oracle.truffle.interop",
         "com.oracle.truffle.object.basic",
       ],
     },
