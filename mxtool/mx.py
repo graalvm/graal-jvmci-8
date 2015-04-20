@@ -101,7 +101,7 @@ _warn = False
 A distribution is a jar or zip file containing the output from one or more Java projects.
 """
 class Distribution:
-    def __init__(self, suite, name, path, sourcesPath, deps, mainClass, excludedDependencies, distDependencies, javaCompliance):
+    def __init__(self, suite, name, path, sourcesPath, deps, mainClass, excludedDependencies, distDependencies, javaCompliance, isProcessorDistribution=False):
         self.suite = suite
         self.name = name
         self.path = path.replace('/', os.sep)
@@ -113,6 +113,7 @@ class Distribution:
         self.excludedDependencies = excludedDependencies
         self.distDependencies = distDependencies
         self.javaCompliance = JavaCompliance(javaCompliance) if javaCompliance else None
+        self.isProcessorDistribution = isProcessorDistribution
 
     def sorted_deps(self, includeLibs=False, transitive=False):
         deps = []
@@ -1090,7 +1091,7 @@ class Suite:
                 exclDeps = []
                 distDeps = []
                 javaCompliance = None
-                d = Distribution(self, dname, path, sourcesPath, deps, mainClass, exclDeps, distDeps, javaCompliance)
+                d = Distribution(self, dname, path, sourcesPath, deps, mainClass, exclDeps, distDeps, javaCompliance, True)
                 d.subDir = os.path.relpath(os.path.dirname(p.dir), self.dir)
                 self.dists.append(d)
                 p.definedAnnotationProcessors = annotationProcessors
@@ -2563,6 +2564,7 @@ def build(args, parser=None):
     parser.add_argument('-p', action='store_true', dest='parallelize', help='parallelizes Java compilation if possible')
     parser.add_argument('--source', dest='compliance', help='Java compliance level for projects without an explicit one')
     parser.add_argument('--Wapi', action='store_true', dest='warnAPI', help='show warnings about using internal APIs')
+    parser.add_argument('--check-distributions', action='store_true', dest='check_distributions', help='check built distributions for overlap')
     parser.add_argument('--projects', action='store', help='comma separated projects to build (omit to build all projects)')
     parser.add_argument('--only', action='store', help='comma separated projects to build, without checking their dependencies (omit to build all projects)')
     parser.add_argument('--no-java', action='store_false', dest='java', help='do not build Java projects')
@@ -2790,9 +2792,16 @@ def build(args, parser=None):
             abort('{0} Java compilation tasks failed'.format(len(failed)))
 
     if args.java:
+        files = []
         for dist in sorted_dists():
             if dist not in updatedAnnotationProcessorDists:
                 archive(['@' + dist.name])
+            if args.check_distributions and not dist.isProcessorDistribution:
+                with zipfile.ZipFile(dist.path, 'r') as zf:
+                    files.extend([member for member in zf.namelist() if not member.startswith('META-INF/services')])
+        dups = set([x for x in files if files.count(x) > 1])
+        if len(dups) > 0:
+            abort('Distributions overlap! duplicates: ' + str(dups))
 
     if suppliedParser:
         return args

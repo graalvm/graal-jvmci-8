@@ -1412,6 +1412,7 @@ def buildvms(args):
     parser = ArgumentParser(prog='mx buildvms')
     parser.add_argument('--vms', help='a comma separated list of VMs to build (default: ' + vmsDefault + ')', metavar='<args>', default=vmsDefault)
     parser.add_argument('--builds', help='a comma separated list of build types (default: ' + vmbuildsDefault + ')', metavar='<args>', default=vmbuildsDefault)
+    parser.add_argument('--check-distributions', action='store_true', dest='check_distributions', help='check built distributions for overlap')
     parser.add_argument('-n', '--no-check', action='store_true', help='omit running "java -version" after each build')
     parser.add_argument('-c', '--console', action='store_true', help='send build output to console instead of log file')
 
@@ -1420,6 +1421,7 @@ def buildvms(args):
     builds = args.builds.split(',')
 
     allStart = time.time()
+    check_dists_args = ['--check-distributions'] if args.check_distributions else []
     for v in vms:
         if not isVMSupported(v):
             mx.log('The ' + v + ' VM is not supported on this platform - skipping')
@@ -1435,14 +1437,14 @@ def buildvms(args):
                 mx.log('BEGIN: ' + v + '-' + vmbuild + '\t(see: ' + logFile + ')')
                 verbose = ['-v'] if mx._opts.verbose else []
                 # Run as subprocess so that output can be directed to a file
-                cmd = [sys.executable, '-u', join('mxtool', 'mx.py')] + verbose + ['--vm', v, '--vmbuild', vmbuild, 'build']
+                cmd = [sys.executable, '-u', join('mxtool', 'mx.py')] + verbose + ['--vm', v, '--vmbuild', vmbuild, 'build'] + check_dists_args
                 mx.logv("executing command: " + str(cmd))
                 subprocess.check_call(cmd, cwd=_graal_home, stdout=log, stderr=subprocess.STDOUT)
                 duration = datetime.timedelta(seconds=time.time() - start)
                 mx.log('END:   ' + v + '-' + vmbuild + '\t[' + str(duration) + ']')
             else:
                 with VM(v, vmbuild):
-                    build([])
+                    build(check_dists_args)
             if not args.no_check:
                 vmargs = ['-version']
                 if v == 'graal':
@@ -1525,7 +1527,7 @@ def ctw(args):
 def _basic_gate_body(args, tasks):
     # Build server-hosted-graal now so we can run the unit tests
     with Task('BuildHotSpotGraalHosted: product', tasks) as t:
-        if t: buildvms(['--vms', 'server', '--builds', 'product'])
+        if t: buildvms(['--vms', 'server', '--builds', 'product', '--check-distributions'])
 
     # Run unit tests on server-hosted-graal
     with VM('server', 'product'):
@@ -1539,7 +1541,7 @@ def _basic_gate_body(args, tasks):
 
     # Build the other VM flavors
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks) as t:
-        if t: buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product'])
+        if t: buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product', '--check-distributions'])
 
     with VM('graal', 'fastdebug'):
         with Task('BootstrapWithSystemAssertions:fastdebug', tasks) as t:
