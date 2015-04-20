@@ -87,15 +87,16 @@ _minVersion = mx.VersionSpec('1.8')
 _untilVersion = None
 
 class JDKDeployedDist:
-    def __init__(self, name, isExtension):
+    def __init__(self, name, isExtension=False, isGraalClassLoader=False):
         self.name = name
         self.isExtension = isExtension
+        self.isGraalClassLoader = isGraalClassLoader
 
 _jdkDeployedDists = [
-    JDKDeployedDist('TRUFFLE', isExtension=False),
-    JDKDeployedDist('GRAAL_LOADER', isExtension=False),
-    JDKDeployedDist('GRAAL', isExtension=False),
-    JDKDeployedDist('GRAAL_TRUFFLE', isExtension=False)
+    JDKDeployedDist('TRUFFLE'),
+    JDKDeployedDist('GRAAL_LOADER'),
+    JDKDeployedDist('GRAAL', isGraalClassLoader=True),
+    JDKDeployedDist('GRAAL_TRUFFLE', isGraalClassLoader=True)
 ]
 
 JDK_UNIX_PERMISSIONS_DIR = 0755
@@ -483,7 +484,7 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
         for jdkDist in _jdkDeployedDists:
             dist = mx.distribution(jdkDist.name)
             if exists(dist.path):
-                _installDistInJdks(dist, jdkDist.isExtension)
+                _installDistInJdks(jdkDist)
 
     if vmToCheck is not None:
         jvmCfg = _vmCfgInJdk(jdk)
@@ -593,13 +594,12 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _installDistInJdksExt(dist):
-    _installDistInJdks(dist, True)
-
-def _installDistInJdks(dist, ext=False):
+def _installDistInJdks(deployableDist):
     """
     Installs the jar(s) for a given Distribution into all existing Graal JDKs
     """
+
+    dist = mx.distribution(deployableDist.name)
 
     if dist.name == 'GRAAL_TRUFFLE':
         # The content in graalRuntime.inline.hpp is generated from Graal
@@ -614,12 +614,34 @@ def _installDistInJdks(dist, ext=False):
     if exists(jdks):
         for e in os.listdir(jdks):
             jreLibDir = join(jdks, e, 'jre', 'lib')
-            if ext:
-                jreLibDir = join(jreLibDir, 'ext')
             if exists(jreLibDir):
-                _copyToJdk(dist.path, jreLibDir)
+                if deployableDist.isExtension:
+                    targetDir = join(jreLibDir, 'ext')
+                elif deployableDist.isGraalClassLoader:
+                    targetDir = join(jreLibDir, 'graal')
+                else:
+                    targetDir = jreLibDir
+                if not exists(targetDir):
+                    os.makedirs(targetDir)
+                _copyToJdk(dist.path, targetDir)
                 if dist.sourcesPath:
                     _copyToJdk(dist.sourcesPath, join(jdks, e))
+                # deploy service files
+                if deployableDist.isGraalClassLoader:
+                    # deploy services files
+                    jreGraalServicesDir = join(jreLibDir, 'graal', 'services')
+                    if not exists(jreGraalServicesDir):
+                        os.makedirs(jreGraalServicesDir)
+                    with zipfile.ZipFile(dist.path) as zf:
+                        for member in zf.namelist():
+                            if not member.startswith('META-INF/services'):
+                                continue
+                            serviceName = basename(member)
+                            # we don't handle directories
+                            assert serviceName
+                            target = join(jreGraalServicesDir, serviceName)
+                            with zf.open(member) as serviceFile, open(target, "w+") as targetFile:
+                                shutil.copyfileobj(serviceFile, targetFile)
 
 # run a command in the windows SDK Debug Shell
 def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):
@@ -785,6 +807,8 @@ def build(args, vm=None):
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if jdkDist.isExtension:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_EXT_DIR)/' + basename(dist.path)
+            elif jdkDist.isGraalClassLoader:
+                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_DIR)/' + basename(dist.path)
             else:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if defLine not in defs:
@@ -1388,6 +1412,7 @@ def buildvms(args):
     parser = ArgumentParser(prog='mx buildvms')
     parser.add_argument('--vms', help='a comma separated list of VMs to build (default: ' + vmsDefault + ')', metavar='<args>', default=vmsDefault)
     parser.add_argument('--builds', help='a comma separated list of build types (default: ' + vmbuildsDefault + ')', metavar='<args>', default=vmbuildsDefault)
+    parser.add_argument('--check-distributions', action='store_true', dest='check_distributions', help='check built distributions for overlap')
     parser.add_argument('-n', '--no-check', action='store_true', help='omit running "java -version" after each build')
     parser.add_argument('-c', '--console', action='store_true', help='send build output to console instead of log file')
 
@@ -1396,6 +1421,7 @@ def buildvms(args):
     builds = args.builds.split(',')
 
     allStart = time.time()
+    check_dists_args = ['--check-distributions'] if args.check_distributions else []
     for v in vms:
         if not isVMSupported(v):
             mx.log('The ' + v + ' VM is not supported on this platform - skipping')
@@ -1411,14 +1437,14 @@ def buildvms(args):
                 mx.log('BEGIN: ' + v + '-' + vmbuild + '\t(see: ' + logFile + ')')
                 verbose = ['-v'] if mx._opts.verbose else []
                 # Run as subprocess so that output can be directed to a file
-                cmd = [sys.executable, '-u', join('mxtool', 'mx.py')] + verbose + ['--vm', v, '--vmbuild', vmbuild, 'build']
+                cmd = [sys.executable, '-u', join('mxtool', 'mx.py')] + verbose + ['--vm', v, '--vmbuild', vmbuild, 'build'] + check_dists_args
                 mx.logv("executing command: " + str(cmd))
                 subprocess.check_call(cmd, cwd=_graal_home, stdout=log, stderr=subprocess.STDOUT)
                 duration = datetime.timedelta(seconds=time.time() - start)
                 mx.log('END:   ' + v + '-' + vmbuild + '\t[' + str(duration) + ']')
             else:
                 with VM(v, vmbuild):
-                    build([])
+                    build(check_dists_args)
             if not args.no_check:
                 vmargs = ['-version']
                 if v == 'graal':
@@ -1501,7 +1527,7 @@ def ctw(args):
 def _basic_gate_body(args, tasks):
     # Build server-hosted-graal now so we can run the unit tests
     with Task('BuildHotSpotGraalHosted: product', tasks) as t:
-        if t: buildvms(['--vms', 'server', '--builds', 'product'])
+        if t: buildvms(['--vms', 'server', '--builds', 'product', '--check-distributions'])
 
     # Run unit tests on server-hosted-graal
     with VM('server', 'product'):
@@ -1515,7 +1541,7 @@ def _basic_gate_body(args, tasks):
 
     # Build the other VM flavors
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks) as t:
-        if t: buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product'])
+        if t: buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product', '--check-distributions'])
 
     with VM('graal', 'fastdebug'):
         with Task('BootstrapWithSystemAssertions:fastdebug', tasks) as t:
@@ -2556,7 +2582,9 @@ def mx_post_parse_cmd_line(opts):  #
     _vm_prefix = opts.vm_prefix
 
     for jdkDist in _jdkDeployedDists:
-        if jdkDist.isExtension:
-            mx.distribution(jdkDist.name).add_update_listener(_installDistInJdksExt)
-        else:
-            mx.distribution(jdkDist.name).add_update_listener(_installDistInJdks)
+        def _close(jdkDeployable):
+            def _install(dist):
+                assert dist.name == jdkDeployable.name, dist.name + "!=" + jdkDeployable.name
+                _installDistInJdks(jdkDeployable)
+            return _install
+        mx.distribution(jdkDist.name).add_update_listener(_close(jdkDist))

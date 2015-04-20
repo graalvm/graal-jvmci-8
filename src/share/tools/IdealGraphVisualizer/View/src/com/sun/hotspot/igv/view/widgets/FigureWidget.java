@@ -32,10 +32,8 @@ import com.sun.hotspot.igv.util.DoubleClickHandler;
 import com.sun.hotspot.igv.util.PropertiesSheet;
 import com.sun.hotspot.igv.view.DiagramScene;
 import java.awt.*;
-import java.awt.color.ColorSpace;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import javax.swing.AbstractAction;
@@ -93,7 +91,6 @@ public class FigureWidget extends Widget implements Properties.Provider, PopupMe
     }
 
     public FigureWidget(final Figure f, WidgetAction hoverAction, WidgetAction selectAction, DiagramScene scene, Widget parent) {
-
         super(scene);
 
         assert this.getScene() != null;
@@ -115,32 +112,20 @@ public class FigureWidget extends Widget implements Properties.Provider, PopupMe
         middleWidget.getActions().addAction(new DoubleClickAction(this));
         middleWidget.setCheckClipping(true);
 
-        labelWidgets = new ArrayList<>();
-
-        String[] strings = figure.getLines();
-
         dummyTop = new Widget(scene);
         dummyTop.setMinimumSize(new Dimension(Figure.INSET / 2, 1));
         middleWidget.addChild(dummyTop);
 
-        for (String cur : strings) {
+        String[] strings = figure.getLines();
+        labelWidgets = new ArrayList<>(strings.length);
 
-            String displayString = cur;
-
+        for (String displayString : strings) {
             LabelWidget lw = new LabelWidget(scene);
             labelWidgets.add(lw);
             middleWidget.addChild(lw);
             lw.setLabel(displayString);
             lw.setFont(figure.getDiagram().getFont());
-            
-            Color bg = f.getColor();
-            double brightness = bg.getRed() * 0.21 + bg.getGreen() * 0.72 + bg.getBlue() * 0.07;
-            if (brightness < 150) {
-                lw.setForeground(Color.WHITE);
-            } else {
-                lw.setForeground(Color.BLACK);
-            }
-            
+            lw.setForeground(getTextColor());
             lw.setAlignment(LabelWidget.Alignment.CENTER);
             lw.setVerticalAlignment(LabelWidget.VerticalAlignment.CENTER);
             lw.setBorder(BorderFactory.createEmptyBorder());
@@ -209,6 +194,16 @@ public class FigureWidget extends Widget implements Properties.Provider, PopupMe
         return figure;
     }
 
+    private Color getTextColor() {
+        Color bg = figure.getColor();
+        double brightness = bg.getRed() * 0.21 + bg.getGreen() * 0.72 + bg.getBlue() * 0.07;
+        if (brightness < 150) {
+            return Color.WHITE;
+        } else {
+            return Color.BLACK;
+        }
+    }
+
     @Override
     protected void paintChildren() {
         Composite oldComposite = null;
@@ -226,9 +221,20 @@ public class FigureWidget extends Widget implements Properties.Provider, PopupMe
             for (LabelWidget labelWidget : labelWidgets) {
                 labelWidget.setVisible(true);
             }
-
         } else {
+            Color oldColor = null;
+            if (boundary) {
+                for (LabelWidget labelWidget : labelWidgets) {
+                    oldColor = labelWidget.getForeground();
+                    labelWidget.setForeground(Color.BLACK);
+                }
+            }
             super.paintChildren();
+            if (boundary) {
+                for (LabelWidget labelWidget : labelWidgets) {
+                    labelWidget.setForeground(oldColor);
+                }
+            }
         }
 
         if (boundary) {
