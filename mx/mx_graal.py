@@ -614,14 +614,20 @@ def _installDistInJdks(deployableDist):
     if exists(jdks):
         for e in os.listdir(jdks):
             jreLibDir = join(jdks, e, 'jre', 'lib')
-            if deployableDist.isExtension:
-                jreLibDir = join(jreLibDir, 'ext')
             if exists(jreLibDir):
-                _copyToJdk(dist.path, jreLibDir)
+                if deployableDist.isExtension:
+                    targetDir = join(jreLibDir, 'ext')
+                elif deployableDist.isGraalClassLoader:
+                    targetDir = join(jreLibDir, 'graal')
+                else:
+                    targetDir = jreLibDir
+                if not exists(targetDir):
+                    os.makedirs(targetDir)
+                _copyToJdk(dist.path, targetDir)
                 if dist.sourcesPath:
                     _copyToJdk(dist.sourcesPath, join(jdks, e))
+                # deploy service files
                 if deployableDist.isGraalClassLoader:
-                    assert not deployableDist.isExtension
                     # deploy services files
                     jreGraalServicesDir = join(jreLibDir, 'graal', 'services')
                     if not exists(jreGraalServicesDir):
@@ -801,6 +807,8 @@ def build(args, vm=None):
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if jdkDist.isExtension:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_EXT_DIR)/' + basename(dist.path)
+            elif jdkDist.isGraalClassLoader:
+                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_DIR)/' + basename(dist.path)
             else:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if defLine not in defs:
@@ -2574,7 +2582,6 @@ def mx_post_parse_cmd_line(opts):  #
     for jdkDist in _jdkDeployedDists:
         def _close(jdkDeployable):
             def _install(dist):
-                mx.log("install " + dist.name)
                 assert dist.name == jdkDeployable.name, dist.name + "!=" + jdkDeployable.name
                 _installDistInJdks(jdkDeployable)
             return _install
