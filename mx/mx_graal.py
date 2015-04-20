@@ -1555,6 +1555,10 @@ def _basic_gate_body(args, tasks):
         with Task('BootstrapWithSystemAssertionsNoCoop:fastdebug', tasks) as t:
             if t: vm(['-esa', '-XX:-TieredCompilation', '-XX:-UseCompressedOops', '-version'])
 
+    with VM('graal', 'fastdebug'):
+        with Task('BootstrapWithExceptionEdges:fastdebug', tasks) as t:
+            if t: vm(['-esa', '-XX:-TieredCompilation', '-G:+StressInvokeWithExceptionNode', '-version'])
+
     with VM('graal', 'product'):
         with Task('BootstrapWithGCVerification:product', tasks) as t:
             if t:
