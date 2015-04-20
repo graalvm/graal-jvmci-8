@@ -587,7 +587,6 @@ suite = {
         "com.oracle.graal.service.processor",
       ],
       "workingSets" : "Graal,Replacements",
-      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.replacements.amd64" : {
