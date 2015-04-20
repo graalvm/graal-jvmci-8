@@ -3672,7 +3672,7 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
     FLAG_SET_ERGO(uintx, InitialTenuringThreshold, MaxTenuringThreshold);
   }
 
-#ifndef COMPILER2
+#if !defined(COMPILER2) && !defined(COMPILERGRAAL)
   // Don't degrade server performance for footprint
   if (FLAG_IS_DEFAULT(UseLargePages) &&
       MaxHeapSize < LargePageHeapSizeThreshold) {
@@ -3682,7 +3682,7 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
     FLAG_SET_DEFAULT(UseLargePages, false);
   }
 
-#else
+#elif defined(COMPILER2)
   if (!FLAG_IS_DEFAULT(OptoLoopAlignment) && FLAG_IS_DEFAULT(MaxLoopPad)) {
     FLAG_SET_DEFAULT(MaxLoopPad, OptoLoopAlignment-1);
   }
