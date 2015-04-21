@@ -436,6 +436,17 @@ suite = {
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
+      "workingSets" : "Graal",
+    },
+
+    "com.oracle.graal.options.processor" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.options",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
       "workingSets" : "Graal,Codegen",
     },
 
@@ -826,6 +837,7 @@ suite = {
         "com.oracle.graal.options",
         "com.oracle.graal.debug",
       ],
+      "annotationProcessors" : ["com.oracle.graal.options.processor"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Java",
