@@ -67,6 +67,10 @@
   GRAAL_ONLY(product(bool, CodeInstallSafepointChecks, true,                \
           "Perform explicit safepoint checks while installing code"))       \
                                                                             \
+  NOT_COMPILER2(product(intx, MaxVectorSize, 32,                            \
+          "Max vector size in bytes, "                                      \
+          "actual size could be less depending on elements type"))          \
+                                                                            \
   product(intx, TraceGraal, 0,                                              \
           "Trace level for Graal")                                          \
                                                                             \

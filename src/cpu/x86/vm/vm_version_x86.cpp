@@ -667,6 +667,8 @@ void VM_Version::get_processor_features() {
       FLAG_SET_DEFAULT(UseFPUForSpilling, false);
     }
   }
+#endif
+#if defined(COMPILER2) || defined(GRAAL)
   if (MaxVectorSize > 0) {
     if (!is_power_of_2(MaxVectorSize)) {
       warning("MaxVectorSize must be a power of 2");
@@ -684,7 +686,7 @@ void VM_Version::get_processor_features() {
       FLAG_SET_DEFAULT(MaxVectorSize, 0);
     }
 #ifdef ASSERT
-    if (supports_avx() && PrintMiscellaneous && Verbose && TraceNewVectors) {
+    if (supports_avx() && PrintMiscellaneous && Verbose) {
       tty->print_cr("State of YMM registers after signal handle:");
       int nreg = 2 LP64_ONLY(+2);
       const char* ymm_name[4] = {"0", "7", "8", "15"};
@@ -698,7 +700,9 @@ void VM_Version::get_processor_features() {
     }
 #endif
   }
+#endif
 
+#ifdef COMPILER2
 #ifdef _LP64
   if (FLAG_IS_DEFAULT(UseMultiplyToLenIntrinsic)) {
     UseMultiplyToLenIntrinsic = true;

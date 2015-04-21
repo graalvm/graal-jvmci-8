@@ -550,7 +550,7 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
         // It might be preferable to set this only for methods which
         // use vector instructions but we currently don't track this
         // and it probably wouldn't make much difference.
-        nm->set_has_wide_vectors(UseAVX >= 2);
+        nm->set_has_wide_vectors(MaxVectorSize > 16);
 #endif
 
         // Record successful registration.
