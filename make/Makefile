@@ -632,6 +632,9 @@ $(EXPORT_JRE_LIB_DIR)/%.jar: $(SHARED_DIR)/%.jar
 $(EXPORT_JRE_LIB_EXT_DIR)/%.jar: $(SHARED_DIR)/%.jar
 	$(install-file)
 
+$(EXPORT_JRE_LIB_GRAAL_DIR)/%.jar: $(SHARED_DIR)/%.jar
+	$(install-file)
+
 $(EXPORT_INCLUDE_DIR)/%: $(HS_SRC_DIR)/share/vm/code/%
 	$(install-file)
 
