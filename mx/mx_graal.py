@@ -594,6 +594,35 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
+def _updateGraalServiceFiles(jdkDir):
+    jreGraalDir = join(jdkDir, 'jre', 'lib', 'graal')
+    graalJars = [join(jreGraalDir, e) for e in os.listdir(jreGraalDir) if e.startswith('graal') and e.endswith('.jar')]
+    jreGraalServicesDir = join(jreGraalDir, 'services')
+    if exists(jreGraalServicesDir):
+        shutil.rmtree(jreGraalServicesDir)
+    os.makedirs(jreGraalServicesDir)
+    for jar in graalJars:
+        if os.path.isfile(jar):
+            with zipfile.ZipFile(jar) as zf:
+                for member in zf.namelist():
+                    if not member.startswith('META-INF/services'):
+                        continue
+                    serviceName = basename(member)
+                    # we don't handle directories
+                    assert serviceName
+                    target = join(jreGraalServicesDir, serviceName)
+                    lines = []
+                    with zf.open(member) as serviceFile:
+                        lines.extend(serviceFile.readlines())
+                    if exists(target):
+                        with open(target) as targetFile:
+                            lines.extend(targetFile.readlines())
+                    with open(target, "w+") as targetFile:
+                        for line in lines:
+                            targetFile.write(line.rstrip() + os.linesep)
+
+
+
 def _installDistInJdks(deployableDist):
     """
     Installs the jar(s) for a given Distribution into all existing Graal JDKs
@@ -613,7 +642,8 @@ def _installDistInJdks(deployableDist):
 
     if exists(jdks):
         for e in os.listdir(jdks):
-            jreLibDir = join(jdks, e, 'jre', 'lib')
+            jdkDir = join(jdks, e)
+            jreLibDir = join(jdkDir, 'jre', 'lib')
             if exists(jreLibDir):
                 if deployableDist.isExtension:
                     targetDir = join(jreLibDir, 'ext')
@@ -625,23 +655,10 @@ def _installDistInJdks(deployableDist):
                     os.makedirs(targetDir)
                 _copyToJdk(dist.path, targetDir)
                 if dist.sourcesPath:
-                    _copyToJdk(dist.sourcesPath, join(jdks, e))
-                # deploy service files
+                    _copyToJdk(dist.sourcesPath, jdkDir)
                 if deployableDist.isGraalClassLoader:
-                    # deploy services files
-                    jreGraalServicesDir = join(jreLibDir, 'graal', 'services')
-                    if not exists(jreGraalServicesDir):
-                        os.makedirs(jreGraalServicesDir)
-                    with zipfile.ZipFile(dist.path) as zf:
-                        for member in zf.namelist():
-                            if not member.startswith('META-INF/services'):
-                                continue
-                            serviceName = basename(member)
-                            # we don't handle directories
-                            assert serviceName
-                            target = join(jreGraalServicesDir, serviceName)
-                            with zf.open(member) as serviceFile, open(target, "w+") as targetFile:
-                                shutil.copyfileobj(serviceFile, targetFile)
+                    # deploy service files
+                    _updateGraalServiceFiles(jdkDir)
 
 # run a command in the windows SDK Debug Shell
 def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):

@@ -186,9 +186,7 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
   __ subptr(rsp, 256); // Save upper half of YMM registers
   if (save_vectors) {
     assert(UseAVX > 0, "256bit vectors are supported only with AVX");
-#ifdef COMPILER2
     assert(MaxVectorSize == 32, "only 256bit vectors are supported now");
-#endif
     // Save upper half of YMM registers
     __ vextractf128h(Address(rsp, ymm_hi0_off * BytesPerInt),  xmm0);
     __ vextractf128h(Address(rsp, ymm_hi1_off * BytesPerInt),  xmm1);
@@ -327,9 +325,7 @@ void RegisterSaver::restore_live_registers(MacroAssembler* masm, bool restore_ve
   if (restore_vectors) {
     // Restore upper half of YMM registes.
     assert(UseAVX > 0, "256bit vectors are supported only with AVX");
-#if defined(COMPILER2)
     assert(MaxVectorSize == 32, "only 256bit vectors are supported now");
-#endif
     __ vinsertf128h(xmm0,  Address(rsp, ymm_hi0_off * BytesPerInt));
     __ vinsertf128h(xmm1,  Address(rsp, ymm_hi1_off * BytesPerInt));
     __ vinsertf128h(xmm2,  Address(rsp, ymm_hi2_off * BytesPerInt));

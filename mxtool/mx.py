@@ -2798,7 +2798,7 @@ def build(args, parser=None):
                 archive(['@' + dist.name])
             if args.check_distributions and not dist.isProcessorDistribution:
                 with zipfile.ZipFile(dist.path, 'r') as zf:
-                    files.extend([member for member in zf.namelist() if not member.startswith('META-INF/services')])
+                    files.extend([member for member in zf.namelist() if not member.startswith('META-INF')])
         dups = set([x for x in files if files.count(x) > 1])
         if len(dups) > 0:
             abort('Distributions overlap! duplicates: ' + str(dups))
