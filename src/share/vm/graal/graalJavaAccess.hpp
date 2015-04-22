@@ -273,8 +273,8 @@ void graal_compute_offsets();
 class name : AllStatic {                                                                                                                                       \
   private:                                                                                                                                                     \
     friend class GraalCompiler;                                                                                                                                \
-    static void check(oop obj) {                                                                                                                               \
-        assert(obj != NULL, "NULL field access of class " #name);                                                                                              \
+    static void check(oop obj, const char* field_name) {                                                                                                       \
+        assert(obj != NULL, err_msg("NULL field access of %s.%s", #name, field_name));                                                                         \
         assert(obj->is_a(SystemDictionary::name##_klass()), "wrong class, " #name " expected");                                                                \
     }                                                                                                                                                          \
     static void compute_offsets();                                                                                                                             \
@@ -283,14 +283,14 @@ class name : AllStatic {                                                        
 
 #define END_CLASS };
 
-#define FIELD(name, type, accessor, cast)                                                                                                                      \
-    static int _##name##_offset;                                                                                                                               \
-    static type name(oop obj)                   { check(obj); return cast obj->accessor(_##name##_offset); } \
-    static type name(Handle& obj)                { check(obj()); return cast obj->accessor(_##name##_offset); } \
-    static type name(jobject obj)               { check(JNIHandles::resolve(obj)); return cast JNIHandles::resolve(obj)->accessor(_##name##_offset); }              \
-    static void set_##name(oop obj, type x)     { check(obj); obj->accessor##_put(_##name##_offset, x); }                                                      \
-    static void set_##name(Handle& obj, type x)  { check(obj()); obj->accessor##_put(_##name##_offset, x); }                                                   \
-    static void set_##name(jobject obj, type x) { check(JNIHandles::resolve(obj)); JNIHandles::resolve(obj)->accessor##_put(_##name##_offset, x); }
+#define FIELD(name, type, accessor, cast)                                                                                                                         \
+    static int _##name##_offset;                                                                                                                                  \
+    static type name(oop obj)                   { check(obj, #name); return cast obj->accessor(_##name##_offset); }                                               \
+    static type name(Handle& obj)                { check(obj(), #name); return cast obj->accessor(_##name##_offset); }                                            \
+    static type name(jobject obj)               { check(JNIHandles::resolve(obj), #name); return cast JNIHandles::resolve(obj)->accessor(_##name##_offset); }     \
+    static void set_##name(oop obj, type x)     { check(obj, #name); obj->accessor##_put(_##name##_offset, x); }                                                  \
+    static void set_##name(Handle& obj, type x)  { check(obj(), #name); obj->accessor##_put(_##name##_offset, x); }                                               \
+    static void set_##name(jobject obj, type x) { check(JNIHandles::resolve(obj), #name); JNIHandles::resolve(obj)->accessor##_put(_##name##_offset, x); }
 
 #define EMPTY_CAST 
 #define CHAR_FIELD(klass, name) FIELD(name, jchar, char_field, EMPTY_CAST)
