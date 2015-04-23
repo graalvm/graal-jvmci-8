@@ -594,32 +594,77 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _isGraalService(className, graalJars):
+def _eraseGenerics(className):
+    if '<' in className:
+        return className[:className.index('<')]
+    return className
+
+def _classifyGraalServices(classNames, graalJars):
+    classification = {}
+    for className in classNames:
+        classification[className] = None
     javap = mx.java().javap
-    output = subprocess.check_output([javap, '-cp', os.pathsep.join(graalJars), className], stderr=subprocess.STDOUT)
+    output = subprocess.check_output([javap, '-cp', os.pathsep.join(graalJars)] + classNames, stderr=subprocess.STDOUT)
     lines = output.split(os.linesep)
-    decl = 'public interface ' + className
     for line in lines:
-        if line.startswith(decl):
-            declLine = line.strip()
-            break
-    if not declLine:
-        mx.abort('Could not find interface for service ' + className + ':\n' + output)
-    afterName = declLine[len(decl):]
-    if not afterName.startswith(' extends '):
-        return False
-    superInterfaces = afterName[len(' extends '):-len(' {')].split(',')
-    if 'com.oracle.graal.api.runtime.Service' in superInterfaces:
-        return True
-    for superInterface in superInterfaces:
-        if '<' in superInterface:
-            superInterface = superInterface[:superInterface.index('<')]
-        if _isGraalService(superInterface, graalJars):
-            return True
-    return False
+        if line.startswith('public interface '):
+            declLine = line[len('public interface '):].strip()
+            for className in classNames:
+                if declLine.startswith(className):
+                    assert classification[className] is None
+                    afterName = declLine[len(className):]
+                    if not afterName.startswith(' extends '):
+                        classification[className] = False
+                        break
+                    superInterfaces = afterName[len(' extends '):-len(' {')].split(',')
+                    if 'com.oracle.graal.api.runtime.Service' in superInterfaces:
+                        classification[className] = True
+                        break
+                    maybe = [_eraseGenerics(superInterface) for superInterface in superInterfaces]
+                    classification[className] = maybe
+                    break
+    for className, v in classification.items():
+        if v is None:
+            mx.abort('Could not find interface for service ' + className + ':\n' + output)
+    return classification
+
+def _extractMaybes(classification):
+    maybes = []
+    for v in classification.values():
+        if isinstance(v, list):
+            maybes.extend(v)
+    return maybes
+
+def _mergeClassification(classification, newClassification):
+    for className, value in classification.items():
+        if isinstance(value, list):
+            classification[className] = None
+            for superInterface in value:
+                if newClassification[superInterface] is True:
+                    classification[className] = True
+                    break
+                elif newClassification[superInterface] is False:
+                    if classification[className] is None:
+                        classification[className] = False
+                else:
+                    if not classification[className]:
+                        classification[className] = []
+                    classification[className].extend(newClassification[superInterface])
+
+def _filterGraalService(classNames, graalJars):
+    classification = _classifyGraalServices(classNames, graalJars)
+    needClassification = _extractMaybes(classification)
+    while needClassification:
+        _mergeClassification(classification, _classifyGraalServices(needClassification, graalJars))
+        needClassification = _extractMaybes(classification)
+    filtered = []
+    for className in classNames:
+        if classification[className] is True:
+            filtered.append(className)
+    return filtered
 
 def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
-    services = set()
+    graalServices = set()
     if cleanDestination:
         if exists(destination):
             shutil.rmtree(destination)
@@ -627,15 +672,17 @@ def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
     for jar in graalJars:
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
+                services = []
                 for member in zf.namelist():
                     if not member.startswith('META-INF/services'):
                         continue
                     serviceName = basename(member)
                     # we don't handle directories
                     assert serviceName and member == 'META-INF/services/' + serviceName
-                    if not _isGraalService(serviceName, graalJars):
-                        continue
-                    services.add(serviceName)
+                    services.append(serviceName)
+                services = _filterGraalService(services, graalJars)
+                for serviceName in services:
+                    graalServices.add(serviceName)
                     target = join(destination, serviceName)
                     lines = []
                     with zf.open(member) as serviceFile:
@@ -646,7 +693,7 @@ def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
                     with open(target, "w+") as targetFile:
                         for line in lines:
                             targetFile.write(line.rstrip() + os.linesep)
-    return services
+    return graalServices
 
 def _updateGraalServiceFiles(jdkDir):
     jreGraalDir = join(jdkDir, 'jre', 'lib', 'graal')
