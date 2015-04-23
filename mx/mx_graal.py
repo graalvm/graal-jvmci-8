@@ -664,35 +664,35 @@ def _filterGraalService(classNames, graalJars):
     return filtered
 
 def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
-    graalServices = set()
     if cleanDestination:
         if exists(destination):
             shutil.rmtree(destination)
         os.makedirs(destination)
+    servicesMap = {}
     for jar in graalJars:
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
-                services = []
                 for member in zf.namelist():
                     if not member.startswith('META-INF/services'):
                         continue
                     serviceName = basename(member)
                     # we don't handle directories
                     assert serviceName and member == 'META-INF/services/' + serviceName
-                    services.append(serviceName)
-                services = _filterGraalService(services, graalJars)
-                for serviceName in services:
-                    graalServices.add(serviceName)
-                    target = join(destination, serviceName)
-                    lines = []
                     with zf.open(member) as serviceFile:
-                        lines.extend(serviceFile.readlines())
-                    if exists(target):
-                        with open(target) as targetFile:
-                            lines.extend(targetFile.readlines())
-                    with open(target, "w+") as targetFile:
-                        for line in lines:
-                            targetFile.write(line.rstrip() + os.linesep)
+                        serviceImpls = servicesMap.setdefault(serviceName, [])
+                        serviceImpls.extend(serviceFile.readlines())
+    graalServices = _filterGraalService(servicesMap.keys(), graalJars)
+    for serviceName in graalServices:
+        serviceImpls = servicesMap[serviceName]
+        fd, tmp = tempfile.mkstemp(prefix=serviceName)
+        f = os.fdopen(fd, 'w+')
+        for serviceImpl in serviceImpls:
+            f.write(serviceImpl.rstrip() + os.linesep)
+        target = join(destination, serviceName)
+        f.close()
+        shutil.move(tmp, target)
+        if mx.get_os() != 'windows':
+            os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
     return graalServices
 
 def _updateGraalServiceFiles(jdkDir):
