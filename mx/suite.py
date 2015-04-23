@@ -314,11 +314,18 @@ suite = {
     "com.oracle.graal.hotspotvmconfig" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.compiler.common"],
       "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["com.oracle.graal.service.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot",
+    },
+
+    "com.oracle.graal.hotspotvmconfig.processor" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.graal.hotspotvmconfig", "com.oracle.graal.compiler.common"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,HotSpot,Codegen",
     },
 
     "com.oracle.graal.hotspot" : {
@@ -334,6 +341,7 @@ suite = {
       "annotationProcessors" : [
         "com.oracle.graal.replacements.verifier",
         "com.oracle.graal.service.processor",
+        "com.oracle.graal.hotspotvmconfig.processor",
       ],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot",
@@ -393,7 +401,7 @@ suite = {
         "com.oracle.graal.replacements.sparc",
       ],
       "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["com.oracle.graal.service.processor"],
+      "annotationProcessors" : ["com.oracle.graal.service.processor", "com.oracle.graal.compiler.match.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot,SPARC",
     },
@@ -743,6 +751,17 @@ suite = {
       "workingSets" : "Graal",
     },
 
+    "com.oracle.graal.compiler.match.processor" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.compiler",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Codegen",
+    },
+
     "com.oracle.graal.compiler.amd64" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -751,6 +770,7 @@ suite = {
         "com.oracle.graal.lir.amd64",
       ],
       "checkstyle" : "com.oracle.graal.graph",
+      "annotationProcessors" : ["com.oracle.graal.compiler.match.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,AMD64",
     },
