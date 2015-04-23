@@ -594,6 +594,30 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
+def _isGraalService(className, graalJars):
+    javap = mx.java().javap
+    output = subprocess.check_output([javap, '-cp', os.pathsep.join(graalJars), className], stderr=subprocess.STDOUT)
+    lines = output.split(os.linesep)
+    decl = 'public interface ' + className
+    for line in lines:
+        if line.startswith(decl):
+            declLine = line.strip()
+            break
+    if not declLine:
+        mx.abort('Could not find interface for service ' + className + ':\n' + output)
+    afterName = declLine[len(decl):]
+    if not afterName.startswith(' extends '):
+        return False
+    superInterfaces = afterName[len(' extends '):-len(' {')].split(',')
+    if 'com.oracle.graal.api.runtime.Service' in superInterfaces:
+        return True
+    for superInterface in superInterfaces:
+        if '<' in superInterface:
+            superInterface = superInterface[:superInterface.index('<')]
+        if _isGraalService(superInterface, graalJars):
+            return True
+    return False
+
 def _updateGraalServiceFiles(jdkDir):
     jreGraalDir = join(jdkDir, 'jre', 'lib', 'graal')
     graalJars = [join(jreGraalDir, e) for e in os.listdir(jreGraalDir) if e.startswith('graal') and e.endswith('.jar')]
@@ -609,7 +633,9 @@ def _updateGraalServiceFiles(jdkDir):
                         continue
                     serviceName = basename(member)
                     # we don't handle directories
-                    assert serviceName
+                    assert serviceName and member == 'META-INF/services/' + serviceName
+                    if not _isGraalService(serviceName, graalJars):
+                        continue
                     target = join(jreGraalServicesDir, serviceName)
                     lines = []
                     with zf.open(member) as serviceFile:
