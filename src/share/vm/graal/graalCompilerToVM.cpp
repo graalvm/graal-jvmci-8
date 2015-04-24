@@ -1019,6 +1019,10 @@ C2V_VMENTRY(void, writeDebugOutput, (JNIEnv*, jobject, jbyteArray bytes, jint of
   }
 C2V_END
 
+C2V_VMENTRY(void, flushDebugOutput, (JNIEnv*, jobject))
+  tty->flush();
+C2V_END
+
 
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
@@ -1099,6 +1103,7 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"materializeVirtualObjects",                    CC"("HS_STACK_FRAME_REF"Z)V",                                             FN_PTR(materializeVirtualObjects)},
   {CC"shouldDebugNonSafepoints",                     CC"()Z",                                                                  FN_PTR(shouldDebugNonSafepoints)},
   {CC"writeDebugOutput",                             CC"([BII)V",                                                              FN_PTR(writeDebugOutput)},
+  {CC"flushDebugOutput",                             CC"()V",                                                                  FN_PTR(flushDebugOutput)},
 };
 
 int CompilerToVM_methods_count() {
