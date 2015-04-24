@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,33 +20,32 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.options;
+package com.oracle.graal.jtt.optimize;
 
-import java.lang.annotation.*;
+import org.junit.*;
 
-/**
- * Describes the attributes of an option whose {@link OptionValue value} is in a static field
- * annotated by this annotation type.
- *
- * @see OptionDescriptor
+import com.oracle.graal.jtt.*;
+
+/*
  */
-@Retention(RetentionPolicy.CLASS)
-@Target(ElementType.FIELD)
-public @interface Option {
+public class SchedulingBug_01 extends JTTTest {
 
-    /**
-     * Gets a help message for the option. New lines can be embedded in the message with
-     * {@code "%n"}.
-     */
-    String help();
+    private static class VolatileBoxHolder {
+        volatile Integer box;
+    }
 
-    /**
-     * The name of the option. By default, the name of the annotated field should be used.
-     */
-    String name() default "";
+    public static int test(VolatileBoxHolder a, VolatileBoxHolder b) {
+        int value = a.box;
+        int result = 0;
+        if (b.box != null) {
+            result += value;
+        }
+        return result + value;
+    }
 
-    /**
-     * Specifies the type of the option.
-     */
-    OptionType type() default OptionType.Debug;
+    @Test
+    public void run0() throws Throwable {
+        runTest("test", new VolatileBoxHolder(), new VolatileBoxHolder());
+    }
+
 }

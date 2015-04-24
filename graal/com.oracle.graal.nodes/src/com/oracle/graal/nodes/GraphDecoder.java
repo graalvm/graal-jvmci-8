@@ -303,7 +303,6 @@ public class GraphDecoder {
              */
             FixedNode detectLoopsStart = startNode.predecessor() != null ? (FixedNode) startNode.predecessor() : startNode;
             cleanupGraph(methodScope, start);
-            Debug.dump(methodScope.graph, "Before loop detection");
             detectLoops(methodScope.graph, detectLoopsStart);
         }
     }
@@ -388,11 +387,12 @@ public class GraphDecoder {
                     resultScope = new LoopScope(loopScope, loopScope.loopDepth + 1, 0, mergeOrderId, Arrays.copyOf(loopScope.createdNodes, loopScope.createdNodes.length), //
                                     methodScope.loopExplosion != LoopExplosionKind.NONE ? new ArrayDeque<>() : null, //
                                     methodScope.loopExplosion == LoopExplosionKind.MERGE_EXPLODE ? new HashMap<>() : null);
+                    phiInputScope = resultScope;
                     phiNodeScope = resultScope;
 
-                    registerNode(phiInputScope, mergeOrderId, null, true, true);
-                    phiInputScope.nodesToProcess.clear(mergeOrderId);
-                    phiNodeScope.nodesToProcess.set(mergeOrderId);
+                    registerNode(loopScope, mergeOrderId, null, true, true);
+                    loopScope.nodesToProcess.clear(mergeOrderId);
+                    resultScope.nodesToProcess.set(mergeOrderId);
                 }
             }
 
@@ -680,7 +680,7 @@ public class GraphDecoder {
          * not processed yet when processing the loop body, we need to create all phi functions
          * upfront.
          */
-        boolean lazyPhi = !(merge instanceof LoopBeginNode) || methodScope.loopExplosion != LoopExplosionKind.NONE;
+        boolean lazyPhi = allowLazyPhis() && (!(merge instanceof LoopBeginNode) || methodScope.loopExplosion != LoopExplosionKind.NONE);
         int numPhis = methodScope.reader.getUVInt();
         for (int i = 0; i < numPhis; i++) {
             int phiInputOrderId = readOrderId(methodScope);
@@ -713,6 +713,11 @@ public class GraphDecoder {
                 phi.addInput(phiInput);
             }
         }
+    }
+
+    protected boolean allowLazyPhis() {
+        /* We need to exactly reproduce the encoded graph, including unnecessary phi functions. */
+        return false;
     }
 
     protected Node instantiateNode(MethodScope methodScope, int nodeOrderId) {
@@ -796,12 +801,20 @@ public class GraphDecoder {
             /* Allow subclasses to canonicalize and intercept nodes. */
             node = handleFloatingNodeBeforeAdd(methodScope, loopScope, node);
             if (!node.isAlive()) {
-                node = methodScope.graph.addOrUnique(node);
+                node = addFloatingNode(methodScope, node);
             }
             node = handleFloatingNodeAfterAdd(methodScope, loopScope, node);
         }
         registerNode(loopScope, nodeOrderId, node, false, false);
         return node;
+    }
+
+    protected Node addFloatingNode(MethodScope methodScope, Node node) {
+        /*
+         * We want to exactly reproduce the encoded graph. Even though nodes should be unique in the
+         * encoded graph, this is not always guaranteed.
+         */
+        return methodScope.graph.addWithoutUnique(node);
     }
 
     /**
@@ -1020,7 +1033,6 @@ public class GraphDecoder {
             }
         }
 
-        Debug.dump(currentGraph, "After loops detected");
         insertLoopEnds(currentGraph, startInstruction);
     }
 
@@ -1145,7 +1157,6 @@ public class GraphDecoder {
     protected void cleanupGraph(MethodScope methodScope, Graph.Mark start) {
         assert verifyEdges(methodScope);
 
-        Debug.dump(methodScope.graph, "Before removing redundant merges");
         for (Node node : methodScope.graph.getNewNodes(start)) {
             if (node instanceof MergeNode) {
                 MergeNode mergeNode = (MergeNode) node;
@@ -1155,7 +1166,6 @@ public class GraphDecoder {
             }
         }
 
-        Debug.dump(methodScope.graph, "Before removing redundant begins");
         for (Node node : methodScope.graph.getNewNodes(start)) {
             if (node instanceof BeginNode || node instanceof KillingBeginNode) {
                 if (!(node.predecessor() instanceof ControlSplitNode) && node.hasNoUsages()) {
@@ -1165,7 +1175,6 @@ public class GraphDecoder {
             }
         }
 
-        Debug.dump(methodScope.graph, "Before removing unused non-fixed nodes");
         for (Node node : methodScope.graph.getNewNodes(start)) {
             if (!(node instanceof FixedNode) && node.hasNoUsages()) {
                 GraphUtil.killCFG(node);

@@ -313,8 +313,14 @@ public final class SchedulePhase extends Phase {
             }
         }
         FixedNode endNode = b.getEndNode();
+        FixedNode fixedEndNode = null;
+        if (isFixedEnd(endNode)) {
+            // Only if the end node is either a control split or an end node, we need to force it to
+            // be the last node in the schedule.
+            fixedEndNode = endNode;
+        }
         for (Node n : earliestSorting) {
-            if (n != endNode) {
+            if (n != fixedEndNode) {
                 if (n instanceof FixedNode) {
                     assert nodeMap.get(n) == b;
                     checkWatchList(b, nodeMap, unprocessed, result, watchList, n);
@@ -337,11 +343,11 @@ public final class SchedulePhase extends Phase {
             assert nodeMap.get(n) == b;
             assert !(n instanceof FixedNode);
             if (unprocessed.isMarked(n)) {
-                sortIntoList(n, b, result, nodeMap, unprocessed, endNode);
+                sortIntoList(n, b, result, nodeMap, unprocessed, fixedEndNode);
             }
         }
 
-        if (unprocessed.isMarked(endNode)) {
+        if (endNode != null && unprocessed.isMarked(endNode)) {
             sortIntoList(endNode, b, result, nodeMap, unprocessed, null);
         }
 
@@ -491,8 +497,10 @@ public final class SchedulePhase extends Phase {
         // Start analysis with control flow ends.
         for (Block b : cfg.postOrder()) {
             FixedNode endNode = b.getEndNode();
-            stack.push(endNode);
-            nodeToBlock.set(endNode, b);
+            if (isFixedEnd(endNode)) {
+                stack.push(endNode);
+                nodeToBlock.set(endNode, b);
+            }
         }
 
         processStack(cfg, blockToNodes, nodeToBlock, visited, floatingReads, stack);
@@ -539,8 +547,10 @@ public final class SchedulePhase extends Phase {
         // Add end nodes as the last nodes in each block.
         for (Block b : cfg.getBlocks()) {
             FixedNode endNode = b.getEndNode();
-            if (endNode != b.getBeginNode()) {
-                addNode(blockToNodes, b, endNode);
+            if (isFixedEnd(endNode)) {
+                if (endNode != b.getBeginNode()) {
+                    addNode(blockToNodes, b, endNode);
+                }
             }
         }
 
@@ -553,6 +563,10 @@ public final class SchedulePhase extends Phase {
         }
 
         assert MemoryScheduleVerification.check(cfg.getStartBlock(), blockToNodes);
+    }
+
+    private static boolean isFixedEnd(FixedNode endNode) {
+        return endNode instanceof ControlSplitNode || endNode instanceof ControlSinkNode || endNode instanceof AbstractEndNode;
     }
 
     private static void resortEarliestWithinBlock(Block b, BlockMap<List<Node>> blockToNodes, NodeMap<Block> nodeToBlock, NodeBitMap unprocessed) {
@@ -583,18 +597,19 @@ public final class SchedulePhase extends Phase {
         for (int i = 1; i < oldList.size(); ++i) {
             Node n = oldList.get(i);
             if (unprocessed.isMarked(n)) {
-                if (n instanceof MemoryCheckpoint) {
-                    assert n instanceof FixedNode;
-                    if (watchList.size() > 0) {
-                        // Check whether we need to commit reads from the watch list.
-                        checkWatchList(b, nodeToBlock, unprocessed, newList, watchList, n);
+                if (n instanceof MemoryNode) {
+                    if (n instanceof MemoryCheckpoint) {
+                        assert n instanceof FixedNode;
+                        if (watchList.size() > 0) {
+                            // Check whether we need to commit reads from the watch list.
+                            checkWatchList(b, nodeToBlock, unprocessed, newList, watchList, n);
+                        }
                     }
-
                     // Add potential dependent reads to the watch list.
                     for (Node usage : n.usages()) {
                         if (usage instanceof FloatingReadNode) {
                             FloatingReadNode floatingReadNode = (FloatingReadNode) usage;
-                            if (nodeToBlock.get(floatingReadNode) == b && floatingReadNode.getLastLocationAccess() == n) {
+                            if (nodeToBlock.get(floatingReadNode) == b && floatingReadNode.getLastLocationAccess() == n && !(n instanceof MemoryPhiNode)) {
                                 watchList.add(floatingReadNode);
                             }
                         }
@@ -679,7 +694,8 @@ public final class SchedulePhase extends Phase {
                                         inputEarliest = nodeToBlock.get(((ControlSplitNode) input).getPrimarySuccessor());
                                     } else {
                                         assert inputEarliest.getSuccessorCount() == 1;
-                                        inputEarliest = inputEarliest.getSuccessors().get(0);
+                                        assert !(input instanceof AbstractEndNode);
+                                        // Keep regular inputEarliest
                                     }
                                 }
                                 if (earliest.getDominatorDepth() < inputEarliest.getDominatorDepth()) {

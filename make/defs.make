@@ -342,6 +342,7 @@ EXPORT_JRE_BIN_DIR = $(EXPORT_JRE_DIR)/bin
 EXPORT_JRE_LIB_DIR = $(EXPORT_JRE_DIR)/lib
 EXPORT_JRE_LIB_EXT_DIR = $(EXPORT_JRE_LIB_DIR)/ext
 EXPORT_JRE_LIB_GRAAL_DIR = $(EXPORT_JRE_LIB_DIR)/graal
+EXPORT_JRE_LIB_GRAAL_SERVICES_DIR = $(EXPORT_JRE_LIB_GRAAL_DIR)/services
 EXPORT_JRE_LIB_ARCH_DIR = $(EXPORT_JRE_LIB_DIR)/$(LIBARCH)
 
 # non-universal macosx builds need to appear universal
@@ -357,10 +358,17 @@ EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/jvmticmlr.h
 EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/jni.h
 EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/$(JDK_INCLUDE_SUBDIR)/jni_md.h
 EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/jmm.h
-EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_DIR)/graal.jar
-EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_DIR)/graal-truffle.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/graal-loader.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/truffle.jar
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_DIR)/graal.jar
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_DIR)/graal-truffle.jar
+
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.compiler.match.MatchStatementSet
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.hotspot.HotSpotBackendFactory
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.nodes.spi.ReplacementsProvider
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.phases.tiers.CompilerConfiguration
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.truffle.hotspot.nfi.RawNativeCallNodeFactory
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.truffle.OptimizedCallTargetInstrumentationFactory
 
 .PHONY: $(HS_ALT_MAKE)/defs.make
 
