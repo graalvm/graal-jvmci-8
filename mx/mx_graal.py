@@ -682,14 +682,17 @@ def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
                     assert serviceName and member == 'META-INF/services/' + serviceName
                     with zf.open(member) as serviceFile:
                         serviceImpls = servicesMap.setdefault(serviceName, [])
-                        serviceImpls.extend(serviceFile.readlines())
+                        for line in serviceFile.readlines():
+                            line = line.strip()
+                            if line:
+                                serviceImpls.append(line)
     graalServices = _filterGraalService(servicesMap.keys(), graalJars)
     for serviceName in graalServices:
         serviceImpls = servicesMap[serviceName]
         fd, tmp = tempfile.mkstemp(prefix=serviceName)
         f = os.fdopen(fd, 'w+')
         for serviceImpl in serviceImpls:
-            f.write(serviceImpl.rstrip() + os.linesep)
+            f.write(serviceImpl + os.linesep)
         target = join(destination, serviceName)
         f.close()
         shutil.move(tmp, target)
