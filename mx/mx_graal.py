@@ -594,13 +594,81 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _updateGraalServiceFiles(jdkDir):
-    jreGraalDir = join(jdkDir, 'jre', 'lib', 'graal')
-    graalJars = [join(jreGraalDir, e) for e in os.listdir(jreGraalDir) if e.startswith('graal') and e.endswith('.jar')]
-    jreGraalServicesDir = join(jreGraalDir, 'services')
-    if exists(jreGraalServicesDir):
-        shutil.rmtree(jreGraalServicesDir)
-    os.makedirs(jreGraalServicesDir)
+def _eraseGenerics(className):
+    if '<' in className:
+        return className[:className.index('<')]
+    return className
+
+def _classifyGraalServices(classNames, graalJars):
+    classification = {}
+    for className in classNames:
+        classification[className] = None
+    javap = mx.java().javap
+    output = subprocess.check_output([javap, '-cp', os.pathsep.join(graalJars)] + classNames, stderr=subprocess.STDOUT)
+    lines = output.split(os.linesep)
+    for line in lines:
+        if line.startswith('public interface '):
+            declLine = line[len('public interface '):].strip()
+            for className in classNames:
+                if declLine.startswith(className):
+                    assert classification[className] is None
+                    afterName = declLine[len(className):]
+                    if not afterName.startswith(' extends '):
+                        classification[className] = False
+                        break
+                    superInterfaces = afterName[len(' extends '):-len(' {')].split(',')
+                    if 'com.oracle.graal.api.runtime.Service' in superInterfaces:
+                        classification[className] = True
+                        break
+                    maybe = [_eraseGenerics(superInterface) for superInterface in superInterfaces]
+                    classification[className] = maybe
+                    break
+    for className, v in classification.items():
+        if v is None:
+            mx.abort('Could not find interface for service ' + className + ':\n' + output)
+    return classification
+
+def _extractMaybes(classification):
+    maybes = []
+    for v in classification.values():
+        if isinstance(v, list):
+            maybes.extend(v)
+    return maybes
+
+def _mergeClassification(classification, newClassification):
+    for className, value in classification.items():
+        if isinstance(value, list):
+            classification[className] = None
+            for superInterface in value:
+                if newClassification[superInterface] is True:
+                    classification[className] = True
+                    break
+                elif newClassification[superInterface] is False:
+                    if classification[className] is None:
+                        classification[className] = False
+                else:
+                    if not classification[className]:
+                        classification[className] = []
+                    classification[className].extend(newClassification[superInterface])
+
+def _filterGraalService(classNames, graalJars):
+    classification = _classifyGraalServices(classNames, graalJars)
+    needClassification = _extractMaybes(classification)
+    while needClassification:
+        _mergeClassification(classification, _classifyGraalServices(needClassification, graalJars))
+        needClassification = _extractMaybes(classification)
+    filtered = []
+    for className in classNames:
+        if classification[className] is True:
+            filtered.append(className)
+    return filtered
+
+def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
+    if cleanDestination:
+        if exists(destination):
+            shutil.rmtree(destination)
+        os.makedirs(destination)
+    servicesMap = {}
     for jar in graalJars:
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
@@ -609,17 +677,29 @@ def _updateGraalServiceFiles(jdkDir):
                         continue
                     serviceName = basename(member)
                     # we don't handle directories
-                    assert serviceName
-                    target = join(jreGraalServicesDir, serviceName)
-                    lines = []
+                    assert serviceName and member == 'META-INF/services/' + serviceName
                     with zf.open(member) as serviceFile:
-                        lines.extend(serviceFile.readlines())
-                    if exists(target):
-                        with open(target) as targetFile:
-                            lines.extend(targetFile.readlines())
-                    with open(target, "w+") as targetFile:
-                        for line in lines:
-                            targetFile.write(line.rstrip() + os.linesep)
+                        serviceImpls = servicesMap.setdefault(serviceName, [])
+                        serviceImpls.extend(serviceFile.readlines())
+    graalServices = _filterGraalService(servicesMap.keys(), graalJars)
+    for serviceName in graalServices:
+        serviceImpls = servicesMap[serviceName]
+        fd, tmp = tempfile.mkstemp(prefix=serviceName)
+        f = os.fdopen(fd, 'w+')
+        for serviceImpl in serviceImpls:
+            f.write(serviceImpl.rstrip() + os.linesep)
+        target = join(destination, serviceName)
+        f.close()
+        shutil.move(tmp, target)
+        if mx.get_os() != 'windows':
+            os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
+    return graalServices
+
+def _updateGraalServiceFiles(jdkDir):
+    jreGraalDir = join(jdkDir, 'jre', 'lib', 'graal')
+    graalJars = [join(jreGraalDir, e) for e in os.listdir(jreGraalDir) if e.startswith('graal') and e.endswith('.jar')]
+    jreGraalServicesDir = join(jreGraalDir, 'services')
+    _extractGraalServiceFiles(graalJars, jreGraalServicesDir)
 
 
 
@@ -819,6 +899,7 @@ def build(args, vm=None):
         defsPath = join(_graal_home, 'make', 'defs.make')
         with open(defsPath) as fp:
             defs = fp.read()
+        graalJars = []
         for jdkDist in _jdkDeployedDists:
             dist = mx.distribution(jdkDist.name)
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
@@ -826,11 +907,17 @@ def build(args, vm=None):
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_EXT_DIR)/' + basename(dist.path)
             elif jdkDist.isGraalClassLoader:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_DIR)/' + basename(dist.path)
+                graalJars.append(dist.path)
             else:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + '\n' + defLine)
             shutil.copy(dist.path, opts2.export_dir)
+        services = _extractGraalServiceFiles(graalJars, join(opts2.export_dir, 'services'))
+        for service in services:
+            defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/' + service
+            if defLine not in defs:
+                mx.abort('Missing following line in ' + defsPath + ' for service from ' + dist.name + '\n' + defLine)
         graalOptions = join(_graal_home, 'graal.options')
         if exists(graalOptions):
             shutil.copy(graalOptions, opts2.export_dir)

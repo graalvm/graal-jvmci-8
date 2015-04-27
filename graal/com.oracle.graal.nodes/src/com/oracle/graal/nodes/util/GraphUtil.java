@@ -225,7 +225,44 @@ public class GraphUtil {
         }
     }
 
-    public static void normalizeLoopBegin(LoopBeginNode begin) {
+    /**
+     * Remove loop header without loop ends. This can happen with degenerated loops like this one:
+     *
+     * <pre>
+     * for (;;) {
+     *     try {
+     *         break;
+     *     } catch (UnresolvedException iioe) {
+     *     }
+     * }
+     * </pre>
+     */
+    public static void normalizeLoops(StructuredGraph graph) {
+        boolean loopRemoved = false;
+        for (LoopBeginNode begin : graph.getNodes(LoopBeginNode.TYPE)) {
+            if (begin.loopEnds().isEmpty()) {
+                assert begin.forwardEndCount() == 1;
+                graph.reduceDegenerateLoopBegin(begin);
+                loopRemoved = true;
+            } else {
+                normalizeLoopBegin(begin);
+            }
+        }
+
+        if (loopRemoved) {
+            /*
+             * Removing a degenerated loop can make non-loop phi functions unnecessary. Therefore,
+             * we re-check all phi functions and remove redundant ones.
+             */
+            for (Node node : graph.getNodes()) {
+                if (node instanceof PhiNode) {
+                    checkRedundantPhi((PhiNode) node);
+                }
+            }
+        }
+    }
+
+    private static void normalizeLoopBegin(LoopBeginNode begin) {
         // Delete unnecessary loop phi functions, i.e., phi functions where all inputs are either
         // the same or the phi itself.
         for (PhiNode phi : begin.phis().snapshot()) {

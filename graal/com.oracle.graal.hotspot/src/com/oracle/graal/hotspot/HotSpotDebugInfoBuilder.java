@@ -26,6 +26,7 @@ import static com.oracle.graal.api.code.BytecodeFrame.*;
 
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.api.meta.*;
+import com.oracle.graal.compiler.common.*;
 import com.oracle.graal.compiler.gen.*;
 import com.oracle.graal.graph.*;
 import com.oracle.graal.nodes.*;
@@ -55,14 +56,17 @@ public class HotSpotDebugInfoBuilder extends DebugInfoBuilder {
         StackSlotValue slot = lockStack.makeLockSlot(lockDepth);
         ValueNode lock = state.lockAt(lockIndex);
         Value object = toValue(lock);
-        boolean eliminated = object instanceof VirtualObject && state.monitorIdAt(lockIndex) != null;
+        boolean eliminated = object instanceof VirtualObject || state.monitorIdAt(lockIndex) == null;
         assert state.monitorIdAt(lockIndex) == null || state.monitorIdAt(lockIndex).getLockDepth() == lockDepth;
         return new StackLockValue(object, slot, eliminated);
     }
 
     @Override
     protected BytecodeFrame computeFrameForState(FrameState state) {
-        assert !isPlaceholderBci(state.bci) || state.bci == BytecodeFrame.BEFORE_BCI : state.bci;
+        if (isPlaceholderBci(state.bci) && state.bci != BytecodeFrame.BEFORE_BCI) {
+            // This is really a hard error since an incorrect state could crash hotspot
+            throw GraalInternalError.shouldNotReachHere("Invalid state " + BytecodeFrame.getPlaceholderBciName(state.bci) + " " + state);
+        }
         return super.computeFrameForState(state);
     }
 }

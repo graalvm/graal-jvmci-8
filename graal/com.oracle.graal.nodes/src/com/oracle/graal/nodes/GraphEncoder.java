@@ -27,6 +27,7 @@ import java.util.*;
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.compiler.common.*;
 import com.oracle.graal.compiler.common.util.*;
+import com.oracle.graal.debug.*;
 import com.oracle.graal.graph.*;
 import com.oracle.graal.graph.iterators.*;
 import com.oracle.graal.nodes.StructuredGraph.AllowAssumptions;
@@ -388,7 +389,15 @@ public class GraphEncoder {
         decoder.decode(decodedGraph, encodedGraph);
 
         decodedGraph.verify();
-        GraphComparison.verifyGraphsEqual(originalGraph, decodedGraph);
+        try {
+            GraphComparison.verifyGraphsEqual(originalGraph, decodedGraph);
+        } catch (Throwable ex) {
+            try (Debug.Scope scope = Debug.scope("GraphEncoder")) {
+                Debug.dump(originalGraph, "Original Graph");
+                Debug.dump(decodedGraph, "Decoded Graph");
+            }
+            throw ex;
+        }
         return true;
     }
 }
@@ -442,9 +451,6 @@ class GraphComparison {
             }
         }
 
-        for (Node expectedNode : expectedGraph.getNodes()) {
-            assert nodeMapping.get(expectedNode) != null || (expectedNode.hasNoUsages() && !(expectedNode instanceof FixedNode)) : "expectedNode";
-        }
         return true;
     }
 

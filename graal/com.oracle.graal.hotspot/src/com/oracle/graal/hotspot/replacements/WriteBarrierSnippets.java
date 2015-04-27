@@ -112,8 +112,8 @@ public class WriteBarrierSnippets implements Snippets {
     @Snippet
     public static void g1PreWriteBarrier(Object object, Object expectedObject, Object location, @ConstantParameter boolean doLoad, @ConstantParameter boolean nullCheck,
                     @ConstantParameter Register threadRegister, @ConstantParameter boolean trace) {
-        if (nullCheck && object == null) {
-            DeoptimizeNode.deopt(DeoptimizationAction.InvalidateReprofile, DeoptimizationReason.NullCheckException);
+        if (nullCheck) {
+            NullCheckNode.nullCheck(object);
         }
         Word thread = registerAsWord(threadRegister);
         Object fixedObject = FixedValueAnchorNode.getObject(object);
@@ -350,10 +350,6 @@ public class WriteBarrierSnippets implements Snippets {
         }
 
         public void lower(SerialWriteBarrier writeBarrier, LoweringTool tool) {
-            if (writeBarrier.alwaysNull()) {
-                writeBarrier.graph().removeFixed(writeBarrier);
-                return;
-            }
             Arguments args = new Arguments(serialWriteBarrier, writeBarrier.graph().getGuardsStage(), tool.getLoweringStage());
             args.add("object", writeBarrier.getObject());
             args.add("location", writeBarrier.getLocation());
