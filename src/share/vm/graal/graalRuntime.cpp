@@ -1099,19 +1099,43 @@ Handle GraalRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
         GrowableArray<char*>* implNames = new GrowableArray<char*>();
         char* line = buffer;
         while (line - buffer < num_read) {
-          char* nl = strchr(line, '\n');
-          if (nl != NULL) {
-            *nl = '\0';
-          }
-          // Turn all '.'s into '/'s
-          for (size_t index = 0; line[index] != '\0'; index++) {
-            if (line[index] == '.') {
-              line[index] = '/';
+          // find line end (\r, \n or \r\n)
+          char* nextline = NULL;
+          char* cr = strchr(line, '\r');
+          char* lf = strchr(line, '\n');
+          if (cr != NULL && lf != NULL) {
+            char* min = MIN2(cr, lf);
+            *min = '\0';
+            if (lf == cr + 1) {
+              nextline = lf + 1;
+            } else {
+              nextline = min + 1;
             }
+          } else if (cr != NULL) {
+            *cr = '\0';
+            nextline = cr + 1;
+          } else if (lf != NULL) {
+            *lf = '\0';
+            nextline = lf + 1;
           }
-          implNames->append(line);
-          if (nl != NULL) {
-            line = nl + 1;
+          // trim left
+          while (*line == ' ' || *line == '\t') line++;
+          char* end = line + strlen(line);
+          // trim right
+          while (end > line && (*(end -1) == ' ' || *(end -1) == '\t')) end--;
+          *end = '\0';
+          // skip comments and empty lines
+          if (*line != '#' && strlen(line) > 0) {
+            // Turn all '.'s into '/'s
+            for (size_t index = 0; line[index] != '\0'; index++) {
+              if (line[index] == '.') {
+                line[index] = '/';
+              }
+            }
+            implNames->append(line);
+          }
+          if (nextline != NULL) {
+            line = nextline;
           } else {
             // File without newline at the end
             break;
