@@ -58,6 +58,7 @@ define_pd_global(uintx,CodeCacheMinBlockLength,      4);
 define_pd_global(uintx, CodeCacheMinimumUseSpace,    400*K);
 define_pd_global(intx, TypeProfileWidth,             8);
 define_pd_global(intx, MethodProfileWidth,           0);
+define_pd_global(intx, MaxVectorSize,                32);
 #endif // COMPILERGRAAL
 
 #endif // CPU_X86_VM_GRAALGLOBALS_X86_HPP
