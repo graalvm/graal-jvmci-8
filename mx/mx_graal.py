@@ -601,6 +601,8 @@ def _eraseGenerics(className):
 
 def _classifyGraalServices(classNames, graalJars):
     classification = {}
+    if not classNames:
+        return classification
     for className in classNames:
         classification[className] = None
     javap = mx.java().javap
