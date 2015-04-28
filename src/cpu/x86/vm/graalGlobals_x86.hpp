@@ -60,4 +60,6 @@ define_pd_global(intx, TypeProfileWidth,             8);
 define_pd_global(intx, MethodProfileWidth,           0);
 #endif // COMPILERGRAAL
 
+define_pd_global(intx, MaxVectorSize,                32);
+
 #endif // CPU_X86_VM_GRAALGLOBALS_X86_HPP
