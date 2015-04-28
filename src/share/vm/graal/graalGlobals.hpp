@@ -67,7 +67,7 @@
   GRAAL_ONLY(product(bool, CodeInstallSafepointChecks, true,                \
           "Perform explicit safepoint checks while installing code"))       \
                                                                             \
-  NOT_COMPILER2(product(intx, MaxVectorSize, 32,                            \
+  NOT_COMPILER2(product_pd(intx, MaxVectorSize,                                \
           "Max vector size in bytes, "                                      \
           "actual size could be less depending on elements type"))          \
                                                                             \
