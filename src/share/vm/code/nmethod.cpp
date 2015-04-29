@@ -1463,16 +1463,6 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
     _method = NULL;            // Clear the method of this dead nmethod
   }
 
-#ifdef GRAAL
-  // The method can only be unloaded after the pointer to the installed code
-  // Java wrapper is no longer alive. Here we need to clear out this weak
-  // reference to the dead object.
-  if (_graal_installed_code != NULL) {
-    InstalledCode::set_address(_graal_installed_code, 0);
-    _graal_installed_code = NULL;
-  }
-#endif
-
   // Make the class unloaded - i.e., change state and notify sweeper
   assert(SafepointSynchronize::is_at_safepoint(), "must be at safepoint");
   if (is_in_use()) {
@@ -1484,6 +1474,18 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
 
   // Unregister must be done before the state change
   Universe::heap()->unregister_nmethod(this);
+
+#ifdef GRAAL
+  // The method can only be unloaded after the pointer to the installed code
+  // Java wrapper is no longer alive. Here we need to clear out this weak
+  // reference to the dead object. Nulling out the reference has to happen
+  // after the method is unregistered since the original value may be still
+  // tracked by the rset.
+  if (_graal_installed_code != NULL) {
+    InstalledCode::set_address(_graal_installed_code, 0);
+    _graal_installed_code = NULL;
+  }
+#endif
 
   _state = unloaded;
 
@@ -1916,27 +1918,6 @@ void nmethod::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred)
     unloading_occurred = true;
   }
 
-#ifdef GRAAL
-  // Follow Graal method
-  if (_graal_installed_code != NULL) {
-    if (_graal_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_graal_installed_code)) {
-      if (!is_alive->do_object_b(_graal_installed_code)) {
-        _graal_installed_code = NULL;
-      }
-    } else {
-      if (can_unload(is_alive, (oop*)&_graal_installed_code, unloading_occurred)) {
-        return;
-      }
-    }
-  }
-
-  if (_speculation_log != NULL) {
-    if (!is_alive->do_object_b(_speculation_log)) {
-      _speculation_log = NULL;
-    }
-  }
-#endif
-
   // Exception cache
   clean_exception_cache(is_alive);
 
@@ -1982,6 +1963,33 @@ void nmethod::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred)
       return;
     }
   }
+
+#ifdef GRAAL
+  // Follow Graal method
+  BarrierSet* bs = Universe::heap()->barrier_set();
+  if (_graal_installed_code != NULL) {
+    if (_graal_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_graal_installed_code)) {
+      if (!is_alive->do_object_b(_graal_installed_code)) {
+        bs->write_ref_nmethod_pre(&_graal_installed_code, this);
+        _graal_installed_code = NULL;
+        bs->write_ref_nmethod_post(&_graal_installed_code, this);
+      }
+    } else {
+      if (can_unload(is_alive, (oop*)&_graal_installed_code, unloading_occurred)) {
+        return;
+      }
+    }
+  }
+
+  if (_speculation_log != NULL) {
+    if (!is_alive->do_object_b(_speculation_log)) {
+      bs->write_ref_nmethod_pre(&_speculation_log, this);
+      _speculation_log = NULL;
+      bs->write_ref_nmethod_post(&_speculation_log, this);
+    }
+  }
+#endif
+
 
   // Ensure that all metadata is still alive
   verify_metadata_loaders(low_boundary, is_alive);
@@ -2181,6 +2189,32 @@ bool nmethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_
   if (is_unloaded) {
     return postponed;
   }
+
+#ifdef GRAAL
+  // Follow Graal method
+  BarrierSet* bs = Universe::heap()->barrier_set();
+  if (_graal_installed_code != NULL) {
+    if (_graal_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_graal_installed_code)) {
+      if (!is_alive->do_object_b(_graal_installed_code)) {
+        bs->write_ref_nmethod_pre(&_graal_installed_code, this);
+        _graal_installed_code = NULL;
+        bs->write_ref_nmethod_post(&_graal_installed_code, this);
+      }
+    } else {
+      if (can_unload(is_alive, (oop*)&_graal_installed_code, unloading_occurred)) {
+        is_unloaded = true;
+      }
+    }
+  }
+
+  if (_speculation_log != NULL) {
+    if (!is_alive->do_object_b(_speculation_log)) {
+      bs->write_ref_nmethod_pre(&_speculation_log, this);
+      _speculation_log = NULL;
+      bs->write_ref_nmethod_post(&_speculation_log, this);
+    }
+  }
+#endif
 
   // Ensure that all metadata is still alive
   verify_metadata_loaders(low_boundary, is_alive);

@@ -4830,11 +4830,14 @@ g1_process_roots(OopClosure* scan_non_heap_roots,
   bool during_im = _g1h->g1_policy()->during_initial_mark_pause();
   bool trace_metadata = during_im && ClassUnloadingWithConcurrentMark;
 
+  // Without eager nmethod unloading, we need to treat all oops in code cache as strong during the initial mark
+  bool trace_codecache = during_im && !ClassUnloadingWithConcurrentMark;
+
   BufferingOopClosure buf_scan_non_heap_roots(scan_non_heap_roots);
   BufferingOopClosure buf_scan_non_heap_weak_roots(scan_non_heap_weak_roots);
 
   process_roots(false, // no scoping; this is parallel code
-                SharedHeap::SO_None,
+                trace_codecache ? SharedHeap::SO_AllCodeCache : SharedHeap::SO_None,
                 &buf_scan_non_heap_roots,
                 &buf_scan_non_heap_weak_roots,
                 scan_strong_clds,

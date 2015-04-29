@@ -509,7 +509,12 @@ C2V_VMENTRY(jint, installCode0, (JNIEnv *jniEnv, jobject, jobject compiled_code,
         HotSpotInstalledCode::set_codeSize(installed_code_handle, cb->code_size());
       }
       nmethod* nm = cb->as_nmethod_or_null();
-      assert(nm == NULL || !installed_code_handle->is_scavengable() || nm->on_scavenge_root_list(), "nm should be scavengable if installed_code is scavengable");
+      if (nm != NULL && installed_code_handle->is_scavengable()) {
+        assert(nm->detect_scavenge_root_oops(), "nm should be scavengable if installed_code is scavengable");
+        if (!UseG1GC) {
+          assert(nm->on_scavenge_root_list(), "nm should be on scavengable list");
+        }
+      }
     }
   }
   return result;
