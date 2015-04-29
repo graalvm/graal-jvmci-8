@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,6 +23,7 @@
  */
 package com.sun.hotspot.igv.graph;
 
+import com.sun.hotspot.igv.data.InputBlock;
 import com.sun.hotspot.igv.data.InputEdge;
 import com.sun.hotspot.igv.data.InputGraph;
 import com.sun.hotspot.igv.data.InputNode;
@@ -38,6 +39,7 @@ import java.util.*;
 public class Diagram {
 
     private List<Figure> figures;
+    private Map<InputBlock, Block> blocks;
     private InputGraph graph;
     private int curId;
     private String nodeText;
@@ -59,18 +61,36 @@ public class Diagram {
     
     private Diagram() {
         figures = new ArrayList<>();
+        blocks = new LinkedHashMap<>(8);
         this.nodeText = "";
         this.font = new Font("Arial", Font.PLAIN, 12);
         this.slotFont = new Font("Arial", Font.PLAIN, 10);
         this.boldFont = this.font.deriveFont(Font.BOLD);
     }
+    
+    public Block getBlock(InputBlock b) {
+        assert blocks.containsKey(b);
+        return blocks.get(b);
+    }
 
     public String getNodeText() {
         return nodeText;
     }
+    
+    public void updateBlocks() {
+        blocks.clear();
+        for (InputBlock b : graph.getBlocks()) {
+            Block curBlock = new Block(b, this);
+            blocks.put(b, curBlock);
+        }
+    }
 
     public Diagram getNext() {
         return Diagram.createDiagram(graph.getNext(), nodeText);
+    }
+    
+    public Collection<Block> getBlocks() {
+        return Collections.unmodifiableCollection(blocks.values());
     }
 
     public Diagram getPrev() {
@@ -118,6 +138,8 @@ public class Diagram {
         Diagram d = new Diagram();
         d.graph = graph;
         d.nodeText = nodeText;
+        
+        d.updateBlocks();
 
         Collection<InputNode> nodes = graph.getNodes();
         Hashtable<Integer, Figure> figureHash = new Hashtable<>();

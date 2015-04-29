@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -182,5 +182,17 @@ public class LayoutGraph {
 
     public Set<Vertex> findRootVertices() {
         return findRootVertices(new HashSet<Vertex>());
+    }
+    
+    public SortedSet<Cluster> getClusters() {
+
+        SortedSet<Cluster> clusters = new TreeSet<Cluster>();
+        for (Vertex v : getVertices()) {
+            if (v.getCluster() != null) {
+                clusters.add(v.getCluster());
+            }
+        }
+
+        return clusters;
     }
 }

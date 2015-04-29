@@ -21,24 +21,36 @@
  * questions.
  *
  */
-package com.sun.hotspot.igv.layout;
+package com.sun.hotspot.igv.view.actions;
 
-import java.awt.Dimension;
-import java.awt.Point;
+import java.awt.event.ActionEvent;
+import javax.swing.AbstractAction;
+import javax.swing.Action;
+import javax.swing.ImageIcon;
+import org.openide.util.ImageUtilities;
 
 /**
  *
  * @author Thomas Wuerthinger
  */
-public interface Vertex extends Comparable<Vertex> {
+public class EnableBlockLayoutAction extends AbstractAction {
 
-    public Dimension getSize();
+    private boolean state;
+    public static final String STATE = "state";
 
-    public Point getPosition();
+    public EnableBlockLayoutAction() {
+        state = false;
+        putValue(AbstractAction.SMALL_ICON, new ImageIcon(ImageUtilities.loadImage(iconResource())));
+        putValue(STATE, state);
+        putValue(Action.SHORT_DESCRIPTION, "Cluster nodes into blocks");
+    }
 
-    public void setPosition(Point p);
+    public void actionPerformed(ActionEvent ev) {
+        this.state = !state;
+        this.putValue(STATE, state);
+    }
 
-    public boolean isRoot();
-    
-    public Cluster getCluster();
+    protected String iconResource() {
+        return "com/sun/hotspot/igv/view/images/blocks.gif";
+    }
 }

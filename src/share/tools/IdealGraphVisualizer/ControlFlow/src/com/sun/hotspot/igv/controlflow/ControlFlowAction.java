@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -21,24 +21,26 @@
  * questions.
  *
  */
-package com.sun.hotspot.igv.layout;
+package com.sun.hotspot.igv.controlflow;
 
-import java.awt.Dimension;
-import java.awt.Point;
+import java.awt.event.ActionEvent;
+import javax.swing.AbstractAction;
+import org.openide.util.NbBundle;
+import org.openide.windows.TopComponent;
 
 /**
  *
  * @author Thomas Wuerthinger
  */
-public interface Vertex extends Comparable<Vertex> {
+public class ControlFlowAction extends AbstractAction {
 
-    public Dimension getSize();
+    public ControlFlowAction() {
+        super(NbBundle.getMessage(ControlFlowAction.class, "CTL_ControlFlowAction"));
+    }
 
-    public Point getPosition();
-
-    public void setPosition(Point p);
-
-    public boolean isRoot();
-    
-    public Cluster getCluster();
+    public void actionPerformed(ActionEvent evt) {
+        TopComponent win = ControlFlowTopComponent.findInstance();
+        win.open();
+        win.requestActive();
+    }
 }

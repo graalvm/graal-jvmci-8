@@ -21,24 +21,52 @@
  * questions.
  *
  */
-package com.sun.hotspot.igv.layout;
+package com.sun.hotspot.igv.hierarchicallayout;
 
-import java.awt.Dimension;
+import com.sun.hotspot.igv.layout.Link;
+import com.sun.hotspot.igv.layout.Port;
 import java.awt.Point;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
  * @author Thomas Wuerthinger
  */
-public interface Vertex extends Comparable<Vertex> {
+public class ClusterOutgoingConnection implements Link {
 
-    public Dimension getSize();
+    private List<Point> intermediatePoints;
+    private ClusterOutputSlotNode outputSlotNode;
+    private Link connection;
+    private Port inputSlot;
+    private Port outputSlot;
 
-    public Point getPosition();
+    public ClusterOutgoingConnection(ClusterOutputSlotNode outputSlotNode, Link c) {
+        this.outputSlotNode = outputSlotNode;
+        this.connection = c;
+        this.intermediatePoints = new ArrayList<Point>();
 
-    public void setPosition(Point p);
+        outputSlot = c.getFrom();
+        inputSlot = outputSlotNode.getInputSlot();
+    }
 
-    public boolean isRoot();
+    public Port getTo() {
+        return inputSlot;
+    }
+
+    public Port getFrom() {
+        return outputSlot;
+    }
+
+    public void setControlPoints(List<Point> p) {
+        this.intermediatePoints = p;
+    }
+
+    public List<Point> getControlPoints() {
+        return intermediatePoints;
+    }
     
-    public Cluster getCluster();
+    public boolean isVIP() {
+        return false;
+    }
 }

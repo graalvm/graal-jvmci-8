@@ -21,24 +21,47 @@
  * questions.
  *
  */
-package com.sun.hotspot.igv.layout;
+package com.sun.hotspot.igv.hierarchicallayout;
 
-import java.awt.Dimension;
+import com.sun.hotspot.igv.layout.Link;
+import com.sun.hotspot.igv.layout.Port;
 import java.awt.Point;
+import java.util.List;
 
 /**
  *
  * @author Thomas Wuerthinger
  */
-public interface Vertex extends Comparable<Vertex> {
+public class ClusterEdge implements Link {
 
-    public Dimension getSize();
+    private ClusterNode from;
+    private ClusterNode to;
+    private List<Point> points;
 
-    public Point getPosition();
+    public ClusterEdge(ClusterNode from, ClusterNode to) {
+        assert from != null;
+        assert to != null;
+        this.from = from;
+        this.to = to;
+    }
 
-    public void setPosition(Point p);
+    public Port getTo() {
+        return to.getInputSlot();
+    }
 
-    public boolean isRoot();
+    public Port getFrom() {
+        return from.getInputSlot();
+    }
+
+    public void setControlPoints(List<Point> p) {
+        this.points = p;
+    }
+
+    public List<Point> getControlPoints() {
+        return points;
+    }
     
-    public Cluster getCluster();
+    public boolean isVIP() {
+        return false;
+    }
 }
