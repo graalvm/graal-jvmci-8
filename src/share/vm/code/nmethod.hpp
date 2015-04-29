@@ -628,6 +628,7 @@ public:
 
 #ifdef GRAAL
   oop graal_installed_code() { return _graal_installed_code ; }
+  char* graal_installed_code_name(char* buf, size_t buflen);
   void set_graal_installed_code(oop installed_code) { _graal_installed_code = installed_code;  }
   oop speculation_log() { return _speculation_log ; }
   void set_speculation_log(oop speculation_log) { _speculation_log = speculation_log;  }

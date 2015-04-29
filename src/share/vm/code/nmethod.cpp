@@ -3523,3 +3523,26 @@ void nmethod::print_statistics() {
   Dependencies::print_statistics();
   if (xtty != NULL)  xtty->tail("statistics");
 }
+
+#ifdef GRAAL
+char* nmethod::graal_installed_code_name(char* buf, size_t buflen) {
+  if (!this->is_compiled_by_graal()) {
+    return NULL;
+  }
+  oop installedCode = this->graal_installed_code();
+  if (installedCode != NULL) {
+    oop installedCodeName = NULL;
+    if (installedCode->is_a(InstalledCode::klass())) {
+      installedCodeName = InstalledCode::name(installedCode);
+    }
+    if (installedCodeName != NULL) {
+      return java_lang_String::as_utf8_string(installedCodeName, buf, buflen);
+    } else {
+      jio_snprintf(buf, buflen, "null");
+      return buf;
+    }
+  }
+  jio_snprintf(buf, buflen, "noInstalledCode");
+  return buf;
+}
+#endif

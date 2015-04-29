@@ -529,6 +529,15 @@ void Disassembler::decode(nmethod* nm, outputStream* st) {
   nm->method()->method_holder()->name()->print_symbol_on(env.output());
   env.output()->print(".");
   nm->method()->name()->print_symbol_on(env.output());
+#ifdef GRAAL
+  {
+    char buffer[O_BUFLEN];
+    char* graalName = nm->graal_installed_code_name(buffer, O_BUFLEN);
+    if (graalName != NULL) {
+      env.output()->print(" (%s)", graalName);
+    }
+  }
+#endif
   env.output()->print_cr("  [" PTR_FORMAT ", " PTR_FORMAT "]  %d bytes", p, end, ((jlong)(end - p)));
 
   // If there has been profiling, print the buckets.
