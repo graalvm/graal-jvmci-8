@@ -126,6 +126,9 @@ public:
     jbyte val = _byte_map[card_index];
     return (val & (clean_card_mask_val() | deferred_card_val())) == deferred_card_val();
   }
+  void write_ref_nmethod_pre(oop* dst, nmethod* nm);
+  void write_ref_nmethod_post(oop* dst, nmethod* nm);
+
 };
 
 class G1SATBCardTableLoggingModRefBSChangedListener : public G1MappingChangedListener {
