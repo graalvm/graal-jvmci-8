@@ -118,7 +118,7 @@ def _get_vm():
         return _vm
     vm = mx.get_env('DEFAULT_VM')
     if vm is None:
-        if not mx.is_interactive()():
+        if not mx.is_interactive():
             mx.abort('Need to specify VM with --vm option or DEFAULT_VM environment variable')
         envPath = join(_graal_home, 'mx', 'env')
         mx.log('Please select the VM to be executed from the following: ')
@@ -392,7 +392,7 @@ def _handle_missing_VM(bld, vm=None):
     if not vm:
         vm = _get_vm()
     mx.log('The ' + bld + ' ' + vm + ' VM has not been created')
-    if mx.is_interactive()():
+    if mx.is_interactive():
         if mx.ask_yes_no('Build it now', 'y'):
             with VM(vm, bld):
                 build([])
