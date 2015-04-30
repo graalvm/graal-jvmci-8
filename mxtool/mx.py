@@ -47,6 +47,11 @@ from threading import Thread
 from argparse import ArgumentParser, REMAINDER
 from os.path import join, basename, dirname, exists, getmtime, isabs, expandvars, isdir, isfile
 
+# needed to work around https://bugs.python.org/issue1927
+import readline
+#then make pylint happy..
+readline.get_line_buffer()
+
 # Support for Python 2.6
 def check_output(*popenargs, **kwargs):
     process = subprocess.Popen(stdout=subprocess.PIPE, *popenargs, **kwargs)
@@ -1672,7 +1677,7 @@ class ArgParser(ArgumentParser):
         self.add_argument('--user-home', help='users home directory', metavar='<path>', default=os.path.expanduser('~'))
         self.add_argument('--java-home', help='primary JDK directory (must be JDK 7 or later)', metavar='<path>')
         self.add_argument('--extra-java-homes', help='secondary JDK directories separated by "' + os.pathsep + '"', metavar='<path>')
-        self.add_argument('--strict-compliance', action='store_true', dest='strict_compliance', help='Projects of a certain compliance will only be built with a JDK of this exact compliance', default=bool(os.environ.get('STRICT_COMPLIANCE')))
+        self.add_argument('--strict-compliance', action='store_true', dest='strict_compliance', help='Projects of a certain compliance will only be built with a JDK of this exact compliance', default=False)
         self.add_argument('--ignore-project', action='append', dest='ignored_projects', help='name of project to ignore', metavar='<name>', default=[])
         self.add_argument('--kill-with-sigquit', action='store_true', dest='killwithsigquit', help='send sigquit first before killing child processes')
         if get_os() != 'windows':
@@ -1704,6 +1709,9 @@ class ArgParser(ArgumentParser):
         if opts.java_home:
             os.environ['JAVA_HOME'] = opts.java_home
         os.environ['HOME'] = opts.user_home
+
+        if os.environ.get('STRICT_COMPLIANCE'):
+            _opts.strict_compliance = True
 
         opts.ignored_projects = opts.ignored_projects + os.environ.get('IGNORED_PROJECTS', '').split(',')
 
@@ -1836,29 +1844,39 @@ def _find_jdk(versionCheck=None, versionDescription=None, purpose=None, cancel=N
         configs = _filtered_jdk_configs(candidateJdks, versionCheck)
     else:
         if not isDefaultJdk:
-            log('find_jdk(versionCheck={0}, versionDescription={1}, purpose={2}, cancel={3})={4}'.format(versionCheck, versionDescription, purpose, cancel, result))
             return result
         configs = [result]
 
     if len(configs) > 1:
-        msg = 'Please select a '
-        if isDefaultJdk:
-            msg += 'default '
-        msg += 'JDK'
-        if purpose:
-            msg += ' for' + purpose
-        msg += ': '
-        if versionDescription:
-            msg = msg + '(' + versionDescription + ')'
-        log(msg)
-        choices = configs + ['<other>']
-        if cancel:
-            choices.append('Cancel (' + cancel + ')')
-        selected = select_items(choices, allowMultiple=False)
-        if isinstance(selected, types.StringTypes) and selected == '<other>':
-            selected = None
-        if isinstance(selected, types.StringTypes) and selected == 'Cancel (' + cancel + ')':
-            return None
+        if not is_interactive():
+            msg = "Multiple possible choices for a JDK"
+            if purpose:
+                msg += ' for' + purpose
+            msg += ': '
+            if versionDescription:
+                msg += '(' + versionDescription + ')'
+            selected = configs[0]
+            msg += ". Selecting " + str(selected)
+            log(msg)
+        else:
+            msg = 'Please select a '
+            if isDefaultJdk:
+                msg += 'default '
+            msg += 'JDK'
+            if purpose:
+                msg += ' for' + purpose
+            msg += ': '
+            if versionDescription:
+                msg += '(' + versionDescription + ')'
+            log(msg)
+            choices = configs + ['<other>']
+            if cancel:
+                choices.append('Cancel (' + cancel + ')')
+            selected = select_items(choices, allowMultiple=False)
+            if isinstance(selected, types.StringTypes) and selected == '<other>':
+                selected = None
+            if isinstance(selected, types.StringTypes) and selected == 'Cancel (' + cancel + ')':
+                return None
     elif len(configs) == 1:
         selected = configs[0]
         msg = 'Selected ' + str(selected) + ' as '
@@ -1887,7 +1905,7 @@ def _find_jdk(versionCheck=None, versionDescription=None, purpose=None, cancel=N
     varName = 'JAVA_HOME' if isDefaultJdk else 'EXTRA_JAVA_HOMES'
     allowMultiple = not isDefaultJdk
     envPath = join(_primary_suite.mxDir, 'env')
-    if ask_yes_no('Persist this setting by adding "{0}={1}" to {2}'.format(varName, selected.jdk, envPath), 'y'):
+    if is_interactive() and ask_yes_no('Persist this setting by adding "{0}={1}" to {2}'.format(varName, selected.jdk, envPath), 'y'):
         envLines = []
         with open(envPath) as fp:
             append = True
@@ -1918,6 +1936,9 @@ def _find_jdk(versionCheck=None, versionDescription=None, purpose=None, cancel=N
         os.environ['JAVA_HOME'] = selected.jdk
 
     return selected
+
+def is_interactive():
+    return sys.__stdin__.isatty()
 
 def _filtered_jdk_configs(candidates, versionCheck, warn=False, source=None):
     filtered = []
@@ -4869,7 +4890,7 @@ def ideinit(args, refreshOnly=False, buildProcessorJars=True):
 
 def fsckprojects(args):
     """find directories corresponding to deleted Java projects and delete them"""
-    if not sys.stdout.isatty():
+    if not is_interactive():
         log('fsckprojects command must be run in an interactive shell')
         return
     hg = HgConfig()
@@ -4894,7 +4915,7 @@ def fsckprojects(args):
                     indicatorsInHg = hg.locate(suite.dir, indicators)
                     # Only proceed if there are indicator files that are not under HG
                     if len(indicators) > len(indicatorsInHg):
-                        if not sys.stdout.isatty() or ask_yes_no(dirpath + ' looks like a removed project -- delete it', 'n'):
+                        if not is_interactive() or ask_yes_no(dirpath + ' looks like a removed project -- delete it', 'n'):
                             shutil.rmtree(dirpath)
                             log('Deleted ' + dirpath)
 
@@ -5234,6 +5255,7 @@ def select_items(items, descriptions=None, allowMultiple=True):
     if len(items) <= 1:
         return items
     else:
+        assert is_interactive()
         numlen = str(len(str(len(items))))
         if allowMultiple:
             log(('[{0:>' + numlen + '}] <all>').format(0))
@@ -5415,7 +5437,7 @@ def show_suites(args):
 def ask_yes_no(question, default=None):
     """"""
     assert not default or default == 'y' or default == 'n'
-    if not sys.stdout.isatty():
+    if not is_interactive():
         if default:
             return default
         else:

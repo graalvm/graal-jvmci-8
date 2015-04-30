@@ -118,7 +118,7 @@ def _get_vm():
         return _vm
     vm = mx.get_env('DEFAULT_VM')
     if vm is None:
-        if not sys.stdout.isatty():
+        if not mx.is_interactive()():
             mx.abort('Need to specify VM with --vm option or DEFAULT_VM environment variable')
         envPath = join(_graal_home, 'mx', 'env')
         mx.log('Please select the VM to be executed from the following: ')
@@ -392,7 +392,7 @@ def _handle_missing_VM(bld, vm=None):
     if not vm:
         vm = _get_vm()
     mx.log('The ' + bld + ' ' + vm + ' VM has not been created')
-    if sys.stdout.isatty():
+    if mx.is_interactive()():
         if mx.ask_yes_no('Build it now', 'y'):
             with VM(vm, bld):
                 build([])
@@ -2573,7 +2573,7 @@ def findbugs(args):
     findbugsResults = join(_graal_home, 'findbugs.results')
 
     cmd = ['-jar', mx._cygpathU2W(findbugsJar), '-textui', '-low', '-maxRank', '15']
-    if sys.stdout.isatty():
+    if mx.is_interactive():
         cmd.append('-progress')
     cmd = cmd + ['-auxclasspath', mx._separatedCygpathU2W(mx.classpath([d.name for d in _jdkDeployedDists] + [p.name for p in nonTestProjects])), '-output', mx._cygpathU2W(findbugsResults), '-exitcode'] + args + outputDirs
     exitcode = mx.run_java(cmd, nonZeroIsFatal=False, javaConfig=mx.java(javaCompliance))
