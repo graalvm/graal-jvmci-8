@@ -1714,9 +1714,8 @@ def _basic_gate_body(args, tasks):
 
     with Task('CleanAndBuildIdealGraphVisualizer', tasks) as t:
         if t and platform.processor() != 'sparc':
-            env = _igvFallbackJDK(os.environ)
             buildxml = mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml'))
-            mx.run(['ant', '-f', buildxml, '-q', 'clean', 'build'], env=env)
+            mx.run(['ant', '-f', buildxml, '-q', 'clean', 'build'], env=_igvBuildEnv())
 
     # Prevent Graal modifications from breaking the standard builds
     if args.buildNonGraal:
@@ -1757,6 +1756,11 @@ def gate(args, gate_body=_basic_gate_body):
     global _jacoco
     if args.task_filter:
         Task.filters = args.task_filter.split(',')
+
+    # Force
+    if not mx._opts.strict_compliance:
+        mx.log("[gate] foring strict compliance")
+        mx._opts.strict_compliance = True
 
     tasks = []
     total = Task('Gate')
@@ -1861,38 +1865,34 @@ def longtests(args):
 
     dacapo(['100', 'eclipse', '-esa'])
 
-def _igvFallbackJDK(env):
+def _igvJdk():
     v8u20 = mx.VersionSpec("1.8.0_20")
     v8u40 = mx.VersionSpec("1.8.0_40")
     v8 = mx.VersionSpec("1.8")
-    igvHomes = [h for h in mx._java_homes if h.version >= v8 and (h.version < v8u20 or h.version >= v8u40)]
-    defaultJava = mx.java()
-    if defaultJava not in igvHomes:
-        if not igvHomes:
-            mx.abort("No JDK available for building IGV. Must have JDK >= 1.8 and < 1.8.0u20 or >= 1.8.0u40 in JAVA_HOME or EXTRA_JAVA_HOMES")
-        env = dict(env)
-        fallbackJDK = igvHomes[0]
-        mx.logv("1.8.0_20 has a known javac bug (JDK-8043926), thus falling back to " + str(fallbackJDK.version))
-        env['JAVA_HOME'] = str(fallbackJDK.jdk)
+    def _igvJdkVersionCheck(version):
+        return version >= v8 and (version < v8u20 or version >= v8u40)
+    return mx.java_version(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40').jdk
+
+def _igvBuildEnv():
+        # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
+    env = dict(os.environ)
+    proxy = os.environ.get('http_proxy')
+    if not (proxy is None) and len(proxy) > 0:
+        if '://' in proxy:
+            # Remove the http:// prefix (or any other protocol prefix)
+            proxy = proxy.split('://', 1)[1]
+        # Separate proxy server name and port number
+        proxyName, proxyPort = proxy.split(':', 1)
+        proxyEnv = '-DproxyHost="' + proxyName + '" -DproxyPort=' + proxyPort
+        env['ANT_OPTS'] = proxyEnv
+
+    env['JAVA_HOME'] = _igvJdk()
     return env
 
 def igv(args):
     """run the Ideal Graph Visualizer"""
     logFile = '.ideal_graph_visualizer.log'
     with open(join(_graal_home, logFile), 'w') as fp:
-        # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
-        env = dict(os.environ)
-        proxy = os.environ.get('http_proxy')
-        if not (proxy is None) and len(proxy) > 0:
-            if '://' in proxy:
-                # Remove the http:// prefix (or any other protocol prefix)
-                proxy = proxy.split('://', 1)[1]
-            # Separate proxy server name and port number
-            proxyName, proxyPort = proxy.split(':', 1)
-            proxyEnv = '-DproxyHost="' + proxyName + '" -DproxyPort=' + proxyPort
-            env['ANT_OPTS'] = proxyEnv
-        env = _igvFallbackJDK(env)
-
         mx.logv('[Ideal Graph Visualizer log is in ' + fp.name + ']')
         nbplatform = join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'nbplatform')
 
@@ -1914,6 +1914,8 @@ def igv(args):
 
         if not exists(nbplatform):
             mx.logv('[This execution may take a while as the NetBeans platform needs to be downloaded]')
+
+        env = _igvBuildEnv()
         # make the jar for Batik 1.7 available.
         env['IGV_BATIK_JAR'] = mx.library('BATIK').get_path(True)
         if mx.run(['ant', '-f', mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env, nonZeroIsFatal=False):
