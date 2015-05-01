@@ -37,6 +37,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 import javax.swing.filechooser.FileFilter;
@@ -94,7 +96,7 @@ public final class ImportAction extends SystemAction {
         fc.setCurrentDirectory(new File(Settings.get().get(Settings.DIRECTORY, Settings.DIRECTORY_DEFAULT)));
 
         if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-            File file = fc.getSelectedFile();
+            final File file = fc.getSelectedFile();
 
             File dir = file;
             if (!dir.isDirectory()) {
@@ -106,6 +108,7 @@ public final class ImportAction extends SystemAction {
                 final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
                 final ProgressHandle handle = ProgressHandleFactory.createHandle("Opening file " + file.getName());
                 handle.start(WORKUNITS);
+                final long startTime = System.currentTimeMillis();
                 final long start = channel.size();
                 ParseMonitor monitor = new ParseMonitor() {
                     @Override
@@ -149,6 +152,8 @@ public final class ImportAction extends SystemAction {
                             Exceptions.printStackTrace(ex);
                         }
                         handle.finish();
+                        long stop = System.currentTimeMillis();
+                        Logger.getLogger(getClass().getName()).log(Level.INFO, "Loaded in " + file + " in " + ((stop - startTime) / 1000.0) + " seconds");
                     }
                 });
             } catch (FileNotFoundException ex) {
