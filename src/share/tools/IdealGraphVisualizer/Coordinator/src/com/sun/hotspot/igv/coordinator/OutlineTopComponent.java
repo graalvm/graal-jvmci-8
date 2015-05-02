@@ -124,6 +124,8 @@ public final class OutlineTopComponent extends TopComponent implements ExplorerM
 
     public void clear() {
         document.clear();
+        root = new FolderNode(document);
+        manager.setRootContext(root);
     }
 
     @Override
