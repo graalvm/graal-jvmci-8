@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -22,13 +20,40 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.frame;
+package com.oracle.graal.jtt.bytecode;
+
+import org.junit.*;
+
+import com.oracle.graal.jtt.*;
 
 /**
- * Represents a materialized frame containing values of local variables of the guest language. It
- * can be created using the {@link VirtualFrame#materialize()} method. Instances of this type are
- * the only frame instances that may be stored in fields or cast to {@link java.lang.Object}.
+ * Tests the checkcast works, when casting an array of interface.
  */
-public interface MaterializedFrame extends Frame {
+public class BC_checkcast03 extends JTTTest {
 
+    public interface IObject {
+
+    }
+
+    private static class BaseClass {
+
+    }
+
+    private static class TestClass extends BaseClass implements IObject {
+    }
+
+    static TestClass[] a1 = {new TestClass()};
+
+    public static BaseClass[] getBaseClassArray() {
+        return a1;
+    }
+
+    public static IObject[] test() {
+        return (IObject[]) getBaseClassArray();
+    }
+
+    @Test
+    public void run0() throws Throwable {
+        runTest("test");
+    }
 }

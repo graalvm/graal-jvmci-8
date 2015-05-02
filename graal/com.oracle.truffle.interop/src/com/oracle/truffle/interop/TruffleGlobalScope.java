@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,13 +22,17 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.frame;
+package com.oracle.truffle.interop;
 
-/**
- * Represents a materialized frame containing values of local variables of the guest language. It
- * can be created using the {@link VirtualFrame#materialize()} method. Instances of this type are
- * the only frame instances that may be stored in fields or cast to {@link java.lang.Object}.
- */
-public interface MaterializedFrame extends Frame {
+import com.oracle.truffle.api.frame.*;
+import com.oracle.truffle.api.interop.*;
 
+public interface TruffleGlobalScope {
+    void exportTruffleObject(Object identifier, TruffleObject object);
+
+    FrameSlot getFrameSlot(Object identifier);
+
+    TruffleObject getTruffleObject(FrameSlot slot);
+
+    boolean contains(Object identifier);
 }

@@ -3536,7 +3536,7 @@ char* nmethod::graal_installed_code_name(char* buf, size_t buflen) {
       installedCodeName = InstalledCode::name(installedCode);
     }
     if (installedCodeName != NULL) {
-      return java_lang_String::as_utf8_string(installedCodeName, buf, buflen);
+      return java_lang_String::as_utf8_string(installedCodeName, buf, (int)buflen);
     } else {
       jio_snprintf(buf, buflen, "null");
       return buf;
