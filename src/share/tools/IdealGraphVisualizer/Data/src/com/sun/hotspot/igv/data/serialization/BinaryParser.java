@@ -691,6 +691,9 @@ public class BinaryParser implements GraphParser {
         parseNodes(graph);
         parseBlocks(graph);
         graph.ensureNodesInBlocks();
+        for (InputNode node : graph.getNodes()) {
+            node.internProperties();
+        }
         return graph;
     }
     
