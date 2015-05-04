@@ -600,7 +600,8 @@ JRT_ENTRY(jint, GraalRuntime::identity_hash_code(JavaThread* thread, oopDesc* ob
 JRT_END
 
 JRT_ENTRY(jboolean, GraalRuntime::thread_is_interrupted(JavaThread* thread, oopDesc* receiver, jboolean clear_interrupted))
-  // Ensure that the C++ Thread and OSThread structures aren't freed before we operate
+  // Ensure that the C++ Thread and OSThread structures aren't freed before we operate.
+  // This locking requires thread_in_vm which is why this method cannot be JRT_LEAF.
   Handle receiverHandle(thread, receiver);
   MutexLockerEx ml(thread->threadObj() == (void*)receiver ? NULL : Threads_lock);
   JavaThread* receiverThread = java_lang_Thread::thread(receiverHandle());
