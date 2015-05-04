@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,13 +22,14 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.frame;
+package com.oracle.truffle.api.instrument;
 
-/**
- * Represents a materialized frame containing values of local variables of the guest language. It
- * can be created using the {@link VirtualFrame#materialize()} method. Instances of this type are
- * the only frame instances that may be stored in fields or cast to {@link java.lang.Object}.
- */
-public interface MaterializedFrame extends Frame {
+public class InstrumentationException extends Exception {
+
+    public InstrumentationException(RuntimeException ex) {
+        super(ex);
+    }
+
+    private static final long serialVersionUID = 447857066220935502L;
 
 }

@@ -3429,6 +3429,7 @@ void nmethod::print_code_comment_on(outputStream* st, int column, u_char* begin,
           }
         }
       }
+      st->print(" {reexecute=%d rethrow=%d return_oop=%d}", sd->should_reexecute(), sd->rethrow_exception(), sd->return_oop());
     }
 
     // Print all scopes

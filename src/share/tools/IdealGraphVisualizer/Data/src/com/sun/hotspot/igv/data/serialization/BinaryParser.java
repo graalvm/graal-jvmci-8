@@ -275,28 +275,33 @@ public class BinaryParser implements GraphParser {
         hashStack = new LinkedList<>();
         this.monitor = monitor;
         try {
-            this.digest = MessageDigest.getInstance("SHA-256");
+            this.digest = MessageDigest.getInstance("SHA-1");
         } catch (NoSuchAlgorithmException e) {
         }
     }
     
     private void fill() throws IOException {
+        // All the data between lastPosition and position has been
+        // used so add it to the digest.
+        int position = buffer.position();
+        buffer.position(lastPosition);
+        byte[] remaining = new byte[position - buffer.position()];
+        buffer.get(remaining);
+        digest.update(remaining);
+        assert position == buffer.position();
+
         buffer.compact();
         if (channel.read(buffer) < 0) {
             throw new EOFException();
         }
         buffer.flip();
+        lastPosition = buffer.position();
     }
     
     private void ensureAvailable(int i) throws IOException {
         while (buffer.remaining() < i) {
             fill();
         }
-        buffer.mark();
-        byte[] result = new byte[i];
-        buffer.get(result);
-        digest.update(result);
-        buffer.reset();
     }
     
     private int readByte() throws IOException {
@@ -650,6 +655,8 @@ public class BinaryParser implements GraphParser {
         }
         return group;
     }
+
+    int lastPosition = 0;
     
     private InputGraph parseGraph() throws IOException {
         if (monitor != null) {
@@ -657,7 +664,17 @@ public class BinaryParser implements GraphParser {
         }
         String title = readPoolObject(String.class);
         digest.reset();
+        lastPosition = buffer.position();
         InputGraph graph = parseGraph(title);
+
+        int position = buffer.position();
+        buffer.position(lastPosition);
+        byte[] remaining = new byte[position - buffer.position()];
+        buffer.get(remaining);
+        digest.update(remaining);
+        assert position == buffer.position();
+        lastPosition = buffer.position();
+        
         byte[] d = digest.digest();
         byte[] hash = hashStack.peek();
         if (hash != null && Arrays.equals(hash, d)) {
@@ -674,6 +691,9 @@ public class BinaryParser implements GraphParser {
         parseNodes(graph);
         parseBlocks(graph);
         graph.ensureNodesInBlocks();
+        for (InputNode node : graph.getNodes()) {
+            node.internProperties();
+        }
         return graph;
     }
     
@@ -822,9 +842,10 @@ public class BinaryParser implements GraphParser {
         }
     }
     
+    static final Pattern templatePattern = Pattern.compile("\\{(p|i)#([a-zA-Z0-9$_]+)(/(l|m|s))?\\}");
+    
     private String createName(List<Edge> edges, Map<String, Object> properties, String template) {
-        Pattern p = Pattern.compile("\\{(p|i)#([a-zA-Z0-9$_]+)(/(l|m|s))?\\}");
-        Matcher m = p.matcher(template);
+        Matcher m = templatePattern.matcher(template);
         StringBuffer sb = new StringBuffer();
         while (m.find()) {
             String name = m.group(2);

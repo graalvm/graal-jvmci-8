@@ -1,12 +1,10 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License version 2 only, as
- * published by the Free Software Foundation.  Oracle designates this
- * particular file as subject to the "Classpath" exception as provided
- * by Oracle in the LICENSE file that accompanied this code.
+ * published by the Free Software Foundation.
  *
  * This code is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
@@ -22,13 +20,45 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.frame;
+package com.oracle.graal.jtt.loop;
 
-/**
- * Represents a materialized frame containing values of local variables of the guest language. It
- * can be created using the {@link VirtualFrame#materialize()} method. Instances of this type are
- * the only frame instances that may be stored in fields or cast to {@link java.lang.Object}.
+import org.junit.*;
+
+import com.oracle.graal.jtt.*;
+
+/*
  */
-public interface MaterializedFrame extends Frame {
+public class Loop09_2 extends JTTTest {
+
+    private static int cnt;
+
+    public static int test(int arg) {
+        cnt = 0;
+        int count = arg;
+        for (int i = 0; i < arg; i++) {
+            count++;
+            foo();
+        }
+        return count - cnt;
+    }
+
+    static void foo() {
+        cnt++;
+    }
+
+    @Test
+    public void run0() throws Throwable {
+        runTest("test", 0);
+    }
+
+    @Test
+    public void run1() throws Throwable {
+        runTest("test", 10);
+    }
+
+    @Test
+    public void run2() throws Throwable {
+        runTest("test", 25);
+    }
 
 }

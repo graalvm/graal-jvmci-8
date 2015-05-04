@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,13 +22,30 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.truffle.api.frame;
+package com.oracle.truffle.api.instrument;
+
+import com.oracle.truffle.api.frame.*;
+import com.oracle.truffle.api.nodes.*;
 
 /**
- * Represents a materialized frame containing values of local variables of the guest language. It
- * can be created using the {@link VirtualFrame#materialize()} method. Instances of this type are
- * the only frame instances that may be stored in fields or cast to {@link java.lang.Object}.
+ * Root of a client-provided AST fragment that can be executed efficiently, subject to full Truffle
+ * optimization, by a {@linkplain Instrument#create(ToolEvalNodeFactory, String) Tool Eval
+ * Instrument}.
+ *
+ * @see Instrument
+ * @see ToolEvalNodeFactory
+ * @see ToolEvalResultListener
  */
-public interface MaterializedFrame extends Frame {
+public abstract class ToolEvalNode extends Node implements InstrumentationNode {
+
+    /**
+     * Executes this AST fragment on behalf of a client {@link Instrument}, just before the
+     * guest-language AST node to which the {@link Probe} holding the Instrument is executed.
+     *
+     * @param node the guest-language AST node to which the host Instrument's Probe is attached
+     * @param vFrame execution frame at the guest-language AST node
+     * @return the result of this AST fragment's execution
+     */
+    public abstract Object executeToolEvalNode(Node node, VirtualFrame vFrame);
 
 }
