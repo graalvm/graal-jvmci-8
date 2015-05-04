@@ -47,10 +47,13 @@ from threading import Thread
 from argparse import ArgumentParser, REMAINDER
 from os.path import join, basename, dirname, exists, getmtime, isabs, expandvars, isdir, isfile
 
-# needed to work around https://bugs.python.org/issue1927
-import readline
-#then make pylint happy..
-readline.get_line_buffer()
+try:
+    # needed to work around https://bugs.python.org/issue1927
+    import readline
+    #then make pylint happy..
+    readline.get_line_buffer()
+except ImportError:
+    pass
 
 # Support for Python 2.6
 def check_output(*popenargs, **kwargs):
