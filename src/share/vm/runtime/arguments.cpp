@@ -3621,7 +3621,7 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
 
 #ifdef GRAAL
   if (!UseGraalClassLoader) {
-    // Append lib/graal/graal*.jar to boot class path
+    // Append lib/graal/*.jar to boot class path
     char graalDir[JVM_MAXPATHLEN];
     const char* fileSep = os::file_separator();
     jio_snprintf(graalDir, sizeof(graalDir), "%s%slib%sgraal", Arguments::get_java_home(), fileSep, fileSep);
@@ -3632,9 +3632,7 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
       while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL) {
         const char* name = entry->d_name;
         const char* ext = name + strlen(name) - 4;
-        if (ext > name && strcmp(ext, ".jar") == 0
-            && strlen(name) > strlen("graal")
-            && strncmp(name, "graal", strlen("graal")) == 0) {
+        if (ext > name && strcmp(ext, ".jar") == 0) {
           char fileName[JVM_MAXPATHLEN];
           jio_snprintf(fileName, sizeof(fileName), "%s%s%s", graalDir, fileSep, name);
           scp_p->add_suffix(fileName);
