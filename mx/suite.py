@@ -548,6 +548,17 @@ suite = {
       "workingSets" : "Graal,LIR",
     },
 
+    "com.oracle.graal.lir.jtt" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.jtt",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,LIR",
+    },
+
     "com.oracle.graal.lir.test" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
