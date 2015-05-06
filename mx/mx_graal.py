@@ -1759,7 +1759,7 @@ def gate(args, gate_body=_basic_gate_body):
 
     # Force
     if not mx._opts.strict_compliance:
-        mx.log("[gate] foring strict compliance")
+        mx.log("[gate] forcing strict compliance")
         mx._opts.strict_compliance = True
 
     tasks = []
