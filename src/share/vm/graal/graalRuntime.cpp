@@ -1076,6 +1076,86 @@ Klass* GraalRuntime::load_required_class(Symbol* name) {
   return klass;
 }
 
+void GraalRuntime::parse_lines(char* path, ParseClosure* closure, TRAPS) {
+  struct stat st;
+  if (os::stat(path, &st) == 0) {
+      int file_handle = os::open(path, 0, 0);
+      if (file_handle != -1) {
+        char* buffer = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, st.st_size + 1);
+        int num_read = (int) os::read(file_handle, (char*) buffer, st.st_size);
+        if (num_read == -1) {
+          warning("Error reading file %s due to %s", path, strerror(errno));
+        } else if (num_read != st.st_size) {
+          warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
+        }
+        os::close(file_handle);
+        if (num_read == st.st_size) {
+          buffer[num_read] = '\0';
+
+          char* line = buffer;
+          while (line - buffer < num_read) {
+            // find line end (\r, \n or \r\n)
+            char* nextline = NULL;
+            char* cr = strchr(line, '\r');
+            char* lf = strchr(line, '\n');
+            if (cr != NULL && lf != NULL) {
+              char* min = MIN2(cr, lf);
+              *min = '\0';
+              if (lf == cr + 1) {
+                nextline = lf + 1;
+              } else {
+                nextline = min + 1;
+              }
+            } else if (cr != NULL) {
+              *cr = '\0';
+              nextline = cr + 1;
+            } else if (lf != NULL) {
+              *lf = '\0';
+              nextline = lf + 1;
+            }
+            // trim left
+            while (*line == ' ' || *line == '\t') line++;
+            char* end = line + strlen(line);
+            // trim right
+            while (end > line && (*(end -1) == ' ' || *(end -1) == '\t')) end--;
+            *end = '\0';
+            // skip comments and empty lines
+            if (*line != '#' && strlen(line) > 0) {
+              closure->do_line(line);
+            }
+            if (nextline != NULL) {
+              line = nextline;
+            } else {
+              // File without newline at the end
+              break;
+            }
+          }
+        }
+      } else {
+        warning("Error opening file %s due to %s", path, strerror(errno));
+      }
+    } else {
+      warning("Error opening file %s due to %s", path, strerror(errno));
+    }
+}
+
+class ServiceParseClosure : public ParseClosure {
+  GrowableArray<char*> _implNames;
+public:
+  ServiceParseClosure() : _implNames() {}
+  void do_line(char* line) {
+    // Turn all '.'s into '/'s
+    for (size_t index = 0; line[index] != '\0'; index++) {
+      if (line[index] == '.') {
+        line[index] = '/';
+      }
+    }
+    _implNames.append(line);
+  }
+  GrowableArray<char*>* implNames() {return &_implNames;}
+};
+
+
 Handle GraalRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
   const char* home = Arguments::get_java_home();
   const char* serviceName = serviceKlass->external_name();
@@ -1083,82 +1163,18 @@ Handle GraalRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
   char* path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
   char sep = os::file_separator()[0];
   sprintf(path, "%s%clib%cgraal%cservices%c%s", home, sep, sep, sep, sep, serviceName);
-  struct stat st;
-  if (os::stat(path, &st) == 0) {
-    int file_handle = os::open(path, 0, 0);
-    if (file_handle != -1) {
-      char* buffer = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, st.st_size + 1);
-      int num_read = (int) os::read(file_handle, (char*) buffer, st.st_size);
-      if (num_read == -1) {
-        warning("Error reading file %s due to %s", path, strerror(errno));
-      } else if (num_read != st.st_size) {
-        warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
-      }
-      os::close(file_handle);
-      if (num_read == st.st_size) {
-        buffer[num_read] = '\0';
-        GrowableArray<char*>* implNames = new GrowableArray<char*>();
-        char* line = buffer;
-        while (line - buffer < num_read) {
-          // find line end (\r, \n or \r\n)
-          char* nextline = NULL;
-          char* cr = strchr(line, '\r');
-          char* lf = strchr(line, '\n');
-          if (cr != NULL && lf != NULL) {
-            char* min = MIN2(cr, lf);
-            *min = '\0';
-            if (lf == cr + 1) {
-              nextline = lf + 1;
-            } else {
-              nextline = min + 1;
-            }
-          } else if (cr != NULL) {
-            *cr = '\0';
-            nextline = cr + 1;
-          } else if (lf != NULL) {
-            *lf = '\0';
-            nextline = lf + 1;
-          }
-          // trim left
-          while (*line == ' ' || *line == '\t') line++;
-          char* end = line + strlen(line);
-          // trim right
-          while (end > line && (*(end -1) == ' ' || *(end -1) == '\t')) end--;
-          *end = '\0';
-          // skip comments and empty lines
-          if (*line != '#' && strlen(line) > 0) {
-            // Turn all '.'s into '/'s
-            for (size_t index = 0; line[index] != '\0'; index++) {
-              if (line[index] == '.') {
-                line[index] = '/';
-              }
-            }
-            implNames->append(line);
-          }
-          if (nextline != NULL) {
-            line = nextline;
-          } else {
-            // File without newline at the end
-            break;
-          }
-        }
+  ServiceParseClosure closure;
+  parse_lines(path, &closure, THREAD);
 
-        objArrayOop servicesOop = oopFactory::new_objArray(serviceKlass(), implNames->length(), CHECK_NH);
-        objArrayHandle services(THREAD, servicesOop);
-        for (int i = 0; i < implNames->length(); ++i) {
-          char* implName = implNames->at(i);
-          Handle service = create_Service(implName, CHECK_NH);
-          services->obj_at_put(i, service());
-        }
-        return services;
-      }
-    } else {
-      warning("Error opening file %s due to %s", path, strerror(errno));
-    }
-  } else {
-    warning("Error opening file %s due to %s", path, strerror(errno));
+  GrowableArray<char*>* implNames = closure.implNames();
+  objArrayOop servicesOop = oopFactory::new_objArray(serviceKlass(), implNames->length(), CHECK_NH);
+  objArrayHandle services(THREAD, servicesOop);
+  for (int i = 0; i < implNames->length(); ++i) {
+    char* implName = implNames->at(i);
+    Handle service = create_Service(implName, CHECK_NH);
+    services->obj_at_put(i, service());
   }
-  return Handle();
+  return services;
 }
 
 #include "graalRuntime.inline.hpp"
