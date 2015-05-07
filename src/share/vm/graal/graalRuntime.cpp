@@ -866,51 +866,27 @@ void GraalRuntime::parse_argument(KlassHandle hotSpotOptionsClass, char* arg, TR
   }
 }
 
+class GraalOptionParseClosure : public ParseClosure {
+  TRAPS;
+  KlassHandle _hotSpotOptionsClass;
+public:
+  GraalOptionParseClosure(KlassHandle hotSpotOptionsClass, TRAPS) : THREAD(THREAD), _hotSpotOptionsClass(hotSpotOptionsClass) {}
+  void do_line(char* line) {
+    GraalRuntime::parse_argument(_hotSpotOptionsClass, line, THREAD);
+    if (HAS_PENDING_EXCEPTION) {
+      warn_and_abort("Exception thrown while parsing argument");
+    }
+  }
+};
+
 void GraalRuntime::parse_graal_options_file(KlassHandle hotSpotOptionsClass, TRAPS) {
   const char* home = Arguments::get_java_home();
   size_t path_len = strlen(home) + strlen("/lib/graal.options") + 1;
   char* path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
   char sep = os::file_separator()[0];
   sprintf(path, "%s%clib%cgraal.options", home, sep, sep);
-
-  struct stat st;
-  if (os::stat(path, &st) == 0) {
-    int file_handle = os::open(path, 0, 0);
-    if (file_handle != -1) {
-      char* buffer = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, st.st_size);
-      int num_read = (int) os::read(file_handle, (char*) buffer, st.st_size);
-      if (num_read == -1) {
-        warning("Error reading file %s due to %s", path, strerror(errno));
-      } else if (num_read != st.st_size) {
-        warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
-      }
-      os::close(file_handle);
-      if (num_read == st.st_size) {
-        char* line = buffer;
-        int lineNo = 1;
-        while (line - buffer < num_read) {
-          char* nl = strchr(line, '\n');
-          if (nl != NULL) {
-            *nl = '\0';
-          }
-          parse_argument(hotSpotOptionsClass, line, THREAD);
-          if (HAS_PENDING_EXCEPTION) {
-            warning("Error in %s:%d", path, lineNo);
-            return;
-          }
-          if (nl != NULL) {
-            line = nl + 1;
-            lineNo++;
-          } else {
-            // File without newline at the end
-            break;
-          }
-        }
-      }
-    } else {
-      warning("Error opening file %s due to %s", path, strerror(errno));
-    }
-  }
+  GraalOptionParseClosure closure(hotSpotOptionsClass, THREAD);
+  parse_lines(path, &closure, false, THREAD);
 }
 
 jlong GraalRuntime::parse_primitive_option_value(char spec, const char* name, size_t name_len, const char* value, TRAPS) {
@@ -1076,7 +1052,7 @@ Klass* GraalRuntime::load_required_class(Symbol* name) {
   return klass;
 }
 
-void GraalRuntime::parse_lines(char* path, ParseClosure* closure, TRAPS) {
+void GraalRuntime::parse_lines(char* path, ParseClosure* closure, bool warnStatFailure, TRAPS) {
   struct stat st;
   if (os::stat(path, &st) == 0) {
       int file_handle = os::open(path, 0, 0);
@@ -1089,11 +1065,12 @@ void GraalRuntime::parse_lines(char* path, ParseClosure* closure, TRAPS) {
           warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
         }
         os::close(file_handle);
+        closure->set_filename(path);
         if (num_read == st.st_size) {
           buffer[num_read] = '\0';
 
           char* line = buffer;
-          while (line - buffer < num_read) {
+          while (line - buffer < num_read && !closure->is_aborted()) {
             // find line end (\r, \n or \r\n)
             char* nextline = NULL;
             char* cr = strchr(line, '\r');
@@ -1121,7 +1098,7 @@ void GraalRuntime::parse_lines(char* path, ParseClosure* closure, TRAPS) {
             *end = '\0';
             // skip comments and empty lines
             if (*line != '#' && strlen(line) > 0) {
-              closure->do_line(line);
+              closure->parse_line(line);
             }
             if (nextline != NULL) {
               line = nextline;
@@ -1134,8 +1111,8 @@ void GraalRuntime::parse_lines(char* path, ParseClosure* closure, TRAPS) {
       } else {
         warning("Error opening file %s due to %s", path, strerror(errno));
       }
-    } else {
-      warning("Error opening file %s due to %s", path, strerror(errno));
+    } else if (warnStatFailure) {
+      warning("Could not stat file %s due to %s", path, strerror(errno));
     }
 }
 
@@ -1164,7 +1141,7 @@ Handle GraalRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
   char sep = os::file_separator()[0];
   sprintf(path, "%s%clib%cgraal%cservices%c%s", home, sep, sep, sep, sep, serviceName);
   ServiceParseClosure closure;
-  parse_lines(path, &closure, THREAD);
+  parse_lines(path, &closure, true, THREAD);
 
   GrowableArray<char*>* implNames = closure.implNames();
   objArrayOop servicesOop = oopFactory::new_objArray(serviceKlass(), implNames->length(), CHECK_NH);

@@ -29,8 +29,25 @@
 #include "runtime/deoptimization.hpp"
 
 class ParseClosure : public StackObj {
+protected:
+  int _lineNo;
+  char* _filename;
+  bool _abort;
+  void abort() { _abort = true; }
+  void warn_and_abort(const char* message) {
+    warning("Error at line %d while parsing %s: %s", _lineNo, _filename == NULL ? "?" : _filename, message);
+    abort();
+  }
  public:
+  ParseClosure() : _lineNo(0), _filename(NULL) {}
+  void parse_line(char* line) {
+    _lineNo++;
+    do_line(line);
+  }
   virtual void do_line(char* line) = 0;
+  int lineNo() { return _lineNo; }
+  bool is_aborted() { return _abort; }
+  void set_filename(char* path) {_filename = path; }
 };
 
 class GraalRuntime: public CHeapObj<mtCompiler> {
@@ -67,13 +84,6 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
    * options present on the command line.
    */
   static void parse_graal_options_file(KlassHandle hotSpotOptionsClass, TRAPS);
-
-  /**
-   * Parses a given argument and sets the denoted Graal option.
-   *
-   * @throws InternalError if there was a problem parsing or setting the option
-   */
-  static void parse_argument(KlassHandle hotSpotOptionsClass, char* arg, TRAPS);
 
   /**
    * Searches for a Boolean Graal option denoted by a given name and sets it value.
@@ -132,6 +142,13 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
  public:
 
   /**
+   * Parses a given argument and sets the denoted Graal option.
+   *
+   * @throws InternalError if there was a problem parsing or setting the option
+   */
+  static void parse_argument(KlassHandle hotSpotOptionsClass, char* arg, TRAPS);
+
+  /**
    * Ensures that the Graal class loader is initialized and the well known Graal classes are loaded.
    */
   static void ensure_graal_class_loader_is_initialized();
@@ -182,7 +199,7 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
    */
   static Handle get_service_impls(KlassHandle serviceKlass, TRAPS);
 
-  static void parse_lines(char* path, ParseClosure* closure, TRAPS);
+  static void parse_lines(char* path, ParseClosure* closure, bool warnStatFailure, TRAPS);
 
   /**
    * Aborts the VM due to an unexpected exception.
