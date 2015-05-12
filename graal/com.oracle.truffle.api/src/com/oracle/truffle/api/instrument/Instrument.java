@@ -420,7 +420,7 @@ public abstract class Instrument {
         @NodeInfo(cost = NodeCost.NONE)
         private final class ToolEvalNodeInstrumentNode extends AbstractInstrumentNode {
 
-            @Child ToolEvalNode toolEvalNode;
+            @Child private ToolEvalNode toolEvalNode;
 
             private ToolEvalNodeInstrumentNode(AbstractInstrumentNode nextNode) {
                 super(nextNode);

@@ -35,32 +35,46 @@ import com.oracle.truffle.api.instrument.*;
  * Representation of a guest language source code unit and its contents. Sources originate in
  * several ways:
  * <ul>
- * <li><strong>Literal:</strong> A named text string. These are not indexed and should be considered
- * value objects; equality is defined based on contents. <br>
+ * <li><strong>Literal:</strong> An anonymous text string: not named and not indexed. These should
+ * be considered value objects; equality is defined based on contents.<br>
  * See {@link Source#fromText(CharSequence, String)}</li>
+ * <p>
+ * <li><strong>Named Literal:</strong> A text string that can be retrieved by name as if it were a
+ * file, but without any assumption that the name is related to a file path. Creating a new literal
+ * with an already existing name will replace its predecessor in the index.<br>
+ * See {@link Source#fromNamedText(CharSequence, String)}<br>
+ * See {@link Source#find(String)}</li>
  * <p>
  * <li><strong>File:</strong> Each file is represented as a canonical object, indexed by the
  * absolute, canonical path name of the file. File contents are <em>read lazily</em> and contents
  * optionally <em>cached</em>. <br>
  * See {@link Source#fromFileName(String)}<br>
- * See {@link Source#fromFileName(String, boolean)}</li>
+ * See {@link Source#fromFileName(String, boolean)}<br>
+ * See {@link Source#find(String)}</li>
  * <p>
  * <li><strong>URL:</strong> Each URL source is represented as a canonical object, indexed by the
  * URL. Contents are <em>read eagerly</em> and <em>cached</em>. <br>
- * See {@link Source#fromURL(URL, String)}</li>
+ * See {@link Source#fromURL(URL, String)}<br>
+ * See {@link Source#find(String)}</li>
  * <p>
- * <li><strong>Reader:</strong> Contents are <em>read eagerly</em> and treated as a <em>Literal</em>
- * . <br>
+ * <li><strong>Reader:</strong> Contents are <em>read eagerly</em> and treated as an anonymous
+ * (non-indexed) <em>Literal</em> . <br>
  * See {@link Source#fromReader(Reader, String)}</li>
  * <p>
- * <li><strong>Pseudo File:</strong> A literal text string that can be retrieved by name as if it
- * were a file, unlike literal sources; useful for testing. <br>
- * See {@link Source#asPseudoFile(CharSequence, String)}</li>
+ * <li><strong>Sub-Source:</strong> A representation of the contents of a sub-range of another
+ * {@link Source}.<br>
+ * See @link {@link Source#subSource(Source, int, int)}<br>
+ * See @link {@link Source#subSource(Source, int)}</li>
+ * <p>
+ * <li><strong>AppendableSource:</strong> Literal contents are provided by the client,
+ * incrementally, after the instance is created.<br>
+ * See {@link Source#fromAppendableText(String)}<br>
+ * See {@link Source#fromNamedAppendableText(String)}</li>
  * </ul>
  * <p>
  * <strong>File cache:</strong>
  * <ol>
- * <li>File content caching is optional, <em>off</em> by default.</li>
+ * <li>File content caching is optional, <em>on</em> by default.</li>
  * <li>The first access to source file contents will result in the contents being read, and (if
  * enabled) cached.</li>
  * <li>If file contents have been cached, access to contents via {@link Source#getInputStream()} or
@@ -128,12 +142,22 @@ public abstract class Source {
      */
     private static final List<WeakReference<Source>> allSources = Collections.synchronizedList(new ArrayList<WeakReference<Source>>());
 
-    // Files and pseudo files are indexed.
-    private static final Map<String, WeakReference<Source>> filePathToSource = new HashMap<>();
+    /**
+     * Index of all named sources.
+     */
+    private static final Map<String, WeakReference<Source>> nameToSource = new HashMap<>();
 
     private static boolean fileCacheEnabled = true;
 
     private static final List<SourceListener> sourceListeners = new ArrayList<>();
+
+    /**
+     * Locates an existing instance by the name under which it was indexed.
+     */
+    public static Source find(String name) {
+        final WeakReference<Source> nameRef = nameToSource.get(name);
+        return nameRef == null ? null : nameRef.get();
+    }
 
     /**
      * Gets the canonical representation of a source file, whose contents will be read lazily and
@@ -146,7 +170,7 @@ public abstract class Source {
      */
     public static Source fromFileName(String fileName, boolean reset) throws IOException {
 
-        final WeakReference<Source> nameRef = filePathToSource.get(fileName);
+        final WeakReference<Source> nameRef = nameToSource.get(fileName);
         Source source = nameRef == null ? null : nameRef.get();
         if (source == null) {
             final File file = new File(fileName);
@@ -154,11 +178,11 @@ public abstract class Source {
                 throw new IOException("Can't read file " + fileName);
             }
             final String path = file.getCanonicalPath();
-            final WeakReference<Source> pathRef = filePathToSource.get(path);
+            final WeakReference<Source> pathRef = nameToSource.get(path);
             source = pathRef == null ? null : pathRef.get();
             if (source == null) {
                 source = new FileSource(file, fileName, path);
-                filePathToSource.put(path, new WeakReference<>(source));
+                nameToSource.put(path, new WeakReference<>(source));
             }
         }
         if (reset) {
@@ -193,17 +217,17 @@ public abstract class Source {
      */
     public static Source fromFileName(CharSequence chars, String fileName) throws IOException {
 
-        final WeakReference<Source> nameRef = filePathToSource.get(fileName);
+        final WeakReference<Source> nameRef = nameToSource.get(fileName);
         Source source = nameRef == null ? null : nameRef.get();
         if (source == null) {
             final File file = new File(fileName);
             // We are going to trust that the fileName is readable.
             final String path = file.getCanonicalPath();
-            final WeakReference<Source> pathRef = filePathToSource.get(path);
+            final WeakReference<Source> pathRef = nameToSource.get(path);
             source = pathRef == null ? null : pathRef.get();
             if (source == null) {
                 source = new FileSource(file, fileName, path, chars);
-                filePathToSource.put(path, new WeakReference<>(source));
+                nameToSource.put(path, new WeakReference<>(source));
             }
         }
         notifyNewSource(source).tagAs(Tags.FROM_FILE);
@@ -211,8 +235,7 @@ public abstract class Source {
     }
 
     /**
-     * Creates a non-canonical source from literal text. If an already created literal source must
-     * be retrievable by name, use {@link #asPseudoFile(CharSequence, String)}.
+     * Creates an anonymous source from literal text: not named and not indexed.
      *
      * @param chars textual source code
      * @param description a note about the origin, for error messages and debugging
@@ -223,6 +246,79 @@ public abstract class Source {
         final LiteralSource source = new LiteralSource(description, chars.toString());
         notifyNewSource(source).tagAs(Tags.FROM_LITERAL);
         return source;
+    }
+
+    /**
+     * Creates an anonymous source from literal text that is provided incrementally after creation:
+     * not named and not indexed.
+     *
+     * @param description a note about the origin, for error messages and debugging
+     * @return a newly created, non-indexed, initially empty, appendable source representation
+     */
+    public static Source fromAppendableText(String description) {
+        final Source source = new AppendableLiteralSource(description);
+        notifyNewSource(source).tagAs(Tags.FROM_LITERAL);
+        return source;
+    }
+
+    /**
+     * Creates a source from literal text that can be retrieved by name, with no assumptions about
+     * the structure or meaning of the name. If the name is already in the index, the new instance
+     * will replace the previously existing instance in the index.
+     *
+     * @param chars textual source code
+     * @param name string to use for indexing/lookup
+     * @return a newly created, source representation
+     */
+    public static Source fromNamedText(CharSequence chars, String name) {
+        final Source source = new LiteralSource(name, chars.toString());
+        nameToSource.put(name, new WeakReference<>(source));
+        notifyNewSource(source).tagAs(Tags.FROM_LITERAL);
+        return source;
+    }
+
+    /**
+     * Creates a source from literal text that is provided incrementally after creation and which
+     * can be retrieved by name, with no assumptions about the structure or meaning of the name. If
+     * the name is already in the index, the new instance will replace the previously existing
+     * instance in the index.
+     *
+     * @param name string to use for indexing/lookup
+     * @return a newly created, indexed, initially empty, appendable source representation
+     */
+    public static Source fromNamedAppendableText(String name) {
+        final Source source = new AppendableLiteralSource(name);
+        nameToSource.put(name, new WeakReference<>(source));
+        notifyNewSource(source).tagAs(Tags.FROM_LITERAL);
+        return source;
+    }
+
+    /**
+     * Creates a {@linkplain Source Source instance} that represents the contents of a sub-range of
+     * an existing {@link Source}.
+     *
+     * @param base an existing Source instance
+     * @param baseCharIndex 0-based index of the first character of the sub-range
+     * @param length the number of characters in the sub-range
+     * @return a new instance representing a sub-range of another Source
+     * @throws IllegalArgumentException if the specified sub-range is not contained in the base
+     */
+    public static Source subSource(Source base, int baseCharIndex, int length) {
+        final SubSource subSource = SubSource.create(base, baseCharIndex, length);
+        return subSource;
+    }
+
+    /**
+     * Creates a {@linkplain Source Source instance} that represents the contents of a sub-range at
+     * the end of an existing {@link Source}.
+     *
+     * @param base an existing Source instance
+     * @param baseCharIndex 0-based index of the first character of the sub-range
+     * @return a new instance representing a sub-range at the end of another Source
+     * @throws IllegalArgumentException if the index is out of range
+     */
+    public static Source subSource(Source base, int baseCharIndex) {
+        return subSource(base, baseCharIndex, base.getLength() - baseCharIndex);
     }
 
     /**
@@ -283,21 +379,6 @@ public abstract class Source {
     public static Source fromBytes(byte[] bytes, int byteIndex, int length, String description, BytesDecoder decoder) {
         final BytesSource source = new BytesSource(description, bytes, byteIndex, length, decoder);
         notifyNewSource(source).tagAs(Tags.FROM_BYTES);
-        return source;
-    }
-
-    /**
-     * Creates a source from literal text, but which acts as a file and can be retrieved by name
-     * (unlike other literal sources); intended for testing.
-     *
-     * @param chars textual source code
-     * @param pseudoFileName string to use for indexing/lookup
-     * @return a newly created, source representation, canonical with respect to its name
-     */
-    public static Source asPseudoFile(CharSequence chars, String pseudoFileName) {
-        final Source source = new LiteralSource(pseudoFileName, chars.toString());
-        filePathToSource.put(pseudoFileName, new WeakReference<>(source));
-        notifyNewSource(source).tagAs(Tags.FROM_LITERAL);
         return source;
     }
 
@@ -372,7 +453,7 @@ public abstract class Source {
 
     private final ArrayList<SourceTag> tags = new ArrayList<>();
 
-    Source() {
+    private Source() {
     }
 
     private TextMap textMap = null;
@@ -448,7 +529,7 @@ public abstract class Source {
      * Gets the number of characters in the source.
      */
     public final int getLength() {
-        return checkTextMap().length();
+        return getTextMap().length();
     }
 
     /**
@@ -467,9 +548,8 @@ public abstract class Source {
      * Gets the text (not including a possible terminating newline) in a (1-based) numbered line.
      */
     public final String getCode(int lineNumber) {
-        checkTextMap();
-        final int offset = textMap.lineStartOffset(lineNumber);
-        final int length = textMap.lineLength(lineNumber);
+        final int offset = getTextMap().lineStartOffset(lineNumber);
+        final int length = getTextMap().lineLength(lineNumber);
         return getCode().substring(offset, offset + length);
     }
 
@@ -478,7 +558,7 @@ public abstract class Source {
      * source without a terminating newline count as a line.
      */
     public final int getLineCount() {
-        return checkTextMap().lineCount();
+        return getTextMap().lineCount();
     }
 
     /**
@@ -488,7 +568,7 @@ public abstract class Source {
      * @throws IllegalArgumentException if the offset is outside the text contents
      */
     public final int getLineNumber(int offset) throws IllegalArgumentException {
-        return checkTextMap().offsetToLine(offset);
+        return getTextMap().offsetToLine(offset);
     }
 
     /**
@@ -497,7 +577,7 @@ public abstract class Source {
      * @throws IllegalArgumentException if the offset is outside the text contents
      */
     public final int getColumnNumber(int offset) throws IllegalArgumentException {
-        return checkTextMap().offsetToCol(offset);
+        return getTextMap().offsetToCol(offset);
     }
 
     /**
@@ -506,7 +586,7 @@ public abstract class Source {
      * @throws IllegalArgumentException if there is no such line in the text
      */
     public final int getLineStartOffset(int lineNumber) throws IllegalArgumentException {
-        return checkTextMap().lineStartOffset(lineNumber);
+        return getTextMap().lineStartOffset(lineNumber);
     }
 
     /**
@@ -516,7 +596,17 @@ public abstract class Source {
      * @throws IllegalArgumentException if there is no such line in the text
      */
     public final int getLineLength(int lineNumber) throws IllegalArgumentException {
-        return checkTextMap().lineLength(lineNumber);
+        return getTextMap().lineLength(lineNumber);
+    }
+
+    /**
+     * Append text to a Source explicitly created as <em>Appendable</em>.
+     *
+     * @param chars the text to append
+     * @throws UnsupportedOperationException by concrete subclasses that do not support appending
+     */
+    public void appendCode(CharSequence chars) {
+        throw new UnsupportedOperationException();
     }
 
     /**
@@ -556,9 +646,8 @@ public abstract class Source {
      * @throws IllegalStateException if the source is one of the "null" instances
      */
     public final SourceSection createSection(String identifier, int startLine, int startColumn, int length) {
-        checkTextMap();
-        final int lineStartOffset = textMap.lineStartOffset(startLine);
-        if (startColumn > textMap.lineLength(startLine)) {
+        final int lineStartOffset = getTextMap().lineStartOffset(startLine);
+        if (startColumn > getTextMap().lineLength(startLine)) {
             throw new IllegalArgumentException("column out of range");
         }
         final int startOffset = lineStartOffset + startColumn - 1;
@@ -586,10 +675,8 @@ public abstract class Source {
      */
     public final SourceSection createSection(String identifier, int charIndex, int length) throws IllegalArgumentException {
         checkRange(charIndex, length);
-        checkTextMap();
         final int startLine = getLineNumber(charIndex);
         final int startColumn = charIndex - getLineStartOffset(startLine) + 1;
-
         return new DefaultSourceSection(this, identifier, startLine, startColumn, charIndex, length);
     }
 
@@ -610,9 +697,8 @@ public abstract class Source {
      * @throws IllegalStateException if the source is one of the "null" instances
      */
     public final SourceSection createSection(String identifier, int lineNumber) {
-        checkTextMap();
-        final int charIndex = textMap.lineStartOffset(lineNumber);
-        final int length = textMap.lineLength(lineNumber);
+        final int charIndex = getTextMap().lineStartOffset(lineNumber);
+        final int length = getTextMap().lineLength(lineNumber);
         return createSection(identifier, charIndex, length);
     }
 
@@ -627,11 +713,23 @@ public abstract class Source {
         return new LineLocationImpl(this, lineNumber);
     }
 
-    private TextMap checkTextMap() {
+    /**
+     * An object suitable for using as a key into a hashtable that defines equivalence between
+     * different source types.
+     */
+    protected Object getHashKey() {
+        return getName();
+    }
+
+    protected final TextMap getTextMap() {
         if (textMap == null) {
             textMap = createTextMap();
         }
         return textMap;
+    }
+
+    protected final void clearTextMap() {
+        textMap = null;
     }
 
     protected TextMap createTextMap() {
@@ -644,22 +742,22 @@ public abstract class Source {
 
     private static final class LiteralSource extends Source {
 
-        private final String name; // Name used originally to describe the source
+        private final String description;
         private final String code;
 
-        public LiteralSource(String name, String code) {
-            this.name = name;
+        public LiteralSource(String description, String code) {
+            this.description = description;
             this.code = code;
         }
 
         @Override
         public String getName() {
-            return name;
+            return description;
         }
 
         @Override
         public String getShortName() {
-            return name;
+            return description;
         }
 
         @Override
@@ -669,7 +767,7 @@ public abstract class Source {
 
         @Override
         public String getPath() {
-            return name;
+            return description;
         }
 
         @Override
@@ -688,11 +786,7 @@ public abstract class Source {
 
         @Override
         public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + name.hashCode();
-            result = prime * result + (code == null ? 0 : code.hashCode());
-            return result;
+            return description.hashCode();
         }
 
         @Override
@@ -703,11 +797,69 @@ public abstract class Source {
             if (obj == null) {
                 return false;
             }
-            if (!(obj instanceof LiteralSource)) {
-                return false;
+            if (obj instanceof LiteralSource) {
+                LiteralSource other = (LiteralSource) obj;
+                return description.equals(other.description);
             }
-            LiteralSource other = (LiteralSource) obj;
-            return name.equals(other.name) && code.equals(other.code);
+            return false;
+        }
+    }
+
+    private static final class AppendableLiteralSource extends Source {
+        private String description;
+        final List<CharSequence> codeList = new ArrayList<>();
+
+        public AppendableLiteralSource(String description) {
+            this.description = description;
+        }
+
+        @Override
+        public String getName() {
+            return description;
+        }
+
+        @Override
+        public String getShortName() {
+            return description;
+        }
+
+        @Override
+        public String getCode() {
+            return getCodeFromIndex(0);
+        }
+
+        @Override
+        public String getPath() {
+            return description;
+        }
+
+        @Override
+        public URL getURL() {
+            return null;
+        }
+
+        @Override
+        public Reader getReader() {
+            return new StringReader(getCode());
+        }
+
+        @Override
+        protected void reset() {
+        }
+
+        private String getCodeFromIndex(int index) {
+            StringBuilder sb = new StringBuilder();
+            for (int i = index; i < codeList.size(); i++) {
+                CharSequence s = codeList.get(i);
+                sb.append(s);
+            }
+            return sb.toString();
+        }
+
+        @Override
+        public void appendCode(CharSequence chars) {
+            codeList.add(chars);
+            clearTextMap();
         }
 
     }
@@ -742,6 +894,11 @@ public abstract class Source {
         @Override
         public String getShortName() {
             return file.getName();
+        }
+
+        @Override
+        protected Object getHashKey() {
+            return path;
         }
 
         @Override
@@ -807,7 +964,6 @@ public abstract class Source {
         protected void reset() {
             this.code = null;
         }
-
     }
 
     private static final class URLSource extends Source {
@@ -867,7 +1023,61 @@ public abstract class Source {
         @Override
         protected void reset() {
         }
+    }
 
+    private static final class SubSource extends Source {
+        private final Source base;
+        private final int baseIndex;
+        private final int subLength;
+
+        private static SubSource create(Source base, int baseIndex, int length) {
+            if (baseIndex < 0 || length < 0 || baseIndex + length > base.getLength()) {
+                throw new IllegalArgumentException("text positions out of range");
+            }
+            return new SubSource(base, baseIndex, length);
+        }
+
+        private SubSource(Source base, int baseIndex, int length) {
+            this.base = base;
+            this.baseIndex = baseIndex;
+            this.subLength = length;
+        }
+
+        @Override
+        protected void reset() {
+            assert false;
+        }
+
+        @Override
+        public String getName() {
+            return base.getName();
+        }
+
+        @Override
+        public String getShortName() {
+            return base.getShortName();
+        }
+
+        @Override
+        public String getPath() {
+            return base.getPath();
+        }
+
+        @Override
+        public URL getURL() {
+            return null;
+        }
+
+        @Override
+        public Reader getReader() {
+            assert false;
+            return null;
+        }
+
+        @Override
+        public String getCode() {
+            return base.getCode(baseIndex, subLength);
+        }
     }
 
     private static final class BytesSource extends Source {
@@ -1132,7 +1342,7 @@ public abstract class Source {
             final int prime = 31;
             int result = 1;
             result = prime * result + line;
-            result = prime * result + source.hashCode();
+            result = prime * result + source.getHashKey().hashCode();
             return result;
         }
 
@@ -1151,7 +1361,7 @@ public abstract class Source {
             if (line != other.line) {
                 return false;
             }
-            return source.equals(other.source);
+            return source.getHashKey().equals(other.source.getHashKey());
         }
 
     }
