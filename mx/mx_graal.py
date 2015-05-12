@@ -1606,7 +1606,6 @@ def ctw(args):
     parser = ArgumentParser(prog='mx ctw')
     parser.add_argument('--ctwopts', action='store', help='space separated Graal options used for CTW compilations (default: --ctwopts="' + defaultCtwopts + '")', default=defaultCtwopts, metavar='<options>')
     parser.add_argument('--jar', action='store', help='jar of classes to compiled instead of rt.jar', metavar='<path>')
-    parser.add_argument('vmargs', nargs=REMAINDER, metavar='VM options...')
 
     args, vmargs = parser.parse_known_args(args)
 
