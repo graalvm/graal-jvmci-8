@@ -32,16 +32,16 @@ import com.oracle.truffle.api.nodes.*;
 import com.oracle.truffle.api.test.instrument.InstrumentationTestNodes.TestAdditionNode;
 import com.oracle.truffle.api.test.instrument.InstrumentationTestNodes.TestRootNode;
 import com.oracle.truffle.api.test.instrument.InstrumentationTestNodes.TestValueNode;
-import com.oracle.truffle.api.test.instrument.InstrumentationTestNodes.TestToolEvalCounterNode;
+import com.oracle.truffle.api.test.instrument.InstrumentationTestNodes.TestAdvancedInstrumentCounterRoot;
 
 /**
  * Tests the kind of instrumentation where a client can provide an AST fragment to be
  * <em>spliced</em> directly into the AST.
  */
-public class ToolEvalInstrumentTest {
+public class AdvancedInstrumentTest {
 
     @Test
-    public void testSpliceInstrumentListener() {
+    public void testAdvancedInstrumentListener() {
         // Create a simple addition AST
         final TruffleRuntime runtime = Truffle.getRuntime();
         final TestValueNode leftValueNode = new TestValueNode(6);
@@ -58,32 +58,30 @@ public class ToolEvalInstrumentTest {
 
         assertEquals(13, callTarget1.call());
 
-        // Attach a null listener; it never actually attaches a node.
-        final Instrument instrument = Instrument.create(new ToolEvalNodeFactory() {
+        // Attach a null factory; it never actually attaches a node.
+        final Instrument instrument = Instrument.create(null, new AdvancedInstrumentRootFactory() {
 
-            public ToolEvalNode createToolEvalNode(Probe p, Node n) {
+            public AdvancedInstrumentRoot createInstrumentRoot(Probe p, Node n) {
                 return null;
             }
-        }, null);
+        }, null, "test AdvancedInstrument");
         probe.attach(instrument);
 
         assertEquals(13, callTarget1.call());
 
-        final TestToolEvalCounterNode counter = new TestToolEvalCounterNode();
+        final TestAdvancedInstrumentCounterRoot counter = new TestAdvancedInstrumentCounterRoot();
 
-        // Attach a listener that splices an execution counter into the AST.
-        probe.attach(Instrument.create(new ToolEvalNodeFactory() {
+        // Attach a factory that splices an execution counter into the AST.
+        probe.attach(Instrument.create(null, new AdvancedInstrumentRootFactory() {
 
-            public ToolEvalNode createToolEvalNode(Probe p, Node n) {
+            public AdvancedInstrumentRoot createInstrumentRoot(Probe p, Node n) {
                 return counter;
             }
-        }, null));
+        }, null, "test AdvancedInstrument"));
         assertEquals(0, counter.getCount());
 
         assertEquals(13, callTarget1.call());
 
         assertEquals(1, counter.getCount());
-
     }
-
 }

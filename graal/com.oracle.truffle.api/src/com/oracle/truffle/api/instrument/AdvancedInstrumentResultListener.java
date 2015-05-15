@@ -24,41 +24,51 @@
  */
 package com.oracle.truffle.api.instrument;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.*;
 import com.oracle.truffle.api.nodes.*;
 
 /**
- * Listener for receiving the result a client-provided {@linkplain ToolEvalNode AST fragment}, when
- * executed by a {@linkplain Instrument#create(ToolEvalNodeFactory, String) Tool Eval Instrument}.
+ * Listener for receiving the result a client-provided {@linkplain AdvancedInstrumentRoot AST
+ * fragment}, when executed by a
+ * {@linkplain Instrument#create(AdvancedInstrumentResultListener, AdvancedInstrumentRootFactory, Class, String)
+ * Advanced Instrument}.
  *
  * @see Instrument
- * @see ToolEvalNode
- * @see ToolEvalNodeFactory
+ * @see AdvancedInstrumentRoot
+ * @see AdvancedInstrumentRootFactory
  */
-public interface ToolEvalResultListener {
+public interface AdvancedInstrumentResultListener {
 
     /**
-     * Notifies listener that a client-provided {@linkplain ToolEvalNode AST fragment} has been
-     * executed by a {@linkplain Instrument#create(ToolEvalNodeFactory, String) Tool Eval
-     * Instrument} with the specified result, possibly {@code null}.
+     * Notifies listener that a client-provided {@linkplain AdvancedInstrumentRoot AST fragment} has
+     * been executed by an
+     * {@linkplain Instrument#create(AdvancedInstrumentResultListener, AdvancedInstrumentRootFactory, Class, String)
+     * Advanced Instrument} with the specified result, possibly {@code null}.
+     * <p>
+     * <strong>Note: </strong> Truffle will attempt to optimize implementations through partial
+     * evaluation; annotate with {@link TruffleBoundary} if this should not be permitted.
      *
      * @param node the guest-language AST node to which the host Instrument's {@link Probe} is
      *            attached
      * @param vFrame execution frame at the guest-language AST node
      * @param result the result of this AST fragment's execution
      */
-    void notifyToolEvalResult(Node node, VirtualFrame vFrame, Object result);
+    void notifyResult(Node node, VirtualFrame vFrame, Object result);
 
     /**
-     * Notifies listener that execution of client-provided {@linkplain ToolEvalNode AST fragment}
-     * filed during execution by a @linkplain Instrument#create(ToolEvalNodeFactory, String) Tool
-     * Eval Instrument}.
+     * Notifies listener that execution of client-provided {@linkplain AdvancedInstrumentRoot AST
+     * fragment} filed during execution by a @linkplain
+     * Instrument#create(AdvancedInstrumentRootFactory, String) Advanced Instrument}.
+     * <p>
+     * <strong>Note: </strong> Truffle will attempt to optimize implementations through partial
+     * evaluation; annotate with {@link TruffleBoundary} if this should not be permitted.
      *
      * @param node the guest-language AST node to which the host Instrument's {@link Probe} is
      *            attached
      * @param vFrame execution frame at the guest-language AST node
      * @param ex the exception
      */
-    void notifyToolEvalFailure(Node node, VirtualFrame vFrame, RuntimeException ex);
+    void notifyFailure(Node node, VirtualFrame vFrame, RuntimeException ex);
 
 }

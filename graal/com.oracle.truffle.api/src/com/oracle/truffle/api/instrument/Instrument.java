@@ -127,16 +127,19 @@ public abstract class Instrument {
     }
 
     /**
-     * Creates a <em>Tool Eval Instrument</em>: this Instrument executes efficiently, subject to
+     * Creates an <em>Advanced Instrument</em>: this Instrument executes efficiently, subject to
      * full Truffle optimization, a client-provided AST fragment every time the Probed node is
      * entered.
      *
-     * @param toolEvalNodeFactory provider of AST fragments on behalf of the client
+     * @param resultListener optional client callback for results/failure notification
+     * @param rootFactory provider of AST fragments on behalf of the client
+     * @param requiredResultType optional requirement, any non-assignable result is reported to the
+     *            the listener, if any, as a failure
      * @param instrumentInfo optional description of the instrument's role, intended for debugging.
      * @return a new instrument, ready for attachment at a probe
      */
-    public static Instrument create(ToolEvalNodeFactory toolEvalNodeFactory, String instrumentInfo) {
-        return new ToolEvalInstrument(toolEvalNodeFactory, instrumentInfo);
+    public static Instrument create(AdvancedInstrumentResultListener resultListener, AdvancedInstrumentRootFactory rootFactory, Class<?> requiredResultType, String instrumentInfo) {
+        return new AdvancedInstrument(resultListener, rootFactory, requiredResultType, instrumentInfo);
     }
 
     // TODO (mlvdv) experimental
@@ -379,22 +382,22 @@ public abstract class Instrument {
      * within a Probe's <em>instrumentation chain</em>, and thus directly in the executing Truffle
      * AST with potential for full optimization.
      */
-    private static final class ToolEvalInstrument extends Instrument {
+    private static final class AdvancedInstrument extends Instrument {
 
-        /**
-         * Client-provided supplier of new node instances to attach.
-         */
-        private final ToolEvalNodeFactory toolEvalNodeFactory;
+        private final AdvancedInstrumentResultListener resultListener;
+        private final AdvancedInstrumentRootFactory rootFactory;
+        private final Class<?> requiredResultType;
 
-        private ToolEvalInstrument(ToolEvalNodeFactory toolEvalNodeFactory, String instrumentInfo) {
+        private AdvancedInstrument(AdvancedInstrumentResultListener resultListener, AdvancedInstrumentRootFactory rootFactory, Class<?> requiredResultType, String instrumentInfo) {
             super(instrumentInfo);
-            this.toolEvalNodeFactory = toolEvalNodeFactory;
-
+            this.resultListener = resultListener;
+            this.rootFactory = rootFactory;
+            this.requiredResultType = requiredResultType;
         }
 
         @Override
         AbstractInstrumentNode addToChain(AbstractInstrumentNode nextNode) {
-            return new ToolEvalNodeInstrumentNode(nextNode);
+            return new AdvancedInstrumentNode(nextNode);
         }
 
         @Override
@@ -406,7 +409,7 @@ public abstract class Instrument {
                     return instrumentNode.nextInstrumentNode;
                 }
                 // Match not at the head of the chain; remove it.
-                found = instrumentNode.removeFromChain(ToolEvalInstrument.this);
+                found = instrumentNode.removeFromChain(AdvancedInstrument.this);
             }
             if (!found) {
                 throw new IllegalStateException("Couldn't find instrument node to remove: " + this);
@@ -415,32 +418,59 @@ public abstract class Instrument {
         }
 
         /**
-         * Node that implements a {@link ToolEvalInstrument} in a particular AST.
+         * Node that implements a {@link AdvancedInstrument} in a particular AST.
          */
         @NodeInfo(cost = NodeCost.NONE)
-        private final class ToolEvalNodeInstrumentNode extends AbstractInstrumentNode {
+        private final class AdvancedInstrumentNode extends AbstractInstrumentNode {
 
-            @Child private ToolEvalNode toolEvalNode;
+            @Child private AdvancedInstrumentRoot instrumentRoot;
 
-            private ToolEvalNodeInstrumentNode(AbstractInstrumentNode nextNode) {
+            private AdvancedInstrumentNode(AbstractInstrumentNode nextNode) {
                 super(nextNode);
             }
 
             public void enter(Node node, VirtualFrame vFrame) {
-                if (toolEvalNode == null) {
-                    final ToolEvalNode newToolEvalNodeNode = ToolEvalInstrument.this.toolEvalNodeFactory.createToolEvalNode(ToolEvalInstrument.this.probe, node);
-                    if (newToolEvalNodeNode != null) {
-                        toolEvalNode = newToolEvalNodeNode;
-                        adoptChildren();
-                        ToolEvalInstrument.this.probe.invalidateProbeUnchanged();
+                if (instrumentRoot == null) {
+                    try {
+                        final AdvancedInstrumentRoot newInstrumentRoot = AdvancedInstrument.this.rootFactory.createInstrumentRoot(AdvancedInstrument.this.probe, node);
+                        if (newInstrumentRoot != null) {
+                            instrumentRoot = newInstrumentRoot;
+                            adoptChildren();
+                            AdvancedInstrument.this.probe.invalidateProbeUnchanged();
+                        }
+                    } catch (RuntimeException ex) {
+                        if (resultListener != null) {
+                            resultListener.notifyFailure(node, vFrame, ex);
+                        }
                     }
                 }
-                if (toolEvalNode != null) {
-                    // TODO (mlvdv) should report exception ; non-trivial architectural change
-                    toolEvalNode.executeToolEvalNode(node, vFrame);
+                if (instrumentRoot != null) {
+                    try {
+                        final Object result = instrumentRoot.executeRoot(node, vFrame);
+                        if (resultListener != null) {
+                            checkResultType(result);
+                            resultListener.notifyResult(node, vFrame, result);
+                        }
+                    } catch (RuntimeException ex) {
+                        if (resultListener != null) {
+                            resultListener.notifyFailure(node, vFrame, ex);
+                        }
+                    }
                 }
                 if (nextInstrumentNode != null) {
                     nextInstrumentNode.enter(node, vFrame);
+                }
+            }
+
+            private void checkResultType(Object result) {
+                if (requiredResultType == null) {
+                    return;
+                }
+                if (result == null) {
+                    throw new RuntimeException("Instrument result null: " + requiredResultType.getSimpleName() + " is required");
+                }
+                if (!(requiredResultType.isAssignableFrom(result.getClass()))) {
+                    throw new RuntimeException("Instrument result " + result.toString() + " not assignable to " + requiredResultType.getSimpleName());
                 }
             }
 
@@ -464,7 +494,7 @@ public abstract class Instrument {
 
             public String instrumentationInfo() {
                 final String info = getInstrumentInfo();
-                return info != null ? info : toolEvalNodeFactory.getClass().getSimpleName();
+                return info != null ? info : rootFactory.getClass().getSimpleName();
             }
         }
     }
