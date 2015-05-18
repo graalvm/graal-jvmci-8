@@ -1045,7 +1045,6 @@ C2V_END
 #define HS_COMPILED_CODE      "Lcom/oracle/graal/hotspot/HotSpotCompiledCode;"
 #define HS_CONFIG             "Lcom/oracle/graal/hotspot/HotSpotVMConfig;"
 #define INSTALLED_CODE        "Lcom/oracle/graal/api/code/InstalledCode;"
-#define NODE_CLASS            "Lcom/oracle/graal/graph/NodeClass;"
 #define HS_STACK_FRAME_REF    "Lcom/oracle/graal/hotspot/HotSpotStackFrameReference;"
 #define METASPACE_KLASS       "J"
 #define METASPACE_METHOD      "J"

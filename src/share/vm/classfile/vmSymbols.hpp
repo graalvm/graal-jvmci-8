@@ -301,8 +301,6 @@
   /* Support for Graal */                                                                                                             \
   template(java_util_BitSet,                                         "java/util/BitSet")                                              \
   GRAAL_ONLY(template(com_oracle_graal_debug_Debug,                             "com/oracle/graal/debug/Debug"))                                  \
-  GRAAL_ONLY(template(com_oracle_graal_graph_Node,                              "com/oracle/graal/graph/Node"))                                   \
-  GRAAL_ONLY(template(com_oracle_graal_graph_NodeClass,                         "com/oracle/graal/graph/NodeClass"))                              \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_HotSpotGraalRuntime,             "com/oracle/graal/hotspot/HotSpotGraalRuntime"))                  \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_HotSpotCompiledCode,             "com/oracle/graal/hotspot/HotSpotCompiledCode"))                  \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_HotSpotCompiledCode_Comment,     "com/oracle/graal/hotspot/HotSpotCompiledCode$Comment"))          \
