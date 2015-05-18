@@ -472,7 +472,7 @@ C2V_VMENTRY(void, doNotInlineOrCompile,(JNIEnv *, jobject,  jlong metaspace_meth
   method->set_dont_inline(true);
 C2V_END
 
-C2V_VMENTRY(jint, installCode0, (JNIEnv *jniEnv, jobject, jobject compiled_code, jobject installed_code, jobject speculation_log))
+C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject compiled_code, jobject installed_code, jobject speculation_log))
   ResourceMark rm;
   HandleMark hm;
   Handle compiled_code_handle = JNIHandles::resolve(compiled_code);
@@ -1084,7 +1084,7 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"getMaxCallTargetOffset",                       CC"(J)J",                                                                 FN_PTR(getMaxCallTargetOffset)},
   {CC"getMetaspaceMethod",                           CC"("CLASS"I)"METASPACE_METHOD,                                           FN_PTR(getMetaspaceMethod)},
   {CC"initializeConfiguration",                      CC"("HS_CONFIG")V",                                                       FN_PTR(initializeConfiguration)},
-  {CC"installCode0",                                 CC"("HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",                 FN_PTR(installCode0)},
+  {CC"installCode",                                  CC"("HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",                 FN_PTR(installCode)},
   {CC"notifyCompilationStatistics",                  CC"(I"HS_RESOLVED_METHOD"ZIJJ"INSTALLED_CODE")V",                         FN_PTR(notifyCompilationStatistics)},
   {CC"resetCompilationStatistics",                   CC"()V",                                                                  FN_PTR(resetCompilationStatistics)},
   {CC"disassembleCodeBlob",                          CC"(J)"STRING,                                                            FN_PTR(disassembleCodeBlob)},
