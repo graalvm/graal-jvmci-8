@@ -665,27 +665,41 @@ def _filterGraalService(classNames, graalJars):
             filtered.append(className)
     return filtered
 
-def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
+def _extractGraalFiles(graalJars, servicesDir, optionsDir, cleanDestination=True):
     if cleanDestination:
-        if exists(destination):
-            shutil.rmtree(destination)
-        os.makedirs(destination)
+        if exists(servicesDir):
+            shutil.rmtree(servicesDir)
+        if exists(optionsDir):
+            shutil.rmtree(optionsDir)
+    if not exists(servicesDir):
+        os.makedirs(servicesDir)
+    if not exists(optionsDir):
+        os.makedirs(optionsDir)
     servicesMap = {}
+    optionsFiles = []
     for jar in graalJars:
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
                 for member in zf.namelist():
-                    if not member.startswith('META-INF/services'):
-                        continue
-                    serviceName = basename(member)
-                    # we don't handle directories
-                    assert serviceName and member == 'META-INF/services/' + serviceName
-                    with zf.open(member) as serviceFile:
-                        serviceImpls = servicesMap.setdefault(serviceName, [])
-                        for line in serviceFile.readlines():
-                            line = line.strip()
-                            if line:
-                                serviceImpls.append(line)
+                    if member.startswith('META-INF/services'):
+                        serviceName = basename(member)
+                        # we don't handle directories
+                        assert serviceName and member == 'META-INF/services/' + serviceName
+                        with zf.open(member) as serviceFile:
+                            serviceImpls = servicesMap.setdefault(serviceName, [])
+                            for line in serviceFile.readlines():
+                                line = line.strip()
+                                if line:
+                                    serviceImpls.append(line)
+                    elif member.startswith('META-INF/options'):
+                        filename = basename(member)
+                        # we don't handle directories
+                        assert filename and member == 'META-INF/options/' + filename
+                        targetpath = join(optionsDir, filename)
+                        optionsFiles.append(filename)
+                        with zf.open(member) as optionsFile, \
+                             file(targetpath, "wb") as target:
+                            shutil.copyfileobj(optionsFile, target)
     graalServices = _filterGraalService(servicesMap.keys(), graalJars)
     for serviceName in graalServices:
         serviceImpls = servicesMap[serviceName]
@@ -693,18 +707,19 @@ def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
         f = os.fdopen(fd, 'w+')
         for serviceImpl in serviceImpls:
             f.write(serviceImpl + os.linesep)
-        target = join(destination, serviceName)
+        target = join(servicesDir, serviceName)
         f.close()
         shutil.move(tmp, target)
         if mx.get_os() != 'windows':
             os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
-    return graalServices
+    return (graalServices, optionsFiles)
 
-def _updateGraalServiceFiles(jdkDir):
+def _updateGraalFiles(jdkDir):
     jreGraalDir = join(jdkDir, 'jre', 'lib', 'graal')
     graalJars = [join(jreGraalDir, e) for e in os.listdir(jreGraalDir) if e.startswith('graal') and e.endswith('.jar')]
     jreGraalServicesDir = join(jreGraalDir, 'services')
-    _extractGraalServiceFiles(graalJars, jreGraalServicesDir)
+    jreGraalOptionsDir = join(jreGraalDir, 'options')
+    _extractGraalFiles(graalJars, jreGraalServicesDir, jreGraalOptionsDir)
 
 
 
@@ -743,7 +758,7 @@ def _installDistInJdks(deployableDist):
                     _copyToJdk(dist.sourcesPath, jdkDir)
                 if deployableDist.isGraalClassLoader:
                     # deploy service files
-                    _updateGraalServiceFiles(jdkDir)
+                    _updateGraalFiles(jdkDir)
 
 # run a command in the windows SDK Debug Shell
 def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):
@@ -918,11 +933,15 @@ def build(args, vm=None):
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + '\n' + defLine)
             shutil.copy(dist.path, opts2.export_dir)
-        services = _extractGraalServiceFiles(graalJars, join(opts2.export_dir, 'services'))
+        services, optionsFiles = _extractGraalFiles(graalJars, join(opts2.export_dir, 'services'), join(opts2.export_dir, 'options'))
         for service in services:
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/' + service
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + ' for service from ' + dist.name + '\n' + defLine)
+        for optionsFile in optionsFiles:
+            defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_OPTIONS_DIR)/' + optionsFile
+            if defLine not in defs:
+                mx.abort('Missing following line in ' + defsPath + ' for options from ' + dist.name + '\n' + defLine)
         graalOptions = join(_graal_home, 'graal.options')
         if exists(graalOptions):
             shutil.copy(graalOptions, opts2.export_dir)
