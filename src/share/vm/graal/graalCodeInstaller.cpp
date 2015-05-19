@@ -450,8 +450,8 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
   int stack_slots = _total_frame_size / HeapWordSize; // conversion to words
 
   GraalEnv::CodeInstallResult result;
-  if (compiled_code->is_a(HotSpotCompiledRuntimeStub::klass())) {
-    oop stubName = HotSpotCompiledRuntimeStub::stubName(compiled_code);
+  if (!compiled_code->is_a(HotSpotCompiledNmethod::klass())) {
+    oop stubName = CompilationResult::name(HotSpotCompiledCode::comp(compiled_code_obj));
     char* name = strdup(java_lang_String::as_utf8_string(stubName));
     cb = RuntimeStub::new_runtime_stub(name,
                                        &buffer,
@@ -490,7 +490,7 @@ void CodeInstaller::initialize_fields(oop compiled_code) {
     _parameter_count = method->size_of_parameters();
     TRACE_graal_1("installing code for %s", method->name_and_sig_as_C_string());
   } else {
-    assert(compiled_code->is_a(HotSpotCompiledRuntimeStub::klass()), "CCE");
+    // Must be a HotSpotCompiledRuntimeStub
     // TODO (ds) not sure if this is correct - only used in OopMap constructor for non-product builds
     _parameter_count = 0;
   }
@@ -878,7 +878,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, oop site) {
   oop hotspot_method = NULL; // JavaMethod
   oop foreign_call = NULL;
 
-  if (target_klass->is_subclass_of(SystemDictionary::HotSpotForeignCallLinkageImpl_klass())) {
+  if (target_klass->is_subclass_of(SystemDictionary::HotSpotForeignCallTarget_klass())) {
     foreign_call = target;
   } else {
     hotspot_method = target;
@@ -897,7 +897,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, oop site) {
   }
 
   if (foreign_call != NULL) {
-    jlong foreign_call_destination = HotSpotForeignCallLinkageImpl::address(foreign_call);
+    jlong foreign_call_destination = HotSpotForeignCallTarget::address(foreign_call);
     CodeInstaller::pd_relocate_ForeignCall(inst, foreign_call_destination);
   } else { // method != NULL
     assert(hotspot_method != NULL, "unexpected JavaMethod");

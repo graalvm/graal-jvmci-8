@@ -48,11 +48,11 @@ void graal_compute_offsets();
  */
 
 #define COMPILER_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, oop_field, typeArrayOop_field, objArrayOop_field, static_oop_field, static_int_field, static_boolean_field) \
-  start_class(HotSpotResolvedObjectTypeImpl)                                                                                                                       \
-    oop_field(HotSpotResolvedObjectTypeImpl, javaClass, "Ljava/lang/Class;")                                                                                       \
+  start_class(HotSpotResolvedObjectTypeImpl)                                                                                                                   \
+    oop_field(HotSpotResolvedObjectTypeImpl, javaClass, "Ljava/lang/Class;")                                                                                   \
   end_class                                                                                                                                                    \
-  start_class(HotSpotResolvedJavaMethodImpl)                                                                                                                       \
-    long_field(HotSpotResolvedJavaMethodImpl, metaspaceMethod)                                                                                                     \
+  start_class(HotSpotResolvedJavaMethodImpl)                                                                                                                   \
+    long_field(HotSpotResolvedJavaMethodImpl, metaspaceMethod)                                                                                                 \
   end_class                                                                                                                                                    \
   start_class(InstalledCode)                                                                                                                                   \
     long_field(InstalledCode, address)                                                                                                                         \
@@ -71,7 +71,7 @@ void graal_compute_offsets();
     oop_field(HotSpotCompiledCode, comp, "Lcom/oracle/graal/api/code/CompilationResult;")                                                                      \
     objArrayOop_field(HotSpotCompiledCode, sites, "[Lcom/oracle/graal/api/code/CompilationResult$Site;")                                                       \
     objArrayOop_field(HotSpotCompiledCode, exceptionHandlers, "[Lcom/oracle/graal/api/code/CompilationResult$ExceptionHandler;")                               \
-    objArrayOop_field(HotSpotCompiledCode, comments, "[Lcom/oracle/graal/hotspot/HotSpotCompiledCode$Comment;")                                                \
+    objArrayOop_field(HotSpotCompiledCode, comments, "[Lcom/oracle/graal/hotspot/jvmci/HotSpotCompiledCode$Comment;")                                          \
     typeArrayOop_field(HotSpotCompiledCode, dataSection, "[B")                                                                                                 \
     int_field(HotSpotCompiledCode, dataSectionAlignment)                                                                                                       \
     objArrayOop_field(HotSpotCompiledCode, dataSectionPatches, "[Lcom/oracle/graal/api/code/CompilationResult$DataPatch;")                                     \
@@ -81,21 +81,19 @@ void graal_compute_offsets();
     int_field(HotSpotCompiledCode_Comment, pcOffset)                                                                                                           \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledNmethod)                                                                                                                          \
-    oop_field(HotSpotCompiledNmethod, method, "Lcom/oracle/graal/hotspot/meta/HotSpotResolvedJavaMethod;")                                                     \
+    oop_field(HotSpotCompiledNmethod, method, "Lcom/oracle/graal/hotspot/jvmci/HotSpotResolvedJavaMethod;")                                                    \
     oop_field(HotSpotCompiledNmethod, installationFailureMessage, "Ljava/lang/String;")                                                                        \
     int_field(HotSpotCompiledNmethod, entryBCI)                                                                                                                \
     int_field(HotSpotCompiledNmethod, id)                                                                                                                      \
     long_field(HotSpotCompiledNmethod, graalEnv)                                                                                                               \
   end_class                                                                                                                                                    \
-  start_class(HotSpotCompiledRuntimeStub)                                                                                                                      \
-    oop_field(HotSpotCompiledRuntimeStub, stubName, "Ljava/lang/String;")                                                                                      \
-  end_class                                                                                                                                                    \
-  start_class(HotSpotForeignCallLinkageImpl)                                                                                                                   \
-    long_field(HotSpotForeignCallLinkageImpl, address)                                                                                                         \
+  start_class(HotSpotForeignCallTarget)                                                                                                                        \
+    long_field(HotSpotForeignCallTarget, address)                                                                                                              \
   end_class                                                                                                                                                    \
   start_class(CompilationResult)                                                                                                                               \
     int_field(CompilationResult, totalFrameSize)                                                                                                               \
     int_field(CompilationResult, customStackAreaOffset)                                                                                                        \
+    oop_field(CompilationResult, name, "Ljava/lang/String;")                                                                                                   \
     typeArrayOop_field(CompilationResult, targetCode, "[B")                                                                                                    \
     objArrayOop_field(CompilationResult, assumptions, "[Lcom/oracle/graal/api/meta/Assumptions$Assumption;")                                                   \
     objArrayOop_field(CompilationResult, methods, "[Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                           \
@@ -162,8 +160,8 @@ void graal_compute_offsets();
     objArrayOop_field(DebugInfo, virtualObjectMapping, "[Lcom/oracle/graal/api/meta/Value;")                                                                   \
   end_class                                                                                                                                                    \
   start_class(HotSpotReferenceMap)                                                                                                                             \
-    oop_field(HotSpotReferenceMap, registerRefMap, "Lcom/oracle/graal/hotspot/HotSpotReferenceMap$HotSpotOopMap;")                                             \
-    oop_field(HotSpotReferenceMap, frameRefMap, "Lcom/oracle/graal/hotspot/HotSpotReferenceMap$HotSpotOopMap;")                                                \
+    oop_field(HotSpotReferenceMap, registerRefMap, "Lcom/oracle/graal/hotspot/jvmci/HotSpotReferenceMap$HotSpotOopMap;")                                       \
+    oop_field(HotSpotReferenceMap, frameRefMap, "Lcom/oracle/graal/hotspot/jvmci/HotSpotReferenceMap$HotSpotOopMap;")                                          \
   end_class                                                                                                                                                    \
   start_class(RegisterSaveLayout)                                                                                                                              \
     objArrayOop_field(RegisterSaveLayout, registers, "[Lcom/oracle/graal/api/code/Register;")                                                                  \
@@ -256,7 +254,7 @@ void graal_compute_offsets();
     oop_field(SpeculationLog, lastFailed, "Ljava/lang/Object;")                                                                                                \
   end_class                                                                                                                                                    \
   start_class(HotSpotStackFrameReference)                                                                                                                      \
-    oop_field(HotSpotStackFrameReference, compilerToVM, "Lcom/oracle/graal/hotspot/bridge/CompilerToVM;")                                                      \
+    oop_field(HotSpotStackFrameReference, compilerToVM, "Lcom/oracle/graal/hotspot/jvmci/CompilerToVM;")                                                       \
     long_field(HotSpotStackFrameReference, stackPointer)                                                                                                       \
     int_field(HotSpotStackFrameReference, frameNumber)                                                                                                         \
     int_field(HotSpotStackFrameReference, bci)                                                                                                                 \

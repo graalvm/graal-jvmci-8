@@ -782,7 +782,7 @@ jint GraalRuntime::check_arguments(TRAPS) {
     // We now load and initialize HotSpotOptions which in turn
     // causes argument parsing to be redone with better error messages.
     CLEAR_PENDING_EXCEPTION;
-    TempNewSymbol name = SymbolTable::new_symbol("Lcom/oracle/graal/hotspot/HotSpotOptions;", CHECK_ABORT_(JNI_ERR));
+    TempNewSymbol name = SymbolTable::new_symbol("Lcom/oracle/graal/hotspot/jvmci/HotSpotOptions;", CHECK_ABORT_(JNI_ERR));
     instanceKlassHandle hotSpotOptionsClass = resolve_or_fail(name, CHECK_ABORT_(JNI_ERR));
 
     parse_arguments(hotSpotOptionsClass, THREAD);
