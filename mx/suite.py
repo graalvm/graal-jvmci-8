@@ -1008,7 +1008,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.truffle.api.dsl",
+        "com.oracle.truffle.dsl.processor",
         "JUNIT",
       ],
       "checkstyle" : "com.oracle.graal.graph",
