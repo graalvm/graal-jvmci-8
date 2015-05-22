@@ -129,6 +129,7 @@ extern "C" {
 #ifdef GRAAL
   void     JNICALL JVM_InitGraalClassLoader(JNIEnv *env, jclass c, jobject loader);
   void     JNICALL JVM_InitializeGraalNatives(JNIEnv *env, jclass compilerToVMClass);
+  jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
   jobject  JNICALL JVM_GetGraalRuntime(JNIEnv *env, jclass c);
   jobject  JNICALL JVM_GetGraalServiceImpls(JNIEnv *env, jclass c, jclass serviceClass);
   jobject  JNICALL JVM_CreateTruffleRuntime(JNIEnv *env, jclass c);
@@ -150,7 +151,7 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 NULL, FN_PTR(JVM_RegisterWhiteBoxMethods)     },
 #ifdef GRAAL
   { CC"Java_com_oracle_graal_hotspot_loader_Factory_init",                                                NULL, FN_PTR(JVM_InitGraalClassLoader)               },
-  { CC"Java_com_oracle_graal_api_runtime_Graal_initializeRuntime",                                        NULL, FN_PTR(JVM_GetGraalRuntime)                    },
+  { CC"Java_com_oracle_jvmci_runtime_JVMCI_initializeRuntime",                                            NULL, FN_PTR(JVM_GetJVMCIRuntime)                    },
   { CC"Java_com_oracle_graal_api_runtime_Services_getServiceImpls",                                       NULL, FN_PTR(JVM_GetGraalServiceImpls)               },
   { CC"Java_com_oracle_truffle_api_Truffle_createRuntime",                                                NULL, FN_PTR(JVM_CreateTruffleRuntime)               },
   { CC"Java_com_oracle_nfi_NativeFunctionInterfaceRuntime_createInterface",                               NULL, FN_PTR(JVM_CreateNativeFunctionInterface)      },

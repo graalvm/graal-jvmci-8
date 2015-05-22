@@ -38,8 +38,8 @@
 #include "runtime/reflection.hpp"
 #include "utilities/debug.hpp"
 
-jobject GraalRuntime::_HotSpotGraalRuntime_instance = NULL;
-bool GraalRuntime::_HotSpotGraalRuntime_initialized = false;
+	jobject GraalRuntime::_HotSpotJVMCIRuntime_instance = NULL;
+bool GraalRuntime::_HotSpotJVMCIRuntime_initialized = false;
 bool GraalRuntime::_shutdown_called = false;
 
 void GraalRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
@@ -625,10 +625,10 @@ JVM_ENTRY(void, JVM_InitGraalClassLoader(JNIEnv *env, jclass c, jobject loader_h
   SystemDictionary::initialize_wk_klasses_through(SystemDictionary::LAST_GRAAL_WKID, scan, CHECK);
 JVM_END
 
-// private static GraalRuntime Graal.initializeRuntime()
-JVM_ENTRY(jobject, JVM_GetGraalRuntime(JNIEnv *env, jclass c))
-  GraalRuntime::initialize_HotSpotGraalRuntime();
-  return GraalRuntime::get_HotSpotGraalRuntime_jobject();
+// private static JVMCIRuntime JVMCI.initializeRuntime()
+JVM_ENTRY(jobject, JVM_GetJVMCIRuntime(JNIEnv *env, jclass c))
+  GraalRuntime::initialize_HotSpotJVMCIRuntime();
+  return GraalRuntime::get_HotSpotJVMCIRuntime_jobject();
 JVM_END
 
 // private static String[] Services.getServiceImpls(Class service)
@@ -682,7 +682,7 @@ void GraalRuntime::check_generated_sources_sha1(TRAPS) {
 }
 
 Handle GraalRuntime::callInitializer(const char* className, const char* methodName, const char* returnType) {
-  guarantee(!_HotSpotGraalRuntime_initialized, "cannot reinitialize HotSpotGraalRuntime");
+  guarantee(!_HotSpotJVMCIRuntime_initialized, "cannot reinitialize HotSpotJVMCIRuntime");
   Thread* THREAD = Thread::current();
   check_generated_sources_sha1(CHECK_ABORT_(Handle()));
 
@@ -695,29 +695,29 @@ Handle GraalRuntime::callInitializer(const char* className, const char* methodNa
   return Handle((oop)result.get_jobject());
 }
 
-void GraalRuntime::initialize_HotSpotGraalRuntime() {
-  if (JNIHandles::resolve(_HotSpotGraalRuntime_instance) == NULL) {
+void GraalRuntime::initialize_HotSpotJVMCIRuntime() {
+  if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
 #ifdef ASSERT
-    // This should only be called in the context of the Graal class being initialized
+    // This should only be called in the context of the JVMCI class being initialized
     Thread* THREAD = Thread::current();
-    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/api/runtime/Graal", CHECK_ABORT);
+    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/runtime/JVMCI", CHECK_ABORT);
     instanceKlassHandle klass = InstanceKlass::cast(load_required_class(name));
     assert(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
-           "HotSpotGraalRuntime initialization should only be triggered through Graal initialization");
+           "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
 #endif
 
-    Handle result = callInitializer("com/oracle/graal/hotspot/HotSpotGraalRuntime", "runtime",
-                                    "()Lcom/oracle/graal/hotspot/HotSpotGraalRuntime;");
-    _HotSpotGraalRuntime_initialized = true;
-    _HotSpotGraalRuntime_instance = JNIHandles::make_global(result());
+    Handle result = callInitializer("com/oracle/graal/hotspot/jvmci/HotSpotJVMCIRuntime", "runtime",
+                                    "()Lcom/oracle/graal/hotspot/jvmci/HotSpotJVMCIRuntime;");
+    _HotSpotJVMCIRuntime_initialized = true;
+    _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result());
   }
 }
 
-void GraalRuntime::initialize_Graal() {
-  if (JNIHandles::resolve(_HotSpotGraalRuntime_instance) == NULL) {
-    callInitializer("com/oracle/graal/api/runtime/Graal",     "getRuntime",      "()Lcom/oracle/graal/api/runtime/GraalRuntime;");
+void GraalRuntime::initialize_JVMCI() {
+  if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
+    callInitializer("com/oracle/jvmci/runtime/JVMCI",     "getRuntime",      "()Lcom/oracle/jvmci/runtime/JVMCIRuntime;");
   }
-  assert(_HotSpotGraalRuntime_initialized == true, "what?");
+  assert(_HotSpotJVMCIRuntime_initialized == true, "what?");
 }
 
 // private static void CompilerToVMImpl.init()
@@ -1015,19 +1015,19 @@ Handle GraalRuntime::create_Service(const char* name, TRAPS) {
 }
 
 void GraalRuntime::shutdown() {
-  if (_HotSpotGraalRuntime_instance != NULL) {
+  if (_HotSpotJVMCIRuntime_instance != NULL) {
     _shutdown_called = true;
     JavaThread* THREAD = JavaThread::current();
     HandleMark hm(THREAD);
-    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/HotSpotGraalRuntime", CHECK_ABORT);
+    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/jvmci/HotSpotJVMCIRuntime", CHECK_ABORT);
     KlassHandle klass = load_required_class(name);
     JavaValue result(T_VOID);
     JavaCallArguments args;
-    args.push_oop(get_HotSpotGraalRuntime());
+    args.push_oop(get_HotSpotJVMCIRuntime());
     JavaCalls::call_special(&result, klass, vmSymbols::shutdown_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
 
-    JNIHandles::destroy_global(_HotSpotGraalRuntime_instance);
-    _HotSpotGraalRuntime_instance = NULL;
+    JNIHandles::destroy_global(_HotSpotJVMCIRuntime_instance);
+    _HotSpotJVMCIRuntime_instance = NULL;
   }
 }
 

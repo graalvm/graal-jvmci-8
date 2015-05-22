@@ -167,6 +167,17 @@ suite = {
       "javaCompliance" : "1.7",
     },
 
+    "com.oracle.jvmci.runtime" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.api.code"
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,Graal",
+    },
+
     "com.oracle.graal.api.collections" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -302,6 +313,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.jvmci.runtime",
         "com.oracle.graal.replacements",
         "com.oracle.graal.runtime",
         "com.oracle.graal.printer",

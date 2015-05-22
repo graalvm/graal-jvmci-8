@@ -369,6 +369,8 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.nodes.spi.R
 EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.phases.tiers.CompilerConfiguration
 EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.truffle.hotspot.nfi.RawNativeCallNodeFactory
 EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.truffle.OptimizedCallTargetInstrumentationFactory
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.api.runtime.GraalRuntimeFactory
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/com.oracle.graal.hotspot.jvmci.HotSpotJVMCIBackendFactory
 
 .PHONY: $(HS_ALT_MAKE)/defs.make
 

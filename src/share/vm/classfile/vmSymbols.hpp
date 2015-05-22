@@ -316,7 +316,6 @@
   GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotObjectConstantImpl,     "com/oracle/graal/hotspot/jvmci/HotSpotObjectConstantImpl"))            \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotMetaspaceConstantImpl,  "com/oracle/graal/hotspot/jvmci/HotSpotMetaspaceConstantImpl"))         \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotStackFrameReference,    "com/oracle/graal/hotspot/jvmci/HotSpotStackFrameReference"))           \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_HotSpotGraalRuntime,             "com/oracle/graal/hotspot/HotSpotGraalRuntime"))                  \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_CompilationTask,                 "com/oracle/graal/hotspot/CompilationTask"))                      \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_JavaConstant,                   "com/oracle/graal/api/meta/JavaConstant"))                        \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_PrimitiveConstant,              "com/oracle/graal/api/meta/PrimitiveConstant"))                   \

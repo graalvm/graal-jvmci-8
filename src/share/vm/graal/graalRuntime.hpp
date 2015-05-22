@@ -31,8 +31,8 @@
 class GraalRuntime: public CHeapObj<mtCompiler> {
  private:
 
-  static jobject _HotSpotGraalRuntime_instance;
-  static bool _HotSpotGraalRuntime_initialized;
+  static jobject _HotSpotJVMCIRuntime_instance;
+  static bool _HotSpotJVMCIRuntime_initialized;
   static const char* _generated_sources_sha1;
 
   static bool _shutdown_called;
@@ -133,33 +133,33 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
 
   static void initialize_natives(JNIEnv *env, jclass c2vmClass);
 
-  static bool is_HotSpotGraalRuntime_initialized() { return _HotSpotGraalRuntime_initialized; }
+  static bool is_HotSpotJVMCIRuntime_initialized() { return _HotSpotJVMCIRuntime_initialized; }
 
   /**
-   * Gets the singleton HotSpotGraalRuntime instance, initializing it if necessary
+   * Gets the singleton HotSpotJVMCIRuntime instance, initializing it if necessary
    */
-  static Handle get_HotSpotGraalRuntime() {
-    initialize_Graal();
-    return Handle(JNIHandles::resolve_non_null(_HotSpotGraalRuntime_instance));
+  static Handle get_HotSpotJVMCIRuntime() {
+    initialize_JVMCI();
+    return Handle(JNIHandles::resolve_non_null(_HotSpotJVMCIRuntime_instance));
   }
 
-  static jobject get_HotSpotGraalRuntime_jobject() {
-    initialize_Graal();
-    assert(_HotSpotGraalRuntime_initialized, "must be");
-    return _HotSpotGraalRuntime_instance;
+  static jobject get_HotSpotJVMCIRuntime_jobject() {
+    initialize_JVMCI();
+    assert(_HotSpotJVMCIRuntime_initialized, "must be");
+    return _HotSpotJVMCIRuntime_instance;
   }
 
   static Handle callInitializer(const char* className, const char* methodName, const char* returnType);
 
   /**
-   * Trigger initialization of HotSpotGraalRuntime through Graal.runtime()
+   * Trigger initialization of HotSpotJVMCIRuntime through JVMCI.getRuntime()
    */
-  static void initialize_Graal();
+  static void initialize_JVMCI();
 
   /**
-   * Explicitly initialize HotSpotGraalRuntime itself
+   * Explicitly initialize HotSpotJVMCIRuntime itself
    */
-  static void initialize_HotSpotGraalRuntime();
+  static void initialize_HotSpotJVMCIRuntime();
 
   static void shutdown();
 

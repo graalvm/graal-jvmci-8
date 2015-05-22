@@ -1340,9 +1340,9 @@ void CompileBroker::compile_method_base(methodHandle method,
         }
       }
 
-      // Don't allow blocking compilation requests to Graal
-      // if Graal itself is not yet initialized
-      if (!GraalRuntime::is_HotSpotGraalRuntime_initialized() && compiler(comp_level)->is_graal()) {
+      // Don't allow blocking compilation requests to JVMCI
+      // if JVMCI itself is not yet initialized
+      if (!GraalRuntime::is_HotSpotJVMCIRuntime_initialized() && compiler(comp_level)->is_graal()) {
         blocking = false;
       }
 

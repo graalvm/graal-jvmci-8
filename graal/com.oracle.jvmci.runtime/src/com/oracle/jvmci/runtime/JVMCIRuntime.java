@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,8 +20,24 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-/**
- * Logging framework for the HotSpot CRI implementation.
- */
-package com.oracle.graal.hotspot.logging;
+package com.oracle.jvmci.runtime;
 
+import com.oracle.graal.api.code.*;
+
+/**
+ * Interface for accessing the {@link JVMCI} APIs supported by the runtime.
+ */
+public interface JVMCIRuntime {
+
+    /**
+     * Gets the host JVMCI backend.
+     */
+    JVMCIBackend getHostJVMCIBackend();
+
+    /**
+     * Gets the backend for a given architecture.
+     *
+     * @param arch a specific architecture class
+     */
+    <T extends Architecture> JVMCIBackend getJVMCIBackend(Class<T> arch);
+}
