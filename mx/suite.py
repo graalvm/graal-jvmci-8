@@ -109,36 +109,6 @@ suite = {
       "sha1" : "59b64c974662b5cf9dbd3cf9045d293853dd7a51",
     },
 
-    "OKRA" : {
-      "path" : "lib/okra-1.10.jar",
-      "urls" : [
-        "http://lafo.ssw.uni-linz.ac.at/graal-external-deps/okra-1.10.jar",
-        "http://cr.openjdk.java.net/~tdeneau/okra-1.10.jar",
-      ],
-      "sha1" : "96eb3c0ec808ed944ba88d1eb9311058fe0f3d1e",
-      "sourcePath" : "lib/okra-1.10-src.jar",
-      "sourceUrls" : [
-        "http://lafo.ssw.uni-linz.ac.at/graal-external-deps/okra-1.10-src.jar",
-        "http://cr.openjdk.java.net/~tdeneau/okra-1.10-src.jar",
-      ],
-      "sourceSha1" : "75751bb148fcebaba78ff590f883a114b2b09176",
-    },
-
-    "OKRA_WITH_SIM" : {
-      "path" : "lib/okra-1.10-with-sim.jar",
-      "urls" : [
-        "http://lafo.ssw.uni-linz.ac.at/graal-external-deps/okra-1.10-with-sim.jar",
-        "http://cr.openjdk.java.net/~tdeneau/okra-1.10-with-sim.jar",
-      ],
-      "sha1" : "7b8db879f1dbcf571290add78d9af24e15a2a50d",
-      "sourcePath" : "lib/okra-1.10-with-sim-src.jar",
-      "sourceSha1" : "7eefd94f16a3e3fd3b8f470cf91e265c6f5e7767",
-      "sourceUrls" : [
-        "http://lafo.ssw.uni-linz.ac.at/graal-external-deps/okra-1.10-with-sim-src.jar",
-        "http://cr.openjdk.java.net/~tdeneau/okra-1.10-with-sim-src.jar",
-      ],
-    },
-
     "JAVA_ALLOCATION_INSTRUMENTER" : {
       "path" : "lib/java-allocation-instrumenter.jar",
       "sourcePath" : "lib/java-allocation-instrumenter.jar",
