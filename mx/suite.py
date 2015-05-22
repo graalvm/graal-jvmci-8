@@ -782,7 +782,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.amd64",
-        "com.oracle.graal.compiler.test",
+        "com.oracle.graal.lir.jtt",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -1008,7 +1008,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.truffle.api.dsl",
+        "com.oracle.truffle.dsl.processor",
         "JUNIT",
       ],
       "checkstyle" : "com.oracle.graal.graph",
