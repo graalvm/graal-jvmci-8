@@ -2318,15 +2318,8 @@ class JavaConfig:
 
     def _init_classpaths(self):
         if not self._classpaths_initialized:
-            myDir = dirname(__file__)
-            outDir = join(dirname(__file__), '.jdk' + str(self.version))
-            if not exists(outDir):
-                os.makedirs(outDir)
-            javaSource = join(myDir, 'ClasspathDump.java')
-            javaClass = join(outDir, 'ClasspathDump.class')
-            if not exists(javaClass) or getmtime(javaClass) < getmtime(javaSource):
-                subprocess.check_call([self.javac, '-d', _cygpathU2W(outDir), _cygpathU2W(javaSource)], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-            self._bootclasspath, self._extdirs, self._endorseddirs = [x if x != 'null' else None for x in subprocess.check_output([self.java, '-cp', _cygpathU2W(outDir), 'ClasspathDump'], stderr=subprocess.PIPE).split('|')]
+            _, binDir = _compile_mx_class('ClasspathDump', jdk=self)
+            self._bootclasspath, self._extdirs, self._endorseddirs = [x if x != 'null' else None for x in subprocess.check_output([self.java, '-cp', _cygpathU2W(binDir), 'ClasspathDump'], stderr=subprocess.PIPE).split('|')]
             if self.javaCompliance <= JavaCompliance('1.8'):
                 # All 3 system properties accessed by ClasspathDump are expected to exist
                 if not self._bootclasspath or not self._extdirs or not self._endorseddirs:
@@ -2537,15 +2530,12 @@ def download(path, urls, verbose=False):
 
     assert not path.endswith(os.sep)
 
-    myDir = dirname(__file__)
-    javaSource = join(myDir, 'URLConnectionDownload.java')
-    javaClass = join(myDir, 'URLConnectionDownload.class')
-    if not exists(javaClass) or getmtime(javaClass) < getmtime(javaSource):
-        subprocess.check_call([java().javac, '-d', _cygpathU2W(myDir), _cygpathU2W(javaSource)])
+    _, binDir = _compile_mx_class('URLConnectionDownload')
+
     verbose = []
     if sys.stderr.isatty():
         verbose.append("-v")
-    if run([java().java, '-cp', _cygpathU2W(myDir), 'URLConnectionDownload', _cygpathU2W(path)] + verbose + urls, nonZeroIsFatal=False) == 0:
+    if run([java().java, '-cp', _cygpathU2W(binDir), 'URLConnectionDownload', _cygpathU2W(path)] + verbose + urls, nonZeroIsFatal=False) == 0:
         return
 
     abort('Could not download to ' + path + ' from any of the following URLs:\n\n    ' +
@@ -5442,6 +5432,65 @@ def show_suites(args):
         _show_section('projects', s.projects)
         _show_section('distributions', s.dists)
 
+def _compile_mx_class(javaClassName, classpath=None, jdk=None):
+    myDir = dirname(__file__)
+    binDir = join(myDir, 'bin' if not jdk else '.jdk' + str(jdk.version))
+    javaSource = join(myDir, javaClassName + '.java')
+    javaClass = join(binDir, javaClassName + '.class')
+    if not exists(javaClass) or getmtime(javaClass) < getmtime(javaSource):
+        if not exists(binDir):
+            os.mkdir(binDir)
+        javac = jdk.javac if jdk else java().javac
+        cmd = [javac, '-d', _cygpathU2W(binDir)]
+        if classpath:
+            cmd += ['-cp', _separatedCygpathU2W(binDir + os.pathsep + classpath)]
+        cmd += [_cygpathU2W(javaSource)]
+        try:
+            subprocess.check_call(cmd)
+        except subprocess.CalledProcessError:
+            abort('failed to compile:' + javaSource)
+
+    return (myDir, binDir)
+
+def checkcopyrights(args):
+    '''run copyright check on the sources'''
+    class CP(ArgumentParser):
+        def format_help(self):
+            return ArgumentParser.format_help(self) + self._get_program_help()
+
+        def _get_program_help(self):
+            help_output = subprocess.check_output([java().java, '-cp', _cygpathU2W(binDir), 'CheckCopyright', '--help'])
+            return '\nother argumemnts preceded with --\n' +  help_output
+
+    myDir, binDir = _compile_mx_class('CheckCopyright')
+
+    parser = CP(prog='mx checkcopyrights')
+
+    parser.add_argument('--primary', action='store_true', help='limit checks to primary suite')
+    parser.add_argument('remainder', nargs=REMAINDER, metavar='...')
+    args = parser.parse_args(args)
+    remove_doubledash(args.remainder)
+
+
+    # ensure compiled form of code is up to date
+
+    result = 0
+    # copyright checking is suite specific as each suite may have different overrides
+    for s in suites(True):
+        if args.primary and not s.primary:
+            continue
+        custom_copyrights = _cygpathU2W(join(s.mxDir, 'copyrights'))
+        custom_args = []
+        if exists(custom_copyrights):
+            custom_args = ['--custom-copyright-dir', custom_copyrights]
+        rc = run([java().java, '-cp', _cygpathU2W(binDir), 'CheckCopyright', '--copyright-dir', _cygpathU2W(myDir)] + custom_args + args.remainder, cwd=s.dir, nonZeroIsFatal=False)
+        result = result if rc == 0 else rc
+    return result
+
+def remove_doubledash(args):
+    if '--' in args:
+        args.remove('--')
+
 def ask_yes_no(question, default=None):
     """"""
     assert not default or default == 'y' or default == 'n'
@@ -5485,6 +5534,7 @@ _commands = {
     'build': [build, '[options]'],
     'checkstyle': [checkstyle, ''],
     'canonicalizeprojects': [canonicalizeprojects, ''],
+    'checkcopyrights': [checkcopyrights, '[options]'],
     'clean': [clean, ''],
     'eclipseinit': [eclipseinit, ''],
     'eclipseformat': [eclipseformat, ''],
