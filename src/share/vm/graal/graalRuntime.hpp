@@ -231,10 +231,10 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
   static jint check_arguments(TRAPS);
 
   /**
-   * Parses the Graal specific VM options that were presented by the launcher and sets
+   * Parses the JVMCI specific VM options that were presented by the launcher and sets
    * the relevants Java fields.
    */
-  static bool parse_arguments(KlassHandle hotSpotOptionsClass, TRAPS);
+  static void parse_arguments(KlassHandle hotSpotOptionsClass, TRAPS);
 
   static BasicType kindToBasicType(jchar ch);
 
