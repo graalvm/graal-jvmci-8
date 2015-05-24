@@ -725,11 +725,13 @@ JVM_ENTRY(void, JVM_InitializeGraalNatives(JNIEnv *env, jclass c2vmClass))
   GraalRuntime::initialize_natives(env, c2vmClass);
 JVM_END
 
-// private static void HotSpotOptions.parseVMOptions()
-JVM_ENTRY(void, JVM_ParseGraalOptions(JNIEnv *env, jclass c))
+// private static OptionsParsed[] HotSpotOptions.parseVMOptions(Class)
+JVM_ENTRY(jobject, JVM_ParseGraalOptions(JNIEnv *env, jclass c, jobject optionsParsedClass_obj))
   HandleMark hm;
   KlassHandle hotSpotOptionsClass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(c)));
-  GraalRuntime::parse_arguments(hotSpotOptionsClass, CHECK);
+  GraalRuntime::parse_arguments(hotSpotOptionsClass, CHECK_NULL);
+  KlassHandle optionsParsedClass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(optionsParsedClass_obj)));
+  return JNIHandles::make_local(THREAD, GraalRuntime::get_service_impls(optionsParsedClass, THREAD)());
 JVM_END
 
 
