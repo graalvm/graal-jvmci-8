@@ -620,7 +620,7 @@ def _classifyGraalServices(classNames, graalJars):
                         classification[className] = False
                         break
                     superInterfaces = afterName[len(' extends '):-len(' {')].split(',')
-                    if 'com.oracle.graal.api.runtime.Service' in superInterfaces:
+                    if 'com.oracle.jvmci.runtime.Service' in superInterfaces:
                         classification[className] = True
                         break
                     maybe = [_eraseGenerics(superInterface) for superInterface in superInterfaces]
@@ -632,11 +632,11 @@ def _classifyGraalServices(classNames, graalJars):
     return classification
 
 def _extractMaybes(classification):
-    maybes = []
+    maybes = set()
     for v in classification.values():
         if isinstance(v, list):
-            maybes.extend(v)
-    return maybes
+            maybes.update(v)
+    return list(maybes)
 
 def _mergeClassification(classification, newClassification):
     for className, value in classification.items():
