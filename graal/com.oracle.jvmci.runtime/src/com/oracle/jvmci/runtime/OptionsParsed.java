@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.api.runtime;
+package com.oracle.jvmci.runtime;
 
 /**
  * Extension for doing post-processing once all JVMCI options have been parsed and initialized.

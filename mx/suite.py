@@ -208,6 +208,9 @@ suite = {
     "com.oracle.graal.api.runtime" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.runtime",
+      ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "API,Graal",
@@ -268,7 +271,7 @@ suite = {
     "com.oracle.graal.service.processor" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.api.runtime"],
+      "dependencies" : ["com.oracle.jvmci.runtime"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Codegen,HotSpot",
@@ -313,10 +316,9 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.runtime",
         "com.oracle.graal.replacements",
-        "com.oracle.graal.runtime",
         "com.oracle.graal.printer",
+        "com.oracle.graal.runtime",
         "com.oracle.graal.hotspotvmconfig",
       ],
       "checkstyle" : "com.oracle.graal.graph",
