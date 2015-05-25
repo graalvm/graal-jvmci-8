@@ -2211,8 +2211,8 @@ private:
   WouldProfile      _would_profile;
 
 #ifdef GRAAL
-  // Support for HotSpotMethodData.setCompiledGraphSize(int)
-  int               _graal_node_count;
+  // Support for HotSpotMethodData.setCompiledIRSize(int)
+  int               _jvmci_ir_size;
 #endif
 
   // Size of _data array in bytes.  (Excludes header and extra_data fields.)

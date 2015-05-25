@@ -1237,7 +1237,7 @@ void MethodData::init() {
   _would_profile = unknown;
 
 #ifdef GRAAL
-  _graal_node_count = 0;
+  _jvmci_ir_size = 0;
 #endif
 
 #if INCLUDE_RTM_OPT

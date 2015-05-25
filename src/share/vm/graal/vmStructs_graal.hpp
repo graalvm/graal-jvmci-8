@@ -34,7 +34,7 @@
   nonstatic_field(ThreadShadow,  _pending_deoptimization, int)                \
   nonstatic_field(ThreadShadow,  _pending_failed_speculation, oop)            \
   nonstatic_field(ThreadShadow,  _pending_transfer_to_interpreter, bool)      \
-  nonstatic_field(MethodData,    _graal_node_count, int)                      \
+  nonstatic_field(MethodData,    _jvmci_ir_size, int)                         \
   nonstatic_field(GraalEnv,      _task, CompileTask*)                         \
   nonstatic_field(GraalEnv,      _jvmti_can_hotswap_or_post_breakpoint, bool) \
 
