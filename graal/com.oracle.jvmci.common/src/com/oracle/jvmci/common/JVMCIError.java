@@ -20,40 +20,40 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.compiler.common;
+package com.oracle.jvmci.common;
 
 import java.util.*;
 
 /**
- * This error represents a conditions that should never occur during normal operation.
+ * Indicates a condition in JVMCI related code that should never occur during normal operation.
  */
-public class GraalInternalError extends Error {
+public class JVMCIError extends Error {
 
     private static final long serialVersionUID = 531632331813456233L;
     private final ArrayList<String> context = new ArrayList<>();
 
     public static RuntimeException unimplemented() {
-        throw new GraalInternalError("unimplemented");
+        throw new JVMCIError("unimplemented");
     }
 
     public static RuntimeException unimplemented(String msg) {
-        throw new GraalInternalError("unimplemented: %s", msg);
+        throw new JVMCIError("unimplemented: %s", msg);
     }
 
     public static RuntimeException shouldNotReachHere() {
-        throw new GraalInternalError("should not reach here");
+        throw new JVMCIError("should not reach here");
     }
 
     public static RuntimeException shouldNotReachHere(String msg) {
-        throw new GraalInternalError("should not reach here: %s", msg);
+        throw new JVMCIError("should not reach here: %s", msg);
     }
 
     public static RuntimeException shouldNotReachHere(Throwable cause) {
-        throw new GraalInternalError(cause);
+        throw new JVMCIError(cause);
     }
 
     /**
-     * Checks a given condition and throws a {@link GraalInternalError} if it is false. Guarantees
+     * Checks a given condition and throws a {@link JVMCIError} if it is false. Guarantees
      * are stronger than assertions in that they are always checked. Error messages for guarantee
      * violations should clearly indicate the nature of the problem as well as a suggested solution
      * if possible.
@@ -65,12 +65,12 @@ public class GraalInternalError extends Error {
      */
     public static void guarantee(boolean condition, String msg, Object... args) {
         if (!condition) {
-            throw new GraalInternalError("failed guarantee: " + msg, args);
+            throw new JVMCIError("failed guarantee: " + msg, args);
         }
     }
 
     /**
-     * This constructor creates a {@link GraalInternalError} with a message assembled via
+     * This constructor creates a {@link JVMCIError} with a message assembled via
      * {@link String#format(String, Object...)}. It always uses the ENGLISH locale in order to
      * always generate the same output.
      *
@@ -78,26 +78,26 @@ public class GraalInternalError extends Error {
      * @param args parameters to String.format - parameters that implement {@link Iterable} will be
      *            expanded into a [x, x, ...] representation.
      */
-    public GraalInternalError(String msg, Object... args) {
+    public JVMCIError(String msg, Object... args) {
         super(format(msg, args));
     }
 
     /**
-     * This constructor creates a {@link GraalInternalError} for a given causing Throwable instance.
+     * This constructor creates a {@link JVMCIError} for a given causing Throwable instance.
      *
      * @param cause the original exception that contains additional information on this error
      */
-    public GraalInternalError(Throwable cause) {
+    public JVMCIError(Throwable cause) {
         super(cause);
     }
 
     /**
-     * This constructor creates a {@link GraalInternalError} from a given GraalInternalError
-     * instance.
+     * This constructor creates a {@link JVMCIError} and adds all the
+     * {@linkplain #addContext(String) context} of another {@link JVMCIError}.
      *
-     * @param e the original GraalInternalError
+     * @param e the original {@link JVMCIError}
      */
-    public GraalInternalError(GraalInternalError e) {
+    public JVMCIError(JVMCIError e) {
         super(e);
         context.addAll(e.context);
     }
@@ -128,13 +128,12 @@ public class GraalInternalError extends Error {
         return String.format(Locale.ENGLISH, msg, args);
     }
 
-    public GraalInternalError addContext(String newContext) {
+    public JVMCIError addContext(String newContext) {
         this.context.add(newContext);
         return this;
     }
 
-    public GraalInternalError addContext(String name, Object obj) {
+    public JVMCIError addContext(String name, Object obj) {
         return addContext(format("%s: %s", name, obj));
     }
-
 }
