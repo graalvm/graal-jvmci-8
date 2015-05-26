@@ -37,6 +37,7 @@ import sanitycheck
 import itertools
 import json, textwrap
 import fnmatch
+import mx_graal_makefile
 
 # This works because when mx loads this file, it makes sure __file__ gets an absolute path
 _graal_home = dirname(dirname(__file__))
@@ -2656,6 +2657,7 @@ def mx_init(suite):
         'longtests' : [longtests, ''],
         'sl' : [sl, '[SL args|@VM options]'],
         'jol' : [jol, ''],
+        'makefile' : [mx_graal_makefile.build_makefile, 'build makefiles for JDK build'],
     }
 
     mx.add_argument('--jacoco', help='instruments com.oracle.* classes using JaCoCo', default='off', choices=['off', 'on', 'append'])
