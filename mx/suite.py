@@ -155,7 +155,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.api.code"
+        "com.oracle.jvmci.code"
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -251,7 +251,7 @@ suite = {
       "workingSets" : "API,Graal,Test",
     },
 
-    "com.oracle.graal.api.meta" : {
+    "com.oracle.jvmci.meta" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
@@ -259,10 +259,10 @@ suite = {
       "workingSets" : "API,Graal",
     },
 
-    "com.oracle.graal.api.code" : {
+    "com.oracle.jvmci.code" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.api.meta"],
+      "dependencies" : ["com.oracle.jvmci.meta"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "API,Graal",
@@ -271,7 +271,7 @@ suite = {
     "com.oracle.graal.api.replacements" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.api.meta"],
+      "dependencies" : ["com.oracle.jvmci.meta"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "API,Graal,Replacements",
@@ -289,7 +289,7 @@ suite = {
     "com.oracle.graal.amd64" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.api.code"],
+      "dependencies" : ["com.oracle.jvmci.code"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,AMD64",
@@ -298,7 +298,7 @@ suite = {
     "com.oracle.graal.sparc" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.api.code"],
+      "dependencies" : ["com.oracle.jvmci.code"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,SPARC",
@@ -862,7 +862,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.jvmci.common",
-        "com.oracle.graal.api.code",
+        "com.oracle.jvmci.code",
         "com.oracle.jvmci.options",
         "com.oracle.jvmci.debug",
       ],
@@ -927,7 +927,7 @@ suite = {
     "com.oracle.graal.asm" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.api.code"],
+      "dependencies" : ["com.oracle.jvmci.code"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Assembler",

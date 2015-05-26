@@ -25,7 +25,7 @@ package com.oracle.jvmci.hotspot;
 import static com.oracle.jvmci.common.UnsafeAccess.*;
 import sun.misc.*;
 
-import com.oracle.graal.api.code.*;
+import com.oracle.jvmci.code.*;
 
 import edu.umd.cs.findbugs.annotations.*;
 

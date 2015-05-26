@@ -22,7 +22,7 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.meta.*;
 
 /**
  * A implementation of {@link JavaField} for an unresolved field.

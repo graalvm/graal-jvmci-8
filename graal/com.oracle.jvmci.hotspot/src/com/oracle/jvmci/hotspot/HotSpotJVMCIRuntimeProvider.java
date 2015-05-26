@@ -24,8 +24,8 @@ package com.oracle.jvmci.hotspot;
 
 import sun.misc.*;
 
-import com.oracle.graal.api.meta.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.meta.*;
 import com.oracle.jvmci.runtime.*;
 
 //JaCoCo Exclude

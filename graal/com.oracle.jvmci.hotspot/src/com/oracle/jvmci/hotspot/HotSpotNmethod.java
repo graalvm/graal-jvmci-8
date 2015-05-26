@@ -24,8 +24,9 @@ package com.oracle.jvmci.hotspot;
 
 import static com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 
-import com.oracle.graal.api.code.*;
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.code.*;
+import com.oracle.jvmci.meta.*;
+
 
 /**
  * Implementation of {@link InstalledCode} for code installed as an nmethod. The nmethod stores a

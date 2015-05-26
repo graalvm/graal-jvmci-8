@@ -27,8 +27,8 @@ import static com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 
 import java.lang.invoke.*;
 
-import com.oracle.graal.api.meta.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Implementation of {@link ConstantPool} for HotSpot.

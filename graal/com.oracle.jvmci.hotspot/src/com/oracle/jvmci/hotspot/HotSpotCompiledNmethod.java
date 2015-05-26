@@ -22,7 +22,7 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import com.oracle.graal.api.code.*;
+import com.oracle.jvmci.code.*;
 
 import edu.umd.cs.findbugs.annotations.*;
 

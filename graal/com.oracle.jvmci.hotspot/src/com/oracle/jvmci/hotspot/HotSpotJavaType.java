@@ -22,7 +22,7 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Common base class for all HotSpot {@link JavaType} implementations.

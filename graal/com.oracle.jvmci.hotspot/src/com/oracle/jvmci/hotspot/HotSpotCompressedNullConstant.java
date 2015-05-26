@@ -22,7 +22,7 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.meta.*;
 
 /**
  * The compressed representation of the {@link JavaConstant#NULL_POINTER null constant}.

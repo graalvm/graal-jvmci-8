@@ -25,7 +25,8 @@ package com.oracle.jvmci.hotspot;
 
 import static com.oracle.jvmci.hotspot.InitTimer.*;
 
-import com.oracle.graal.api.code.*;
+import com.oracle.jvmci.code.*;
+
 
 /**
  * Entries into the HotSpot VM from Java code.

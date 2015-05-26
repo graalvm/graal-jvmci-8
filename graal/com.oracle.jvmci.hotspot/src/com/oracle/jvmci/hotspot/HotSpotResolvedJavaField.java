@@ -22,7 +22,7 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Represents a field in a HotSpot type.

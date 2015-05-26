@@ -26,8 +26,8 @@ import static com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 import static com.oracle.jvmci.hotspot.HotSpotResolvedJavaType.*;
 import static com.oracle.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
 
-import com.oracle.graal.api.meta.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.meta.*;
 
 public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProvider, HotSpotProxified {
 

@@ -27,19 +27,19 @@ import static com.oracle.jvmci.hotspot.HotSpotCompressedNullConstant.*;
 import java.lang.reflect.*;
 import java.util.*;
 
-import com.oracle.graal.api.code.*;
-import com.oracle.graal.api.code.CodeUtil.DefaultRefMapFormatter;
-import com.oracle.graal.api.code.CodeUtil.RefMapFormatter;
-import com.oracle.graal.api.code.CompilationResult.Call;
-import com.oracle.graal.api.code.CompilationResult.ConstantReference;
-import com.oracle.graal.api.code.CompilationResult.DataPatch;
-import com.oracle.graal.api.code.CompilationResult.Infopoint;
-import com.oracle.graal.api.code.CompilationResult.Mark;
-import com.oracle.graal.api.code.DataSection.Data;
-import com.oracle.graal.api.code.DataSection.DataBuilder;
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.code.*;
+import com.oracle.jvmci.code.CodeUtil.DefaultRefMapFormatter;
+import com.oracle.jvmci.code.CodeUtil.RefMapFormatter;
+import com.oracle.jvmci.code.CompilationResult.Call;
+import com.oracle.jvmci.code.CompilationResult.ConstantReference;
+import com.oracle.jvmci.code.CompilationResult.DataPatch;
+import com.oracle.jvmci.code.CompilationResult.Infopoint;
+import com.oracle.jvmci.code.CompilationResult.Mark;
+import com.oracle.jvmci.code.DataSection.Data;
+import com.oracle.jvmci.code.DataSection.DataBuilder;
 import com.oracle.jvmci.common.*;
 import com.oracle.jvmci.debug.*;
+import com.oracle.jvmci.meta.*;
 
 /**
  * HotSpot implementation of {@link CodeCacheProvider}.

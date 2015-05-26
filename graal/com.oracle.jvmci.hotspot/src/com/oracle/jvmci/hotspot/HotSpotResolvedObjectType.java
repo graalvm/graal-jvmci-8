@@ -22,8 +22,8 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import com.oracle.graal.api.meta.Assumptions.AssumptionResult;
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.meta.Assumptions.AssumptionResult;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Implementation of {@link JavaType} for resolved non-primitive HotSpot classes.

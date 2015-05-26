@@ -27,15 +27,15 @@ import java.util.*;
 import java.util.stream.*;
 import java.util.stream.Stream.Builder;
 
-import com.oracle.graal.api.code.*;
-import com.oracle.graal.api.code.CompilationResult.CodeAnnotation;
-import com.oracle.graal.api.code.CompilationResult.CodeComment;
-import com.oracle.graal.api.code.CompilationResult.DataPatch;
-import com.oracle.graal.api.code.CompilationResult.ExceptionHandler;
-import com.oracle.graal.api.code.CompilationResult.Infopoint;
-import com.oracle.graal.api.code.CompilationResult.JumpTable;
-import com.oracle.graal.api.code.CompilationResult.Mark;
-import com.oracle.graal.api.code.CompilationResult.Site;
+import com.oracle.jvmci.code.*;
+import com.oracle.jvmci.code.CompilationResult.CodeAnnotation;
+import com.oracle.jvmci.code.CompilationResult.CodeComment;
+import com.oracle.jvmci.code.CompilationResult.DataPatch;
+import com.oracle.jvmci.code.CompilationResult.ExceptionHandler;
+import com.oracle.jvmci.code.CompilationResult.Infopoint;
+import com.oracle.jvmci.code.CompilationResult.JumpTable;
+import com.oracle.jvmci.code.CompilationResult.Mark;
+import com.oracle.jvmci.code.CompilationResult.Site;
 
 /**
  * A {@link CompilationResult} with additional HotSpot-specific information required for installing

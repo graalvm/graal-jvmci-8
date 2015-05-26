@@ -22,8 +22,8 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import com.oracle.graal.api.code.*;
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.code.*;
+import com.oracle.jvmci.meta.*;
 
 public class HotSpotSpeculationLog extends SpeculationLog {
 

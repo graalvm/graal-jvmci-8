@@ -215,43 +215,43 @@ class Ticks;
   GRAAL_ONLY(do_klass(HotSpotMetaspaceConstantImpl_klass,    com_oracle_jvmci_hotspot_HotSpotMetaspaceConstantImpl,        Graal)) \
   GRAAL_ONLY(do_klass(HotSpotStackFrameReference_klass,      com_oracle_jvmci_hotspot_HotSpotStackFrameReference,          Graal)) \
   GRAAL_ONLY(do_klass(CompilationTask_klass,                 com_oracle_graal_hotspot_CompilationTask,                     Graal)) \
-  GRAAL_ONLY(do_klass(Assumptions_ConcreteMethod_klass,      com_oracle_graal_api_meta_Assumptions_ConcreteMethod,         Graal)) \
-  GRAAL_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, com_oracle_graal_api_meta_Assumptions_NoFinalizableSubclass, Graal))\
-  GRAAL_ONLY(do_klass(Assumptions_ConcreteSubtype_klass,     com_oracle_graal_api_meta_Assumptions_ConcreteSubtype,        Graal)) \
-  GRAAL_ONLY(do_klass(Assumptions_LeafType_klass,            com_oracle_graal_api_meta_Assumptions_LeafType,               Graal)) \
-  GRAAL_ONLY(do_klass(Assumptions_CallSiteTargetValue_klass, com_oracle_graal_api_meta_Assumptions_CallSiteTargetValue,    Graal)) \
-  GRAAL_ONLY(do_klass(BytecodePosition_klass,                com_oracle_graal_api_code_BytecodePosition,                   Graal)) \
-  GRAAL_ONLY(do_klass(DebugInfo_klass,                       com_oracle_graal_api_code_DebugInfo,                          Graal)) \
-  GRAAL_ONLY(do_klass(RegisterSaveLayout_klass,              com_oracle_graal_api_code_RegisterSaveLayout,                 Graal)) \
-  GRAAL_ONLY(do_klass(BytecodeFrame_klass,                   com_oracle_graal_api_code_BytecodeFrame,                      Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_klass,               com_oracle_graal_api_code_CompilationResult,                  Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_Call_klass,          com_oracle_graal_api_code_CompilationResult_Call,             Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_ConstantReference_klass, com_oracle_graal_api_code_CompilationResult_ConstantReference, Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_DataPatch_klass,     com_oracle_graal_api_code_CompilationResult_DataPatch,        Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_DataSectionReference_klass, com_oracle_graal_api_code_CompilationResult_DataSectionReference, Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_ExceptionHandler_klass, com_oracle_graal_api_code_CompilationResult_ExceptionHandler, Graal))\
-  GRAAL_ONLY(do_klass(CompilationResult_Mark_klass,          com_oracle_graal_api_code_CompilationResult_Mark,             Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_Infopoint_klass,     com_oracle_graal_api_code_CompilationResult_Infopoint,        Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_Site_klass,          com_oracle_graal_api_code_CompilationResult_Site,             Graal)) \
-  GRAAL_ONLY(do_klass(InfopointReason_klass,                 com_oracle_graal_api_code_InfopointReason,                    Graal)) \
-  GRAAL_ONLY(do_klass(InstalledCode_klass,                   com_oracle_graal_api_code_InstalledCode,                      Graal)) \
-  GRAAL_ONLY(do_klass(code_Register_klass,                   com_oracle_graal_api_code_Register,                           Graal)) \
-  GRAAL_ONLY(do_klass(RegisterValue_klass,                   com_oracle_graal_api_code_RegisterValue,                      Graal)) \
-  GRAAL_ONLY(do_klass(RegisterCategory_klass,                com_oracle_graal_api_code_Register_RegisterCategory,          Graal)) \
-  GRAAL_ONLY(do_klass(StackSlot_klass,                       com_oracle_graal_api_code_StackSlot,                          Graal)) \
-  GRAAL_ONLY(do_klass(StackLockValue_klass,                  com_oracle_graal_api_code_StackLockValue,                     Graal)) \
-  GRAAL_ONLY(do_klass(VirtualObject_klass,                   com_oracle_graal_api_code_VirtualObject,                      Graal)) \
-  GRAAL_ONLY(do_klass(SpeculationLog_klass,                  com_oracle_graal_api_code_SpeculationLog,                     Graal)) \
-  GRAAL_ONLY(do_klass(JavaConstant_klass,                    com_oracle_graal_api_meta_JavaConstant,                       Graal)) \
-  GRAAL_ONLY(do_klass(PrimitiveConstant_klass,               com_oracle_graal_api_meta_PrimitiveConstant,                  Graal)) \
-  GRAAL_ONLY(do_klass(RawConstant_klass,                     com_oracle_graal_api_meta_RawConstant,                        Graal)) \
-  GRAAL_ONLY(do_klass(NullConstant_klass,                    com_oracle_graal_api_meta_NullConstant,                       Graal)) \
-  GRAAL_ONLY(do_klass(ExceptionHandler_klass,                com_oracle_graal_api_meta_ExceptionHandler,                   Graal)) \
-  GRAAL_ONLY(do_klass(Kind_klass,                            com_oracle_graal_api_meta_Kind,                               Graal)) \
-  GRAAL_ONLY(do_klass(LIRKind_klass,                         com_oracle_graal_api_meta_LIRKind,                            Graal)) \
-  GRAAL_ONLY(do_klass(JavaMethod_klass,                      com_oracle_graal_api_meta_JavaMethod,                         Graal)) \
-  GRAAL_ONLY(do_klass(JavaType_klass,                        com_oracle_graal_api_meta_JavaType,                           Graal)) \
-  GRAAL_ONLY(do_klass(AbstractValue_klass,                   com_oracle_graal_api_meta_AbstractValue,                      Graal)) \
+  GRAAL_ONLY(do_klass(Assumptions_ConcreteMethod_klass,      com_oracle_jvmci_meta_Assumptions_ConcreteMethod,             Graal)) \
+  GRAAL_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, com_oracle_jvmci_meta_Assumptions_NoFinalizableSubclass,    Graal))\
+  GRAAL_ONLY(do_klass(Assumptions_ConcreteSubtype_klass,     com_oracle_jvmci_meta_Assumptions_ConcreteSubtype,            Graal)) \
+  GRAAL_ONLY(do_klass(Assumptions_LeafType_klass,            com_oracle_jvmci_meta_Assumptions_LeafType,                   Graal)) \
+  GRAAL_ONLY(do_klass(Assumptions_CallSiteTargetValue_klass, com_oracle_jvmci_meta_Assumptions_CallSiteTargetValue,        Graal)) \
+  GRAAL_ONLY(do_klass(BytecodePosition_klass,                com_oracle_jvmci_code_BytecodePosition,                       Graal)) \
+  GRAAL_ONLY(do_klass(DebugInfo_klass,                       com_oracle_jvmci_code_DebugInfo,                              Graal)) \
+  GRAAL_ONLY(do_klass(RegisterSaveLayout_klass,              com_oracle_jvmci_code_RegisterSaveLayout,                     Graal)) \
+  GRAAL_ONLY(do_klass(BytecodeFrame_klass,                   com_oracle_jvmci_code_BytecodeFrame,                          Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_klass,               com_oracle_jvmci_code_CompilationResult,                      Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_Call_klass,          com_oracle_jvmci_code_CompilationResult_Call,                 Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_ConstantReference_klass, com_oracle_jvmci_code_CompilationResult_ConstantReference, Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_DataPatch_klass,     com_oracle_jvmci_code_CompilationResult_DataPatch,            Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_DataSectionReference_klass, com_oracle_jvmci_code_CompilationResult_DataSectionReference, Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_ExceptionHandler_klass, com_oracle_jvmci_code_CompilationResult_ExceptionHandler,  Graal))\
+  GRAAL_ONLY(do_klass(CompilationResult_Mark_klass,          com_oracle_jvmci_code_CompilationResult_Mark,                 Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_Infopoint_klass,     com_oracle_jvmci_code_CompilationResult_Infopoint,            Graal)) \
+  GRAAL_ONLY(do_klass(CompilationResult_Site_klass,          com_oracle_jvmci_code_CompilationResult_Site,                 Graal)) \
+  GRAAL_ONLY(do_klass(InfopointReason_klass,                 com_oracle_jvmci_code_InfopointReason,                        Graal)) \
+  GRAAL_ONLY(do_klass(InstalledCode_klass,                   com_oracle_jvmci_code_InstalledCode,                          Graal)) \
+  GRAAL_ONLY(do_klass(code_Register_klass,                   com_oracle_jvmci_code_Register,                               Graal)) \
+  GRAAL_ONLY(do_klass(RegisterValue_klass,                   com_oracle_jvmci_code_RegisterValue,                          Graal)) \
+  GRAAL_ONLY(do_klass(RegisterCategory_klass,                com_oracle_jvmci_code_Register_RegisterCategory,              Graal)) \
+  GRAAL_ONLY(do_klass(StackSlot_klass,                       com_oracle_jvmci_code_StackSlot,                              Graal)) \
+  GRAAL_ONLY(do_klass(StackLockValue_klass,                  com_oracle_jvmci_code_StackLockValue,                         Graal)) \
+  GRAAL_ONLY(do_klass(VirtualObject_klass,                   com_oracle_jvmci_code_VirtualObject,                          Graal)) \
+  GRAAL_ONLY(do_klass(SpeculationLog_klass,                  com_oracle_jvmci_code_SpeculationLog,                         Graal)) \
+  GRAAL_ONLY(do_klass(JavaConstant_klass,                    com_oracle_jvmci_meta_JavaConstant,                           Graal)) \
+  GRAAL_ONLY(do_klass(PrimitiveConstant_klass,               com_oracle_jvmci_meta_PrimitiveConstant,                      Graal)) \
+  GRAAL_ONLY(do_klass(RawConstant_klass,                     com_oracle_jvmci_meta_RawConstant,                            Graal)) \
+  GRAAL_ONLY(do_klass(NullConstant_klass,                    com_oracle_jvmci_meta_NullConstant,                           Graal)) \
+  GRAAL_ONLY(do_klass(ExceptionHandler_klass,                com_oracle_jvmci_meta_ExceptionHandler,                       Graal)) \
+  GRAAL_ONLY(do_klass(Kind_klass,                            com_oracle_jvmci_meta_Kind,                                   Graal)) \
+  GRAAL_ONLY(do_klass(LIRKind_klass,                         com_oracle_jvmci_meta_LIRKind,                                Graal)) \
+  GRAAL_ONLY(do_klass(JavaMethod_klass,                      com_oracle_jvmci_meta_JavaMethod,                             Graal)) \
+  GRAAL_ONLY(do_klass(JavaType_klass,                        com_oracle_jvmci_meta_JavaType,                               Graal)) \
+  GRAAL_ONLY(do_klass(AbstractValue_klass,                   com_oracle_jvmci_meta_AbstractValue,                          Graal)) \
 
   /*end*/
 

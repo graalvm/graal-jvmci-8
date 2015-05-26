@@ -317,48 +317,47 @@
   GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotMetaspaceConstantImpl,    "com/oracle/jvmci/hotspot/HotSpotMetaspaceConstantImpl"))         \
   GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotStackFrameReference,      "com/oracle/jvmci/hotspot/HotSpotStackFrameReference"))           \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_CompilationTask,                 "com/oracle/graal/hotspot/CompilationTask"))                      \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_JavaConstant,                   "com/oracle/graal/api/meta/JavaConstant"))                        \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_PrimitiveConstant,              "com/oracle/graal/api/meta/PrimitiveConstant"))                   \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_RawConstant,                    "com/oracle/graal/api/meta/RawConstant"))                         \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_NullConstant,                   "com/oracle/graal/api/meta/NullConstant"))                        \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_ExceptionHandler,               "com/oracle/graal/api/meta/ExceptionHandler"))                    \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_JavaMethod,                     "com/oracle/graal/api/meta/JavaMethod"))                          \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_JavaType,                       "com/oracle/graal/api/meta/JavaType"))                            \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_Kind,                           "com/oracle/graal/api/meta/Kind"))                                \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_LIRKind,                        "com/oracle/graal/api/meta/LIRKind"))                             \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_AbstractValue,                  "com/oracle/graal/api/meta/AbstractValue"))                       \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_ConcreteSubtype,    "com/oracle/graal/api/meta/Assumptions$ConcreteSubtype"))         \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_LeafType,           "com/oracle/graal/api/meta/Assumptions$LeafType"))                \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_NoFinalizableSubclass, "com/oracle/graal/api/meta/Assumptions$NoFinalizableSubclass")) \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_ConcreteMethod,     "com/oracle/graal/api/meta/Assumptions$ConcreteMethod"))          \
-  GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_CallSiteTargetValue,"com/oracle/graal/api/meta/Assumptions$CallSiteTargetValue"))     \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult,              "com/oracle/graal/api/code/CompilationResult"))                   \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_Call,         "com/oracle/graal/api/code/CompilationResult$Call"))              \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_ConstantReference, "com/oracle/graal/api/code/CompilationResult$ConstantReference")) \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_DataPatch,    "com/oracle/graal/api/code/CompilationResult$DataPatch"))         \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_DataSectionReference, "com/oracle/graal/api/code/CompilationResult$DataSectionReference")) \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_ExceptionHandler, "com/oracle/graal/api/code/CompilationResult$ExceptionHandler")) \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_Mark,         "com/oracle/graal/api/code/CompilationResult$Mark"))              \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_Infopoint,    "com/oracle/graal/api/code/CompilationResult$Infopoint"))         \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_Site,         "com/oracle/graal/api/code/CompilationResult$Site"))              \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_InfopointReason,                "com/oracle/graal/api/code/InfopointReason"))                     \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_InstalledCode,                  "com/oracle/graal/api/code/InstalledCode"))                       \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_BytecodeFrame,                  "com/oracle/graal/api/code/BytecodeFrame"))                       \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_BytecodePosition,               "com/oracle/graal/api/code/BytecodePosition"))                    \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_DebugInfo,                      "com/oracle/graal/api/code/DebugInfo"))                           \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_Register,                       "com/oracle/graal/api/code/Register"))                            \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_RegisterValue,                  "com/oracle/graal/api/code/RegisterValue"))                       \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_Register_RegisterCategory,      "com/oracle/graal/api/code/Register$RegisterCategory"))           \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_StackSlot,                      "com/oracle/graal/api/code/StackSlot"))                           \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_StackLockValue,                 "com/oracle/graal/api/code/StackLockValue"))                      \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_VirtualObject,                  "com/oracle/graal/api/code/VirtualObject"))                       \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_RegisterSaveLayout,             "com/oracle/graal/api/code/RegisterSaveLayout"))                  \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_InvalidInstalledCodeException,  "com/oracle/graal/api/code/InvalidInstalledCodeException"))       \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_SpeculationLog,                 "com/oracle/graal/api/code/SpeculationLog"))                      \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_JavaConstant,                       "com/oracle/jvmci/meta/JavaConstant"))                            \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_PrimitiveConstant,                  "com/oracle/jvmci/meta/PrimitiveConstant"))                       \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_RawConstant,                        "com/oracle/jvmci/meta/RawConstant"))                             \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_NullConstant,                       "com/oracle/jvmci/meta/NullConstant"))                            \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_ExceptionHandler,                   "com/oracle/jvmci/meta/ExceptionHandler"))                        \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_JavaMethod,                         "com/oracle/jvmci/meta/JavaMethod"))                              \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_JavaType,                           "com/oracle/jvmci/meta/JavaType"))                                \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_Kind,                               "com/oracle/jvmci/meta/Kind"))                                    \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_LIRKind,                            "com/oracle/jvmci/meta/LIRKind"))                                 \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_AbstractValue,                      "com/oracle/jvmci/meta/AbstractValue"))                           \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_Assumptions_ConcreteSubtype,        "com/oracle/jvmci/meta/Assumptions$ConcreteSubtype"))             \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_Assumptions_LeafType,               "com/oracle/jvmci/meta/Assumptions$LeafType"))                    \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_Assumptions_NoFinalizableSubclass,  "com/oracle/jvmci/meta/Assumptions$NoFinalizableSubclass"))       \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_Assumptions_ConcreteMethod,         "com/oracle/jvmci/meta/Assumptions$ConcreteMethod"))              \
+  GRAAL_ONLY(template(com_oracle_jvmci_meta_Assumptions_CallSiteTargetValue,    "com/oracle/jvmci/meta/Assumptions$CallSiteTargetValue"))         \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_CompilationResult,                  "com/oracle/jvmci/code/CompilationResult"))                       \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_CompilationResult_Call,             "com/oracle/jvmci/code/CompilationResult$Call"))                  \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_CompilationResult_ConstantReference, "com/oracle/jvmci/code/CompilationResult$ConstantReference"))    \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_CompilationResult_DataPatch,        "com/oracle/jvmci/code/CompilationResult$DataPatch"))             \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_CompilationResult_DataSectionReference, "com/oracle/jvmci/code/CompilationResult$DataSectionReference")) \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_CompilationResult_ExceptionHandler, "com/oracle/jvmci/code/CompilationResult$ExceptionHandler"))      \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_CompilationResult_Mark,             "com/oracle/jvmci/code/CompilationResult$Mark"))                  \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_CompilationResult_Infopoint,        "com/oracle/jvmci/code/CompilationResult$Infopoint"))             \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_CompilationResult_Site,             "com/oracle/jvmci/code/CompilationResult$Site"))                  \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_InfopointReason,                    "com/oracle/jvmci/code/InfopointReason"))                         \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_InstalledCode,                      "com/oracle/jvmci/code/InstalledCode"))                           \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_BytecodeFrame,                      "com/oracle/jvmci/code/BytecodeFrame"))                           \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_BytecodePosition,                   "com/oracle/jvmci/code/BytecodePosition"))                        \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_DebugInfo,                          "com/oracle/jvmci/code/DebugInfo"))                               \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_Register,                           "com/oracle/jvmci/code/Register"))                                \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_RegisterValue,                      "com/oracle/jvmci/code/RegisterValue"))                           \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_Register_RegisterCategory,          "com/oracle/jvmci/code/Register$RegisterCategory"))               \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_StackSlot,                          "com/oracle/jvmci/code/StackSlot"))                               \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_StackLockValue,                     "com/oracle/jvmci/code/StackLockValue"))                          \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_VirtualObject,                      "com/oracle/jvmci/code/VirtualObject"))                           \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_RegisterSaveLayout,                 "com/oracle/jvmci/code/RegisterSaveLayout"))                      \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_InvalidInstalledCodeException,      "com/oracle/jvmci/code/InvalidInstalledCodeException"))           \
+  GRAAL_ONLY(template(com_oracle_jvmci_code_SpeculationLog,                     "com/oracle/jvmci/code/SpeculationLog"))                          \
   GRAAL_ONLY(template(compileMetaspaceMethod_name,                     "compileMetaspaceMethod"))                                                 \
   GRAAL_ONLY(template(compileMetaspaceMethod_signature,                "(JIJI)V"))                                                                \
-  GRAAL_ONLY(template(graal_mirror_name,                               "graal_mirror"))                                                           \
-  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_Stable_signature, "Lcom/oracle/jvmci/hotspot/Stable;"))                                \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_Stable_signature, "Lcom/oracle/jvmci/hotspot/Stable;"))                                            \
                                                                                                   \
   /* common method and field names */                                                             \
   template(object_initializer_name,                   "<init>")                                   \

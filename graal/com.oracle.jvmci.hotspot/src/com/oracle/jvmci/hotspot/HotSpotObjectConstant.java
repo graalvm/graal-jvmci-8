@@ -25,7 +25,8 @@ package com.oracle.jvmci.hotspot;
 import java.lang.invoke.*;
 import java.util.*;
 
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.meta.*;
+
 
 /**
  * Represents a constant non-{@code null} object reference, within the compiler and across the

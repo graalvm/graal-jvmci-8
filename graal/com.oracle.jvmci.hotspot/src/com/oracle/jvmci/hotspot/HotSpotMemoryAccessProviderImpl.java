@@ -24,10 +24,10 @@ package com.oracle.jvmci.hotspot;
 
 import static com.oracle.jvmci.common.UnsafeAccess.*;
 
-import com.oracle.graal.api.code.*;
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.common.*;
 import com.oracle.jvmci.hotspot.HotSpotVMConfig.CompressEncoding;
+import com.oracle.jvmci.meta.*;
 
 /**
  * HotSpot implementation of {@link MemoryAccessProvider}.

@@ -30,10 +30,10 @@ import java.util.*;
 
 import sun.misc.*;
 
-import com.oracle.graal.api.meta.*;
-import com.oracle.graal.api.meta.JavaMethodProfile.ProfiledMethod;
-import com.oracle.graal.api.meta.JavaTypeProfile.ProfiledType;
 import com.oracle.jvmci.hotspot.HotSpotMethodDataAccessor.Tag;
+import com.oracle.jvmci.meta.*;
+import com.oracle.jvmci.meta.JavaMethodProfile.ProfiledMethod;
+import com.oracle.jvmci.meta.JavaTypeProfile.ProfiledType;
 
 /**
  * Access to a HotSpot MethodData structure (defined in methodData.hpp).

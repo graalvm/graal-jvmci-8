@@ -22,8 +22,10 @@
  */
 package com.oracle.jvmci.runtime;
 
-import com.oracle.graal.api.code.*;
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.code.CodeCacheProvider;
+import com.oracle.jvmci.code.TargetDescription;
+import com.oracle.jvmci.meta.MetaAccessProvider;
+import com.oracle.jvmci.meta.ConstantReflectionProvider;
 
 /**
  * A JVMCI backend encapsulates the capabilities needed by a Java based compiler for compiling and

@@ -32,13 +32,13 @@ import java.net.*;
 import java.nio.*;
 import java.util.*;
 
-import com.oracle.graal.api.meta.Assumptions.AssumptionResult;
-import com.oracle.graal.api.meta.Assumptions.ConcreteMethod;
-import com.oracle.graal.api.meta.Assumptions.ConcreteSubtype;
-import com.oracle.graal.api.meta.Assumptions.LeafType;
-import com.oracle.graal.api.meta.Assumptions.NoFinalizableSubclass;
-import com.oracle.graal.api.meta.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.meta.Assumptions.AssumptionResult;
+import com.oracle.jvmci.meta.Assumptions.ConcreteMethod;
+import com.oracle.jvmci.meta.Assumptions.ConcreteSubtype;
+import com.oracle.jvmci.meta.Assumptions.LeafType;
+import com.oracle.jvmci.meta.Assumptions.NoFinalizableSubclass;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Implementation of {@link JavaType} for resolved non-primitive HotSpot classes.

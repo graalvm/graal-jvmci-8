@@ -28,9 +28,9 @@ import static com.oracle.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
 
 import java.lang.reflect.*;
 
-import com.oracle.graal.api.code.*;
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.meta.*;
 
 /**
  * HotSpot implementation of {@link MetaAccessProvider}.

@@ -26,10 +26,10 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.*;
 
-import com.oracle.graal.api.code.*;
-import com.oracle.graal.api.code.CompilationResult.CodeAnnotation;
-import com.oracle.graal.api.code.CompilationResult.CodeComment;
-import com.oracle.graal.api.code.CompilationResult.JumpTable;
+import com.oracle.jvmci.code.*;
+import com.oracle.jvmci.code.CompilationResult.CodeAnnotation;
+import com.oracle.jvmci.code.CompilationResult.CodeComment;
+import com.oracle.jvmci.code.CompilationResult.JumpTable;
 
 /**
  * A HexCodeFile is a textual format for representing a chunk of machine code along with extra

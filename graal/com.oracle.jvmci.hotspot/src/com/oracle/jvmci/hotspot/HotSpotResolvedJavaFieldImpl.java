@@ -29,8 +29,8 @@ import static com.oracle.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
 import java.lang.annotation.*;
 import java.lang.reflect.*;
 
-import com.oracle.graal.api.meta.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.meta.*;
 import com.oracle.jvmci.options.*;
 
 /**

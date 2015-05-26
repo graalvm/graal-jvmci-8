@@ -22,7 +22,7 @@
  */
 package com.oracle.jvmci.runtime;
 
-import com.oracle.graal.api.code.*;
+import com.oracle.jvmci.code.Architecture;
 
 /**
  * Interface for accessing the {@link JVMCI} APIs supported by the runtime.

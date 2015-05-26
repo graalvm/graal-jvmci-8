@@ -24,8 +24,8 @@ package com.oracle.jvmci.hotspot;
 
 import java.util.*;
 
-import com.oracle.graal.api.meta.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Represents a method signature.

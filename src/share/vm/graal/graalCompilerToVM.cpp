@@ -599,7 +599,7 @@ C2V_VMENTRY(jobject, executeCompiledMethodVarargs, (JNIEnv*, jobject, jobject ar
 
   jlong nmethodValue = InstalledCode::address(hotspotInstalledCode);
   if (nmethodValue == 0L) {
-    THROW_(vmSymbols::com_oracle_graal_api_code_InvalidInstalledCodeException(), NULL);
+    THROW_(vmSymbols::com_oracle_jvmci_code_InvalidInstalledCodeException(), NULL);
   }
   nmethod* nm = (nmethod*) (address) nmethodValue;
   methodHandle mh = nm->method();
@@ -1032,16 +1032,16 @@ C2V_END
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
 
-#define TYPE                  "Lcom/oracle/graal/api/meta/JavaType;"
-#define METHOD                "Lcom/oracle/graal/api/meta/JavaMethod;"
-#define FIELD                 "Lcom/oracle/graal/api/meta/JavaField;"
-#define SPECULATION_LOG       "Lcom/oracle/graal/api/code/SpeculationLog;"
+#define TYPE                  "Lcom/oracle/jvmci/meta/JavaType;"
+#define METHOD                "Lcom/oracle/jvmci/meta/JavaMethod;"
+#define FIELD                 "Lcom/oracle/jvmci/meta/JavaField;"
+#define SPECULATION_LOG       "Lcom/oracle/jvmci/code/SpeculationLog;"
 #define STRING                "Ljava/lang/String;"
 #define OBJECT                "Ljava/lang/Object;"
 #define CLASS                 "Ljava/lang/Class;"
 #define STACK_TRACE_ELEMENT   "Ljava/lang/StackTraceElement;"
-#define INSTALLED_CODE        "Lcom/oracle/graal/api/code/InstalledCode;"
-#define RESOLVED_METHOD       "Lcom/oracle/graal/api/meta/ResolvedJavaMethod;"
+#define INSTALLED_CODE        "Lcom/oracle/jvmci/code/InstalledCode;"
+#define RESOLVED_METHOD       "Lcom/oracle/jvmci/meta/ResolvedJavaMethod;"
 #define HS_RESOLVED_METHOD    "Lcom/oracle/jvmci/hotspot/HotSpotResolvedJavaMethod;"
 #define HS_COMPILED_CODE      "Lcom/oracle/jvmci/hotspot/HotSpotCompiledCode;"
 #define HS_CONFIG             "Lcom/oracle/jvmci/hotspot/HotSpotVMConfig;"

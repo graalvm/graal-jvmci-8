@@ -28,9 +28,9 @@ import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.*;
 
-import com.oracle.graal.api.meta.Assumptions.AssumptionResult;
-import com.oracle.graal.api.meta.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.meta.Assumptions.AssumptionResult;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Implementation of {@link JavaType} for primitive HotSpot types.

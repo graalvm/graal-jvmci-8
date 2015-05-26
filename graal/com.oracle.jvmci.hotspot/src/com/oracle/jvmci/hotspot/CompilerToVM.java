@@ -25,9 +25,9 @@ package com.oracle.jvmci.hotspot;
 
 import sun.misc.*;
 
-import com.oracle.graal.api.code.*;
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.hotspotvmconfig.*;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Calls from Java into HotSpot.

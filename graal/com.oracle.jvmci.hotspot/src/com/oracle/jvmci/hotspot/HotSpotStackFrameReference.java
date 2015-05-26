@@ -24,8 +24,9 @@ package com.oracle.jvmci.hotspot;
 
 import java.util.*;
 
-import com.oracle.graal.api.code.stack.*;
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.code.stack.*;
+import com.oracle.jvmci.meta.*;
+
 
 public class HotSpotStackFrameReference implements InspectedFrame {
 

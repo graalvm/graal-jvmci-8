@@ -24,7 +24,8 @@ package com.oracle.jvmci.hotspot;
 
 import static com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.meta.*;
+
 
 public abstract class HotSpotResolvedJavaType extends HotSpotJavaType implements ResolvedJavaType {
 

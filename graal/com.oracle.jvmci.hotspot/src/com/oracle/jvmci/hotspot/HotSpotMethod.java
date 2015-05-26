@@ -27,7 +27,8 @@ import static java.util.FormattableFlags.*;
 
 import java.util.*;
 
-import com.oracle.graal.api.meta.*;
+import com.oracle.jvmci.meta.*;
+
 
 public abstract class HotSpotMethod implements JavaMethod, Formattable {
 
