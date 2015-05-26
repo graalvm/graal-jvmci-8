@@ -158,7 +158,7 @@ void GraalCompiler::print_compilation_timers() {
 void GraalCompiler::compile_the_world() {
   HandleMark hm;
   JavaThread* THREAD = JavaThread::current();
-  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/jvmci/HotSpotJVMCIRuntime", CHECK_ABORT);
+  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/HotSpotJVMCIRuntime", CHECK_ABORT);
   KlassHandle klass = GraalRuntime::load_required_class(name);
   TempNewSymbol compileTheWorld = SymbolTable::new_symbol("compileTheWorld", CHECK_ABORT);
   JavaValue result(T_VOID);

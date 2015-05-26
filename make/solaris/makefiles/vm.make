@@ -215,7 +215,7 @@ ifneq ($(INCLUDE_GRAAL), true)
   GRAAL_SPECIFIC_FILES   := graal\* 
 else
   GRAAL_SPECIFIC_FILES   :=
-  Src_Dirs_I += $(HS_COMMON_SRC)/../graal/com.oracle.graal.hotspot/src_gen/hotspot
+  Src_Dirs_I += $(HS_COMMON_SRC)/../graal/com.oracle.jvmci.hotspot/src_gen/hotspot
 endif
 
 # Always exclude these.

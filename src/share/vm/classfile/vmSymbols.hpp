@@ -301,21 +301,21 @@
   /* Support for Graal */                                                                                                             \
   template(java_util_BitSet,                                         "java/util/BitSet")                                              \
   GRAAL_ONLY(template(com_oracle_graal_debug_Debug,                             "com/oracle/graal/debug/Debug"))                                            \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotCompiledCode,           "com/oracle/graal/hotspot/jvmci/HotSpotCompiledCode"))                  \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotCompiledCode_Comment,   "com/oracle/graal/hotspot/jvmci/HotSpotCompiledCode$Comment"))          \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotCompiledNmethod,        "com/oracle/graal/hotspot/jvmci/HotSpotCompiledNmethod"))               \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotForeignCallTarget,      "com/oracle/graal/hotspot/jvmci/HotSpotForeignCallTarget"))             \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotReferenceMap,           "com/oracle/graal/hotspot/jvmci/HotSpotReferenceMap"))                  \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotReferenceMap_HotSpotOopMap, "com/oracle/graal/hotspot/jvmci/HotSpotReferenceMap$HotSpotOopMap"))\
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_CompilerToVMImpl,              "com/oracle/graal/hotspot/jvmci/CompilerToVMImpl"))                     \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotInstalledCode,          "com/oracle/graal/hotspot/jvmci/HotSpotInstalledCode"))                 \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotNmethod,                "com/oracle/graal/hotspot/jvmci/HotSpotNmethod"))                       \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotResolvedJavaMethodImpl, "com/oracle/graal/hotspot/jvmci/HotSpotResolvedJavaMethodImpl"))        \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotResolvedObjectTypeImpl, "com/oracle/graal/hotspot/jvmci/HotSpotResolvedObjectTypeImpl"))        \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotCompressedNullConstant, "com/oracle/graal/hotspot/jvmci/HotSpotCompressedNullConstant"))        \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotObjectConstantImpl,     "com/oracle/graal/hotspot/jvmci/HotSpotObjectConstantImpl"))            \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotMetaspaceConstantImpl,  "com/oracle/graal/hotspot/jvmci/HotSpotMetaspaceConstantImpl"))         \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_HotSpotStackFrameReference,    "com/oracle/graal/hotspot/jvmci/HotSpotStackFrameReference"))           \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotCompiledCode,             "com/oracle/jvmci/hotspot/HotSpotCompiledCode"))                  \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotCompiledCode_Comment,     "com/oracle/jvmci/hotspot/HotSpotCompiledCode$Comment"))          \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotCompiledNmethod,          "com/oracle/jvmci/hotspot/HotSpotCompiledNmethod"))               \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotForeignCallTarget,        "com/oracle/jvmci/hotspot/HotSpotForeignCallTarget"))             \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotReferenceMap,             "com/oracle/jvmci/hotspot/HotSpotReferenceMap"))                  \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotReferenceMap_HotSpotOopMap, "com/oracle/jvmci/hotspot/HotSpotReferenceMap$HotSpotOopMap"))  \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_CompilerToVMImpl,                "com/oracle/jvmci/hotspot/CompilerToVMImpl"))                     \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotInstalledCode,            "com/oracle/jvmci/hotspot/HotSpotInstalledCode"))                 \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotNmethod,                  "com/oracle/jvmci/hotspot/HotSpotNmethod"))                       \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotResolvedJavaMethodImpl,   "com/oracle/jvmci/hotspot/HotSpotResolvedJavaMethodImpl"))        \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotResolvedObjectTypeImpl,   "com/oracle/jvmci/hotspot/HotSpotResolvedObjectTypeImpl"))        \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotCompressedNullConstant,   "com/oracle/jvmci/hotspot/HotSpotCompressedNullConstant"))        \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotObjectConstantImpl,       "com/oracle/jvmci/hotspot/HotSpotObjectConstantImpl"))            \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotMetaspaceConstantImpl,    "com/oracle/jvmci/hotspot/HotSpotMetaspaceConstantImpl"))         \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotStackFrameReference,      "com/oracle/jvmci/hotspot/HotSpotStackFrameReference"))           \
   GRAAL_ONLY(template(com_oracle_graal_hotspot_CompilationTask,                 "com/oracle/graal/hotspot/CompilationTask"))                      \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_JavaConstant,                   "com/oracle/graal/api/meta/JavaConstant"))                        \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_PrimitiveConstant,              "com/oracle/graal/api/meta/PrimitiveConstant"))                   \
@@ -358,7 +358,7 @@
   GRAAL_ONLY(template(compileMetaspaceMethod_name,                     "compileMetaspaceMethod"))                                                 \
   GRAAL_ONLY(template(compileMetaspaceMethod_signature,                "(JIJI)V"))                                                                \
   GRAAL_ONLY(template(graal_mirror_name,                               "graal_mirror"))                                                           \
-  GRAAL_ONLY(template(com_oracle_graal_hotspot_jvmci_Stable_signature, "Lcom/oracle/graal/hotspot/jvmci/Stable;"))                                \
+  GRAAL_ONLY(template(com_oracle_jvmci_hotspot_Stable_signature, "Lcom/oracle/jvmci/hotspot/Stable;"))                                \
                                                                                                   \
   /* common method and field names */                                                             \
   template(object_initializer_name,                   "<init>")                                   \

@@ -666,7 +666,7 @@ JVM_ENTRY(jobject, JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c))
 JVM_END
 
 void GraalRuntime::check_generated_sources_sha1(TRAPS) {
-  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/sourcegen/GeneratedSourcesSha1", CHECK_ABORT);
+  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/sourcegen/GeneratedSourcesSha1", CHECK_ABORT);
   KlassHandle klass = load_required_class(name);
   fieldDescriptor fd;
   if (!InstanceKlass::cast(klass())->find_field(vmSymbols::value_name(), vmSymbols::string_signature(), true, &fd)) {
@@ -706,8 +706,8 @@ void GraalRuntime::initialize_HotSpotJVMCIRuntime() {
            "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
 #endif
 
-    Handle result = callInitializer("com/oracle/graal/hotspot/jvmci/HotSpotJVMCIRuntime", "runtime",
-                                    "()Lcom/oracle/graal/hotspot/jvmci/HotSpotJVMCIRuntime;");
+    Handle result = callInitializer("com/oracle/jvmci/hotspot/HotSpotJVMCIRuntime", "runtime",
+                                    "()Lcom/oracle/jvmci/hotspot/HotSpotJVMCIRuntime;");
     _HotSpotJVMCIRuntime_initialized = true;
     _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result());
   }
@@ -784,7 +784,7 @@ jint GraalRuntime::check_arguments(TRAPS) {
     // We now load and initialize HotSpotOptions which in turn
     // causes argument parsing to be redone with better error messages.
     CLEAR_PENDING_EXCEPTION;
-    TempNewSymbol name = SymbolTable::new_symbol("Lcom/oracle/graal/hotspot/jvmci/HotSpotOptions;", CHECK_ABORT_(JNI_ERR));
+    TempNewSymbol name = SymbolTable::new_symbol("Lcom/oracle/jvmci/hotspot/HotSpotOptions;", CHECK_ABORT_(JNI_ERR));
     instanceKlassHandle hotSpotOptionsClass = resolve_or_fail(name, CHECK_ABORT_(JNI_ERR));
 
     parse_arguments(hotSpotOptionsClass, THREAD);
@@ -1021,7 +1021,7 @@ void GraalRuntime::shutdown() {
     _shutdown_called = true;
     JavaThread* THREAD = JavaThread::current();
     HandleMark hm(THREAD);
-    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/jvmci/HotSpotJVMCIRuntime", CHECK_ABORT);
+    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/HotSpotJVMCIRuntime", CHECK_ABORT);
     KlassHandle klass = load_required_class(name);
     JavaValue result(T_VOID);
     JavaCallArguments args;

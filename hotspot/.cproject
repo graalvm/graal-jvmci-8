@@ -26,7 +26,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1094883386" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1342888057" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.801956928" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.graal.hotspot/src_gen/hotspot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.jvmci.hotspot/src_gen/hotspot}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.634868600" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_LP64=1"/>
@@ -108,7 +108,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.446231503" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.677873708" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.2060190160" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.graal.hotspot/src_gen/hotspot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.jvmci.hotspot/src_gen/hotspot}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.270375031" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_LP64=1"/>
@@ -189,7 +189,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.805698881" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1673917487" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.1395828869" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.graal.hotspot/src_gen/hotspot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.jvmci.hotspot/src_gen/hotspot}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1699174802" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_LP64=1"/>
@@ -269,7 +269,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.111821059" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.501581878" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.1285141101" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.graal.hotspot/src_gen/hotspot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.jvmci.hotspot/src_gen/hotspot}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1301765451" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_LP64=1"/>
@@ -350,7 +350,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.832885832" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1920567990" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.839069865" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.graal.hotspot/src_gen/hotspot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.jvmci.hotspot/src_gen/hotspot}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.1804264717" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_LP64=1"/>
@@ -430,7 +430,7 @@
 							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1406128591" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
 							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1404788740" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
 								<option id="gnu.cpp.compiler.option.include.paths.701589205" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.graal.hotspot/src_gen/hotspot}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/com.oracle.jvmci.hotspot/src_gen/hotspot}&quot;"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.def.815907884" name="Defined symbols (-D)" superClass="gnu.cpp.compiler.option.preprocessor.def" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="_LP64=1"/>

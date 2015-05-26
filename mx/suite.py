@@ -147,6 +147,44 @@ suite = {
   },
 
   "projects" : {
+    "com.oracle.jvmci.common" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,Graal",
+    },
+
+    "com.oracle.jvmci.runtime" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.api.code"
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,Graal",
+    },
+
+    "com.oracle.jvmci.hotspot" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.runtime",
+        "com.oracle.jvmci.common",
+        "com.oracle.graal.hotspotvmconfig",
+        "com.oracle.graal.debug",
+        "com.oracle.graal.options",
+        "FINDBUGS"
+      ],
+      "annotationProcessors" : [
+        "com.oracle.graal.hotspotvmconfig.processor",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,Graal",
+    },
+
     "com.oracle.nfi" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -165,25 +203,6 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.7",
-    },
-
-    "com.oracle.jvmci.common" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
-    },
-
-    "com.oracle.jvmci.runtime" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.graal.api.code"
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
     },
 
     "com.oracle.graal.api.collections" : {
@@ -324,10 +343,10 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.jvmci.hotspot",
         "com.oracle.graal.replacements",
         "com.oracle.graal.printer",
         "com.oracle.graal.runtime",
-        "com.oracle.graal.hotspotvmconfig",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : [

@@ -200,20 +200,20 @@ class Ticks;
   do_klass(BitSet_klass,                                java_util_BitSet,                          Opt                 ) \
   /* Graal classes. These are loaded on-demand. */                                                                                 \
   GRAAL_ONLY(do_klass(Debug_klass,                           com_oracle_graal_debug_Debug,                                 Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotCompiledCode_klass,             com_oracle_graal_hotspot_jvmci_HotSpotCompiledCode,           Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotCompiledCode_Comment_klass,     com_oracle_graal_hotspot_jvmci_HotSpotCompiledCode_Comment,   Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotCompiledNmethod_klass,          com_oracle_graal_hotspot_jvmci_HotSpotCompiledNmethod,        Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotForeignCallTarget_klass,        com_oracle_graal_hotspot_jvmci_HotSpotForeignCallTarget,      Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotReferenceMap_klass,             com_oracle_graal_hotspot_jvmci_HotSpotReferenceMap,               Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotOopMap_klass,                   com_oracle_graal_hotspot_jvmci_HotSpotReferenceMap_HotSpotOopMap, Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotInstalledCode_klass,            com_oracle_graal_hotspot_jvmci_HotSpotInstalledCode,          Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotNmethod_klass,                  com_oracle_graal_hotspot_jvmci_HotSpotNmethod,                Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotResolvedJavaMethodImpl_klass,   com_oracle_graal_hotspot_jvmci_HotSpotResolvedJavaMethodImpl, Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotResolvedObjectTypeImpl_klass,   com_oracle_graal_hotspot_jvmci_HotSpotResolvedObjectTypeImpl, Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotCompressedNullConstant_klass,   com_oracle_graal_hotspot_jvmci_HotSpotCompressedNullConstant, Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotObjectConstantImpl_klass,       com_oracle_graal_hotspot_jvmci_HotSpotObjectConstantImpl,     Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotMetaspaceConstantImpl_klass,    com_oracle_graal_hotspot_jvmci_HotSpotMetaspaceConstantImpl,  Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotStackFrameReference_klass,      com_oracle_graal_hotspot_jvmci_HotSpotStackFrameReference,    Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotCompiledCode_klass,             com_oracle_jvmci_hotspot_HotSpotCompiledCode,                 Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotCompiledCode_Comment_klass,     com_oracle_jvmci_hotspot_HotSpotCompiledCode_Comment,         Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotCompiledNmethod_klass,          com_oracle_jvmci_hotspot_HotSpotCompiledNmethod,              Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotForeignCallTarget_klass,        com_oracle_jvmci_hotspot_HotSpotForeignCallTarget,            Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotReferenceMap_klass,             com_oracle_jvmci_hotspot_HotSpotReferenceMap,                 Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotOopMap_klass,                   com_oracle_jvmci_hotspot_HotSpotReferenceMap_HotSpotOopMap,   Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotInstalledCode_klass,            com_oracle_jvmci_hotspot_HotSpotInstalledCode,                Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotNmethod_klass,                  com_oracle_jvmci_hotspot_HotSpotNmethod,                      Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotResolvedJavaMethodImpl_klass,   com_oracle_jvmci_hotspot_HotSpotResolvedJavaMethodImpl,       Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotResolvedObjectTypeImpl_klass,   com_oracle_jvmci_hotspot_HotSpotResolvedObjectTypeImpl,       Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotCompressedNullConstant_klass,   com_oracle_jvmci_hotspot_HotSpotCompressedNullConstant,       Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotObjectConstantImpl_klass,       com_oracle_jvmci_hotspot_HotSpotObjectConstantImpl,           Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotMetaspaceConstantImpl_klass,    com_oracle_jvmci_hotspot_HotSpotMetaspaceConstantImpl,        Graal)) \
+  GRAAL_ONLY(do_klass(HotSpotStackFrameReference_klass,      com_oracle_jvmci_hotspot_HotSpotStackFrameReference,          Graal)) \
   GRAAL_ONLY(do_klass(CompilationTask_klass,                 com_oracle_graal_hotspot_CompilationTask,                     Graal)) \
   GRAAL_ONLY(do_klass(Assumptions_ConcreteMethod_klass,      com_oracle_graal_api_meta_Assumptions_ConcreteMethod,         Graal)) \
   GRAAL_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, com_oracle_graal_api_meta_Assumptions_NoFinalizableSubclass, Graal))\

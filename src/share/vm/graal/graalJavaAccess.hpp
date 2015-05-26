@@ -71,7 +71,7 @@ void graal_compute_offsets();
     oop_field(HotSpotCompiledCode, comp, "Lcom/oracle/graal/api/code/CompilationResult;")                                                                      \
     objArrayOop_field(HotSpotCompiledCode, sites, "[Lcom/oracle/graal/api/code/CompilationResult$Site;")                                                       \
     objArrayOop_field(HotSpotCompiledCode, exceptionHandlers, "[Lcom/oracle/graal/api/code/CompilationResult$ExceptionHandler;")                               \
-    objArrayOop_field(HotSpotCompiledCode, comments, "[Lcom/oracle/graal/hotspot/jvmci/HotSpotCompiledCode$Comment;")                                          \
+    objArrayOop_field(HotSpotCompiledCode, comments, "[Lcom/oracle/jvmci/hotspot/HotSpotCompiledCode$Comment;")                                          \
     typeArrayOop_field(HotSpotCompiledCode, dataSection, "[B")                                                                                                 \
     int_field(HotSpotCompiledCode, dataSectionAlignment)                                                                                                       \
     objArrayOop_field(HotSpotCompiledCode, dataSectionPatches, "[Lcom/oracle/graal/api/code/CompilationResult$DataPatch;")                                     \
@@ -81,7 +81,7 @@ void graal_compute_offsets();
     int_field(HotSpotCompiledCode_Comment, pcOffset)                                                                                                           \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledNmethod)                                                                                                                          \
-    oop_field(HotSpotCompiledNmethod, method, "Lcom/oracle/graal/hotspot/jvmci/HotSpotResolvedJavaMethod;")                                                    \
+    oop_field(HotSpotCompiledNmethod, method, "Lcom/oracle/jvmci/hotspot/HotSpotResolvedJavaMethod;")                                                    \
     oop_field(HotSpotCompiledNmethod, installationFailureMessage, "Ljava/lang/String;")                                                                        \
     int_field(HotSpotCompiledNmethod, entryBCI)                                                                                                                \
     int_field(HotSpotCompiledNmethod, id)                                                                                                                      \
@@ -160,8 +160,8 @@ void graal_compute_offsets();
     objArrayOop_field(DebugInfo, virtualObjectMapping, "[Lcom/oracle/graal/api/meta/Value;")                                                                   \
   end_class                                                                                                                                                    \
   start_class(HotSpotReferenceMap)                                                                                                                             \
-    oop_field(HotSpotReferenceMap, registerRefMap, "Lcom/oracle/graal/hotspot/jvmci/HotSpotReferenceMap$HotSpotOopMap;")                                       \
-    oop_field(HotSpotReferenceMap, frameRefMap, "Lcom/oracle/graal/hotspot/jvmci/HotSpotReferenceMap$HotSpotOopMap;")                                          \
+    oop_field(HotSpotReferenceMap, registerRefMap, "Lcom/oracle/jvmci/hotspot/HotSpotReferenceMap$HotSpotOopMap;")                                       \
+    oop_field(HotSpotReferenceMap, frameRefMap, "Lcom/oracle/jvmci/hotspot/HotSpotReferenceMap$HotSpotOopMap;")                                          \
   end_class                                                                                                                                                    \
   start_class(RegisterSaveLayout)                                                                                                                              \
     objArrayOop_field(RegisterSaveLayout, registers, "[Lcom/oracle/graal/api/code/Register;")                                                                  \
@@ -254,7 +254,7 @@ void graal_compute_offsets();
     oop_field(SpeculationLog, lastFailed, "Ljava/lang/Object;")                                                                                                \
   end_class                                                                                                                                                    \
   start_class(HotSpotStackFrameReference)                                                                                                                      \
-    oop_field(HotSpotStackFrameReference, compilerToVM, "Lcom/oracle/graal/hotspot/jvmci/CompilerToVM;")                                                       \
+    oop_field(HotSpotStackFrameReference, compilerToVM, "Lcom/oracle/jvmci/hotspot/CompilerToVM;")                                                       \
     long_field(HotSpotStackFrameReference, stackPointer)                                                                                                       \
     int_field(HotSpotStackFrameReference, frameNumber)                                                                                                         \
     int_field(HotSpotStackFrameReference, bci)                                                                                                                 \

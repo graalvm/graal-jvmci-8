@@ -513,9 +513,9 @@ def _updateInstalledGraalOptionsFile(jdk):
 def _makeHotspotGeneratedSourcesDir():
     """
     Gets the directory containing all the HotSpot sources generated from
-    Graal Java sources. This directory will be created if it doesn't yet exist.
+    JVMCI Java sources. This directory will be created if it doesn't yet exist.
     """
-    hsSrcGenDir = join(mx.project('com.oracle.graal.hotspot').source_gen_dir(), 'hotspot')
+    hsSrcGenDir = join(mx.project('com.oracle.jvmci.hotspot').source_gen_dir(), 'hotspot')
     if not exists(hsSrcGenDir):
         os.makedirs(hsSrcGenDir)
     return hsSrcGenDir
@@ -557,7 +557,7 @@ def _update_graalRuntime_inline_hpp(dist):
         mx.update_file(graalRuntime_inline_hpp, tmp.getvalue())
 
         # Store SHA1 in generated Java class and append class to specified jar
-        javaPackageName = 'com.oracle.graal.hotspot.sourcegen'
+        javaPackageName = 'com.oracle.jvmci.hotspot.sourcegen'
         javaClassName = javaPackageName + '.GeneratedSourcesSha1'
         javaSource = join(_graal_home, 'GeneratedSourcesSha1.java')
         javaClass = join(_graal_home, javaClassName.replace('.', os.path.sep) + '.class')
