@@ -71,12 +71,8 @@ suite = {
     },
 
     "FINDBUGS" : {
-      "path" : "lib/findbugs-3.0.0.jar",
-      "urls" : [
-        "jar:http://lafo.ssw.uni-linz.ac.at/graal-external-deps/findbugs-3.0.0.zip!/findbugs-3.0.0/lib/findbugs.jar",
-        "jar:http://sourceforge.net/projects/findbugs/files/findbugs/3.0.0/findbugs-3.0.0.zip/download!/findbugs-3.0.0/lib/findbugs.jar",
-      ],
-      "sha1" : "e9a938f0cb34e2ab5853f9ecb1989f6f590ee385",
+      "path" : "lib/findbugs-SuppressFBWarnings.jar",
+      "sha1" : "fb78822d27c68fabf2cb2e5e573b3cdb5f9cae2d",
     },
 
     "DACAPO" : {
