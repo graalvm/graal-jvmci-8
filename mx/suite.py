@@ -259,20 +259,6 @@ suite = {
       "workingSets" : "API,Graal",
     },
 
-    "com.oracle.graal.api.meta.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "JUNIT",
-        "com.oracle.graal.runtime",
-        "com.oracle.graal.java",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal,Test",
-      "jacoco" : "exclude",
-    },
-
     "com.oracle.graal.api.code" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -844,6 +830,20 @@ suite = {
       "annotationProcessors" : ["com.oracle.jvmci.runtime.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Java",
+    },
+
+    "com.oracle.graal.java.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "JUNIT",
+        "com.oracle.graal.runtime",
+        "com.oracle.graal.java",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,Graal,Test",
+      "jacoco" : "exclude",
     },
 
     "com.oracle.graal.graphbuilderconf" : {
