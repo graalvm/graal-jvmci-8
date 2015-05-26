@@ -1752,6 +1752,7 @@ def gate(args, gate_body=_basic_gate_body):
     parser = ArgumentParser(prog='mx gate')
     parser.add_argument('-j', '--omit-java-clean', action='store_false', dest='cleanJava', help='omit cleaning Java native code')
     parser.add_argument('-n', '--omit-native-clean', action='store_false', dest='cleanNative', help='omit cleaning and building native code')
+    parser.add_argument('-i', '--omit-ide-clean', action='store_false', dest='cleanIde', help='omit cleaning the ide project files')
     parser.add_argument('-g', '--only-build-graalvm', action='store_false', dest='buildNonGraal', help='only build the Graal VM')
     parser.add_argument('-t', '--task-filter', help='comma separated list of substrings to select subset of tasks to be run')
     parser.add_argument('--jacocout', help='specify the output directory for jacoco report')
@@ -1784,10 +1785,11 @@ def gate(args, gate_body=_basic_gate_body):
                     clean(cleanArgs)
         _clean()
 
-        with Task('IDEConfigCheck', tasks):
+        with Task('IDEConfigCheck', tasks) as t:
             if t:
-                mx.ideclean([])
-                mx.ideinit([])
+                if args.cleanIde:
+                    mx.ideclean([])
+                    mx.ideinit([])
 
         eclipse_exe = mx.get_env('ECLIPSE_EXE')
         if eclipse_exe is not None:
