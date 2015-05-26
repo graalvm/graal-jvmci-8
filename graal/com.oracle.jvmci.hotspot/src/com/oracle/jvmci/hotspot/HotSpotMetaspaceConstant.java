@@ -23,7 +23,7 @@
 package com.oracle.jvmci.hotspot;
 
 import com.oracle.graal.api.meta.*;
-import com.oracle.jvmci.hotspot.HotSpotVMConfig.*;
+import com.oracle.jvmci.hotspot.HotSpotVMConfig.CompressEncoding;
 
 public interface HotSpotMetaspaceConstant extends HotSpotConstant, VMConstant {
 

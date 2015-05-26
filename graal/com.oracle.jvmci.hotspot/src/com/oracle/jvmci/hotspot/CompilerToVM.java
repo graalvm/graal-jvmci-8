@@ -27,7 +27,7 @@ import sun.misc.*;
 
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.hotspotvmconfig.*;
+import com.oracle.jvmci.hotspotvmconfig.*;
 
 /**
  * Calls from Java into HotSpot.

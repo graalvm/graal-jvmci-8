@@ -27,7 +27,8 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.*;
 
-import com.oracle.graal.debug.*;
+import com.oracle.jvmci.debug.*;
+
 
 /**
  * A java.lang.reflect proxy that hierarchically logs all method invocations along with their

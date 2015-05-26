@@ -24,7 +24,7 @@ package com.oracle.jvmci.hotspot;
 
 import java.util.*;
 
-import com.oracle.graal.options.*;
+import com.oracle.jvmci.options.*;
 import com.oracle.jvmci.runtime.*;
 
 /**
@@ -52,6 +52,6 @@ class HotSpotOptionsLoader {
      * Determines if a given option is a HotSpot command line option.
      */
     private static boolean isHotSpotOption(OptionDescriptor desc) {
-        return desc.getClass().getName().startsWith("com.oracle.graal");
+        return desc.getDeclaringClass().getName().startsWith("com.oracle.graal");
     }
 }

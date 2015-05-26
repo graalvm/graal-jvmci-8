@@ -27,7 +27,7 @@ import static com.oracle.jvmci.hotspot.HotSpotConstantReflectionProvider.Options
 import java.lang.reflect.*;
 
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.options.*;
+import com.oracle.jvmci.options.*;
 
 /**
  * HotSpot implementation of {@link ConstantReflectionProvider}.

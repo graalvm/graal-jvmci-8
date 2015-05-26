@@ -38,8 +38,8 @@ import com.oracle.graal.api.code.CompilationResult.Mark;
 import com.oracle.graal.api.code.DataSection.Data;
 import com.oracle.graal.api.code.DataSection.DataBuilder;
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.debug.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.debug.*;
 
 /**
  * HotSpot implementation of {@link CodeCacheProvider}.

@@ -30,10 +30,10 @@ import java.util.*;
 
 import com.oracle.graal.api.code.*;
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.debug.*;
-import com.oracle.graal.options.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.hotspot.logging.*;
+import com.oracle.jvmci.options.*;
 import com.oracle.jvmci.runtime.*;
 
 //JaCoCo Exclude

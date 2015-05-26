@@ -970,7 +970,7 @@ void GraalRuntime::set_option_helper(KlassHandle hotSpotOptionsClass, char* name
   }
 
   TempNewSymbol setOption = SymbolTable::new_symbol("setOption", CHECK);
-  TempNewSymbol sig = SymbolTable::new_symbol("(Ljava/lang/String;Lcom/oracle/graal/options/OptionValue;CLjava/lang/String;J)V", CHECK);
+  TempNewSymbol sig = SymbolTable::new_symbol("(Ljava/lang/String;Lcom/oracle/jvmci/options/OptionValue;CLjava/lang/String;J)V", CHECK);
   JavaValue result(T_VOID);
   JavaCallArguments args;
   args.push_oop(name_handle());

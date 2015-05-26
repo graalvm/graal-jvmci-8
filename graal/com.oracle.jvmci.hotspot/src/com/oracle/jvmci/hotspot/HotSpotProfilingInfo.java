@@ -23,7 +23,7 @@
 package com.oracle.jvmci.hotspot;
 
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.debug.*;
+import com.oracle.jvmci.debug.*;
 
 public final class HotSpotProfilingInfo implements ProfilingInfo, HotSpotProxified {
 

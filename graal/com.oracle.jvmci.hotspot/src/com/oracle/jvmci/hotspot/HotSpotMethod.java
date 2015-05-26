@@ -22,7 +22,7 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import static com.oracle.graal.debug.Debug.*;
+import static com.oracle.jvmci.debug.Debug.*;
 import static java.util.FormattableFlags.*;
 
 import java.util.*;

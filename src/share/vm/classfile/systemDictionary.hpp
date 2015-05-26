@@ -199,7 +199,7 @@ class Ticks;
   /* Support for Graal */                                                                                                \
   do_klass(BitSet_klass,                                java_util_BitSet,                          Opt                 ) \
   /* Graal classes. These are loaded on-demand. */                                                                                 \
-  GRAAL_ONLY(do_klass(Debug_klass,                           com_oracle_graal_debug_Debug,                                 Graal)) \
+  GRAAL_ONLY(do_klass(Debug_klass,                           com_oracle_jvmci_debug_Debug,                                 Graal)) \
   GRAAL_ONLY(do_klass(HotSpotCompiledCode_klass,             com_oracle_jvmci_hotspot_HotSpotCompiledCode,                 Graal)) \
   GRAAL_ONLY(do_klass(HotSpotCompiledCode_Comment_klass,     com_oracle_jvmci_hotspot_HotSpotCompiledCode_Comment,         Graal)) \
   GRAAL_ONLY(do_klass(HotSpotCompiledNmethod_klass,          com_oracle_jvmci_hotspot_HotSpotCompiledNmethod,              Graal)) \

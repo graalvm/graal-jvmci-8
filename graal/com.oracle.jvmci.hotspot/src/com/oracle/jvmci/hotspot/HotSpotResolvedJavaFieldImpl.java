@@ -30,8 +30,8 @@ import java.lang.annotation.*;
 import java.lang.reflect.*;
 
 import com.oracle.graal.api.meta.*;
-import com.oracle.graal.options.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.options.*;
 
 /**
  * Represents a field in a HotSpot type.

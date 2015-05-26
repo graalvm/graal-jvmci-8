@@ -168,13 +168,13 @@ suite = {
       "dependencies" : [
         "com.oracle.jvmci.runtime",
         "com.oracle.jvmci.common",
-        "com.oracle.graal.hotspotvmconfig",
-        "com.oracle.graal.debug",
-        "com.oracle.graal.options",
+        "com.oracle.jvmci.hotspotvmconfig",
+        "com.oracle.jvmci.debug",
+        "com.oracle.jvmci.options",
         "FINDBUGS"
       ],
       "annotationProcessors" : [
-        "com.oracle.graal.hotspotvmconfig.processor",
+        "com.oracle.jvmci.hotspotvmconfig.processor",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -318,7 +318,7 @@ suite = {
       "workingSets" : "Graal,SPARC",
     },
 
-    "com.oracle.graal.hotspotvmconfig" : {
+    "com.oracle.jvmci.hotspotvmconfig" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
@@ -326,10 +326,10 @@ suite = {
       "workingSets" : "Graal,HotSpot",
     },
 
-    "com.oracle.graal.hotspotvmconfig.processor" : {
+    "com.oracle.jvmci.hotspotvmconfig.processor" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.hotspotvmconfig", "com.oracle.jvmci.common"],
+      "dependencies" : ["com.oracle.jvmci.hotspotvmconfig", "com.oracle.jvmci.common"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot,Codegen",
@@ -348,7 +348,6 @@ suite = {
       "annotationProcessors" : [
         "com.oracle.graal.replacements.verifier",
         "com.oracle.jvmci.runtime.processor",
-        "com.oracle.graal.hotspotvmconfig.processor",
       ],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot",
@@ -437,7 +436,7 @@ suite = {
       "workingSets" : "Graal,HotSpot,AMD64,Test",
     },
 
-    "com.oracle.graal.options" : {
+    "com.oracle.jvmci.options" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
@@ -445,22 +444,22 @@ suite = {
       "workingSets" : "Graal",
     },
 
-    "com.oracle.graal.options.processor" : {
+    "com.oracle.jvmci.options.processor" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.options",
+        "com.oracle.jvmci.options",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Codegen",
     },
 
-    "com.oracle.graal.options.test" : {
+    "com.oracle.jvmci.options.test" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.options",
+        "com.oracle.jvmci.options",
         "JUNIT",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -514,7 +513,7 @@ suite = {
       "workingSets" : "Graal,Graph,Test",
     },
 
-    "com.oracle.graal.debug" : {
+    "com.oracle.jvmci.debug" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
@@ -522,12 +521,12 @@ suite = {
       "workingSets" : "Graal,Debug",
     },
 
-    "com.oracle.graal.debug.test" : {
+    "com.oracle.jvmci.debug.test" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
         "JUNIT",
-        "com.oracle.graal.debug",
+        "com.oracle.jvmci.debug",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -864,10 +863,10 @@ suite = {
       "dependencies" : [
         "com.oracle.jvmci.common",
         "com.oracle.graal.api.code",
-        "com.oracle.graal.options",
-        "com.oracle.graal.debug",
+        "com.oracle.jvmci.options",
+        "com.oracle.jvmci.debug",
       ],
-      "annotationProcessors" : ["com.oracle.graal.options.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.options.processor"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Java",
@@ -890,7 +889,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "JUNIT",
-        "com.oracle.graal.debug",
+        "com.oracle.jvmci.debug",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",

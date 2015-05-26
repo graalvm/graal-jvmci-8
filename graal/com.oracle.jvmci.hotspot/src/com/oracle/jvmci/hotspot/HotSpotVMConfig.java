@@ -27,8 +27,8 @@ import static com.oracle.jvmci.common.UnsafeAccess.*;
 import java.lang.reflect.*;
 import java.util.*;
 
-import com.oracle.graal.hotspotvmconfig.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.hotspotvmconfig.*;
 
 //JaCoCo Exclude
 

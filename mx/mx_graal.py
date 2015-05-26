@@ -718,8 +718,7 @@ def _installDistInJdks(deployableDist):
 
     if dist.name == 'GRAAL_TRUFFLE':
         # The content in graalRuntime.inline.hpp is generated from Graal
-        # classes that implement com.oracle.graal.api.runtime.Service
-        # or contain com.oracle.graal.options.Option annotated fields.
+        # classes that contain com.oracle.jvmci.options.Option annotated fields.
         # Since GRAAL_TRUFFLE is the leaf most distribution containing
         # such classes, the generation is triggered when GRAAL_TRUFFLE
         # is (re)built.
@@ -991,7 +990,7 @@ def build(args, vm=None):
             mustBuild = False
             timestamp = os.path.getmtime(timestampFile)
             sources = []
-            for d in ['src', 'make', join('graal', 'com.oracle.graal.hotspot', 'src_gen', 'hotspot')]:
+            for d in ['src', 'make', join('graal', 'com.oracle.jvmci.hotspot', 'src_gen', 'hotspot')]:
                 for root, dirnames, files in os.walk(join(_graal_home, d)):
                     # ignore <graal>/src/share/tools
                     if root == join(_graal_home, 'src', 'share'):
@@ -1159,7 +1158,7 @@ def _parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
         jacocoagent = mx.library("JACOCOAGENT", True)
         # Exclude all compiler tests and snippets
 
-        includes = ['com.oracle.graal.*']
+        includes = ['com.oracle.graal.*', 'com.oracle.jvmci.*']
         baseExcludes = []
         for p in mx.projects():
             projsetting = getattr(p, 'jacoco', '')

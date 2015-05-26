@@ -25,7 +25,8 @@ package com.oracle.jvmci.hotspot;
 import java.io.*;
 import java.lang.management.*;
 
-import com.oracle.graal.options.*;
+import com.oracle.jvmci.options.*;
+
 
 /**
  * An option that encapsulates and configures a print stream.

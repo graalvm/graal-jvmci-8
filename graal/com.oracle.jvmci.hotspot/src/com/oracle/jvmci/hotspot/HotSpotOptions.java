@@ -25,9 +25,9 @@ package com.oracle.jvmci.hotspot;
 import static com.oracle.jvmci.hotspot.HotSpotOptionsLoader.*;
 import static java.lang.Double.*;
 
-import com.oracle.graal.debug.*;
-import com.oracle.graal.options.*;
-import com.oracle.graal.options.OptionUtils.OptionConsumer;
+import com.oracle.jvmci.debug.*;
+import com.oracle.jvmci.options.*;
+import com.oracle.jvmci.options.OptionUtils.OptionConsumer;
 import com.oracle.jvmci.runtime.*;
 
 //JaCoCo Exclude

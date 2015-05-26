@@ -300,7 +300,7 @@
                                                                                                                                       \
   /* Support for Graal */                                                                                                             \
   template(java_util_BitSet,                                         "java/util/BitSet")                                              \
-  GRAAL_ONLY(template(com_oracle_graal_debug_Debug,                             "com/oracle/graal/debug/Debug"))                                            \
+  GRAAL_ONLY(template(com_oracle_jvmci_debug_Debug,                             "com/oracle/jvmci/debug/Debug"))                                  \
   GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotCompiledCode,             "com/oracle/jvmci/hotspot/HotSpotCompiledCode"))                  \
   GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotCompiledCode_Comment,     "com/oracle/jvmci/hotspot/HotSpotCompiledCode$Comment"))          \
   GRAAL_ONLY(template(com_oracle_jvmci_hotspot_HotSpotCompiledNmethod,          "com/oracle/jvmci/hotspot/HotSpotCompiledNmethod"))               \
