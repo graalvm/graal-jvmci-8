@@ -2,6 +2,16 @@ suite = {
   "mxversion" : "1.0",
   "name" : "graal",
   "libraries" : {
+
+      "JLINE" : {
+      "path" : "lib/jline-2.11.jar",
+      "urls" : [
+        "http://lafo.ssw.uni-linz.ac.at/graal-external-deps/jline-2.11.jar",
+        "https://search.maven.org/remotecontent?filepath=jline/jline/2.11/jline-2.11.jar",
+      ],
+      "sha1" : "9504d5e2da5d78237239c5226e8200ec21182040",
+    },
+
     "JUNIT" : {
       "path" : "lib/junit-4.11.jar",
       "urls" : [
@@ -1072,12 +1082,55 @@ suite = {
       "workingSets" : "Truffle",
     },
 
+    "com.oracle.truffle.tools" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.truffle.api"],
+      "checkstyle" : "com.oracle.truffle.api",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Truffle,Tools",
+    },
+
+    "com.oracle.truffle.tools.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+          "com.oracle.truffle.tools",
+          "JUNIT"
+          ],
+      "checkstyle" : "com.oracle.truffle.api",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Truffle,Tools",
+    },
+
+    "com.oracle.truffle.tools.debug.engine" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.truffle.api",
+                        "com.oracle.truffle.tools"
+                        ],
+      "checkstyle" : "com.oracle.truffle.api",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Truffle,Tools",
+    },
+
+    "com.oracle.truffle.tools.debug.shell" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.truffle.tools.debug.engine",
+                        "JLINE"],
+      "checkstyle" : "com.oracle.truffle.api",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Truffle,Tools",
+    },
+
     "com.oracle.truffle.sl" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.truffle.api.dsl",
         "com.oracle.truffle.api.object",
+        "com.oracle.truffle.tools",
         "FINDBUGS"
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -1096,6 +1149,18 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Truffle,SimpleLanguage,Test",
+    },
+
+     "com.oracle.truffle.sl.tools" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.truffle.sl",
+        "com.oracle.truffle.tools.debug.shell",
+      ],
+      "checkstyle" : "com.oracle.truffle.api",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Truffle,SimpleLanguage,Tools",
     },
 
     "com.oracle.graal.truffle" : {

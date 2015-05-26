@@ -2407,6 +2407,11 @@ def sl(args):
     vmArgs, slArgs = _extract_VM_args(args)
     vm(vmArgs + ['-cp', mx.classpath(["TRUFFLE", "com.oracle.truffle.sl"]), "com.oracle.truffle.sl.SLMain"] + slArgs)
 
+def sldebug(args):
+    """run a simple command line debugger for the Simple Language"""
+    vmArgs, slArgs = _extract_VM_args(args, useDoubleDash=True)
+    vm(vmArgs + ['-cp', mx.classpath("com.oracle.truffle.sl.tools.debug"), "com.oracle.truffle.sl.tools.debug.SLREPLServer"] + slArgs)
+
 def isGraalEnabled(vm):
     return vm != 'original' and not vm.endswith('nograal')
 
@@ -2653,6 +2658,7 @@ def mx_init(suite):
         'deoptalot' : [deoptalot, '[n]'],
         'longtests' : [longtests, ''],
         'sl' : [sl, '[SL args|@VM options]'],
+        'sldebug' : [sldebug, '[SL args|@VM options]'],
         'jol' : [jol, ''],
     }
 
