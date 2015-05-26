@@ -1047,6 +1047,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.truffle.api.dsl",
+        "com.oracle.truffle.interop",
         "com.oracle.truffle.api.object",
         "FINDBUGS"
       ],
@@ -1060,8 +1061,8 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.truffle.sl",
-        "JUNIT",
+        "com.oracle.truffle.api.test",
+        "com.oracle.truffle.sl"
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
