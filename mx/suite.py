@@ -160,7 +160,7 @@ suite = {
       "sourceDirs" : ["test"],
       "dependencies" : [
         "com.oracle.nfi",
-        "com.oracle.graal.compiler.common",
+        "com.oracle.jvmci.common",
         "JUNIT",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -314,7 +314,7 @@ suite = {
     "com.oracle.graal.hotspotvmconfig.processor" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.hotspotvmconfig", "com.oracle.graal.compiler.common"],
+      "dependencies" : ["com.oracle.graal.hotspotvmconfig", "com.oracle.jvmci.common"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot,Codegen",
