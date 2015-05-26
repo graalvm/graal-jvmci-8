@@ -1,0 +1,15 @@
+DEFAULT_VM=server
+
+LANG=en_US.UTF-8
+
+USE_PRECOMPILED_HEADER=0
+
+# Use clang instead of gcc.
+COMPILER_WARNINGS_FATAL=false
+USE_CLANG=true
+LFLAGS=-Xlinker -lstdc++
+
+# Which JDK to use for javac (and others).
+JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_45.jdk/Contents/Home
+
+EXTRA_JAVA_HOMES=/Library/Java/JavaVirtualMachines/jdk1.7.0_67.jdk/Contents/Home
