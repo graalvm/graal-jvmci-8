@@ -53,12 +53,6 @@ import com.oracle.graal.phases.common.inlining.info.*;
 public class InliningUtil {
 
     private static final String inliningDecisionsScopeString = "InliningDecisions";
-    /**
-     * Meters the size (in bytecodes) of all methods processed during compilation (i.e., top level
-     * and all inlined methods), irrespective of how many bytecodes in each method are actually
-     * parsed (which may be none for methods whose IR is retrieved from a cache).
-     */
-    public static final DebugMetric InlinedBytecodes = Debug.metric("InlinedBytecodes");
 
     /**
      * Print a HotSpot-style inlining message to the console.
@@ -321,7 +315,7 @@ public class InliningUtil {
             unwindNode = (UnwindNode) duplicates.get(unwindNode);
         }
 
-        finishInlining(invoke, graph, firstCFGNode, returnNodes, unwindNode, inlineGraph.getAssumptions(), inlineGraph.getInlinedMethods(), canonicalizedNodes);
+        finishInlining(invoke, graph, firstCFGNode, returnNodes, unwindNode, inlineGraph.getAssumptions(), inlineGraph, canonicalizedNodes);
 
         GraphUtil.killCFG(invokeNode);
 
@@ -329,7 +323,7 @@ public class InliningUtil {
     }
 
     public static ValueNode finishInlining(Invoke invoke, StructuredGraph graph, FixedNode firstNode, List<ReturnNode> returnNodes, UnwindNode unwindNode, Assumptions inlinedAssumptions,
-                    Set<ResolvedJavaMethod> inlinedMethods, List<Node> canonicalizedNodes) {
+                    StructuredGraph inlineGraph, List<Node> canonicalizedNodes) {
         FixedNode invokeNode = invoke.asNode();
         FrameState stateAfter = invoke.stateAfter();
         assert stateAfter == null || stateAfter.isAlive();
@@ -401,9 +395,7 @@ public class InliningUtil {
         }
 
         // Copy inlined methods from inlinee to caller
-        if (inlinedMethods != null && graph.getInlinedMethods() != null) {
-            graph.getInlinedMethods().addAll(inlinedMethods);
-        }
+        graph.updateInlinedMethods(inlineGraph);
 
         return returnValue;
     }
@@ -486,7 +478,7 @@ public class InliningUtil {
              * pop return kind from invoke's stateAfter and replace with this frameState's return
              * value (top of stack)
              */
-            if (invokeReturnKind != Kind.Void && (alwaysDuplicateStateAfter || (frameState.stackSize() > 0 && stateAfterReturn.stackAt(0) != frameState.stackAt(0)))) {
+            if (frameState.stackSize() > 0 && (alwaysDuplicateStateAfter || stateAfterReturn.stackAt(0) != frameState.stackAt(0))) {
                 stateAfterReturn = stateAtReturn.duplicateModified(invokeReturnKind, frameState.stackAt(0));
             }
 
@@ -541,8 +533,11 @@ public class InliningUtil {
                 // in the intrinsic code.
                 assert inlinedMethod.getAnnotation(MethodSubstitution.class) != null : "expected an intrinsic when inlinee frame state matches method of call target but does not match the method of the inlinee graph: " +
                                 frameState;
+            } else if (frameState.method().getName().equals(inlinedMethod.getName())) {
+                // This can happen for method substitutions.
             } else {
-                throw new AssertionError(frameState.toString());
+                throw new AssertionError(String.format("inlinedMethod=%s frameState.method=%s frameState=%s invoke.method=%s", inlinedMethod, frameState.method(), frameState,
+                                invoke.callTarget().targetMethod()));
             }
         }
         return true;

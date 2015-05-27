@@ -1613,9 +1613,7 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     }
 
                     // Record inlined method dependency in the graph
-                    if (graph.isInlinedMethodRecordingEnabled()) {
-                        graph.getInlinedMethods().add(targetMethod);
-                    }
+                    graph.recordInlinedMethod(targetMethod);
                 }
             }
 
@@ -3070,7 +3068,26 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     JavaTypeProfile profile = getProfileForTypeCheck(resolvedType);
                     TypeCheckPlugin typeCheckPlugin = this.graphBuilderConfig.getPlugins().getTypeCheckPlugin();
                     if (typeCheckPlugin == null || !typeCheckPlugin.checkCast(this, object, resolvedType, profile)) {
-                        ValueNode checkCastNode = append(createCheckCast(resolvedType, object, profile, false));
+                        ValueNode checkCastNode = null;
+                        if (profile != null) {
+                            if (profile.getNullSeen().isFalse()) {
+                                object = append(GuardingPiNode.createNullCheck(object));
+                                ResolvedJavaType singleType = profile.asSingleType();
+                                if (singleType != null) {
+                                    LogicNode typeCheck = append(TypeCheckNode.create(singleType, object));
+                                    if (typeCheck.isTautology()) {
+                                        checkCastNode = object;
+                                    } else {
+                                        GuardingPiNode piNode = append(new GuardingPiNode(object, typeCheck, false, DeoptimizationReason.TypeCheckedInliningViolated,
+                                                        DeoptimizationAction.InvalidateReprofile, StampFactory.exactNonNull(singleType)));
+                                        checkCastNode = piNode;
+                                    }
+                                }
+                            }
+                        }
+                        if (checkCastNode == null) {
+                            checkCastNode = append(createCheckCast(resolvedType, object, profile, false));
+                        }
                         frameState.apush(checkCastNode);
                     }
                 } else {
@@ -3087,7 +3104,21 @@ public class GraphBuilderPhase extends BasePhase<HighTierContext> {
                     JavaTypeProfile profile = getProfileForTypeCheck(resolvedType);
                     TypeCheckPlugin typeCheckPlugin = this.graphBuilderConfig.getPlugins().getTypeCheckPlugin();
                     if (typeCheckPlugin == null || !typeCheckPlugin.instanceOf(this, object, resolvedType, profile)) {
-                        ValueNode instanceOfNode = createInstanceOf(resolvedType, object, profile);
+                        ValueNode instanceOfNode = null;
+                        if (profile != null) {
+                            if (profile.getNullSeen().isFalse()) {
+                                object = append(GuardingPiNode.createNullCheck(object));
+                                ResolvedJavaType singleType = profile.asSingleType();
+                                if (singleType != null) {
+                                    LogicNode typeCheck = append(TypeCheckNode.create(singleType, object));
+                                    append(new FixedGuardNode(typeCheck, DeoptimizationReason.TypeCheckedInliningViolated, DeoptimizationAction.InvalidateReprofile));
+                                    instanceOfNode = LogicConstantNode.forBoolean(resolvedType.isAssignableFrom(singleType));
+                                }
+                            }
+                        }
+                        if (instanceOfNode == null) {
+                            instanceOfNode = createInstanceOf(resolvedType, object, profile);
+                        }
                         frameState.ipush(append(genConditional(genUnique(instanceOfNode))));
                     }
                 } else {

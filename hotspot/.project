@@ -133,7 +133,7 @@
 		<link>
 			<name>make</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/make</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/make</locationURI>
 		</link>
 		<link>
 			<name>solaris</name>

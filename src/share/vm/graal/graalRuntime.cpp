@@ -725,12 +725,11 @@ JVM_ENTRY(void, JVM_InitializeGraalNatives(JNIEnv *env, jclass c2vmClass))
   GraalRuntime::initialize_natives(env, c2vmClass);
 JVM_END
 
-// private static boolean HotSpotOptions.parseVMOptions()
-JVM_ENTRY(jboolean, JVM_ParseGraalOptions(JNIEnv *env, jclass c))
+// private static void HotSpotOptions.parseVMOptions()
+JVM_ENTRY(void, JVM_ParseGraalOptions(JNIEnv *env, jclass c))
   HandleMark hm;
   KlassHandle hotSpotOptionsClass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(c)));
-  bool result = GraalRuntime::parse_arguments(hotSpotOptionsClass, CHECK_false);
-  return result;
+  GraalRuntime::parse_arguments(hotSpotOptionsClass, CHECK);
 JVM_END
 
 
@@ -803,19 +802,18 @@ jint GraalRuntime::check_arguments(TRAPS) {
   return JNI_OK;
 }
 
-bool GraalRuntime::parse_arguments(KlassHandle hotSpotOptionsClass, TRAPS) {
+void GraalRuntime::parse_arguments(KlassHandle hotSpotOptionsClass, TRAPS) {
   ResourceMark rm(THREAD);
 
   // Process option overrides from graal.options first
-  parse_graal_options_file(hotSpotOptionsClass, CHECK_false);
+  parse_graal_options_file(hotSpotOptionsClass, CHECK);
 
   // Now process options on the command line
   int numOptions = Arguments::num_graal_args();
   for (int i = 0; i < numOptions; i++) {
     char* arg = Arguments::graal_args_array()[i];
-    parse_argument(hotSpotOptionsClass, arg, CHECK_false);
+    parse_argument(hotSpotOptionsClass, arg, CHECK);
   }
-  return CITime || CITimeEach;
 }
 
 void GraalRuntime::check_required_value(const char* name, size_t name_len, const char* value, TRAPS) {
