@@ -84,8 +84,9 @@ def createMakeRule(p, bootClasspath):
 """.format(**props)
 
 def createDistributionRule(dist):
-    depDirs = ' '.join(['$(TARGET)/' + i.name for i in dist.sorted_deps(False, True)])
-    depDirsStar = ' '.join(['$(TARGET)/' + i.name + '/*' for i in dist.sorted_deps(False, True)])
+    sorted_deps = set(dist.sorted_deps(False, True))
+    depDirs = ' '.join(['$(TARGET)/' + i.name for i in sorted_deps])
+    depDirsStar = ' '.join(['$(TARGET)/' + i.name + '/*' for i in sorted_deps])
     jarPath = os.path.relpath(dist.path, dist.suite.dir)
     jarDir = os.path.dirname(jarPath)
     props = {
