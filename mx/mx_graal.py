@@ -2413,7 +2413,7 @@ def sl(args):
 def sldebug(args):
     """run a simple command line debugger for the Simple Language"""
     vmArgs, slArgs = _extract_VM_args(args, useDoubleDash=True)
-    vm(vmArgs + ['-cp', mx.classpath("com.oracle.truffle.sl.tools.debug"), "com.oracle.truffle.sl.tools.debug.SLREPLServer"] + slArgs)
+    vm(vmArgs + ['-cp', mx.classpath("com.oracle.truffle.sl.tools"), "com.oracle.truffle.sl.tools.debug.SLREPLServer"] + slArgs)
 
 def isGraalEnabled(vm):
     return vm != 'original' and not vm.endswith('nograal')
