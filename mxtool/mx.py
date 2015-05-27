@@ -2759,7 +2759,7 @@ def build(args, parser=None):
         # N.B. Limiting to a suite only affects the starting set of projects. Dependencies in other suites will still be compiled
         sortedProjects = sorted_project_deps(projects, includeAnnotationProcessors=True)
 
-    if args.java:
+    if args.java and jdtJar:
         ideinit([], refreshOnly=True, buildProcessorJars=False)
 
     tasks = {}
@@ -2937,7 +2937,7 @@ def build(args, parser=None):
                 log('Compiling {0} failed'.format(t.proj.name))
             abort('{0} Java compilation tasks failed'.format(len(failed)))
 
-    if args.java:
+    if args.java and not args.only:
         files = []
         for dist in sorted_dists():
             if dist not in updatedAnnotationProcessorDists:
@@ -4430,6 +4430,8 @@ def _netbeansinit_project(p, jdks=None, files=None, libFiles=None):
     out.element('arg', {'value' : 'build'})
     out.element('arg', {'value' : '--only'})
     out.element('arg', {'value' : p.name})
+    out.element('arg', {'value' : '--force-javac'})
+    out.element('arg', {'value' : '--no-native'})
     out.close('exec')
     out.close('target')
     out.open('target', {'name' : 'jar', 'depends' : 'compile'})
