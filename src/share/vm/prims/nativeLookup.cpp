@@ -133,7 +133,7 @@ extern "C" {
   jobject  JNICALL JVM_GetGraalServiceImpls(JNIEnv *env, jclass c, jclass serviceClass);
   jobject  JNICALL JVM_CreateTruffleRuntime(JNIEnv *env, jclass c);
   jobject  JNICALL JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c);
-  jboolean JNICALL JVM_ParseGraalOptions(JNIEnv *env, jclass hotspotOptionsClass);
+  jboolean JNICALL JVM_IsCITimingEnabled(JNIEnv *env);
 #ifdef COMPILERGRAAL
   void     JNICALL JVM_PrintAndResetGraalCompRate(JNIEnv *env, jclass c);
 #endif
@@ -155,7 +155,7 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_com_oracle_truffle_api_Truffle_createRuntime",                                                NULL, FN_PTR(JVM_CreateTruffleRuntime)               },
   { CC"Java_com_oracle_nfi_NativeFunctionInterfaceRuntime_createInterface",                               NULL, FN_PTR(JVM_CreateNativeFunctionInterface)      },
   { CC"Java_com_oracle_graal_hotspot_bridge_CompilerToVMImpl_init",                                       NULL, FN_PTR(JVM_InitializeGraalNatives)             },
-  { CC"Java_com_oracle_graal_hotspot_HotSpotOptions_parseVMOptions",                                      NULL, FN_PTR(JVM_ParseGraalOptions)                  },
+  { CC"Java_com_oracle_graal_hotspot_HotSpotOptions_isCITimingEnabled",                                   NULL, FN_PTR(JVM_IsCITimingEnabled)                  },
 #endif
 };
 

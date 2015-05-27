@@ -37,6 +37,7 @@
 #include "runtime/arguments.hpp"
 #include "runtime/reflection.hpp"
 #include "utilities/debug.hpp"
+#include "utilities/defaultStream.hpp"
 
 jobject GraalRuntime::_HotSpotGraalRuntime_instance = NULL;
 bool GraalRuntime::_HotSpotGraalRuntime_initialized = false;
@@ -625,6 +626,11 @@ JVM_ENTRY(void, JVM_InitGraalClassLoader(JNIEnv *env, jclass c, jobject loader_h
   SystemDictionary::initialize_wk_klasses_through(SystemDictionary::LAST_GRAAL_WKID, scan, CHECK);
 JVM_END
 
+// boolean com.oracle.graal.hotspot.HotSpotOptions.isCITimingEnabled()
+JVM_ENTRY(jboolean, JVM_IsCITimingEnabled(JNIEnv *env, jclass c))
+  return CITime || CITimeEach;
+JVM_END
+
 // private static GraalRuntime Graal.initializeRuntime()
 JVM_ENTRY(jobject, JVM_GetGraalRuntime(JNIEnv *env, jclass c))
   GraalRuntime::initialize_HotSpotGraalRuntime();
@@ -665,26 +671,9 @@ JVM_ENTRY(jobject, JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c))
   return JNIHandles::make_local(THREAD, (oop) result.get_jobject());
 JVM_END
 
-void GraalRuntime::check_generated_sources_sha1(TRAPS) {
-  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/sourcegen/GeneratedSourcesSha1", CHECK_ABORT);
-  KlassHandle klass = load_required_class(name);
-  fieldDescriptor fd;
-  if (!InstanceKlass::cast(klass())->find_field(vmSymbols::value_name(), vmSymbols::string_signature(), true, &fd)) {
-    THROW_MSG(vmSymbols::java_lang_NoSuchFieldError(), "GeneratedSourcesSha1.value");
-  }
-
-  Symbol* value = java_lang_String::as_symbol(klass->java_mirror()->obj_field(fd.offset()), CHECK);
-  if (!value->equals(_generated_sources_sha1)) {
-    char buf[200];
-    jio_snprintf(buf, sizeof(buf), "Generated sources SHA1 check failed (%s != %s) - need to rebuild the VM", value->as_C_string(), _generated_sources_sha1);
-    THROW_MSG(vmSymbols::java_lang_InternalError(), buf);
-  }
-}
-
 Handle GraalRuntime::callInitializer(const char* className, const char* methodName, const char* returnType) {
   guarantee(!_HotSpotGraalRuntime_initialized, "cannot reinitialize HotSpotGraalRuntime");
   Thread* THREAD = Thread::current();
-  check_generated_sources_sha1(CHECK_ABORT_(Handle()));
 
   TempNewSymbol name = SymbolTable::new_symbol(className, CHECK_ABORT_(Handle()));
   KlassHandle klass = load_required_class(name);
@@ -725,15 +714,6 @@ JVM_ENTRY(void, JVM_InitializeGraalNatives(JNIEnv *env, jclass c2vmClass))
   GraalRuntime::initialize_natives(env, c2vmClass);
 JVM_END
 
-// private static boolean HotSpotOptions.parseVMOptions()
-JVM_ENTRY(jboolean, JVM_ParseGraalOptions(JNIEnv *env, jclass c))
-  HandleMark hm;
-  KlassHandle hotSpotOptionsClass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(c)));
-  bool result = GraalRuntime::parse_arguments(hotSpotOptionsClass, CHECK_false);
-  return result;
-JVM_END
-
-
 void GraalRuntime::ensure_graal_class_loader_is_initialized() {
   // This initialization code is guarded by a static pointer to the Factory class.
   // Once it is non-null, the Graal class loader and well known Graal classes are
@@ -772,212 +752,316 @@ void GraalRuntime::ensure_graal_class_loader_is_initialized() {
     *((jboolean *) addr) = (jboolean) UseGraalClassLoader;
     klass->initialize(CHECK_ABORT);
     _FactoryKlass = klass();
+    assert(!UseGraalClassLoader || SystemDictionary::graal_loader() != NULL, "Graal classloader should have been initialized");
   }
 }
 
-jint GraalRuntime::check_arguments(TRAPS) {
-  KlassHandle nullHandle;
-  parse_arguments(nullHandle, THREAD);
-  if (HAS_PENDING_EXCEPTION) {
-    // Errors in parsing Graal arguments cause exceptions.
-    // We now load and initialize HotSpotOptions which in turn
-    // causes argument parsing to be redone with better error messages.
-    CLEAR_PENDING_EXCEPTION;
-    TempNewSymbol name = SymbolTable::new_symbol("Lcom/oracle/graal/hotspot/HotSpotOptions;", CHECK_ABORT_(JNI_ERR));
-    instanceKlassHandle hotSpotOptionsClass = resolve_or_fail(name, CHECK_ABORT_(JNI_ERR));
-
-    parse_arguments(hotSpotOptionsClass, THREAD);
-    assert(HAS_PENDING_EXCEPTION, "must be");
-
-    ResourceMark rm;
-    Handle exception = PENDING_EXCEPTION;
-    CLEAR_PENDING_EXCEPTION;
-    oop message = java_lang_Throwable::message(exception);
-    if (message != NULL) {
-      tty->print_cr("Error parsing Graal options: %s", java_lang_String::as_utf8_string(message));
-    } else {
-      call_printStackTrace(exception, THREAD);
-    }
-    return JNI_ERR;
+OptionsValueTable* GraalRuntime::parse_arguments() {
+  OptionsTable* table = OptionsTable::load_options();
+  if (table == NULL) {
+    return NULL;
   }
-  return JNI_OK;
-}
 
-bool GraalRuntime::parse_arguments(KlassHandle hotSpotOptionsClass, TRAPS) {
-  ResourceMark rm(THREAD);
+  OptionsValueTable* options = new OptionsValueTable(table);
 
   // Process option overrides from graal.options first
-  parse_graal_options_file(hotSpotOptionsClass, CHECK_false);
+  parse_graal_options_file(options);
 
   // Now process options on the command line
   int numOptions = Arguments::num_graal_args();
   for (int i = 0; i < numOptions; i++) {
     char* arg = Arguments::graal_args_array()[i];
-    parse_argument(hotSpotOptionsClass, arg, CHECK_false);
+    if (!parse_argument(options, arg)) {
+      delete options;
+      return NULL;
+    }
   }
-  return CITime || CITimeEach;
+  return options;
 }
 
-void GraalRuntime::check_required_value(const char* name, size_t name_len, const char* value, TRAPS) {
-  if (value == NULL) {
-    char buf[200];
-    jio_snprintf(buf, sizeof(buf), "Must use '-G:%.*s=<value>' format for %.*s option", name_len, name, name_len, name);
-    THROW_MSG(vmSymbols::java_lang_InternalError(), buf);
+void not_found(OptionsTable* table, const char* argname, size_t namelen) {
+  jio_fprintf(defaultStream::error_stream(),"Unrecognized VM option '%.*s'\n", namelen, argname);
+  OptionDesc* fuzzy_matched = table->fuzzy_match(argname, strlen(argname));
+  if (fuzzy_matched != NULL) {
+    jio_fprintf(defaultStream::error_stream(),
+                "Did you mean '%s%s%s'?\n",
+                (fuzzy_matched->type == _boolean) ? "(+/-)" : "",
+                fuzzy_matched->name,
+                (fuzzy_matched->type == _boolean) ? "" : "=<value>");
   }
 }
 
-void GraalRuntime::parse_argument(KlassHandle hotSpotOptionsClass, char* arg, TRAPS) {
-  ensure_graal_class_loader_is_initialized();
+bool GraalRuntime::parse_argument(OptionsValueTable* options, const char* arg) {
+  OptionsTable* table = options->options_table();
   char first = arg[0];
-  char* name;
+  const char* name;
   size_t name_len;
-  bool recognized = true;
   if (first == '+' || first == '-') {
     name = arg + 1;
-    name_len = strlen(name);
-    recognized = set_option_bool(hotSpotOptionsClass, name, name_len, first, CHECK);
+    OptionDesc* optionDesc = table->get(name);
+    if (optionDesc == NULL) {
+      not_found(table, name, strlen(name));
+      return false;
+    }
+    if (optionDesc->type != _boolean) {
+      jio_fprintf(defaultStream::error_stream(), "Unexpected +/- setting in VM option '%s'\n", name);
+      return false;
+    }
+    OptionValue value;
+    value.desc = *optionDesc;
+    value.boolean_value = first == '+';
+    options->put(value);
+    return true;
   } else {
-    char* sep = strchr(arg, '=');
+    const char* sep = strchr(arg, '=');
     name = arg;
-    char* value = NULL;
+    const char* value = NULL;
     if (sep != NULL) {
       name_len = sep - name;
       value = sep + 1;
     } else {
       name_len = strlen(name);
     }
-    recognized = set_option(hotSpotOptionsClass, name, name_len, value, CHECK);
-  }
-
-  if (!recognized) {
-    bool throw_err = hotSpotOptionsClass.is_null();
-    if (!hotSpotOptionsClass.is_null()) {
-      set_option_helper(hotSpotOptionsClass, name, name_len, Handle(), ' ', Handle(), 0L);
-      if (!HAS_PENDING_EXCEPTION) {
-        throw_err = true;
+    OptionDesc* optionDesc = table->get(name, name_len);
+    if (optionDesc == NULL) {
+      not_found(table, name, name_len);
+      return false;
+    }
+    if (optionDesc->type == _boolean) {
+      jio_fprintf(defaultStream::error_stream(), "Missing +/- setting for VM option '%s'\n", name);
+      return false;
+    }
+    if (value == NULL) {
+      jio_fprintf(defaultStream::error_stream(), "Must use '-G:%.*s=<value>' format for %.*s option", name_len, name, name_len, name);
+      return false;
+    }
+    OptionValue optionValue;
+    optionValue.desc = *optionDesc;
+    char* check;
+    errno = 0;
+    switch(optionDesc->type) {
+      case _int: {
+        long int int_value = ::strtol(value, &check, 10);
+        if (*check != '\0' || errno == ERANGE || int_value > max_jint || int_value < min_jint) {
+          jio_fprintf(defaultStream::error_stream(), "Expected int value for VM option '%s'\n", name);
+          return false;
+        }
+        optionValue.int_value = int_value;
+        break;
       }
+      case _long: {
+        long long int long_value = ::strtoll(value, &check, 10);
+        if (*check != '\0' || errno == ERANGE || long_value > max_jlong || long_value < min_jlong) {
+          jio_fprintf(defaultStream::error_stream(), "Expected long value for VM option '%s'\n", name);
+          return false;
+        }
+        optionValue.long_value = long_value;
+        break;
+      }
+      case _float: {
+        optionValue.float_value = ::strtof(value, &check);
+        if (*check != '\0' || errno == ERANGE) {
+          jio_fprintf(defaultStream::error_stream(), "Expected float value for VM option '%s'\n", name);
+          return false;
+        }
+        break;
+      }
+      case _double: {
+        optionValue.double_value = ::strtod(value, &check);
+        if (*check != '\0' || errno == ERANGE) {
+          jio_fprintf(defaultStream::error_stream(), "Expected double value for VM option '%s'\n", name);
+          return false;
+        }
+        break;
+      }
+      case _string: {
+        char* copy = NEW_C_HEAP_ARRAY(char, strlen(value) + 1, mtCompiler);
+        strcpy(copy, value);
+        optionValue.string_value = copy;
+        break;
+      }
+      default:
+        ShouldNotReachHere();
     }
-
-    if (throw_err) {
-      char buf[200];
-      jio_snprintf(buf, sizeof(buf), "Unrecognized Graal option %.*s", name_len, name);
-      THROW_MSG(vmSymbols::java_lang_InternalError(), buf);
-    }
+    options->put(optionValue);
+    return true;
   }
 }
 
 class GraalOptionParseClosure : public ParseClosure {
-  TRAPS;
-  KlassHandle _hotSpotOptionsClass;
+  OptionsValueTable* _options;
 public:
-  GraalOptionParseClosure(KlassHandle hotSpotOptionsClass, TRAPS) : THREAD(THREAD), _hotSpotOptionsClass(hotSpotOptionsClass) {}
+  GraalOptionParseClosure(OptionsValueTable* options) : _options(options) {}
   void do_line(char* line) {
-    GraalRuntime::parse_argument(_hotSpotOptionsClass, line, THREAD);
-    if (HAS_PENDING_EXCEPTION) {
-      warn_and_abort("Exception thrown while parsing argument");
+    if (!GraalRuntime::parse_argument(_options, line)) {
+      warn("There was an error parsing an argument. Skipping it.");
     }
   }
 };
 
-void GraalRuntime::parse_graal_options_file(KlassHandle hotSpotOptionsClass, TRAPS) {
+void GraalRuntime::parse_graal_options_file(OptionsValueTable* options) {
   const char* home = Arguments::get_java_home();
   size_t path_len = strlen(home) + strlen("/lib/graal.options") + 1;
-  char* path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
+  char path[JVM_MAXPATHLEN];
   char sep = os::file_separator()[0];
-  sprintf(path, "%s%clib%cgraal.options", home, sep, sep);
-  GraalOptionParseClosure closure(hotSpotOptionsClass, THREAD);
-  parse_lines(path, &closure, false, THREAD);
+  jio_snprintf(path, JVM_MAXPATHLEN, "%s%clib%cgraal.options", home, sep, sep);
+  GraalOptionParseClosure closure(options);
+  parse_lines(path, &closure, false);
 }
 
-jlong GraalRuntime::parse_primitive_option_value(char spec, const char* name, size_t name_len, const char* value, TRAPS) {
-  check_required_value(name, name_len, value, CHECK_(0L));
-  union {
-    jint i;
-    jlong l;
-    double d;
-  } uu;
-  uu.l = 0L;
-  char dummy;
-  switch (spec) {
-    case 'd':
-    case 'f': {
-      if (sscanf(value, "%lf%c", &uu.d, &dummy) == 1) {
-        return uu.l;
+#define CHECK_WARN_ABORT_(message) THREAD); \
+  if (HAS_PENDING_EXCEPTION) { \
+    warning(message); \
+    char buf[512]; \
+    jio_snprintf(buf, 512, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
+    GraalRuntime::abort_on_pending_exception(PENDING_EXCEPTION, buf); \
+    return; \
+  } \
+  (void)(0
+
+class SetOptionClosure : public ValueClosure<OptionValue> {
+  Thread* _thread;
+public:
+  SetOptionClosure(TRAPS) : _thread(THREAD) {}
+  void do_value(OptionValue* optionValue) {
+    TRAPS = _thread;
+    const char* declaringClass = optionValue->desc.declaringClass;
+    if (declaringClass == NULL) {
+      // skip PrintFlags pseudo-option
+      return;
+    }
+    const char* fieldName = optionValue->desc.name;
+    const char* fieldClass = optionValue->desc.fieldClass;
+
+    size_t fieldSigLen = 2 + strlen(fieldClass);
+    char* fieldSig = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, fieldSigLen + 1);
+    jio_snprintf(fieldSig, fieldSigLen + 1, "L%s;", fieldClass);
+    for (size_t i = 0; i < fieldSigLen; ++i) {
+      if (fieldSig[i] == '.') {
+        fieldSig[i] = '/';
       }
+    }
+    fieldSig[fieldSigLen] = '\0';
+    size_t declaringClassLen = strlen(declaringClass);
+    char* declaringClassBinary = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, declaringClassLen + 1);
+    for (size_t i = 0; i < declaringClassLen; ++i) {
+      if (declaringClass[i] == '.') {
+        declaringClassBinary[i] = '/';
+      } else {
+        declaringClassBinary[i] = declaringClass[i];
+      }
+    }
+    declaringClassBinary[declaringClassLen] = '\0';
+
+    TempNewSymbol name = SymbolTable::new_symbol(declaringClassBinary, CHECK_WARN_ABORT_("Declaring class could not be found"));
+    Klass* klass = GraalRuntime::resolve_or_null(name, CHECK_WARN_ABORT_("Declaring class could not be resolved"));
+
+    if (klass == NULL) {
+      warning("Declaring class for option %s could not be resolved", declaringClass);
+      abort();
+      return;
+    }
+
+    // The class has been loaded so the field and signature should already be in the symbol
+    // table.  If they're not there, the field doesn't exist.
+    TempNewSymbol fieldname = SymbolTable::probe(fieldName, (int)strlen(fieldName));
+    TempNewSymbol signame = SymbolTable::probe(fieldSig, (int)fieldSigLen);
+    if (fieldname == NULL || signame == NULL) {
+      warning("Symbols for field for option %s not found (in %s)", fieldName, declaringClass);
+      abort();
+      return;
+    }
+    // Make sure class is initialized before handing id's out to fields
+    klass->initialize(CHECK_WARN_ABORT_("Error while initializing declaring class for option"));
+
+    fieldDescriptor fd;
+    if (!InstanceKlass::cast(klass)->find_field(fieldname, signame, true, &fd)) {
+      warning("Field for option %s not found (in %s)", fieldName, declaringClass);
+      abort();
+      return;
+    }
+    oop value;
+    switch(optionValue->desc.type) {
+    case _boolean: {
+      jvalue jv;
+      jv.z = optionValue->boolean_value;
+      value = java_lang_boxing_object::create(T_BOOLEAN, &jv, THREAD);
       break;
     }
-    case 'i': {
-      if (sscanf(value, "%d%c", &uu.i, &dummy) == 1) {
-        return (jlong)uu.i;
-      }
+    case _int: {
+      jvalue jv;
+      jv.i = optionValue->int_value;
+      value = java_lang_boxing_object::create(T_INT, &jv, THREAD);
       break;
     }
+    case _long: {
+      jvalue jv;
+      jv.j = optionValue->long_value;
+      value = java_lang_boxing_object::create(T_LONG, &jv, THREAD);
+      break;
+    }
+    case _float: {
+      jvalue jv;
+      jv.f = optionValue->float_value;
+      value = java_lang_boxing_object::create(T_FLOAT, &jv, THREAD);
+      break;
+    }
+    case _double: {
+      jvalue jv;
+      jv.d = optionValue->double_value;
+      value = java_lang_boxing_object::create(T_DOUBLE, &jv, THREAD);
+      break;
+    }
+    case _string:
+      value = java_lang_String::create_from_str(optionValue->string_value, THREAD)();
+      break;
     default:
       ShouldNotReachHere();
-  }
-  ResourceMark rm(THREAD);
-  char buf[200];
-  bool missing = strlen(value) == 0;
-  if (missing) {
-    jio_snprintf(buf, sizeof(buf), "Missing %s value for Graal option %.*s", (spec == 'i' ? "numeric" : "float/double"), name_len, name);
-  } else {
-    jio_snprintf(buf, sizeof(buf), "Invalid %s value for Graal option %.*s: %s", (spec == 'i' ? "numeric" : "float/double"), name_len, name, value);
-  }
-  THROW_MSG_(vmSymbols::java_lang_InternalError(), buf, 0L);
-}
+    }
 
-void GraalRuntime::set_option_helper(KlassHandle hotSpotOptionsClass, char* name, size_t name_len, Handle option, jchar spec, Handle stringValue, jlong primitiveValue) {
-  Thread* THREAD = Thread::current();
-  Handle name_handle;
-  if (name != NULL) {
-    if (strlen(name) > name_len) {
-      // Temporarily replace '=' with NULL to create the Java string for the option name
-      char save = name[name_len];
-      name[name_len] = '\0';
-      name_handle = java_lang_String::create_from_str(name, THREAD);
-      name[name_len] = '=';
-      if (HAS_PENDING_EXCEPTION) {
-        return;
-      }
-    } else {
-      assert(strlen(name) == name_len, "must be");
-      name_handle = java_lang_String::create_from_str(name, CHECK);
+    oop optionValueOop = klass->java_mirror()->obj_field(fd.offset());
+
+    if (optionValueOop == NULL) {
+      warning("Option field was null, can not set %s", fieldName);
+      abort();
+      return;
+    }
+
+    if (!InstanceKlass::cast(optionValueOop->klass())->find_field(vmSymbols::value_name(), vmSymbols::object_signature(), false, &fd)) {
+      warning("'Object value' field not found in option class %s, can not set option %s", fieldClass, fieldName);
+      abort();
+      return;
+    }
+
+    optionValueOop->obj_field_put(fd.offset(), value);
+  }
+};
+
+void GraalRuntime::set_options(OptionsValueTable* options, TRAPS) {
+  ensure_graal_class_loader_is_initialized();
+  {
+    ResourceMark rm;
+    SetOptionClosure closure(THREAD);
+    options->for_each(&closure);
+    if (closure.is_aborted()) {
+      vm_abort(false);
     }
   }
-
-  TempNewSymbol setOption = SymbolTable::new_symbol("setOption", CHECK);
-  TempNewSymbol sig = SymbolTable::new_symbol("(Ljava/lang/String;Lcom/oracle/graal/options/OptionValue;CLjava/lang/String;J)V", CHECK);
-  JavaValue result(T_VOID);
-  JavaCallArguments args;
-  args.push_oop(name_handle());
-  args.push_oop(option());
-  args.push_int(spec);
-  args.push_oop(stringValue());
-  args.push_long(primitiveValue);
-  JavaCalls::call_static(&result, hotSpotOptionsClass, setOption, sig, &args, CHECK);
+  OptionValue* printFlags = options->get(PRINT_FLAGS_ARG);
+  if (printFlags != NULL && printFlags->boolean_value) {
+    print_flags_helper(CHECK_ABORT);
+  }
 }
 
-Handle GraalRuntime::get_OptionValue(const char* declaringClass, const char* fieldName, const char* fieldSig, TRAPS) {
-  TempNewSymbol name = SymbolTable::new_symbol(declaringClass, CHECK_NH);
-  Klass* klass = resolve_or_fail(name, CHECK_NH);
-
-  // The class has been loaded so the field and signature should already be in the symbol
-  // table.  If they're not there, the field doesn't exist.
-  TempNewSymbol fieldname = SymbolTable::probe(fieldName, (int)strlen(fieldName));
-  TempNewSymbol signame = SymbolTable::probe(fieldSig, (int)strlen(fieldSig));
-  if (fieldname == NULL || signame == NULL) {
-    THROW_MSG_(vmSymbols::java_lang_NoSuchFieldError(), (char*) fieldName, Handle());
-  }
-  // Make sure class is initialized before handing id's out to fields
-  klass->initialize(CHECK_NH);
-
-  fieldDescriptor fd;
-  if (!InstanceKlass::cast(klass)->find_field(fieldname, signame, true, &fd)) {
-    THROW_MSG_(vmSymbols::java_lang_NoSuchFieldError(), (char*) fieldName, Handle());
-  }
-
-  Handle ret = klass->java_mirror()->obj_field(fd.offset());
-  return ret;
+void GraalRuntime::print_flags_helper(TRAPS) {
+  // TODO(gd) write this in C++?
+  HandleMark hm(THREAD);
+  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/HotSpotOptions", CHECK_ABORT);
+  KlassHandle hotSpotOptionsClass = load_required_class(name);
+  TempNewSymbol setOption = SymbolTable::new_symbol("printFlags", CHECK);
+  JavaValue result(T_VOID);
+  JavaCallArguments args;
+  JavaCalls::call_static(&result, hotSpotOptionsClass, setOption, vmSymbols::void_method_signature(), &args, CHECK);
 }
 
 Handle GraalRuntime::create_Service(const char* name, TRAPS) {
@@ -1052,68 +1136,69 @@ Klass* GraalRuntime::load_required_class(Symbol* name) {
   return klass;
 }
 
-void GraalRuntime::parse_lines(char* path, ParseClosure* closure, bool warnStatFailure, TRAPS) {
+void GraalRuntime::parse_lines(char* path, ParseClosure* closure, bool warnStatFailure) {
   struct stat st;
-  if (os::stat(path, &st) == 0) {
-      int file_handle = os::open(path, 0, 0);
-      if (file_handle != -1) {
-        char* buffer = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, st.st_size + 1);
-        int num_read = (int) os::read(file_handle, (char*) buffer, st.st_size);
-        if (num_read == -1) {
-          warning("Error reading file %s due to %s", path, strerror(errno));
-        } else if (num_read != st.st_size) {
-          warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
-        }
-        os::close(file_handle);
-        closure->set_filename(path);
-        if (num_read == st.st_size) {
-          buffer[num_read] = '\0';
+  if (os::stat(path, &st) == 0 && (st.st_mode & S_IFREG) == S_IFREG) { // exists & is regular file
+    int file_handle = os::open(path, 0, 0);
+    if (file_handle != -1) {
+      char* buffer = NEW_C_HEAP_ARRAY(char, st.st_size + 1, mtInternal);
+      int num_read = (int) os::read(file_handle, (char*) buffer, st.st_size);
+      if (num_read == -1) {
+        warning("Error reading file %s due to %s", path, strerror(errno));
+      } else if (num_read != st.st_size) {
+        warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
+      }
+      os::close(file_handle);
+      closure->set_filename(path);
+      if (num_read == st.st_size) {
+        buffer[num_read] = '\0';
 
-          char* line = buffer;
-          while (line - buffer < num_read && !closure->is_aborted()) {
-            // find line end (\r, \n or \r\n)
-            char* nextline = NULL;
-            char* cr = strchr(line, '\r');
-            char* lf = strchr(line, '\n');
-            if (cr != NULL && lf != NULL) {
-              char* min = MIN2(cr, lf);
-              *min = '\0';
-              if (lf == cr + 1) {
-                nextline = lf + 1;
-              } else {
-                nextline = min + 1;
-              }
-            } else if (cr != NULL) {
-              *cr = '\0';
-              nextline = cr + 1;
-            } else if (lf != NULL) {
-              *lf = '\0';
+        char* line = buffer;
+        while (line - buffer < num_read && !closure->is_aborted()) {
+          // find line end (\r, \n or \r\n)
+          char* nextline = NULL;
+          char* cr = strchr(line, '\r');
+          char* lf = strchr(line, '\n');
+          if (cr != NULL && lf != NULL) {
+            char* min = MIN2(cr, lf);
+            *min = '\0';
+            if (lf == cr + 1) {
               nextline = lf + 1;
-            }
-            // trim left
-            while (*line == ' ' || *line == '\t') line++;
-            char* end = line + strlen(line);
-            // trim right
-            while (end > line && (*(end -1) == ' ' || *(end -1) == '\t')) end--;
-            *end = '\0';
-            // skip comments and empty lines
-            if (*line != '#' && strlen(line) > 0) {
-              closure->parse_line(line);
-            }
-            if (nextline != NULL) {
-              line = nextline;
             } else {
-              // File without newline at the end
-              break;
+              nextline = min + 1;
             }
+          } else if (cr != NULL) {
+            *cr = '\0';
+            nextline = cr + 1;
+          } else if (lf != NULL) {
+            *lf = '\0';
+            nextline = lf + 1;
+          }
+          // trim left
+          while (*line == ' ' || *line == '\t') line++;
+          char* end = line + strlen(line);
+          // trim right
+          while (end > line && (*(end -1) == ' ' || *(end -1) == '\t')) end--;
+          *end = '\0';
+          // skip comments and empty lines
+          if (*line != '#' && strlen(line) > 0) {
+            closure->parse_line(line);
+          }
+          if (nextline != NULL) {
+            line = nextline;
+          } else {
+            // File without newline at the end
+            break;
           }
         }
-      } else {
-        warning("Error opening file %s due to %s", path, strerror(errno));
       }
-    } else if (warnStatFailure) {
-      warning("Could not stat file %s due to %s", path, strerror(errno));
+      FREE_C_HEAP_ARRAY(char, buffer, mtInternal);
+    } else {
+      warning("Error opening file %s due to %s", path, strerror(errno));
     }
+  } else if (warnStatFailure) {
+    warning("Could not stat file %s due to %s", path, strerror(errno));
+  }
 }
 
 class ServiceParseClosure : public ParseClosure {
@@ -1121,13 +1206,18 @@ class ServiceParseClosure : public ParseClosure {
 public:
   ServiceParseClosure() : _implNames() {}
   void do_line(char* line) {
+    size_t lineLen = strlen(line);
+    char* implName = NEW_C_HEAP_ARRAY(char, lineLen + 1, mtCompiler); // TODO (gd) i'm leaking
     // Turn all '.'s into '/'s
-    for (size_t index = 0; line[index] != '\0'; index++) {
+    for (size_t index = 0; index < lineLen; ++index) {
       if (line[index] == '.') {
-        line[index] = '/';
+        implName[index] = '/';
+      } else {
+        implName[index] = line[index];
       }
     }
-    _implNames.append(line);
+    implName[lineLen] = '\0';
+    _implNames.append(implName);
   }
   GrowableArray<char*>* implNames() {return &_implNames;}
 };
@@ -1141,7 +1231,7 @@ Handle GraalRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
   char sep = os::file_separator()[0];
   sprintf(path, "%s%clib%cgraal%cservices%c%s", home, sep, sep, sep, sep, serviceName);
   ServiceParseClosure closure;
-  parse_lines(path, &closure, true, THREAD);
+  parse_lines(path, &closure, true); // TODO(gd) cache parsing results?
 
   GrowableArray<char*>* implNames = closure.implNames();
   objArrayOop servicesOop = oopFactory::new_objArray(serviceKlass(), implNames->length(), CHECK_NH);
@@ -1153,5 +1243,3 @@ Handle GraalRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
   }
   return services;
 }
-
-#include "graalRuntime.inline.hpp"

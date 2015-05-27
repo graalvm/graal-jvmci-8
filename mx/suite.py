@@ -442,6 +442,9 @@ suite = {
     "com.oracle.graal.options" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.api.runtime",
+      ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal",
@@ -496,7 +499,6 @@ suite = {
         "com.oracle.graal.nodeinfo",
         "com.oracle.graal.compiler.common",
         "com.oracle.graal.api.collections",
-        "com.oracle.graal.api.runtime",
         "FINDBUGS",
       ],
       "javaCompliance" : "1.8",
