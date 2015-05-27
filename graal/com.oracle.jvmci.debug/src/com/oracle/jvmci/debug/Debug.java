@@ -45,7 +45,7 @@ public class Debug {
      */
     public static class Initialization {
 
-        public static final String INITIALIZER_PROPERTY_NAME = "graal.debug.enable";
+        public static final String INITIALIZER_PROPERTY_NAME = "jvmci.debug.enable";
 
         private static boolean initialized;
 
@@ -1305,19 +1305,19 @@ public class Debug {
         }
     };
 
-    public static final String ENABLE_UNSCOPED_TIMERS_PROPERTY_NAME = "graal.debug.unscopedTimers";
-    public static final String ENABLE_UNSCOPED_METRICS_PROPERTY_NAME = "graal.debug.unscopedMetrics";
-    public static final String ENABLE_UNSCOPED_MEM_USE_TRACKERS_PROPERTY_NAME = "graal.debug.unscopedMemUseTrackers";
+    public static final String ENABLE_UNSCOPED_TIMERS_PROPERTY_NAME = "jvmci.debug.unscopedTimers";
+    public static final String ENABLE_UNSCOPED_METRICS_PROPERTY_NAME = "jvmci.debug.unscopedMetrics";
+    public static final String ENABLE_UNSCOPED_MEM_USE_TRACKERS_PROPERTY_NAME = "jvmci.debug.unscopedMemUseTrackers";
 
     /**
      * @see #timer(CharSequence)
      */
-    public static final String ENABLE_TIMER_PROPERTY_NAME_PREFIX = "graal.debug.timer.";
+    public static final String ENABLE_TIMER_PROPERTY_NAME_PREFIX = "jvmci.debug.timer.";
 
     /**
      * @see #metric(CharSequence)
      */
-    public static final String ENABLE_METRIC_PROPERTY_NAME_PREFIX = "graal.debug.metric.";
+    public static final String ENABLE_METRIC_PROPERTY_NAME_PREFIX = "jvmci.debug.metric.";
 
     /**
      * Set of unconditionally enabled metrics. Possible values and their meanings:

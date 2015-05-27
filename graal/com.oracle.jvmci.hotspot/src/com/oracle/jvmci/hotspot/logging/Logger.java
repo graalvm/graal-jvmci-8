@@ -34,7 +34,7 @@ import com.oracle.jvmci.hotspot.*;
  */
 public class Logger {
 
-    public static final boolean ENABLED = Boolean.valueOf(System.getProperty("graal.debug"));
+    public static final boolean ENABLED = Boolean.valueOf(System.getProperty("jvmci.debug"));
     private static final int SPACING = 4;
     private static final ThreadLocal<Logger> loggerTL;
 
@@ -58,7 +58,7 @@ public class Logger {
         }
 
         PrintStream ps = null;
-        String filename = System.getProperty("graal.info_file");
+        String filename = System.getProperty("jvmci.info_file");
         if (filename != null && !"".equals(filename)) {
             try {
                 ps = new PrintStream(new FileOutputStream(filename));

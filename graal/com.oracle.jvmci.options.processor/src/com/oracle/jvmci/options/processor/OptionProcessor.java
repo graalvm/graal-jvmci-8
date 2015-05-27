@@ -35,7 +35,6 @@ import javax.tools.*;
 
 import com.oracle.jvmci.options.*;
 
-
 /**
  * Processes static fields annotated with {@link Option}. An {@link Options} service is generated
  * for each top level class containing at least one such field. These service objects can be
@@ -227,7 +226,7 @@ public class OptionProcessor extends AbstractProcessor {
 
     protected PrintWriter createSourceFile(String pkg, String relativeName, Filer filer, Element... originatingElements) {
         try {
-            // Ensure Unix line endings to comply with Graal code style guide checked by Checkstyle
+            // Ensure Unix line endings to comply with code style guide checked by Checkstyle
             JavaFileObject sourceFile = filer.createSourceFile(pkg + "." + relativeName, originatingElements);
             return new PrintWriter(sourceFile.openWriter()) {
 

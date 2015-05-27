@@ -33,12 +33,12 @@ import com.oracle.jvmci.runtime.*;
 //JaCoCo Exclude
 
 /**
- * Sets Graal options from the HotSpot command line. Such options are distinguished by the
- * {@link #GRAAL_OPTION_PREFIX} prefix.
+ * Sets JVMCI options from the HotSpot command line. Such options are distinguished by the
+ * {@link #JVMCI_OPTION_PREFIX} prefix.
  */
 public class HotSpotOptions {
 
-    private static final String GRAAL_OPTION_PREFIX = "-G:";
+    private static final String JVMCI_OPTION_PREFIX = "-G:";
 
     /**
      * Parses the JVMCI specific options specified to HotSpot (e.g., on the command line).
@@ -81,10 +81,10 @@ public class HotSpotOptions {
                 option.setValue(Boolean.FALSE);
                 break;
             case '?':
-                OptionUtils.printFlags(options, GRAAL_OPTION_PREFIX);
+                OptionUtils.printFlags(options, JVMCI_OPTION_PREFIX);
                 break;
             case ' ':
-                OptionUtils.printNoMatchMessage(options, name, GRAAL_OPTION_PREFIX);
+                OptionUtils.printNoMatchMessage(options, name, JVMCI_OPTION_PREFIX);
                 break;
             case 'i':
                 option.setValue((int) primitiveValue);
@@ -110,6 +110,6 @@ public class HotSpotOptions {
      *            instead.
      */
     public static boolean parseOption(String option, OptionConsumer setter) {
-        return OptionUtils.parseOption(options, option, GRAAL_OPTION_PREFIX, setter);
+        return OptionUtils.parseOption(options, option, JVMCI_OPTION_PREFIX, setter);
     }
 }

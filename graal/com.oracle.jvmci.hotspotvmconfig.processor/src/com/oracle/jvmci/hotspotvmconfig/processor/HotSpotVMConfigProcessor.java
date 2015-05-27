@@ -230,7 +230,7 @@ public class HotSpotVMConfigProcessor extends AbstractProcessor {
 
     protected PrintWriter createSourceFile(String pkg, String relativeName, Filer filer, Element... originatingElements) {
         try {
-            // Ensure Unix line endings to comply with Graal code style guide checked by Checkstyle
+            // Ensure Unix line endings to comply with code style guide checked by Checkstyle
             FileObject sourceFile = filer.createResource(StandardLocation.SOURCE_OUTPUT, pkg, relativeName, originatingElements);
             logMessage("%s\n", sourceFile);
             return new PrintWriter(sourceFile.openWriter()) {

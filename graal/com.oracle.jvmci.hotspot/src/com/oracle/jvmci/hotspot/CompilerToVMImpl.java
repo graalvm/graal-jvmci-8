@@ -27,14 +27,13 @@ import static com.oracle.jvmci.hotspot.InitTimer.*;
 
 import com.oracle.jvmci.code.*;
 
-
 /**
  * Entries into the HotSpot VM from Java code.
  */
 public class CompilerToVMImpl implements CompilerToVM {
 
     /**
-     * Initializes the native part of the Graal runtime.
+     * Initializes the native part of the JVMCI runtime.
      */
     private static native void init();
 

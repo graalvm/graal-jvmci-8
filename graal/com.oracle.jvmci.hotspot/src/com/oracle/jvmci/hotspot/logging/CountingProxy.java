@@ -29,14 +29,13 @@ import java.util.concurrent.atomic.*;
 
 import com.oracle.jvmci.debug.*;
 
-
 /**
  * A java.lang.reflect proxy that hierarchically logs all method invocations along with their
  * parameters and return values.
  */
 public class CountingProxy<T> implements InvocationHandler {
 
-    public static final boolean ENABLED = Boolean.valueOf(System.getProperty("graal.countcalls"));
+    public static final boolean ENABLED = Boolean.valueOf(System.getProperty("jvmci.countcalls"));
 
     private T delegate;
 

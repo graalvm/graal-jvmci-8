@@ -39,7 +39,7 @@ public class Services {
             Service[] names = getServiceImpls(type);
             if (names == null || names.length == 0) {
                 throw new InternalError(
-                                format("No implementations for %s found (ensure %s extends %s and that in suite.py the \"annotationProcessors\" attribute for the project enclosing %s includes \"com.oracle.graal.service.processor\")",
+                                format("No implementations for %s found (ensure %s extends %s and that in suite.py the \"annotationProcessors\" attribute for the project enclosing %s includes \"com.oracle.jvmci.runtime.processor\")",
                                                 type.getSimpleName(), type.getSimpleName(), Service.class, type.getSimpleName()));
             }
             return Arrays.asList(names);

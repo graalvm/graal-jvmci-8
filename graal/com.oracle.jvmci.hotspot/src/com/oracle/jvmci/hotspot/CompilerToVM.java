@@ -269,7 +269,7 @@ public interface CompilerToVM {
     void invalidateInstalledCode(InstalledCode hotspotInstalledCode);
 
     /**
-     * Collects the current values of all Graal benchmark counters, summed up over all threads.
+     * Collects the current values of all JVMCI benchmark counters, summed up over all threads.
      */
     long[] collectCounters();
 

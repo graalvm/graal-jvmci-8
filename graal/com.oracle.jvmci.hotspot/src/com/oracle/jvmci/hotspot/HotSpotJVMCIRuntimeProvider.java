@@ -31,7 +31,7 @@ import com.oracle.jvmci.runtime.*;
 //JaCoCo Exclude
 
 /**
- * Configuration information for the HotSpot Graal runtime.
+ * Configuration information for the HotSpot JVMCI runtime.
  */
 public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
 
@@ -55,7 +55,7 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
     JavaType lookupType(String name, HotSpotResolvedObjectType accessingType, boolean resolve);
 
     /**
-     * Gets the Graal mirror for a {@link Class} object.
+     * Gets the JVMCI mirror for a {@link Class} object.
      *
      * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
      */

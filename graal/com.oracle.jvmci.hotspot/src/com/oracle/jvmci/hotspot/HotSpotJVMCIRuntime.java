@@ -182,11 +182,11 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     private final JVMCIBackend hostBackend;
 
     /**
-     * Graal mirrors are stored as a {@link ClassValue} associated with the {@link Class} of the
+     * JVMCI mirrors are stored as a {@link ClassValue} associated with the {@link Class} of the
      * type. This data structure stores both {@link HotSpotResolvedObjectType} and
      * {@link HotSpotResolvedPrimitiveType} types.
      */
-    private final ClassValue<ResolvedJavaType> graalMirrors = new ClassValue<ResolvedJavaType>() {
+    private final ClassValue<ResolvedJavaType> jvmciMirrors = new ClassValue<ResolvedJavaType>() {
         @Override
         protected ResolvedJavaType computeValue(Class<?> javaClass) {
             if (javaClass.isPrimitive()) {
@@ -207,7 +207,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             config = new HotSpotVMConfig(compilerToVm);
         }
 
-        if (Boolean.valueOf(System.getProperty("graal.printconfig"))) {
+        if (Boolean.valueOf(System.getProperty("jvmci.printconfig"))) {
             printConfig(config);
         }
 
@@ -230,7 +230,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     }
 
     public ResolvedJavaType fromClass(Class<?> javaClass) {
-        return graalMirrors.get(javaClass);
+        return jvmciMirrors.get(javaClass);
     }
 
     private static void printConfig(HotSpotVMConfig config) {

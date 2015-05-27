@@ -151,7 +151,7 @@ public class OptionValue<T> {
     private OptionValue<?> next;
     private static OptionValue<?> head;
 
-    private static final boolean ShowReadsHistogram = Boolean.getBoolean("graal.showOptionValueReadsHistogram");
+    private static final boolean ShowReadsHistogram = Boolean.getBoolean("jvmci.showOptionValueReadsHistogram");
 
     private static void addToHistogram(OptionValue<?> option) {
         if (ShowReadsHistogram) {

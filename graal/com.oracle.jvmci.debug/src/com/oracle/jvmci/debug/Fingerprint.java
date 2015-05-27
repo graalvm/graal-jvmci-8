@@ -30,7 +30,7 @@ import java.util.stream.*;
  */
 public class Fingerprint implements AutoCloseable {
 
-    public static final String ENABLED_PROPERTY_NAME = "graal.fingerprint";
+    public static final String ENABLED_PROPERTY_NAME = "jvmci.fingerprint";
 
     /**
      * Determines whether fingerprinting is enabled. This is set by the
@@ -121,7 +121,7 @@ public class Fingerprint implements AutoCloseable {
         return index == -1 ? events.size() : index;
     }
 
-    private static final int MAX_EVENT_TAIL_IN_ERROR_MESSAGE = Integer.getInteger("graal.fingerprint.errorEventTailLength", 50);
+    private static final int MAX_EVENT_TAIL_IN_ERROR_MESSAGE = Integer.getInteger("jvmci.fingerprint.errorEventTailLength", 50);
 
     private String tail() {
         int start = Math.max(index - MAX_EVENT_TAIL_IN_ERROR_MESSAGE, 0);

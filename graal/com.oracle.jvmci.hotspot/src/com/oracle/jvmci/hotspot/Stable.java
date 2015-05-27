@@ -26,10 +26,9 @@ package com.oracle.jvmci.hotspot;
 import java.lang.annotation.*;
 
 /**
- * This annotation functions as an alias for the sun.invoke.Stable annotation within Graal code. It
+ * This annotation functions as an alias for the sun.invoke.Stable annotation within JVMCI code. It
  * is specially recognized during class file parsing in the same way as that annotation.
  */
-
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Stable {
