@@ -54,12 +54,8 @@ protected:
   void set_filename(char* path) {_filename = path; _lineNo = 0;}
 };
 
-class GraalOptionParseClosure;
-
 class GraalRuntime: public CHeapObj<mtCompiler> {
-  friend GraalOptionParseClosure;
  private:
-
   static jobject _HotSpotGraalRuntime_instance;
   static bool _HotSpotGraalRuntime_initialized;
 
@@ -72,8 +68,6 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
    * options present on the command line.
    */
   static void parse_graal_options_file(OptionsValueTable* options);
-
-  static bool parse_argument(OptionsValueTable* options, const char* arg);
 
   static void print_flags_helper(TRAPS);
   /**
@@ -90,6 +84,8 @@ class GraalRuntime: public CHeapObj<mtCompiler> {
    * the relevants Java fields.
    */
   static OptionsValueTable* parse_arguments();
+
+  static bool parse_argument(OptionsValueTable* options, const char* arg);
 
   static void set_options(OptionsValueTable* options, TRAPS);
 
