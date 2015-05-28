@@ -390,7 +390,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code) {
   CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
   _oop_recorder = new OopRecorder(&_arena, true);
   _dependencies = new Dependencies(&_arena, _oop_recorder, compilerThread != NULL ? compilerThread->log() : NULL);
-  objArrayHandle assumptions = CompilationResult::assumptions(HotSpotCompiledCode::comp(compiled_code));
+  objArrayHandle assumptions = HotSpotCompiledCode::assumptions(compiled_code);
   if (!assumptions.is_null()) {
     int length = assumptions->length();
     for (int i = 0; i < length; ++i) {
@@ -413,7 +413,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code) {
       }
     }
   }
-  objArrayHandle methods = CompilationResult::methods(HotSpotCompiledCode::comp(compiled_code));
+  objArrayHandle methods = HotSpotCompiledCode::methods(compiled_code);
   if (!methods.is_null()) {
     int length = methods->length();
     for (int i = 0; i < length; ++i) {
@@ -483,7 +483,6 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
 }
 
 void CodeInstaller::initialize_fields(oop compiled_code) {
-  Handle comp_result = HotSpotCompiledCode::comp(compiled_code);
   if (compiled_code->is_a(HotSpotCompiledNmethod::klass())) {
     Handle hotspotJavaMethod = HotSpotCompiledNmethod::method(compiled_code);
     methodHandle method = getMethodFromHotSpotMethod(hotspotJavaMethod());
@@ -497,10 +496,10 @@ void CodeInstaller::initialize_fields(oop compiled_code) {
   _sites_handle = JNIHandles::make_local(HotSpotCompiledCode::sites(compiled_code));
   _exception_handlers_handle = JNIHandles::make_local(HotSpotCompiledCode::exceptionHandlers(compiled_code));
 
-  _code_handle = JNIHandles::make_local(CompilationResult::targetCode(comp_result));
-  _code_size = CompilationResult::targetCodeSize(comp_result);
-  _total_frame_size = CompilationResult::totalFrameSize(comp_result);
-  _custom_stack_area_offset = CompilationResult::customStackAreaOffset(comp_result);
+  _code_handle = JNIHandles::make_local(HotSpotCompiledCode::targetCode(compiled_code));
+  _code_size = HotSpotCompiledCode::targetCodeSize(compiled_code);
+  _total_frame_size = HotSpotCompiledCode::totalFrameSize(compiled_code);
+  _custom_stack_area_offset = HotSpotCompiledCode::customStackAreaOffset(compiled_code);
 
   // Pre-calculate the constants section size.  This is required for PC-relative addressing.
   _data_section_handle = JNIHandles::make_local(HotSpotCompiledCode::dataSection(compiled_code));

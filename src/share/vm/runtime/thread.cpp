@@ -3395,6 +3395,13 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   jint parse_result = Arguments::parse(args);
   if (parse_result != JNI_OK) return parse_result;
 
+#ifdef GRAAL
+  OptionsValueTable* options = GraalRuntime::parse_arguments();
+  if (options == NULL) {
+    return JNI_ERR;
+  }
+#endif
+
   os::init_before_ergo();
 
   jint ergo_result = Arguments::apply_ergo();
@@ -3703,11 +3710,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
 #ifdef GRAAL
-  status = GraalRuntime::check_arguments(main_thread);
-  if (status != JNI_OK) {
-    *canTryAgain = false; // don't let caller call JNI_CreateJavaVM again
-    return status;
-  }
+  GraalRuntime::set_options(options, main_thread);
 #endif
 
   // initialize compiler(s)
