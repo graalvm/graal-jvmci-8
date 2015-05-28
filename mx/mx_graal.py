@@ -707,7 +707,26 @@ def _updateJVMCIServiceFiles(jdkDir):
     jreJVMCIServicesDir = join(jreJVMCIDir, 'services')
     _extractJVMCIServiceFiles(jvmciJars, jreJVMCIServicesDir)
 
-
+def _patchGraalVersionConstant(dist):
+    """
+    Patches the constant "@@graal.version@@" in the constant pool of Graal.class
+    with the computed Graal version string.
+    """
+    zfOutFd, zfOutPath = tempfile.mkstemp(suffix='', prefix=basename(dist.path) + '.', dir=dirname(dist.path))
+    zfOut = zipfile.ZipFile(zfOutPath, 'w')
+    zf = zipfile.ZipFile(dist.path, 'r')
+    for zi in zf.infolist():
+        data = zf.read(zi)
+        if zi.filename == 'com/oracle/graal/api/runtime/Graal.class':
+            versionSpec = '{:' + str(len('@@graal.version@@')) + '}'
+            versionStr = versionSpec.format(graal_version())
+            assert '@@graal.version@@' in data, 'could not find "@@graal.version@@" constant in ' + dist.path + '!' + zi.filename
+            data = data.replace('@@graal.version@@', versionStr)
+        zfOut.writestr(zi, data)
+    zfOut.close()
+    os.close(zfOutFd)
+    zf.close()
+    shutil.move(zfOutPath, dist.path)
 
 def _installDistInJdks(deployableDist):
     """
@@ -717,9 +736,8 @@ def _installDistInJdks(deployableDist):
     dist = mx.distribution(deployableDist.name)
 
     if dist.name == 'GRAAL':
-        zf = zipfile.ZipFile(dist.path, 'a')
-        zf.writestr('com/oracle/graal/api/runtime/graal.version', graal_version())
-        zf.close()
+        _patchGraalVersionConstant(dist)
+
     elif dist.name == 'GRAAL_TRUFFLE':
         # The content in graalRuntime.inline.hpp is generated from Graal
         # classes that contain com.oracle.jvmci.options.Option annotated fields.
