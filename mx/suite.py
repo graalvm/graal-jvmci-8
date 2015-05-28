@@ -166,12 +166,11 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.runtime",
-        "com.oracle.jvmci.common",
         "com.oracle.jvmci.hotspotvmconfig",
-        "com.oracle.jvmci.debug",
         "com.oracle.jvmci.options",
-        "FINDBUGS"
+        "com.oracle.jvmci.debug",
+        "com.oracle.jvmci.common",
+        "FINDBUGS",
       ],
       "annotationProcessors" : [
         "com.oracle.jvmci.hotspotvmconfig.processor",
@@ -348,15 +347,6 @@ suite = {
       "workingSets" : "Graal,HotSpot",
     },
 
-    "com.oracle.graal.hotspot.sourcegen" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.hotspot"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,HotSpot",
-    },
-
     "com.oracle.graal.hotspot.jfr" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -425,6 +415,9 @@ suite = {
     "com.oracle.jvmci.options" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.runtime",
+      ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal",
@@ -861,10 +854,9 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.common",
-        "com.oracle.jvmci.code",
         "com.oracle.jvmci.options",
         "com.oracle.jvmci.debug",
+        "com.oracle.jvmci.common",
       ],
       "annotationProcessors" : ["com.oracle.jvmci.options.processor"],
       "checkstyle" : "com.oracle.graal.graph",

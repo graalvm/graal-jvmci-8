@@ -23,11 +23,9 @@
 package com.oracle.jvmci.hotspot;
 
 import static com.oracle.jvmci.hotspot.HotSpotOptionsLoader.*;
-import static java.lang.Double.*;
 
 import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.options.*;
-import com.oracle.jvmci.options.OptionUtils.OptionConsumer;
 import com.oracle.jvmci.runtime.*;
 
 //JaCoCo Exclude
@@ -40,21 +38,13 @@ public class HotSpotOptions {
 
     private static final String JVMCI_OPTION_PREFIX = "-G:";
 
-    /**
-     * Parses the JVMCI specific options specified to HotSpot (e.g., on the command line).
-     *
-     * @param optionsParsedClass the {@link Class} for {@link OptionsParsed}
-     * @return the implementations of {@link OptionsParsed} available
-     */
-    private static native OptionsParsed[] parseVMOptions(Class<?> optionsParsedClass);
-
     static {
         // Debug should not be initialized until all options that may affect
         // its initialization have been processed.
         assert !Debug.Initialization.isDebugInitialized() : "The class " + Debug.class.getName() + " must not be initialized before the JVMCI runtime has been initialized. " +
                         "This can be fixed by placing a call to " + JVMCI.class.getName() + ".getRuntime() on the path that triggers initialization of " + Debug.class.getName();
 
-        for (OptionsParsed handler : parseVMOptions(OptionsParsed.class)) {
+        for (OptionsParsed handler : Services.load(OptionsParsed.class)) {
             handler.apply();
         }
     }
@@ -65,51 +55,9 @@ public class HotSpotOptions {
     public static void initialize() {
     }
 
-    /**
-     * Helper for the VM code called by {@link #parseVMOptions}.
-     *
-     * @param name the name of a parsed option
-     * @param option the object encapsulating the option
-     * @param spec specification of boolean option value, type of option value or action to take
-     */
-    static void setOption(String name, OptionValue<?> option, char spec, String stringValue, long primitiveValue) {
-        switch (spec) {
-            case '+':
-                option.setValue(Boolean.TRUE);
-                break;
-            case '-':
-                option.setValue(Boolean.FALSE);
-                break;
-            case '?':
-                OptionUtils.printFlags(options, JVMCI_OPTION_PREFIX);
-                break;
-            case ' ':
-                OptionUtils.printNoMatchMessage(options, name, JVMCI_OPTION_PREFIX);
-                break;
-            case 'i':
-                option.setValue((int) primitiveValue);
-                break;
-            case 'f':
-                option.setValue((float) longBitsToDouble(primitiveValue));
-                break;
-            case 'd':
-                option.setValue(longBitsToDouble(primitiveValue));
-                break;
-            case 's':
-                option.setValue(stringValue);
-                break;
-        }
+    static void printFlags() {
+        OptionUtils.printFlags(options, JVMCI_OPTION_PREFIX);
     }
 
-    /**
-     * Parses a given option value specification.
-     *
-     * @param option the specification of an option and its value
-     * @param setter the object to notify of the parsed option and value. If null, the
-     *            {@link OptionValue#setValue(Object)} method of the specified option is called
-     *            instead.
-     */
-    public static boolean parseOption(String option, OptionConsumer setter) {
-        return OptionUtils.parseOption(options, option, JVMCI_OPTION_PREFIX, setter);
-    }
+    public native Object getOptionValue(String optionName);
 }

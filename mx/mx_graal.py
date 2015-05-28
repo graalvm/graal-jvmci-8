@@ -30,7 +30,6 @@ import os, stat, errno, sys, shutil, zipfile, tarfile, tempfile, re, time, datet
 from os.path import join, exists, dirname, basename
 from argparse import ArgumentParser, RawDescriptionHelpFormatter, REMAINDER
 from outputparser import OutputParser, ValuesMatcher
-import hashlib
 import mx
 import xml.dom.minidom
 import sanitycheck
@@ -520,62 +519,6 @@ def _makeHotspotGeneratedSourcesDir():
         os.makedirs(hsSrcGenDir)
     return hsSrcGenDir
 
-def _update_graalRuntime_inline_hpp(dist):
-    """
-    (Re)generates graalRuntime.inline.hpp based on a given distribution
-    that transitively represents all the input for the generation process.
-
-    A SHA1 digest is computed for all generated content and is written to
-    graalRuntime.inline.hpp as well as stored in a generated class
-    that is appended to the dist.path jar. At runtime, these two digests
-    are checked for consistency.
-    """
-
-    p = mx.project('com.oracle.graal.hotspot.sourcegen')
-    mainClass = 'com.oracle.graal.hotspot.sourcegen.GenGraalRuntimeInlineHpp'
-    if exists(join(p.output_dir(), mainClass.replace('.', os.sep) + '.class')):
-        genSrcDir = _makeHotspotGeneratedSourcesDir()
-        graalRuntime_inline_hpp = join(genSrcDir, 'graalRuntime.inline.hpp')
-        cp = os.pathsep.join([mx.distribution(d).path for d in dist.distDependencies] + [dist.path, p.output_dir()])
-        tmp = StringIO.StringIO()
-        mx.run_java(['-cp', mx._separatedCygpathU2W(cp), mainClass], out=tmp.write)
-
-        # Compute SHA1 for currently generated graalRuntime.inline.hpp content
-        # and all other generated sources in genSrcDir
-        d = hashlib.sha1()
-        d.update(tmp.getvalue())
-        for e in os.listdir(genSrcDir):
-            if e != 'graalRuntime.inline.hpp':
-                with open(join(genSrcDir, e)) as fp:
-                    d.update(fp.read())
-        sha1 = d.hexdigest()
-
-        # Add SHA1 to end of graalRuntime.inline.hpp
-        print >> tmp, ''
-        print >> tmp, 'const char* JVMCIRuntime::_generated_sources_sha1 = "' + sha1 + '";'
-
-        mx.update_file(graalRuntime_inline_hpp, tmp.getvalue())
-
-        # Store SHA1 in generated Java class and append class to specified jar
-        javaPackageName = 'com.oracle.jvmci.hotspot.sourcegen'
-        javaClassName = javaPackageName + '.GeneratedSourcesSha1'
-        javaSource = join(_graal_home, 'GeneratedSourcesSha1.java')
-        javaClass = join(_graal_home, javaClassName.replace('.', os.path.sep) + '.class')
-        with open(javaSource, 'w') as fp:
-            print >> fp, 'package ' + javaPackageName + ';'
-            print >> fp, 'class GeneratedSourcesSha1 { private static final String value = "' + sha1 + '"; }'
-        subprocess.check_call([mx.java().javac, '-d', mx._cygpathU2W(_graal_home), mx._cygpathU2W(javaSource)], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        zf = zipfile.ZipFile(dist.path, 'a')
-        with open(javaClass, 'rb') as fp:
-            zf.writestr(javaClassName.replace('.', '/') + '.class', fp.read())
-        zf.close()
-        os.unlink(javaSource)
-        os.unlink(javaClass)
-        javaClassParent = os.path.dirname(javaClass)
-        while len(os.listdir(javaClassParent)) == 0:
-            os.rmdir(javaClassParent)
-            javaClassParent = os.path.dirname(javaClassParent)
-
 def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
     name = os.path.basename(src)
     dstLib = join(dst, name)
@@ -666,27 +609,41 @@ def _filterJVMCIService(classNames, jvmciJars):
             filtered.append(className)
     return filtered
 
-def _extractJVMCIServiceFiles(jvmciJars, destination, cleanDestination=True):
+def _extractJVMCIFiles(jvmciJars, servicesDir, optionsDir, cleanDestination=True):
     if cleanDestination:
-        if exists(destination):
-            shutil.rmtree(destination)
-        os.makedirs(destination)
+        if exists(servicesDir):
+            shutil.rmtree(servicesDir)
+        if exists(optionsDir):
+            shutil.rmtree(optionsDir)
+    if not exists(servicesDir):
+        os.makedirs(servicesDir)
+    if not exists(optionsDir):
+        os.makedirs(optionsDir)
     servicesMap = {}
+    optionsFiles = []
     for jar in jvmciJars:
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
                 for member in zf.namelist():
-                    if not member.startswith('META-INF/services'):
-                        continue
-                    serviceName = basename(member)
-                    # we don't handle directories
-                    assert serviceName and member == 'META-INF/services/' + serviceName
-                    with zf.open(member) as serviceFile:
-                        serviceImpls = servicesMap.setdefault(serviceName, [])
-                        for line in serviceFile.readlines():
-                            line = line.strip()
-                            if line:
-                                serviceImpls.append(line)
+                    if member.startswith('META-INF/services'):
+                        serviceName = basename(member)
+                        # we don't handle directories
+                        assert serviceName and member == 'META-INF/services/' + serviceName
+                        with zf.open(member) as serviceFile:
+                            serviceImpls = servicesMap.setdefault(serviceName, [])
+                            for line in serviceFile.readlines():
+                                line = line.strip()
+                                if line:
+                                    serviceImpls.append(line)
+                    elif member.startswith('META-INF/options'):
+                        filename = basename(member)
+                        # we don't handle directories
+                        assert filename and member == 'META-INF/options/' + filename
+                        targetpath = join(optionsDir, filename)
+                        optionsFiles.append(filename)
+                        with zf.open(member) as optionsFile, \
+                             file(targetpath, "wb") as target:
+                            shutil.copyfileobj(optionsFile, target)
     jvmciServices = _filterJVMCIService(servicesMap.keys(), jvmciJars)
     for serviceName in jvmciServices:
         serviceImpls = servicesMap[serviceName]
@@ -694,18 +651,19 @@ def _extractJVMCIServiceFiles(jvmciJars, destination, cleanDestination=True):
         f = os.fdopen(fd, 'w+')
         for serviceImpl in serviceImpls:
             f.write(serviceImpl + os.linesep)
-        target = join(destination, serviceName)
+        target = join(servicesDir, serviceName)
         f.close()
         shutil.move(tmp, target)
         if mx.get_os() != 'windows':
             os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
-    return jvmciServices
+    return (jvmciServices, optionsFiles)
 
-def _updateJVMCIServiceFiles(jdkDir):
+def _updateJVMCIFiles(jdkDir):
     jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')
-    jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if (e.startswith('jvmci') or e.startswith('graal')) and e.endswith('.jar')]
-    jreJVMCIServicesDir = join(jreJVMCIDir, 'services')
-    _extractJVMCIServiceFiles(jvmciJars, jreJVMCIServicesDir)
+    graalJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.startswith('graal') and e.endswith('.jar')]
+    jreGraalServicesDir = join(jreJVMCIDir, 'services')
+    jreGraalOptionsDir = join(jreJVMCIDir, 'options')
+    _extractJVMCIFiles(graalJars, jreGraalServicesDir, jreGraalOptionsDir)
 
 def _patchGraalVersionConstant(dist):
     """
@@ -734,19 +692,10 @@ def _installDistInJdks(deployableDist):
     """
 
     dist = mx.distribution(deployableDist.name)
-
     if dist.name == 'GRAAL':
         _patchGraalVersionConstant(dist)
 
-    elif dist.name == 'GRAAL_TRUFFLE':
-        # The content in graalRuntime.inline.hpp is generated from Graal
-        # classes that contain com.oracle.jvmci.options.Option annotated fields.
-        # Since GRAAL_TRUFFLE is the leaf most distribution containing
-        # such classes, the generation is triggered when GRAAL_TRUFFLE
-        # is (re)built.
-        _update_graalRuntime_inline_hpp(dist)
     jdks = _jdksDir()
-
     if exists(jdks):
         for e in os.listdir(jdks):
             jdkDir = join(jdks, e)
@@ -765,7 +714,7 @@ def _installDistInJdks(deployableDist):
                     _copyToJdk(dist.sourcesPath, jdkDir)
                 if deployableDist.usesJVMCIClassLoader:
                     # deploy service files
-                    _updateJVMCIServiceFiles(jdkDir)
+                    _updateJVMCIFiles(jdkDir)
 
 # run a command in the windows SDK Debug Shell
 def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):
@@ -940,11 +889,15 @@ def build(args, vm=None):
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + '\n' + defLine)
             shutil.copy(dist.path, opts2.export_dir)
-        services = _extractJVMCIServiceFiles(jvmciJars, join(opts2.export_dir, 'services'))
+        services, optionsFiles = _extractJVMCIFiles(jvmciJars, join(opts2.export_dir, 'services'), join(opts2.export_dir, 'options'))
         for service in services:
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/' + service
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + ' for service from ' + dist.name + '\n' + defLine)
+        for optionsFile in optionsFiles:
+            defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/' + optionsFile
+            if defLine not in defs:
+                mx.abort('Missing following line in ' + defsPath + ' for options from ' + dist.name + '\n' + defLine)
         jvmciOptions = join(_graal_home, 'jvmci.options')
         if exists(jvmciOptions):
             shutil.copy(jvmciOptions, opts2.export_dir)
@@ -1786,7 +1739,7 @@ def gate(args, gate_body=_basic_gate_body):
 
     # Force
     if not mx._opts.strict_compliance:
-        mx.log("[gate] foring strict compliance")
+        mx.log("[gate] forcing strict compliance")
         mx._opts.strict_compliance = True
 
     tasks = []
