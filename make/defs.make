@@ -402,6 +402,8 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_OPTIONS_DIR)/com.oracle.graal.replacements
 EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_OPTIONS_DIR)/com.oracle.graal.truffle.PartialEvaluator
 EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_OPTIONS_DIR)/com.oracle.graal.truffle.TruffleCompilerOptions
 EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_OPTIONS_DIR)/com.oracle.graal.virtual.phases.ea.PartialEscapePhase
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_OPTIONS_DIR)/com.oracle.graal.lir.asm.CompilationResultBuilder
+EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_OPTIONS_DIR)/com.oracle.graal.java.GraphBuilderPhase
 
 
 .PHONY: $(HS_ALT_MAKE)/defs.make

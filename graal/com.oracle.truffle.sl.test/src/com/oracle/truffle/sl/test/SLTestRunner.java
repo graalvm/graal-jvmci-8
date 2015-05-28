@@ -37,11 +37,9 @@ import org.junit.runners.*;
 import org.junit.runners.model.*;
 
 import com.oracle.truffle.api.dsl.*;
-import com.oracle.truffle.api.source.*;
-import com.oracle.truffle.sl.*;
+import com.oracle.truffle.api.vm.TruffleVM;
+import com.oracle.truffle.sl.SLMain;
 import com.oracle.truffle.sl.builtins.*;
-import com.oracle.truffle.sl.factory.*;
-import com.oracle.truffle.sl.runtime.*;
 import com.oracle.truffle.sl.test.SLTestRunner.TestCase;
 
 public final class SLTestRunner extends ParentRunner<TestCase> {
@@ -165,19 +163,18 @@ public final class SLTestRunner extends ParentRunner<TestCase> {
         notifier.fireTestStarted(testCase.name);
 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        PrintStream printer = new PrintStream(out);
+        PrintWriter printer = new PrintWriter(out);
         try {
-            SLContext context = SLContextFactory.create(new BufferedReader(new StringReader(repeat(testCase.testInput, repeats))), printer);
-            for (NodeFactory<? extends SLBuiltinNode> builtin : builtins) {
-                context.installBuiltin(builtin);
-            }
-            final Source source = Source.fromText(readAllLines(testCase.path), testCase.sourceName);
-            SLMain.run(context, source, null, repeats);
+            TruffleVM vm = TruffleVM.newVM().stdIn(new BufferedReader(new StringReader(repeat(testCase.testInput, repeats)))).stdOut(printer).build();
 
+            String script = readAllLines(testCase.path);
+            SLMain.run(vm, testCase.path.toUri(), null, printer, repeats, builtins);
+
+            printer.flush();
             String actualOutput = new String(out.toByteArray());
-            Assert.assertEquals(repeat(testCase.expectedOutput, repeats), actualOutput);
+            Assert.assertEquals(script, repeat(testCase.expectedOutput, repeats), actualOutput);
         } catch (Throwable ex) {
-            notifier.fireTestFailure(new Failure(testCase.name, ex));
+            notifier.fireTestFailure(new Failure(testCase.name, new IllegalStateException("Cannot run " + testCase.sourceName, ex)));
         } finally {
             notifier.fireTestFinished(testCase.name);
         }

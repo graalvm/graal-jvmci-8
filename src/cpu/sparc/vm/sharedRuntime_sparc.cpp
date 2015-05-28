@@ -3546,11 +3546,8 @@ void SharedRuntime::generate_deopt_blob() {
 #ifdef GRAAL
   masm->block_comment("BEGIN GRAAL");
   int implicit_exception_uncommon_trap_offset = __ offset() - start;
-  //__ pushptr(Address(G2_thread, in_bytes(JavaThread::graal_implicit_exception_pc_offset())));
   __ ld_ptr(G2_thread, in_bytes(JavaThread::graal_implicit_exception_pc_offset()), O7);
-  //__ add(G0, 0x321, O7);
   __ add(O7, -8, O7);
-  //__ st_ptr(I7, SP, I7->sp_offset_in_saved_window()*wordSize + STACK_BIAS);
 
   int uncommon_trap_offset = __ offset() - start;
 
@@ -3558,15 +3555,11 @@ void SharedRuntime::generate_deopt_blob() {
   masm->block_comment("save_live_regs");
   (void) RegisterSaver::save_live_registers(masm, 0, &frame_size_words);
   masm->block_comment("/save_live_regs");
-  //__ ld_ptr(G2_thread, in_bytes(JavaThread::graal_implicit_exception_pc_offset()), O7);
-  // fetch_unroll_info needs to call last_java_frame()
   masm->block_comment("set_last_java_frame");
   __ set_last_Java_frame(SP, NULL);
   masm->block_comment("/set_last_java_frame");
 
-  //__ movl(c_rarg1, Address(r15_thread, in_bytes(ThreadShadow::pending_deoptimization_offset())));
   __ ld(G2_thread, in_bytes(ThreadShadow::pending_deoptimization_offset()), O1);
-  //__ movl(Address(r15_thread, in_bytes(ThreadShadow::pending_deoptimization_offset())), -1);
   __ sub(G0, 1, L1);
   __ st_ptr(L1, G2_thread, in_bytes(ThreadShadow::pending_deoptimization_offset()));
 
@@ -3612,33 +3605,6 @@ void SharedRuntime::generate_deopt_blob() {
 
   // Restore G2_thread
   __ get_thread();
-
-#ifdef GRAAL
-  // load throwing pc from JavaThread and patch it as the return address
-  // of the current frame. Then clear the field in JavaThread
-  __ block_comment("load throwing pc and patch return");
-  Address exception_pc(G2_thread, JavaThread::exception_pc_offset());
-  Label has_no_pc;
-  // TODO: Remove this weird check if we should patch the return pc
-  // This is because when graal decides to deoptimize and the ExceptionHandlerStub.java
-  // jumps back to this code and the I7 register contains the pc pointing to the begin
-  // of this code. If this is the case (PC within a certain range) then we need to patch
-  // the return pc.
-  // THIS NEEDS REWORK! (sa)
-  __ rdpc(L0);
-  __ sub(L0, I7, L0);
-  __ cmp(L0, 0xFFF);
-  __ br(Assembler::greater, false, Assembler::pt, has_no_pc);
-  __ delayed() -> nop();
-  __ cmp(L0, -0xFFF);
-  __ br(Assembler::less, false, Assembler::pt, has_no_pc);
-  __ delayed() -> nop();
-  __ ld_ptr(exception_pc, I7);
-  __ sub(I7, 8, I7);
-  __ st_ptr(G0, exception_pc);
-  __ bind(has_no_pc);
-  __ block_comment("/load throwing pc and patch return");
-#endif // GAAL
 
 #ifdef ASSERT
   {

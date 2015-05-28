@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -45,7 +45,13 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
   Handle obj = HotSpotObjectConstantImpl::object(constant);
   jobject value = JNIHandles::make_local(obj());
   if (HotSpotObjectConstantImpl::compressed(constant)) {
-    fatal("unimplemented: narrow oop relocation");
+#ifdef _LP64
+    int oop_index = _oop_recorder->find_index(value);
+    RelocationHolder rspec = oop_Relocation::spec(oop_index);
+    _instructions->relocate(pc, rspec, 1);
+#else
+    fatal("compressed oop on 32bit");
+#endif
   } else {
     NativeMovConstReg* move = nativeMovConstReg_at(pc);
     move->set_data((intptr_t) value);

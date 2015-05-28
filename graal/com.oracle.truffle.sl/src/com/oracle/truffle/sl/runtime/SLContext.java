@@ -30,7 +30,6 @@ import com.oracle.truffle.api.frame.*;
 import com.oracle.truffle.api.nodes.*;
 import com.oracle.truffle.api.object.*;
 import com.oracle.truffle.api.source.*;
-import com.oracle.truffle.sl.*;
 import com.oracle.truffle.sl.builtins.*;
 import com.oracle.truffle.sl.nodes.*;
 import com.oracle.truffle.sl.nodes.local.*;
@@ -50,11 +49,11 @@ public final class SLContext extends ExecutionContext {
     private static final Layout LAYOUT = Layout.createLayout();
 
     private final BufferedReader input;
-    private final PrintStream output;
+    private final PrintWriter output;
     private final SLFunctionRegistry functionRegistry;
     private final Shape emptyShape;
 
-    public SLContext(BufferedReader input, PrintStream output) {
+    public SLContext(BufferedReader input, PrintWriter output) {
         this.input = input;
         this.output = output;
         this.functionRegistry = new SLFunctionRegistry();
@@ -80,7 +79,7 @@ public final class SLContext extends ExecutionContext {
      * The default default, i.e., the output for the {@link SLPrintlnBuiltin}. To allow unit
      * testing, we do not use {@link System#out} directly.
      */
-    public PrintStream getOutput() {
+    public PrintWriter getOutput() {
         return output;
     }
 
@@ -158,11 +157,6 @@ public final class SLContext extends ExecutionContext {
      */
     public void executeMain(Source source) {
         Parser.parseSL(this, source);
-        SLFunction main = getFunctionRegistry().lookup("main");
-        if (main.getCallTarget() == null) {
-            throw new SLException("No function main() defined in SL source file.");
-        }
-        main.getCallTarget().call();
     }
 
     public DynamicObject createObject() {

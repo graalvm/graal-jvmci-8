@@ -472,7 +472,7 @@ C2V_VMENTRY(void, doNotInlineOrCompile,(JNIEnv *, jobject,  jlong metaspace_meth
   method->set_dont_inline(true);
 C2V_END
 
-C2V_VMENTRY(jint, installCode0, (JNIEnv *jniEnv, jobject, jobject compiled_code, jobject installed_code, jobject speculation_log))
+C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject compiled_code, jobject installed_code, jobject speculation_log))
   ResourceMark rm;
   HandleMark hm;
   Handle compiled_code_handle = JNIHandles::resolve(compiled_code);
@@ -502,7 +502,6 @@ C2V_VMENTRY(jint, installCode0, (JNIEnv *jniEnv, jobject, jobject compiled_code,
       assert(installed_code_handle->is_a(InstalledCode::klass()), "wrong type");
       InstalledCode::set_address(installed_code_handle, (jlong) cb);
       InstalledCode::set_version(installed_code_handle, InstalledCode::version(installed_code_handle) + 1);
-      oop comp_result = HotSpotCompiledCode::comp(compiled_code_handle);
       if (installed_code_handle->is_a(HotSpotInstalledCode::klass())) {
         HotSpotInstalledCode::set_size(installed_code_handle, cb->size());
         HotSpotInstalledCode::set_codeStart(installed_code_handle, (jlong) cb->code_begin());
@@ -1045,7 +1044,6 @@ C2V_END
 #define HS_COMPILED_CODE      "Lcom/oracle/graal/hotspot/HotSpotCompiledCode;"
 #define HS_CONFIG             "Lcom/oracle/graal/hotspot/HotSpotVMConfig;"
 #define INSTALLED_CODE        "Lcom/oracle/graal/api/code/InstalledCode;"
-#define NODE_CLASS            "Lcom/oracle/graal/graph/NodeClass;"
 #define HS_STACK_FRAME_REF    "Lcom/oracle/graal/hotspot/HotSpotStackFrameReference;"
 #define METASPACE_KLASS       "J"
 #define METASPACE_METHOD      "J"
@@ -1085,7 +1083,7 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"getMaxCallTargetOffset",                       CC"(J)J",                                                                 FN_PTR(getMaxCallTargetOffset)},
   {CC"getMetaspaceMethod",                           CC"("CLASS"I)"METASPACE_METHOD,                                           FN_PTR(getMetaspaceMethod)},
   {CC"initializeConfiguration",                      CC"("HS_CONFIG")V",                                                       FN_PTR(initializeConfiguration)},
-  {CC"installCode0",                                 CC"("HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",                 FN_PTR(installCode0)},
+  {CC"installCode",                                  CC"("HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",                 FN_PTR(installCode)},
   {CC"notifyCompilationStatistics",                  CC"(I"HS_RESOLVED_METHOD"ZIJJ"INSTALLED_CODE")V",                         FN_PTR(notifyCompilationStatistics)},
   {CC"resetCompilationStatistics",                   CC"()V",                                                                  FN_PTR(resetCompilationStatistics)},
   {CC"disassembleCodeBlob",                          CC"(J)"STRING,                                                            FN_PTR(disassembleCodeBlob)},

@@ -34,9 +34,10 @@ import javax.lang.model.element.*;
 import javax.tools.Diagnostic.Kind;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.nodes.Node.Child;
+import com.oracle.truffle.dsl.processor.*;
 
-@SupportedSourceVersion(SourceVersion.RELEASE_7)
-@SupportedAnnotationTypes({"com.oracle.truffle.api.CompilerDirectives.TruffleBoundary"})
+@SupportedAnnotationTypes({"com.oracle.truffle.api.CompilerDirectives.TruffleBoundary", "com.oracle.truffle.api.nodes.Node.Child"})
 public class VerifyTruffleProcessor extends AbstractProcessor {
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -113,7 +114,26 @@ public class VerifyTruffleProcessor extends AbstractProcessor {
                 scope = null;
             }
         }
+
+        for (Element e : roundEnv.getElementsAnnotatedWith(Child.class)) {
+            if (e.getModifiers().contains(Modifier.FINAL)) {
+                emitError("@Child field cannot be final", e);
+                continue;
+            }
+            assertNoErrorExpected(e);
+        }
         return false;
+    }
+
+    void assertNoErrorExpected(Element element) {
+        ExpectError.assertNoErrorExpected(processingEnv, element);
+    }
+
+    void emitError(String message, Element element) {
+        if (ExpectError.isExpectedError(processingEnv, element, message)) {
+            return;
+        }
+        processingEnv.getMessager().printMessage(Kind.ERROR, message, element);
     }
 
     /**
