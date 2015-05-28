@@ -224,7 +224,6 @@ class Ticks;
   JVMCI_ONLY(do_klass(DebugInfo_klass,                       com_oracle_jvmci_code_DebugInfo,                              Jvmci)) \
   JVMCI_ONLY(do_klass(RegisterSaveLayout_klass,              com_oracle_jvmci_code_RegisterSaveLayout,                     Jvmci)) \
   JVMCI_ONLY(do_klass(BytecodeFrame_klass,                   com_oracle_jvmci_code_BytecodeFrame,                          Jvmci)) \
-  JVMCI_ONLY(do_klass(CompilationResult_klass,               com_oracle_jvmci_code_CompilationResult,                      Jvmci)) \
   JVMCI_ONLY(do_klass(CompilationResult_Call_klass,          com_oracle_jvmci_code_CompilationResult_Call,                 Jvmci)) \
   JVMCI_ONLY(do_klass(CompilationResult_ConstantReference_klass, com_oracle_jvmci_code_CompilationResult_ConstantReference, Jvmci)) \
   JVMCI_ONLY(do_klass(CompilationResult_DataPatch_klass,     com_oracle_jvmci_code_CompilationResult_DataPatch,            Jvmci)) \

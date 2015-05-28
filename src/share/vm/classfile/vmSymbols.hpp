@@ -332,7 +332,6 @@
   JVMCI_ONLY(template(com_oracle_jvmci_meta_Assumptions_NoFinalizableSubclass,  "com/oracle/jvmci/meta/Assumptions$NoFinalizableSubclass"))       \
   JVMCI_ONLY(template(com_oracle_jvmci_meta_Assumptions_ConcreteMethod,         "com/oracle/jvmci/meta/Assumptions$ConcreteMethod"))              \
   JVMCI_ONLY(template(com_oracle_jvmci_meta_Assumptions_CallSiteTargetValue,    "com/oracle/jvmci/meta/Assumptions$CallSiteTargetValue"))         \
-  JVMCI_ONLY(template(com_oracle_jvmci_code_CompilationResult,                  "com/oracle/jvmci/code/CompilationResult"))                       \
   JVMCI_ONLY(template(com_oracle_jvmci_code_CompilationResult_Call,             "com/oracle/jvmci/code/CompilationResult$Call"))                  \
   JVMCI_ONLY(template(com_oracle_jvmci_code_CompilationResult_ConstantReference, "com/oracle/jvmci/code/CompilationResult$ConstantReference"))    \
   JVMCI_ONLY(template(com_oracle_jvmci_code_CompilationResult_DataPatch,        "com/oracle/jvmci/code/CompilationResult$DataPatch"))             \

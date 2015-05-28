@@ -502,7 +502,6 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject compiled_code, 
       assert(installed_code_handle->is_a(InstalledCode::klass()), "wrong type");
       InstalledCode::set_address(installed_code_handle, (jlong) cb);
       InstalledCode::set_version(installed_code_handle, InstalledCode::version(installed_code_handle) + 1);
-      oop comp_result = HotSpotCompiledCode::comp(compiled_code_handle);
       if (installed_code_handle->is_a(HotSpotInstalledCode::klass())) {
         HotSpotInstalledCode::set_size(installed_code_handle, cb->size());
         HotSpotInstalledCode::set_codeStart(installed_code_handle, (jlong) cb->code_begin());
