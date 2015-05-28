@@ -519,62 +519,6 @@ def _makeHotspotGeneratedSourcesDir():
         os.makedirs(hsSrcGenDir)
     return hsSrcGenDir
 
-def _update_graalRuntime_inline_hpp(dist):
-    """
-    (Re)generates graalRuntime.inline.hpp based on a given distribution
-    that transitively represents all the input for the generation process.
-
-    A SHA1 digest is computed for all generated content and is written to
-    graalRuntime.inline.hpp as well as stored in a generated class
-    that is appended to the dist.path jar. At runtime, these two digests
-    are checked for consistency.
-    """
-
-    p = mx.project('com.oracle.graal.hotspot.sourcegen')
-    mainClass = 'com.oracle.graal.hotspot.sourcegen.GenGraalRuntimeInlineHpp'
-    if exists(join(p.output_dir(), mainClass.replace('.', os.sep) + '.class')):
-        genSrcDir = _makeHotspotGeneratedSourcesDir()
-        graalRuntime_inline_hpp = join(genSrcDir, 'graalRuntime.inline.hpp')
-        cp = os.pathsep.join([mx.distribution(d).path for d in dist.distDependencies] + [dist.path, p.output_dir()])
-        tmp = StringIO.StringIO()
-        mx.run_java(['-cp', mx._separatedCygpathU2W(cp), mainClass], out=tmp.write)
-
-        # Compute SHA1 for currently generated graalRuntime.inline.hpp content
-        # and all other generated sources in genSrcDir
-        d = hashlib.sha1()
-        d.update(tmp.getvalue())
-        for e in os.listdir(genSrcDir):
-            if e != 'graalRuntime.inline.hpp':
-                with open(join(genSrcDir, e)) as fp:
-                    d.update(fp.read())
-        sha1 = d.hexdigest()
-
-        # Add SHA1 to end of graalRuntime.inline.hpp
-        print >> tmp, ''
-        print >> tmp, 'const char* GraalRuntime::_generated_sources_sha1 = "' + sha1 + '";'
-
-        mx.update_file(graalRuntime_inline_hpp, tmp.getvalue())
-
-        # Store SHA1 in generated Java class and append class to specified jar
-        javaPackageName = 'com.oracle.graal.hotspot.sourcegen'
-        javaClassName = javaPackageName + '.GeneratedSourcesSha1'
-        javaSource = join(_graal_home, 'GeneratedSourcesSha1.java')
-        javaClass = join(_graal_home, javaClassName.replace('.', os.path.sep) + '.class')
-        with open(javaSource, 'w') as fp:
-            print >> fp, 'package ' + javaPackageName + ';'
-            print >> fp, 'class GeneratedSourcesSha1 { private static final String value = "' + sha1 + '"; }'
-        subprocess.check_call([mx.java().javac, '-d', mx._cygpathU2W(_graal_home), mx._cygpathU2W(javaSource)], stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        zf = zipfile.ZipFile(dist.path, 'a')
-        with open(javaClass, 'rb') as fp:
-            zf.writestr(javaClassName.replace('.', '/') + '.class', fp.read())
-        zf.close()
-        os.unlink(javaSource)
-        os.unlink(javaClass)
-        javaClassParent = os.path.dirname(javaClass)
-        while len(os.listdir(javaClassParent)) == 0:
-            os.rmdir(javaClassParent)
-            javaClassParent = os.path.dirname(javaClassParent)
-
 def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
     name = os.path.basename(src)
     dstLib = join(dst, name)
@@ -729,17 +673,7 @@ def _installDistInJdks(deployableDist):
     """
 
     dist = mx.distribution(deployableDist.name)
-
-    if dist.name == 'GRAAL_TRUFFLE':
-        # The content in graalRuntime.inline.hpp is generated from Graal
-        # classes that implement com.oracle.graal.api.runtime.Service
-        # or contain com.oracle.graal.options.Option annotated fields.
-        # Since GRAAL_TRUFFLE is the leaf most distribution containing
-        # such classes, the generation is triggered when GRAAL_TRUFFLE
-        # is (re)built.
-        _update_graalRuntime_inline_hpp(dist)
     jdks = _jdksDir()
-
     if exists(jdks):
         for e in os.listdir(jdks):
             jdkDir = join(jdks, e)
