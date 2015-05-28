@@ -69,7 +69,13 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
    */
   static void parse_jvmci_options_file(OptionsValueTable* options);
 
+  /**
+   * Called after all options have been set to notify OptionsParsed providers.
+   */
+  static void notify_options_set(TRAPS);
+
   static void print_flags_helper(TRAPS);
+
   /**
    * Instantiates a service object, calls its default constructor and returns it.
    *
@@ -135,7 +141,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
    * com.oracle.jvmci.api.runtime.Service), gets an array of objects, one per
    * known implementation of the service.
    */
-  static Handle get_service_impls(KlassHandle serviceKlass, TRAPS);
+  static objArrayHandle get_service_impls(KlassHandle serviceKlass, TRAPS);
 
   static void parse_lines(char* path, ParseClosure* closure, bool warnStatFailure);
 

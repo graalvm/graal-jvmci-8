@@ -44,10 +44,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     static {
         try (InitTimer t0 = timer("HotSpotJVMCIRuntime.<clinit>")) {
-            try (InitTimer t = timer("initialize HotSpotOptions")) {
-                HotSpotOptions.initialize();
-            }
-
             try (InitTimer t = timer("HotSpotJVMCIRuntime.<init>")) {
                 instance = new HotSpotJVMCIRuntime();
             }

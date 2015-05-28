@@ -22,9 +22,8 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import static com.oracle.jvmci.hotspot.HotSpotOptionsLoader.*;
+import java.util.*;
 
-import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.options.*;
 import com.oracle.jvmci.runtime.*;
 
@@ -38,26 +37,28 @@ public class HotSpotOptions {
 
     private static final String JVMCI_OPTION_PREFIX = "-G:";
 
-    static {
-        // Debug should not be initialized until all options that may affect
-        // its initialization have been processed.
-        assert !Debug.Initialization.isDebugInitialized() : "The class " + Debug.class.getName() + " must not be initialized before the JVMCI runtime has been initialized. " +
-                        "This can be fixed by placing a call to " + JVMCI.class.getName() + ".getRuntime() on the path that triggers initialization of " + Debug.class.getName();
-
-        for (OptionsParsed handler : Services.load(OptionsParsed.class)) {
-            handler.apply();
-        }
-    }
-
     /**
-     * Ensures {@link HotSpotOptions} is initialized.
+     * Called from VM.
      */
-    public static void initialize() {
-    }
-
     static void printFlags() {
+        SortedMap<String, OptionDescriptor> options = new TreeMap<>();
+        for (Options opts : Services.load(Options.class)) {
+            for (OptionDescriptor desc : opts) {
+                if (isHotSpotOption(desc)) {
+                    String name = desc.getName();
+                    OptionDescriptor existing = options.put(name, desc);
+                    assert existing == null : "Option named \"" + name + "\" has multiple definitions: " + existing.getLocation() + " and " + desc.getLocation();
+                }
+            }
+        }
+
         OptionUtils.printFlags(options, JVMCI_OPTION_PREFIX);
     }
 
-    public native Object getOptionValue(String optionName);
+    /**
+     * Determines if a given option is a HotSpot command line option.
+     */
+    private static boolean isHotSpotOption(OptionDescriptor desc) {
+        return desc.getDeclaringClass().getName().startsWith("com.oracle.graal");
+    }
 }

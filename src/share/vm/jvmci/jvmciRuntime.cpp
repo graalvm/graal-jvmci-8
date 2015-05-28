@@ -626,18 +626,13 @@ JVM_ENTRY(void, JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader_h
   SystemDictionary::initialize_wk_klasses_through(SystemDictionary::LAST_JVMCI_WKID, scan, CHECK);
 JVM_END
 
-// boolean com.oracle.jvmci.hotspot.HotSpotOptions.isCITimingEnabled()
-JVM_ENTRY(jboolean, JVM_IsCITimingEnabled(JNIEnv *env, jclass c))
-  return CITime || CITimeEach;
-JVM_END
-
 // private static JVMCIRuntime JVMCI.initializeRuntime()
 JVM_ENTRY(jobject, JVM_GetJVMCIRuntime(JNIEnv *env, jclass c))
   JVMCIRuntime::initialize_HotSpotJVMCIRuntime();
   return JVMCIRuntime::get_HotSpotJVMCIRuntime_jobject();
 JVM_END
 
-// private static String[] Services.getServiceImpls(Class service)
+// private static Service[] Services.getServiceImpls(String serviceClass)
 JVM_ENTRY(jobject, JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass serviceClass))
   HandleMark hm;
   ResourceMark rm;
@@ -1046,10 +1041,28 @@ void JVMCIRuntime::set_options(OptionsValueTable* options, TRAPS) {
     if (closure.is_aborted()) {
       vm_abort(false);
     }
+
+    notify_options_set(THREAD);
   }
   OptionValue* printFlags = options->get(PRINT_FLAGS_ARG);
   if (printFlags != NULL && printFlags->boolean_value) {
     print_flags_helper(CHECK_ABORT);
+  }
+}
+
+void JVMCIRuntime::notify_options_set(TRAPS) {
+  HandleMark hm(THREAD);
+  TempNewSymbol optionsParsedName = SymbolTable::new_symbol("com/oracle/jvmci/runtime/OptionsParsed", CHECK_ABORT);
+  KlassHandle optionsParsedClass = load_required_class(optionsParsedName);
+  objArrayHandle impls = get_service_impls(optionsParsedClass, THREAD);
+  int implsLen = impls->length();
+  if (implsLen != 0) {
+    for (int i = 0; i < implsLen; i++) {
+      JavaValue result(T_VOID);
+      JavaCallArguments args;
+      args.push_oop(impls->obj_at(i));
+      JavaCalls::call_interface(&result, optionsParsedClass, vmSymbols::run_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
+    }
   }
 }
 
@@ -1223,7 +1236,7 @@ public:
 };
 
 
-Handle JVMCIRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
+objArrayHandle JVMCIRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
   const char* home = Arguments::get_java_home();
   const char* serviceName = serviceKlass->external_name();
   size_t path_len = strlen(home) + strlen("/lib/jvmci/services/") + strlen(serviceName) + 1;
@@ -1234,11 +1247,11 @@ Handle JVMCIRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
   parse_lines(path, &closure, true); // TODO(gd) cache parsing results?
 
   GrowableArray<char*>* implNames = closure.implNames();
-  objArrayOop servicesOop = oopFactory::new_objArray(serviceKlass(), implNames->length(), CHECK_NH);
+  objArrayOop servicesOop = oopFactory::new_objArray(serviceKlass(), implNames->length(), CHECK_(objArrayHandle()));
   objArrayHandle services(THREAD, servicesOop);
   for (int i = 0; i < implNames->length(); ++i) {
     char* implName = implNames->at(i);
-    Handle service = create_Service(implName, CHECK_NH);
+    Handle service = create_Service(implName, CHECK_(objArrayHandle()));
     services->obj_at_put(i, service());
   }
   return services;

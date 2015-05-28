@@ -30,5 +30,5 @@ public interface OptionsParsed extends Service {
     /**
      * Notifies this service that all JVMCI options have been parsed and initialized.
      */
-    void apply();
+    void run();
 }
