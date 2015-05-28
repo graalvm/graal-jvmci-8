@@ -356,15 +356,6 @@ suite = {
       "workingSets" : "Graal,HotSpot",
     },
 
-    "com.oracle.graal.hotspot.sourcegen" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.hotspot"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,HotSpot",
-    },
-
     "com.oracle.graal.hotspot.jfr" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
