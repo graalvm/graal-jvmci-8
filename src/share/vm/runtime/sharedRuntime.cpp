@@ -111,8 +111,8 @@ void SharedRuntime::generate_stubs() {
   _resolve_virtual_call_blob           = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_virtual_call_C),       "resolve_virtual_call");
   _resolve_static_call_blob            = generate_resolve_blob(CAST_FROM_FN_PTR(address, SharedRuntime::resolve_static_call_C),        "resolve_static_call");
 
-#if defined(COMPILER2) || defined(GRAAL)
-  // Vectors are generated only by C2 and Graal.
+#if defined(COMPILER2) || defined(JVMCI)
+  // Vectors are generated only by C2 and JVMCI.
   bool support_wide = is_wide_vector(MaxVectorSize);
   if (support_wide) {
     _polling_page_vectors_safepoint_handler_blob = generate_handler_blob(CAST_FROM_FN_PTR(address, SafepointSynchronize::handle_polling_page_exception), POLL_AT_VECTOR_LOOP);
@@ -488,8 +488,8 @@ address SharedRuntime::raw_exception_handler_for_return_address(JavaThread* thre
   // Reset method handle flag.
   thread->set_is_method_handle_return(false);
 
-#ifdef GRAAL
-  // Graal's ExceptionHandlerStub expects the thread local exception PC to be clear
+#ifdef JVMCI
+  // JVMCI's ExceptionHandlerStub expects the thread local exception PC to be clear
   // and other exception handler continuations do not read it
   thread->set_exception_pc(NULL);
 #endif
@@ -650,8 +650,8 @@ address SharedRuntime::compute_compiled_exc_handler(nmethod* nm, address ret_pc,
   assert(nm != NULL, "must exist");
   ResourceMark rm;
 
-#ifdef GRAAL
-  if (nm->is_compiled_by_graal()) {
+#ifdef JVMCI
+  if (nm->is_compiled_by_jvmci()) {
     // lookup exception handler for this pc
     int catch_pco = ret_pc - nm->code_begin();
     ExceptionHandlerTable table(nm);
@@ -795,10 +795,10 @@ JRT_ENTRY(void, SharedRuntime::throw_StackOverflowError(JavaThread* thread))
   throw_and_post_jvmti_exception(thread, exception);
 JRT_END
 
-#ifdef GRAAL
+#ifdef JVMCI
 address SharedRuntime::deoptimize_for_implicit_exception(JavaThread* thread, address pc, nmethod* nm, int deopt_reason) {
   assert(deopt_reason > Deoptimization::Reason_none && deopt_reason < Deoptimization::Reason_LIMIT, "invalid deopt reason");
-  thread->set_graal_implicit_exception_pc(pc);
+  thread->set_jvmci_implicit_exception_pc(pc);
   thread->set_pending_deoptimization(Deoptimization::make_trap_request((Deoptimization::DeoptReason)deopt_reason, Deoptimization::Action_reinterpret));
   return (SharedRuntime::deopt_blob()->implicit_exception_uncommon_trap());
 }
@@ -901,8 +901,8 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread,
 #ifndef PRODUCT
           _implicit_null_throws++;
 #endif
-#ifdef GRAAL
-          if (nm->is_compiled_by_graal() && nm->pc_desc_at(pc) != NULL) {
+#ifdef JVMCI
+          if (nm->is_compiled_by_jvmci() && nm->pc_desc_at(pc) != NULL) {
             // If there's no PcDesc then we'll die way down inside of
             // deopt instead of just getting normal error reporting,
             // so only go there if it will succeed.
@@ -910,7 +910,7 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread,
           } else {
 #endif
           target_pc = nm->continuation_for_implicit_exception(pc);
-#ifdef GRAAL
+#ifdef JVMCI
           }
 #endif
           // If there's an unexpected fault, target_pc might be NULL,
@@ -928,13 +928,13 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread,
 #ifndef PRODUCT
         _implicit_div0_throws++;
 #endif
-#ifdef GRAAL
-        if (nm->is_compiled_by_graal() && nm->pc_desc_at(pc) != NULL) {
+#ifdef JVMCI
+        if (nm->is_compiled_by_jvmci() && nm->pc_desc_at(pc) != NULL) {
           return deoptimize_for_implicit_exception(thread, pc, nm, Deoptimization::Reason_div0_check);
         } else {
 #endif
         target_pc = nm->continuation_for_implicit_exception(pc);
-#ifdef GRAAL
+#ifdef JVMCI
         }
 #endif
         // If there's an unexpected fault, target_pc might be NULL,
@@ -1013,7 +1013,7 @@ JRT_END
 
 
 JRT_ENTRY_NO_ASYNC(void, SharedRuntime::register_finalizer(JavaThread* thread, oopDesc* obj))
-#ifdef GRAAL
+#ifdef JVMCI
   if (!obj->klass()->has_finalizer()) {
     return;
   }

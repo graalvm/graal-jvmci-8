@@ -21,43 +21,43 @@
  * questions.
  */
 
-#ifndef SHARE_VM_GRAAL_GRAAL_COMPILER_HPP
-#define SHARE_VM_GRAAL_GRAAL_COMPILER_HPP
+#ifndef SHARE_VM_JVMCI_JVMCI_COMPILER_HPP
+#define SHARE_VM_JVMCI_JVMCI_COMPILER_HPP
 
 #include "compiler/abstractCompiler.hpp"
-#include "graal/graalEnv.hpp"
+#include "jvmci/jvmciEnv.hpp"
 
-class GraalCompiler : public AbstractCompiler {
+class JVMCICompiler : public AbstractCompiler {
 
 private:
 
-#ifdef COMPILERGRAAL
+#ifdef COMPILERJVMCI
   bool _bootstrapping;
 
   /**
-   * Number of methods compiled by Graal. This is not synchronized
+   * Number of methods compiled by JVMCI. This is not synchronized
    * so may not be 100% accurate.
    */
   volatile int  _methodsCompiled;
 
 #endif
 
-  static GraalCompiler* _instance;
+  static JVMCICompiler* _instance;
  
   static elapsedTimer _codeInstallTimer;
 
 public:
 
-  GraalCompiler();
+  JVMCICompiler();
 
-  static GraalCompiler* instance() { return _instance; }
+  static JVMCICompiler* instance() { return _instance; }
 
-  virtual const char* name() { return "Graal"; }
+  virtual const char* name() { return "JVMCI"; }
 
   virtual bool supports_native()                 { return true; }
   virtual bool supports_osr   ()                 { return true; }
 
-  bool is_graal()                                { return true; }
+  bool is_jvmci()                                { return true; }
   bool is_c1   ()                                { return false; }
   bool is_c2   ()                                { return false; }
 
@@ -66,21 +66,21 @@ public:
   // Initialization
   virtual void initialize();
 
-#ifdef COMPILERGRAAL
+#ifdef COMPILERJVMCI
 
   void bootstrap();
   
   // Compilation entry point for methods
   virtual void compile_method(ciEnv* env, ciMethod* target, int entry_bci);
 
-  void compile_method(methodHandle target, int entry_bci, GraalEnv* env);
+  void compile_method(methodHandle target, int entry_bci, JVMCIEnv* env);
 
   // Print compilation timers and statistics
   virtual void print_timers();
 
   // Print compilation statistics
   void reset_compilation_stats();
-#endif // COMPILERGRAAL
+#endif // COMPILERJVMCI
 
   // Print compilation timers and statistics
   static void print_compilation_timers();
@@ -90,4 +90,4 @@ public:
   void compile_the_world();
 };
 
-#endif // SHARE_VM_GRAAL_GRAAL_COMPILER_HPP
+#endif // SHARE_VM_JVMCI_JVMCI_COMPILER_HPP

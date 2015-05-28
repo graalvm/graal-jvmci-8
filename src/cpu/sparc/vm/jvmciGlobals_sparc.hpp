@@ -22,16 +22,16 @@
  *
  */
 
-#ifndef CPU_X86_VM_GRAALGLOBALS_X86_HPP
-#define CPU_X86_VM_GRAALGLOBALS_X86_HPP
+#ifndef CPU_SPARC_VM_JVMCIGLOBALS_SPARC_HPP
+#define CPU_SPARC_VM_JVMCIGLOBALS_SPARC_HPP
 
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/macros.hpp"
 
-// Sets the default values for platform dependent flags used by the Graal compiler.
-// (see graalGlobals.hpp)
+// Sets the default values for platform dependent flags used by the JVMCI compiler.
+// (see jvmciGlobals.hpp)
 
-#ifdef COMPILERGRAAL
+#ifdef COMPILERJVMCI
 define_pd_global(bool, BackgroundCompilation,        true );
 define_pd_global(bool, UseTLAB,                      true );
 define_pd_global(bool, ResizeTLAB,                   true );
@@ -58,8 +58,8 @@ define_pd_global(uintx,CodeCacheMinBlockLength,      4);
 define_pd_global(uintx, CodeCacheMinimumUseSpace,    400*K);
 define_pd_global(intx, TypeProfileWidth,             8);
 define_pd_global(intx, MethodProfileWidth,           0);
-#endif // COMPILERGRAAL
+#endif // COMPILERJVMCI
 
-define_pd_global(intx, MaxVectorSize,                32);
+define_pd_global(intx, MaxVectorSize,                8);
 
-#endif // CPU_X86_VM_GRAALGLOBALS_X86_HPP
+#endif // CPU_SPARC_VM_JVMCIGLOBALS_SPARC_HPP

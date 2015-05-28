@@ -126,9 +126,9 @@ class nmethod : public CodeBlob {
   int       _entry_bci;        // != InvocationEntryBci if this nmethod is an on-stack replacement method
   jmethodID _jmethod_id;       // Cache of method()->jmethod_id()
 
-#ifdef GRAAL
+#ifdef JVMCI
   // Needed to keep nmethods alive that are not the default nmethod for the associated Method.
-  oop       _graal_installed_code;
+  oop       _jvmci_installed_code;
   oop       _speculation_log;
 #endif
 
@@ -299,7 +299,7 @@ class nmethod : public CodeBlob {
           ImplicitExceptionTable* nul_chk_table,
           AbstractCompiler* compiler,
           int comp_level
-#ifdef GRAAL
+#ifdef JVMCI
           , Handle installed_code,
           Handle speculation_log
 #endif
@@ -340,7 +340,7 @@ class nmethod : public CodeBlob {
                               ImplicitExceptionTable* nul_chk_table,
                               AbstractCompiler* compiler,
                               int comp_level
-#ifdef GRAAL
+#ifdef JVMCI
                               , Handle installed_code = Handle(),
                               Handle speculation_log = Handle()
 #endif
@@ -383,7 +383,7 @@ class nmethod : public CodeBlob {
   bool is_osr_method() const                      { return _entry_bci != InvocationEntryBci; }
 
   bool is_compiled_by_c1() const;
-  bool is_compiled_by_graal() const;
+  bool is_compiled_by_jvmci() const;
   bool is_compiled_by_c2() const;
   bool is_compiled_by_shark() const;
 
@@ -626,10 +626,10 @@ public:
   // Evolution support. We make old (discarded) compiled methods point to new Method*s.
   void set_method(Method* method) { _method = method; }
 
-#ifdef GRAAL
-  oop graal_installed_code() { return _graal_installed_code ; }
-  char* graal_installed_code_name(char* buf, size_t buflen);
-  void set_graal_installed_code(oop installed_code) { _graal_installed_code = installed_code;  }
+#ifdef JVMCI
+  oop jvmci_installed_code() { return _jvmci_installed_code ; }
+  char* jvmci_installed_code_name(char* buf, size_t buflen);
+  void set_jvmci_installed_code(oop installed_code) { _jvmci_installed_code = installed_code;  }
   oop speculation_log() { return _speculation_log ; }
   void set_speculation_log(oop speculation_log) { _speculation_log = speculation_log;  }
 #endif
@@ -695,13 +695,13 @@ public:
   // Return true is the PC is one would expect if the frame is being deopted.
   bool is_deopt_pc      (address pc) { return is_deopt_entry(pc) || is_deopt_mh_entry(pc); }
 
-  // (thomaswue) When using graal, the address might be off by 5 (because this is the size of the call instruction.
+  // (thomaswue) When using jvmci, the address might be off by 5 (because this is the size of the call instruction.
   // (thomaswue) TODO: Replace this by a more general mechanism.
   // (sanzinger) SPARC has another offset, looked for some variable existing in HotSpot which describes this offset, but i have not
   // found anything.
   bool is_deopt_entry   (address pc) {
     return pc == deopt_handler_begin()
-#ifdef GRAAL
+#ifdef JVMCI
       || pc == deopt_handler_begin() +
 #ifdef TARGET_ARCH_sparc
   8
@@ -709,7 +709,7 @@ public:
 #ifdef TARGET_ARCH_x86
   5
 #endif // x86
-#endif // GRAAL
+#endif // JVMCI
       ;
   }
   bool is_deopt_mh_entry(address pc) { return pc == deopt_mh_handler_begin(); }

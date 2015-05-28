@@ -25,11 +25,11 @@
 #include "asm/codeBuffer.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
-#include "graal/graalRuntime.hpp"
-#include "graal/graalCompilerToVM.hpp"
-#include "graal/graalCompiler.hpp"
-#include "graal/graalJavaAccess.hpp"
-#include "graal/graalEnv.hpp"
+#include "jvmci/jvmciRuntime.hpp"
+#include "jvmci/jvmciCompilerToVM.hpp"
+#include "jvmci/jvmciCompiler.hpp"
+#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciEnv.hpp"
 #include "memory/oopFactory.hpp"
 #include "prims/jvm.h"
 #include "runtime/biasedLocking.hpp"
@@ -38,17 +38,17 @@
 #include "runtime/reflection.hpp"
 #include "utilities/debug.hpp"
 
-	jobject GraalRuntime::_HotSpotJVMCIRuntime_instance = NULL;
-bool GraalRuntime::_HotSpotJVMCIRuntime_initialized = false;
-bool GraalRuntime::_shutdown_called = false;
+	jobject JVMCIRuntime::_HotSpotJVMCIRuntime_instance = NULL;
+bool JVMCIRuntime::_HotSpotJVMCIRuntime_initialized = false;
+bool JVMCIRuntime::_shutdown_called = false;
 
-void GraalRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
+void JVMCIRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
   uintptr_t heap_end = (uintptr_t) Universe::heap()->reserved_region().end();
   uintptr_t allocation_end = heap_end + ((uintptr_t)16) * 1024 * 1024 * 1024;
   AMD64_ONLY(guarantee(heap_end < allocation_end, "heap end too close to end of address space (might lead to erroneous TLAB allocations)"));
   NOT_LP64(error("check TLAB allocation code for address space conflicts"));
 
-  ensure_graal_class_loader_is_initialized();
+  ensure_jvmci_class_loader_is_initialized();
 
   JavaThread* THREAD = JavaThread::current();
   {
@@ -57,7 +57,7 @@ void GraalRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
     ResourceMark rm;
     HandleMark hm;
 
-    graal_compute_offsets();
+    jvmci_compute_offsets();
 
     // Ensure _non_oop_bits is initialized
     Universe::non_oop_word();
@@ -69,11 +69,11 @@ void GraalRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
   }
 }
 
-BufferBlob* GraalRuntime::initialize_buffer_blob() {
+BufferBlob* JVMCIRuntime::initialize_buffer_blob() {
   JavaThread* THREAD = JavaThread::current();
   BufferBlob* buffer_blob = THREAD->get_buffer_blob();
   if (buffer_blob == NULL) {
-    buffer_blob = BufferBlob::create("Graal thread-local CodeBuffer", GraalNMethodSizeLimit);
+    buffer_blob = BufferBlob::create("JVMCI thread-local CodeBuffer", JVMCINMethodSizeLimit);
     if (buffer_blob != NULL) {
       THREAD->set_buffer_blob(buffer_blob);
     }
@@ -81,7 +81,7 @@ BufferBlob* GraalRuntime::initialize_buffer_blob() {
   return buffer_blob;
 }
 
-BasicType GraalRuntime::kindToBasicType(jchar ch) {
+BasicType JVMCIRuntime::kindToBasicType(jchar ch) {
   switch(ch) {
     case 'z': return T_BOOLEAN;
     case 'b': return T_BYTE;
@@ -124,7 +124,7 @@ static void deopt_caller() {
   }
 }
 
-JRT_BLOCK_ENTRY(void, GraalRuntime::new_instance(JavaThread* thread, Klass* klass))
+JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance(JavaThread* thread, Klass* klass))
   JRT_BLOCK;
   assert(klass->is_klass(), "not a class");
   instanceKlassHandle h(thread, klass);
@@ -136,12 +136,12 @@ JRT_BLOCK_ENTRY(void, GraalRuntime::new_instance(JavaThread* thread, Klass* klas
   thread->set_vm_result(obj);
   JRT_BLOCK_END;
 
-  if (GraalDeferredInitBarriers) {
+  if (JVMCIDeferredInitBarriers) {
     new_store_pre_barrier(thread);
   }
 JRT_END
 
-JRT_BLOCK_ENTRY(void, GraalRuntime::new_array(JavaThread* thread, Klass* array_klass, jint length))
+JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array(JavaThread* thread, Klass* array_klass, jint length))
   JRT_BLOCK;
   // Note: no handle for klass needed since they are not used
   //       anymore after new_objArray() and no GC can happen before.
@@ -170,12 +170,12 @@ JRT_BLOCK_ENTRY(void, GraalRuntime::new_array(JavaThread* thread, Klass* array_k
   }
   JRT_BLOCK_END;
 
-  if (GraalDeferredInitBarriers) {
+  if (JVMCIDeferredInitBarriers) {
     new_store_pre_barrier(thread);
   }
 JRT_END
 
-void GraalRuntime::new_store_pre_barrier(JavaThread* thread) {
+void JVMCIRuntime::new_store_pre_barrier(JavaThread* thread) {
   // After any safepoint, just before going back to compiled code,
   // we inform the GC that we will be doing initializing writes to
   // this object in the future without emitting card-marks, so
@@ -192,19 +192,19 @@ void GraalRuntime::new_store_pre_barrier(JavaThread* thread) {
   thread->set_vm_result(new_obj);
 }
 
-JRT_ENTRY(void, GraalRuntime::new_multi_array(JavaThread* thread, Klass* klass, int rank, jint* dims))
+JRT_ENTRY(void, JVMCIRuntime::new_multi_array(JavaThread* thread, Klass* klass, int rank, jint* dims))
   assert(klass->is_klass(), "not a class");
   assert(rank >= 1, "rank must be nonzero");
   oop obj = ArrayKlass::cast(klass)->multi_allocate(rank, dims, CHECK);
   thread->set_vm_result(obj);
 JRT_END
 
-JRT_ENTRY(void, GraalRuntime::dynamic_new_array(JavaThread* thread, oopDesc* element_mirror, jint length))
+JRT_ENTRY(void, JVMCIRuntime::dynamic_new_array(JavaThread* thread, oopDesc* element_mirror, jint length))
   oop obj = Reflection::reflect_new_array(element_mirror, length, CHECK);
   thread->set_vm_result(obj);
 JRT_END
 
-JRT_ENTRY(void, GraalRuntime::dynamic_new_instance(JavaThread* thread, oopDesc* type_mirror))
+JRT_ENTRY(void, JVMCIRuntime::dynamic_new_instance(JavaThread* thread, oopDesc* type_mirror))
   instanceKlassHandle klass(THREAD, java_lang_Class::as_Klass(type_mirror));
 
   if (klass == NULL) {
@@ -358,7 +358,7 @@ JRT_END
 // We are entering here from exception stub. We don't do a normal VM transition here.
 // We do it in a helper. This is so we can check to see if the nmethod we have just
 // searched for an exception handler has been deoptimized in the meantime.
-address GraalRuntime::exception_handler_for_pc(JavaThread* thread) {
+address JVMCIRuntime::exception_handler_for_pc(JavaThread* thread) {
   oop exception = thread->exception_oop();
   address pc = thread->exception_pc();
   // Still in Java mode
@@ -382,13 +382,13 @@ address GraalRuntime::exception_handler_for_pc(JavaThread* thread) {
   return continuation;
 }
 
-JRT_ENTRY(void, GraalRuntime::create_null_exception(JavaThread* thread))
+JRT_ENTRY(void, JVMCIRuntime::create_null_exception(JavaThread* thread))
   SharedRuntime::throw_and_post_jvmti_exception(thread, vmSymbols::java_lang_NullPointerException());
   thread->set_vm_result(PENDING_EXCEPTION);
   CLEAR_PENDING_EXCEPTION;
 JRT_END
 
-JRT_ENTRY(void, GraalRuntime::create_out_of_bounds_exception(JavaThread* thread, jint index))
+JRT_ENTRY(void, JVMCIRuntime::create_out_of_bounds_exception(JavaThread* thread, jint index))
   char message[jintAsStringSize];
   sprintf(message, "%d", index);
   SharedRuntime::throw_and_post_jvmti_exception(thread, vmSymbols::java_lang_ArrayIndexOutOfBoundsException(), message);
@@ -396,8 +396,8 @@ JRT_ENTRY(void, GraalRuntime::create_out_of_bounds_exception(JavaThread* thread,
   CLEAR_PENDING_EXCEPTION;
 JRT_END
 
-JRT_ENTRY_NO_ASYNC(void, GraalRuntime::monitorenter(JavaThread* thread, oopDesc* obj, BasicLock* lock))
-  if (TraceGraal >= 3) {
+JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc* obj, BasicLock* lock))
+  if (TraceJVMCI >= 3) {
     char type[O_BUFLEN];
     obj->klass()->name()->as_C_string(type, O_BUFLEN);
     markOop mark = obj->mark();
@@ -415,19 +415,19 @@ JRT_ENTRY_NO_ASYNC(void, GraalRuntime::monitorenter(JavaThread* thread, oopDesc*
     // Retry fast entry if bias is revoked to avoid unnecessary inflation
     ObjectSynchronizer::fast_enter(h_obj, lock, true, CHECK);
   } else {
-    if (GraalUseFastLocking) {
+    if (JVMCIUseFastLocking) {
       // When using fast locking, the compiled code has already tried the fast case
       ObjectSynchronizer::slow_enter(h_obj, lock, THREAD);
     } else {
       ObjectSynchronizer::fast_enter(h_obj, lock, false, THREAD);
     }
   }
-  if (TraceGraal >= 3) {
+  if (TraceJVMCI >= 3) {
     tty->print_cr("%s: exiting locking slow with obj=" INTPTR_FORMAT, thread->name(), p2i(obj));
   }
 JRT_END
 
-JRT_LEAF(void, GraalRuntime::monitorexit(JavaThread* thread, oopDesc* obj, BasicLock* lock))
+JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, BasicLock* lock))
   assert(thread == JavaThread::current(), "threads must correspond");
   assert(thread->last_Java_sp(), "last_Java_sp must be set");
   // monitorexit is non-blocking (leaf routine) => no exceptions can be thrown
@@ -445,13 +445,13 @@ JRT_LEAF(void, GraalRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
   }
 #endif
 
-  if (GraalUseFastLocking) {
+  if (JVMCIUseFastLocking) {
     // When using fast locking, the compiled code has already tried the fast case
     ObjectSynchronizer::slow_exit(obj, lock, THREAD);
   } else {
     ObjectSynchronizer::fast_exit(obj, lock, THREAD);
   }
-  if (TraceGraal >= 3) {
+  if (TraceJVMCI >= 3) {
     char type[O_BUFLEN];
     obj->klass()->name()->as_C_string(type, O_BUFLEN);
     tty->print_cr("%s: exited locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(obj->mark()), p2i(lock));
@@ -459,7 +459,7 @@ JRT_LEAF(void, GraalRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
   }
 JRT_END
 
-JRT_LEAF(void, GraalRuntime::log_object(JavaThread* thread, oopDesc* obj, jint flags))
+JRT_LEAF(void, JVMCIRuntime::log_object(JavaThread* thread, oopDesc* obj, jint flags))
   bool string =  mask_bits_are_true(flags, LOG_OBJECT_STRING);
   bool addr = mask_bits_are_true(flags, LOG_OBJECT_ADDRESS);
   bool newline = mask_bits_are_true(flags, LOG_OBJECT_NEWLINE);
@@ -481,15 +481,15 @@ JRT_LEAF(void, GraalRuntime::log_object(JavaThread* thread, oopDesc* obj, jint f
   }
 JRT_END
 
-JRT_LEAF(void, GraalRuntime::write_barrier_pre(JavaThread* thread, oopDesc* obj))
+JRT_LEAF(void, JVMCIRuntime::write_barrier_pre(JavaThread* thread, oopDesc* obj))
   thread->satb_mark_queue().enqueue(obj);
 JRT_END
 
-JRT_LEAF(void, GraalRuntime::write_barrier_post(JavaThread* thread, void* card_addr))
+JRT_LEAF(void, JVMCIRuntime::write_barrier_post(JavaThread* thread, void* card_addr))
   thread->dirty_card_queue().enqueue(card_addr);
 JRT_END
 
-JRT_LEAF(jboolean, GraalRuntime::validate_object(JavaThread* thread, oopDesc* parent, oopDesc* child))
+JRT_LEAF(jboolean, JVMCIRuntime::validate_object(JavaThread* thread, oopDesc* parent, oopDesc* child))
   bool ret = true;
   if(!Universe::heap()->is_in_closed_subset(parent)) {
     tty->print_cr("Parent Object "INTPTR_FORMAT" not in heap", p2i(parent));
@@ -504,9 +504,9 @@ JRT_LEAF(jboolean, GraalRuntime::validate_object(JavaThread* thread, oopDesc* pa
   return (jint)ret;
 JRT_END
 
-JRT_ENTRY(void, GraalRuntime::vm_error(JavaThread* thread, jlong where, jlong format, jlong value))
+JRT_ENTRY(void, JVMCIRuntime::vm_error(JavaThread* thread, jlong where, jlong format, jlong value))
   ResourceMark rm;
-  const char *error_msg = where == 0L ? "<internal Graal error>" : (char*) (address) where;
+  const char *error_msg = where == 0L ? "<internal JVMCI error>" : (char*) (address) where;
   char *detail_msg = NULL;
   if (format != 0L) {
     const char* buf = (char*) (address) format;
@@ -517,7 +517,7 @@ JRT_ENTRY(void, GraalRuntime::vm_error(JavaThread* thread, jlong where, jlong fo
   report_vm_error(__FILE__, __LINE__, error_msg, detail_msg);
 JRT_END
 
-JRT_LEAF(oopDesc*, GraalRuntime::load_and_clear_exception(JavaThread* thread))
+JRT_LEAF(oopDesc*, JVMCIRuntime::load_and_clear_exception(JavaThread* thread))
   oop exception = thread->exception_oop();
   assert(exception != NULL, "npe");
   thread->set_exception_oop(NULL);
@@ -525,7 +525,7 @@ JRT_LEAF(oopDesc*, GraalRuntime::load_and_clear_exception(JavaThread* thread))
   return exception;
 JRT_END
 
-JRT_LEAF(void, GraalRuntime::log_printf(JavaThread* thread, oopDesc* format, jlong v1, jlong v2, jlong v3))
+JRT_LEAF(void, JVMCIRuntime::log_printf(JavaThread* thread, oopDesc* format, jlong v1, jlong v2, jlong v3))
   ResourceMark rm;
   assert(format != NULL && java_lang_String::is_instance(format), "must be");
   char *buf = java_lang_String::as_utf8_string(format);
@@ -554,7 +554,7 @@ static void decipher(jlong v, bool ignoreZero) {
   }
 }
 
-JRT_LEAF(void, GraalRuntime::vm_message(jboolean vmError, jlong format, jlong v1, jlong v2, jlong v3))
+JRT_LEAF(void, JVMCIRuntime::vm_message(jboolean vmError, jlong format, jlong v1, jlong v2, jlong v3))
   ResourceMark rm;
   char *buf = (char*) (address) format;
   if (vmError) {
@@ -572,7 +572,7 @@ JRT_LEAF(void, GraalRuntime::vm_message(jboolean vmError, jlong format, jlong v1
   }
 JRT_END
 
-JRT_LEAF(void, GraalRuntime::log_primitive(JavaThread* thread, jchar typeChar, jlong value, jboolean newline))
+JRT_LEAF(void, JVMCIRuntime::log_primitive(JavaThread* thread, jchar typeChar, jlong value, jboolean newline))
   union {
       jlong l;
       jdouble d;
@@ -595,11 +595,11 @@ JRT_LEAF(void, GraalRuntime::log_primitive(JavaThread* thread, jchar typeChar, j
   }
 JRT_END
 
-JRT_ENTRY(jint, GraalRuntime::identity_hash_code(JavaThread* thread, oopDesc* obj))
+JRT_ENTRY(jint, JVMCIRuntime::identity_hash_code(JavaThread* thread, oopDesc* obj))
   return (jint) obj->identity_hash();
 JRT_END
 
-JRT_ENTRY(jboolean, GraalRuntime::thread_is_interrupted(JavaThread* thread, oopDesc* receiver, jboolean clear_interrupted))
+JRT_ENTRY(jboolean, JVMCIRuntime::thread_is_interrupted(JavaThread* thread, oopDesc* receiver, jboolean clear_interrupted))
   // Ensure that the C++ Thread and OSThread structures aren't freed before we operate.
   // This locking requires thread_in_vm which is why this method cannot be JRT_LEAF.
   Handle receiverHandle(thread, receiver);
@@ -613,37 +613,37 @@ JRT_ENTRY(jboolean, GraalRuntime::thread_is_interrupted(JavaThread* thread, oopD
   }
 JRT_END
 
-JRT_ENTRY(jint, GraalRuntime::test_deoptimize_call_int(JavaThread* thread, int value))
+JRT_ENTRY(jint, JVMCIRuntime::test_deoptimize_call_int(JavaThread* thread, int value))
   deopt_caller();
   return value;
 JRT_END
 
 // private static void Factory.init()
-JVM_ENTRY(void, JVM_InitGraalClassLoader(JNIEnv *env, jclass c, jobject loader_handle))
-  SystemDictionary::init_graal_loader(JNIHandles::resolve(loader_handle));
-  SystemDictionary::WKID scan = SystemDictionary::FIRST_GRAAL_WKID;
-  SystemDictionary::initialize_wk_klasses_through(SystemDictionary::LAST_GRAAL_WKID, scan, CHECK);
+JVM_ENTRY(void, JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader_handle))
+  SystemDictionary::init_jvmci_loader(JNIHandles::resolve(loader_handle));
+  SystemDictionary::WKID scan = SystemDictionary::FIRST_JVMCI_WKID;
+  SystemDictionary::initialize_wk_klasses_through(SystemDictionary::LAST_JVMCI_WKID, scan, CHECK);
 JVM_END
 
 // private static JVMCIRuntime JVMCI.initializeRuntime()
 JVM_ENTRY(jobject, JVM_GetJVMCIRuntime(JNIEnv *env, jclass c))
-  GraalRuntime::initialize_HotSpotJVMCIRuntime();
-  return GraalRuntime::get_HotSpotJVMCIRuntime_jobject();
+  JVMCIRuntime::initialize_HotSpotJVMCIRuntime();
+  return JVMCIRuntime::get_HotSpotJVMCIRuntime_jobject();
 JVM_END
 
 // private static String[] Services.getServiceImpls(Class service)
-JVM_ENTRY(jobject, JVM_GetGraalServiceImpls(JNIEnv *env, jclass c, jclass serviceClass))
+JVM_ENTRY(jobject, JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass serviceClass))
   HandleMark hm;
   ResourceMark rm;
   KlassHandle serviceKlass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(serviceClass)));
-  return JNIHandles::make_local(THREAD, GraalRuntime::get_service_impls(serviceKlass, THREAD)());
+  return JNIHandles::make_local(THREAD, JVMCIRuntime::get_service_impls(serviceKlass, THREAD)());
 JVM_END
 
 // private static TruffleRuntime Truffle.createRuntime()
 JVM_ENTRY(jobject, JVM_CreateTruffleRuntime(JNIEnv *env, jclass c))
-  GraalRuntime::ensure_graal_class_loader_is_initialized();
+  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
   TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/truffle/hotspot/HotSpotTruffleRuntime", CHECK_NULL);
-  KlassHandle klass = GraalRuntime::resolve_or_fail(name, CHECK_NULL);
+  KlassHandle klass = JVMCIRuntime::resolve_or_fail(name, CHECK_NULL);
 
   TempNewSymbol makeInstance = SymbolTable::new_symbol("makeInstance", CHECK_NULL);
   TempNewSymbol sig = SymbolTable::new_symbol("()Lcom/oracle/truffle/api/TruffleRuntime;", CHECK_NULL);
@@ -654,9 +654,9 @@ JVM_END
 
 // private static NativeFunctionInterfaceRuntime.createInterface()
 JVM_ENTRY(jobject, JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c))
-  GraalRuntime::ensure_graal_class_loader_is_initialized();
+  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
   TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/truffle/hotspot/HotSpotTruffleRuntime", CHECK_NULL);
-  KlassHandle klass = GraalRuntime::resolve_or_fail(name, CHECK_NULL);
+  KlassHandle klass = JVMCIRuntime::resolve_or_fail(name, CHECK_NULL);
 
   TempNewSymbol makeInstance = SymbolTable::new_symbol("createNativeFunctionInterface", CHECK_NULL);
   TempNewSymbol sig = SymbolTable::new_symbol("()Lcom/oracle/nfi/api/NativeFunctionInterface;", CHECK_NULL);
@@ -665,7 +665,7 @@ JVM_ENTRY(jobject, JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c))
   return JNIHandles::make_local(THREAD, (oop) result.get_jobject());
 JVM_END
 
-void GraalRuntime::check_generated_sources_sha1(TRAPS) {
+void JVMCIRuntime::check_generated_sources_sha1(TRAPS) {
   TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/sourcegen/GeneratedSourcesSha1", CHECK_ABORT);
   KlassHandle klass = load_required_class(name);
   fieldDescriptor fd;
@@ -681,7 +681,7 @@ void GraalRuntime::check_generated_sources_sha1(TRAPS) {
   }
 }
 
-Handle GraalRuntime::callInitializer(const char* className, const char* methodName, const char* returnType) {
+Handle JVMCIRuntime::callInitializer(const char* className, const char* methodName, const char* returnType) {
   guarantee(!_HotSpotJVMCIRuntime_initialized, "cannot reinitialize HotSpotJVMCIRuntime");
   Thread* THREAD = Thread::current();
   check_generated_sources_sha1(CHECK_ABORT_(Handle()));
@@ -695,7 +695,7 @@ Handle GraalRuntime::callInitializer(const char* className, const char* methodNa
   return Handle((oop)result.get_jobject());
 }
 
-void GraalRuntime::initialize_HotSpotJVMCIRuntime() {
+void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
 #ifdef ASSERT
     // This should only be called in the context of the JVMCI class being initialized
@@ -713,7 +713,7 @@ void GraalRuntime::initialize_HotSpotJVMCIRuntime() {
   }
 }
 
-void GraalRuntime::initialize_JVMCI() {
+void JVMCIRuntime::initialize_JVMCI() {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
     callInitializer("com/oracle/jvmci/runtime/JVMCI",     "getRuntime",      "()Lcom/oracle/jvmci/runtime/JVMCIRuntime;");
   }
@@ -721,36 +721,36 @@ void GraalRuntime::initialize_JVMCI() {
 }
 
 // private static void CompilerToVMImpl.init()
-JVM_ENTRY(void, JVM_InitializeGraalNatives(JNIEnv *env, jclass c2vmClass))
-  GraalRuntime::initialize_natives(env, c2vmClass);
+JVM_ENTRY(void, JVM_InitializeJVMCINatives(JNIEnv *env, jclass c2vmClass))
+  JVMCIRuntime::initialize_natives(env, c2vmClass);
 JVM_END
 
 // private static OptionsParsed[] HotSpotOptions.parseVMOptions(Class)
-JVM_ENTRY(jobject, JVM_ParseGraalOptions(JNIEnv *env, jclass c, jobject optionsParsedClass_obj))
+JVM_ENTRY(jobject, JVM_ParseJVMCIOptions(JNIEnv *env, jclass c, jobject optionsParsedClass_obj))
   HandleMark hm;
   KlassHandle hotSpotOptionsClass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(c)));
-  GraalRuntime::parse_arguments(hotSpotOptionsClass, CHECK_NULL);
+  JVMCIRuntime::parse_arguments(hotSpotOptionsClass, CHECK_NULL);
   KlassHandle optionsParsedClass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(optionsParsedClass_obj)));
-  return JNIHandles::make_local(THREAD, GraalRuntime::get_service_impls(optionsParsedClass, THREAD)());
+  return JNIHandles::make_local(THREAD, JVMCIRuntime::get_service_impls(optionsParsedClass, THREAD)());
 JVM_END
 
 
-void GraalRuntime::ensure_graal_class_loader_is_initialized() {
+void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
   // This initialization code is guarded by a static pointer to the Factory class.
-  // Once it is non-null, the Graal class loader and well known Graal classes are
+  // Once it is non-null, the JVMCI class loader and well known JVMCI classes are
   // guaranteed to have been initialized. By going through the static
   // initializer of Factory, we can rely on class initialization semantics to
   // synchronize threads racing to do the initialization.
   static Klass* _FactoryKlass = NULL;
   if (_FactoryKlass == NULL) {
     Thread* THREAD = Thread::current();
-    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/hotspot/loader/Factory", CHECK_ABORT);
+    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/loader/Factory", CHECK_ABORT);
     KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, THREAD);
     if (HAS_PENDING_EXCEPTION) {
       static volatile int seen_error = 0;
       if (!seen_error && Atomic::cmpxchg(1, &seen_error, 0) == 0) {
         // Only report the failure on the first thread that hits it
-        abort_on_pending_exception(PENDING_EXCEPTION, "Graal classes are not available");
+        abort_on_pending_exception(PENDING_EXCEPTION, "JVMCI classes are not available");
       } else {
         CLEAR_PENDING_EXCEPTION;
         // Give first thread time to report the error.
@@ -759,9 +759,9 @@ void GraalRuntime::ensure_graal_class_loader_is_initialized() {
       }
     }
 
-    // We cannot use graalJavaAccess for this because we are currently in the
+    // We cannot use jvmciJavaAccess for this because we are currently in the
     // process of initializing that mechanism.
-    TempNewSymbol field_name = SymbolTable::new_symbol("useGraalClassLoader", CHECK_ABORT);
+    TempNewSymbol field_name = SymbolTable::new_symbol("useJVMCIClassLoader", CHECK_ABORT);
     fieldDescriptor field_desc;
     if (klass->find_field(field_name, vmSymbols::bool_signature(), &field_desc) == NULL) {
       ResourceMark rm;
@@ -770,17 +770,17 @@ void GraalRuntime::ensure_graal_class_loader_is_initialized() {
 
     InstanceKlass* ik = InstanceKlass::cast(klass());
     address addr = ik->static_field_addr(field_desc.offset() - InstanceMirrorKlass::offset_of_static_fields());
-    *((jboolean *) addr) = (jboolean) UseGraalClassLoader;
+    *((jboolean *) addr) = (jboolean) UseJVMCIClassLoader;
     klass->initialize(CHECK_ABORT);
     _FactoryKlass = klass();
   }
 }
 
-jint GraalRuntime::check_arguments(TRAPS) {
+jint JVMCIRuntime::check_arguments(TRAPS) {
   KlassHandle nullHandle;
   parse_arguments(nullHandle, THREAD);
   if (HAS_PENDING_EXCEPTION) {
-    // Errors in parsing Graal arguments cause exceptions.
+    // Errors in parsing JVMCI arguments cause exceptions.
     // We now load and initialize HotSpotOptions which in turn
     // causes argument parsing to be redone with better error messages.
     CLEAR_PENDING_EXCEPTION;
@@ -795,7 +795,7 @@ jint GraalRuntime::check_arguments(TRAPS) {
     CLEAR_PENDING_EXCEPTION;
     oop message = java_lang_Throwable::message(exception);
     if (message != NULL) {
-      tty->print_cr("Error parsing Graal options: %s", java_lang_String::as_utf8_string(message));
+      tty->print_cr("Error parsing JVMCI options: %s", java_lang_String::as_utf8_string(message));
     } else {
       call_printStackTrace(exception, THREAD);
     }
@@ -804,21 +804,21 @@ jint GraalRuntime::check_arguments(TRAPS) {
   return JNI_OK;
 }
 
-void GraalRuntime::parse_arguments(KlassHandle hotSpotOptionsClass, TRAPS) {
+void JVMCIRuntime::parse_arguments(KlassHandle hotSpotOptionsClass, TRAPS) {
   ResourceMark rm(THREAD);
 
-  // Process option overrides from graal.options first
-  parse_graal_options_file(hotSpotOptionsClass, CHECK);
+  // Process option overrides from jvmci.options first
+  parse_jvmci_options_file(hotSpotOptionsClass, CHECK);
 
   // Now process options on the command line
-  int numOptions = Arguments::num_graal_args();
+  int numOptions = Arguments::num_jvmci_args();
   for (int i = 0; i < numOptions; i++) {
-    char* arg = Arguments::graal_args_array()[i];
+    char* arg = Arguments::jvmci_args_array()[i];
     parse_argument(hotSpotOptionsClass, arg, CHECK);
   }
 }
 
-void GraalRuntime::check_required_value(const char* name, size_t name_len, const char* value, TRAPS) {
+void JVMCIRuntime::check_required_value(const char* name, size_t name_len, const char* value, TRAPS) {
   if (value == NULL) {
     char buf[200];
     jio_snprintf(buf, sizeof(buf), "Must use '-G:%.*s=<value>' format for %.*s option", name_len, name, name_len, name);
@@ -826,8 +826,8 @@ void GraalRuntime::check_required_value(const char* name, size_t name_len, const
   }
 }
 
-void GraalRuntime::parse_argument(KlassHandle hotSpotOptionsClass, char* arg, TRAPS) {
-  ensure_graal_class_loader_is_initialized();
+void JVMCIRuntime::parse_argument(KlassHandle hotSpotOptionsClass, char* arg, TRAPS) {
+  ensure_jvmci_class_loader_is_initialized();
   char first = arg[0];
   char* name;
   size_t name_len;
@@ -860,18 +860,18 @@ void GraalRuntime::parse_argument(KlassHandle hotSpotOptionsClass, char* arg, TR
 
     if (throw_err) {
       char buf[200];
-      jio_snprintf(buf, sizeof(buf), "Unrecognized Graal option %.*s", name_len, name);
+      jio_snprintf(buf, sizeof(buf), "Unrecognized JVMCI option %.*s", name_len, name);
       THROW_MSG(vmSymbols::java_lang_InternalError(), buf);
     }
   }
 }
 
-void GraalRuntime::parse_graal_options_file(KlassHandle hotSpotOptionsClass, TRAPS) {
+void JVMCIRuntime::parse_jvmci_options_file(KlassHandle hotSpotOptionsClass, TRAPS) {
   const char* home = Arguments::get_java_home();
-  size_t path_len = strlen(home) + strlen("/lib/graal.options") + 1;
+  size_t path_len = strlen(home) + strlen("/lib/jvmci.options") + 1;
   char* path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
   char sep = os::file_separator()[0];
-  sprintf(path, "%s%clib%cgraal.options", home, sep, sep);
+  sprintf(path, "%s%clib%cjvmci.options", home, sep, sep);
 
   struct stat st;
   if (os::stat(path, &st) == 0) {
@@ -913,7 +913,7 @@ void GraalRuntime::parse_graal_options_file(KlassHandle hotSpotOptionsClass, TRA
   }
 }
 
-jlong GraalRuntime::parse_primitive_option_value(char spec, const char* name, size_t name_len, const char* value, TRAPS) {
+jlong JVMCIRuntime::parse_primitive_option_value(char spec, const char* name, size_t name_len, const char* value, TRAPS) {
   check_required_value(name, name_len, value, CHECK_(0L));
   union {
     jint i;
@@ -943,14 +943,14 @@ jlong GraalRuntime::parse_primitive_option_value(char spec, const char* name, si
   char buf[200];
   bool missing = strlen(value) == 0;
   if (missing) {
-    jio_snprintf(buf, sizeof(buf), "Missing %s value for Graal option %.*s", (spec == 'i' ? "numeric" : "float/double"), name_len, name);
+    jio_snprintf(buf, sizeof(buf), "Missing %s value for JVMCI option %.*s", (spec == 'i' ? "numeric" : "float/double"), name_len, name);
   } else {
-    jio_snprintf(buf, sizeof(buf), "Invalid %s value for Graal option %.*s: %s", (spec == 'i' ? "numeric" : "float/double"), name_len, name, value);
+    jio_snprintf(buf, sizeof(buf), "Invalid %s value for JVMCI option %.*s: %s", (spec == 'i' ? "numeric" : "float/double"), name_len, name, value);
   }
   THROW_MSG_(vmSymbols::java_lang_InternalError(), buf, 0L);
 }
 
-void GraalRuntime::set_option_helper(KlassHandle hotSpotOptionsClass, char* name, size_t name_len, Handle option, jchar spec, Handle stringValue, jlong primitiveValue) {
+void JVMCIRuntime::set_option_helper(KlassHandle hotSpotOptionsClass, char* name, size_t name_len, Handle option, jchar spec, Handle stringValue, jlong primitiveValue) {
   Thread* THREAD = Thread::current();
   Handle name_handle;
   if (name != NULL) {
@@ -981,7 +981,7 @@ void GraalRuntime::set_option_helper(KlassHandle hotSpotOptionsClass, char* name
   JavaCalls::call_static(&result, hotSpotOptionsClass, setOption, sig, &args, CHECK);
 }
 
-Handle GraalRuntime::get_OptionValue(const char* declaringClass, const char* fieldName, const char* fieldSig, TRAPS) {
+Handle JVMCIRuntime::get_OptionValue(const char* declaringClass, const char* fieldName, const char* fieldSig, TRAPS) {
   TempNewSymbol name = SymbolTable::new_symbol(declaringClass, CHECK_NH);
   Klass* klass = resolve_or_fail(name, CHECK_NH);
 
@@ -1004,7 +1004,7 @@ Handle GraalRuntime::get_OptionValue(const char* declaringClass, const char* fie
   return ret;
 }
 
-Handle GraalRuntime::create_Service(const char* name, TRAPS) {
+Handle JVMCIRuntime::create_Service(const char* name, TRAPS) {
   TempNewSymbol kname = SymbolTable::new_symbol(name, CHECK_NH);
   Klass* k = resolve_or_fail(kname, CHECK_NH);
   instanceKlassHandle klass(THREAD, k);
@@ -1016,7 +1016,7 @@ Handle GraalRuntime::create_Service(const char* name, TRAPS) {
   return service;
 }
 
-void GraalRuntime::shutdown() {
+void JVMCIRuntime::shutdown() {
   if (_HotSpotJVMCIRuntime_instance != NULL) {
     _shutdown_called = true;
     JavaThread* THREAD = JavaThread::current();
@@ -1033,7 +1033,7 @@ void GraalRuntime::shutdown() {
   }
 }
 
-void GraalRuntime::call_printStackTrace(Handle exception, Thread* thread) {
+void JVMCIRuntime::call_printStackTrace(Handle exception, Thread* thread) {
   assert(exception->is_a(SystemDictionary::Throwable_klass()), "Throwable instance expected");
   JavaValue result(T_VOID);
   JavaCalls::call_virtual(&result,
@@ -1045,7 +1045,7 @@ void GraalRuntime::call_printStackTrace(Handle exception, Thread* thread) {
                           thread);
 }
 
-void GraalRuntime::abort_on_pending_exception(Handle exception, const char* message, bool dump_core) {
+void JVMCIRuntime::abort_on_pending_exception(Handle exception, const char* message, bool dump_core) {
   Thread* THREAD = Thread::current();
   CLEAR_PENDING_EXCEPTION;
   tty->print_raw_cr(message);
@@ -1059,15 +1059,15 @@ void GraalRuntime::abort_on_pending_exception(Handle exception, const char* mess
   vm_abort(dump_core);
 }
 
-Klass* GraalRuntime::resolve_or_null(Symbol* name, TRAPS) {
-  return SystemDictionary::resolve_or_null(name, SystemDictionary::graal_loader(), Handle(), CHECK_NULL);
+Klass* JVMCIRuntime::resolve_or_null(Symbol* name, TRAPS) {
+  return SystemDictionary::resolve_or_null(name, SystemDictionary::jvmci_loader(), Handle(), CHECK_NULL);
 }
 
-Klass* GraalRuntime::resolve_or_fail(Symbol* name, TRAPS) {
-  return SystemDictionary::resolve_or_fail(name, SystemDictionary::graal_loader(), Handle(), true, CHECK_NULL);
+Klass* JVMCIRuntime::resolve_or_fail(Symbol* name, TRAPS) {
+  return SystemDictionary::resolve_or_fail(name, SystemDictionary::jvmci_loader(), Handle(), true, CHECK_NULL);
 }
 
-Klass* GraalRuntime::load_required_class(Symbol* name) {
+Klass* JVMCIRuntime::load_required_class(Symbol* name) {
   Klass* klass = resolve_or_null(name, Thread::current());
   if (klass == NULL) {
     tty->print_cr("Could not load class %s", name->as_C_string());
@@ -1076,13 +1076,14 @@ Klass* GraalRuntime::load_required_class(Symbol* name) {
   return klass;
 }
 
-Handle GraalRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
+Handle JVMCIRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
   const char* home = Arguments::get_java_home();
   const char* serviceName = serviceKlass->external_name();
-  size_t path_len = strlen(home) + strlen("/lib/graal/services/") + strlen(serviceName) + 1;
+
+  size_t path_len = strlen(home) + strlen("/lib/jvmci/services/") + strlen(serviceName) + 1;
   char* path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
   char sep = os::file_separator()[0];
-  sprintf(path, "%s%clib%cgraal%cservices%c%s", home, sep, sep, sep, sep, serviceName);
+  sprintf(path, "%s%clib%cjvmci%cservices%c%s", home, sep, sep, sep, sep, serviceName);
   struct stat st;
   if (os::stat(path, &st) == 0) {
     int file_handle = os::open(path, 0, 0);

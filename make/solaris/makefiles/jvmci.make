@@ -23,13 +23,13 @@
 #  
 #
 
-# Sets make macros for making Graal version of VM
+# Sets make macros for making JVMCI version of VM
 
-TYPE = GRAAL
+TYPE = JVMCI
 
-VM_SUBDIR = graal
+VM_SUBDIR = jvmci
 
-# To make a non-tiered Graal build, remove the -DCOMPILER1 below and
-# in vm.make remove COMPILER1_PATHS from Src_Dirs/GRAAL and add
-# COMPILER1_SPECIFIC_FILES to Src_Files_EXCLUDE/GRAAL
-CFLAGS += -DCOMPILERGRAAL -DGRAAL -DCOMPILER1
+# To make a non-tiered JVMCI build, remove the -DCOMPILER1 below and
+# in vm.make remove COMPILER1_PATHS from Src_Dirs/JVMCI and add
+# COMPILER1_SPECIFIC_FILES to Src_Files_EXCLUDE/JVMCI
+CFLAGS += -DCOMPILERJVMCI -DJVMCI -DCOMPILER1

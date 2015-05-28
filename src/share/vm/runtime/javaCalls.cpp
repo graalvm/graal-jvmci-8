@@ -40,9 +40,9 @@
 #include "runtime/signature.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
-#ifdef GRAAL
-#include "graal/graalJavaAccess.hpp"
-#include "graal/graalRuntime.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciRuntime.hpp"
 #endif
 
 // -----------------------------------------------------
@@ -343,7 +343,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
 
   CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
 
-#ifdef GRAAL
+#ifdef JVMCI
   nmethod* nm = args->alternative_target();
   if (nm == NULL) {
 #endif
@@ -353,7 +353,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
     args->verify(method, result->get_type(), thread);
   }
   else debug_only(args->verify(method, result->get_type(), thread));
-#ifdef GRAAL
+#ifdef JVMCI
   }
 #else
 
@@ -418,10 +418,10 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
     os::bang_stack_shadow_pages();
   }
 
-#ifdef GRAAL
+#ifdef JVMCI
   if (nm != NULL) {
     if (nm->is_alive()) {
-      ((JavaThread*) THREAD)->set_graal_alternate_call_target(nm->verified_entry_point());
+      ((JavaThread*) THREAD)->set_jvmci_alternate_call_target(nm->verified_entry_point());
       entry_point = method->adapter()->get_i2c_entry();
     } else {
       THROW(vmSymbols::com_oracle_jvmci_code_InvalidInstalledCodeException());

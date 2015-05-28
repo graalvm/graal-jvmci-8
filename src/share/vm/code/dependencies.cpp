@@ -52,9 +52,9 @@ void Dependencies::initialize(ciEnv* env) {
   _oop_recorder = env->oop_recorder();
   _log = env->log();
   _dep_seen = new(arena) GrowableArray<int>(arena, 500, 0, 0);
-#ifdef GRAAL
+#ifdef JVMCI
   _using_dep_values = false;
-#endif // GRAAL
+#endif // JVMCI
   DEBUG_ONLY(_deps[end_marker] = NULL);
   for (int i = (int)FIRST_TYPE; i < (int)TYPE_LIMIT; i++) {
     _deps[i] = new(arena) GrowableArray<ciBaseObject*>(arena, 10, 0, 0);
@@ -124,7 +124,7 @@ void Dependencies::assert_call_site_target_value(ciCallSite* call_site, ciMethod
   assert_common_2(call_site_target_value, call_site, method_handle);
 }
 
-#ifdef GRAAL
+#ifdef JVMCI
 
 Dependencies::Dependencies(Arena* arena, OopRecorder* oop_recorder, CompileLog* log) {
   _oop_recorder = oop_recorder;
@@ -180,7 +180,7 @@ void Dependencies::assert_unique_concrete_method(Klass* ctxk, Method* uniqm) {
 void Dependencies::assert_call_site_target_value(oop call_site, oop method_handle) {
   assert_common_2(call_site_target_value, DepValue(_oop_recorder, JNIHandles::make_local(call_site)), DepValue(_oop_recorder, JNIHandles::make_local(method_handle)));
 }
-#endif // GRAAL
+#endif // JVMCI
 
 
 // Helper function.  If we are adding a new dep. under ctxk2,
@@ -294,7 +294,7 @@ void Dependencies::assert_common_3(DepType dept,
   deps->append(x2);
 }
 
-#ifdef GRAAL
+#ifdef JVMCI
 bool Dependencies::maybe_merge_ctxk(GrowableArray<DepValue>* deps,
                                     int ctxk_i, DepValue ctxk2_dv) {
   Klass* ctxk1 = deps->at(ctxk_i).as_klass(_oop_recorder);
@@ -364,7 +364,7 @@ void Dependencies::assert_common_2(DepType dept,
   deps->append(x0);
   deps->append(x1);
 }
-#endif // GRAAL
+#endif // JVMCI
 
 /// Support for encoding dependencies into an nmethod:
 
@@ -392,7 +392,7 @@ static int sort_dep_arg_2(ciBaseObject** p1, ciBaseObject** p2)
 static int sort_dep_arg_3(ciBaseObject** p1, ciBaseObject** p2)
 { return sort_dep(p1, p2, 3); }
 
-#ifdef GRAAL
+#ifdef JVMCI
 // metadata deps are sorted before object deps
 static int sort_dep_value(Dependencies::DepValue* p1, Dependencies::DepValue* p2, int narg) {
   for (int i = 0; i < narg; i++) {
@@ -407,10 +407,10 @@ static int sort_dep_value_arg_2(Dependencies::DepValue* p1, Dependencies::DepVal
 { return sort_dep_value(p1, p2, 2); }
 static int sort_dep_value_arg_3(Dependencies::DepValue* p1, Dependencies::DepValue* p2)
 { return sort_dep_value(p1, p2, 3); }
-#endif // GRAAL
+#endif // JVMCI
 
 void Dependencies::sort_all_deps() {
-#ifdef GRAAL
+#ifdef JVMCI
   if (_using_dep_values) {
     for (int deptv = (int)FIRST_TYPE; deptv < (int)TYPE_LIMIT; deptv++) {
       DepType dept = (DepType)deptv;
@@ -425,7 +425,7 @@ void Dependencies::sort_all_deps() {
     }
     return;
   }
-#endif // GRAAL
+#endif // JVMCI
   for (int deptv = (int)FIRST_TYPE; deptv < (int)TYPE_LIMIT; deptv++) {
     DepType dept = (DepType)deptv;
     GrowableArray<ciBaseObject*>* deps = _deps[dept];
@@ -441,7 +441,7 @@ void Dependencies::sort_all_deps() {
 
 size_t Dependencies::estimate_size_in_bytes() {
   size_t est_size = 100;
-#ifdef GRAAL
+#ifdef JVMCI
   if (_using_dep_values) {
     for (int deptv = (int)FIRST_TYPE; deptv < (int)TYPE_LIMIT; deptv++) {
       DepType dept = (DepType)deptv;
@@ -450,7 +450,7 @@ size_t Dependencies::estimate_size_in_bytes() {
     }
     return est_size;
   }
-#endif // GRAAL
+#endif // JVMCI
   for (int deptv = (int)FIRST_TYPE; deptv < (int)TYPE_LIMIT; deptv++) {
     DepType dept = (DepType)deptv;
     GrowableArray<ciBaseObject*>* deps = _deps[dept];
@@ -490,7 +490,7 @@ void Dependencies::encode_content_bytes() {
   // cast is safe, no deps can overflow INT_MAX
   CompressedWriteStream bytes((int)estimate_size_in_bytes());
 
-#ifdef GRAAL
+#ifdef JVMCI
   if (_using_dep_values) {
     for (int deptv = (int)FIRST_TYPE; deptv < (int)TYPE_LIMIT; deptv++) {
       DepType dept = (DepType)deptv;
@@ -520,7 +520,7 @@ void Dependencies::encode_content_bytes() {
       }
     }
   } else {
-#endif // GRAAL
+#endif // JVMCI
   for (int deptv = (int)FIRST_TYPE; deptv < (int)TYPE_LIMIT; deptv++) {
     DepType dept = (DepType)deptv;
     GrowableArray<ciBaseObject*>* deps = _deps[dept];
@@ -554,9 +554,9 @@ void Dependencies::encode_content_bytes() {
       }
     }
   }
-#ifdef GRAAL
+#ifdef JVMCI
   }
-#endif // GRAAL
+#endif // JVMCI
 
   // write a sentinel byte to mark the end
   bytes.write_byte(end_marker);

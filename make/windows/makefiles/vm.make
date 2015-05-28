@@ -48,8 +48,8 @@ CXX_FLAGS=$(CXX_FLAGS) /D "COMPILER2"
 CXX_FLAGS=$(CXX_FLAGS) /D "COMPILER1" /D "COMPILER2"
 !endif
 
-!if "$(Variant)" == "graal"
-CXX_FLAGS=$(CXX_FLAGS) /D "GRAAL" /D "COMPILERGRAAL" /D "COMPILER1"
+!if "$(Variant)" == "jvmci"
+CXX_FLAGS=$(CXX_FLAGS) /D "JVMCI" /D "COMPILERJVMCI" /D "COMPILER1"
 !endif
 
 !if "$(BUILDARCH)" == "i486"
@@ -70,10 +70,6 @@ CXX_FLAGS=$(CXX_FLAGS) $(CXX_INCLUDE_DIRS)
 
 # Define that so jni.h is on correct side
 CXX_FLAGS=$(CXX_FLAGS) /D "_JNI_IMPLEMENTATION_"
-
-!if "$(INCLUDE_GRAAL)" == "true"
-  CXX_FLAGS=$(CXX_FLAGS) /D "GRAAL_VERSION=\"$(GRAAL_VERSION)\""
-!endif
 
 !if "$(BUILDARCH)" == "ia64"
 STACK_SIZE="/STACK:1048576,262144"
@@ -150,7 +146,7 @@ VM_PATH=$(VM_PATH);../generated/adfiles
 VM_PATH=$(VM_PATH);../generated/jvmtifiles
 VM_PATH=$(VM_PATH);../generated/tracefiles
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/c1
-VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/graal
+VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/jvmci
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/compiler
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/code
 VM_PATH=$(VM_PATH);$(WorkSpace)/src/share/vm/interpreter

@@ -3039,7 +3039,7 @@ void TemplateTable::invokevirtual_helper(Register index,
 
   // get target Method* & entry point
   __ lookup_virtual_method(rax, index, method);
-#ifdef GRAAL
+#ifdef JVMCI
   // r14: MethodDataPointer (r14 is callee saved)
   __ profile_called_method(method, r14, r13);
 #endif
@@ -3143,7 +3143,7 @@ void TemplateTable::invokeinterface(int byte_no) {
   __ testptr(rbx, rbx);
   __ jcc(Assembler::zero, no_such_method);
 
-#ifdef GRAAL
+#ifdef JVMCI
   // r13: MethodDataPointer (r13 is callee saved)
   __ profile_called_method(rbx, r13, r14);
 #endif

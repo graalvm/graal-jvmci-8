@@ -166,7 +166,7 @@
 
 // COMPILER1 variant
 #ifdef COMPILER1
-#if defined(COMPILER2) || defined(COMPILERGRAAL)
+#if defined(COMPILER2) || defined(COMPILERJVMCI)
   #define TIERED
 #endif
 #define COMPILER1_PRESENT(code) code
@@ -183,27 +183,27 @@
 #define NOT_COMPILER2(code) code
 #endif // COMPILER2
 
-#ifdef COMPILERGRAAL
-#define COMPILERGRAAL_PRESENT(code) code
-#define NOT_COMPILERGRAAL(code)
-#else // COMPILERGRAAL
-#define COMPILERGRAAL_PRESENT(code)
-#define NOT_COMPILERGRAAL(code) code
-#endif // COMPILERGRAAL
+#ifdef COMPILERJVMCI
+#define COMPILERJVMCI_PRESENT(code) code
+#define NOT_COMPILERJVMCI(code)
+#else // COMPILERJVMCI
+#define COMPILERJVMCI_PRESENT(code)
+#define NOT_COMPILERJVMCI(code) code
+#endif // COMPILERJVMCI
 
-#if defined(COMPILERGRAAL) && !defined(GRAAL)
-#error "COMPILERGRAAL needs GRAAL to be defined"
+#if defined(COMPILERJVMCI) && !defined(JVMCI)
+#error "COMPILERJVMCI needs JVMCI to be defined"
 #endif
 
-#ifdef GRAAL
-#define GRAAL_ONLY(code) code
-#define NOT_GRAAL(code)
-#define IS_GRAAL_DEFINED true
-#else // GRAAL
-#define GRAAL_ONLY(code)
-#define NOT_GRAAL(code) code
-#define IS_GRAAL_DEFINED false
-#endif // GRAAL
+#ifdef JVMCI
+#define JVMCI_ONLY(code) code
+#define NOT_JVMCI(code)
+#define IS_JVMCI_DEFINED true
+#else // JVMCI
+#define JVMCI_ONLY(code)
+#define NOT_JVMCI(code) code
+#define IS_JVMCI_DEFINED false
+#endif // JVMCI
 
 #ifdef TIERED
 #define TIERED_ONLY(code) code

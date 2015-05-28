@@ -278,10 +278,10 @@ def getCTW(vm, mode):
 
 
     args = ['-XX:+CompileTheWorld', '-Xbootclasspath/p:' + rtjar]
-    if vm == 'graal':
+    if vm == 'jvmci':
         args += ['-XX:+BootstrapGraal']
     if mode >= CTWMode.NoInline:
-        if not mx_graal.isGraalEnabled(vm):
+        if not mx_graal.isJVMCIEnabled(vm):
             args.append('-XX:-Inline')
         else:
             args.append('-G:CompileTheWordConfig=-Inline')
@@ -380,7 +380,7 @@ class Test:
             parser.addMatcher(scoreMatcher)
 
         if self.benchmarkCompilationRate:
-            if vm == 'graal':
+            if vm == 'jvmci':
                 bps = re.compile(r"ParsedBytecodesPerSecond@final: (?P<rate>[0-9]+)")
                 ibps = re.compile(r"InlinedBytecodesPerSecond@final: (?P<rate>[0-9]+)")
                 parser.addMatcher(ValuesMatcher(bps, {'group' : 'ParsedBytecodesPerSecond', 'name' : self.name, 'score' : '<rate>'}))

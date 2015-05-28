@@ -92,9 +92,9 @@
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
-#ifdef GRAAL
-#include "graal/graalRuntime.hpp"
-#include "graal/graalJavaAccess.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciRuntime.hpp"
+#include "jvmci/jvmciJavaAccess.hpp"
 #endif
 
 
@@ -225,7 +225,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
 
   bool realloc_failures = false;
 
-#if defined(COMPILER2) || defined(GRAAL)
+#if defined(COMPILER2) || defined(JVMCI)
   // Reallocate the non-escaping objects and restore their fields. Then
   // relock objects if synchronization on them was eliminated.
 #ifdef COMPILER2
@@ -313,7 +313,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
     }
   }
 #endif // COMPILER2
-#endif // COMPILER2 || GRAAL
+#endif // COMPILER2 || JVMCI
 
   // Ensure that no safepoint is taken after pointers have been stored
   // in fields of rematerialized objects.  If a safepoint occurs from here on
@@ -321,7 +321,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
   No_Safepoint_Verifier no_safepoint;
 
   vframeArray* array = create_vframeArray(thread, deoptee, &map, chunk, realloc_failures);
-#if defined(COMPILER2) || defined(GRAAL)
+#if defined(COMPILER2) || defined(JVMCI)
   if (realloc_failures) {
     pop_frames_failed_reallocs(thread, array);
   }
@@ -776,7 +776,7 @@ int Deoptimization::deoptimize_dependents() {
 }
 
 
-#if defined(COMPILER2) || defined(GRAAL)
+#if defined(COMPILER2) || defined(JVMCI)
 bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, GrowableArray<ScopeValue*>* objects, TRAPS) {
   Handle pending_exception(thread->pending_exception());
   const char* exception_file = thread->exception_file();
@@ -1111,7 +1111,7 @@ void Deoptimization::print_objects(GrowableArray<ScopeValue*>* objects, bool rea
   }
 }
 #endif
-#endif // COMPILER2 || GRAAL
+#endif // COMPILER2 || JVMCI
 
 vframeArray* Deoptimization::create_vframeArray(JavaThread* thread, frame fr, RegisterMap *reg_map, GrowableArray<compiledVFrame*>* chunk, bool realloc_failures) {
   Events::log(thread, "DEOPT PACKING pc=" INTPTR_FORMAT " sp=" INTPTR_FORMAT, fr.pc(), fr.sp());
@@ -1171,7 +1171,7 @@ vframeArray* Deoptimization::create_vframeArray(JavaThread* thread, frame fr, Re
   return array;
 }
 
-#if defined(COMPILER2) || defined(GRAAL)
+#if defined(COMPILER2) || defined(JVMCI)
 void Deoptimization::pop_frames_failed_reallocs(JavaThread* thread, vframeArray* array) {
   // Reallocation of some scalar replaced objects failed. Record
   // that we need to pop all the interpreter frames for the
@@ -1361,7 +1361,7 @@ JRT_LEAF(void, Deoptimization::popframe_preserve_args(JavaThread* thread, int by
 JRT_END
 
 
-#if defined(COMPILER2) || defined(SHARK) || defined(GRAAL)
+#if defined(COMPILER2) || defined(SHARK) || defined(JVMCI)
 void Deoptimization::load_class_by_index(constantPoolHandle constant_pool, int index, TRAPS) {
   // in case of an unresolved klass entry, load the class.
   if (constant_pool->tag_at(index).is_unresolved_klass()) {
@@ -1424,8 +1424,8 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
   thread->inc_in_deopt_handler();
 
   // We need to update the map if we have biased locking.
-#ifdef GRAAL
-  // (lstadler) Graal might need to get an exception from the stack, which in turn requires the register map to be valid
+#ifdef JVMCI
+  // (lstadler) JVMCI might need to get an exception from the stack, which in turn requires the register map to be valid
   RegisterMap reg_map(thread, true);
 #else
   RegisterMap reg_map(thread, UseBiasedLocking);
@@ -1448,7 +1448,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
 
     DeoptReason reason = trap_request_reason(trap_request);
     DeoptAction action = trap_request_action(trap_request);
-#ifdef GRAAL
+#ifdef JVMCI
     int debug_id = trap_request_debug_id(trap_request);
 #endif
     jint unloaded_class_index = trap_request_index(trap_request); // CP idx or -1
@@ -1462,8 +1462,8 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     
     if (TraceDeoptimization) {
       ttyLocker ttyl;
-      tty->print_cr("  bci=%d pc=" INTPTR_FORMAT ", relative_pc=%d, method=%s" GRAAL_ONLY(", debug_id=%d"), trap_scope->bci(), fr.pc(), fr.pc() - nm->code_begin(), trap_scope->method()->name_and_sig_as_C_string()
-#ifdef GRAAL
+      tty->print_cr("  bci=%d pc=" INTPTR_FORMAT ", relative_pc=%d, method=%s" JVMCI_ONLY(", debug_id=%d"), trap_scope->bci(), fr.pc(), fr.pc() - nm->code_begin(), trap_scope->method()->name_and_sig_as_C_string()
+#ifdef JVMCI
           , debug_id
 #endif
           );
@@ -1471,9 +1471,9 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
 
     methodHandle    trap_method = trap_scope->method();
     int             trap_bci    = trap_scope->bci();
-#ifdef GRAAL
+#ifdef JVMCI
     oop speculation = thread->pending_failed_speculation();
-    if (nm->is_compiled_by_graal()) {
+    if (nm->is_compiled_by_jvmci()) {
     if (speculation != NULL) {
       oop speculation_log = nm->speculation_log();
       if (speculation_log != NULL) {
@@ -1534,8 +1534,8 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     bool create_if_missing = ProfileTraps RTM_OPT_ONLY( || UseRTMLocking );
 
     methodHandle profiled_method;
-#ifdef GRAAL
-    if (nm->is_compiled_by_graal()) {
+#ifdef JVMCI
+    if (nm->is_compiled_by_jvmci()) {
       profiled_method = nm->method();
     } else {
       profiled_method = trap_method;
@@ -1604,29 +1604,29 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
         tty->print("Uncommon trap occurred in");
         nm->method()->print_short_name(tty);
         tty->print(" compiler=%s compile_id=%d", nm->compiler() == NULL ? "" : nm->compiler()->name(), nm->compile_id());
-#ifdef GRAAL
-        oop installedCode = nm->graal_installed_code();
+#ifdef JVMCI
+        oop installedCode = nm->jvmci_installed_code();
         if (installedCode != NULL) {
           oop installedCodeName = NULL;
           if (installedCode->is_a(InstalledCode::klass())) {
             installedCodeName = InstalledCode::name(installedCode);
           }
           if (installedCodeName != NULL) {
-            tty->print(" (Graal: installedCodeName=%s) ", java_lang_String::as_utf8_string(installedCodeName));
+            tty->print(" (JVMCI: installedCodeName=%s) ", java_lang_String::as_utf8_string(installedCodeName));
           } else {
-            tty->print(" (Graal: installed code has no name) ");
+            tty->print(" (JVMCI: installed code has no name) ");
           }
-        } else if (nm->is_compiled_by_graal()) {
-          tty->print(" (Graal: no installed code) ");
+        } else if (nm->is_compiled_by_jvmci()) {
+          tty->print(" (JVMCI: no installed code) ");
         }
-#endif //GRAAL
-        tty->print(" (@" INTPTR_FORMAT ") thread=" UINTX_FORMAT " reason=%s action=%s unloaded_class_index=%d" GRAAL_ONLY(" debug_id=%d"),
+#endif //JVMCI
+        tty->print(" (@" INTPTR_FORMAT ") thread=" UINTX_FORMAT " reason=%s action=%s unloaded_class_index=%d" JVMCI_ONLY(" debug_id=%d"),
                    fr.pc(),
                    os::current_thread_id(),
                    trap_reason_name(reason),
                    trap_action_name(action),
                    unloaded_class_index
-#ifdef GRAAL
+#ifdef JVMCI
                    , debug_id
 #endif
                    );
@@ -1764,8 +1764,8 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
       bool maybe_prior_trap = false;
       bool maybe_prior_recompile = false;
       pdata = query_update_method_data(trap_mdo, trap_bci, reason, true,
-#ifdef GRAAL
-                                   nm->is_compiled_by_graal() && nm->is_osr_method(),
+#ifdef JVMCI
+                                   nm->is_compiled_by_jvmci() && nm->is_osr_method(),
 #endif
                                    nm->method(),
                                    //outputs:
@@ -1913,7 +1913,7 @@ Deoptimization::query_update_method_data(MethodData* trap_mdo,
                                          int trap_bci,
                                          Deoptimization::DeoptReason reason,
                                          bool update_total_trap_count,
-#ifdef GRAAL
+#ifdef JVMCI
                                          bool is_osr,
 #endif
                                          Method* compiled_method,
@@ -1926,7 +1926,7 @@ Deoptimization::query_update_method_data(MethodData* trap_mdo,
   uint this_trap_count = 0;
   if (update_total_trap_count) {
     uint idx = reason;
-#ifdef GRAAL
+#ifdef JVMCI
     if (is_osr) {
       idx += Reason_LIMIT;
     }
@@ -2000,12 +2000,12 @@ Deoptimization::update_method_data_from_interpreter(MethodData* trap_mdo, int tr
   bool ignore_maybe_prior_trap;
   bool ignore_maybe_prior_recompile;
   assert(!reason_is_speculate(reason), "reason speculate only used by compiler");
-  // Graal uses the total counts to determine if deoptimizations are happening too frequently -> do not adjust total counts
-  bool update_total_counts = GRAAL_ONLY(false) NOT_GRAAL(true);
+  // JVMCI uses the total counts to determine if deoptimizations are happening too frequently -> do not adjust total counts
+  bool update_total_counts = JVMCI_ONLY(false) NOT_JVMCI(true);
   query_update_method_data(trap_mdo, trap_bci,
                            (DeoptReason)reason,
                            update_total_counts,
-#ifdef GRAAL
+#ifdef JVMCI
                            false,
 #endif
                            NULL,
@@ -2124,12 +2124,12 @@ const char* Deoptimization::_trap_reason_name[Reason_LIMIT] = {
   // Note:  Keep this in sync. with enum DeoptReason.
   "none",
   "null_check",
-  "null_assert" GRAAL_ONLY("_or_unreached0"),
+  "null_assert" JVMCI_ONLY("_or_unreached0"),
   "range_check",
   "class_check",
   "array_check",
-  "intrinsic" GRAAL_ONLY("_or_type_checked_inlining"),
-  "bimorphic" GRAAL_ONLY("_or_optimized_type_check"),
+  "intrinsic" JVMCI_ONLY("_or_type_checked_inlining"),
+  "bimorphic" JVMCI_ONLY("_or_optimized_type_check"),
   "unloaded",
   "uninitialized",
   "unreached",
@@ -2142,7 +2142,7 @@ const char* Deoptimization::_trap_reason_name[Reason_LIMIT] = {
   "speculate_class_check",
   "rtm_state_change",
   "unstable_if"
-#ifdef GRAAL
+#ifdef JVMCI
   "aliasing",
   "transfer_to_interpreter",
   "not_compiled_exception_handler",
@@ -2181,21 +2181,21 @@ const char* Deoptimization::format_trap_request(char* buf, size_t buflen,
   jint unloaded_class_index = trap_request_index(trap_request);
   const char* reason = trap_reason_name(trap_request_reason(trap_request));
   const char* action = trap_action_name(trap_request_action(trap_request));
-#ifdef GRAAL
+#ifdef JVMCI
   int debug_id = trap_request_debug_id(trap_request);
 #endif
   size_t len;
   if (unloaded_class_index < 0) {
-    len = jio_snprintf(buf, buflen, "reason='%s' action='%s'" GRAAL_ONLY(" debug_id='%d'"),
+    len = jio_snprintf(buf, buflen, "reason='%s' action='%s'" JVMCI_ONLY(" debug_id='%d'"),
                        reason, action
-#ifdef GRAAL
+#ifdef JVMCI
                        ,debug_id
 #endif
                        );
   } else {
-    len = jio_snprintf(buf, buflen, "reason='%s' action='%s' index='%d'" GRAAL_ONLY(" debug_id='%d'"),
+    len = jio_snprintf(buf, buflen, "reason='%s' action='%s' index='%d'" JVMCI_ONLY(" debug_id='%d'"),
                        reason, action, unloaded_class_index
-#ifdef GRAAL
+#ifdef JVMCI
                        ,debug_id
 #endif
                        );
@@ -2295,7 +2295,7 @@ void Deoptimization::print_statistics() {
     if (xtty != NULL)  xtty->tail("statistics");
   }
 }
-#else // COMPILER2 || SHARK || GRAAL
+#else // COMPILER2 || SHARK || JVMCI
 
 
 // Stubs for C1 only system.
@@ -2331,4 +2331,4 @@ const char* Deoptimization::format_trap_state(char* buf, size_t buflen,
   return buf;
 }
 
-#endif // COMPILER2 || SHARK || GRAAL
+#endif // COMPILER2 || SHARK || JVMCI

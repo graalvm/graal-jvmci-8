@@ -100,7 +100,7 @@ class JavaCallArguments : public StackObj {
   int         _size;
   int         _max_size;
   bool        _start_at_zero;      // Support late setting of receiver
-#ifdef GRAAL
+#ifdef JVMCI
   nmethod*    _alternative_target; // Nmethod that should be called instead of normal target
 #endif
 
@@ -112,7 +112,7 @@ class JavaCallArguments : public StackObj {
     _max_size = _default_size;
     _size = 0;
     _start_at_zero = false;
-    GRAAL_ONLY(_alternative_target = NULL;)
+    JVMCI_ONLY(_alternative_target = NULL;)
   }
 
  public:
@@ -134,13 +134,13 @@ class JavaCallArguments : public StackObj {
       _max_size = max_size;
       _size = 0;
       _start_at_zero = false;
-      GRAAL_ONLY(_alternative_target = NULL;)
+      JVMCI_ONLY(_alternative_target = NULL;)
     } else {
       initialize();
     }
   }
 
-#ifdef GRAAL
+#ifdef JVMCI
   void set_alternative_target(nmethod* target) {
     _alternative_target = target;
   }

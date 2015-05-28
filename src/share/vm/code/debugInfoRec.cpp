@@ -37,7 +37,7 @@ class DIR_Chunk {
   int  _offset; // location in the stream of this scope
   int  _length; // number of bytes in the stream
   int  _hash;   // hash of stream bytes (for quicker reuse)
-#ifdef GRAAL
+#ifdef JVMCI
   DebugInformationRecorder* _DIR;
 #endif
 
@@ -54,7 +54,7 @@ class DIR_Chunk {
   DIR_Chunk(int offset, int length, DebugInformationRecorder* dir) {
     _offset = offset;
     _length = length;
-#ifdef GRAAL
+#ifdef JVMCI
     _DIR = dir;
 #endif
     unsigned int hash = 0;
@@ -84,7 +84,7 @@ class DIR_Chunk {
     return NULL;
   }
 
-#ifdef GRAAL
+#ifdef JVMCI
   static int compare(DIR_Chunk* a, DIR_Chunk* b) {
     if (b->_hash > a->_hash) {
       return 1;
@@ -138,7 +138,7 @@ DebugInformationRecorder::DebugInformationRecorder(OopRecorder* oop_recorder)
   _oop_recorder = oop_recorder;
 
   _all_chunks    = new GrowableArray<DIR_Chunk*>(300);
-#ifndef GRAAL
+#ifndef JVMCI
   _shared_chunks = new GrowableArray<DIR_Chunk*>(30);
 #endif
   _next_chunk = _next_chunk_limit = NULL;
@@ -277,7 +277,7 @@ int DebugInformationRecorder::find_sharable_decode_offset(int stream_offset) {
 
   DIR_Chunk* ns = new(this) DIR_Chunk(stream_offset, stream_length, this);
 
-#ifdef GRAAL
+#ifdef JVMCI
   DIR_Chunk* match = _all_chunks->find_insert_binary<DIR_Chunk::compare>(ns);
   if (match != ns) {
     // Found an existing chunk

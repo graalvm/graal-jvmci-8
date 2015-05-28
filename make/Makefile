@@ -84,7 +84,7 @@ else
   ALT_OUT=
 endif
 
-# Directory for shared code (e.g. graal.jar)
+# Directory for shared code (e.g. jvmci.jar)
 SHARED_DIR=$(OUTPUTDIR)/shared
 
 # Typical C1/C2 targets made available with this Makefile
@@ -94,7 +94,7 @@ CORE_VM_TARGETS=productcore fastdebugcore optimizedcore debugcore
 ZERO_VM_TARGETS=productzero fastdebugzero optimizedzero debugzero
 SHARK_VM_TARGETS=productshark fastdebugshark optimizedshark debugshark
 MINIMAL1_VM_TARGETS=productminimal1 fastdebugminimal1 debugminimal1
-GRAAL_VM_TARGETS=productgraal fastdebuggraal optimizedgraal debuggraal
+JVMCI_VM_TARGETS=productjvmci fastdebugjvmci optimizedjvmci debugjvmci
 
 COMMON_VM_PRODUCT_TARGETS=product product1 docs export_product
 COMMON_VM_FASTDEBUG_TARGETS=fastdebug fastdebug1 docs export_fastdebug
@@ -149,11 +149,11 @@ all_fastdebugcore: fastdebugcore docs export_fastdebug
 all_debugcore:     debugcore docs export_debug
 all_optimizedcore: optimizedcore docs export_optimized
 
-allgraal:           all_productgraal all_fastdebuggraal
-all_productgraal:   productgraal docs export_product
-all_fastdebuggraal: fastdebuggraal docs export_fastdebug
-all_debuggraal:     debuggraal docs export_debug
-all_optimizedgraal: optimizedgraal docs export_optimized
+alljvmci:           all_productjvmci all_fastdebugjvmci
+all_productjvmci:   productjvmci docs export_product
+all_fastdebugjvmci: fastdebugjvmci docs export_fastdebug
+all_debugjvmci:     debugjvmci docs export_debug
+all_optimizedjvmci: optimizedjvmci docs export_optimized
 
 # Do everything
 world:         all create_jdk
@@ -174,11 +174,11 @@ endif
 C1_DIR      =$(OUTPUTDIR)/$(VM_PLATFORM)_compiler1
 C2_DIR      =$(OUTPUTDIR)/$(VM_PLATFORM)_compiler2
 CORE_DIR    =$(OUTPUTDIR)/$(VM_PLATFORM)_core
-GRAAL_DIR   =$(OUTPUTDIR)/$(VM_PLATFORM)_graal
+JVMCI_DIR   =$(OUTPUTDIR)/$(VM_PLATFORM)_jvmci
 MINIMAL1_DIR=$(OUTPUTDIR)/$(VM_PLATFORM)_minimal1
 ZERO_DIR    =$(OUTPUTDIR)/$(VM_PLATFORM)_zero
 SHARK_DIR   =$(OUTPUTDIR)/$(VM_PLATFORM)_shark
-GRAAL_DIR   =$(OUTPUTDIR)/$(VM_PLATFORM)_graal
+JVMCI_DIR   =$(OUTPUTDIR)/$(VM_PLATFORM)_jvmci
 
 # Build variation of hotspot
 $(C1_VM_TARGETS):
@@ -205,9 +205,9 @@ $(MINIMAL1_VM_TARGETS):
 	$(CD) $(GAMMADIR)/make; \
 	$(MAKE) BUILD_DIR=$(MINIMAL1_DIR) BUILD_FLAVOR=$(@:%minimal1=%) VM_TARGET=$@ generic_buildminimal1 $(ALT_OUT)
 
-$(GRAAL_VM_TARGETS):
+$(JVMCI_VM_TARGETS):
 	$(CD) $(GAMMADIR)/make; \
-	$(MAKE) BUILD_DIR=$(GRAAL_DIR) BUILD_FLAVOR=$(@:%graal=%) VM_TARGET=$@ INCLUDE_GRAAL=true generic_buildgraal $(ALT_OUT)
+	$(MAKE) BUILD_DIR=$(JVMCI_DIR) BUILD_FLAVOR=$(@:%jvmci=%) VM_TARGET=$@ INCLUDE_JVMCI=true generic_buildjvmci $(ALT_OUT)
 
 # Install hotspot script in build directory
 HOTSPOT_SCRIPT=$(BUILD_DIR)/$(BUILD_FLAVOR)/hotspot
@@ -301,7 +301,7 @@ else
 	@$(ECHO) "Error: trying to build a minimal target but JVM_VARIANT_MINIMAL1 is not true."
 endif
 
-generic_buildgraal: $(HOTSPOT_SCRIPT) buildshared
+generic_buildjvmci: $(HOTSPOT_SCRIPT) buildshared
 	$(MKDIR) -p $(OUTPUTDIR)
 	$(CD) $(OUTPUTDIR); \
 		$(MAKE) -f $(ABS_OS_MAKEFILE) \
@@ -350,7 +350,7 @@ DOCS_DIR=$(OUTPUTDIR)/$(VM_PLATFORM)_docs
 C1_BUILD_DIR      =$(C1_DIR)/$(BUILD_FLAVOR)
 C2_BUILD_DIR      =$(C2_DIR)/$(BUILD_FLAVOR)
 CORE_BUILD_DIR    =$(CORE_DIR)/$(BUILD_FLAVOR)
-GRAAL_BUILD_DIR   =$(GRAAL_DIR)/$(BUILD_FLAVOR)
+JVMCI_BUILD_DIR   =$(JVMCI_DIR)/$(BUILD_FLAVOR)
 MINIMAL1_BUILD_DIR=$(MINIMAL1_DIR)/$(BUILD_FLAVOR)
 ZERO_BUILD_DIR    =$(ZERO_DIR)/$(BUILD_FLAVOR)
 SHARK_BUILD_DIR   =$(SHARK_DIR)/$(BUILD_FLAVOR)
@@ -404,52 +404,52 @@ $(EXPORT_JRE_LIB_ARCH_DIR)/%.dSYM: 		$(C2_BUILD_DIR)/%.dSYM
 $(EXPORT_SERVER_DIR)/%.dSYM:       		$(C2_BUILD_DIR)/%.dSYM
 	$(install-dir)
 
-# Graal
+# JVMCI
 # Common
-$(EXPORT_SERVER_DIR)/%.diz:       		$(GRAAL_BUILD_DIR)/%.diz
+$(EXPORT_SERVER_DIR)/%.diz:       		$(JVMCI_BUILD_DIR)/%.diz
 	$(install-file)
-$(EXPORT_LIB_DIR)/%.jar:			$(GRAAL_BUILD_DIR)/../generated/%.jar
+$(EXPORT_LIB_DIR)/%.jar:			$(JVMCI_BUILD_DIR)/../generated/%.jar
 	$(install-file)
-$(EXPORT_INCLUDE_DIR)/%:			$(GRAAL_BUILD_DIR)/../generated/jvmtifiles/%
+$(EXPORT_INCLUDE_DIR)/%:			$(JVMCI_BUILD_DIR)/../generated/jvmtifiles/%
 	$(install-file)
 # Windows
-$(EXPORT_SERVER_DIR)/%.dll:			$(GRAAL_BUILD_DIR)/%.dll
+$(EXPORT_SERVER_DIR)/%.dll:			$(JVMCI_BUILD_DIR)/%.dll
 	$(install-file)
-$(EXPORT_SERVER_DIR)/%.pdb:			$(GRAAL_BUILD_DIR)/%.pdb
+$(EXPORT_SERVER_DIR)/%.pdb:			$(JVMCI_BUILD_DIR)/%.pdb
 	$(install-file)
-$(EXPORT_SERVER_DIR)/%.map:			$(GRAAL_BUILD_DIR)/%.map
+$(EXPORT_SERVER_DIR)/%.map:			$(JVMCI_BUILD_DIR)/%.map
 	$(install-file)
-$(EXPORT_LIB_DIR)/%.lib:			$(GRAAL_BUILD_DIR)/%.lib
+$(EXPORT_LIB_DIR)/%.lib:			$(JVMCI_BUILD_DIR)/%.lib
 	$(install-file)
-$(EXPORT_JRE_BIN_DIR)/%.diz:			$(GRAAL_BUILD_DIR)/%.diz
+$(EXPORT_JRE_BIN_DIR)/%.diz:			$(JVMCI_BUILD_DIR)/%.diz
 	$(install-file)
-$(EXPORT_JRE_BIN_DIR)/%.dll:			$(GRAAL_BUILD_DIR)/%.dll
+$(EXPORT_JRE_BIN_DIR)/%.dll:			$(JVMCI_BUILD_DIR)/%.dll
 	$(install-file)
-$(EXPORT_JRE_BIN_DIR)/%.pdb:			$(GRAAL_BUILD_DIR)/%.pdb
+$(EXPORT_JRE_BIN_DIR)/%.pdb:			$(JVMCI_BUILD_DIR)/%.pdb
 	$(install-file)
-$(EXPORT_JRE_BIN_DIR)/%.map:			$(GRAAL_BUILD_DIR)/%.map
+$(EXPORT_JRE_BIN_DIR)/%.map:			$(JVMCI_BUILD_DIR)/%.map
 	$(install-file)
 # Unix
-$(EXPORT_JRE_LIB_ARCH_DIR)/%.$(LIBRARY_SUFFIX): $(GRAAL_BUILD_DIR)/%.$(LIBRARY_SUFFIX)
+$(EXPORT_JRE_LIB_ARCH_DIR)/%.$(LIBRARY_SUFFIX): $(JVMCI_BUILD_DIR)/%.$(LIBRARY_SUFFIX)
 	$(install-file)
-$(EXPORT_SERVER_DIR)/%.$(LIBRARY_SUFFIX):       $(GRAAL_BUILD_DIR)/%.$(LIBRARY_SUFFIX)
+$(EXPORT_SERVER_DIR)/%.$(LIBRARY_SUFFIX):       $(JVMCI_BUILD_DIR)/%.$(LIBRARY_SUFFIX)
 	$(install-file)
-$(EXPORT_SERVER_DIR)/64/%.$(LIBRARY_SUFFIX):    $(GRAAL_BUILD_DIR)/%.$(LIBRARY_SUFFIX)
+$(EXPORT_SERVER_DIR)/64/%.$(LIBRARY_SUFFIX):    $(JVMCI_BUILD_DIR)/%.$(LIBRARY_SUFFIX)
 	$(install-file)
-$(EXPORT_JRE_LIB_ARCH_DIR)/%.debuginfo: 	$(GRAAL_BUILD_DIR)/%.debuginfo
+$(EXPORT_JRE_LIB_ARCH_DIR)/%.debuginfo: 	$(JVMCI_BUILD_DIR)/%.debuginfo
 	$(install-file)
-$(EXPORT_SERVER_DIR)/%.debuginfo:       	$(GRAAL_BUILD_DIR)/%.debuginfo
+$(EXPORT_SERVER_DIR)/%.debuginfo:       	$(JVMCI_BUILD_DIR)/%.debuginfo
 	$(install-file)
-$(EXPORT_SERVER_DIR)/64/%.debuginfo:    	$(GRAAL_BUILD_DIR)/%.debuginfo
+$(EXPORT_SERVER_DIR)/64/%.debuginfo:    	$(JVMCI_BUILD_DIR)/%.debuginfo
 	$(install-file)
-$(EXPORT_JRE_LIB_ARCH_DIR)/%.diz: 		$(GRAAL_BUILD_DIR)/%.diz
+$(EXPORT_JRE_LIB_ARCH_DIR)/%.diz: 		$(JVMCI_BUILD_DIR)/%.diz
 	$(install-file)
-$(EXPORT_SERVER_DIR)/64/%.diz:    		$(GRAAL_BUILD_DIR)/%.diz
+$(EXPORT_SERVER_DIR)/64/%.diz:    		$(JVMCI_BUILD_DIR)/%.diz
 	$(install-file)
 # MacOS X
-$(EXPORT_JRE_LIB_ARCH_DIR)/%.dSYM: 		$(GRAAL_BUILD_DIR)/%.dSYM
+$(EXPORT_JRE_LIB_ARCH_DIR)/%.dSYM: 		$(JVMCI_BUILD_DIR)/%.dSYM
 	$(install-dir)
-$(EXPORT_SERVER_DIR)/%.dSYM:       		$(GRAAL_BUILD_DIR)/%.dSYM
+$(EXPORT_SERVER_DIR)/%.dSYM:       		$(JVMCI_BUILD_DIR)/%.dSYM
 	$(install-dir)
 
 endif
@@ -632,10 +632,10 @@ $(EXPORT_JRE_LIB_DIR)/%.jar: $(SHARED_DIR)/%.jar
 $(EXPORT_JRE_LIB_EXT_DIR)/%.jar: $(SHARED_DIR)/%.jar
 	$(install-file)
 
-$(EXPORT_JRE_LIB_GRAAL_DIR)/%.jar: $(SHARED_DIR)/%.jar
+$(EXPORT_JRE_LIB_JVMCI_DIR)/%.jar: $(SHARED_DIR)/%.jar
 	$(install-file)
 
-$(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/%: $(SHARED_DIR)/services/%
+$(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/%: $(SHARED_DIR)/services/%
 	$(install-file)
 
 $(EXPORT_INCLUDE_DIR)/%: $(HS_SRC_DIR)/share/vm/code/%
@@ -680,7 +680,7 @@ clean_build:
 	$(RM) -r $(C1_DIR)
 	$(RM) -r $(C2_DIR)
 	$(RM) -r $(CORE_DIR)
-	$(RM) -r $(GRAAL_DIR)
+	$(RM) -r $(JVMCI_DIR)
 	$(RM) -r $(ZERO_DIR)
 	$(RM) -r $(SHARK_DIR)
 	$(RM) -r $(MINIMAL1_DIR)
@@ -944,7 +944,7 @@ jvmgzero: warn_jvmg_deprecated debugzero
 
 jvmgshark: warn_jvmg_deprecated debugshark
 
-jvmggraal: warn_jvmg_deprecated debuggraal
+jvmgjvmci: warn_jvmg_deprecated debugjvmci
 
 # JPRT rule to build this workspace
 include $(GAMMADIR)/make/jprt.gmk

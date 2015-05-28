@@ -529,12 +529,12 @@ void Disassembler::decode(nmethod* nm, outputStream* st) {
   nm->method()->method_holder()->name()->print_symbol_on(env.output());
   env.output()->print(".");
   nm->method()->name()->print_symbol_on(env.output());
-#ifdef GRAAL
+#ifdef JVMCI
   {
     char buffer[O_BUFLEN];
-    char* graalName = nm->graal_installed_code_name(buffer, O_BUFLEN);
-    if (graalName != NULL) {
-      env.output()->print(" (%s)", graalName);
+    char* jvmciName = nm->jvmci_installed_code_name(buffer, O_BUFLEN);
+    if (jvmciName != NULL) {
+      env.output()->print(" (%s)", jvmciName);
     }
   }
 #endif

@@ -21,10 +21,10 @@
  * questions.
  */
 
-#include "graal/graalCodeInstaller.hpp"
-#include "graal/graalRuntime.hpp"
-#include "graal/graalCompilerToVM.hpp"
-#include "graal/graalJavaAccess.hpp"
+#include "jvmci/jvmciCodeInstaller.hpp"
+#include "jvmci/jvmciRuntime.hpp"
+#include "jvmci/jvmciCompilerToVM.hpp"
+#include "jvmci/jvmciJavaAccess.hpp"
 #include "vmreg_sparc.inline.hpp"
 
 jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, oop method) {
@@ -71,7 +71,7 @@ void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset
 
   _instructions->relocate(pc + NativeMovConstReg::sethi_offset, internal_word_Relocation::spec((address) dest));
   _instructions->relocate(pc + NativeMovConstReg::add_offset, internal_word_Relocation::spec((address) dest));
-  TRACE_graal_3("relocating at %p with destination at %p (%d)", pc, dest, data_offset);
+  TRACE_jvmci_3("relocating at %p with destination at %p (%d)", pc, dest, data_offset);
 }
 
 void CodeInstaller::pd_relocate_CodeBlob(CodeBlob* cb, NativeInstruction* inst) {
@@ -91,7 +91,7 @@ void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong forei
   } else {
     fatal(err_msg("unknown call or jump instruction at %p", pc));
   }
-  TRACE_graal_3("relocating (foreign call) at %p", inst);
+  TRACE_jvmci_3("relocating (foreign call) at %p", inst);
 }
 
 void CodeInstaller::pd_relocate_JavaMethod(oop hotspot_method, jint pc_offset) {
@@ -153,12 +153,12 @@ void CodeInstaller::pd_relocate_poll(address pc, jint mark) {
   }
 }
 
-// convert Graal register indices (as used in oop maps) to HotSpot registers
-VMReg CodeInstaller::get_hotspot_reg(jint graal_reg) {
-  if (graal_reg < RegisterImpl::number_of_registers) {
-    return as_Register(graal_reg)->as_VMReg();
+// convert JVMCI register indices (as used in oop maps) to HotSpot registers
+VMReg CodeInstaller::get_hotspot_reg(jint jvmci_reg) {
+  if (jvmci_reg < RegisterImpl::number_of_registers) {
+    return as_Register(jvmci_reg)->as_VMReg();
   } else {
-    jint floatRegisterNumber = graal_reg - RegisterImpl::number_of_registers;
+    jint floatRegisterNumber = jvmci_reg - RegisterImpl::number_of_registers;
     floatRegisterNumber += MAX2(0, floatRegisterNumber-32); // Beginning with f32, only every second register is going to be addressed
     if (floatRegisterNumber < FloatRegisterImpl::number_of_registers) {
       return as_FloatRegister(floatRegisterNumber)->as_VMReg();

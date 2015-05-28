@@ -916,17 +916,17 @@ class JavaThread: public Thread {
 
  private:
 
-#ifdef GRAAL
-  address   _graal_alternate_call_target;
-  address   _graal_implicit_exception_pc;    // pc at which the most recent implicit exception occurred
+#ifdef JVMCI
+  address   _jvmci_alternate_call_target;
+  address   _jvmci_implicit_exception_pc;    // pc at which the most recent implicit exception occurred
 
-  jlong*    _graal_counters;
+  jlong*    _jvmci_counters;
 
  public:
-  static jlong* _graal_old_thread_counters;
+  static jlong* _jvmci_old_thread_counters;
   static void collect_counters(typeArrayOop array);
  private:
-#endif // GRAAL
+#endif // JVMCI
 
   nmethod*      _scanned_nmethod;  // nmethod being scanned by the sweeper
 
@@ -1301,9 +1301,9 @@ class JavaThread: public Thread {
   MemRegion deferred_card_mark() const           { return _deferred_card_mark; }
   void set_deferred_card_mark(MemRegion mr)      { _deferred_card_mark = mr;   }
 
-#ifdef GRAAL
-  void set_graal_alternate_call_target(address a) { _graal_alternate_call_target = a; }
-  void set_graal_implicit_exception_pc(address a) { _graal_implicit_exception_pc = a; }
+#ifdef JVMCI
+  void set_jvmci_alternate_call_target(address a) { _jvmci_alternate_call_target = a; }
+  void set_jvmci_implicit_exception_pc(address a) { _jvmci_implicit_exception_pc = a; }
 #endif
 
   // Exception handling for compiled methods
@@ -1399,11 +1399,11 @@ class JavaThread: public Thread {
   static ByteSize thread_state_offset()          { return byte_offset_of(JavaThread, _thread_state        ); }
   static ByteSize saved_exception_pc_offset()    { return byte_offset_of(JavaThread, _saved_exception_pc  ); }
   static ByteSize osthread_offset()              { return byte_offset_of(JavaThread, _osthread            ); }
-#ifdef GRAAL
-  static ByteSize graal_alternate_call_target_offset() { return byte_offset_of(JavaThread, _graal_alternate_call_target); }
-  static ByteSize graal_implicit_exception_pc_offset() { return byte_offset_of(JavaThread, _graal_implicit_exception_pc); }
-  static ByteSize graal_counters_offset()        { return byte_offset_of(JavaThread, _graal_counters      ); }
-#endif // GRAAL
+#ifdef JVMCI
+  static ByteSize jvmci_alternate_call_target_offset() { return byte_offset_of(JavaThread, _jvmci_alternate_call_target); }
+  static ByteSize jvmci_implicit_exception_pc_offset() { return byte_offset_of(JavaThread, _jvmci_implicit_exception_pc); }
+  static ByteSize jvmci_counters_offset()        { return byte_offset_of(JavaThread, _jvmci_counters      ); }
+#endif // JVMCI
   static ByteSize exception_oop_offset()         { return byte_offset_of(JavaThread, _exception_oop       ); }
   static ByteSize exception_pc_offset()          { return byte_offset_of(JavaThread, _exception_pc        ); }
   static ByteSize exception_handler_pc_offset()  { return byte_offset_of(JavaThread, _exception_handler_pc); }
@@ -1875,7 +1875,7 @@ class CompilerThread : public JavaThread {
 
   bool is_Compiler_thread() const                { return true; }
 
-#ifdef COMPILERGRAAL
+#ifdef COMPILERJVMCI
   virtual bool can_call_java() const;
 #else
   virtual bool can_call_java() const             { return false; }

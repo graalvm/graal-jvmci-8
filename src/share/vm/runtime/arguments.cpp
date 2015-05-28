@@ -95,9 +95,9 @@ char**  Arguments::_jvm_flags_array             = NULL;
 int     Arguments::_num_jvm_flags               = 0;
 char**  Arguments::_jvm_args_array              = NULL;
 int     Arguments::_num_jvm_args                = 0;
-#ifdef GRAAL
-char**  Arguments::_graal_args_array              = NULL;
-int     Arguments::_num_graal_args                = 0;
+#ifdef JVMCI
+char**  Arguments::_jvmci_args_array              = NULL;
+int     Arguments::_num_jvmci_args                = 0;
 #endif
 char*  Arguments::_java_command                 = NULL;
 SystemProperty* Arguments::_system_properties   = NULL;
@@ -189,13 +189,6 @@ void Arguments::init_system_properties() {
   PropertyList_add(&_system_properties, new SystemProperty("java.vm.version", VM_Version::vm_release(),  false));
   PropertyList_add(&_system_properties, new SystemProperty("java.vm.name", VM_Version::vm_name(),  false));
   PropertyList_add(&_system_properties, new SystemProperty("java.vm.info", VM_Version::vm_info_string(),  true));
-#ifdef GRAAL
-#ifdef GRAAL_VERSION
-  PropertyList_add(&_system_properties, new SystemProperty("graal.version", GRAAL_VERSION,  true));
-#else
-  PropertyList_add(&_system_properties, new SystemProperty("graal.version", "unknown",  true));
-#endif
-#endif
 
   // following are JVMTI agent writeable properties.
   // Properties values are set to NULL and they are
@@ -817,9 +810,9 @@ void Arguments::build_jvm_args(const char* arg) {
 void Arguments::build_jvm_flags(const char* arg) {
   add_string(&_jvm_flags_array, &_num_jvm_flags, arg);
 }
-#ifdef GRAAL
-void Arguments::add_graal_arg(const char* arg) {
-  add_string(&_graal_args_array, &_num_graal_args, arg);
+#ifdef JVMCI
+void Arguments::add_jvmci_arg(const char* arg) {
+  add_string(&_jvmci_args_array, &_num_jvmci_args, arg);
 }
 #endif
 
@@ -1127,7 +1120,7 @@ void Arguments::set_mode_flags(Mode mode) {
   }
 }
 
-#if defined(COMPILER2) || defined(GRAAL) || defined(_LP64) || !INCLUDE_CDS
+#if defined(COMPILER2) || defined(JVMCI) || defined(_LP64) || !INCLUDE_CDS
 // Conflict: required to use shared spaces (-Xshare:on), but
 // incompatible command line options were chosen.
 
@@ -1177,7 +1170,7 @@ void Arguments::set_tiered_flags() {
  *    the minimum number of compiler threads is 2.
  */
 int Arguments::get_min_number_of_compiler_threads() {
-#if !defined(COMPILER1) && !defined(COMPILER2) && !defined(SHARK) && !defined(COMPILERGRAAL)
+#if !defined(COMPILER1) && !defined(COMPILER2) && !defined(SHARK) && !defined(COMPILERJVMCI)
   return 0;   // case 1
 #else
   if (!TieredCompilation || (TieredStopAtLevel < CompLevel_full_optimization)) {
@@ -1501,7 +1494,7 @@ void Arguments::set_use_compressed_oops() {
   // the only value that can override MaxHeapSize if we are
   // to use UseCompressedOops is InitialHeapSize.
   size_t max_heap_size = MAX2(MaxHeapSize, InitialHeapSize);
-  // Set default on graal with sparc to not use compressed oops as long they are not implemented
+  // Set default on jvmci with sparc to not use compressed oops as long they are not implemented
   if (max_heap_size <= max_heap_for_compressed_oops()) {
 #if !defined(COMPILER1) || defined(TIERED)
     if (FLAG_IS_DEFAULT(UseCompressedOops)) {
@@ -1595,7 +1588,7 @@ void Arguments::select_gc() {
 void Arguments::set_ergonomics_flags() {
   select_gc();
 
-#if defined(COMPILER2) || defined(GRAAL)
+#if defined(COMPILER2) || defined(JVMCI)
   // Shared spaces work fine with other GCs but causes bytecode rewriting
   // to be disabled, which hurts interpreter performance and decreases
   // server performance.  When -server is specified, keep the default off
@@ -1679,7 +1672,7 @@ void Arguments::set_parallel_gc_flags() {
 
 void Arguments::set_g1_gc_flags() {
   assert(UseG1GC, "Error");
-#if defined(COMPILER1) || defined(GRAAL)
+#if defined(COMPILER1) || defined(JVMCI)
   FastTLABRefill = false;
 #endif
   FLAG_SET_DEFAULT(ParallelGCThreads,
@@ -2446,7 +2439,7 @@ bool Arguments::check_vm_args_consistency() {
     }
 #endif
   }
-#ifdef GRAAL
+#ifdef JVMCI
   if (UseG1GC) {
       if (IgnoreUnrecognizedVMOptions) {
         FLAG_SET_CMDLINE(bool, UseG1GC, true);
@@ -2459,7 +2452,7 @@ bool Arguments::check_vm_args_consistency() {
   }
 
   if (!ScavengeRootsInCode) {
-      warning("forcing ScavengeRootsInCode non-zero because Graal is enabled");
+      warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
       ScavengeRootsInCode = 1;
   }
   if (TypeProfileLevel != 0) {
@@ -2783,9 +2776,9 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
           return JNI_ERR;
         }
 #endif // !INCLUDE_JVMTI
-#if defined(GRAAL)
+#if defined(JVMCI)
         if (strcmp(name, "hprof") == 0) {
-          FLAG_SET_CMDLINE(bool, GraalHProfEnabled, true);
+          FLAG_SET_CMDLINE(bool, JVMCIHProfEnabled, true);
         }
 #endif
         add_init_library(name, options);
@@ -2810,9 +2803,9 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
           return JNI_ERR;
         }
 #endif // !INCLUDE_JVMTI
-#if defined(GRAAL)
+#if defined(JVMCI)
         if (valid_hprof_or_jdwp_agent(name, is_absolute_path)) {
-          FLAG_SET_CMDLINE(bool, GraalHProfEnabled, true);
+          FLAG_SET_CMDLINE(bool, JVMCIHProfEnabled, true);
         }
 #endif
 
@@ -3389,13 +3382,13 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
         }
       }
     }
-#ifdef GRAAL
+#ifdef JVMCI
     else if (match_option(option, "-G:", &tail)) { // -G:XXX
-      // Option for the Graal compiler.
+      // Option for the JVMCI compiler.
       if (PrintVMOptions) {
-        tty->print_cr("Graal option %s", tail);
+        tty->print_cr("JVMCI option %s", tail);
       }
-      Arguments::add_graal_arg(tail);
+      Arguments::add_jvmci_arg(tail);
 
     // Unknown option
     }
@@ -3615,24 +3608,22 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
   // This must be done after all -D arguments have been processed.
   scp_p->expand_endorsed();
 
-#ifdef GRAAL
-  if (!UseGraalClassLoader) {
-    // Append lib/graal/graal*.jar to boot class path
-    char graalDir[JVM_MAXPATHLEN];
+#ifdef JVMCI
+  if (!UseJVMCIClassLoader) {
+    // Append lib/jvmci/*.jar to boot class path
+    char jvmciDir[JVM_MAXPATHLEN];
     const char* fileSep = os::file_separator();
-    jio_snprintf(graalDir, sizeof(graalDir), "%s%slib%sgraal", Arguments::get_java_home(), fileSep, fileSep);
-    DIR* dir = os::opendir(graalDir);
+    jio_snprintf(jvmciDir, sizeof(jvmciDir), "%s%slib%sjvmci", Arguments::get_java_home(), fileSep, fileSep);
+    DIR* dir = os::opendir(jvmciDir);
     if (dir != NULL) {
       struct dirent *entry;
-      char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(graalDir), mtInternal);
+      char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(jvmciDir), mtInternal);
       while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL) {
         const char* name = entry->d_name;
         const char* ext = name + strlen(name) - 4;
-        if (ext > name && strcmp(ext, ".jar") == 0
-            && strlen(name) > strlen("graal")
-            && strncmp(name, "graal", strlen("graal")) == 0) {
+        if (ext > name && strcmp(ext, ".jar") == 0) {
           char fileName[JVM_MAXPATHLEN];
-          jio_snprintf(fileName, sizeof(fileName), "%s%s%s", graalDir, fileSep, name);
+          jio_snprintf(fileName, sizeof(fileName), "%s%s%s", jvmciDir, fileSep, name);
           scp_p->add_suffix(fileName);
           scp_assembly_required = true;
         }
@@ -3668,7 +3659,7 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
     FLAG_SET_ERGO(uintx, InitialTenuringThreshold, MaxTenuringThreshold);
   }
 
-#if !defined(COMPILER2) && !defined(COMPILERGRAAL)
+#if !defined(COMPILER2) && !defined(COMPILERJVMCI)
   // Don't degrade server performance for footprint
   if (FLAG_IS_DEFAULT(UseLargePages) &&
       MaxHeapSize < LargePageHeapSizeThreshold) {
@@ -4138,9 +4129,9 @@ jint Arguments::apply_ergo() {
 #ifdef COMPILER1
       || !UseFastLocking
 #endif // COMPILER1
-#ifdef GRAAL
-      || !GraalUseFastLocking
-#endif // GRAAL
+#ifdef JVMCI
+      || !JVMCIUseFastLocking
+#endif // JVMCI
     ) {
     if (!FLAG_IS_DEFAULT(UseBiasedLocking) && UseBiasedLocking) {
       // flag set to true on command line; warn the user that they

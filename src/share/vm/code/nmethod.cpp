@@ -46,8 +46,8 @@
 #ifdef SHARK
 #include "shark/sharkCompiler.hpp"
 #endif
-#ifdef GRAAL
-#include "graal/graalJavaAccess.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciJavaAccess.hpp"
 #endif
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
@@ -106,10 +106,10 @@ bool nmethod::is_compiled_by_c1() const {
   }
   return compiler()->is_c1();
 }
-bool nmethod::is_compiled_by_graal() const {
+bool nmethod::is_compiled_by_jvmci() const {
   if (compiler() == NULL || method() == NULL)  return false;  // can happen during debug printing
   if (is_native_method()) return false;
-  return compiler()->is_graal();
+  return compiler()->is_jvmci();
 }
 bool nmethod::is_compiled_by_c2() const {
   if (compiler() == NULL) {
@@ -238,8 +238,8 @@ static java_nmethod_stats_struct c1_java_nmethod_stats;
 #ifdef COMPILER2
 static java_nmethod_stats_struct c2_java_nmethod_stats;
 #endif
-#ifdef GRAAL
-static java_nmethod_stats_struct graal_java_nmethod_stats;
+#ifdef JVMCI
+static java_nmethod_stats_struct jvmci_java_nmethod_stats;
 #endif
 #ifdef SHARK
 static java_nmethod_stats_struct shark_java_nmethod_stats;
@@ -264,9 +264,9 @@ static void note_java_nmethod(nmethod* nm) {
     c2_java_nmethod_stats.note_nmethod(nm);
   } else
 #endif
-#ifdef GRAAL
-  if (nm->is_compiled_by_graal()) {
-    graal_java_nmethod_stats.note_nmethod(nm);
+#ifdef JVMCI
+  if (nm->is_compiled_by_jvmci()) {
+    jvmci_java_nmethod_stats.note_nmethod(nm);
   } else
 #endif
 #ifdef SHARK
@@ -559,8 +559,8 @@ void nmethod::init_defaults() {
 #if INCLUDE_RTM_OPT
   _rtm_state               = NoRTM;
 #endif
-#ifdef GRAAL
-  _graal_installed_code   = NULL;
+#ifdef JVMCI
+  _jvmci_installed_code   = NULL;
   _speculation_log        = NULL;
 #endif
 #ifdef HAVE_DTRACE_H
@@ -657,7 +657,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
   ImplicitExceptionTable* nul_chk_table,
   AbstractCompiler* compiler,
   int comp_level
-#ifdef GRAAL
+#ifdef JVMCI
   , Handle installed_code,
   Handle speculationLog
 #endif
@@ -684,7 +684,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
             nul_chk_table,
             compiler,
             comp_level
-#ifdef GRAAL
+#ifdef JVMCI
             , installed_code,
             speculationLog
 #endif
@@ -920,7 +920,7 @@ nmethod::nmethod(
   ImplicitExceptionTable* nul_chk_table,
   AbstractCompiler* compiler,
   int comp_level
-#ifdef GRAAL
+#ifdef JVMCI
   , Handle installed_code,
   Handle speculation_log
 #endif
@@ -948,12 +948,12 @@ nmethod::nmethod(
     _consts_offset           = content_offset()      + code_buffer->total_offset_of(code_buffer->consts());
     _stub_offset             = content_offset()      + code_buffer->total_offset_of(code_buffer->stubs());
 
-#ifdef GRAAL
-    _graal_installed_code = installed_code();
+#ifdef JVMCI
+    _jvmci_installed_code = installed_code();
     _speculation_log = (instanceOop)speculation_log();
 
-    if (compiler->is_graal()) {
-      // Graal might not produce any stub sections
+    if (compiler->is_jvmci()) {
+      // JVMCI might not produce any stub sections
       if (offsets->value(CodeOffsets::Exceptions) != -1) {
         _exception_offset        = code_offset()          + offsets->value(CodeOffsets::Exceptions);
       } else {
@@ -981,7 +981,7 @@ nmethod::nmethod(
       _deoptimize_mh_offset  = _stub_offset          + offsets->value(CodeOffsets::DeoptMH);
     } else {
       _deoptimize_mh_offset  = -1;
-#ifdef GRAAL
+#ifdef JVMCI
     }
 #endif
     }
@@ -1027,7 +1027,7 @@ nmethod::nmethod(
 
     // we use the information of entry points to find out if a method is
     // static or non static
-    assert(compiler->is_c2() || compiler->is_graal() ||
+    assert(compiler->is_c2() || compiler->is_jvmci() ||
            _method->is_static() == (entry_point() == _verified_entry_point),
            " entry points must be same for static methods and vice versa");
   }
@@ -1398,7 +1398,7 @@ bool nmethod::can_not_entrant_be_converted() {
 }
 
 void nmethod::inc_decompile_count() {
-  if (!is_compiled_by_c2() && !is_compiled_by_graal()) return;
+  if (!is_compiled_by_c2() && !is_compiled_by_jvmci()) return;
   // Could be gated by ProfileTraps, but do not bother...
   Method* m = method();
   if (m == NULL)  return;
@@ -1475,15 +1475,15 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
   // Unregister must be done before the state change
   Universe::heap()->unregister_nmethod(this);
 
-#ifdef GRAAL
+#ifdef JVMCI
   // The method can only be unloaded after the pointer to the installed code
   // Java wrapper is no longer alive. Here we need to clear out this weak
   // reference to the dead object. Nulling out the reference has to happen
   // after the method is unregistered since the original value may be still
   // tracked by the rset.
-  if (_graal_installed_code != NULL) {
-    InstalledCode::set_address(_graal_installed_code, 0);
-    _graal_installed_code = NULL;
+  if (_jvmci_installed_code != NULL) {
+    InstalledCode::set_address(_jvmci_installed_code, 0);
+    _jvmci_installed_code = NULL;
   }
 #endif
 
@@ -1652,10 +1652,10 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
   } else {
     assert(state == not_entrant, "other cases may need to be handled differently");
   }
-#ifdef GRAAL
-  if (_graal_installed_code != NULL) {
+#ifdef JVMCI
+  if (_jvmci_installed_code != NULL) {
     // Break the link between nmethod and InstalledCode such that the nmethod can subsequently be flushed safely.
-    InstalledCode::set_address(_graal_installed_code, 0);
+    InstalledCode::set_address(_jvmci_installed_code, 0);
   }
 #endif
 
@@ -1964,18 +1964,18 @@ void nmethod::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred)
     }
   }
 
-#ifdef GRAAL
-  // Follow Graal method
+#ifdef JVMCI
+  // Follow JVMCI method
   BarrierSet* bs = Universe::heap()->barrier_set();
-  if (_graal_installed_code != NULL) {
-    if (_graal_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_graal_installed_code)) {
-      if (!is_alive->do_object_b(_graal_installed_code)) {
-        bs->write_ref_nmethod_pre(&_graal_installed_code, this);
-        _graal_installed_code = NULL;
-        bs->write_ref_nmethod_post(&_graal_installed_code, this);
+  if (_jvmci_installed_code != NULL) {
+    if (_jvmci_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_jvmci_installed_code)) {
+      if (!is_alive->do_object_b(_jvmci_installed_code)) {
+        bs->write_ref_nmethod_pre(&_jvmci_installed_code, this);
+        _jvmci_installed_code = NULL;
+        bs->write_ref_nmethod_post(&_jvmci_installed_code, this);
       }
     } else {
-      if (can_unload(is_alive, (oop*)&_graal_installed_code, unloading_occurred)) {
+      if (can_unload(is_alive, (oop*)&_jvmci_installed_code, unloading_occurred)) {
         return;
       }
     }
@@ -2101,15 +2101,15 @@ bool nmethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_
     unloading_occurred = true;
   }
 
-#ifdef GRAAL
-  // Follow Graal method
-  if (_graal_installed_code != NULL) {
-    if (_graal_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_graal_installed_code)) {
-      if (!is_alive->do_object_b(_graal_installed_code)) {
-        _graal_installed_code = NULL;
+#ifdef JVMCI
+  // Follow JVMCI method
+  if (_jvmci_installed_code != NULL) {
+    if (_jvmci_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_jvmci_installed_code)) {
+      if (!is_alive->do_object_b(_jvmci_installed_code)) {
+        _jvmci_installed_code = NULL;
       }
     } else {
-      if (can_unload(is_alive, (oop*)&_graal_installed_code, unloading_occurred)) {
+      if (can_unload(is_alive, (oop*)&_jvmci_installed_code, unloading_occurred)) {
         return false;
       }
     }
@@ -2190,18 +2190,18 @@ bool nmethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_
     return postponed;
   }
 
-#ifdef GRAAL
-  // Follow Graal method
+#ifdef JVMCI
+  // Follow JVMCI method
   BarrierSet* bs = Universe::heap()->barrier_set();
-  if (_graal_installed_code != NULL) {
-    if (_graal_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_graal_installed_code)) {
-      if (!is_alive->do_object_b(_graal_installed_code)) {
-        bs->write_ref_nmethod_pre(&_graal_installed_code, this);
-        _graal_installed_code = NULL;
-        bs->write_ref_nmethod_post(&_graal_installed_code, this);
+  if (_jvmci_installed_code != NULL) {
+    if (_jvmci_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_jvmci_installed_code)) {
+      if (!is_alive->do_object_b(_jvmci_installed_code)) {
+        bs->write_ref_nmethod_pre(&_jvmci_installed_code, this);
+        _jvmci_installed_code = NULL;
+        bs->write_ref_nmethod_post(&_jvmci_installed_code, this);
       }
     } else {
-      if (can_unload(is_alive, (oop*)&_graal_installed_code, unloading_occurred)) {
+      if (can_unload(is_alive, (oop*)&_jvmci_installed_code, unloading_occurred)) {
         is_unloaded = true;
       }
     }
@@ -2400,9 +2400,9 @@ void nmethod::oops_do(OopClosure* f, bool allow_zombie) {
     // (See comment above.)
   }
 
-#ifdef GRAAL
-  if (_graal_installed_code != NULL) {
-    f->do_oop((oop*) &_graal_installed_code);
+#ifdef JVMCI
+  if (_jvmci_installed_code != NULL) {
+    f->do_oop((oop*) &_jvmci_installed_code);
   }
   if (_speculation_log != NULL) {
     f->do_oop((oop*) &_speculation_log);
@@ -3057,8 +3057,8 @@ void nmethod::print() const {
     tty->print("(c2) ");
   } else if (is_compiled_by_shark()) {
     tty->print("(shark) ");
-  } else if (is_compiled_by_graal()) {
-    tty->print("(Graal) ");
+  } else if (is_compiled_by_jvmci()) {
+    tty->print("(JVMCI) ");
   } else {
     tty->print("(nm) ");
   }
@@ -3262,9 +3262,9 @@ ScopeDesc* nmethod::scope_desc_in(address begin, address end) {
 void nmethod::print_nmethod_labels(outputStream* stream, address block_begin) const {
   if (block_begin == entry_point())             stream->print_cr("[Entry Point]");
   if (block_begin == verified_entry_point())    stream->print_cr("[Verified Entry Point]");
-  if (GRAAL_ONLY(_exception_offset >= 0 &&) block_begin == exception_begin())         stream->print_cr("[Exception Handler]");
+  if (JVMCI_ONLY(_exception_offset >= 0 &&) block_begin == exception_begin())         stream->print_cr("[Exception Handler]");
   if (block_begin == stub_begin())              stream->print_cr("[Stub Code]");
-  if (GRAAL_ONLY(_deoptimize_offset >= 0 &&) block_begin == deopt_handler_begin())     stream->print_cr("[Deopt Handler Code]");
+  if (JVMCI_ONLY(_deoptimize_offset >= 0 &&) block_begin == deopt_handler_begin())     stream->print_cr("[Deopt Handler Code]");
 
   if (has_method_handle_invokes())
     if (block_begin == deopt_mh_handler_begin())  stream->print_cr("[Deopt MH Handler Code]");
@@ -3510,8 +3510,8 @@ void nmethod::print_statistics() {
 #ifdef COMPILER2
   c2_java_nmethod_stats.print_nmethod_stats("C2");
 #endif
-#ifdef GRAAL
-  graal_java_nmethod_stats.print_nmethod_stats("Graal");
+#ifdef JVMCI
+  jvmci_java_nmethod_stats.print_nmethod_stats("JVMCI");
 #endif
 #ifdef SHARK
   shark_java_nmethod_stats.print_nmethod_stats("Shark");
@@ -3525,12 +3525,12 @@ void nmethod::print_statistics() {
   if (xtty != NULL)  xtty->tail("statistics");
 }
 
-#ifdef GRAAL
-char* nmethod::graal_installed_code_name(char* buf, size_t buflen) {
-  if (!this->is_compiled_by_graal()) {
+#ifdef JVMCI
+char* nmethod::jvmci_installed_code_name(char* buf, size_t buflen) {
+  if (!this->is_compiled_by_jvmci()) {
     return NULL;
   }
-  oop installedCode = this->graal_installed_code();
+  oop installedCode = this->jvmci_installed_code();
   if (installedCode != NULL) {
     oop installedCodeName = NULL;
     if (installedCode->is_a(InstalledCode::klass())) {

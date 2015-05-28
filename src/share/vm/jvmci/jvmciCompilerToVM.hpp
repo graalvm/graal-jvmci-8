@@ -21,8 +21,8 @@
  * questions.
  */
 
-#ifndef SHARE_VM_GRAAL_GRAAL_COMPILER_TO_VM_HPP
-#define SHARE_VM_GRAAL_GRAAL_COMPILER_TO_VM_HPP
+#ifndef SHARE_VM_JVMCI_JVMCI_COMPILER_TO_VM_HPP
+#define SHARE_VM_JVMCI_JVMCI_COMPILER_TO_VM_HPP
 
 #include "prims/jni.h"
 #include "runtime/javaCalls.hpp"
@@ -105,4 +105,4 @@ class JavaArgumentUnboxer : public SignatureIterator {
   inline void do_void()                     { }
 };
 
-#endif // SHARE_VM_GRAAL_GRAAL_COMPILER_TO_VM_HPP
+#endif // SHARE_VM_JVMCI_JVMCI_COMPILER_TO_VM_HPP

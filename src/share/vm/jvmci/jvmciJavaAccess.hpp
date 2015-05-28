@@ -21,10 +21,10 @@
  * questions.
  */
 
-#ifndef SHARE_VM_GRAAL_GRAAL_JAVA_ACCESS_HPP
-#define SHARE_VM_GRAAL_GRAAL_JAVA_ACCESS_HPP
+#ifndef SHARE_VM_JVMCI_JVMCI_JAVA_ACCESS_HPP
+#define SHARE_VM_JVMCI_JVMCI_JAVA_ACCESS_HPP
 
-void graal_compute_offsets();
+void jvmci_compute_offsets();
 
 #include "classfile/systemDictionary.hpp"
 #include "oops/instanceMirrorKlass.hpp"
@@ -85,7 +85,7 @@ void graal_compute_offsets();
     oop_field(HotSpotCompiledNmethod, installationFailureMessage, "Ljava/lang/String;")                                                                        \
     int_field(HotSpotCompiledNmethod, entryBCI)                                                                                                                \
     int_field(HotSpotCompiledNmethod, id)                                                                                                                      \
-    long_field(HotSpotCompiledNmethod, graalEnv)                                                                                                               \
+    long_field(HotSpotCompiledNmethod, jvmciEnv)                                                                                                               \
   end_class                                                                                                                                                    \
   start_class(HotSpotForeignCallTarget)                                                                                                                        \
     long_field(HotSpotForeignCallTarget, address)                                                                                                              \
@@ -270,7 +270,7 @@ void graal_compute_offsets();
 #define START_CLASS(name)                                                                                                                                      \
 class name : AllStatic {                                                                                                                                       \
   private:                                                                                                                                                     \
-    friend class GraalCompiler;                                                                                                                                \
+    friend class JVMCICompiler;                                                                                                                                \
     static void check(oop obj, const char* field_name) {                                                                                                       \
         assert(obj != NULL, err_msg("NULL field access of %s.%s", #name, field_name));                                                                         \
         assert(obj->is_a(SystemDictionary::name##_klass()), "wrong class, " #name " expected");                                                                \
@@ -354,4 +354,4 @@ COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD
 
 void compute_offset(int &dest_offset, Klass* klass, const char* name, const char* signature, bool static_field);
 
-#endif // SHARE_VM_GRAAL_GRAAL_JAVA_ACCESS_HPP
+#endif // SHARE_VM_JVMCI_JVMCI_JAVA_ACCESS_HPP

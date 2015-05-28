@@ -24,17 +24,17 @@
 #include "precompiled.hpp"
 #include "memory/oopFactory.hpp"
 #include "runtime/javaCalls.hpp"
-#include "graal/graalCompiler.hpp"
-#include "graal/graalEnv.hpp"
-#include "graal/graalRuntime.hpp"
+#include "jvmci/jvmciCompiler.hpp"
+#include "jvmci/jvmciEnv.hpp"
+#include "jvmci/jvmciRuntime.hpp"
 #include "runtime/compilationPolicy.hpp"
 #include "runtime/globals_extension.hpp"
 
-GraalCompiler* GraalCompiler::_instance = NULL;
-elapsedTimer GraalCompiler::_codeInstallTimer;
+JVMCICompiler* JVMCICompiler::_instance = NULL;
+elapsedTimer JVMCICompiler::_codeInstallTimer;
 
-GraalCompiler::GraalCompiler() : AbstractCompiler(graal) {
-#ifdef COMPILERGRAAL
+JVMCICompiler::JVMCICompiler() : AbstractCompiler(jvmci) {
+#ifdef COMPILERJVMCI
   _bootstrapping = false;
   _methodsCompiled = 0;
 #endif
@@ -43,35 +43,35 @@ GraalCompiler::GraalCompiler() : AbstractCompiler(graal) {
 }
 
 // Initialization
-void GraalCompiler::initialize() {
-#ifdef COMPILERGRAAL
+void JVMCICompiler::initialize() {
+#ifdef COMPILERJVMCI
   if (!UseCompiler || !should_perform_init()) {
     return;
   }
 
-  BufferBlob* buffer_blob = GraalRuntime::initialize_buffer_blob();
+  BufferBlob* buffer_blob = JVMCIRuntime::initialize_buffer_blob();
   if (buffer_blob == NULL) {
     set_state(failed);
   } else {
     set_state(initialized);
   }
-  // Graal is considered as application code so we need to
+  // JVMCI is considered as application code so we need to
   // stop the VM deferring compilation now.
   CompilationPolicy::completed_vm_startup();
-#endif // COMPILERGRAAL
+#endif // COMPILERJVMCI
 }
 
-#ifdef COMPILERGRAAL
-void GraalCompiler::bootstrap() {
+#ifdef COMPILERJVMCI
+void JVMCICompiler::bootstrap() {
   JavaThread* THREAD = JavaThread::current();
   _bootstrapping = true;
-  // Allow bootstrap to perform Graal compilations of itself
-  bool c1only = GraalCompileWithC1Only;
-  GraalCompileWithC1Only = false;
+  // Allow bootstrap to perform JVMCI compilations of itself
+  bool c1only = JVMCICompileWithC1Only;
+  JVMCICompileWithC1Only = false;
   ResourceMark rm;
   HandleMark hm;
   if (PrintBootstrap) {
-    tty->print("Bootstrapping Graal");
+    tty->print("Bootstrapping JVMCI");
   }
   jlong start = os::javaTimeMillis();
 
@@ -108,12 +108,12 @@ void GraalCompiler::bootstrap() {
   if (PrintBootstrap) {
     tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methodsCompiled);
   }
-  GraalCompileWithC1Only = c1only;
+  JVMCICompileWithC1Only = c1only;
   _bootstrapping = false;
 }
 
-void GraalCompiler::compile_method(methodHandle method, int entry_bci, GraalEnv* env) {
-  GRAAL_EXCEPTION_CONTEXT
+void JVMCICompiler::compile_method(methodHandle method, int entry_bci, JVMCIEnv* env) {
+  JVMCI_EXCEPTION_CONTEXT
 
   bool is_osr = entry_bci != InvocationEntryBci;
   if (_bootstrapping && is_osr) {
@@ -122,7 +122,7 @@ void GraalCompiler::compile_method(methodHandle method, int entry_bci, GraalEnv*
       return;
   }
 
-  GraalRuntime::ensure_graal_class_loader_is_initialized();
+  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
   HandleMark hm;
   ResourceMark rm;
   JavaValue result(T_VOID);
@@ -138,31 +138,31 @@ void GraalCompiler::compile_method(methodHandle method, int entry_bci, GraalEnv*
 
 
 // Compilation entry point for methods
-void GraalCompiler::compile_method(ciEnv* env, ciMethod* target, int entry_bci) {
+void JVMCICompiler::compile_method(ciEnv* env, ciMethod* target, int entry_bci) {
   ShouldNotReachHere();
 }
 
 // Print compilation timers and statistics
-void GraalCompiler::print_timers() {
+void JVMCICompiler::print_timers() {
   print_compilation_timers();
 }
 
-#endif // COMPILERGRAAL
+#endif // COMPILERJVMCI
 
 // Print compilation timers and statistics
-void GraalCompiler::print_compilation_timers() {
-  TRACE_graal_1("GraalCompiler::print_timers");
-  tty->print_cr("       Graal code install time:        %6.3f s",    _codeInstallTimer.seconds());
+void JVMCICompiler::print_compilation_timers() {
+  TRACE_jvmci_1("JVMCICompiler::print_timers");
+  tty->print_cr("       JVMCI code install time:        %6.3f s",    _codeInstallTimer.seconds());
 }
 
-void GraalCompiler::compile_the_world() {
+void JVMCICompiler::compile_the_world() {
   HandleMark hm;
   JavaThread* THREAD = JavaThread::current();
   TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/HotSpotJVMCIRuntime", CHECK_ABORT);
-  KlassHandle klass = GraalRuntime::load_required_class(name);
+  KlassHandle klass = JVMCIRuntime::load_required_class(name);
   TempNewSymbol compileTheWorld = SymbolTable::new_symbol("compileTheWorld", CHECK_ABORT);
   JavaValue result(T_VOID);
   JavaCallArguments args;
-  args.push_oop(GraalRuntime::get_HotSpotJVMCIRuntime());
+  args.push_oop(JVMCIRuntime::get_HotSpotJVMCIRuntime());
   JavaCalls::call_special(&result, klass, compileTheWorld, vmSymbols::void_method_signature(), &args, CHECK_ABORT);
 }

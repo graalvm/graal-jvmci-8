@@ -61,9 +61,9 @@
 #include "services/threadService.hpp"
 #include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
-#ifdef GRAAL
+#ifdef JVMCI
 #include "classfile/javaAssertions.hpp"
-#include "graal/graalRuntime.hpp"
+#include "jvmci/jvmciRuntime.hpp"
 #endif
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/concurrentMarkSweep/cmsOopClosures.inline.hpp"

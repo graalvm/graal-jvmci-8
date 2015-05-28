@@ -64,8 +64,8 @@
 #include "services/threadService.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/ticks.hpp"
-#ifdef GRAAL
-#include "graal/graalRuntime.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciRuntime.hpp"
 #endif
 #if INCLUDE_TRACE
 #include "trace/tracing.hpp"
@@ -96,15 +96,15 @@ oop         SystemDictionary::_java_system_loader         =  NULL;
 bool        SystemDictionary::_has_loadClassInternal      =  false;
 bool        SystemDictionary::_has_checkPackageAccess     =  false;
 
-#ifdef GRAAL
-oop         SystemDictionary::_graal_loader               = NULL;
+#ifdef JVMCI
+oop         SystemDictionary::_jvmci_loader               = NULL;
 
-oop SystemDictionary::graal_loader() {
-  return _graal_loader;
+oop SystemDictionary::jvmci_loader() {
+  return _jvmci_loader;
 }
-void SystemDictionary::init_graal_loader(oop loader) {
-  assert(UseGraalClassLoader == (loader != NULL), "must be");
-  _graal_loader = loader;
+void SystemDictionary::init_jvmci_loader(oop loader) {
+  assert(UseJVMCIClassLoader == (loader != NULL), "must be");
+  _jvmci_loader = loader;
 }
 #endif
 
@@ -1728,7 +1728,7 @@ void SystemDictionary::roots_oops_do(OopClosure* strong, OopClosure* weak) {
   strong->do_oop(&_java_system_loader);
   strong->do_oop(&_system_loader_lock_obj);
   CDS_ONLY(SystemDictionaryShared::roots_oops_do(strong);)
-  GRAAL_ONLY(strong->do_oop(&_graal_loader);)
+  JVMCI_ONLY(strong->do_oop(&_jvmci_loader);)
 
   // Adjust dictionary
   dictionary()->roots_oops_do(strong, weak);
@@ -1741,7 +1741,7 @@ void SystemDictionary::oops_do(OopClosure* f) {
   f->do_oop(&_java_system_loader);
   f->do_oop(&_system_loader_lock_obj);
   CDS_ONLY(SystemDictionaryShared::oops_do(f);)
-  GRAAL_ONLY(f->do_oop(&_graal_loader);)
+  JVMCI_ONLY(f->do_oop(&_jvmci_loader);)
 
   // Adjust dictionary
   dictionary()->oops_do(f);
@@ -1865,12 +1865,12 @@ bool SystemDictionary::initialize_wk_klass(WKID id, int init_opt, TRAPS) {
   Klass**    klassp = &_well_known_klasses[id];
   bool must_load = (init_opt < SystemDictionary::Opt);
   if ((*klassp) == NULL) {
-#ifdef GRAAL
-    bool is_graal = init_opt == SystemDictionary::Graal;
-    assert(is_graal == (id >= (int)FIRST_GRAAL_WKID && id <= (int)LAST_GRAAL_WKID),
-        "Graal WKIDs must be contiguous and separate from non-Graal WKIDs");
-    if (is_graal) {
-      (*klassp) = resolve_or_fail(symbol, _graal_loader, Handle(), true, CHECK_0); // load required Graal class
+#ifdef JVMCI
+    bool is_jvmci = init_opt == SystemDictionary::Jvmci;
+    assert(is_jvmci == (id >= (int)FIRST_JVMCI_WKID && id <= (int)LAST_JVMCI_WKID),
+        "JVMCI WKIDs must be contiguous and separate from non-JVMCI WKIDs");
+    if (is_jvmci) {
+      (*klassp) = resolve_or_fail(symbol, _jvmci_loader, Handle(), true, CHECK_0); // load required JVMCI class
     } else
 #endif
     if (must_load) {
@@ -1950,7 +1950,7 @@ void SystemDictionary::initialize_preloaded_classes(TRAPS) {
     scan = WKID(jsr292_group_end + 1);
   }
 
-  initialize_wk_klasses_until(NOT_GRAAL(WKID_LIMIT) GRAAL_ONLY(FIRST_GRAAL_WKID), scan, CHECK);
+  initialize_wk_klasses_until(NOT_JVMCI(WKID_LIMIT) JVMCI_ONLY(FIRST_JVMCI_WKID), scan, CHECK);
 
   _box_klasses[T_BOOLEAN] = WK_KLASS(Boolean_klass);
   _box_klasses[T_CHAR]    = WK_KLASS(Character_klass);

@@ -357,7 +357,7 @@ StackValueCollection* interpretedVFrame::stack_data(bool expressions) const {
 
   InterpreterOopMap oop_mask;
   // oopmap for current bci
-  if ((TraceDeoptimization && Verbose) GRAAL_ONLY( || PrintDeoptimizationDetails)) {
+  if ((TraceDeoptimization && Verbose) JVMCI_ONLY( || PrintDeoptimizationDetails)) {
     methodHandle m_h(Thread::current(), method());
     OopMapCache::compute_one_oop_map(m_h, bci(), &oop_mask);
   } else {

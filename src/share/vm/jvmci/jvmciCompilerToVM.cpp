@@ -28,15 +28,15 @@
 #include "oops/fieldStreams.hpp"
 #include "runtime/fieldDescriptor.hpp"
 #include "runtime/javaCalls.hpp"
-#include "graal/graalRuntime.hpp"
+#include "jvmci/jvmciRuntime.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "compiler/disassembler.hpp"
-#include "graal/graalCompilerToVM.hpp"
-#include "graal/graalCompiler.hpp"
-#include "graal/graalEnv.hpp"
-#include "graal/graalJavaAccess.hpp"
-#include "graal/graalCodeInstaller.hpp"
+#include "jvmci/jvmciCompilerToVM.hpp"
+#include "jvmci/jvmciCompiler.hpp"
+#include "jvmci/jvmciEnv.hpp"
+#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciCodeInstaller.hpp"
 #include "gc_implementation/g1/heapRegion.hpp"
 #include "runtime/javaCalls.hpp"
 #include "runtime/deoptimization.hpp"
@@ -48,8 +48,8 @@
 // Entry to native method implementation that transitions current thread to '_thread_in_vm'.
 #define C2V_VMENTRY(result_type, name, signature) \
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
-  TRACE_graal_3("CompilerToVM::" #name); \
-  GRAAL_VM_ENTRY_MARK; \
+  TRACE_jvmci_3("CompilerToVM::" #name); \
+  JVMCI_VM_ENTRY_MARK; \
 
 #define C2V_END }
 
@@ -320,7 +320,7 @@ C2V_VMENTRY(jlong, lookupKlassInPool, (JNIEnv*, jobject, jlong metaspace_constan
   constantPoolHandle cp = (ConstantPool*) metaspace_constant_pool;
   KlassHandle loading_klass(cp->pool_holder());
   bool is_accessible = false;
-  KlassHandle klass = GraalEnv::get_klass_by_index(cp, index, is_accessible, loading_klass);
+  KlassHandle klass = JVMCIEnv::get_klass_by_index(cp, index, is_accessible, loading_klass);
   if (klass.is_null()) {
     // We have to lock the cpool to keep the oop from being resolved
     // while we are accessing it.
@@ -350,7 +350,7 @@ C2V_VMENTRY(jlong, lookupMethodInPool, (JNIEnv*, jobject, jlong metaspace_consta
   constantPoolHandle cp = (ConstantPool*) metaspace_constant_pool;
   instanceKlassHandle pool_holder(cp->pool_holder());
   Bytecodes::Code bc = (Bytecodes::Code) (((int) opcode) & 0xFF);
-  methodHandle method = GraalEnv::get_method_by_index(cp, index, bc, pool_holder);
+  methodHandle method = JVMCIEnv::get_method_by_index(cp, index, bc, pool_holder);
   return (jlong) (address) method();
 C2V_END
 
@@ -480,9 +480,9 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject compiled_code, 
   Handle installed_code_handle = JNIHandles::resolve(installed_code);
   Handle speculation_log_handle = JNIHandles::resolve(speculation_log);
 
-  TraceTime install_time("installCode", GraalCompiler::codeInstallTimer());
+  TraceTime install_time("installCode", JVMCICompiler::codeInstallTimer());
   CodeInstaller installer;
-  GraalEnv::CodeInstallResult result = installer.install(compiled_code_handle, cb, installed_code_handle, speculation_log_handle);
+  JVMCIEnv::CodeInstallResult result = installer.install(compiled_code_handle, cb, installed_code_handle, speculation_log_handle);
 
   if (PrintCodeCacheOnCompilation) {
     stringStream s;
@@ -495,7 +495,7 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject compiled_code, 
     tty->print_raw_cr(s.as_string());
   }
 
-  if (result != GraalEnv::ok) {
+  if (result != JVMCIEnv::ok) {
     assert(cb == NULL, "should be");
   } else {
     if (!installed_code_handle.is_null()) {
@@ -521,7 +521,7 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject compiled_code, 
 C2V_END
 
 C2V_VMENTRY(void, notifyCompilationStatistics, (JNIEnv *jniEnv, jobject, jint id, jobject hotspot_method, jboolean osr, jint processedBytecodes, jlong time, jlong timeUnitsPerSecond, jobject installed_code))
-  CompilerStatistics* stats = GraalCompiler::instance()->stats();
+  CompilerStatistics* stats = JVMCICompiler::instance()->stats();
 
   elapsedTimer timer = elapsedTimer(time, timeUnitsPerSecond);
   if (osr) {
@@ -544,7 +544,7 @@ C2V_VMENTRY(void, notifyCompilationStatistics, (JNIEnv *jniEnv, jobject, jint id
 C2V_END
 
 C2V_VMENTRY(void, resetCompilationStatistics, (JNIEnv *jniEnv, jobject))
-  CompilerStatistics* stats = GraalCompiler::instance()->stats();
+  CompilerStatistics* stats = JVMCICompiler::instance()->stats();
   stats->_standard.reset();
   stats->_osr.reset();
 C2V_END
@@ -731,7 +731,7 @@ C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv*, jobject, jlong addr))
 C2V_END
 
 C2V_VMENTRY(jlongArray, collectCounters, (JNIEnv*, jobject))
-  typeArrayOop arrayOop = oopFactory::new_longArray(GraalCounterSize, CHECK_NULL);
+  typeArrayOop arrayOop = oopFactory::new_longArray(JVMCICounterSize, CHECK_NULL);
   JavaThread::collect_counters(arrayOop);
   return (jlongArray) JNIHandles::make_local(THREAD, arrayOop);
 C2V_END

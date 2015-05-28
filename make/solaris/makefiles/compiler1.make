@@ -30,8 +30,8 @@ VM_SUBDIR = client
 
 CFLAGS += -DCOMPILER1
 
-ifeq ($(INCLUDE_GRAAL), true)
-  CFLAGS += -DGRAAL
+ifeq ($(INCLUDE_JVMCI), true)
+  CFLAGS += -DJVMCI
 else
-  VM_SUBDIR = client-nograal
+  VM_SUBDIR = client-nojvmci
 endif

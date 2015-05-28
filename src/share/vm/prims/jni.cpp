@@ -33,9 +33,9 @@
 #include "classfile/vmSymbols.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "utilities/macros.hpp"
-#ifdef GRAAL
-#include "graal/graalCompiler.hpp"
-#include "graal/graalRuntime.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciCompiler.hpp"
+#include "jvmci/jvmciRuntime.hpp"
 #endif
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
@@ -5209,27 +5209,27 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
     *vm = (JavaVM *)(&main_vm);
     *(JNIEnv**)penv = thread->jni_environment();
 
-#if defined(GRAAL)
-    // We turn off CompileTheWorld so that compilation requests are not ignored during bootstrap or that Graal can be compiled by C1/C2.
+#if defined(JVMCI)
+    // We turn off CompileTheWorld so that compilation requests are not ignored during bootstrap or that JVMCI can be compiled by C1/C2.
     bool doCTW = CompileTheWorld;
     CompileTheWorld = false;
 #endif
 
-#ifdef COMPILERGRAAL
-    // Graal is initialized on a CompilerThread
-    if (FLAG_IS_DEFAULT(BootstrapGraal) ? !TieredCompilation : BootstrapGraal) {
-      GraalCompiler::instance()->bootstrap();
+#ifdef COMPILERJVMCI
+    // JVMCI is initialized on a CompilerThread
+    if (FLAG_IS_DEFAULT(BootstrapJVMCI) ? !TieredCompilation : BootstrapJVMCI) {
+      JVMCICompiler::instance()->bootstrap();
     }
-#elif defined(GRAAL)
+#elif defined(JVMCI)
     if (doCTW) {
       // required for hosted CTW.
       CompilationPolicy::completed_vm_startup();
     }
 #endif
 
-#if defined(GRAAL)
+#if defined(JVMCI)
     if (doCTW) {
-      GraalCompiler::instance()->compile_the_world();
+      JVMCICompiler::instance()->compile_the_world();
     }
 #endif
 

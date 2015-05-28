@@ -339,7 +339,7 @@ suite = {
       "workingSets" : "Graal,HotSpot",
     },
 
-    "com.oracle.graal.hotspot.loader" : {
+    "com.oracle.jvmci.hotspot.loader" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [],
@@ -1191,11 +1191,11 @@ suite = {
       "exclude" : ["FINDBUGS"],
     },
 
-    "GRAAL_LOADER" : {
-      "path" : "build/graal-loader.jar",
+    "JVMCI_LOADER" : {
+      "path" : "build/jvmci-loader.jar",
       "subDir" : "graal",
-      "sourcesPath" : "build/graal-loader.src.zip",
-      "dependencies" : ["com.oracle.graal.hotspot.loader"],
+      "sourcesPath" : "build/jvmci-loader.src.zip",
+      "dependencies" : ["com.oracle.jvmci.hotspot.loader"],
     },
 
     "TRUFFLE" : {

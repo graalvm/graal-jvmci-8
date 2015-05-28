@@ -456,7 +456,7 @@ class CompileBroker: AllStatic {
   // Redefine Classes support
   static void mark_on_stack();
 
-#ifdef GRAAL
+#ifdef JVMCI
   // Print curent compilation time stats for a given compiler
   static void print_times(AbstractCompiler* comp);
 #endif

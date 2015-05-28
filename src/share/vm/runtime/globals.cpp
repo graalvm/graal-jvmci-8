@@ -38,8 +38,8 @@
 #ifdef COMPILER1
 #include "c1/c1_globals.hpp"
 #endif
-#ifdef GRAAL
-#include "graal/graalGlobals.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciGlobals.hpp"
 #endif
 #ifdef COMPILER2
 #include "opto/c2_globals.hpp"
@@ -358,7 +358,7 @@ void Flag::print_kind(outputStream* st) {
 
   Data data[] = {
       { KIND_C1, "C1" },
-      { KIND_GRAAL, "Graal" },
+      { KIND_JVMCI, "JVMCI" },
       { KIND_C2, "C2" },
       { KIND_ARCH, "ARCH" },
       { KIND_SHARK, "SHARK" },
@@ -458,11 +458,11 @@ void Flag::print_as_flag(outputStream* st) {
 #define C1_PD_DEVELOP_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), NAME(name), NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_C1 | Flag::KIND_DEVELOP | Flag::KIND_PLATFORM_DEPENDENT) },
 #define C1_NOTPRODUCT_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), NAME(name), NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_C1 | Flag::KIND_NOT_PRODUCT) },
 
-#define GRAAL_PRODUCT_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), &name,      NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_GRAAL | Flag::KIND_PRODUCT) },
-#define GRAAL_PD_PRODUCT_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), &name,      NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_GRAAL | Flag::KIND_PRODUCT | Flag::KIND_PLATFORM_DEPENDENT) },
-#define GRAAL_DEVELOP_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), NAME(name), NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_GRAAL | Flag::KIND_DEVELOP) },
-#define GRAAL_PD_DEVELOP_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), NAME(name), NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_GRAAL | Flag::KIND_DEVELOP | Flag::KIND_PLATFORM_DEPENDENT) },
-#define GRAAL_NOTPRODUCT_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), NAME(name), NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_GRAAL | Flag::KIND_NOT_PRODUCT) },
+#define JVMCI_PRODUCT_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), &name,      NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_JVMCI | Flag::KIND_PRODUCT) },
+#define JVMCI_PD_PRODUCT_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), &name,      NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_JVMCI | Flag::KIND_PRODUCT | Flag::KIND_PLATFORM_DEPENDENT) },
+#define JVMCI_DEVELOP_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), NAME(name), NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_JVMCI | Flag::KIND_DEVELOP) },
+#define JVMCI_PD_DEVELOP_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), NAME(name), NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_JVMCI | Flag::KIND_DEVELOP | Flag::KIND_PLATFORM_DEPENDENT) },
+#define JVMCI_NOTPRODUCT_FLAG_STRUCT(       type, name, value, doc) { #type, XSTR(name), NAME(name), NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_JVMCI | Flag::KIND_NOT_PRODUCT) },
 
 #define C2_PRODUCT_FLAG_STRUCT(          type, name, value, doc) { #type, XSTR(name), &name,      NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_C2 | Flag::KIND_PRODUCT) },
 #define C2_PD_PRODUCT_FLAG_STRUCT(       type, name,        doc) { #type, XSTR(name), &name,      NOT_PRODUCT_ARG(doc) Flag::Flags(Flag::DEFAULT | Flag::KIND_C2 | Flag::KIND_PRODUCT | Flag::KIND_PLATFORM_DEPENDENT) },
@@ -494,8 +494,8 @@ static Flag flagTable[] = {
 #ifdef COMPILER1
  C1_FLAGS(C1_DEVELOP_FLAG_STRUCT, C1_PD_DEVELOP_FLAG_STRUCT, C1_PRODUCT_FLAG_STRUCT, C1_PD_PRODUCT_FLAG_STRUCT, C1_DIAGNOSTIC_FLAG_STRUCT, C1_NOTPRODUCT_FLAG_STRUCT)
 #endif
-#ifdef GRAAL
- GRAAL_FLAGS(GRAAL_DEVELOP_FLAG_STRUCT, GRAAL_PD_DEVELOP_FLAG_STRUCT, GRAAL_PRODUCT_FLAG_STRUCT, GRAAL_PD_PRODUCT_FLAG_STRUCT, GRAAL_NOTPRODUCT_FLAG_STRUCT)
+#ifdef JVMCI
+ JVMCI_FLAGS(JVMCI_DEVELOP_FLAG_STRUCT, JVMCI_PD_DEVELOP_FLAG_STRUCT, JVMCI_PRODUCT_FLAG_STRUCT, JVMCI_PD_PRODUCT_FLAG_STRUCT, JVMCI_NOTPRODUCT_FLAG_STRUCT)
 #endif
 #ifdef COMPILER2
  C2_FLAGS(C2_DEVELOP_FLAG_STRUCT, C2_PD_DEVELOP_FLAG_STRUCT, C2_PRODUCT_FLAG_STRUCT, C2_PD_PRODUCT_FLAG_STRUCT, C2_DIAGNOSTIC_FLAG_STRUCT, C2_EXPERIMENTAL_FLAG_STRUCT, C2_NOTPRODUCT_FLAG_STRUCT)

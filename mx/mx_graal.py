@@ -48,11 +48,11 @@ _vmSourcesAvailable = exists(join(_graal_home, 'make')) and exists(join(_graal_h
 """ The VMs that can be built and run along with an optional description. Only VMs with a
     description are listed in the dialogue for setting the default VM (see _get_vm()). """
 _vmChoices = {
-    'graal' : 'Normal compilation is performed with a tiered system (C1 + Graal), Truffle compilation is performed with Graal.',
+    'jvmci' : 'Normal compilation is performed with a tiered system (C1 + Graal), Truffle compilation is performed with Graal.',
     'server' : 'Normal compilation is performed with a tiered system (C1 + C2), Truffle compilation is performed with Graal. Use this for optimal Truffle performance.',
     'client' : None,  # normal compilation with client compiler, explicit compilation (e.g., by Truffle) with Graal
-    'server-nograal' : None,  # all compilation with tiered system (i.e., client + server), Graal omitted
-    'client-nograal' : None,  # all compilation with client compiler, Graal omitted
+    'server-nojvmci' : None,  # all compilation with tiered system (i.e., client + server), JVMCI omitted
+    'client-nojvmci' : None,  # all compilation with client compiler, JVMCI omitted
     'original' : None,  # default VM copied from bootstrap JDK
 }
 
@@ -88,16 +88,16 @@ _minVersion = mx.VersionSpec('1.8')
 _untilVersion = None
 
 class JDKDeployedDist:
-    def __init__(self, name, isExtension=False, isGraalClassLoader=False):
+    def __init__(self, name, isExtension=False, usesJVMCIClassLoader=False):
         self.name = name
         self.isExtension = isExtension
-        self.isGraalClassLoader = isGraalClassLoader
+        self.usesJVMCIClassLoader = usesJVMCIClassLoader
 
 _jdkDeployedDists = [
     JDKDeployedDist('TRUFFLE'),
-    JDKDeployedDist('GRAAL_LOADER'),
-    JDKDeployedDist('GRAAL', isGraalClassLoader=True),
-    JDKDeployedDist('GRAAL_TRUFFLE', isGraalClassLoader=True)
+    JDKDeployedDist('JVMCI_LOADER'),
+    JDKDeployedDist('GRAAL', usesJVMCIClassLoader=True),
+    JDKDeployedDist('GRAAL_TRUFFLE', usesJVMCIClassLoader=True)
 ]
 
 JDK_UNIX_PERMISSIONS_DIR = 0755
@@ -168,7 +168,7 @@ def chmodRecursive(dirname, chmodFlagsDir):
     os.path.walk(dirname, _chmodDir, chmodFlagsDir)
 
 def clean(args):
-    """clean the GraalVM source tree"""
+    """clean the source tree"""
     opts = mx.clean(args, parser=ArgumentParser(prog='mx clean'))
 
     if opts.native:
@@ -187,7 +187,7 @@ def clean(args):
                 os.unlink(name)
 
         rmIfExists(join(_graal_home, 'build'))
-        rmIfExists(join(_graal_home, 'build-nograal'))
+        rmIfExists(join(_graal_home, 'build-nojvmci'))
         rmIfExists(_jdksDir())
 
 def export(args):
@@ -500,13 +500,13 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
 
     return jdk
 
-def _updateInstalledGraalOptionsFile(jdk):
-    graalOptions = join(_graal_home, 'graal.options')
+def _updateInstalledJVMCIOptionsFile(jdk):
+    jvmciOptions = join(_graal_home, 'jvmci.options')
     jreLibDir = join(jdk, 'jre', 'lib')
-    if exists(graalOptions):
-        shutil.copy(graalOptions, join(jreLibDir, 'graal.options'))
+    if exists(jvmciOptions):
+        shutil.copy(jvmciOptions, join(jreLibDir, 'jvmci.options'))
     else:
-        toDelete = join(jreLibDir, 'graal.options')
+        toDelete = join(jreLibDir, 'jvmci.options')
         if exists(toDelete):
             os.unlink(toDelete)
 
@@ -552,7 +552,7 @@ def _update_graalRuntime_inline_hpp(dist):
 
         # Add SHA1 to end of graalRuntime.inline.hpp
         print >> tmp, ''
-        print >> tmp, 'const char* GraalRuntime::_generated_sources_sha1 = "' + sha1 + '";'
+        print >> tmp, 'const char* JVMCIRuntime::_generated_sources_sha1 = "' + sha1 + '";'
 
         mx.update_file(graalRuntime_inline_hpp, tmp.getvalue())
 
@@ -600,14 +600,14 @@ def _eraseGenerics(className):
         return className[:className.index('<')]
     return className
 
-def _classifyGraalServices(classNames, graalJars):
+def _classifyJVMCIServices(classNames, jvmciJars):
     classification = {}
     if not classNames:
         return classification
     for className in classNames:
         classification[className] = None
     javap = mx.java().javap
-    output = subprocess.check_output([javap, '-cp', os.pathsep.join(graalJars)] + classNames, stderr=subprocess.STDOUT)
+    output = subprocess.check_output([javap, '-cp', os.pathsep.join(jvmciJars)] + classNames, stderr=subprocess.STDOUT)
     lines = output.split(os.linesep)
     for line in lines:
         if line.startswith('public interface '):
@@ -654,11 +654,11 @@ def _mergeClassification(classification, newClassification):
                         classification[className] = []
                     classification[className].extend(newClassification[superInterface])
 
-def _filterGraalService(classNames, graalJars):
-    classification = _classifyGraalServices(classNames, graalJars)
+def _filterJVMCIService(classNames, jvmciJars):
+    classification = _classifyJVMCIServices(classNames, jvmciJars)
     needClassification = _extractMaybes(classification)
     while needClassification:
-        _mergeClassification(classification, _classifyGraalServices(needClassification, graalJars))
+        _mergeClassification(classification, _classifyJVMCIServices(needClassification, jvmciJars))
         needClassification = _extractMaybes(classification)
     filtered = []
     for className in classNames:
@@ -666,13 +666,13 @@ def _filterGraalService(classNames, graalJars):
             filtered.append(className)
     return filtered
 
-def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
+def _extractJVMCIServiceFiles(jvmciJars, destination, cleanDestination=True):
     if cleanDestination:
         if exists(destination):
             shutil.rmtree(destination)
         os.makedirs(destination)
     servicesMap = {}
-    for jar in graalJars:
+    for jar in jvmciJars:
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
                 for member in zf.namelist():
@@ -687,8 +687,8 @@ def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
                             line = line.strip()
                             if line:
                                 serviceImpls.append(line)
-    graalServices = _filterGraalService(servicesMap.keys(), graalJars)
-    for serviceName in graalServices:
+    jvmciServices = _filterJVMCIService(servicesMap.keys(), jvmciJars)
+    for serviceName in jvmciServices:
         serviceImpls = servicesMap[serviceName]
         fd, tmp = tempfile.mkstemp(prefix=serviceName)
         f = os.fdopen(fd, 'w+')
@@ -699,24 +699,28 @@ def _extractGraalServiceFiles(graalJars, destination, cleanDestination=True):
         shutil.move(tmp, target)
         if mx.get_os() != 'windows':
             os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
-    return graalServices
+    return jvmciServices
 
-def _updateGraalServiceFiles(jdkDir):
-    jreGraalDir = join(jdkDir, 'jre', 'lib', 'graal')
-    graalJars = [join(jreGraalDir, e) for e in os.listdir(jreGraalDir) if e.startswith('graal') and e.endswith('.jar')]
-    jreGraalServicesDir = join(jreGraalDir, 'services')
-    _extractGraalServiceFiles(graalJars, jreGraalServicesDir)
+def _updateJVMCIServiceFiles(jdkDir):
+    jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')
+    jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if (e.startswith('jvmci') or e.startswith('graal')) and e.endswith('.jar')]
+    jreJVMCIServicesDir = join(jreJVMCIDir, 'services')
+    _extractJVMCIServiceFiles(jvmciJars, jreJVMCIServicesDir)
 
 
 
 def _installDistInJdks(deployableDist):
     """
-    Installs the jar(s) for a given Distribution into all existing Graal JDKs
+    Installs the jar(s) for a given Distribution into all existing JVMCI JDKs
     """
 
     dist = mx.distribution(deployableDist.name)
 
-    if dist.name == 'GRAAL_TRUFFLE':
+    if dist.name == 'GRAAL':
+        zf = zipfile.ZipFile(dist.path, 'a')
+        zf.writestr('com/oracle/graal/api/runtime/graal.version', graal_version())
+        zf.close()
+    elif dist.name == 'GRAAL_TRUFFLE':
         # The content in graalRuntime.inline.hpp is generated from Graal
         # classes that contain com.oracle.jvmci.options.Option annotated fields.
         # Since GRAAL_TRUFFLE is the leaf most distribution containing
@@ -732,8 +736,8 @@ def _installDistInJdks(deployableDist):
             if exists(jreLibDir):
                 if deployableDist.isExtension:
                     targetDir = join(jreLibDir, 'ext')
-                elif deployableDist.isGraalClassLoader:
-                    targetDir = join(jreLibDir, 'graal')
+                elif deployableDist.usesJVMCIClassLoader:
+                    targetDir = join(jreLibDir, 'jvmci')
                 else:
                     targetDir = jreLibDir
                 if not exists(targetDir):
@@ -741,9 +745,9 @@ def _installDistInJdks(deployableDist):
                 _copyToJdk(dist.path, targetDir)
                 if dist.sourcesPath:
                     _copyToJdk(dist.sourcesPath, jdkDir)
-                if deployableDist.isGraalClassLoader:
+                if deployableDist.usesJVMCIClassLoader:
                     # deploy service files
-                    _updateGraalServiceFiles(jdkDir)
+                    _updateJVMCIServiceFiles(jdkDir)
 
 # run a command in the windows SDK Debug Shell
 def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):
@@ -890,7 +894,7 @@ def build(args, vm=None):
 
     # Call mx.build to compile the Java sources
     parser = AP()
-    parser.add_argument('--export-dir', help='directory to which graal.jar and graal.options will be copied', metavar='<path>')
+    parser.add_argument('--export-dir', help='directory to which JVMCI and Graal jars and jvmci.options will be copied', metavar='<path>')
     parser.add_argument('-D', action='append', help='set a HotSpot build variable (run \'mx buildvars\' to list variables)', metavar='name=value')
     opts2 = mx.build(['--source', '1.7'] + args, parser=parser)
     assert len(opts2.remainder) == 0
@@ -904,28 +908,28 @@ def build(args, vm=None):
         defsPath = join(_graal_home, 'make', 'defs.make')
         with open(defsPath) as fp:
             defs = fp.read()
-        graalJars = []
+        jvmciJars = []
         for jdkDist in _jdkDeployedDists:
             dist = mx.distribution(jdkDist.name)
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if jdkDist.isExtension:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_EXT_DIR)/' + basename(dist.path)
-            elif jdkDist.isGraalClassLoader:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_DIR)/' + basename(dist.path)
-                graalJars.append(dist.path)
+            elif jdkDist.usesJVMCIClassLoader:
+                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/' + basename(dist.path)
+                jvmciJars.append(dist.path)
             else:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + '\n' + defLine)
             shutil.copy(dist.path, opts2.export_dir)
-        services = _extractGraalServiceFiles(graalJars, join(opts2.export_dir, 'services'))
+        services = _extractJVMCIServiceFiles(jvmciJars, join(opts2.export_dir, 'services'))
         for service in services:
-            defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_GRAAL_SERVICES_DIR)/' + service
+            defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/' + service
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + ' for service from ' + dist.name + '\n' + defLine)
-        graalOptions = join(_graal_home, 'graal.options')
-        if exists(graalOptions):
-            shutil.copy(graalOptions, opts2.export_dir)
+        jvmciOptions = join(_graal_home, 'jvmci.options')
+        if exists(jvmciOptions):
+            shutil.copy(jvmciOptions, opts2.export_dir)
 
     if not _vmSourcesAvailable or not opts2.native:
         return
@@ -951,8 +955,8 @@ def build(args, vm=None):
     elif vm.startswith('client'):
         buildSuffix = '1'
     else:
-        assert vm == 'graal', vm
-        buildSuffix = 'graal'
+        assert vm == 'jvmci', vm
+        buildSuffix = 'jvmci'
 
     if _installed_jdks and _installed_jdks != _graal_home:
         if not mx.ask_yes_no("Warning: building while --installed-jdks is set (" + _installed_jdks + ") is not recommanded - are you sure you want to continue", 'n'):
@@ -1051,14 +1055,13 @@ def build(args, vm=None):
             setMakeVar('ALT_BOOTDIR', mx.java().jdk, env=env)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
-            if vm.endswith('nograal'):
-                setMakeVar('INCLUDE_GRAAL', 'false')
-                setMakeVar('ALT_OUTPUTDIR', join(_graal_home, 'build-nograal', mx.get_os()), env=env)
+            if vm.endswith('nojvmci'):
+                setMakeVar('INCLUDE_JVMCI', 'false')
+                setMakeVar('ALT_OUTPUTDIR', join(_graal_home, 'build-nojvmci', mx.get_os()), env=env)
             else:
                 version = graal_version()
-                setMakeVar('USER_RELEASE_SUFFIX', 'graal-' + version)
-                setMakeVar('GRAAL_VERSION', version)
-                setMakeVar('INCLUDE_GRAAL', 'true')
+                setMakeVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
+                setMakeVar('INCLUDE_JVMCI', 'true')
             setMakeVar('INSTALL', 'y', env=env)
             if mx.get_os() == 'darwin' and platform.mac_ver()[0] != '':
                 # Force use of clang on MacOS
@@ -1150,7 +1153,7 @@ def _parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
 
     build = vmbuild if vmbuild else _vmbuild if _vmSourcesAvailable else 'product'
     jdk = _jdk(build, vmToCheck=vm, installJars=False)
-    _updateInstalledGraalOptionsFile(jdk)
+    _updateInstalledJVMCIOptionsFile(jdk)
     mx.expand_project_in_args(args)
     if _make_eclipse_launch:
         mx.make_eclipse_launch(args, 'graal-' + build, name=None, deps=mx.project('com.oracle.graal.hotspot').all_deps([], True))
@@ -1338,7 +1341,7 @@ def _unittest(args, annotations, prefixCp="", blacklist=None, whitelist=None, ve
 
 
     def harness(projectsCp, vmArgs):
-        if _get_vm() != 'graal':
+        if _get_vm() != 'jvmci':
             prefixArgs = ['-esa', '-ea']
         else:
             prefixArgs = ['-XX:-BootstrapGraal', '-esa', '-ea']
@@ -1351,13 +1354,13 @@ def _unittest(args, annotations, prefixCp="", blacklist=None, whitelist=None, ve
         # run the VM in a mode where application/test classes can
         # access core Graal classes.
         cp = prefixCp + coreCp + os.pathsep + projectsCp
-        if isGraalEnabled(_get_vm()):
+        if isJVMCIEnabled(_get_vm()):
             excluded = set()
             for jdkDist in _jdkDeployedDists:
                 dist = mx.distribution(jdkDist.name)
                 excluded.update([d.output_dir() for d in dist.sorted_deps()])
             cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
-            vmArgs = ['-XX:-UseGraalClassLoader'] + vmArgs
+            vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
 
         # suppress menubar and dock when running on Mac
         vmArgs = ['-Djava.awt.headless=true'] + vmArgs
@@ -1556,8 +1559,8 @@ def buildvms(args):
                     build(check_dists_args)
             if not args.no_check:
                 vmargs = ['-version']
-                if v == 'graal':
-                    vmargs.insert(0, '-XX:-BootstrapGraal')
+                if v == 'jvmci':
+                    vmargs.insert(0, '-XX:-BootstrapJVMCI')
                 vm(vmargs, vm=v, vmbuild=vmbuild)
     allDuration = datetime.timedelta(seconds=time.time() - allStart)
     mx.log('TOTAL TIME:   ' + '[' + str(allDuration) + ']')
@@ -1604,7 +1607,7 @@ def ctw(args):
     defaultCtwopts = '-Inline'
 
     parser = ArgumentParser(prog='mx ctw')
-    parser.add_argument('--ctwopts', action='store', help='space separated Graal options used for CTW compilations (default: --ctwopts="' + defaultCtwopts + '")', default=defaultCtwopts, metavar='<options>')
+    parser.add_argument('--ctwopts', action='store', help='space separated JVMCI options used for CTW compilations (default: --ctwopts="' + defaultCtwopts + '")', default=defaultCtwopts, metavar='<options>')
     parser.add_argument('--jar', action='store', help='jar of classes to compiled instead of rt.jar', metavar='<path>')
 
     args, vmargs = parser.parse_known_args(args)
@@ -1620,9 +1623,9 @@ def ctw(args):
 
     vmargs += ['-XX:+CompileTheWorld']
     vm_ = _get_vm()
-    if isGraalEnabled(vm_):
-        if vm_ == 'graal':
-            vmargs += ['-XX:+BootstrapGraal']
+    if isJVMCIEnabled(vm_):
+        if vm_ == 'jvmci':
+            vmargs += ['-XX:+BootstrapJVMCI']
         vmargs += ['-G:CompileTheWorldClasspath=' + jar]
     else:
         vmargs += ['-Xbootclasspath/p:' + jar]
@@ -1633,81 +1636,81 @@ def ctw(args):
     vm(vmargs)
 
 def _basic_gate_body(args, tasks):
-    # Build server-hosted-graal now so we can run the unit tests
-    with Task('BuildHotSpotGraalHosted: product', tasks) as t:
+    # Build server-hosted-jvmci now so we can run the unit tests
+    with Task('BuildHotSpotJVMCIHosted: product', tasks) as t:
         if t: buildvms(['--vms', 'server', '--builds', 'product', '--check-distributions'])
 
-    # Run unit tests on server-hosted-graal
+    # Run unit tests on server-hosted-jvmci
     with VM('server', 'product'):
         with Task('UnitTests:hosted-product', tasks) as t:
             if t: unittest(['--enable-timing', '--verbose', '--fail-fast'])
 
-    # Run ctw against rt.jar on server-hosted-graal
+    # Run ctw against rt.jar on server-hosted-jvmci
     with VM('server', 'product'):
         with Task('CTW:hosted-product', tasks) as t:
             if t: ctw(['--ctwopts', '-Inline +ExitVMOnException', '-esa', '-G:+CompileTheWorldMultiThreaded', '-G:-CompileTheWorldVerbose'])
 
     # Build the other VM flavors
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks) as t:
-        if t: buildvms(['--vms', 'graal,server', '--builds', 'fastdebug,product', '--check-distributions'])
+        if t: buildvms(['--vms', 'jvmci,server', '--builds', 'fastdebug,product', '--check-distributions'])
 
-    with VM('graal', 'fastdebug'):
+    with VM('jvmci', 'fastdebug'):
         with Task('BootstrapWithSystemAssertions:fastdebug', tasks) as t:
             if t: vm(['-esa', '-XX:-TieredCompilation', '-version'])
 
-    with VM('graal', 'fastdebug'):
+    with VM('jvmci', 'fastdebug'):
         with Task('BootstrapEconomyWithSystemAssertions:fastdebug', tasks) as t:
             if t: vm(['-esa', '-XX:-TieredCompilation', '-G:CompilerConfiguration=economy', '-version'])
 
-    with VM('graal', 'fastdebug'):
+    with VM('jvmci', 'fastdebug'):
         with Task('BootstrapWithSystemAssertionsNoCoop:fastdebug', tasks) as t:
             if t: vm(['-esa', '-XX:-TieredCompilation', '-XX:-UseCompressedOops', '-version'])
 
-    with VM('graal', 'fastdebug'):
+    with VM('jvmci', 'fastdebug'):
         with Task('BootstrapWithExceptionEdges:fastdebug', tasks) as t:
             if t: vm(['-esa', '-XX:-TieredCompilation', '-G:+StressInvokeWithExceptionNode', '-version'])
 
-    with VM('graal', 'product'):
+    with VM('jvmci', 'product'):
         with Task('BootstrapWithGCVerification:product', tasks) as t:
             if t:
                 out = mx.DuplicateSuppressingStream(['VerifyAfterGC:', 'VerifyBeforeGC:']).write
                 vm(['-XX:-TieredCompilation', '-XX:+UnlockDiagnosticVMOptions', '-XX:+VerifyBeforeGC', '-XX:+VerifyAfterGC', '-version'], out=out)
 
-    with VM('graal', 'product'):
+    with VM('jvmci', 'product'):
         with Task('BootstrapWithG1GCVerification:product', tasks) as t:
             if t:
                 out = mx.DuplicateSuppressingStream(['VerifyAfterGC:', 'VerifyBeforeGC:']).write
                 vm(['-XX:-TieredCompilation', '-XX:+UnlockDiagnosticVMOptions', '-XX:-UseSerialGC', '-XX:+UseG1GC', '-XX:+VerifyBeforeGC', '-XX:+VerifyAfterGC', '-version'], out=out)
 
-    with VM('graal', 'product'):
+    with VM('jvmci', 'product'):
         with Task('BootstrapWithRegisterPressure:product', tasks) as t:
             if t:
                 registers = 'o0,o1,o2,o3,f8,f9,d32,d34' if platform.processor() == 'sparc' else 'rbx,r11,r10,r14,xmm3,xmm11,xmm14'
                 vm(['-XX:-TieredCompilation', '-G:RegisterPressure=' + registers, '-esa', '-version'])
 
-    with VM('graal', 'product'):
+    with VM('jvmci', 'product'):
         with Task('BootstrapSSAWithRegisterPressure:product', tasks) as t:
             if t:
                 registers = 'o0,o1,o2,o3,f8,f9,d32,d34' if platform.processor() == 'sparc' else 'rbx,r11,r10,r14,xmm3,xmm11,xmm14'
                 vm(['-XX:-TieredCompilation', '-G:+SSA_LIR', '-G:RegisterPressure=' + registers, '-esa', '-version'])
 
-    with VM('graal', 'product'):
+    with VM('jvmci', 'product'):
         with Task('BootstrapWithImmutableCode:product', tasks) as t:
             if t: vm(['-XX:-TieredCompilation', '-G:+ImmutableCode', '-G:+VerifyPhases', '-esa', '-version'])
 
     for vmbuild in ['fastdebug', 'product']:
         for test in sanitycheck.getDacapos(level=sanitycheck.SanityCheckLevel.Gate, gateBuildLevel=vmbuild) + sanitycheck.getScalaDacapos(level=sanitycheck.SanityCheckLevel.Gate, gateBuildLevel=vmbuild):
             with Task(str(test) + ':' + vmbuild, tasks) as t:
-                if t and not test.test('graal'):
+                if t and not test.test('jvmci'):
                     t.abort(test.name + ' Failed')
 
     # ensure -Xbatch still works
-    with VM('graal', 'product'):
+    with VM('jvmci', 'product'):
         with Task('DaCapo_pmd:BatchMode:product', tasks) as t:
             if t: dacapo(['-Xbatch', 'pmd'])
 
     # ensure -Xcomp still works
-    with VM('graal', 'product'):
+    with VM('jvmci', 'product'):
         with Task('XCompMode:product', tasks) as t:
             if t: vm(['-Xcomp', '-version'])
 
@@ -1728,7 +1731,7 @@ def _basic_gate_body(args, tasks):
             if t:
                 buildvms(['--vms', 'client,server', '--builds', 'fastdebug,product'])
                 if mx.get_os() not in ['windows', 'cygwin']:
-                    buildvms(['--vms', 'server-nograal', '--builds', 'product,optimized'])
+                    buildvms(['--vms', 'server-nojvmci', '--builds', 'product,optimized'])
 
         for vmbuild in ['product', 'fastdebug']:
             for theVm in ['client', 'server']:
@@ -1740,7 +1743,7 @@ def _basic_gate_body(args, tasks):
                         if t: dacapo(['pmd'])
 
                     with Task('UnitTests:' + theVm + ':' + vmbuild, tasks) as t:
-                        if t: unittest(['-XX:CompileCommand=exclude,*::run*', 'graal.api'])
+                        if t: unittest(['-XX:CompileCommand=exclude,*::run*', 'graal.api', 'java.test'])
 
 
 def gate(args, gate_body=_basic_gate_body):
@@ -1753,7 +1756,7 @@ def gate(args, gate_body=_basic_gate_body):
     parser.add_argument('-j', '--omit-java-clean', action='store_false', dest='cleanJava', help='omit cleaning Java native code')
     parser.add_argument('-n', '--omit-native-clean', action='store_false', dest='cleanNative', help='omit cleaning and building native code')
     parser.add_argument('-i', '--omit-ide-clean', action='store_false', dest='cleanIde', help='omit cleaning the ide project files')
-    parser.add_argument('-g', '--only-build-graalvm', action='store_false', dest='buildNonGraal', help='only build the Graal VM')
+    parser.add_argument('-g', '--only-build-jvmci', action='store_false', dest='buildNonJVMCI', help='only build the JVMCI VM')
     parser.add_argument('-t', '--task-filter', help='comma separated list of substrings to select subset of tasks to be run')
     parser.add_argument('--jacocout', help='specify the output directory for jacoco report')
 
@@ -1853,7 +1856,7 @@ def gate(args, gate_body=_basic_gate_body):
         Task.filters = None
 
 def deoptalot(args):
-    """bootstrap a fastdebug Graal VM with DeoptimizeALot and VerifyOops on
+    """bootstrap a fastdebug JVMCI VM with DeoptimizeALot and VerifyOops on
 
     If the first argument is a number, the process will be repeated
     this number of times. All other arguments are passed to the VM."""
@@ -2151,7 +2154,7 @@ def buildjmh(args):
                 buildOutput.append(x)
         env = os.environ.copy()
         env['JAVA_HOME'] = _jdk(vmToCheck='server')
-        env['MAVEN_OPTS'] = '-server -XX:-UseGraalClassLoader'
+        env['MAVEN_OPTS'] = '-server -XX:-UseJVMCIClassLoader'
         mx.log("Building benchmarks...")
         cmd = ['mvn']
         if args.settings:
@@ -2177,8 +2180,8 @@ def jmh(args):
         mx.abort(1)
 
     vmArgs, benchmarksAndJsons = _extract_VM_args(args)
-    if isGraalEnabled(_get_vm()) and  '-XX:-UseGraalClassLoader' not in vmArgs:
-        vmArgs = ['-XX:-UseGraalClassLoader'] + vmArgs
+    if isJVMCIEnabled(_get_vm()) and  '-XX:-UseJVMCIClassLoader' not in vmArgs:
+        vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
 
     benchmarks = [b for b in benchmarksAndJsons if not b.startswith('{')]
     jmhArgJsons = [b for b in benchmarksAndJsons if b.startswith('{')]
@@ -2382,7 +2385,7 @@ def jacocoreport(args):
     elif len(args) > 1:
         mx.abort('jacocoreport takes only one argument : an output directory')
 
-    includes = ['com.oracle.graal']
+    includes = ['com.oracle.graal', 'com.oracle.jvmci']
     for p in mx.projects():
         projsetting = getattr(p, 'jacoco', '')
         if projsetting == 'include':
@@ -2409,8 +2412,8 @@ def sl(args):
     vmArgs, slArgs = _extract_VM_args(args)
     vm(vmArgs + ['-cp', mx.classpath(["TRUFFLE", "com.oracle.truffle.sl"]), "com.oracle.truffle.sl.SLMain"] + slArgs)
 
-def isGraalEnabled(vm):
-    return vm != 'original' and not vm.endswith('nograal')
+def isJVMCIEnabled(vm):
+    return vm != 'original' and not vm.endswith('nojvmci')
 
 def jol(args):
     """Java Object Layout"""
@@ -2479,7 +2482,7 @@ def generateZshCompletion(args):
     complt += '\t\t\t(vm | vmg | vmfg | unittest | jmh | dacapo | scaladacapo | specjvm2008 | specjbb2013 | specjbb2005)\n'
     complt += '\t\t\t\tnoglob \\\n'
     complt += '\t\t\t\t\t_arguments -s -S \\\n'
-    complt += _appendOptions("graal", r"G\:")
+    complt += _appendOptions("jvmci", r"G\:")
     # TODO: fix -XX:{-,+}Use* flags
     complt += _appendOptions("hotspot", r"XX\:")
     complt += '\t\t\t\t\t"-version" && ret=0 \n'
@@ -2541,10 +2544,10 @@ def _parseVMOptions(optionType):
         'optDoc' : '<optDoc>',
         }))
 
-    # gather graal options
+    # gather JVMCI options
     output = StringIO.StringIO()
-    vm(['-XX:-BootstrapGraal', '-XX:+UnlockDiagnosticVMOptions', '-G:+PrintFlags' if optionType == "graal" else '-XX:+PrintFlagsWithComments'],
-       vm="graal",
+    vm(['-XX:-BootstrapJVMCI', '-XX:+UnlockDiagnosticVMOptions', '-G:+PrintFlags' if optionType == "jvmci" else '-XX:+PrintFlagsWithComments'],
+       vm="jvmci",
        vmbuild="optimized",
        nonZeroIsFatal=False,
        out=output.write,

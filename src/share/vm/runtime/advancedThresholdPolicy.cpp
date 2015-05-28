@@ -161,8 +161,8 @@ bool AdvancedThresholdPolicy::is_method_profiled(Method* method) {
 
 // Called with the queue locked and with at least one element
 CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
-#ifdef COMPILERGRAAL
-  CompileTask *max_non_graal_task = NULL;
+#ifdef COMPILERJVMCI
+  CompileTask *max_non_jvmci_task = NULL;
 #endif
   CompileTask *max_task = NULL;
   Method* max_method = NULL;
@@ -194,16 +194,16 @@ CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
         max_method = method;
       }
     }
-#ifdef COMPILERGRAAL
-    if (GraalCompileAppFirst && (task->comp_level() == CompLevel_full_optimization || !method->has_compiled_code()) &&
-        SystemDictionary::graal_loader() != NULL &&
-        method->method_holder()->class_loader() != SystemDictionary::graal_loader()) {
-      if (max_non_graal_task == NULL) {
-        max_non_graal_task = task;
+#ifdef COMPILERJVMCI
+    if (JVMCICompileAppFirst && (task->comp_level() == CompLevel_full_optimization || !method->has_compiled_code()) &&
+        SystemDictionary::jvmci_loader() != NULL &&
+        method->method_holder()->class_loader() != SystemDictionary::jvmci_loader()) {
+      if (max_non_jvmci_task == NULL) {
+        max_non_jvmci_task = task;
       } else {
         // Select a method with a higher rate
-        if (compare_methods(method, max_non_graal_task->method())) {
-          max_non_graal_task = task;
+        if (compare_methods(method, max_non_jvmci_task->method())) {
+          max_non_jvmci_task = task;
         }
       }
     }
@@ -211,9 +211,9 @@ CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
     task = next_task;
   }
 
-#ifdef COMPILERGRAAL
-  if (max_non_graal_task != NULL) {
-    max_task = max_non_graal_task;
+#ifdef COMPILERJVMCI
+  if (max_non_jvmci_task != NULL) {
+    max_task = max_non_jvmci_task;
     max_method = max_task->method();
   }
 #endif
@@ -373,11 +373,11 @@ CompLevel AdvancedThresholdPolicy::common(Predicate p, Method* method, CompLevel
       if (common(p, method, CompLevel_full_profile, disable_feedback) == CompLevel_full_optimization) {
         next_level = CompLevel_full_optimization;
       } else if ((this->*p)(i, b, cur_level)) {
-#ifdef COMPILERGRAAL
-        // Since Graal takes a while to warm up, its queue inevitably backs up during
-        // early VM execution. As of 2014-06-13, Graal's inliner assumes that the root
+#ifdef COMPILERJVMCI
+        // Since JVMCI takes a while to warm up, its queue inevitably backs up during
+        // early VM execution. As of 2014-06-13, JVMCI's inliner assumes that the root
         // compilation method and all potential inlinees have mature profiles (which
-        // includes type profiling). If it sees immature profiles, Graal's inliner
+        // includes type profiling). If it sees immature profiles, JVMCI's inliner
         // can perform pathologically bad (e.g., causing OutOfMemoryErrors due to
         // exploring/inlining too many graphs). Since a rewrite of the inliner is
         // in progress, we simply disable the dialing back heuristic for now and will

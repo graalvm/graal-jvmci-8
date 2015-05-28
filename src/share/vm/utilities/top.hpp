@@ -42,8 +42,8 @@
 #ifdef COMPILER2
 #include "opto/c2_globals.hpp"
 #endif
-#ifdef GRAAL
-#include "graal/graalGlobals.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciGlobals.hpp"
 #endif
 
 // THIS FILE IS INTESIONALLY LEFT EMPTY

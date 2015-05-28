@@ -49,10 +49,10 @@
 #ifdef COMPILER1
 #include "c1/c1_Compiler.hpp"
 #endif
-#ifdef GRAAL
-#include "graal/graalCompiler.hpp"
-#ifdef COMPILERGRAAL
-#include "graal/graalRuntime.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciCompiler.hpp"
+#ifdef COMPILERJVMCI
+#include "jvmci/jvmciRuntime.hpp"
 #include "runtime/vframe.hpp"
 #endif
 #endif
@@ -916,25 +916,25 @@ void CompileBroker::compilation_init() {
   // Set the interface to the current compiler(s).
   int c1_count = CompilationPolicy::policy()->compiler_count(CompLevel_simple);
   int c2_count = CompilationPolicy::policy()->compiler_count(CompLevel_full_optimization);
-#ifdef GRAAL
-  GraalCompiler* graal = new GraalCompiler();
+#ifdef JVMCI
+  JVMCICompiler* jvmci = new JVMCICompiler();
 #endif
 
-#if defined(COMPILERGRAAL)
-  _compilers[1] = graal;
-  if (FLAG_IS_DEFAULT(GraalThreads)) {
-    if (!TieredCompilation && FLAG_IS_DEFAULT(BootstrapGraal) || BootstrapGraal) {
-      // Graal will bootstrap so give it more threads
+#if defined(COMPILERJVMCI)
+  _compilers[1] = jvmci;
+  if (FLAG_IS_DEFAULT(JVMCIThreads)) {
+    if (!TieredCompilation && FLAG_IS_DEFAULT(BootstrapJVMCI) || BootstrapJVMCI) {
+      // JVMCI will bootstrap so give it more threads
       c2_count = MIN2(32, os::active_processor_count());
     }
   } else {
-    c2_count = GraalThreads;
+    c2_count = JVMCIThreads;
   }
-  if (FLAG_IS_DEFAULT(GraalHostThreads)) {
+  if (FLAG_IS_DEFAULT(JVMCIHostThreads)) {
   } else {
-    c1_count = GraalHostThreads;
+    c1_count = JVMCIHostThreads;
   }
-#endif // COMPILERGRAAL
+#endif // COMPILERJVMCI
 
 #ifdef COMPILER1
   if (c1_count > 0) {
@@ -1142,9 +1142,9 @@ CompilerThread* CompileBroker::make_compiler_thread(const char* name, CompileQue
 
 void CompileBroker::init_compiler_threads(int c1_compiler_count, int c2_compiler_count) {
   EXCEPTION_MARK;
-#if !defined(ZERO) && !defined(SHARK) && !defined(COMPILERGRAAL)
+#if !defined(ZERO) && !defined(SHARK) && !defined(COMPILERJVMCI)
   assert(c2_compiler_count > 0 || c1_compiler_count > 0, "No compilers?");
-#endif // !ZERO && !SHARK && !COMPILERGRAAL
+#endif // !ZERO && !SHARK && !COMPILERJVMCI
   // Initialize the compilation queue
   if (c2_compiler_count > 0) {
     _c2_compile_queue  = new CompileQueue("C2 CompileQueue",  MethodCompileQueue_lock);
@@ -1322,9 +1322,9 @@ void CompileBroker::compile_method_base(methodHandle method,
     // Should this thread wait for completion of the compile?
     blocking = is_compile_blocking();
 
-#ifdef COMPILERGRAAL
+#ifdef COMPILERJVMCI
     if (blocking) {
-      // Don't allow blocking compiles for requests triggered by Graal.
+      // Don't allow blocking compiles for requests triggered by JVMCI.
       if (thread->is_Compiler_thread()) {
         blocking = false;
       }
@@ -1342,14 +1342,14 @@ void CompileBroker::compile_method_base(methodHandle method,
 
       // Don't allow blocking compilation requests to JVMCI
       // if JVMCI itself is not yet initialized
-      if (!GraalRuntime::is_HotSpotJVMCIRuntime_initialized() && compiler(comp_level)->is_graal()) {
+      if (!JVMCIRuntime::is_HotSpotJVMCIRuntime_initialized() && compiler(comp_level)->is_jvmci()) {
         blocking = false;
       }
 
-      // Don't allow blocking compilation requests if we are in GraalRuntime::shutdown
+      // Don't allow blocking compilation requests if we are in JVMCIRuntime::shutdown
       // to avoid deadlock between compiler thread(s) and threads run at shutdown
       // such as the DestroyJavaVM thread.
-      if (GraalRuntime::shutdown_called()) {
+      if (JVMCIRuntime::shutdown_called()) {
         blocking = false;
       }
     }
@@ -2081,19 +2081,19 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     MutexLocker locker(Compile_lock, thread);
     system_dictionary_modification_counter = SystemDictionary::number_of_modifications();
   }
-#ifdef COMPILERGRAAL
-  if (comp != NULL && comp->is_graal()) {
-    GraalCompiler* graal = (GraalCompiler*) comp;
+#ifdef COMPILERJVMCI
+  if (comp != NULL && comp->is_jvmci()) {
+    JVMCICompiler* jvmci = (JVMCICompiler*) comp;
 
     TraceTime t1("compilation", &time);
     EventCompilation event;
 
-    GraalEnv env(task, system_dictionary_modification_counter);
-    graal->compile_method(target_handle, osr_bci, &env);
+    JVMCIEnv env(task, system_dictionary_modification_counter);
+    jvmci->compile_method(target_handle, osr_bci, &env);
 
     post_compile(thread, task, event, task->code() != NULL, NULL);
   } else
-#endif // COMPILERGRAAL
+#endif // COMPILERJVMCI
   {
 
     NoHandleMark  nhm;
@@ -2406,18 +2406,18 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
 
     if (CITime) {
       int bytes_compiled = method->code_size() + task->num_inlined_bytecodes();
-      GRAAL_ONLY(CompilerStatistics* stats = compiler(task->comp_level())->stats();)
+      JVMCI_ONLY(CompilerStatistics* stats = compiler(task->comp_level())->stats();)
       if (is_osr) {
         _t_osr_compilation.add(time);
         _sum_osr_bytes_compiled += bytes_compiled;
-        GRAAL_ONLY(stats->_osr.update(time, bytes_compiled);)
+        JVMCI_ONLY(stats->_osr.update(time, bytes_compiled);)
       } else {
         _t_standard_compilation.add(time);
         _sum_standard_bytes_compiled += method->code_size() + task->num_inlined_bytecodes();
-        GRAAL_ONLY(stats->_standard.update(time, bytes_compiled);)
+        JVMCI_ONLY(stats->_standard.update(time, bytes_compiled);)
       }
-      GRAAL_ONLY(stats->_nmethods_size += code->total_size();)
-      GRAAL_ONLY(stats->_nmethods_code_size += code->insts_size();)
+      JVMCI_ONLY(stats->_nmethods_size += code->total_size();)
+      JVMCI_ONLY(stats->_nmethods_code_size += code->insts_size();)
     }
 
     if (UsePerfData) {
@@ -2473,7 +2473,7 @@ const char* CompileBroker::compiler_name(int comp_level) {
   }
 }
 
-#ifdef GRAAL
+#ifdef JVMCI
 void CompileBroker::print_times(AbstractCompiler* comp) {
   CompilerStatistics* stats = comp->stats();
   tty->print_cr("  %s {speed: %d bytes/s; standard: %6.3f s, %d bytes, %d methods; osr: %6.3f s, %d bytes, %d methods; nmethods_size: %d bytes; nmethods_code_size: %d bytes}",
@@ -2486,7 +2486,7 @@ void CompileBroker::print_times(AbstractCompiler* comp) {
 #endif
 
 void CompileBroker::print_times(bool per_compiler, bool aggregate) {
-#ifdef GRAAL
+#ifdef JVMCI
   elapsedTimer standard_compilation;
   elapsedTimer total_compilation;
   elapsedTimer osr_compilation;
@@ -2535,9 +2535,9 @@ void CompileBroker::print_times(bool per_compiler, bool aggregate) {
   total_compilation.add(osr_compilation);
   total_compilation.add(standard_compilation);
 
-#ifndef COMPILERGRAAL
-  // In hosted mode, print the Graal compiler specific counters manually.
-  GraalCompiler::print_compilation_timers();
+#ifndef COMPILERJVMCI
+  // In hosted mode, print the JVMCI compiler specific counters manually.
+  JVMCICompiler::print_compilation_timers();
 #endif
 #else
   elapsedTimer standard_compilation = CompileBroker::_t_standard_compilation;

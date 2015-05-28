@@ -734,10 +734,10 @@ void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose
                   nm->compile_id(), (nm->is_osr_method() ? "%" : ""),
                   ((nm->compiler() != NULL) ? nm->compiler()->name() : ""),
                   buf, m->code_size(), _pc, _cb->code_begin(), _pc - _cb->code_begin());
-#ifdef GRAAL
-        char* graalName = nm->graal_installed_code_name(buf, buflen);
-        if (graalName != NULL) {
-          st->print(" (%s)", graalName);
+#ifdef JVMCI
+        char* jvmciName = nm->jvmci_installed_code_name(buf, buflen);
+        if (jvmciName != NULL) {
+          st->print(" (%s)", jvmciName);
         }
 #endif
       } else {

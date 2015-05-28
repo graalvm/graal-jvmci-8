@@ -22,26 +22,26 @@
  *
  */
 
-#ifndef SHARE_VM_GRAAL_VMSTRUCTS_GRAAL_HPP
-#define SHARE_VM_GRAAL_VMSTRUCTS_GRAAL_HPP
+#ifndef SHARE_VM_JVMCI_VMSTRUCTS_JVMCI_HPP
+#define SHARE_VM_JVMCI_VMSTRUCTS_JVMCI_HPP
 
 #include "compiler/abstractCompiler.hpp"
-#include "graal/graalCodeInstaller.hpp"
-#include "graal/graalCompilerToVM.hpp"
-#include "graal/graalEnv.hpp"
+#include "jvmci/jvmciCodeInstaller.hpp"
+#include "jvmci/jvmciCompilerToVM.hpp"
+#include "jvmci/jvmciEnv.hpp"
 
-#define VM_STRUCTS_GRAAL(nonstatic_field, static_field)                       \
+#define VM_STRUCTS_JVMCI(nonstatic_field, static_field)                       \
   nonstatic_field(ThreadShadow,  _pending_deoptimization, int)                \
   nonstatic_field(ThreadShadow,  _pending_failed_speculation, oop)            \
   nonstatic_field(ThreadShadow,  _pending_transfer_to_interpreter, bool)      \
   nonstatic_field(MethodData,    _jvmci_ir_size, int)                         \
-  nonstatic_field(GraalEnv,      _task, CompileTask*)                         \
-  nonstatic_field(GraalEnv,      _jvmti_can_hotswap_or_post_breakpoint, bool) \
+  nonstatic_field(JVMCIEnv,      _task, CompileTask*)                         \
+  nonstatic_field(JVMCIEnv,      _jvmti_can_hotswap_or_post_breakpoint, bool) \
 
-#define VM_TYPES_GRAAL(declare_type, declare_toplevel_type)                   \
-  declare_toplevel_type(GraalEnv)                                             \
+#define VM_TYPES_JVMCI(declare_type, declare_toplevel_type)                   \
+  declare_toplevel_type(JVMCIEnv)                                             \
 
-#define VM_INT_CONSTANTS_GRAAL(declare_constant, declare_preprocessor_constant)                   \
+#define VM_INT_CONSTANTS_JVMCI(declare_constant, declare_preprocessor_constant)                   \
   declare_constant(Deoptimization::Reason_unreached0)                                             \
   declare_constant(Deoptimization::Reason_type_checked_inlining)                                  \
   declare_constant(Deoptimization::Reason_optimized_type_check)                                   \
@@ -50,11 +50,11 @@
   declare_constant(Deoptimization::Reason_not_compiled_exception_handler)                         \
   declare_constant(Deoptimization::Reason_unresolved)                                             \
   declare_constant(Deoptimization::Reason_jsr_mismatch)                                           \
-  declare_constant(GraalEnv::ok)                                                                  \
-  declare_constant(GraalEnv::dependencies_failed)                                                 \
-  declare_constant(GraalEnv::dependencies_invalid)                                                \
-  declare_constant(GraalEnv::cache_full)                                                          \
-  declare_constant(GraalEnv::code_too_large)                                                      \
+  declare_constant(JVMCIEnv::ok)                                                                  \
+  declare_constant(JVMCIEnv::dependencies_failed)                                                 \
+  declare_constant(JVMCIEnv::dependencies_invalid)                                                \
+  declare_constant(JVMCIEnv::cache_full)                                                          \
+  declare_constant(JVMCIEnv::code_too_large)                                                      \
                                                                                                   \
   declare_preprocessor_constant("JVM_ACC_SYNTHETIC", JVM_ACC_SYNTHETIC)                           \
   declare_preprocessor_constant("JVM_RECOGNIZED_FIELD_MODIFIERS", JVM_RECOGNIZED_FIELD_MODIFIERS) \
@@ -82,4 +82,4 @@
                                                                                                   \
   declare_constant(Method::invalid_vtable_index)                                                  \
 
-#endif // SHARE_VM_GRAAL_VMSTRUCTS_GRAAL_HPP
+#endif // SHARE_VM_JVMCI_VMSTRUCTS_JVMCI_HPP

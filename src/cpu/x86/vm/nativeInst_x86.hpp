@@ -566,7 +566,7 @@ inline bool NativeInstruction::is_safepoint_poll() {
   if (ubyte_at(0) == NativeTstRegMem::instruction_code_memXregl &&
       ubyte_at(1) == 0x05) { // 00 rax 101
     address fault = addr_at(6) + int_at(2);
-    NOT_GRAAL(assert(!Assembler::is_polling_page_far(), "unexpected poll encoding");)
+    NOT_JVMCI(assert(!Assembler::is_polling_page_far(), "unexpected poll encoding");)
     return os::is_poll_address(fault);
   }
   // Now try decoding a far safepoint:
@@ -576,7 +576,7 @@ inline bool NativeInstruction::is_safepoint_poll() {
        (ubyte_at(2) & NativeTstRegMem::modrm_mask) == NativeTstRegMem::modrm_reg) ||
       ubyte_at(0) == NativeTstRegMem::instruction_code_memXregl &&
       (ubyte_at(1) & NativeTstRegMem::modrm_mask) == NativeTstRegMem::modrm_reg) {
-    NOT_GRAAL(assert(Assembler::is_polling_page_far(), "unexpected poll encoding");)
+    NOT_JVMCI(assert(Assembler::is_polling_page_far(), "unexpected poll encoding");)
     return true;
   }
   return false;

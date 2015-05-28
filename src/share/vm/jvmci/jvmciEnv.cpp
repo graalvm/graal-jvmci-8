@@ -23,7 +23,7 @@
  */
 
 #include "precompiled.hpp"
-#include "graal/graalEnv.hpp"
+#include "jvmci/jvmciEnv.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "code/scopeDesc.hpp"
@@ -42,10 +42,10 @@
 #include "runtime/reflection.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "utilities/dtrace.hpp"
-#include "graal/graalRuntime.hpp"
-#include "graal/graalJavaAccess.hpp"
+#include "jvmci/jvmciRuntime.hpp"
+#include "jvmci/jvmciJavaAccess.hpp"
 
-GraalEnv::GraalEnv(CompileTask* task, int system_dictionary_modification_counter) {
+JVMCIEnv::JVMCIEnv(CompileTask* task, int system_dictionary_modification_counter) {
   _task = task;
   _system_dictionary_modification_counter = system_dictionary_modification_counter;
   {
@@ -60,7 +60,7 @@ GraalEnv::GraalEnv(CompileTask* task, int system_dictionary_modification_counter
 // ------------------------------------------------------------------
 // Note: the logic of this method should mirror the logic of
 // constantPoolOopDesc::verify_constant_pool_resolve.
-bool GraalEnv::check_klass_accessibility(KlassHandle accessing_klass, KlassHandle resolved_klass) {
+bool JVMCIEnv::check_klass_accessibility(KlassHandle accessing_klass, KlassHandle resolved_klass) {
   if (accessing_klass->oop_is_objArray()) {
     accessing_klass = ObjArrayKlass::cast(accessing_klass())->bottom_klass();
   }
@@ -79,11 +79,11 @@ bool GraalEnv::check_klass_accessibility(KlassHandle accessing_klass, KlassHandl
 }
 
 // ------------------------------------------------------------------
-KlassHandle GraalEnv::get_klass_by_name_impl(KlassHandle& accessing_klass,
+KlassHandle JVMCIEnv::get_klass_by_name_impl(KlassHandle& accessing_klass,
                                           constantPoolHandle& cpool,
                                           Symbol* sym,
                                           bool require_local) {
-  GRAAL_EXCEPTION_CONTEXT;
+  JVMCI_EXCEPTION_CONTEXT;
 
   // Now we need to check the SystemDictionary
   if (sym->byte_at(0) == 'L' &&
@@ -158,7 +158,7 @@ KlassHandle GraalEnv::get_klass_by_name_impl(KlassHandle& accessing_klass,
 }
 
 // ------------------------------------------------------------------
-KlassHandle GraalEnv::get_klass_by_name(KlassHandle& accessing_klass,
+KlassHandle JVMCIEnv::get_klass_by_name(KlassHandle& accessing_klass,
                                   Symbol* klass_name,
                                   bool require_local) {
   ResourceMark rm;
@@ -171,11 +171,11 @@ KlassHandle GraalEnv::get_klass_by_name(KlassHandle& accessing_klass,
 
 // ------------------------------------------------------------------
 // Implementation of get_klass_by_index.
-KlassHandle GraalEnv::get_klass_by_index_impl(constantPoolHandle& cpool,
+KlassHandle JVMCIEnv::get_klass_by_index_impl(constantPoolHandle& cpool,
                                         int index,
                                         bool& is_accessible,
                                         KlassHandle& accessor) {
-  GRAAL_EXCEPTION_CONTEXT;
+  JVMCI_EXCEPTION_CONTEXT;
   KlassHandle klass (THREAD, ConstantPool::klass_at_if_loaded(cpool, index));
   Symbol* klass_name = NULL;
   if (klass.is_null()) {
@@ -230,7 +230,7 @@ KlassHandle GraalEnv::get_klass_by_index_impl(constantPoolHandle& cpool,
 
 // ------------------------------------------------------------------
 // Get a klass from the constant pool.
-KlassHandle GraalEnv::get_klass_by_index(constantPoolHandle& cpool,
+KlassHandle JVMCIEnv::get_klass_by_index(constantPoolHandle& cpool,
                                    int index,
                                    bool& is_accessible,
                                    KlassHandle& accessor) {
@@ -244,9 +244,9 @@ KlassHandle GraalEnv::get_klass_by_index(constantPoolHandle& cpool,
 //
 // Implementation note: the results of field lookups are cached
 // in the accessor klass.
-void GraalEnv::get_field_by_index_impl(instanceKlassHandle& klass, fieldDescriptor& field_desc,
+void JVMCIEnv::get_field_by_index_impl(instanceKlassHandle& klass, fieldDescriptor& field_desc,
                                         int index) {
-  GRAAL_EXCEPTION_CONTEXT;
+  JVMCI_EXCEPTION_CONTEXT;
 
   assert(klass->is_linked(), "must be linked before using its constant-pool");
 
@@ -285,7 +285,7 @@ void GraalEnv::get_field_by_index_impl(instanceKlassHandle& klass, fieldDescript
 
 // ------------------------------------------------------------------
 // Get a field by index from a klass's constant pool.
-void GraalEnv::get_field_by_index(instanceKlassHandle& accessor, fieldDescriptor& fd, int index) {
+void JVMCIEnv::get_field_by_index(instanceKlassHandle& accessor, fieldDescriptor& fd, int index) {
   ResourceMark rm;
   return get_field_by_index_impl(accessor, fd, index);
 }
@@ -293,12 +293,12 @@ void GraalEnv::get_field_by_index(instanceKlassHandle& accessor, fieldDescriptor
 // ------------------------------------------------------------------
 // Perform an appropriate method lookup based on accessor, holder,
 // name, signature, and bytecode.
-methodHandle GraalEnv::lookup_method(instanceKlassHandle& h_accessor,
+methodHandle JVMCIEnv::lookup_method(instanceKlassHandle& h_accessor,
                                instanceKlassHandle& h_holder,
                                Symbol*       name,
                                Symbol*       sig,
                                Bytecodes::Code bc) {
-  GRAAL_EXCEPTION_CONTEXT;
+  JVMCI_EXCEPTION_CONTEXT;
   LinkResolver::check_klass_accessability(h_accessor, h_holder, KILL_COMPILE_ON_FATAL_(NULL));
   methodHandle dest_method;
   switch (bc) {
@@ -328,7 +328,7 @@ methodHandle GraalEnv::lookup_method(instanceKlassHandle& h_accessor,
 
 
 // ------------------------------------------------------------------
-methodHandle GraalEnv::get_method_by_index_impl(constantPoolHandle& cpool,
+methodHandle JVMCIEnv::get_method_by_index_impl(constantPoolHandle& cpool,
                                           int index, Bytecodes::Code bc,
                                           instanceKlassHandle& accessor) {
   if (bc == Bytecodes::_invokedynamic) {
@@ -395,7 +395,7 @@ methodHandle GraalEnv::get_method_by_index_impl(constantPoolHandle& cpool,
 }
 
 // ------------------------------------------------------------------
-instanceKlassHandle GraalEnv::get_instance_klass_for_declared_method_holder(KlassHandle& method_holder) {
+instanceKlassHandle JVMCIEnv::get_instance_klass_for_declared_method_holder(KlassHandle& method_holder) {
   // For the case of <array>.clone(), the method holder can be an ArrayKlass*
   // instead of an InstanceKlass*.  For that case simply pretend that the
   // declared holder is Object.clone since that's where the call will bottom out.
@@ -411,7 +411,7 @@ instanceKlassHandle GraalEnv::get_instance_klass_for_declared_method_holder(Klas
 
 
 // ------------------------------------------------------------------
-methodHandle GraalEnv::get_method_by_index(constantPoolHandle& cpool,
+methodHandle JVMCIEnv::get_method_by_index(constantPoolHandle& cpool,
                                      int index, Bytecodes::Code bc,
                                      instanceKlassHandle& accessor) {
   ResourceMark rm;
@@ -421,13 +421,13 @@ methodHandle GraalEnv::get_method_by_index(constantPoolHandle& cpool,
 // ------------------------------------------------------------------
 // Check for changes to the system dictionary during compilation
 // class loads, evolution, breakpoints
-GraalEnv::CodeInstallResult GraalEnv::check_for_system_dictionary_modification(Dependencies* dependencies, Handle compiled_code,
-                                                                               GraalEnv* env, char** failure_detail) {
+JVMCIEnv::CodeInstallResult JVMCIEnv::check_for_system_dictionary_modification(Dependencies* dependencies, Handle compiled_code,
+                                                                               JVMCIEnv* env, char** failure_detail) {
   // If JVMTI capabilities were enabled during compile, the compilation is invalidated.
   if (env != NULL) {
     if (!env->_jvmti_can_hotswap_or_post_breakpoint && JvmtiExport::can_hotswap_or_post_breakpoint()) {
       *failure_detail = (char*) "Hotswapping or breakpointing was enabled during compilation";
-      return GraalEnv::dependencies_failed;
+      return JVMCIEnv::dependencies_failed;
     }
   }
 
@@ -437,7 +437,7 @@ GraalEnv::CodeInstallResult GraalEnv::check_for_system_dictionary_modification(D
   bool counter_changed = env != NULL && env->_system_dictionary_modification_counter != SystemDictionary::number_of_modifications();
   bool verify_deps = env == NULL || trueInDebug || Debug::ENABLED();
   if (!counter_changed && !verify_deps) {
-    return GraalEnv::ok;
+    return JVMCIEnv::ok;
   }
 
   for (Dependencies::DepStream deps(dependencies); deps.next(); ) {
@@ -450,12 +450,12 @@ GraalEnv::CodeInstallResult GraalEnv::check_for_system_dictionary_modification(D
       deps.print_dependency(witness, true, &st);
       *failure_detail = st.as_string();
       if (env == NULL || counter_changed) {
-        return GraalEnv::dependencies_failed;
+        return JVMCIEnv::dependencies_failed;
       } else {
         // The dependencies were invalid at the time of installation
         // without any intervening modification of the system
         // dictionary.  That means they were invalidly constructed.
-        return GraalEnv::dependencies_invalid;
+        return JVMCIEnv::dependencies_invalid;
       }
     }
     if (LogCompilation) {
@@ -463,11 +463,11 @@ GraalEnv::CodeInstallResult GraalEnv::check_for_system_dictionary_modification(D
     }
   }
 
-  return GraalEnv::ok;
+  return JVMCIEnv::ok;
 }
 
 // ------------------------------------------------------------------
-GraalEnv::CodeInstallResult GraalEnv::register_method(
+JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
                                 methodHandle& method,
                                 nmethod*& nm,
                                 int entry_bci,
@@ -480,18 +480,18 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
                                 AbstractCompiler* compiler,
                                 DebugInformationRecorder* debug_info,
                                 Dependencies* dependencies,
-                                GraalEnv* env,
+                                JVMCIEnv* env,
                                 int compile_id,
                                 bool has_unsafe_access,
                                 Handle installed_code,
                                 Handle compiled_code,
                                 Handle speculation_log) {
-  GRAAL_EXCEPTION_CONTEXT;
+  JVMCI_EXCEPTION_CONTEXT;
   NMethodSweeper::possibly_sweep();
   nm = NULL;
   int comp_level = CompLevel_full_optimization;
   char* failure_detail = NULL;
-  GraalEnv::CodeInstallResult result;
+  JVMCIEnv::CodeInstallResult result;
   {
     // To prevent compile queue updates.
     MutexLocker locker(MethodCompileQueue_lock, THREAD);
@@ -505,7 +505,7 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
 
     // Check for {class loads, evolution, breakpoints} during compilation
     result = check_for_system_dictionary_modification(dependencies, compiled_code, env, &failure_detail);
-    if (result != GraalEnv::ok) {
+    if (result != JVMCIEnv::ok) {
       // While not a true deoptimization, it is a preemptive decompile.
       MethodData* mdp = method()->method_data();
       if (mdp != NULL) {
@@ -596,7 +596,7 @@ GraalEnv::CodeInstallResult GraalEnv::register_method(
           }
         }
       }
-      result = nm != NULL ? GraalEnv::ok :GraalEnv::cache_full;
+      result = nm != NULL ? JVMCIEnv::ok :JVMCIEnv::cache_full;
     }
   }
 

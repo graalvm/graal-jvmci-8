@@ -246,10 +246,10 @@ class Arguments : AllStatic {
   // an array containing all jvm arguments specified in the command line
   static char** _jvm_args_array;
   static int    _num_jvm_args;
-#ifdef GRAAL
-  // an array containing all Graal arguments specified in the command line
-  static char** _graal_args_array;
-  static int    _num_graal_args;
+#ifdef JVMCI
+  // an array containing all JVMCI arguments specified in the command line
+  static char** _jvmci_args_array;
+  static int    _num_jvmci_args;
 #endif
   // string containing all java command (class/jarfile name and app args)
   static char* _java_command;
@@ -410,8 +410,8 @@ class Arguments : AllStatic {
   // methods to build strings from individual args
   static void build_jvm_args(const char* arg);
   static void build_jvm_flags(const char* arg);
-#ifdef GRAAL
-  static void add_graal_arg(const char* arg);
+#ifdef JVMCI
+  static void add_jvmci_arg(const char* arg);
 #endif
   static void add_string(char*** bldarray, int* count, const char* arg);
   static const char* build_resource_string(char** args, int count);
@@ -492,9 +492,9 @@ class Arguments : AllStatic {
   // return a char* array containing all options
   static char** jvm_flags_array()          { return _jvm_flags_array; }
   static char** jvm_args_array()           { return _jvm_args_array; }
-#ifdef GRAAL
-  static char** graal_args_array()           { return _graal_args_array; }
-  static int num_graal_args()               { return _num_graal_args; }
+#ifdef JVMCI
+  static char** jvmci_args_array()           { return _jvmci_args_array; }
+  static int num_jvmci_args()               { return _num_jvmci_args; }
 #endif
   static int num_jvm_flags()               { return _num_jvm_flags; }
   static int num_jvm_args()                { return _num_jvm_args; }

@@ -26,12 +26,12 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
 #include "runtime/javaCalls.hpp"
-#include "graal/graalEnv.hpp"
-#include "graal/graalCompiler.hpp"
-#include "graal/graalCodeInstaller.hpp"
-#include "graal/graalJavaAccess.hpp"
-#include "graal/graalCompilerToVM.hpp"
-#include "graal/graalRuntime.hpp"
+#include "jvmci/jvmciEnv.hpp"
+#include "jvmci/jvmciCompiler.hpp"
+#include "jvmci/jvmciCodeInstaller.hpp"
+#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciCompilerToVM.hpp"
+#include "jvmci/jvmciRuntime.hpp"
 #include "asm/register.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "code/vmreg.hpp"
@@ -150,12 +150,12 @@ static OopMap* create_oop_map(jint total_frame_size, jint parameter_count, oop d
     objArrayOop registers = RegisterSaveLayout::registers(callee_save_info);
     typeArrayOop slots = RegisterSaveLayout::slots(callee_save_info);
     for (jint i = 0; i < slots->length(); i++) {
-      oop graal_reg = registers->obj_at(i);
-      jint graal_reg_number = code_Register::number(graal_reg);
-      VMReg hotspot_reg = CodeInstaller::get_hotspot_reg(graal_reg_number);
+      oop jvmci_reg = registers->obj_at(i);
+      jint jvmci_reg_number = code_Register::number(jvmci_reg);
+      VMReg hotspot_reg = CodeInstaller::get_hotspot_reg(jvmci_reg_number);
       // HotSpot stack slots are 4 bytes
-      jint graal_slot = slots->int_at(i);
-      jint hotspot_slot = graal_slot * VMRegImpl::slots_per_word;
+      jint jvmci_slot = slots->int_at(i);
+      jint hotspot_slot = jvmci_slot * VMRegImpl::slots_per_word;
       VMReg hotspot_slot_as_reg = VMRegImpl::stack2reg(hotspot_slot);
       map->set_callee_saved(hotspot_slot_as_reg, hotspot_reg);
 #ifdef _LP64
@@ -177,12 +177,12 @@ static void record_metadata_reference(oop obj, jlong prim, jboolean compressed, 
       assert((Klass*) prim == klass, err_msg("%s @ " INTPTR_FORMAT " != " PTR64_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
     }
     int index = oop_recorder->find_index(klass);
-    TRACE_graal_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), klass->name()->as_C_string());
+    TRACE_jvmci_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), klass->name()->as_C_string());
   } else if (obj->is_a(HotSpotResolvedJavaMethodImpl::klass())) {
     Method* method = (Method*) (address) HotSpotResolvedJavaMethodImpl::metaspaceMethod(obj);
     assert(!compressed, err_msg("unexpected compressed method pointer %s @ " INTPTR_FORMAT " = " PTR64_FORMAT, method->name()->as_C_string(), p2i(method), prim));
     int index = oop_recorder->find_index(method);
-    TRACE_graal_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), method->name()->as_C_string());
+    TRACE_jvmci_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), method->name()->as_C_string());
   } else {
     assert(java_lang_String::is_instance(obj),
         err_msg("unexpected metadata reference (%s) for constant " JLONG_FORMAT " (" PTR64_FORMAT ")", obj->klass()->name()->as_C_string(), prim, prim));
@@ -219,7 +219,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, GrowableArray<ScopeValue*>
   assert(referenceMask == 0 || referenceMask == 1, "unexpected referenceMask");
   bool reference = referenceMask == 1;
 
-  BasicType type = GraalRuntime::kindToBasicType(Kind::typeChar(platformKind));
+  BasicType type = JVMCIRuntime::kindToBasicType(Kind::typeChar(platformKind));
 
   if (value->is_a(RegisterValue::klass())) {
     oop reg = RegisterValue::reg(value);
@@ -425,10 +425,10 @@ void CodeInstaller::initialize_dependencies(oop compiled_code) {
 }
 
 // constructor used to create a method
-GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log) {
-  BufferBlob* buffer_blob = GraalRuntime::initialize_buffer_blob();
+JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log) {
+  BufferBlob* buffer_blob = JVMCIRuntime::initialize_buffer_blob();
   if (buffer_blob == NULL) {
-    return GraalEnv::cache_full;
+    return JVMCIEnv::cache_full;
   }
 
   CodeBuffer buffer(buffer_blob);
@@ -442,14 +442,14 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
   {
     initialize_fields(JNIHandles::resolve(compiled_code_obj));
     if (!initialize_buffer(buffer)) {
-      return GraalEnv::code_too_large;
+      return JVMCIEnv::code_too_large;
     }
     process_exception_handlers();
   }
 
   int stack_slots = _total_frame_size / HeapWordSize; // conversion to words
 
-  GraalEnv::CodeInstallResult result;
+  JVMCIEnv::CodeInstallResult result;
   if (!compiled_code->is_a(HotSpotCompiledNmethod::klass())) {
     oop stubName = CompilationResult::name(HotSpotCompiledCode::comp(compiled_code_obj));
     char* name = strdup(java_lang_String::as_utf8_string(stubName));
@@ -459,19 +459,19 @@ GraalEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
                                        stack_slots,
                                        _debug_recorder->_oopmaps,
                                        false);
-    result = GraalEnv::ok;
+    result = JVMCIEnv::ok;
   } else {
     nmethod* nm = NULL;
     methodHandle method = getMethodFromHotSpotMethod(HotSpotCompiledNmethod::method(compiled_code));
     jint entry_bci = HotSpotCompiledNmethod::entryBCI(compiled_code);
     jint id = HotSpotCompiledNmethod::id(compiled_code);
-    GraalEnv* env = (GraalEnv*) (address) HotSpotCompiledNmethod::graalEnv(compiled_code);
+    JVMCIEnv* env = (JVMCIEnv*) (address) HotSpotCompiledNmethod::jvmciEnv(compiled_code);
     if (id == -1) {
       // Make sure a valid compile_id is associated with every compile
       id = CompileBroker::assign_compile_id_unlocked(Thread::current(), method, entry_bci);
     }
-    result = GraalEnv::register_method(method, nm, entry_bci, &_offsets, _custom_stack_area_offset, &buffer, stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
-        GraalCompiler::instance(), _debug_recorder, _dependencies, env, id, false, installed_code, compiled_code, speculation_log);
+    result = JVMCIEnv::register_method(method, nm, entry_bci, &_offsets, _custom_stack_area_offset, &buffer, stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
+        JVMCICompiler::instance(), _debug_recorder, _dependencies, env, id, false, installed_code, compiled_code, speculation_log);
     cb = nm;
   }
 
@@ -488,7 +488,7 @@ void CodeInstaller::initialize_fields(oop compiled_code) {
     Handle hotspotJavaMethod = HotSpotCompiledNmethod::method(compiled_code);
     methodHandle method = getMethodFromHotSpotMethod(hotspotJavaMethod());
     _parameter_count = method->size_of_parameters();
-    TRACE_graal_1("installing code for %s", method->name_and_sig_as_C_string());
+    TRACE_jvmci_1("installing code for %s", method->name_and_sig_as_C_string());
   } else {
     // Must be a HotSpotCompiledRuntimeStub
     // TODO (ds) not sure if this is correct - only used in OopMap constructor for non-product builds
@@ -602,13 +602,13 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
         jint pc_offset = CompilationResult_Site::pcOffset(site);
 
         if (site->is_a(CompilationResult_Call::klass())) {
-          TRACE_graal_4("call at %i", pc_offset);
+          TRACE_jvmci_4("call at %i", pc_offset);
           site_Call(buffer, pc_offset, site);
         } else if (site->is_a(CompilationResult_Infopoint::klass())) {
           // three reasons for infopoints denote actual safepoints
           oop reason = CompilationResult_Infopoint::reason(site);
           if (InfopointReason::SAFEPOINT() == reason || InfopointReason::CALL() == reason || InfopointReason::IMPLICIT_EXCEPTION() == reason) {
-            TRACE_graal_4("safepoint at %i", pc_offset);
+            TRACE_jvmci_4("safepoint at %i", pc_offset);
             site_Safepoint(buffer, pc_offset, site);
           } else {
             // if the infopoint is not an actual safepoint, it must have one of the other reasons
@@ -617,10 +617,10 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
             site_Infopoint(buffer, pc_offset, site);
           }
         } else if (site->is_a(CompilationResult_DataPatch::klass())) {
-          TRACE_graal_4("datapatch at %i", pc_offset);
+          TRACE_jvmci_4("datapatch at %i", pc_offset);
           site_DataPatch(buffer, pc_offset, site);
         } else if (site->is_a(CompilationResult_Mark::klass())) {
-          TRACE_graal_4("mark at %i", pc_offset);
+          TRACE_jvmci_4("mark at %i", pc_offset);
           site_Mark(buffer, pc_offset, site);
         } else {
           fatal("unexpected Site subclass");
@@ -776,7 +776,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
     bci = SynchronizationEntryBCI;
   }
 
-  if (TraceGraal >= 2) {
+  if (TraceJVMCI >= 2) {
     tty->print_cr("Recording scope pc_offset=%d bci=%d method=%s", pc_offset, bci, method->name_and_sig_as_C_string());
   }
 
@@ -810,7 +810,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
     GrowableArray<ScopeValue*>* expressions = expression_count > 0 ? new GrowableArray<ScopeValue*> (expression_count) : NULL;
     GrowableArray<MonitorValue*>* monitors = monitor_count > 0 ? new GrowableArray<MonitorValue*> (monitor_count) : NULL;
 
-    if (TraceGraal >= 2) {
+    if (TraceJVMCI >= 2) {
       tty->print_cr("Scope at bci %d with %d values", bci, values->length());
       tty->print_cr("%d locals %d expressions, %d monitors", local_count, expression_count, monitor_count);
     }
@@ -903,7 +903,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, oop site) {
     assert(hotspot_method != NULL, "unexpected JavaMethod");
     assert(debug_info != NULL, "debug info expected");
 
-    TRACE_graal_3("method call");
+    TRACE_jvmci_3("method call");
     CodeInstaller::pd_relocate_JavaMethod(hotspot_method, pc_offset);
     if (_next_call_type == INVOKESTATIC || _next_call_type == INVOKESPECIAL) {
       // Need a static call stub for transitions from compiled to interpreted.

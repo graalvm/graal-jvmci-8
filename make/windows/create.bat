@@ -159,7 +159,7 @@ echo   HotSpotJDKDist=%HotSpotJDKDist%
 
 REM This is now safe to do.
 :copyfiles
-for /D %%i in (graal, compiler1, compiler2, tiered) do (
+for /D %%i in (jvmci, compiler1, compiler2, tiered) do (
 if NOT EXIST %HotSpotBuildSpace%\%%i\generated mkdir %HotSpotBuildSpace%\%%i\generated
 copy %HotSpotWorkSpace%\make\windows\projectfiles\%%i\* %HotSpotBuildSpace%\%%i\generated > NUL
 )
@@ -167,7 +167,7 @@ copy %HotSpotWorkSpace%\make\windows\projectfiles\%%i\* %HotSpotBuildSpace%\%%i\
 REM force regneration of ProjectFile
 if exist %ProjectFile% del %ProjectFile%
 
-for /D %%i in (graal, compiler1, compiler2, tiered) do (
+for /D %%i in (jvmci, compiler1, compiler2, tiered) do (
 echo -- %%i --
 echo # Generated file!                                                        >    %HotSpotBuildSpace%\%%i\local.make
 echo # Changing a variable below and then deleting %ProjectFile% will cause  >>    %HotSpotBuildSpace%\%%i\local.make

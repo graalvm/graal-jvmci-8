@@ -29,7 +29,7 @@
 
 typedef void (*initializer)(void);
 
-#ifdef GRAAL
+#ifdef JVMCI
 // Per-compiler statistics
 class CompilerStatistics VALUE_OBJ_CLASS_SPEC {
   friend class VMStructs;
@@ -84,12 +84,12 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   // The (closed set) of concrete compiler classes. Using an tag like this
   // avoids a confusing use of macros around the definition of the
   // 'is_<compiler type>' methods.
-  enum Type { c1, c2, shark, graal };
+  enum Type { c1, c2, shark, jvmci };
 
  private:
   Type _type;
 
-#ifdef GRAAL
+#ifdef JVMCI
   CompilerStatistics _stats;
 #endif
 
@@ -112,7 +112,7 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   bool is_c1   ()                                { return _type == c1; }
   bool is_c2   ()                                { return _type == c2; }
   bool is_shark()                                { return _type == shark; }
-  bool is_graal()                                { return _type == graal; }
+  bool is_jvmci()                                { return _type == jvmci; }
 
   // Customization
   virtual void initialize () = 0;
@@ -136,7 +136,7 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
     ShouldNotReachHere();
   }
 
-#ifdef GRAAL
+#ifdef JVMCI
   CompilerStatistics* stats() { return &_stats; }
 #endif
 };

@@ -22,8 +22,8 @@
  *
  */
 
-#ifndef SHARE_VM_GRAAL_GRAALENV_HPP
-#define SHARE_VM_GRAAL_GRAALENV_HPP
+#ifndef SHARE_VM_JVMCI_JVMCIENV_HPP
+#define SHARE_VM_JVMCI_JVMCIENV_HPP
 
 #include "classfile/systemDictionary.hpp"
 #include "code/debugInfoRec.hpp"
@@ -34,8 +34,8 @@
 
 class CompileTask;
 
-// Bring the Graal compiler thread into the VM state.
-#define GRAAL_VM_ENTRY_MARK                       \
+// Bring the JVMCI compiler thread into the VM state.
+#define JVMCI_VM_ENTRY_MARK                       \
   JavaThread* thread = JavaThread::current(); \
   ThreadInVMfromNative __tiv(thread);       \
   ResetNoHandleMark rnhm;                   \
@@ -43,14 +43,14 @@ class CompileTask;
   Thread* THREAD = thread;                  \
   debug_only(VMNativeEntryWrapper __vew;)
 
-#define GRAAL_EXCEPTION_CONTEXT \
+#define JVMCI_EXCEPTION_CONTEXT \
   JavaThread* thread=JavaThread::current(); \
   Thread* THREAD = thread;
 
 //
 // This class is the top level broker for requests from the compiler
 // to the VM.
-class GraalEnv : StackObj {
+class JVMCIEnv : StackObj {
   CI_PACKAGE_ACCESS_TO
 
   friend class CompileBroker;
@@ -93,7 +93,7 @@ public:
                                  int method_index, Bytecodes::Code bc,
                                  instanceKlassHandle& loading_klass);
 
-  GraalEnv(CompileTask* task, int system_dictionary_modification_counter);
+  JVMCIEnv(CompileTask* task, int system_dictionary_modification_counter);
 
 private:
   CompileTask*     _task;
@@ -134,14 +134,14 @@ private:
 
   // Helper routine for determining the validity of a compilation
   // with respect to concurrent class loading.
-  static GraalEnv::CodeInstallResult check_for_system_dictionary_modification(Dependencies* target, Handle compiled_code,
-                                                                              GraalEnv* env, char** failure_detail);
+  static JVMCIEnv::CodeInstallResult check_for_system_dictionary_modification(Dependencies* target, Handle compiled_code,
+                                                                              JVMCIEnv* env, char** failure_detail);
 
 public:
   CompileTask* task() { return _task; }
 
   // Register the result of a compilation.
-  static GraalEnv::CodeInstallResult register_method(
+  static JVMCIEnv::CodeInstallResult register_method(
                        methodHandle&             target,
                        nmethod*&                 nm,
                        int                       entry_bci,
@@ -154,7 +154,7 @@ public:
                        AbstractCompiler*         compiler,
                        DebugInformationRecorder* debug_info,
                        Dependencies*             dependencies,
-                       GraalEnv*                 env,
+                       JVMCIEnv*                 env,
                        int                       compile_id,
                        bool                      has_unsafe_access,
                        Handle                    installed_code,
@@ -168,4 +168,4 @@ public:
   static instanceKlassHandle get_instance_klass_for_declared_method_holder(KlassHandle& klass);
 };
 
-#endif // SHARE_VM_GRAAL_GRAALENV_HPP
+#endif // SHARE_VM_JVMCI_JVMCIENV_HPP

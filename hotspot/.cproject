@@ -42,9 +42,9 @@
 									<listOptionValue builtIn="false" value="TARGET_OS_FAMILY_linux=1"/>
 									<listOptionValue builtIn="false" value="TARGET_OS_ARCH_linux_x86=1"/>
 									<listOptionValue builtIn="false" value="TARGET_ARCH_MODEL_x86_64=1"/>
-									<listOptionValue builtIn="false" value="GRAAL=1"/>
+									<listOptionValue builtIn="false" value="JVMCI=1"/>
 									<listOptionValue builtIn="false" value="COMPILER2=1"/>
-									<listOptionValue builtIn="false" value="COMPILERGRAAL=1"/>
+									<listOptionValue builtIn="false" value="COMPILERJVMCI=1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.undef.2137486146" name="Undefined symbols (-U)" superClass="gnu.cpp.compiler.option.preprocessor.undef"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.866181452" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -96,7 +96,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="hotspot" buildProperties="" description="Server VM with graal enabled (Tiered)" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.1958236162" name="Server" parent="org.eclipse.cdt.build.core.emptycfg">
+				<configuration artifactName="hotspot" buildProperties="" description="Server VM with JVMCI enabled (Tiered)" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.1958236162" name="Server" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.1958236162." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1741231788" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.1058861512" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
@@ -124,7 +124,7 @@
 									<listOptionValue builtIn="false" value="TARGET_OS_FAMILY_linux=1"/>
 									<listOptionValue builtIn="false" value="TARGET_OS_ARCH_linux_x86=1"/>
 									<listOptionValue builtIn="false" value="TARGET_ARCH_MODEL_x86_64=1"/>
-									<listOptionValue builtIn="false" value="GRAAL=1"/>
+									<listOptionValue builtIn="false" value="JVMCI=1"/>
 									<listOptionValue builtIn="false" value="COMPILER2=1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.undef.553556482" name="Undefined symbols (-U)" superClass="gnu.cpp.compiler.option.preprocessor.undef"/>
@@ -177,7 +177,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="hotspot" buildProperties="" description="Client VM with Graal enabled" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.982312162" name="Client" parent="org.eclipse.cdt.build.core.emptycfg">
+				<configuration artifactName="hotspot" buildProperties="" description="Client VM with JVMCI enabled" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.982312162" name="Client" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.982312162." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1944635494" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.760397453" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
@@ -205,7 +205,7 @@
 									<listOptionValue builtIn="false" value="TARGET_OS_FAMILY_linux=1"/>
 									<listOptionValue builtIn="false" value="TARGET_OS_ARCH_linux_x86=1"/>
 									<listOptionValue builtIn="false" value="TARGET_ARCH_MODEL_x86_64=1"/>
-									<listOptionValue builtIn="false" value="GRAAL=1"/>
+									<listOptionValue builtIn="false" value="JVMCI=1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.undef.2019710410" name="Undefined symbols (-U)" superClass="gnu.cpp.compiler.option.preprocessor.undef"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.931461388" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -245,7 +245,7 @@
 			<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004" moduleId="org.eclipse.cdt.core.settings" name="Graal">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004" moduleId="org.eclipse.cdt.core.settings" name="JVMCI">
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
@@ -257,7 +257,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="hotspot" buildProperties="" description="Graal VM (Tiered)" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004" name="Graal" parent="org.eclipse.cdt.build.core.emptycfg">
+				<configuration artifactName="hotspot" buildProperties="" description="Graal VM (Tiered)" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004" name="JVMCI" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1790873354" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.2087199731" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
@@ -285,8 +285,8 @@
 									<listOptionValue builtIn="false" value="TARGET_OS_FAMILY_linux=1"/>
 									<listOptionValue builtIn="false" value="TARGET_OS_ARCH_linux_x86=1"/>
 									<listOptionValue builtIn="false" value="TARGET_ARCH_MODEL_x86_64=1"/>
-									<listOptionValue builtIn="false" value="GRAAL=1"/>
-									<listOptionValue builtIn="false" value="COMPILERGRAAL=1"/>
+									<listOptionValue builtIn="false" value="JVMCI=1"/>
+									<listOptionValue builtIn="false" value="COMPILERJVMCI=1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.undef.1682796822" name="Undefined symbols (-U)" superClass="gnu.cpp.compiler.option.preprocessor.undef"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1552002453" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -326,7 +326,7 @@
 			<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.500153051">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.500153051" moduleId="org.eclipse.cdt.core.settings" name="Server no Graal">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.500153051" moduleId="org.eclipse.cdt.core.settings" name="Server no JVMCI">
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
@@ -338,7 +338,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="hotspot" buildProperties="" description="Server VM without Graal extentions (Tiered)" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.500153051" name="Server no Graal" parent="org.eclipse.cdt.build.core.emptycfg">
+				<configuration artifactName="hotspot" buildProperties="" description="Server VM without JVMCI extentions (Tiered)" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.500153051" name="Server no JVMCI" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.500153051." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.264813073" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.555589372" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
@@ -406,7 +406,7 @@
 			<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 		</cconfiguration>
 		<cconfiguration id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.915924225">
-			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.915924225" moduleId="org.eclipse.cdt.core.settings" name="Client no Graal">
+			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.915924225" moduleId="org.eclipse.cdt.core.settings" name="Client no JVMCI">
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
@@ -418,7 +418,7 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="hotspot" buildProperties="" description="Client VM without Graal extentions" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.915924225" name="Client no Graal" parent="org.eclipse.cdt.build.core.emptycfg">
+				<configuration artifactName="hotspot" buildProperties="" description="Client VM without JVMCI extentions" id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.915924225" name="Client no JVMCI" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.915924225." name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.237868264" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.819675926" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
@@ -475,7 +475,7 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="cpu/vm/templateTable_x86_32.cpp|cpu/vm/templateInterpreter_x86_32.cpp|cpu/vm/stubRoutines_x86_32.cpp|cpu/vm/stubGenerator_x86_32.cpp|cpu/vm/sharedRuntime_x86_32.cpp|cpu/vm/jniFastGetField_x86_32.cpp|cpu/vm/interpreterRT_x86_32.cpp|cpu/vm/interpreter_x86_32.cpp|cpu/vm/interp_masm_x86_32.cpp|cpu/vm/vtableStubs_x86_32.cpp|shared/vm/opto|shared/vm/graal" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
+						<entry excluding="cpu/vm/templateTable_x86_32.cpp|cpu/vm/templateInterpreter_x86_32.cpp|cpu/vm/stubRoutines_x86_32.cpp|cpu/vm/stubGenerator_x86_32.cpp|cpu/vm/sharedRuntime_x86_32.cpp|cpu/vm/jniFastGetField_x86_32.cpp|cpu/vm/interpreterRT_x86_32.cpp|cpu/vm/interpreter_x86_32.cpp|cpu/vm/interp_masm_x86_32.cpp|cpu/vm/vtableStubs_x86_32.cpp|shared/vm/opto|shared/vm/jvmci" flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name=""/>
 					</sourceEntries>
 				</configuration>
 			</storageModule>

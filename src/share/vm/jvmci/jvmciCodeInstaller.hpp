@@ -21,10 +21,10 @@
  * questions.
  */
 
-#ifndef SHARE_VM_GRAAL_GRAAL_CODE_INSTALLER_HPP
-#define SHARE_VM_GRAAL_GRAAL_CODE_INSTALLER_HPP
+#ifndef SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP
+#define SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP
 
-#include "graal/graalEnv.hpp"
+#include "jvmci/jvmciEnv.hpp"
 
 /*
  * This class handles the conversion from a InstalledCode to a CodeBlob or an nmethod.
@@ -108,10 +108,10 @@ private:
 public:
 
   CodeInstaller() : _arena(mtCompiler) {}
-  GraalEnv::CodeInstallResult install(Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log);
+  JVMCIEnv::CodeInstallResult install(Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log);
 
   static address runtime_call_target_address(oop runtime_call);
-  static VMReg get_hotspot_reg(jint graalRegisterNumber);
+  static VMReg get_hotspot_reg(jint jvmciRegisterNumber);
   static bool is_general_purpose_reg(VMReg hotspotRegister);
 
 private:
@@ -156,4 +156,4 @@ Method* getMethodFromHotSpotMethod(oop hotspot_method);
 
 
 
-#endif // SHARE_VM_GRAAL_GRAAL_CODE_INSTALLER_HPP
+#endif // SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP

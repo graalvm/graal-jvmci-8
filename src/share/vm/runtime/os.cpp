@@ -1189,8 +1189,8 @@ bool os::set_boot_path(char fileSep, char pathSep) {
         "%/lib/jce.jar:"
         "%/lib/charsets.jar:"
         "%/lib/jfr.jar:"
-#ifdef GRAAL
-        "%/lib/graal-loader.jar:"
+#ifdef JVMCI
+        "%/lib/jvmci-loader.jar:"
 #endif
 #ifndef NO_TRUFFLE_JAR
         "%/lib/truffle.jar:"

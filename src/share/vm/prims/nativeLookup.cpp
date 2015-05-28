@@ -126,17 +126,17 @@ extern "C" {
   void JNICALL JVM_RegisterMethodHandleMethods(JNIEnv *env, jclass unsafecls);
   void JNICALL JVM_RegisterPerfMethods(JNIEnv *env, jclass perfclass);
   void JNICALL JVM_RegisterWhiteBoxMethods(JNIEnv *env, jclass wbclass);
-#ifdef GRAAL
-  void     JNICALL JVM_InitGraalClassLoader(JNIEnv *env, jclass c, jobject loader);
-  void     JNICALL JVM_InitializeGraalNatives(JNIEnv *env, jclass compilerToVMClass);
+#ifdef JVMCI
+  void     JNICALL JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader);
+  void     JNICALL JVM_InitializeJVMCINatives(JNIEnv *env, jclass compilerToVMClass);
   jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
-  jobject  JNICALL JVM_GetGraalRuntime(JNIEnv *env, jclass c);
-  jobject  JNICALL JVM_GetGraalServiceImpls(JNIEnv *env, jclass c, jclass serviceClass);
+  jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
+  jobject  JNICALL JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass serviceClass);
   jobject  JNICALL JVM_CreateTruffleRuntime(JNIEnv *env, jclass c);
   jobject  JNICALL JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c);
-  jboolean JNICALL JVM_ParseGraalOptions(JNIEnv *env, jclass hotspotOptionsClass);
-#ifdef COMPILERGRAAL
-  void     JNICALL JVM_PrintAndResetGraalCompRate(JNIEnv *env, jclass c);
+  jboolean JNICALL JVM_ParseJVMCIOptions(JNIEnv *env, jclass hotspotOptionsClass);
+#ifdef COMPILERJVMCI
+  void     JNICALL JVM_PrintAndResetJVMCICompRate(JNIEnv *env, jclass c);
 #endif
 #endif
 }
@@ -149,14 +149,14 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_java_lang_invoke_MethodHandleNatives_registerNatives", NULL, FN_PTR(JVM_RegisterMethodHandleMethods) },
   { CC"Java_sun_misc_Perf_registerNatives",                        NULL, FN_PTR(JVM_RegisterPerfMethods)         },
   { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 NULL, FN_PTR(JVM_RegisterWhiteBoxMethods)     },
-#ifdef GRAAL
-  { CC"Java_com_oracle_graal_hotspot_loader_Factory_init",                     NULL, FN_PTR(JVM_InitGraalClassLoader)               },
+#ifdef JVMCI
+  { CC"Java_com_oracle_jvmci_hotspot_loader_Factory_init",                     NULL, FN_PTR(JVM_InitJVMCIClassLoader)               },
   { CC"Java_com_oracle_jvmci_runtime_JVMCI_initializeRuntime",                 NULL, FN_PTR(JVM_GetJVMCIRuntime)                    },
-  { CC"Java_com_oracle_jvmci_runtime_Services_getServiceImpls",                NULL, FN_PTR(JVM_GetGraalServiceImpls)               },
+  { CC"Java_com_oracle_jvmci_runtime_Services_getServiceImpls",                NULL, FN_PTR(JVM_GetJVMCIServiceImpls)               },
   { CC"Java_com_oracle_truffle_api_Truffle_createRuntime",                     NULL, FN_PTR(JVM_CreateTruffleRuntime)               },
   { CC"Java_com_oracle_nfi_NativeFunctionInterfaceRuntime_createInterface",    NULL, FN_PTR(JVM_CreateNativeFunctionInterface)      },
-  { CC"Java_com_oracle_jvmci_hotspot_CompilerToVMImpl_init",                   NULL, FN_PTR(JVM_InitializeGraalNatives)             },
-  { CC"Java_com_oracle_jvmci_hotspot_HotSpotOptions_parseVMOptions",           NULL, FN_PTR(JVM_ParseGraalOptions)                  },
+  { CC"Java_com_oracle_jvmci_hotspot_CompilerToVMImpl_init",                   NULL, FN_PTR(JVM_InitializeJVMCINatives)             },
+  { CC"Java_com_oracle_jvmci_hotspot_HotSpotOptions_parseVMOptions",           NULL, FN_PTR(JVM_ParseJVMCIOptions)                  },
 #endif
 };
 
@@ -187,7 +187,7 @@ address NativeLookup::lookup_style(methodHandle method, char* pure_name, const c
   // gets found the first time around - otherwise an infinite loop can occure. This is
   // another VM/library dependency
   Handle loader(THREAD, method->method_holder()->class_loader());
-  if (loader.is_null() GRAAL_ONLY(|| loader() == SystemDictionary::graal_loader())) {
+  if (loader.is_null() JVMCI_ONLY(|| loader() == SystemDictionary::jvmci_loader())) {
     entry = lookup_special_native(jni_name);
     if (entry == NULL) {
        entry = (address) os::dll_lookup(os::native_java_library(), jni_name);

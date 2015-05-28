@@ -22,7 +22,7 @@
  */
 
 #include "precompiled.hpp"
-#include "graal/graalJavaAccess.hpp"
+#include "jvmci/jvmciJavaAccess.hpp"
 #include "runtime/jniHandles.hpp"
 #include "classfile/symbolTable.hpp"
 // This function is similar to javaClasses.cpp, it computes the field offset of a (static or instance) field.
@@ -48,7 +48,7 @@ void compute_offset(int &dest_offset, Klass* klass, const char* name, const char
   dest_offset = fd.offset();
 }
 
-// This piece of macro magic creates the contents of the graal_compute_offsets method that initializes the field indices of all the access classes.
+// This piece of macro magic creates the contents of the jvmci_compute_offsets method that initializes the field indices of all the access classes.
 
 #define START_CLASS(name) { Klass* k = SystemDictionary::name##_klass(); assert(k != NULL, "Could not find class " #name "");
 
@@ -66,7 +66,7 @@ void compute_offset(int &dest_offset, Klass* klass, const char* name, const char
 #define STATIC_BOOLEAN_FIELD(klass, name) FIELD(klass, name, "Z", true)
 
 
-void graal_compute_offsets() {
+void jvmci_compute_offsets() {
   COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, OOP_FIELD, OOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
   guarantee(InstalledCode::_address_offset == sizeof(oopDesc), "codeBlob must be first field!");
 }

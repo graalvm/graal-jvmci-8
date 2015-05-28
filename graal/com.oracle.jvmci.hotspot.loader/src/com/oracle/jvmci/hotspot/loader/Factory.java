@@ -20,57 +20,57 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.loader;
+package com.oracle.jvmci.hotspot.loader;
 
 import java.io.*;
 import java.net.*;
 import java.util.*;
 
 /**
- * Utility to create and register a separate class loader for loading Graal classes (i.e., those in
- * found in lib/graal/graal*.jar).
+ * Utility to create and register a separate class loader for loading JVMCI classes (i.e., those in
+ * found in lib/jvmci/*.jar).
  */
 public class Factory {
 
     /**
-     * Copy of the {@code UseGraalClassLoader} VM option. Set by the VM before the static
+     * Copy of the {@code UseJVMCIClassLoader} VM option. Set by the VM before the static
      * initializer is called.
      */
-    private static boolean useGraalClassLoader;
+    private static boolean useJVMCIClassLoader;
 
     /**
-     * Registers the Graal class loader in the VM.
+     * Registers the JVMCI class loader in the VM.
      */
     private static native void init(ClassLoader loader);
 
     static {
-        init(useGraalClassLoader ? newClassLoader() : null);
+        init(useJVMCIClassLoader ? newClassLoader() : null);
     }
 
     /**
-     * Creates a new class loader for loading graal classes.
+     * Creates a new class loader for loading JVMCI classes.
      */
     private static ClassLoader newClassLoader() {
-        URL[] urls = getGraalJarsUrls();
+        URL[] urls = getJVMCIJarsUrls();
         ClassLoader parent = null;
         return URLClassLoader.newInstance(urls, parent);
     }
 
     /**
-     * Gets the URLs for lib/graal/graal*.jar.
+     * Gets the URLs for lib/jvmci/*.jar.
      */
-    private static URL[] getGraalJarsUrls() {
+    private static URL[] getJVMCIJarsUrls() {
         File javaHome = new File(System.getProperty("java.home"));
         File lib = new File(javaHome, "lib");
-        File graal = new File(lib, "graal");
-        if (!graal.exists()) {
-            throw new InternalError(graal + " does not exist");
+        File jvmci = new File(lib, "jvmci");
+        if (!jvmci.exists()) {
+            throw new InternalError(jvmci + " does not exist");
         }
 
         List<URL> urls = new ArrayList<>();
-        for (String fileName : graal.list()) {
-            if (fileName.startsWith("graal") && fileName.endsWith(".jar")) {
-                File file = new File(graal, fileName);
+        for (String fileName : jvmci.list()) {
+            if (fileName.endsWith(".jar")) {
+                File file = new File(jvmci, fileName);
                 if (file.isDirectory()) {
                     continue;
                 }

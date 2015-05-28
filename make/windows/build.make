@@ -110,8 +110,8 @@ VARIANT_TEXT=Server
 !endif
 !elseif "$(Variant)" == "tiered"
 VARIANT_TEXT=Tiered
-!elseif "$(Variant)" == "graal"
-VARIANT_TEXT=Graal
+!elseif "$(Variant)" == "jvmci"
+VARIANT_TEXT=JVMCI
 !endif
 
 #########################################################################
@@ -308,9 +308,9 @@ $(variantDir)\local.make: checks
 checks: checkVariant checkWorkSpace checkSA
 
 checkVariant:
-	@ if "$(Variant)"=="" echo Need to specify "Variant=[graal|tiered|compiler2|compiler1|core]" && false
-	@ if "$(Variant)" NEQ "graal" if "$(Variant)" NEQ "tiered" if "$(Variant)" NEQ "compiler2" if "$(Variant)" NEQ "compiler1" if "$(Variant)" NEQ "core" \
-          echo Need to specify "Variant=[graal|tiered|compiler2|compiler1|core]" && false
+	@ if "$(Variant)"=="" echo Need to specify "Variant=[jvmci|tiered|compiler2|compiler1|core]" && false
+	@ if "$(Variant)" NEQ "jvmci" if "$(Variant)" NEQ "tiered" if "$(Variant)" NEQ "compiler2" if "$(Variant)" NEQ "compiler1" if "$(Variant)" NEQ "core" \
+          echo Need to specify "Variant=[jvmci|tiered|compiler2|compiler1|core]" && false
 
 checkWorkSpace:
 	@ if "$(WorkSpace)"=="" echo Need to specify "WorkSpace=..." && false

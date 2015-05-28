@@ -715,7 +715,7 @@ public class HotSpotVMConfig {
     @HotSpotVMFlag(name = "DontCompileHugeMethods") @Stable public boolean dontCompileHugeMethods;
     @HotSpotVMFlag(name = "HugeMethodLimit") @Stable public int hugeMethodLimit;
     @HotSpotVMFlag(name = "PrintInlining") @Stable public boolean printInlining;
-    @HotSpotVMFlag(name = "GraalUseFastLocking") @Stable public boolean useFastLocking;
+    @HotSpotVMFlag(name = "JVMCIUseFastLocking") @Stable public boolean useFastLocking;
     @HotSpotVMFlag(name = "ForceUnreachable") @Stable public boolean forceUnreachable;
 
     @HotSpotVMFlag(name = "UseTLAB") @Stable public boolean useTLAB;
@@ -744,8 +744,8 @@ public class HotSpotVMConfig {
         return universeCollectedHeap + collectedHeapTotalCollectionsOffset;
     }
 
-    @HotSpotVMFlag(name = "GraalDeferredInitBarriers") @Stable public boolean useDeferredInitBarriers;
-    @HotSpotVMFlag(name = "GraalHProfEnabled") @Stable public boolean useHeapProfiler;
+    @HotSpotVMFlag(name = "JVMCIDeferredInitBarriers") @Stable public boolean useDeferredInitBarriers;
+    @HotSpotVMFlag(name = "JVMCIHProfEnabled") @Stable public boolean useHeapProfiler;
 
     // Compressed Oops related values.
     @HotSpotVMFlag(name = "UseCompressedOops") @Stable public boolean useCompressedOops;
@@ -902,7 +902,7 @@ public class HotSpotVMConfig {
     @HotSpotVMField(name = "JavaThread::_is_method_handle_return", type = "int", get = HotSpotVMField.Type.OFFSET) @Stable public int threadIsMethodHandleReturnOffset;
     @HotSpotVMField(name = "JavaThread::_satb_mark_queue", type = "ObjPtrQueue", get = HotSpotVMField.Type.OFFSET) @Stable public int javaThreadSatbMarkQueueOffset;
     @HotSpotVMField(name = "JavaThread::_vm_result", type = "oop", get = HotSpotVMField.Type.OFFSET) @Stable public int threadObjectResultOffset;
-    @HotSpotVMValue(expression = "in_bytes(JavaThread::graal_counters_offset())") @Stable public int graalCountersThreadOffset;
+    @HotSpotVMValue(expression = "in_bytes(JavaThread::jvmci_counters_offset())") @Stable public int jvmciCountersThreadOffset;
 
     /**
      * An invalid value for {@link #rtldDefault}.
@@ -1053,8 +1053,8 @@ public class HotSpotVMConfig {
     @HotSpotVMConstant(name = "JVM_ACC_MONITOR_MATCH") @Stable public int jvmAccMonitorMatch;
     @HotSpotVMConstant(name = "JVM_ACC_HAS_MONITOR_BYTECODES") @Stable public int jvmAccHasMonitorBytecodes;
 
-    @HotSpotVMField(name = "GraalEnv::_task", type = "CompileTask*", get = HotSpotVMField.Type.OFFSET) @Stable public int graalEnvTaskOffset;
-    @HotSpotVMField(name = "GraalEnv::_jvmti_can_hotswap_or_post_breakpoint", type = "bool", get = HotSpotVMField.Type.OFFSET) @Stable public int graalEnvJvmtiCanHotswapOrPostBreakpointOffset;
+    @HotSpotVMField(name = "JVMCIEnv::_task", type = "CompileTask*", get = HotSpotVMField.Type.OFFSET) @Stable public int jvmciEnvTaskOffset;
+    @HotSpotVMField(name = "JVMCIEnv::_jvmti_can_hotswap_or_post_breakpoint", type = "bool", get = HotSpotVMField.Type.OFFSET) @Stable public int jvmciEnvJvmtiCanHotswapOrPostBreakpointOffset;
     @HotSpotVMField(name = "CompileTask::_num_inlined_bytecodes", type = "int", get = HotSpotVMField.Type.OFFSET) @Stable public int compileTaskNumInlinedBytecodesOffset;
 
     /**
@@ -1384,29 +1384,29 @@ public class HotSpotVMConfig {
     @HotSpotVMField(name = "StubRoutines::_unsafe_arraycopy", type = "address", get = HotSpotVMField.Type.VALUE) @Stable public long unsafeArraycopy;
     @HotSpotVMField(name = "StubRoutines::_generic_arraycopy", type = "address", get = HotSpotVMField.Type.VALUE) @Stable public long genericArraycopy;
 
-    @HotSpotVMValue(expression = "GraalRuntime::new_instance", get = HotSpotVMValue.Type.ADDRESS) @Stable public long newInstanceAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::new_array", get = HotSpotVMValue.Type.ADDRESS) @Stable public long newArrayAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::new_multi_array", get = HotSpotVMValue.Type.ADDRESS) @Stable public long newMultiArrayAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::dynamic_new_array", get = HotSpotVMValue.Type.ADDRESS) @Stable public long dynamicNewArrayAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::dynamic_new_instance", get = HotSpotVMValue.Type.ADDRESS) @Stable public long dynamicNewInstanceAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::thread_is_interrupted", get = HotSpotVMValue.Type.ADDRESS) @Stable public long threadIsInterruptedAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::vm_message", signature = "(unsigned char, long, long, long, long)", get = HotSpotVMValue.Type.ADDRESS) @Stable public long vmMessageAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::identity_hash_code", get = HotSpotVMValue.Type.ADDRESS) @Stable public long identityHashCodeAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::exception_handler_for_pc", signature = "(JavaThread*)", get = HotSpotVMValue.Type.ADDRESS) @Stable public long exceptionHandlerForPcAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::monitorenter", get = HotSpotVMValue.Type.ADDRESS) @Stable public long monitorenterAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::monitorexit", get = HotSpotVMValue.Type.ADDRESS) @Stable public long monitorexitAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::create_null_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long createNullPointerExceptionAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::create_out_of_bounds_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long createOutOfBoundsExceptionAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::log_primitive", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logPrimitiveAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::log_object", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logObjectAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::log_printf", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logPrintfAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::vm_error", get = HotSpotVMValue.Type.ADDRESS) @Stable public long vmErrorAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::load_and_clear_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long loadAndClearExceptionAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::write_barrier_pre", get = HotSpotVMValue.Type.ADDRESS) @Stable public long writeBarrierPreAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::write_barrier_post", get = HotSpotVMValue.Type.ADDRESS) @Stable public long writeBarrierPostAddress;
-    @HotSpotVMValue(expression = "GraalRuntime::validate_object", get = HotSpotVMValue.Type.ADDRESS) @Stable public long validateObject;
+    @HotSpotVMValue(expression = "JVMCIRuntime::new_instance", get = HotSpotVMValue.Type.ADDRESS) @Stable public long newInstanceAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::new_array", get = HotSpotVMValue.Type.ADDRESS) @Stable public long newArrayAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::new_multi_array", get = HotSpotVMValue.Type.ADDRESS) @Stable public long newMultiArrayAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::dynamic_new_array", get = HotSpotVMValue.Type.ADDRESS) @Stable public long dynamicNewArrayAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::dynamic_new_instance", get = HotSpotVMValue.Type.ADDRESS) @Stable public long dynamicNewInstanceAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::thread_is_interrupted", get = HotSpotVMValue.Type.ADDRESS) @Stable public long threadIsInterruptedAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::vm_message", signature = "(unsigned char, long, long, long, long)", get = HotSpotVMValue.Type.ADDRESS) @Stable public long vmMessageAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::identity_hash_code", get = HotSpotVMValue.Type.ADDRESS) @Stable public long identityHashCodeAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::exception_handler_for_pc", signature = "(JavaThread*)", get = HotSpotVMValue.Type.ADDRESS) @Stable public long exceptionHandlerForPcAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::monitorenter", get = HotSpotVMValue.Type.ADDRESS) @Stable public long monitorenterAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::monitorexit", get = HotSpotVMValue.Type.ADDRESS) @Stable public long monitorexitAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::create_null_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long createNullPointerExceptionAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::create_out_of_bounds_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long createOutOfBoundsExceptionAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::log_primitive", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logPrimitiveAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::log_object", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logObjectAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::log_printf", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logPrintfAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::vm_error", get = HotSpotVMValue.Type.ADDRESS) @Stable public long vmErrorAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::load_and_clear_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long loadAndClearExceptionAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::write_barrier_pre", get = HotSpotVMValue.Type.ADDRESS) @Stable public long writeBarrierPreAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::write_barrier_post", get = HotSpotVMValue.Type.ADDRESS) @Stable public long writeBarrierPostAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::validate_object", get = HotSpotVMValue.Type.ADDRESS) @Stable public long validateObject;
 
-    @HotSpotVMValue(expression = "GraalRuntime::test_deoptimize_call_int", get = HotSpotVMValue.Type.ADDRESS) @Stable public long testDeoptimizeCallInt;
+    @HotSpotVMValue(expression = "JVMCIRuntime::test_deoptimize_call_int", get = HotSpotVMValue.Type.ADDRESS) @Stable public long testDeoptimizeCallInt;
 
     @HotSpotVMValue(expression = "SharedRuntime::register_finalizer", get = HotSpotVMValue.Type.ADDRESS) @Stable public long registerFinalizerAddress;
     @HotSpotVMValue(expression = "SharedRuntime::exception_handler_for_return_address", get = HotSpotVMValue.Type.ADDRESS) @Stable public long exceptionHandlerForReturnAddressAddress;
@@ -1422,7 +1422,7 @@ public class HotSpotVMConfig {
     @HotSpotVMValue(expression = "SharedRuntime::dlog10", get = HotSpotVMValue.Type.ADDRESS) @Stable public long arithmeticLog10Address;
     @HotSpotVMValue(expression = "SharedRuntime::dpow", get = HotSpotVMValue.Type.ADDRESS) @Stable public long arithmeticPowAddress;
 
-    @HotSpotVMValue(expression = "(jint) GraalCounterSize") @Stable public int graalCountersSize;
+    @HotSpotVMValue(expression = "(jint) JVMCICounterSize") @Stable public int jvmciCountersSize;
 
     @HotSpotVMValue(expression = "Deoptimization::fetch_unroll_info", signature = "(JavaThread*)", get = HotSpotVMValue.Type.ADDRESS) @Stable public long deoptimizationFetchUnrollInfo;
     @HotSpotVMValue(expression = "Deoptimization::uncommon_trap", get = HotSpotVMValue.Type.ADDRESS) @Stable public long deoptimizationUncommonTrap;
@@ -1478,11 +1478,11 @@ public class HotSpotVMConfig {
     @HotSpotVMConstant(name = "vmIntrinsics::_linkToSpecial") @Stable public int vmIntrinsicLinkToSpecial;
     @HotSpotVMConstant(name = "vmIntrinsics::_linkToInterface") @Stable public int vmIntrinsicLinkToInterface;
 
-    @HotSpotVMConstant(name = "GraalEnv::ok") @Stable public int codeInstallResultOk;
-    @HotSpotVMConstant(name = "GraalEnv::dependencies_failed") @Stable public int codeInstallResultDependenciesFailed;
-    @HotSpotVMConstant(name = "GraalEnv::dependencies_invalid") @Stable public int codeInstallResultDependenciesInvalid;
-    @HotSpotVMConstant(name = "GraalEnv::cache_full") @Stable public int codeInstallResultCacheFull;
-    @HotSpotVMConstant(name = "GraalEnv::code_too_large") @Stable public int codeInstallResultCodeTooLarge;
+    @HotSpotVMConstant(name = "JVMCIEnv::ok") @Stable public int codeInstallResultOk;
+    @HotSpotVMConstant(name = "JVMCIEnv::dependencies_failed") @Stable public int codeInstallResultDependenciesFailed;
+    @HotSpotVMConstant(name = "JVMCIEnv::dependencies_invalid") @Stable public int codeInstallResultDependenciesInvalid;
+    @HotSpotVMConstant(name = "JVMCIEnv::cache_full") @Stable public int codeInstallResultCacheFull;
+    @HotSpotVMConstant(name = "JVMCIEnv::code_too_large") @Stable public int codeInstallResultCodeTooLarge;
 
     public String getCodeInstallResultDescription(int codeInstallResult) {
         if (codeInstallResult == codeInstallResultOk) {

@@ -22,97 +22,97 @@
  *
  */
 
-#ifndef SHARE_VM_GRAAL_GRAALGLOBALS_HPP
-#define SHARE_VM_GRAAL_GRAALGLOBALS_HPP
+#ifndef SHARE_VM_JVMCI_JVMCIGLOBALS_HPP
+#define SHARE_VM_JVMCI_JVMCIGLOBALS_HPP
 
 #include "runtime/globals.hpp"
 #ifdef TARGET_ARCH_x86
-# include "graalGlobals_x86.hpp"
+# include "jvmciGlobals_x86.hpp"
 #endif
 #ifdef TARGET_ARCH_sparc
-# include "graalGlobals_sparc.hpp"
+# include "jvmciGlobals_sparc.hpp"
 #endif
 #ifdef TARGET_ARCH_arm
-# include "graalGlobals_arm.hpp"
+# include "jvmciGlobals_arm.hpp"
 #endif
 #ifdef TARGET_ARCH_ppc
-# include "graalGlobals_ppc.hpp"
+# include "jvmciGlobals_ppc.hpp"
 #endif
 
 //
-// Defines all global flags used by the Graal compiler. Only flags that need
-// to be accessible to the Graal C++ code should be defined here. All other
-// Graal flags should be defined in GraalOptions.java.
+// Defines all global flags used by the JVMCI compiler. Only flags that need
+// to be accessible to the JVMCI C++ code should be defined here. All other
+// JVMCI flags should be defined in JVMCIOptions.java.
 //
-#define GRAAL_FLAGS(develop, develop_pd, product, product_pd, notproduct)   \
+#define JVMCI_FLAGS(develop, develop_pd, product, product_pd, notproduct)   \
                                                                             \
-  product(bool, DebugGraal, true,                                           \
+  product(bool, DebugJVMCI, true,                                           \
           "Enable JVMTI for the compiler thread")                           \
                                                                             \
-  product(bool, UseGraalClassLoader, true,                                  \
-          "Load Graal classes with separate class loader")                  \
+  product(bool, UseJVMCIClassLoader, true,                                  \
+          "Load JVMCI classes with separate class loader")                  \
                                                                             \
-  COMPILERGRAAL_PRESENT(product(bool, BootstrapGraal, true,                 \
-          "Bootstrap Graal before running Java main method"))               \
+  COMPILERJVMCI_PRESENT(product(bool, BootstrapJVMCI, true,                 \
+          "Bootstrap JVMCI before running Java main method"))               \
                                                                             \
-  COMPILERGRAAL_PRESENT(product(bool, PrintBootstrap, true,                 \
-          "Print Graal bootstrap progress and summary"))                    \
+  COMPILERJVMCI_PRESENT(product(bool, PrintBootstrap, true,                 \
+          "Print JVMCI bootstrap progress and summary"))                    \
                                                                             \
-  COMPILERGRAAL_PRESENT(product(intx, GraalThreads, 1,                      \
-          "Force number of Graal compiler threads to use"))                 \
+  COMPILERJVMCI_PRESENT(product(intx, JVMCIThreads, 1,                      \
+          "Force number of JVMCI compiler threads to use"))                 \
                                                                             \
-  COMPILERGRAAL_PRESENT(product(intx, GraalHostThreads, 1,                  \
-          "Force number of compiler threads for Graal host compiler"))      \
+  COMPILERJVMCI_PRESENT(product(intx, JVMCIHostThreads, 1,                  \
+          "Force number of compiler threads for JVMCI host compiler"))      \
                                                                             \
-  GRAAL_ONLY(product(bool, CodeInstallSafepointChecks, true,                \
+  JVMCI_ONLY(product(bool, CodeInstallSafepointChecks, true,                \
           "Perform explicit safepoint checks while installing code"))       \
                                                                             \
   NOT_COMPILER2(product_pd(intx, MaxVectorSize,                                \
           "Max vector size in bytes, "                                      \
           "actual size could be less depending on elements type"))          \
                                                                             \
-  product(intx, TraceGraal, 0,                                              \
-          "Trace level for Graal")                                          \
+  product(intx, TraceJVMCI, 0,                                              \
+          "Trace level for JVMCI")                                          \
                                                                             \
-  product(intx, GraalCounterSize, 0,                                        \
+  product(intx, JVMCICounterSize, 0,                                        \
           "Reserved size for benchmark counters")                           \
                                                                             \
-  product(bool, GraalCountersExcludeCompiler, true,                         \
-          "Exclude Graal compiler threads from benchmark counters")         \
+  product(bool, JVMCICountersExcludeCompiler, true,                         \
+          "Exclude JVMCI compiler threads from benchmark counters")         \
                                                                             \
-  product(bool, GraalDeferredInitBarriers, true,                            \
+  product(bool, JVMCIDeferredInitBarriers, true,                            \
           "Defer write barriers of young objects")                          \
                                                                             \
-  product(bool, GraalHProfEnabled, false,                                   \
+  product(bool, JVMCIHProfEnabled, false,                                   \
           "Is Heap  Profiler enabled")                                      \
                                                                             \
-  product(bool, GraalCompileWithC1Only, true,                               \
-          "Only compile Graal classes with C1")                             \
+  product(bool, JVMCICompileWithC1Only, true,                               \
+          "Only compile JVMCI classes with C1")                             \
                                                                             \
-  product(bool, GraalCompileAppFirst, false,                                \
-          "Prioritize application compilations over Graal compilations")    \
+  product(bool, JVMCICompileAppFirst, false,                                \
+          "Prioritize application compilations over JVMCI compilations")    \
                                                                             \
-  develop(bool, GraalUseFastLocking, true,                                  \
+  develop(bool, JVMCIUseFastLocking, true,                                  \
           "Use fast inlined locking code")                                  \
                                                                             \
-  develop(bool, GraalUseFastNewTypeArray, true,                             \
+  develop(bool, JVMCIUseFastNewTypeArray, true,                             \
           "Use fast inlined type array allocation")                         \
                                                                             \
-  develop(bool, GraalUseFastNewObjectArray, true,                           \
+  develop(bool, JVMCIUseFastNewObjectArray, true,                           \
           "Use fast inlined object array allocation")                       \
                                                                             \
-  product(intx, GraalNMethodSizeLimit, (80*K)*wordSize,                     \
+  product(intx, JVMCINMethodSizeLimit, (80*K)*wordSize,                     \
           "Maximum size of a compiled method.")                             \
                                                                             \
-  notproduct(bool, GraalPrintSimpleStubs, false,                            \
-          "Print simple Graal stubs")                                       \
+  notproduct(bool, JVMCIPrintSimpleStubs, false,                            \
+          "Print simple JVMCI stubs")                                       \
                                                                             \
   develop(bool, TraceUncollectedSpeculations, false,                        \
           "Print message when a failed speculation was not collected")      \
 
 
-// Read default values for Graal globals
+// Read default values for JVMCI globals
 
-GRAAL_FLAGS(DECLARE_DEVELOPER_FLAG, DECLARE_PD_DEVELOPER_FLAG, DECLARE_PRODUCT_FLAG, DECLARE_PD_PRODUCT_FLAG, DECLARE_NOTPRODUCT_FLAG)
+JVMCI_FLAGS(DECLARE_DEVELOPER_FLAG, DECLARE_PD_DEVELOPER_FLAG, DECLARE_PRODUCT_FLAG, DECLARE_PD_PRODUCT_FLAG, DECLARE_NOTPRODUCT_FLAG)
 
-#endif // SHARE_VM_GRAAL_GRAALGLOBALS_HPP
+#endif // SHARE_VM_JVMCI_JVMCIGLOBALS_HPP
