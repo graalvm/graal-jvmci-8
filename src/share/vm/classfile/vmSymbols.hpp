@@ -334,7 +334,6 @@
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_NoFinalizableSubclass, "com/oracle/graal/api/meta/Assumptions$NoFinalizableSubclass")) \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_ConcreteMethod,     "com/oracle/graal/api/meta/Assumptions$ConcreteMethod"))          \
   GRAAL_ONLY(template(com_oracle_graal_api_meta_Assumptions_CallSiteTargetValue,"com/oracle/graal/api/meta/Assumptions$CallSiteTargetValue"))     \
-  GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult,              "com/oracle/graal/api/code/CompilationResult"))                   \
   GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_Call,         "com/oracle/graal/api/code/CompilationResult$Call"))              \
   GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_ConstantReference, "com/oracle/graal/api/code/CompilationResult$ConstantReference")) \
   GRAAL_ONLY(template(com_oracle_graal_api_code_CompilationResult_DataPatch,    "com/oracle/graal/api/code/CompilationResult$DataPatch"))         \

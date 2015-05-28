@@ -225,7 +225,6 @@ class Ticks;
   GRAAL_ONLY(do_klass(DebugInfo_klass,                       com_oracle_graal_api_code_DebugInfo,                          Graal)) \
   GRAAL_ONLY(do_klass(RegisterSaveLayout_klass,              com_oracle_graal_api_code_RegisterSaveLayout,                 Graal)) \
   GRAAL_ONLY(do_klass(BytecodeFrame_klass,                   com_oracle_graal_api_code_BytecodeFrame,                      Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_klass,               com_oracle_graal_api_code_CompilationResult,                  Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_Call_klass,          com_oracle_graal_api_code_CompilationResult_Call,             Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_ConstantReference_klass, com_oracle_graal_api_code_CompilationResult_ConstantReference, Graal)) \
   GRAAL_ONLY(do_klass(CompilationResult_DataPatch_klass,     com_oracle_graal_api_code_CompilationResult_DataPatch,        Graal)) \

@@ -68,13 +68,18 @@ void graal_compute_offsets();
     boolean_field(HotSpotNmethod, isDefault)                                                                                                                   \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledCode)                                                                                                                             \
-    oop_field(HotSpotCompiledCode, comp, "Lcom/oracle/graal/api/code/CompilationResult;")                                                                      \
     objArrayOop_field(HotSpotCompiledCode, sites, "[Lcom/oracle/graal/api/code/CompilationResult$Site;")                                                       \
     objArrayOop_field(HotSpotCompiledCode, exceptionHandlers, "[Lcom/oracle/graal/api/code/CompilationResult$ExceptionHandler;")                               \
     objArrayOop_field(HotSpotCompiledCode, comments, "[Lcom/oracle/graal/hotspot/HotSpotCompiledCode$Comment;")                                                \
+    objArrayOop_field(HotSpotCompiledCode, assumptions, "[Lcom/oracle/graal/api/meta/Assumptions$Assumption;")                                                 \
+    typeArrayOop_field(HotSpotCompiledCode, targetCode, "[B")                                                                                                  \
+    int_field(HotSpotCompiledCode, targetCodeSize)                                                                                                             \
     typeArrayOop_field(HotSpotCompiledCode, dataSection, "[B")                                                                                                 \
     int_field(HotSpotCompiledCode, dataSectionAlignment)                                                                                                       \
     objArrayOop_field(HotSpotCompiledCode, dataSectionPatches, "[Lcom/oracle/graal/api/code/CompilationResult$DataPatch;")                                     \
+    int_field(HotSpotCompiledCode, totalFrameSize)                                                                                                             \
+    int_field(HotSpotCompiledCode, customStackAreaOffset)                                                                                                      \
+    objArrayOop_field(HotSpotCompiledCode, methods, "[Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                         \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledCode_Comment)                                                                                                                     \
     oop_field(HotSpotCompiledCode_Comment, text, "Ljava/lang/String;")                                                                                         \
@@ -92,14 +97,6 @@ void graal_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(HotSpotForeignCallLinkageImpl)                                                                                                                   \
     long_field(HotSpotForeignCallLinkageImpl, address)                                                                                                         \
-  end_class                                                                                                                                                    \
-  start_class(CompilationResult)                                                                                                                               \
-    int_field(CompilationResult, totalFrameSize)                                                                                                               \
-    int_field(CompilationResult, customStackAreaOffset)                                                                                                        \
-    typeArrayOop_field(CompilationResult, targetCode, "[B")                                                                                                    \
-    objArrayOop_field(CompilationResult, assumptions, "[Lcom/oracle/graal/api/meta/Assumptions$Assumption;")                                                   \
-    objArrayOop_field(CompilationResult, methods, "[Lcom/oracle/graal/api/meta/ResolvedJavaMethod;")                                                           \
-    int_field(CompilationResult, targetCodeSize)                                                                                                               \
   end_class                                                                                                                                                    \
   start_class(Assumptions_NoFinalizableSubclass)                                                                                                               \
     oop_field(Assumptions_NoFinalizableSubclass, receiverType, "Lcom/oracle/graal/api/meta/ResolvedJavaType;")                                                 \
