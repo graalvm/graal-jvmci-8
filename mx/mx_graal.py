@@ -1696,8 +1696,8 @@ def _basic_gate_body(args, tasks):
             buildxml = mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml'))
             mx.run(['ant', '-f', buildxml, '-q', 'clean', 'build'], env=_igvBuildEnv())
 
-    # Prevent Graal modifications from breaking the standard builds
-    if args.buildNonGraal:
+    # Prevent JVMCI modifications from breaking the standard builds
+    if args.buildNonJVMCI:
         with Task('BuildHotSpotVarieties', tasks) as t:
             if t:
                 buildvms(['--vms', 'client,server', '--builds', 'fastdebug,product'])
