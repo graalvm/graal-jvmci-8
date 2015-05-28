@@ -53,8 +53,8 @@ public class JVMCIError extends Error {
     }
 
     /**
-     * Checks a given condition and throws a {@link JVMCIError} if it is false. Guarantees
-     * are stronger than assertions in that they are always checked. Error messages for guarantee
+     * Checks a given condition and throws a {@link JVMCIError} if it is false. Guarantees are
+     * stronger than assertions in that they are always checked. Error messages for guarantee
      * violations should clearly indicate the nature of the problem as well as a suggested solution
      * if possible.
      *

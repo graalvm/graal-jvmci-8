@@ -26,7 +26,6 @@ import java.util.*;
 
 import com.oracle.jvmci.debug.*;
 
-
 public class DebugHistogramImpl implements DebugHistogram {
 
     private final String name;

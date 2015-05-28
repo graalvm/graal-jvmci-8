@@ -25,7 +25,6 @@ package com.oracle.jvmci.code;
 import com.oracle.jvmci.meta.ResolvedJavaMethod;
 import java.util.*;
 
-
 /**
  * Represents a code position, that is, a chain of inlined methods with bytecode locations, that is
  * communicated from the compiler to the runtime system. A code position can be used by the runtime

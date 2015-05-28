@@ -28,7 +28,6 @@ import com.oracle.jvmci.meta.JavaType;
 import com.oracle.jvmci.meta.MetaUtil;
 import java.util.*;
 
-
 /**
  * Miscellaneous collection of utility methods used by {@code com.oracle.jvmci.code} and its
  * clients.

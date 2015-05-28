@@ -28,7 +28,6 @@ import com.oracle.jvmci.meta.Value;
 import com.oracle.jvmci.meta.LIRKind;
 import static com.oracle.jvmci.code.ValueUtil.*;
 
-
 /**
  * Represents lock information in the debug information.
  */

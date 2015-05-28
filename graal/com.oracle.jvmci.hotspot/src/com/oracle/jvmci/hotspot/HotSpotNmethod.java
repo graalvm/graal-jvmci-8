@@ -27,7 +27,6 @@ import static com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.meta.*;
 
-
 /**
  * Implementation of {@link InstalledCode} for code installed as an nmethod. The nmethod stores a
  * weak reference to an instance of this class. This is necessary to keep the nmethod from being

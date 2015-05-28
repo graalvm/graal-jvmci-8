@@ -27,7 +27,6 @@ import com.oracle.jvmci.meta.ResolvedJavaMethod;
 import com.oracle.jvmci.meta.Value;
 import java.util.*;
 
-
 /**
  * Represents the Java bytecode frame state(s) at a given position including {@link Value locations}
  * where to find the local variables, operand stack values and locked objects of the bytecode

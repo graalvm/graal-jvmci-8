@@ -29,7 +29,6 @@ import java.util.*;
 
 import com.oracle.jvmci.meta.*;
 
-
 public abstract class HotSpotMethod implements JavaMethod, Formattable {
 
     protected String name;

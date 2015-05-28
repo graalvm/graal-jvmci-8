@@ -27,7 +27,6 @@ import java.lang.reflect.*;
 import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.meta.*;
 
-
 /**
  * Implementation of {@link JavaMethod} for resolved HotSpot methods.
  */

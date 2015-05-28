@@ -31,7 +31,6 @@ import com.oracle.jvmci.meta.ResolvedJavaType;
 import com.oracle.jvmci.meta.LIRKind;
 import java.util.*;
 
-
 /**
  * An instance of this class represents an object whose allocation was removed by escape analysis.
  * The information stored in the {@link VirtualObject} is used during deoptimization to recreate the

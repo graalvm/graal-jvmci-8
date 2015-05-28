@@ -26,7 +26,6 @@ import com.oracle.jvmci.meta.Value;
 import com.oracle.jvmci.meta.AllocatableValue;
 import static com.oracle.jvmci.code.ValueUtil.*;
 
-
 /**
  * A calling convention describes the locations in which the arguments for a call are placed and the
  * location in which the return value is placed if the call is not void.

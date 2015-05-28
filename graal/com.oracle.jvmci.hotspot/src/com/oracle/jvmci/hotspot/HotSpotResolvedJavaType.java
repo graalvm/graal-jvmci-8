@@ -26,7 +26,6 @@ import static com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 
 import com.oracle.jvmci.meta.*;
 
-
 public abstract class HotSpotResolvedJavaType extends HotSpotJavaType implements ResolvedJavaType {
 
     /**

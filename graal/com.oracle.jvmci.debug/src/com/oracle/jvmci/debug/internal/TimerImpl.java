@@ -29,7 +29,6 @@ import java.util.concurrent.*;
 
 import com.oracle.jvmci.debug.*;
 
-
 public final class TimerImpl extends AccumulatedDebugValue implements DebugTimer {
 
     private static final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();

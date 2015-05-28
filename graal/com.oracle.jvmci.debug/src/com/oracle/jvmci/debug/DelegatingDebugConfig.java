@@ -27,7 +27,6 @@ import java.util.*;
 
 import com.oracle.jvmci.debug.internal.*;
 
-
 public class DelegatingDebugConfig implements DebugConfig {
 
     protected final DebugConfig delegate;

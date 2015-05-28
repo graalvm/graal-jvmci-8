@@ -28,7 +28,6 @@ import java.util.concurrent.*;
 
 import com.oracle.jvmci.debug.*;
 
-
 public final class DebugScope implements Debug.Scope {
 
     private final class IndentImpl implements Indent {

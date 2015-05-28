@@ -27,7 +27,6 @@ import java.lang.management.*;
 
 import com.oracle.jvmci.options.*;
 
-
 /**
  * An option that encapsulates and configures a print stream.
  */

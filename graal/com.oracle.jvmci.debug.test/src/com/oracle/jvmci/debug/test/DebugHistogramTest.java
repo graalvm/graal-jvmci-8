@@ -29,7 +29,6 @@ import org.junit.*;
 import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.debug.internal.*;
 
-
 public class DebugHistogramTest {
 
     @Test

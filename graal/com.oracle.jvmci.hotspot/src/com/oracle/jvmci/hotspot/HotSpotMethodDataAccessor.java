@@ -26,7 +26,6 @@ import static com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 
 import com.oracle.jvmci.meta.*;
 
-
 /**
  * Interface for accessor objects that encapsulate the logic for accessing the different kinds of
  * data in a HotSpot methodDataOop. This interface is similar to the interface {@link ProfilingInfo}

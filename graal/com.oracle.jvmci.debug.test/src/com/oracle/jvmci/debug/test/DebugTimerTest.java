@@ -30,7 +30,6 @@ import org.junit.*;
 
 import com.oracle.jvmci.debug.*;
 
-
 public class DebugTimerTest {
 
     private static final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();

@@ -28,7 +28,6 @@ import com.oracle.jvmci.meta.AllocatableValue;
 import com.oracle.jvmci.meta.JavaConstant;
 import java.util.*;
 
-
 /**
  * Utility class for working with the {@link Value} class and its subclasses.
  */

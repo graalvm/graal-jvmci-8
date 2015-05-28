@@ -27,7 +27,6 @@ import java.util.*;
 import com.oracle.jvmci.code.stack.*;
 import com.oracle.jvmci.meta.*;
 
-
 public class HotSpotStackFrameReference implements InspectedFrame {
 
     private CompilerToVM compilerToVM;

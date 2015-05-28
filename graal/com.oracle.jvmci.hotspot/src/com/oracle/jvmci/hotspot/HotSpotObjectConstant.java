@@ -27,7 +27,6 @@ import java.util.*;
 
 import com.oracle.jvmci.meta.*;
 
-
 /**
  * Represents a constant non-{@code null} object reference, within the compiler and across the
  * compiler/runtime interface.
