@@ -173,7 +173,6 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.service",
         "com.oracle.jvmci.code"
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -518,6 +517,9 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
+      "dependencies" : [
+        "com.oracle.jvmci.service",
+      ],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Debug",
     },
@@ -751,7 +753,6 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.runtime",
         "com.oracle.graal.virtual",
         "com.oracle.graal.loop",
       ],

@@ -20,17 +20,13 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.jvmci.runtime;
+package com.oracle.jvmci.debug;
 
 import com.oracle.jvmci.service.*;
 
 /**
- * Extension for doing post-processing once all JVMCI options have been parsed and initialized.
+ * Sets one or more system properties used during initialization of the {@link Debug} class.
  */
-public interface OptionsParsed extends Service {
-
-    /**
-     * Notifies this service that all JVMCI options have been parsed and initialized.
-     */
-    void run();
+public interface DebugInitializationPropertyProvider extends Service {
+    void apply();
 }

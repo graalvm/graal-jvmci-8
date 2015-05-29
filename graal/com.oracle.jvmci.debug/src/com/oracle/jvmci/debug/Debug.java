@@ -32,6 +32,7 @@ import java.util.concurrent.*;
 
 import com.oracle.jvmci.debug.DelegatingDebugConfig.Level;
 import com.oracle.jvmci.debug.internal.*;
+import com.oracle.jvmci.service.*;
 
 /**
  * Scope based debugging facility. This facility is {@link #isEnabled()} if assertions are enabled
@@ -39,6 +40,12 @@ import com.oracle.jvmci.debug.internal.*;
  * property is {@code "true"} when {@link Debug} is initialized.
  */
 public class Debug {
+
+    static {
+        for (DebugInitializationPropertyProvider p : Services.load(DebugInitializationPropertyProvider.class)) {
+            p.apply();
+        }
+    }
 
     /**
      * Class to assist with initialization of {@link Debug}.

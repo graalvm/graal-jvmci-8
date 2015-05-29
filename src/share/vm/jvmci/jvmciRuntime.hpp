@@ -69,11 +69,6 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
    */
   static void parse_jvmci_options_file(OptionsValueTable* options);
 
-  /**
-   * Called after all options have been set to notify OptionsParsed providers.
-   */
-  static void notify_options_set(TRAPS);
-
   static void print_flags_helper(TRAPS);
 
   /**

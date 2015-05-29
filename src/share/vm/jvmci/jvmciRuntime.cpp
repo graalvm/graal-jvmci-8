@@ -1045,28 +1045,10 @@ void JVMCIRuntime::set_options(OptionsValueTable* options, TRAPS) {
     if (closure.is_aborted()) {
       vm_abort(false);
     }
-
-    notify_options_set(THREAD);
   }
   OptionValue* printFlags = options->get(PRINT_FLAGS_ARG);
   if (printFlags != NULL && printFlags->boolean_value) {
     print_flags_helper(CHECK_ABORT);
-  }
-}
-
-void JVMCIRuntime::notify_options_set(TRAPS) {
-  HandleMark hm(THREAD);
-  TempNewSymbol optionsParsedName = SymbolTable::new_symbol("com/oracle/jvmci/runtime/OptionsParsed", CHECK_ABORT);
-  KlassHandle optionsParsedClass = load_required_class(optionsParsedName);
-  objArrayHandle impls = get_service_impls(optionsParsedClass, THREAD);
-  int implsLen = impls->length();
-  if (implsLen != 0) {
-    for (int i = 0; i < implsLen; i++) {
-      JavaValue result(T_VOID);
-      JavaCallArguments args;
-      args.push_oop(impls->obj_at(i));
-      JavaCalls::call_interface(&result, optionsParsedClass, vmSymbols::run_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
-    }
   }
 }
 
