@@ -226,8 +226,8 @@ void ScopeDesc::print_on(outputStream* st, PcDesc* pd) const {
     }
   }
 
-#if defined(COMPILER2) || defined(GRAAL)
-  if (NOT_GRAAL(DoEscapeAnalysis &&) is_top() && _objects != NULL) {
+#if defined(COMPILER2) || defined(JVMCI)
+  if (NOT_JVMCI(DoEscapeAnalysis &&) is_top() && _objects != NULL) {
     tty->print_cr("Objects");
     for (int i = 0; i < _objects->length(); i++) {
       ObjectValue* sv = _objects->at(i)->as_ObjectValue();
@@ -237,7 +237,7 @@ void ScopeDesc::print_on(outputStream* st, PcDesc* pd) const {
       tty->cr();
     }
   }
-#endif // COMPILER2 || GRAAL
+#endif // COMPILER2 || JVMCI
 }
 
 #endif

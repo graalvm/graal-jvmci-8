@@ -152,7 +152,7 @@ void InterpretedRFrame::init() {
 
 void RFrame::print(const char* kind) {
 #ifndef PRODUCT
-#if defined(COMPILER2) || defined(GRAAL)
+#if defined(COMPILER2) || defined(JVMCI)
   int cnt = top_method()->interpreter_invocation_count();
 #else
   int cnt = top_method()->invocation_count();

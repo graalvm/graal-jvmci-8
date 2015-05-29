@@ -58,10 +58,10 @@ bool SimpleThresholdPolicy::is_trivial(Method* method) {
       method->is_constant_getter()) {
     return true;
   }
-#ifdef COMPILERGRAAL
-  if (TieredCompilation && GraalCompileWithC1Only &&
-      SystemDictionary::graal_loader() != NULL &&
-      method->method_holder()->class_loader() == SystemDictionary::graal_loader()) {
+#ifdef COMPILERJVMCI
+  if (TieredCompilation && JVMCICompileWithC1Only &&
+      SystemDictionary::jvmci_loader() != NULL &&
+      method->method_holder()->class_loader() == SystemDictionary::jvmci_loader()) {
     return true;
   }
 #endif

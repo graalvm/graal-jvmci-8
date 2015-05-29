@@ -196,62 +196,61 @@ class Ticks;
   do_klass(Integer_klass,                               java_lang_Integer,                         Pre                 ) \
   do_klass(Long_klass,                                  java_lang_Long,                            Pre                 ) \
                                                                                                                          \
-  /* Support for Graal */                                                                                                \
+  /* Support for JVMCI */                                                                                                \
   do_klass(BitSet_klass,                                java_util_BitSet,                          Opt                 ) \
-  /* Graal classes. These are loaded on-demand. */                                                                                 \
-  GRAAL_ONLY(do_klass(Debug_klass,                           com_oracle_graal_debug_Debug,                                 Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotCompiledCode_klass,             com_oracle_graal_hotspot_HotSpotCompiledCode,                 Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotCompiledCode_Comment_klass,     com_oracle_graal_hotspot_HotSpotCompiledCode_Comment,         Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotCompiledNmethod_klass,          com_oracle_graal_hotspot_HotSpotCompiledNmethod,              Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotCompiledRuntimeStub_klass,      com_oracle_graal_hotspot_HotSpotCompiledRuntimeStub,          Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotForeignCallLinkageImpl_klass,   com_oracle_graal_hotspot_HotSpotForeignCallLinkageImpl,       Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotReferenceMap_klass,             com_oracle_graal_hotspot_HotSpotReferenceMap,                 Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotOopMap_klass,                   com_oracle_graal_hotspot_HotSpotReferenceMap_HotSpotOopMap,   Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotInstalledCode_klass,            com_oracle_graal_hotspot_meta_HotSpotInstalledCode,           Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotNmethod_klass,                  com_oracle_graal_hotspot_meta_HotSpotNmethod,                 Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotResolvedJavaMethodImpl_klass,   com_oracle_graal_hotspot_meta_HotSpotResolvedJavaMethodImpl,  Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotResolvedObjectTypeImpl_klass,   com_oracle_graal_hotspot_meta_HotSpotResolvedObjectTypeImpl,  Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotCompressedNullConstant_klass,   com_oracle_graal_hotspot_meta_HotSpotCompressedNullConstant,  Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotObjectConstantImpl_klass,       com_oracle_graal_hotspot_meta_HotSpotObjectConstantImpl,      Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotMetaspaceConstantImpl_klass,    com_oracle_graal_hotspot_meta_HotSpotMetaspaceConstantImpl,   Graal)) \
-  GRAAL_ONLY(do_klass(HotSpotStackFrameReference_klass,      com_oracle_graal_hotspot_HotSpotStackFrameReference,          Graal)) \
-  GRAAL_ONLY(do_klass(CompilationTask_klass,                 com_oracle_graal_hotspot_CompilationTask,                     Graal)) \
-  GRAAL_ONLY(do_klass(Assumptions_ConcreteMethod_klass,      com_oracle_graal_api_meta_Assumptions_ConcreteMethod,         Graal)) \
-  GRAAL_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, com_oracle_graal_api_meta_Assumptions_NoFinalizableSubclass, Graal))\
-  GRAAL_ONLY(do_klass(Assumptions_ConcreteSubtype_klass,     com_oracle_graal_api_meta_Assumptions_ConcreteSubtype,        Graal)) \
-  GRAAL_ONLY(do_klass(Assumptions_LeafType_klass,            com_oracle_graal_api_meta_Assumptions_LeafType,               Graal)) \
-  GRAAL_ONLY(do_klass(Assumptions_CallSiteTargetValue_klass, com_oracle_graal_api_meta_Assumptions_CallSiteTargetValue,    Graal)) \
-  GRAAL_ONLY(do_klass(BytecodePosition_klass,                com_oracle_graal_api_code_BytecodePosition,                   Graal)) \
-  GRAAL_ONLY(do_klass(DebugInfo_klass,                       com_oracle_graal_api_code_DebugInfo,                          Graal)) \
-  GRAAL_ONLY(do_klass(RegisterSaveLayout_klass,              com_oracle_graal_api_code_RegisterSaveLayout,                 Graal)) \
-  GRAAL_ONLY(do_klass(BytecodeFrame_klass,                   com_oracle_graal_api_code_BytecodeFrame,                      Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_Call_klass,          com_oracle_graal_api_code_CompilationResult_Call,             Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_ConstantReference_klass, com_oracle_graal_api_code_CompilationResult_ConstantReference, Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_DataPatch_klass,     com_oracle_graal_api_code_CompilationResult_DataPatch,        Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_DataSectionReference_klass, com_oracle_graal_api_code_CompilationResult_DataSectionReference, Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_ExceptionHandler_klass, com_oracle_graal_api_code_CompilationResult_ExceptionHandler, Graal))\
-  GRAAL_ONLY(do_klass(CompilationResult_Mark_klass,          com_oracle_graal_api_code_CompilationResult_Mark,             Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_Infopoint_klass,     com_oracle_graal_api_code_CompilationResult_Infopoint,        Graal)) \
-  GRAAL_ONLY(do_klass(CompilationResult_Site_klass,          com_oracle_graal_api_code_CompilationResult_Site,             Graal)) \
-  GRAAL_ONLY(do_klass(InfopointReason_klass,                 com_oracle_graal_api_code_InfopointReason,                    Graal)) \
-  GRAAL_ONLY(do_klass(InstalledCode_klass,                   com_oracle_graal_api_code_InstalledCode,                      Graal)) \
-  GRAAL_ONLY(do_klass(code_Register_klass,                   com_oracle_graal_api_code_Register,                           Graal)) \
-  GRAAL_ONLY(do_klass(RegisterValue_klass,                   com_oracle_graal_api_code_RegisterValue,                      Graal)) \
-  GRAAL_ONLY(do_klass(RegisterCategory_klass,                com_oracle_graal_api_code_Register_RegisterCategory,          Graal)) \
-  GRAAL_ONLY(do_klass(StackSlot_klass,                       com_oracle_graal_api_code_StackSlot,                          Graal)) \
-  GRAAL_ONLY(do_klass(StackLockValue_klass,                  com_oracle_graal_api_code_StackLockValue,                     Graal)) \
-  GRAAL_ONLY(do_klass(VirtualObject_klass,                   com_oracle_graal_api_code_VirtualObject,                      Graal)) \
-  GRAAL_ONLY(do_klass(SpeculationLog_klass,                  com_oracle_graal_api_code_SpeculationLog,                     Graal)) \
-  GRAAL_ONLY(do_klass(JavaConstant_klass,                    com_oracle_graal_api_meta_JavaConstant,                       Graal)) \
-  GRAAL_ONLY(do_klass(PrimitiveConstant_klass,               com_oracle_graal_api_meta_PrimitiveConstant,                  Graal)) \
-  GRAAL_ONLY(do_klass(RawConstant_klass,                     com_oracle_graal_api_meta_RawConstant,                        Graal)) \
-  GRAAL_ONLY(do_klass(NullConstant_klass,                    com_oracle_graal_api_meta_NullConstant,                       Graal)) \
-  GRAAL_ONLY(do_klass(ExceptionHandler_klass,                com_oracle_graal_api_meta_ExceptionHandler,                   Graal)) \
-  GRAAL_ONLY(do_klass(Kind_klass,                            com_oracle_graal_api_meta_Kind,                               Graal)) \
-  GRAAL_ONLY(do_klass(LIRKind_klass,                         com_oracle_graal_api_meta_LIRKind,                            Graal)) \
-  GRAAL_ONLY(do_klass(JavaMethod_klass,                      com_oracle_graal_api_meta_JavaMethod,                         Graal)) \
-  GRAAL_ONLY(do_klass(JavaType_klass,                        com_oracle_graal_api_meta_JavaType,                           Graal)) \
-  GRAAL_ONLY(do_klass(AbstractValue_klass,                   com_oracle_graal_api_meta_AbstractValue,                      Graal)) \
+  /* JVMCI classes. These are loaded on-demand. */                                                                                 \
+  JVMCI_ONLY(do_klass(Debug_klass,                           com_oracle_jvmci_debug_Debug,                                 Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotCompiledCode_klass,             com_oracle_jvmci_hotspot_HotSpotCompiledCode,                 Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotCompiledCode_Comment_klass,     com_oracle_jvmci_hotspot_HotSpotCompiledCode_Comment,         Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotCompiledNmethod_klass,          com_oracle_jvmci_hotspot_HotSpotCompiledNmethod,              Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotForeignCallTarget_klass,        com_oracle_jvmci_hotspot_HotSpotForeignCallTarget,            Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotReferenceMap_klass,             com_oracle_jvmci_hotspot_HotSpotReferenceMap,                 Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotOopMap_klass,                   com_oracle_jvmci_hotspot_HotSpotReferenceMap_HotSpotOopMap,   Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotInstalledCode_klass,            com_oracle_jvmci_hotspot_HotSpotInstalledCode,                Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotNmethod_klass,                  com_oracle_jvmci_hotspot_HotSpotNmethod,                      Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotResolvedJavaMethodImpl_klass,   com_oracle_jvmci_hotspot_HotSpotResolvedJavaMethodImpl,       Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotResolvedObjectTypeImpl_klass,   com_oracle_jvmci_hotspot_HotSpotResolvedObjectTypeImpl,       Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotCompressedNullConstant_klass,   com_oracle_jvmci_hotspot_HotSpotCompressedNullConstant,       Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotObjectConstantImpl_klass,       com_oracle_jvmci_hotspot_HotSpotObjectConstantImpl,           Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotMetaspaceConstantImpl_klass,    com_oracle_jvmci_hotspot_HotSpotMetaspaceConstantImpl,        Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotStackFrameReference_klass,      com_oracle_jvmci_hotspot_HotSpotStackFrameReference,          Jvmci)) \
+  JVMCI_ONLY(do_klass(CompilationTask_klass,                 com_oracle_graal_hotspot_CompilationTask,                     Jvmci)) \
+  JVMCI_ONLY(do_klass(Assumptions_ConcreteMethod_klass,      com_oracle_jvmci_meta_Assumptions_ConcreteMethod,             Jvmci)) \
+  JVMCI_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, com_oracle_jvmci_meta_Assumptions_NoFinalizableSubclass,    Jvmci))\
+  JVMCI_ONLY(do_klass(Assumptions_ConcreteSubtype_klass,     com_oracle_jvmci_meta_Assumptions_ConcreteSubtype,            Jvmci)) \
+  JVMCI_ONLY(do_klass(Assumptions_LeafType_klass,            com_oracle_jvmci_meta_Assumptions_LeafType,                   Jvmci)) \
+  JVMCI_ONLY(do_klass(Assumptions_CallSiteTargetValue_klass, com_oracle_jvmci_meta_Assumptions_CallSiteTargetValue,        Jvmci)) \
+  JVMCI_ONLY(do_klass(BytecodePosition_klass,                com_oracle_jvmci_code_BytecodePosition,                       Jvmci)) \
+  JVMCI_ONLY(do_klass(DebugInfo_klass,                       com_oracle_jvmci_code_DebugInfo,                              Jvmci)) \
+  JVMCI_ONLY(do_klass(RegisterSaveLayout_klass,              com_oracle_jvmci_code_RegisterSaveLayout,                     Jvmci)) \
+  JVMCI_ONLY(do_klass(BytecodeFrame_klass,                   com_oracle_jvmci_code_BytecodeFrame,                          Jvmci)) \
+  JVMCI_ONLY(do_klass(CompilationResult_Call_klass,          com_oracle_jvmci_code_CompilationResult_Call,                 Jvmci)) \
+  JVMCI_ONLY(do_klass(CompilationResult_ConstantReference_klass, com_oracle_jvmci_code_CompilationResult_ConstantReference, Jvmci)) \
+  JVMCI_ONLY(do_klass(CompilationResult_DataPatch_klass,     com_oracle_jvmci_code_CompilationResult_DataPatch,            Jvmci)) \
+  JVMCI_ONLY(do_klass(CompilationResult_DataSectionReference_klass, com_oracle_jvmci_code_CompilationResult_DataSectionReference, Jvmci)) \
+  JVMCI_ONLY(do_klass(CompilationResult_ExceptionHandler_klass, com_oracle_jvmci_code_CompilationResult_ExceptionHandler,  Jvmci))\
+  JVMCI_ONLY(do_klass(CompilationResult_Mark_klass,          com_oracle_jvmci_code_CompilationResult_Mark,                 Jvmci)) \
+  JVMCI_ONLY(do_klass(CompilationResult_Infopoint_klass,     com_oracle_jvmci_code_CompilationResult_Infopoint,            Jvmci)) \
+  JVMCI_ONLY(do_klass(CompilationResult_Site_klass,          com_oracle_jvmci_code_CompilationResult_Site,                 Jvmci)) \
+  JVMCI_ONLY(do_klass(InfopointReason_klass,                 com_oracle_jvmci_code_InfopointReason,                        Jvmci)) \
+  JVMCI_ONLY(do_klass(InstalledCode_klass,                   com_oracle_jvmci_code_InstalledCode,                          Jvmci)) \
+  JVMCI_ONLY(do_klass(code_Register_klass,                   com_oracle_jvmci_code_Register,                               Jvmci)) \
+  JVMCI_ONLY(do_klass(RegisterValue_klass,                   com_oracle_jvmci_code_RegisterValue,                          Jvmci)) \
+  JVMCI_ONLY(do_klass(RegisterCategory_klass,                com_oracle_jvmci_code_Register_RegisterCategory,              Jvmci)) \
+  JVMCI_ONLY(do_klass(StackSlot_klass,                       com_oracle_jvmci_code_StackSlot,                              Jvmci)) \
+  JVMCI_ONLY(do_klass(StackLockValue_klass,                  com_oracle_jvmci_code_StackLockValue,                         Jvmci)) \
+  JVMCI_ONLY(do_klass(VirtualObject_klass,                   com_oracle_jvmci_code_VirtualObject,                          Jvmci)) \
+  JVMCI_ONLY(do_klass(SpeculationLog_klass,                  com_oracle_jvmci_code_SpeculationLog,                         Jvmci)) \
+  JVMCI_ONLY(do_klass(JavaConstant_klass,                    com_oracle_jvmci_meta_JavaConstant,                           Jvmci)) \
+  JVMCI_ONLY(do_klass(PrimitiveConstant_klass,               com_oracle_jvmci_meta_PrimitiveConstant,                      Jvmci)) \
+  JVMCI_ONLY(do_klass(RawConstant_klass,                     com_oracle_jvmci_meta_RawConstant,                            Jvmci)) \
+  JVMCI_ONLY(do_klass(NullConstant_klass,                    com_oracle_jvmci_meta_NullConstant,                           Jvmci)) \
+  JVMCI_ONLY(do_klass(ExceptionHandler_klass,                com_oracle_jvmci_meta_ExceptionHandler,                       Jvmci)) \
+  JVMCI_ONLY(do_klass(Kind_klass,                            com_oracle_jvmci_meta_Kind,                                   Jvmci)) \
+  JVMCI_ONLY(do_klass(LIRKind_klass,                         com_oracle_jvmci_meta_LIRKind,                                Jvmci)) \
+  JVMCI_ONLY(do_klass(JavaMethod_klass,                      com_oracle_jvmci_meta_JavaMethod,                             Jvmci)) \
+  JVMCI_ONLY(do_klass(JavaType_klass,                        com_oracle_jvmci_meta_JavaType,                               Jvmci)) \
+  JVMCI_ONLY(do_klass(AbstractValue_klass,                   com_oracle_jvmci_meta_AbstractValue,                          Jvmci)) \
 
   /*end*/
 
@@ -270,9 +269,9 @@ class SystemDictionary : AllStatic {
 
     WKID_LIMIT,
 
-#ifdef GRAAL
-    FIRST_GRAAL_WKID = WK_KLASS_ENUM_NAME(Debug_klass),
-    LAST_GRAAL_WKID  = WK_KLASS_ENUM_NAME(AbstractValue_klass),
+#ifdef JVMCI
+    FIRST_JVMCI_WKID = WK_KLASS_ENUM_NAME(Debug_klass),
+    LAST_JVMCI_WKID  = WK_KLASS_ENUM_NAME(AbstractValue_klass),
 #endif
 
     FIRST_WKID = NO_WKID + 1
@@ -288,8 +287,8 @@ class SystemDictionary : AllStatic {
     Opt,                        // preload tried; NULL if not present
     Opt_Only_JDK14NewRef,       // preload tried; use only with NewReflection
     Opt_Only_JDK15,             // preload tried; use only with JDK1.5+
-#ifdef GRAAL
-    Graal,                      // preload tried; error if not present, use only with GRAAL
+#ifdef JVMCI
+    Jvmci,                      // preload tried; error if not present, use only with JVMCI
 #endif
     OPTION_LIMIT,
     CEIL_LG_OPTION_LIMIT = 4    // OPTION_LIMIT <= (1<<CEIL_LG_OPTION_LIMIT)
@@ -480,8 +479,8 @@ public:
     // despite the optional loading, if you use this it must be present:
     return check_klass(k);
   }
-#ifdef GRAAL
-  static Klass* check_klass_Graal(Klass* k)      { return k; }
+#ifdef JVMCI
+  static Klass* check_klass_Jvmci(Klass* k)      { return k; }
 #endif
 
   static bool initialize_wk_klass(WKID id, int init_opt, TRAPS);
@@ -548,12 +547,12 @@ public:
   // Returns default system loader
   static oop java_system_loader();
 
-#ifdef GRAAL
-  // Returns the Graal loader. This will be NULL if !UseGraalClassLoader
+#ifdef JVMCI
+  // Returns the JVMCI loader. This will be NULL if !UseJVMCIClassLoader
   // in which case it's equivalent to the boot loader
-  static oop graal_loader();
-  // Sets the Graal loader. This is called at most once.
-  static void init_graal_loader(oop loader);
+  static oop jvmci_loader();
+  // Sets the JVMCI loader. This is called at most once.
+  static void init_jvmci_loader(oop loader);
 #endif
 
   // Compute the default system loader
@@ -786,8 +785,8 @@ protected:
   static Klass* _box_klasses[T_VOID+1];
 
   static oop  _java_system_loader;
-#ifdef GRAAL
-  static oop  _graal_loader;
+#ifdef JVMCI
+  static oop  _jvmci_loader;
 #endif
 
   static bool _has_loadClassInternal;

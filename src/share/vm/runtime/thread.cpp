@@ -29,9 +29,9 @@
 #include "classfile/vmSymbols.hpp"
 #include "code/scopeDesc.hpp"
 #include "compiler/compileBroker.hpp"
-#ifdef GRAAL
-#include "graal/graalCompiler.hpp"
-#include "graal/graalRuntime.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciCompiler.hpp"
+#include "jvmci/jvmciRuntime.hpp"
 #endif
 #include "interpreter/interpreter.hpp"
 #include "interpreter/linkResolver.hpp"
@@ -843,7 +843,7 @@ void Thread::oops_do(OopClosure* f, CLDClosure* cld_f, CodeBlobClosure* cf) {
   active_handles()->oops_do(f);
   // Do oop for ThreadShadow
   f->do_oop((oop*)&_pending_exception);
-#ifdef GRAAL
+#ifdef JVMCI
   f->do_oop((oop*)&_pending_failed_speculation);
 #endif
   handle_area()->oops_do(f);
@@ -1426,32 +1426,32 @@ void WatcherThread::print_on(outputStream* st) const {
 
 // ======= JavaThread ========
 
-#ifdef GRAAL
+#ifdef JVMCI
 
-jlong* JavaThread::_graal_old_thread_counters;
+jlong* JavaThread::_jvmci_old_thread_counters;
 
-bool graal_counters_include(JavaThread* thread) {
+bool jvmci_counters_include(JavaThread* thread) {
   oop threadObj = thread->threadObj();
-  return !GraalCountersExcludeCompiler || !thread->is_Compiler_thread();
+  return !JVMCICountersExcludeCompiler || !thread->is_Compiler_thread();
 }
 
 void JavaThread::collect_counters(typeArrayOop array) {
-  if (GraalCounterSize > 0) {
+  if (JVMCICounterSize > 0) {
     MutexLocker tl(Threads_lock);
     for (int i = 0; i < array->length(); i++) {
-      array->long_at_put(i, _graal_old_thread_counters[i]);
+      array->long_at_put(i, _jvmci_old_thread_counters[i]);
     }
     for (JavaThread* tp = Threads::first(); tp != NULL; tp = tp->next()) {
-      if (graal_counters_include(tp)) {
+      if (jvmci_counters_include(tp)) {
         for (int i = 0; i < array->length(); i++) {
-          array->long_at_put(i, array->long_at(i) + tp->_graal_counters[i]);
+          array->long_at_put(i, array->long_at(i) + tp->_jvmci_counters[i]);
         }
       }
     }
   }
 }
 
-#endif // GRAAL
+#endif // JVMCI
 
 // A JavaThread is a normal Java thread
 
@@ -1486,16 +1486,16 @@ void JavaThread::initialize() {
   _in_deopt_handler = 0;
   _doing_unsafe_access = false;
   _stack_guard_state = stack_guard_unused;
-#ifdef GRAAL
-  _graal_alternate_call_target = NULL;
-  _graal_implicit_exception_pc = NULL;
-  if (GraalCounterSize > 0) {
-    _graal_counters = NEW_C_HEAP_ARRAY(jlong, GraalCounterSize, mtInternal);
-    memset(_graal_counters, 0, sizeof(jlong) * GraalCounterSize);
+#ifdef JVMCI
+  _jvmci_alternate_call_target = NULL;
+  _jvmci_implicit_exception_pc = NULL;
+  if (JVMCICounterSize > 0) {
+    _jvmci_counters = NEW_C_HEAP_ARRAY(jlong, JVMCICounterSize, mtInternal);
+    memset(_jvmci_counters, 0, sizeof(jlong) * JVMCICounterSize);
   } else {
-    _graal_counters = NULL;
+    _jvmci_counters = NULL;
   }
-#endif // GRAAL
+#endif // JVMCI
   (void)const_cast<oop&>(_exception_oop = NULL);
   _exception_pc  = 0;
   _exception_handler_pc = 0;
@@ -1676,16 +1676,16 @@ JavaThread::~JavaThread() {
   if (_thread_profiler != NULL) delete _thread_profiler;
   if (_thread_stat != NULL) delete _thread_stat;
 
-#ifdef GRAAL
-  if (GraalCounterSize > 0) {
-    if (graal_counters_include(this)) {
-      for (int i = 0; i < GraalCounterSize; i++) {
-        _graal_old_thread_counters[i] += _graal_counters[i];
+#ifdef JVMCI
+  if (JVMCICounterSize > 0) {
+    if (jvmci_counters_include(this)) {
+      for (int i = 0; i < JVMCICounterSize; i++) {
+        _jvmci_old_thread_counters[i] += _jvmci_counters[i];
       }
     }
-    FREE_C_HEAP_ARRAY(jlong, _graal_counters, mtInternal);
+    FREE_C_HEAP_ARRAY(jlong, _jvmci_counters, mtInternal);
   }
-#endif // GRAAL
+#endif // JVMCI
 }
 
 
@@ -3304,9 +3304,9 @@ CompilerThread::CompilerThread(CompileQueue* queue, CompilerCounters* counters)
 #endif
 }
 
-#ifdef COMPILERGRAAL
+#ifdef COMPILERJVMCI
 bool CompilerThread::can_call_java() const {
-  return _compiler != NULL && _compiler->is_graal();
+  return _compiler != NULL && _compiler->is_jvmci();
 }
 #endif
 
@@ -3395,8 +3395,8 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   jint parse_result = Arguments::parse(args);
   if (parse_result != JNI_OK) return parse_result;
 
-#ifdef GRAAL
-  OptionsValueTable* options = GraalRuntime::parse_arguments();
+#ifdef JVMCI
+  OptionsValueTable* options = JVMCIRuntime::parse_arguments();
   if (options == NULL) {
     return JNI_ERR;
   }
@@ -3456,14 +3456,14 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // Initialize global data structures and create system classes in heap
   vm_init_globals();
 
-#ifdef GRAAL
-  if (GraalCounterSize > 0) {
-    JavaThread::_graal_old_thread_counters = NEW_C_HEAP_ARRAY(jlong, GraalCounterSize, mtInternal);
-    memset(JavaThread::_graal_old_thread_counters, 0, sizeof(jlong) * GraalCounterSize);
+#ifdef JVMCI
+  if (JVMCICounterSize > 0) {
+    JavaThread::_jvmci_old_thread_counters = NEW_C_HEAP_ARRAY(jlong, JVMCICounterSize, mtInternal);
+    memset(JavaThread::_jvmci_old_thread_counters, 0, sizeof(jlong) * JVMCICounterSize);
   } else {
-    JavaThread::_graal_old_thread_counters = NULL;
+    JavaThread::_jvmci_old_thread_counters = NULL;
   }
-#endif // GRAAL
+#endif // JVMCI
 
   // Attach the main thread to this os thread
   JavaThread* main_thread = new JavaThread();
@@ -3709,12 +3709,12 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     Chunk::start_chunk_pool_cleaner_task();
   }
 
-#ifdef GRAAL
-  GraalRuntime::set_options(options, main_thread);
+#ifdef JVMCI
+  JVMCIRuntime::set_options(options, main_thread);
 #endif
 
   // initialize compiler(s)
-#if defined(COMPILER1) || defined(COMPILER2) || defined(SHARK) || defined(COMPILERGRAAL)
+#if defined(COMPILER1) || defined(COMPILER2) || defined(SHARK) || defined(COMPILERJVMCI)
   CompileBroker::compilation_init();
 #endif
 
@@ -4132,11 +4132,11 @@ bool Threads::destroy_vm() {
 
   delete thread;
 
-#ifdef GRAAL
-  if (GraalCounterSize > 0) {
-    FREE_C_HEAP_ARRAY(jlong, JavaThread::_graal_old_thread_counters, mtInternal);
+#ifdef JVMCI
+  if (JVMCICounterSize > 0) {
+    FREE_C_HEAP_ARRAY(jlong, JavaThread::_jvmci_old_thread_counters, mtInternal);
   }
-#endif // GRAAL
+#endif // JVMCI
 
   // exit_globals() will delete tty
   exit_globals();

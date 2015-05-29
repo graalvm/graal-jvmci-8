@@ -43,8 +43,8 @@
 #include "compiler/compileBroker.hpp"
 #include "shark/sharkCompiler.hpp"
 #endif
-#ifdef GRAAL
-#include "graal/graalJavaAccess.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciJavaAccess.hpp"
 #endif
 
 #define __ masm->
@@ -995,16 +995,16 @@ void AdapterGenerator::gen_i2c_adapter(int total_args_passed,
 
   // Jump to the compiled code just as if compiled code was doing it.
   __ ld_ptr(G5_method, in_bytes(Method::from_compiled_offset()), G3);
-#ifdef GRAAL
+#ifdef JVMCI
   // check if this call should be routed towards a specific entry point
-  __ ld(Address(G2_thread, in_bytes(JavaThread::graal_alternate_call_target_offset())), G1);
+  __ ld(Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())), G1);
   __ cmp(G0, G1);
   Label no_alternative_target;
   __ br(Assembler::equal, false, Assembler::pn, no_alternative_target);
   __ delayed()->nop();
 
-  __ ld_ptr(G2_thread, in_bytes(JavaThread::graal_alternate_call_target_offset()), G3);
-  __ st(G0, Address(G2_thread, in_bytes(JavaThread::graal_alternate_call_target_offset())));
+  __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset()), G3);
+  __ st(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())));
 
   __ bind(no_alternative_target);
 #endif
@@ -3473,8 +3473,8 @@ void SharedRuntime::generate_deopt_blob() {
     pad += StackShadowPages*16 + 32;
   }
 #endif
-#ifdef GRAAL
-  pad += 1000; // Increase the buffer size when compiling for GRAAL
+#ifdef JVMCI
+  pad += 1000; // Increase the buffer size when compiling for JVMCI
 #endif
 #ifdef _LP64
   CodeBuffer buffer("deopt_blob", 2100+pad+1000, 512);
@@ -3543,10 +3543,10 @@ void SharedRuntime::generate_deopt_blob() {
   __ delayed()->mov(Deoptimization::Unpack_deopt, L0deopt_mode);
 
 
-#ifdef GRAAL
-  masm->block_comment("BEGIN GRAAL");
+#ifdef JVMCI
+  masm->block_comment("BEGIN JVMCI");
   int implicit_exception_uncommon_trap_offset = __ offset() - start;
-  __ ld_ptr(G2_thread, in_bytes(JavaThread::graal_implicit_exception_pc_offset()), O7);
+  __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset()), O7);
   __ add(O7, -8, O7);
 
   int uncommon_trap_offset = __ offset() - start;
@@ -3575,8 +3575,8 @@ void SharedRuntime::generate_deopt_blob() {
   Label after_fetch_unroll_info_call;
   __ ba(after_fetch_unroll_info_call);
   __ delayed()->nop(); // Delay slot
-  masm->block_comment("END GRAAL");
-#endif // GRAAL
+  masm->block_comment("END JVMCI");
+#endif // JVMCI
 
   int exception_offset = __ offset() - start;
 
@@ -3632,8 +3632,8 @@ void SharedRuntime::generate_deopt_blob() {
   // Reexecute entry, similar to c2 uncommon trap
   //
   int reexecute_offset = __ offset() - start;
-#if defined(COMPILERGRAAL) && !defined(COMPILER1)
-  // Graal does not use this kind of deoptimization
+#if defined(COMPILERJVMCI) && !defined(COMPILER1)
+  // JVMCI does not use this kind of deoptimization
   __ should_not_reach_here();
 #endif
   // No need to update oop_map  as each call to save_live_registers will produce identical oopmap
@@ -3659,7 +3659,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   __ reset_last_Java_frame();
 
-#ifdef GRAAL
+#ifdef JVMCI
   __ bind(after_fetch_unroll_info_call);
 #endif
   // NOTE: we know that only O0/O1 will be reloaded by restore_result_registers
@@ -3727,7 +3727,7 @@ void SharedRuntime::generate_deopt_blob() {
   masm->flush();
   _deopt_blob = DeoptimizationBlob::create(&buffer, oop_maps, 0, exception_offset, reexecute_offset, frame_size_words);
   _deopt_blob->set_unpack_with_exception_in_tls_offset(exception_in_tls_offset);
-#ifdef GRAAL
+#ifdef JVMCI
   _deopt_blob->set_uncommon_trap_offset(uncommon_trap_offset);
   _deopt_blob->set_implicit_exception_uncommon_trap_offset(implicit_exception_uncommon_trap_offset);
 #endif

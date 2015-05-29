@@ -70,7 +70,7 @@
 #include "oops/constMethod.hpp"
 #include "oops/constantPool.hpp"
 #include "oops/cpCache.hpp"
-#ifdef GRAAL
+#ifdef JVMCI
 #include "oops/fieldStreams.hpp"
 #endif
 #include "oops/instanceClassLoaderKlass.hpp"
@@ -106,9 +106,9 @@
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/hashtable.hpp"
 #include "utilities/macros.hpp"
-#ifdef GRAAL
-# include "graal/graalRuntime.hpp"
-# include "graal/vmStructs_graal.hpp"
+#ifdef JVMCI
+# include "jvmci/jvmciRuntime.hpp"
+# include "jvmci/vmStructs_jvmci.hpp"
 #endif
 #ifdef TARGET_ARCH_x86
 # include "vmStructs_x86.hpp"
@@ -3030,8 +3030,8 @@ VMStructEntry VMStructs::localHotSpotVMStructs[] = {
              GENERATE_C1_UNCHECKED_STATIC_VM_STRUCT_ENTRY,
              GENERATE_C2_UNCHECKED_STATIC_VM_STRUCT_ENTRY)
 
-#ifdef GRAAL
-   VM_STRUCTS_GRAAL(GENERATE_NONSTATIC_VM_STRUCT_ENTRY,
+#ifdef JVMCI
+   VM_STRUCTS_JVMCI(GENERATE_NONSTATIC_VM_STRUCT_ENTRY,
                     GENERATE_STATIC_VM_STRUCT_ENTRY)
 #endif
 
@@ -3079,8 +3079,8 @@ VMTypeEntry VMStructs::localHotSpotVMTypes[] = {
            GENERATE_C2_VM_TYPE_ENTRY,
            GENERATE_C2_TOPLEVEL_VM_TYPE_ENTRY)
 
-#ifdef GRAAL
-  VM_TYPES_GRAAL(GENERATE_VM_TYPE_ENTRY,
+#ifdef JVMCI
+  VM_TYPES_JVMCI(GENERATE_VM_TYPE_ENTRY,
                  GENERATE_TOPLEVEL_VM_TYPE_ENTRY)
 #endif
 
@@ -3126,8 +3126,8 @@ VMIntConstantEntry VMStructs::localHotSpotVMIntConstants[] = {
                    GENERATE_C2_VM_INT_CONSTANT_ENTRY,
                    GENERATE_C2_PREPROCESSOR_VM_INT_CONSTANT_ENTRY)
 
-#ifdef GRAAL
-  VM_INT_CONSTANTS_GRAAL(GENERATE_VM_INT_CONSTANT_ENTRY,
+#ifdef JVMCI
+  VM_INT_CONSTANTS_JVMCI(GENERATE_VM_INT_CONSTANT_ENTRY,
                          GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY)
 
 #endif
@@ -3478,7 +3478,7 @@ void VMStructs::test() {
 #endif
 
 
-#ifdef GRAAL
+#ifdef JVMCI
 // Emit intialization code for HotSpotVMConfig.  It's placed here so
 // it can take advantage of the relaxed access checking enjoyed by
 // VMStructs.

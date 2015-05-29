@@ -383,8 +383,8 @@ JVM_ENTRY(jobject, JVM_InitProperties(JNIEnv *env, jobject properties))
     const char* compiler_name = "HotSpot " CSIZE "Client Compiler";
 #elif defined(COMPILER2)
     const char* compiler_name = "HotSpot " CSIZE "Server Compiler";
-#elif defined(GRAAL)
-    const char* compiler_name = "HotSpot " CSIZE "Graal Compiler";
+#elif defined(JVMCI)
+    const char* compiler_name = "HotSpot " CSIZE "JVMCI Compiler";
 #else
     const char* compiler_name = "";
 #endif // compilers
@@ -2362,7 +2362,7 @@ JVM_ENTRY(jboolean, JVM_DesiredAssertionStatus(JNIEnv *env, jclass unused, jclas
 
   ResourceMark rm(THREAD);
   const char* name = k->name()->as_C_string();
-  bool system_class = k->class_loader() == NULL GRAAL_ONLY(|| SystemDictionary::graal_loader() == k->class_loader());
+  bool system_class = k->class_loader() == NULL JVMCI_ONLY(|| SystemDictionary::jvmci_loader() == k->class_loader());
   return JavaAssertions::enabled(name, system_class);
 
 JVM_END

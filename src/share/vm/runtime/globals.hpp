@@ -129,20 +129,20 @@
 # include "c1_globals_bsd.hpp"
 #endif
 #endif
-#ifdef COMPILERGRAAL 
+#ifdef COMPILERJVMCI 
 #ifdef TARGET_ARCH_x86
-# include "graalGlobals_x86.hpp"
+# include "jvmciGlobals_x86.hpp"
 #endif
 #ifdef TARGET_ARCH_sparc
-# include "graalGlobals_sparc.hpp"
+# include "jvmciGlobals_sparc.hpp"
 #endif
 #ifdef TARGET_ARCH_arm
-# include "graalGlobals_arm.hpp"
+# include "jvmciGlobals_arm.hpp"
 #endif
 #ifdef TARGET_ARCH_ppc
-# include "graalGlobals_ppc.hpp"
+# include "jvmciGlobals_ppc.hpp"
 #endif
-#endif // COMPILERGRAAL
+#endif // COMPILERJVMCI
 #ifdef COMPILER2
 #ifdef TARGET_ARCH_x86
 # include "c2_globals_x86.hpp"
@@ -178,7 +178,7 @@
 #endif
 #endif
 
-#if !defined(COMPILER1) && !defined(COMPILER2) && !defined(SHARK) && !defined(COMPILERGRAAL)
+#if !defined(COMPILER1) && !defined(COMPILER2) && !defined(SHARK) && !defined(COMPILERJVMCI)
 define_pd_global(bool, BackgroundCompilation,        false);
 define_pd_global(bool, UseTLAB,                      false);
 define_pd_global(bool, CICompileOSR,                 false);
@@ -210,7 +210,7 @@ define_pd_global(uint64_t,MaxRAM,                    1ULL*G);
 #define CI_COMPILER_COUNT 0
 #else
 
-#if defined(COMPILER2) || defined(COMPILERGRAAL)
+#if defined(COMPILER2) || defined(COMPILERJVMCI)
 #define CI_COMPILER_COUNT 2
 #else
 #define CI_COMPILER_COUNT 1
@@ -253,7 +253,7 @@ struct Flag {
     KIND_SHARK              = 1 << 15,
     KIND_LP64_PRODUCT       = 1 << 16,
     KIND_COMMERCIAL         = 1 << 17,
-    KIND_GRAAL              = 1 << 18,
+    KIND_JVMCI              = 1 << 18,
 
     KIND_MASK = ~VALUE_ORIGIN_MASK
   };
@@ -998,7 +998,7 @@ class CommandLineFlags {
   product(bool, PrintNMethodStatistics, false,                              \
           "Print a summary statistic for the generated nmethods")           \
                                                                             \
-  product(bool, ShareDebugInfo, IS_GRAAL_DEFINED,                           \
+  product(bool, ShareDebugInfo, IS_JVMCI_DEFINED,                           \
           "Always tries to share similar debug info inside a nmethod")      \
                                                                             \
   diagnostic(bool, PrintNMethods, false,                                    \
@@ -2713,11 +2713,11 @@ class CommandLineFlags {
           "Delay invoking the compiler until main application class is "    \
           "loaded")                                                         \
                                                                             \
-  NOT_GRAAL(develop(bool, CompileTheWorld, false,                           \
+  NOT_JVMCI(develop(bool, CompileTheWorld, false,                           \
           "Compile all methods in all classes in bootstrap class path "     \
             "(stress test)"))                                               \
                                                                             \
-  GRAAL_ONLY(product(bool, CompileTheWorld, false,                          \
+  JVMCI_ONLY(product(bool, CompileTheWorld, false,                          \
           "Compile all methods in all classes in bootstrap class path "     \
                      "(stress test)"))                                      \
                                                                             \

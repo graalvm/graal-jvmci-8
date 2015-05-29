@@ -200,7 +200,7 @@ void NonTieredCompPolicy::initialize() {
 // - if neither is defined - always return zero.
 int NonTieredCompPolicy::compiler_count(CompLevel comp_level) {
   assert(!TieredCompilation, "This policy should not be used with TieredCompilation");
-#if defined(COMPILER2) || defined(COMPILERGRAAL)
+#if defined(COMPILER2) || defined(COMPILERJVMCI)
   if (is_c2_compile(comp_level)) {
     return _compiler_count;
   } else {

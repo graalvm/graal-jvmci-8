@@ -460,11 +460,11 @@ frame frame::sender_for_interpreter_frame(RegisterMap* map) const {
   // This is the sp before any possible extension (adapter/locals).
   intptr_t* unextended_sp = interpreter_frame_sender_sp();
 
-#if defined(COMPILER2) || defined(GRAAL)
+#if defined(COMPILER2) || defined(JVMCI)
   if (map->update_map()) {
     update_map_with_saved_link(map, (intptr_t**) addr_at(link_offset));
   }
-#endif // COMPILER2 || GRAAL
+#endif // COMPILER2 || JVMCI
 
   return frame(sender_sp, unextended_sp, link(), sender_pc());
 }

@@ -3560,7 +3560,7 @@ bool GraphBuilder::try_inline_intrinsics(ciMethod* callee) {
     case vmIntrinsics::_updateBytesCRC32:
     case vmIntrinsics::_updateByteBufferCRC32:
       if (!UseCRC32Intrinsics) return false;
-      // GRAAL-409: CRC32 C1 intrinsics cause errors on jdk version earlier than 8
+      // JVMCI-409: CRC32 C1 intrinsics cause errors on jdk version earlier than 8
       if (!JDK_Version::is_gte_jdk18x_version()) return false;
       cantrap = false;
       preserves_state = true;

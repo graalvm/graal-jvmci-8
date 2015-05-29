@@ -47,7 +47,7 @@ define_pd_global(bool, UncommonNullCast,         true);  // Uncommon-trap NULLs 
 // the the vep is aligned at CodeEntryAlignment whereas c2 only aligns
 // the uep and the vep doesn't get real alignment but just slops on by
 // only assured that the entry instruction meets the 5 byte size requirement.
-#if defined(COMPILER2) || defined(GRAAL)
+#if defined(COMPILER2) || defined(JVMCI)
 define_pd_global(intx, CodeEntryAlignment,       32);
 #else
 define_pd_global(intx, CodeEntryAlignment,       16);
@@ -80,8 +80,8 @@ define_pd_global(bool, UseMembar,            false);
 // GC Ergo Flags
 define_pd_global(uintx, CMSYoungGenPerWorker, 64*M);  // default max size of CMS young gen, per GC worker thread
 
-// Disabled in GRAAL until HotSpotMethodData is updated to be aware of the new profiling tags
-define_pd_global(uintx, TypeProfileLevel, GRAAL_ONLY(0) NOT_GRAAL(111));
+// Disabled in JVMCI until HotSpotMethodData is updated to be aware of the new profiling tags
+define_pd_global(uintx, TypeProfileLevel, JVMCI_ONLY(0) NOT_JVMCI(111));
 
 #define ARCH_FLAGS(develop, product, diagnostic, experimental, notproduct) \
                                                                             \

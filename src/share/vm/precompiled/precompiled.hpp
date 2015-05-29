@@ -295,9 +295,9 @@
 # include "c1/c1_ValueType.hpp"
 # include "c1/c1_globals.hpp"
 #endif // COMPILER1
-#ifdef GRAAL
-# include "graal/graalGlobals.hpp"
-#endif // GRAAL
+#ifdef JVMCI
+# include "jvmci/jvmciGlobals.hpp"
+#endif // JVMCI
 #if INCLUDE_ALL_GCS
 # include "gc_implementation/concurrentMarkSweep/cmsOopClosures.hpp"
 # include "gc_implementation/concurrentMarkSweep/compactibleFreeListSpace.hpp"

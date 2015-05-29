@@ -106,14 +106,14 @@
 			<locationURI>PARENT-1-PROJECT_LOC/build/linux/linux_amd64_compiler2/generated</locationURI>
 		</link>
 		<link>
-			<name>generated_graal</name>
+			<name>generated_jvmci</name>
 			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/build/linux/linux_amd64_graal/generated</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/build/linux/linux_amd64_jvmci/generated</locationURI>
 		</link>
 		<link>
 			<name>generated_java_processor</name>
 			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/graal/com.oracle.graal.hotspot/src_gen/hotspot</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/graal/com.oracle.jvmci.hotspot/src_gen/hotspot</locationURI>
 		</link>
 		<link>
 			<name>linux</name>

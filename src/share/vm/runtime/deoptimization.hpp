@@ -42,11 +42,11 @@ class Deoptimization : AllStatic {
     Reason_many = -1,             // indicates presence of several reasons
     Reason_none = 0,              // indicates absence of a relevant deopt.
     // Next 7 reasons are recorded per bytecode in DataLayout::trap_bits.
-    // This is more complicated for Graal as Graal may deoptimize to *some* bytecode before the
-    // bytecode that actually caused the deopt (with inlining, Graal may even deoptimize to a
+    // This is more complicated for JVMCI as JVMCI may deoptimize to *some* bytecode before the
+    // bytecode that actually caused the deopt (with inlining, JVMCI may even deoptimize to a
     // bytecode in another method):
     //  - bytecode y in method b() causes deopt
-    //  - Graal deoptimizes to bytecode x in method a()
+    //  - JVMCI deoptimizes to bytecode x in method a()
     // -> the deopt reason will be recorded for method a() at bytecode x
     Reason_null_check,            // saw unexpected null or zero divisor (@bci)
     Reason_null_assert,           // saw unexpected non-null or non-zero (@bci)
@@ -56,7 +56,7 @@ class Deoptimization : AllStatic {
     Reason_intrinsic,             // saw unexpected operand to intrinsic (@bci)
     Reason_bimorphic,             // saw unexpected object class in bimorphic inlining (@bci)
 
-#ifdef GRAAL
+#ifdef JVMCI
     Reason_unreached0             = Reason_null_assert,
     Reason_type_checked_inlining  = Reason_intrinsic,
     Reason_optimized_type_check   = Reason_bimorphic,
@@ -75,7 +75,7 @@ class Deoptimization : AllStatic {
     Reason_speculate_class_check, // saw unexpected object class from type speculation
     Reason_rtm_state_change,      // rtm state change detected
     Reason_unstable_if,           // a branch predicted always false was taken
-#ifdef GRAAL
+#ifdef JVMCI
     Reason_aliasing,              // optimistic assumption about aliasing failed
     Reason_transfer_to_interpreter, // explicit transferToInterpreter()
     Reason_not_compiled_exception_handler,
@@ -138,8 +138,8 @@ class Deoptimization : AllStatic {
   // executing in a particular CodeBlob if UseBiasedLocking is enabled
   static void revoke_biases_of_monitors(CodeBlob* cb);
 
-#if defined(COMPILER2) || defined(GRAAL)
-GRAAL_ONLY(public:)
+#if defined(COMPILER2) || defined(JVMCI)
+JVMCI_ONLY(public:)
 
   // Support for restoring non-escaping objects
   static bool realloc_objects(JavaThread* thread, frame* fr, GrowableArray<ScopeValue*>* objects, TRAPS);
@@ -149,7 +149,7 @@ GRAAL_ONLY(public:)
   static void relock_objects(GrowableArray<MonitorInfo*>* monitors, JavaThread* thread, bool realloc_failures);
   static void pop_frames_failed_reallocs(JavaThread* thread, vframeArray* array);
   NOT_PRODUCT(static void print_objects(GrowableArray<ScopeValue*>* objects, bool realloc_failures);)
-#endif // COMPILER2 || GRAAL
+#endif // COMPILER2 || JVMCI
 
   public:
   static vframeArray* create_vframeArray(JavaThread* thread, frame fr, RegisterMap *reg_map, GrowableArray<compiledVFrame*>* chunk, bool realloc_failures);
@@ -312,8 +312,8 @@ GRAAL_ONLY(public:)
   }
   static int make_trap_request(DeoptReason reason, DeoptAction action,
                                int index = -1) {
-#if defined(COMPILERGRAAL) && !defined(COMPILER1) && !defined(COMPILER2)
-    assert(index == -1, "Graal does not use index");
+#if defined(COMPILERJVMCI) && !defined(COMPILER1) && !defined(COMPILER2)
+    assert(index == -1, "JVMCI does not use index");
 #endif
 
     assert((1 << _reason_bits) >= Reason_LIMIT, "enough bits");
@@ -395,7 +395,7 @@ GRAAL_ONLY(public:)
                                                int trap_bci,
                                                DeoptReason reason,
                                                bool update_total_trap_count,
-#ifdef GRAAL
+#ifdef JVMCI
                                                bool is_osr,
 #endif
                                                Method* compiled_method,

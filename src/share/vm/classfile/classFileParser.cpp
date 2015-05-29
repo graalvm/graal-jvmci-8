@@ -1791,10 +1791,10 @@ ClassFileParser::AnnotationCollector::annotation_index(ClassLoaderData* loader_d
     if (_location != _in_method)  break;  // only allow for methods
     if (!privileged)              break;  // only allow in privileged code
     return _method_LambdaForm_Hidden;
-#ifdef GRAAL
-  case vmSymbols::VM_SYMBOL_ENUM_NAME(com_oracle_graal_hotspot_Stable_signature):
+#ifdef JVMCI
+  case vmSymbols::VM_SYMBOL_ENUM_NAME(com_oracle_jvmci_hotspot_Stable_signature):
     if (_location != _in_field)   break;  // only allow for fields
-    if (!privileged && loader_data->class_loader() != SystemDictionary::graal_loader()) break;  // only allow in privileged code
+    if (!privileged && loader_data->class_loader() != SystemDictionary::jvmci_loader()) break;  // only allow in privileged code
     return _field_Stable;
 #endif
   case vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_Stable_signature):

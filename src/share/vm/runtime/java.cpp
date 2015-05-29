@@ -30,9 +30,9 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
-#ifdef GRAAL
-#include "graal/graalCompiler.hpp"
-#include "graal/graalRuntime.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciCompiler.hpp"
+#include "jvmci/jvmciRuntime.hpp"
 #endif
 #include "memory/genCollectedHeap.hpp"
 #include "memory/oopFactory.hpp"
@@ -490,8 +490,8 @@ void before_exit(JavaThread * thread) {
     }
   }
 
-#ifdef GRAAL
-  GraalRuntime::shutdown();
+#ifdef JVMCI
+  JVMCIRuntime::shutdown();
 #endif
 
   // The only difference between this and Win32's _onexit procs is that

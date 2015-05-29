@@ -668,7 +668,7 @@ void VM_Version::get_processor_features() {
     }
   }
 #endif
-#if defined(COMPILER2) || defined(GRAAL)
+#if defined(COMPILER2) || defined(JVMCI)
   if (MaxVectorSize > 0) {
     if (!is_power_of_2(MaxVectorSize)) {
       warning("MaxVectorSize must be a power of 2");

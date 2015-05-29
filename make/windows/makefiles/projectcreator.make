@@ -56,7 +56,7 @@ ProjectCreatorIncludesPRIVATE=\
         -relativeInclude src\os\windows\vm \
         -relativeInclude src\os_cpu\windows_$(Platform_arch)\vm \
         -relativeInclude src\cpu\$(Platform_arch)\vm \
-        -relativeInclude graal\com.oracle.graal.hotspot\src_gen\hotspot \
+        -relativeInclude graal\com.oracle.jvmci.hotspot\src_gen\hotspot \
         -absoluteInclude $(HOTSPOTBUILDSPACE)/%f/generated \
         -relativeSrcInclude src \
         -absoluteSrcInclude $(HOTSPOTBUILDSPACE) \
@@ -150,10 +150,10 @@ ProjectCreatorIDEOptionsIgnoreCompiler1=\
  -ignorePath_TARGET tiered \
  -ignorePath_TARGET c1_
 
-ProjectCreatorIDEOptionsIgnoreGraal=\
- -ignorePath_TARGET src/share/vm/graal \
- -ignorePath_TARGET graal\com.oracle.graal.hotspot\src_gen\hotspot \
- -ignorePath_TARGET vm/graal
+ProjectCreatorIDEOptionsIgnoreJVMCI=\
+ -ignorePath_TARGET src/share/vm/jvmci \
+ -ignorePath_TARGET graal\com.oracle.jvmci.hotspot\src_gen\hotspot \
+ -ignorePath_TARGET vm/jvmci
 
 ProjectCreatorIDEOptionsIgnoreCompiler2=\
  -ignorePath_TARGET compiler2 \
@@ -175,17 +175,17 @@ ProjectCreatorIDEOptionsIgnoreCompiler2=\
 ##################################################
 ProjectCreatorIDEOptions=$(ProjectCreatorIDEOptions) \
  -define_compiler1 COMPILER1 \
- -define_compiler1 GRAAL \
+ -define_compiler1 JVMCI \
  $(ProjectCreatorIDEOptionsIgnoreCompiler2:TARGET=compiler1)
 
 ##################################################
-# Graal compiler specific options
+# JVMCI compiler specific options
 ##################################################
 ProjectCreatorIDEOptions=$(ProjectCreatorIDEOptions) \
- -define_graal COMPILER1 \
- -define_graal COMPILERGRAAL \
- -define_graal GRAAL \
- $(ProjectCreatorIDEOptionsIgnoreCompiler2:TARGET=graal)
+ -define_jvmci COMPILER1 \
+ -define_jvmci COMPILERJVMCI \
+ -define_jvmci JVMCI \
+ $(ProjectCreatorIDEOptionsIgnoreCompiler2:TARGET=jvmci)
 
 ##################################################
 # Server(C2) compiler specific options
@@ -194,7 +194,7 @@ ProjectCreatorIDEOptions=$(ProjectCreatorIDEOptions) \
 ProjectCreatorIDEOptions=$(ProjectCreatorIDEOptions) \
  -define_compiler2 COMPILER1 \
  -define_compiler2 COMPILER2 \
- -define_compiler2 GRAAL \
+ -define_compiler2 JVMCI \
  -additionalFile_compiler2 $(Platform_arch_model).ad \
  -additionalFile_compiler2 ad_$(Platform_arch_model).cpp \
  -additionalFile_compiler2 ad_$(Platform_arch_model).hpp \

@@ -1129,7 +1129,7 @@ void InterpreterMacroAssembler::profile_virtual_call(Register receiver,
     bind(skip_receiver_profile);
 
     // The method data pointer needs to be updated to reflect the new target.
-#ifdef GRAAL
+#ifdef JVMCI
     if (MethodProfileWidth == 0) {
       update_mdp_by_constant(mdp, in_bytes(VirtualCallData::virtual_call_data_size()));
     }
@@ -1140,7 +1140,7 @@ void InterpreterMacroAssembler::profile_virtual_call(Register receiver,
   }
 }
 
-#ifdef GRAAL
+#ifdef JVMCI
 void InterpreterMacroAssembler::profile_called_method(Register method, Register mdp, Register reg2) {
   assert_different_registers(method, mdp, reg2);
   if (ProfileInterpreter && MethodProfileWidth > 0) {
@@ -1178,17 +1178,17 @@ void InterpreterMacroAssembler::record_klass_in_profile_helper(
     if (is_virtual_call) {
       increment_mdp_data_at(mdp, in_bytes(CounterData::count_offset()));
     }
-#ifdef GRAAL
+#ifdef JVMCI
     else {
       increment_mdp_data_at(mdp, in_bytes(ReceiverTypeData::nonprofiled_receiver_count_offset()));
     }
 #endif
   } else {                                      
-    bool use_non_profiled_counter = !is_virtual_call || IS_GRAAL_DEFINED;
+    bool use_non_profiled_counter = !is_virtual_call || IS_JVMCI_DEFINED;
     int non_profiled_offset = -1;
     if (use_non_profiled_counter) {
        non_profiled_offset = in_bytes(CounterData::count_offset());
-    #ifdef GRAAL
+    #ifdef JVMCI
       if (!is_virtual_call) {
         non_profiled_offset = in_bytes(ReceiverTypeData::nonprofiled_receiver_count_offset());
       }
