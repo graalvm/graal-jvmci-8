@@ -3711,6 +3711,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
 #ifdef JVMCI
   JVMCIRuntime::set_options(options, main_thread);
+  delete options;
 #endif
 
   // initialize compiler(s)
