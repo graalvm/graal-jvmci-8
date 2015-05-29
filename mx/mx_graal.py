@@ -570,7 +570,7 @@ def _classifyJVMCIServices(classNames, jvmciJars):
                         classification[className] = False
                         break
                     superInterfaces = afterName[len(' extends '):-len(' {')].split(',')
-                    if 'com.oracle.jvmci.runtime.Service' in superInterfaces:
+                    if 'com.oracle.jvmci.service.Service' in superInterfaces:
                         classification[className] = True
                         break
                     maybe = [_eraseGenerics(superInterface) for superInterface in superInterfaces]

@@ -79,7 +79,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
   /**
    * Instantiates a service object, calls its default constructor and returns it.
    *
-   * @param name the name of a class implementing com.oracle.jvmci.runtime.Service
+   * @param name the name of a class implementing com.oracle.jvmci.service.Service
    */
   static Handle create_Service(const char* name, TRAPS);
 
@@ -138,7 +138,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
 
   /**
    * Given an interface representing a JVMCI service (i.e. sub-interface of
-   * com.oracle.jvmci.api.runtime.Service), gets an array of objects, one per
+   * com.oracle.jvmci.api.service.Service), gets an array of objects, one per
    * known implementation of the service.
    */
   static objArrayHandle get_service_impls(KlassHandle serviceKlass, TRAPS);

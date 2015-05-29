@@ -25,7 +25,7 @@ package com.oracle.jvmci.hotspot;
 import java.util.*;
 
 import com.oracle.jvmci.options.*;
-import com.oracle.jvmci.runtime.*;
+import com.oracle.jvmci.service.*;
 
 //JaCoCo Exclude
 

@@ -22,6 +22,8 @@
  */
 package com.oracle.jvmci.runtime;
 
+import com.oracle.jvmci.service.*;
+
 /**
  * Extension for doing post-processing once all JVMCI options have been parsed and initialized.
  */

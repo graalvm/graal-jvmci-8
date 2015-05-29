@@ -153,6 +153,14 @@ suite = {
   },
 
   "projects" : {
+    "com.oracle.jvmci.service" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,Graal",
+    },
+
     "com.oracle.jvmci.common" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -165,6 +173,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.jvmci.service",
         "com.oracle.jvmci.code"
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -179,6 +188,7 @@ suite = {
         "com.oracle.jvmci.hotspotvmconfig",
         "com.oracle.jvmci.options",
         "com.oracle.jvmci.debug",
+        "com.oracle.jvmci.runtime",
         "com.oracle.jvmci.common",
         "FINDBUGS",
       ],
@@ -242,7 +252,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.runtime",
+        "com.oracle.jvmci.service",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -287,10 +297,10 @@ suite = {
       "workingSets" : "API,Graal,Replacements",
     },
 
-    "com.oracle.jvmci.runtime.processor" : {
+    "com.oracle.jvmci.service.processor" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.jvmci.runtime"],
+      "dependencies" : ["com.oracle.jvmci.service"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Codegen,HotSpot",
@@ -343,7 +353,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : [
         "com.oracle.graal.replacements.verifier",
-        "com.oracle.jvmci.runtime.processor",
+        "com.oracle.jvmci.service.processor",
       ],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot",
@@ -366,7 +376,7 @@ suite = {
         "JFR",
       ],
       "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["com.oracle.jvmci.runtime.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "javaCompliance" : "1.8",
       "profile" : "",
       "workingSets" : "Graal,HotSpot",
@@ -381,7 +391,7 @@ suite = {
         "com.oracle.graal.replacements.amd64",
       ],
       "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["com.oracle.jvmci.runtime.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot,AMD64",
     },
@@ -394,7 +404,7 @@ suite = {
         "com.oracle.graal.replacements.sparc",
       ],
       "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["com.oracle.jvmci.runtime.processor", "com.oracle.graal.compiler.match.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor", "com.oracle.graal.compiler.match.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,HotSpot,SPARC",
     },
@@ -427,7 +437,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.runtime",
+        "com.oracle.jvmci.service",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -602,7 +612,7 @@ suite = {
       "javaCompliance" : "1.8",
       "annotationProcessors" : [
         "com.oracle.graal.replacements.verifier",
-        "com.oracle.jvmci.runtime.processor",
+        "com.oracle.jvmci.service.processor",
       ],
       "workingSets" : "Graal,Replacements",
     },
@@ -616,7 +626,7 @@ suite = {
           ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "annotationProcessors" : ["com.oracle.jvmci.runtime.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "workingSets" : "Graal,Replacements,AMD64",
     },
 
@@ -741,12 +751,13 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.jvmci.runtime",
         "com.oracle.graal.virtual",
         "com.oracle.graal.loop",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "annotationProcessors" : ["com.oracle.jvmci.runtime.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "workingSets" : "Graal",
     },
 
@@ -832,7 +843,7 @@ suite = {
         "com.oracle.graal.graphbuilderconf"
       ],
       "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["com.oracle.jvmci.runtime.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Java",
     },
@@ -869,6 +880,7 @@ suite = {
         "com.oracle.jvmci.options",
         "com.oracle.jvmci.debug",
         "com.oracle.jvmci.common",
+        "com.oracle.jvmci.code",
       ],
       "annotationProcessors" : ["com.oracle.jvmci.options.processor"],
       "checkstyle" : "com.oracle.graal.graph",
@@ -1203,7 +1215,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "annotationProcessors" : ["com.oracle.jvmci.runtime.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "workingSets" : "Graal,Truffle",
     },
 
@@ -1216,7 +1228,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "annotationProcessors" : ["com.oracle.jvmci.runtime.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "workingSets" : "Graal,Truffle",
     },
 
@@ -1229,7 +1241,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "annotationProcessors" : ["com.oracle.jvmci.runtime.processor"],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "workingSets" : "Graal,Truffle,SPARC",
     }
   },

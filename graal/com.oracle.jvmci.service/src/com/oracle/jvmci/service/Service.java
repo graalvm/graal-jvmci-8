@@ -20,13 +20,10 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.jvmci.runtime;
+package com.oracle.jvmci.service;
 
-import java.lang.annotation.*;
-
-@Retention(RetentionPolicy.CLASS)
-@Target(ElementType.TYPE)
-public @interface ServiceProvider {
-
-    Class<?> value();
+/**
+ * Denotes a service that may be efficiently loaded by {@link Services#load(Class)}.
+ */
+public interface Service {
 }

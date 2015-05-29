@@ -24,7 +24,7 @@ package com.oracle.jvmci.options;
 
 import java.util.*;
 
-import com.oracle.jvmci.runtime.*;
+import com.oracle.jvmci.service.*;
 
 /**
  * Helper class used to load option descriptors. Only to be used in the slow-path.

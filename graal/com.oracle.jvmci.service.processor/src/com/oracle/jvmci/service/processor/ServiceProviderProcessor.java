@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.jvmci.runtime.processor;
+package com.oracle.jvmci.service.processor;
 
 import java.io.*;
 import java.util.*;
@@ -32,9 +32,9 @@ import javax.lang.model.type.*;
 import javax.tools.Diagnostic.Kind;
 import javax.tools.*;
 
-import com.oracle.jvmci.runtime.*;
+import com.oracle.jvmci.service.*;
 
-@SupportedAnnotationTypes("com.oracle.jvmci.runtime.ServiceProvider")
+@SupportedAnnotationTypes("com.oracle.jvmci.service.ServiceProvider")
 public class ServiceProviderProcessor extends AbstractProcessor {
 
     private final Set<TypeElement> processed = new HashSet<>();
