@@ -119,4 +119,21 @@ public interface Signature {
         }
         return result;
     }
+
+    default Kind[] toParameterKinds(boolean receiver) {
+        int args = getParameterCount(false);
+        Kind[] result;
+        int i = 0;
+        if (receiver) {
+            result = new Kind[args + 1];
+            result[0] = Kind.Object;
+            i = 1;
+        } else {
+            result = new Kind[args];
+        }
+        for (int j = 0; j < args; j++) {
+            result[i + j] = getParameterKind(j);
+        }
+        return result;
+    }
 }
