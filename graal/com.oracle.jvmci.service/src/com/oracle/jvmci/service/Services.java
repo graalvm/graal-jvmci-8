@@ -26,6 +26,8 @@ import static java.lang.String.*;
 
 import java.util.*;
 
+import sun.reflect.*;
+
 /**
  * A mechanism on top of the standard {@link ServiceLoader} that enables a runtime to efficiently
  * load services marked by {@link Service}. This may be important for services loaded early in the
@@ -50,15 +52,19 @@ public class Services {
      * Gets an {@link Iterable} of the implementations available for a given service.
      */
     @SuppressWarnings("unchecked")
+    @CallerSensitive
     public static <S> Iterable<S> load(Class<S> service) {
         if (Service.class.isAssignableFrom(service)) {
             try {
                 return (Iterable<S>) cache.get(service);
             } catch (UnsatisfiedLinkError e) {
-                // Fall back to standard SerivceLoader
+                // Fall back to standard ServiceLoader
             }
         }
-        return ServiceLoader.load(service, Services.class.getClassLoader());
+
+        // Need to use the ClassLoader of the caller
+        ClassLoader cl = Reflection.getCallerClass().getClassLoader();
+        return ServiceLoader.load(service, cl);
     }
 
     private static native <S> S[] getServiceImpls(Class<?> service);

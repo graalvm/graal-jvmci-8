@@ -95,7 +95,9 @@ class JDKDeployedDist:
 
 _jdkDeployedDists = [
     JDKDeployedDist('TRUFFLE'),
-    JDKDeployedDist('JVMCI_LOADER'),
+    JDKDeployedDist('JVMCI_SERVICE'),
+    JDKDeployedDist('JVMCI_API', usesJVMCIClassLoader=True),
+    JDKDeployedDist('JVMCI_HOTSPOT', usesJVMCIClassLoader=True),
     JDKDeployedDist('GRAAL', usesJVMCIClassLoader=True),
     JDKDeployedDist('GRAAL_TRUFFLE', usesJVMCIClassLoader=True)
 ]
@@ -667,10 +669,10 @@ def _extractJVMCIFiles(jvmciJars, servicesDir, optionsDir, cleanDestination=True
 
 def _updateJVMCIFiles(jdkDir):
     jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')
-    graalJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.startswith('graal') and e.endswith('.jar')]
+    jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.endswith('.jar')]
     jreGraalServicesDir = join(jreJVMCIDir, 'services')
     jreGraalOptionsDir = join(jreJVMCIDir, 'options')
-    _extractJVMCIFiles(graalJars, jreGraalServicesDir, jreGraalOptionsDir)
+    _extractJVMCIFiles(jvmciJars, jreGraalServicesDir, jreGraalOptionsDir)
 
 def _patchGraalVersionConstant(dist):
     """

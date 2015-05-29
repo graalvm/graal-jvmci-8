@@ -358,15 +358,6 @@ suite = {
       "workingSets" : "Graal,HotSpot",
     },
 
-    "com.oracle.jvmci.hotspot.loader" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,HotSpot",
-    },
-
     "com.oracle.graal.hotspot.jfr" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -1248,6 +1239,41 @@ suite = {
   },
 
   "distributions" : {
+
+    "JVMCI_SERVICE" : {
+      "path" : "build/jvmci-service.jar",
+      "subDir" : "graal",
+      "sourcesPath" : "build/jvmci-service.src.zip",
+      "dependencies" : ["com.oracle.jvmci.service"],
+      "exclude" : ["FINDBUGS"],
+    },
+
+    "JVMCI_API" : {
+      "path" : "build/jvmci-api.jar",
+      "subDir" : "graal",
+      "sourcesPath" : "build/jvmci-api.src.zip",
+      "dependencies" : [
+        "com.oracle.jvmci.runtime",
+        "com.oracle.jvmci.options",
+        "com.oracle.jvmci.common",
+        "com.oracle.jvmci.debug",
+      ],
+      "exclude" : ["FINDBUGS"],
+      "distDependencies" : [
+        "JVMCI_SERVICE",
+      ],
+    },
+
+    "JVMCI_HOTSPOT" : {
+      "path" : "build/jvmci-hotspot.jar",
+      "subDir" : "graal",
+      "sourcesPath" : "build/jvmci-hotspot.src.zip",
+      "dependencies" : ["com.oracle.jvmci.hotspot"],
+      "distDependencies" : [
+        "JVMCI_API",
+      ],
+    },
+
     "GRAAL" : {
       "path" : "build/graal.jar",
       "subDir" : "graal",
@@ -1259,13 +1285,10 @@ suite = {
         "com.oracle.graal.hotspot.jfr",
       ],
       "exclude" : ["FINDBUGS"],
-    },
-
-    "JVMCI_LOADER" : {
-      "path" : "build/jvmci-loader.jar",
-      "subDir" : "graal",
-      "sourcesPath" : "build/jvmci-loader.src.zip",
-      "dependencies" : ["com.oracle.jvmci.hotspot.loader"],
+      "distDependencies" : [
+        "JVMCI_HOTSPOT",
+        "TRUFFLE",
+      ],
     },
 
     "TRUFFLE" : {
@@ -1306,5 +1329,4 @@ suite = {
       "distDependencies" : ["TRUFFLE"],
     }
   },
-
 }

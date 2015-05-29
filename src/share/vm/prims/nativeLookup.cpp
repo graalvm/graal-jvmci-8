@@ -149,7 +149,7 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_sun_misc_Perf_registerNatives",                        NULL, FN_PTR(JVM_RegisterPerfMethods)         },
   { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 NULL, FN_PTR(JVM_RegisterWhiteBoxMethods)     },
 #ifdef JVMCI
-  { CC"Java_com_oracle_jvmci_hotspot_loader_Factory_init",                     NULL, FN_PTR(JVM_InitJVMCIClassLoader)               },
+  { CC"Java_com_oracle_jvmci_service_JVMCIClassLoaderFactory_init",            NULL, FN_PTR(JVM_InitJVMCIClassLoader)               },
   { CC"Java_com_oracle_jvmci_runtime_JVMCI_initializeRuntime",                 NULL, FN_PTR(JVM_GetJVMCIRuntime)                    },
   { CC"Java_com_oracle_jvmci_service_Services_getServiceImpls",                NULL, FN_PTR(JVM_GetJVMCIServiceImpls)               },
   { CC"Java_com_oracle_truffle_api_Truffle_createRuntime",                     NULL, FN_PTR(JVM_CreateTruffleRuntime)               },

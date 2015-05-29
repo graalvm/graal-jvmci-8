@@ -623,7 +623,7 @@ JRT_ENTRY(jint, JVMCIRuntime::test_deoptimize_call_int(JavaThread* thread, int v
   return value;
 JRT_END
 
-// private static void Factory.init()
+// private static void JVMCIClassLoaderFactory.init()
 JVM_ENTRY(void, JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader_handle))
   SystemDictionary::init_jvmci_loader(JNIHandles::resolve(loader_handle));
   SystemDictionary::WKID scan = SystemDictionary::FIRST_JVMCI_WKID;
@@ -722,7 +722,7 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
   static Klass* _FactoryKlass = NULL;
   if (_FactoryKlass == NULL) {
     Thread* THREAD = Thread::current();
-    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/loader/Factory", CHECK_ABORT);
+    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/service/JVMCIClassLoaderFactory", CHECK_ABORT);
     KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, THREAD);
     if (HAS_PENDING_EXCEPTION) {
       static volatile int seen_error = 0;

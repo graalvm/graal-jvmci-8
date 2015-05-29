@@ -20,17 +20,17 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.jvmci.hotspot.loader;
+package com.oracle.jvmci.service;
 
 import java.io.*;
 import java.net.*;
 import java.util.*;
 
 /**
- * Utility to create and register a separate class loader for loading JVMCI classes (i.e., those in
- * found in lib/jvmci/*.jar).
+ * Utility called from the VM to create and register a separate class loader for loading JVMCI
+ * classes (i.e., those in found in lib/jvmci/*.jar).
  */
-public class Factory {
+class JVMCIClassLoaderFactory {
 
     /**
      * Copy of the {@code UseJVMCIClassLoader} VM option. Set by the VM before the static
