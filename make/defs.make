@@ -375,6 +375,11 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.phases.tier
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.truffle.hotspot.nfi.RawNativeCallNodeFactory
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.truffle.OptimizedCallTargetInstrumentationFactory
 
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotConstantReflectionProvider
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaFieldImpl
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaMethodImpl
+
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.common.GraalOptions
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.GraalCompiler
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.GraalDebugConfig

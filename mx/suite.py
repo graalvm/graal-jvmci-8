@@ -184,6 +184,7 @@ suite = {
       ],
       "annotationProcessors" : [
         "com.oracle.jvmci.hotspotvmconfig.processor",
+        "com.oracle.jvmci.options.processor",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -452,6 +453,7 @@ suite = {
         "JUNIT",
       ],
       "checkstyle" : "com.oracle.graal.graph",
+      "annotationProcessors" : ["com.oracle.jvmci.options.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "Graal",
     },
