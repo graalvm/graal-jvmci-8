@@ -53,7 +53,7 @@ _vmChoices = {
     'server-nojvmci' : None,  # all compilation with tiered system (i.e., client + server), JVMCI omitted
     'client-nojvmci' : None,  # all compilation with client compiler, JVMCI omitted
     'original' : None,  # default VM copied from bootstrap JDK
-    'graal' : 'Alias for jvmci',
+    'graal' : None, # alias for jvmci
 }
 
 """ The VM that will be run by the 'vm' command and built by default by the 'build' command.
@@ -118,10 +118,16 @@ def _get_vm():
     if _vm:
         return _vm
     vm = mx.get_env('DEFAULT_VM')
+    envPath = join(_graal_home, 'mx', 'env')
+    if vm == 'graal':
+        if exists(envPath):
+            with open(envPath) as fp:
+                if 'DEFAULT_VM=graal' in fp.read():
+                    mx.log('Please update the DEFAULT_VM entry in ' + envPath + ' to use "jvmti" instead of "graal" as the value')
+        vm = 'jvmci'
     if vm is None:
         if not mx.is_interactive():
             mx.abort('Need to specify VM with --vm option or DEFAULT_VM environment variable')
-        envPath = join(_graal_home, 'mx', 'env')
         mx.log('Please select the VM to be executed from the following: ')
         items = [k for k in _vmChoices.keys() if _vmChoices[k] is not None]
         descriptions = [_vmChoices[k] for k in _vmChoices.keys() if _vmChoices[k] is not None]
