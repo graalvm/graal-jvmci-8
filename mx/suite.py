@@ -166,7 +166,7 @@ suite = {
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "API,JVMCI",
     },
 
     "com.oracle.jvmci.runtime" : {
@@ -177,7 +177,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "API,JVMCI",
     },
 
     "com.oracle.jvmci.hotspot" : {
@@ -197,7 +197,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "JVMCI",
     },
 
     "com.oracle.nfi" : {
@@ -275,7 +275,7 @@ suite = {
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "API,JVMCI",
     },
 
     "com.oracle.jvmci.code" : {
@@ -284,7 +284,7 @@ suite = {
       "dependencies" : ["com.oracle.jvmci.meta"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "API,JVMCI",
     },
 
     "com.oracle.graal.api.replacements" : {
@@ -328,7 +328,7 @@ suite = {
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,HotSpot",
+      "workingSets" : "JVMCI,HotSpot",
     },
 
     "com.oracle.jvmci.hotspotvmconfig.processor" : {
@@ -431,7 +431,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal",
+      "workingSets" : "JVMCI",
     },
 
     "com.oracle.jvmci.options.processor" : {
@@ -442,7 +442,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Codegen",
+      "workingSets" : "JVMCI,Codegen",
     },
 
     "com.oracle.jvmci.options.test" : {
@@ -455,7 +455,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : ["com.oracle.jvmci.options.processor"],
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal",
+      "workingSets" : "JVMCI",
     },
 
     "com.oracle.graal.nodeinfo" : {
@@ -512,7 +512,7 @@ suite = {
         "com.oracle.jvmci.service",
       ],
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Debug",
+      "workingSets" : "JVMCI,Debug",
     },
 
     "com.oracle.jvmci.debug.test" : {
@@ -524,7 +524,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Debug,Test",
+      "workingSets" : "JVMCI,Debug,Test",
     },
 
     "com.oracle.graal.lir" : {
