@@ -84,8 +84,6 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
      */
     boolean hasCompiledCodeAtLevel(int level);
 
-    ProfilingInfo getCompilationProfilingInfo(boolean isOSR);
-
     default boolean isDefault() {
         if (isConstructor()) {
             return false;

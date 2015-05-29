@@ -410,15 +410,7 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
     private static final String TraceMethodDataFilter = System.getProperty("graal.traceMethodDataFilter");
 
     @Override
-    public ProfilingInfo getProfilingInfo() {
-        return getProfilingInfo(true, true);
-    }
-
-    public ProfilingInfo getCompilationProfilingInfo(boolean isOSR) {
-        return getProfilingInfo(!isOSR, isOSR);
-    }
-
-    private ProfilingInfo getProfilingInfo(boolean includeNormal, boolean includeOSR) {
+    public ProfilingInfo getProfilingInfo(boolean includeNormal, boolean includeOSR) {
         ProfilingInfo info;
 
         if (UseProfilingInformation.getValue() && methodData == null) {
