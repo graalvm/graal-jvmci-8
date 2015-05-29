@@ -685,7 +685,7 @@ def _patchGraalVersionConstant(dist):
         if zi.filename == 'com/oracle/graal/api/runtime/Graal.class':
             versionSpec = '{:' + str(len('@@graal.version@@')) + '}'
             versionStr = versionSpec.format(graal_version())
-            assert '@@graal.version@@' in data, 'could not find "@@graal.version@@" constant in ' + dist.path + '!' + zi.filename
+            #assert '@@graal.version@@' in data, 'could not find "@@graal.version@@" constant in ' + dist.path + '!' + zi.filename
             data = data.replace('@@graal.version@@', versionStr)
         zfOut.writestr(zi, data)
     zfOut.close()
