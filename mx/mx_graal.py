@@ -53,6 +53,7 @@ _vmChoices = {
     'server-nojvmci' : None,  # all compilation with tiered system (i.e., client + server), JVMCI omitted
     'client-nojvmci' : None,  # all compilation with client compiler, JVMCI omitted
     'original' : None,  # default VM copied from bootstrap JDK
+    'graal' : 'Alias for jvmci',
 }
 
 """ The VM that will be run by the 'vm' command and built by default by the 'build' command.
@@ -1094,6 +1095,9 @@ def build(args, vm=None):
                     f.write(line)
                 if not found:
                     f.write(vmKnown)
+                    if vm == 'jvmci':
+                        # Legacy support
+                        f.write('-graal ALIASED_TO -jvmci\n')
 
         if exists(timestampFile):
             os.utime(timestampFile, None)
@@ -2670,6 +2674,8 @@ def mx_post_parse_cmd_line(opts):  #
         if hasattr(opts, 'vm') and opts.vm is not None:
             global _vm
             _vm = opts.vm
+            if _vm == 'graal':
+                _vm = 'jvmci'
         if hasattr(opts, 'vmbuild') and opts.vmbuild is not None:
             global _vmbuild
             _vmbuild = opts.vmbuild
