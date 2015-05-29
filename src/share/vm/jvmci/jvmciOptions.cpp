@@ -111,6 +111,9 @@ public:
 
 class FreeNamesClosure : public ValueClosure<OptionDesc> {
   void do_value(OptionDesc* desc) {
+    if (desc->declaringClass == NULL) {
+      return; //skip pseudo-options whose name is not allocated with malloc
+    }
     FREE_C_HEAP_ARRAY(char, desc->name, mtCompiler);
   }
 };
