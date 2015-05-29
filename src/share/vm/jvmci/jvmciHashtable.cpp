@@ -21,6 +21,7 @@
  * questions.
  */
 
+#include "precompiled.hpp"
 #include "jvmci/jvmciHashtable.hpp"
 
 template<class K, class V> bool JVMCIHashtable<K,V>::add(V value, bool replace) {
@@ -54,7 +55,7 @@ template<class K, class V> V* JVMCIHashtable<K,V>::get(K key) {
 
 template<class K, class V> void JVMCIHashtable<K, V>::for_each(ValueClosure<V>* closure) {
   for (size_t i = 0; i < table_size(); ++i) {
-    for (JVMCIHashtableEntry<V>* e = bucket(i); e != NULL && !closure->is_aborted(); e = e->next()) {
+    for (JVMCIHashtableEntry<V>* e = bucket((int)i); e != NULL && !closure->is_aborted(); e = e->next()) {
       closure->do_value(e->literal_addr());
     }
   }
@@ -62,7 +63,7 @@ template<class K, class V> void JVMCIHashtable<K, V>::for_each(ValueClosure<V>* 
 
 template<class K, class V> JVMCIHashtable<K,V>::~JVMCIHashtable() {
   for (size_t i = 0; i < table_size(); ++i) {
-    JVMCIHashtableEntry<V>* e = bucket(i);
+    JVMCIHashtableEntry<V>* e = bucket((int)i);
     while (e != NULL) {
       JVMCIHashtableEntry<V>* current = e;
       e = e->next();

@@ -58,7 +58,7 @@ inline unsigned int compute_string_hash(const char *s, int n) {
 
 class OptionsTable : public JVMCIHashtable<const char*, OptionDesc> {
 protected:
-  unsigned int compute_hash(const char* key) { return compute_string_hash(key, strlen(key)); }
+  unsigned int compute_hash(const char* key) { return compute_string_hash(key, (int)strlen(key)); }
   bool key_equals(const char* k1, const char* k2) { return strcmp(k1, k2) == 0; }
   const char* get_key(OptionDesc value) { return value.name; } ;
   const char* get_key(OptionDesc* value) { return value->name; } ;
@@ -87,7 +87,7 @@ struct OptionValue {
 class OptionsValueTable : public JVMCIHashtable<const char*, OptionValue> {
   OptionsTable* _table;
 protected:
-  unsigned int compute_hash(const char* key) { return compute_string_hash(key, strlen(key)); }
+  unsigned int compute_hash(const char* key) { return compute_string_hash(key, (int)strlen(key)); }
   bool key_equals(const char* k1, const char* k2) { return strcmp(k1, k2) == 0; }
   const char* get_key(OptionValue value) { return value.desc.name; } ;
   const char* get_key(OptionValue* value) { return value->desc.name; } ;

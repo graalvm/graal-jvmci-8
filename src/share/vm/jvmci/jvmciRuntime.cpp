@@ -39,7 +39,11 @@
 #include "utilities/debug.hpp"
 #include "utilities/defaultStream.hpp"
 
-	jobject JVMCIRuntime::_HotSpotJVMCIRuntime_instance = NULL;
+#if defined(_MSC_VER)
+#define strtoll _strtoi64
+#endif
+
+jobject JVMCIRuntime::_HotSpotJVMCIRuntime_instance = NULL;
 bool JVMCIRuntime::_HotSpotJVMCIRuntime_initialized = false;
 bool JVMCIRuntime::_shutdown_called = false;
 
@@ -854,7 +858,7 @@ bool JVMCIRuntime::parse_argument(OptionsValueTable* options, const char* arg) {
         break;
       }
       case _float: {
-        optionValue.float_value = ::strtof(value, &check);
+        optionValue.float_value = (float)::strtod(value, &check); //strtof not available in Windows SDK yet
         if (*check != '\0' || errno == ERANGE) {
           jio_fprintf(defaultStream::error_stream(), "Expected float value for VM option '%s'\n", name);
           return false;

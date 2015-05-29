@@ -79,7 +79,7 @@ private:
   unsigned int             _number_of_entries;
 
 public:
-  JVMCIHashtable(size_t size) : _table_size(size), _number_of_entries(0) {
+  JVMCIHashtable(size_t size) : _table_size((int)size), _number_of_entries(0) {
     _buckets = NEW_C_HEAP_ARRAY(JVMCIHashtableEntry<V>*, table_size(), mtCompiler);
     for (size_t i = 0; i < table_size(); ++i) {
       _buckets[i] = NULL;
