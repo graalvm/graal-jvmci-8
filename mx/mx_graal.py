@@ -677,16 +677,23 @@ def _patchGraalVersionConstant(dist):
     Patches the constant "@@graal.version@@" in the constant pool of Graal.class
     with the computed Graal version string.
     """
+    zf = zipfile.ZipFile(dist.path, 'r')
+    graalClassfilePath = 'com/oracle/graal/api/runtime/Graal.class'
+    graalClassfile = zf.read(graalClassfilePath)
+    versionSpec = '{:' + str(len('@@graal.version@@')) + '}'
+    versionStr = versionSpec.format(graal_version())
+    if '@@graal.version@@' not in graalClassfile:
+        assert versionStr in graalClassfile, 'could not find "@@graal.version@@" or "' + versionStr + '" constant in ' + dist.path + '!' + graalClassfilePath
+        zf.close()
+        return False
+
     zfOutFd, zfOutPath = tempfile.mkstemp(suffix='', prefix=basename(dist.path) + '.', dir=dirname(dist.path))
     zfOut = zipfile.ZipFile(zfOutPath, 'w')
-    zf = zipfile.ZipFile(dist.path, 'r')
     for zi in zf.infolist():
-        data = zf.read(zi)
-        if zi.filename == 'com/oracle/graal/api/runtime/Graal.class':
-            versionSpec = '{:' + str(len('@@graal.version@@')) + '}'
-            versionStr = versionSpec.format(graal_version())
-            #assert '@@graal.version@@' in data, 'could not find "@@graal.version@@" constant in ' + dist.path + '!' + zi.filename
-            data = data.replace('@@graal.version@@', versionStr)
+        if zi.filename == graalClassfilePath:
+            data = graalClassfile.replace('@@graal.version@@', versionStr)
+        else:
+            data = zf.read(zi)
         zfOut.writestr(zi, data)
     zfOut.close()
     os.close(zfOutFd)
