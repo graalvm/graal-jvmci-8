@@ -214,7 +214,6 @@ class Ticks;
   JVMCI_ONLY(do_klass(HotSpotObjectConstantImpl_klass,       com_oracle_jvmci_hotspot_HotSpotObjectConstantImpl,           Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotMetaspaceConstantImpl_klass,    com_oracle_jvmci_hotspot_HotSpotMetaspaceConstantImpl,        Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotStackFrameReference_klass,      com_oracle_jvmci_hotspot_HotSpotStackFrameReference,          Jvmci)) \
-  JVMCI_ONLY(do_klass(CompilationTask_klass,                 com_oracle_graal_hotspot_CompilationTask,                     Jvmci)) \
   JVMCI_ONLY(do_klass(Assumptions_ConcreteMethod_klass,      com_oracle_jvmci_meta_Assumptions_ConcreteMethod,             Jvmci)) \
   JVMCI_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, com_oracle_jvmci_meta_Assumptions_NoFinalizableSubclass,    Jvmci))\
   JVMCI_ONLY(do_klass(Assumptions_ConcreteSubtype_klass,     com_oracle_jvmci_meta_Assumptions_ConcreteSubtype,            Jvmci)) \
