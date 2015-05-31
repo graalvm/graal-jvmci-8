@@ -197,6 +197,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
 
+    private final HotSpotVMEventListener vmEventListener;
+
     private HotSpotJVMCIRuntime() {
         CompilerToVM toVM = new CompilerToVMImpl();
         compilerToVm = toVM;
@@ -217,6 +219,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         try (InitTimer t = timer("create JVMCI backend:", hostArchitecture)) {
             hostBackend = registerBackend(factory.createJVMCIBackend(this, null));
         }
+
+        vmEventListener = Services.loadSingle(HotSpotVMEventListener.class, true);
     }
 
     private JVMCIBackend registerBackend(JVMCIBackend backend) {
@@ -288,11 +292,17 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     /**
      * Called from the VM.
      */
-    @SuppressWarnings({"unused", "static-method"})
+    @SuppressWarnings({"unused"})
+    private void compileMetaspaceMethod(long metaspaceMethod, int entryBCI, long jvmciEnv, int id) {
+        vmEventListener.compileMetaspaceMethod(metaspaceMethod, entryBCI, jvmciEnv, id);
+    }
+
+    /**
+     * Called from the VM.
+     */
+    @SuppressWarnings({"unused"})
     private void compileTheWorld() throws Throwable {
-        for (HotSpotVMEventListener l : Services.load(HotSpotVMEventListener.class)) {
-            l.notifyCompileTheWorld();
-        }
+        vmEventListener.notifyCompileTheWorld();
     }
 
     /**
@@ -300,10 +310,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      *
      * Called from the VM.
      */
-    @SuppressWarnings({"unused", "static-method"})
+    @SuppressWarnings({"unused"})
     private void shutdown() throws Exception {
-        for (HotSpotVMEventListener l : Services.load(HotSpotVMEventListener.class)) {
-            l.notifyShutdown();
-        }
+        vmEventListener.notifyShutdown();
     }
 }

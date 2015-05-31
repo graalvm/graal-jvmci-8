@@ -1054,12 +1054,11 @@ void JVMCIRuntime::shutdown() {
     _shutdown_called = true;
     JavaThread* THREAD = JavaThread::current();
     HandleMark hm(THREAD);
-    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/HotSpotJVMCIRuntime", CHECK_ABORT);
-    KlassHandle klass = load_required_class(name);
+    Handle receiver = get_HotSpotJVMCIRuntime();
     JavaValue result(T_VOID);
     JavaCallArguments args;
-    args.push_oop(get_HotSpotJVMCIRuntime());
-    JavaCalls::call_special(&result, klass, vmSymbols::shutdown_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
+    args.push_oop(receiver);
+    JavaCalls::call_special(&result, receiver->klass(), vmSymbols::shutdown_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
 
     JNIHandles::destroy_global(_HotSpotJVMCIRuntime_instance);
     _HotSpotJVMCIRuntime_instance = NULL;
