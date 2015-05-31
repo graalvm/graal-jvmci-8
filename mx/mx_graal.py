@@ -547,78 +547,20 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _eraseGenerics(className):
-    if '<' in className:
-        return className[:className.index('<')]
-    return className
+def _filterJVMCIServices(serviceImplNames, classpath):
+    """
+    Filters and returns the names in 'serviceImplNames' that denote
+    types available in 'classpath' implementing or extending
+    com.oracle.jvmci.service.Service.
+    """
+    _, binDir = mx._compile_mx_class('FilterTypes', os.pathsep.join(classpath), myDir=dirname(__file__))
+    cmd = [mx.java().java, '-cp', mx._cygpathU2W(os.pathsep.join([binDir] + classpath)), 'FilterTypes', 'com.oracle.jvmci.service.Service'] + serviceImplNames
+    services = subprocess.check_output(cmd, stderr=subprocess.PIPE)
+    if len(services) == 0:
+        return []
+    return services.split('|')
 
-def _classifyJVMCIServices(classNames, jvmciJars):
-    classification = {}
-    if not classNames:
-        return classification
-    for className in classNames:
-        classification[className] = None
-    javap = mx.java().javap
-    output = subprocess.check_output([javap, '-cp', os.pathsep.join(jvmciJars)] + classNames, stderr=subprocess.STDOUT)
-    lines = output.split(os.linesep)
-    for line in lines:
-        if line.startswith('public interface '):
-            declLine = line[len('public interface '):].strip()
-            for className in classNames:
-                if declLine.startswith(className):
-                    assert classification[className] is None
-                    afterName = declLine[len(className):]
-                    if not afterName.startswith(' extends '):
-                        classification[className] = False
-                        break
-                    superInterfaces = afterName[len(' extends '):-len(' {')].split(',')
-                    if 'com.oracle.jvmci.service.Service' in superInterfaces:
-                        classification[className] = True
-                        break
-                    maybe = [_eraseGenerics(superInterface) for superInterface in superInterfaces]
-                    classification[className] = maybe
-                    break
-    for className, v in classification.items():
-        if v is None:
-            mx.abort('Could not find interface for service ' + className + ':\n' + output)
-    return classification
-
-def _extractMaybes(classification):
-    maybes = set()
-    for v in classification.values():
-        if isinstance(v, list):
-            maybes.update(v)
-    return list(maybes)
-
-def _mergeClassification(classification, newClassification):
-    for className, value in classification.items():
-        if isinstance(value, list):
-            classification[className] = None
-            for superInterface in value:
-                if newClassification[superInterface] is True:
-                    classification[className] = True
-                    break
-                elif newClassification[superInterface] is False:
-                    if classification[className] is None:
-                        classification[className] = False
-                else:
-                    if not classification[className]:
-                        classification[className] = []
-                    classification[className].extend(newClassification[superInterface])
-
-def _filterJVMCIService(classNames, jvmciJars):
-    classification = _classifyJVMCIServices(classNames, jvmciJars)
-    needClassification = _extractMaybes(classification)
-    while needClassification:
-        _mergeClassification(classification, _classifyJVMCIServices(needClassification, jvmciJars))
-        needClassification = _extractMaybes(classification)
-    filtered = []
-    for className in classNames:
-        if classification[className] is True:
-            filtered.append(className)
-    return filtered
-
-def _extractJVMCIFiles(jvmciJars, servicesDir, optionsDir, cleanDestination=True):
+def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestination=True):
     if cleanDestination:
         if exists(servicesDir):
             shutil.rmtree(servicesDir)
@@ -653,7 +595,7 @@ def _extractJVMCIFiles(jvmciJars, servicesDir, optionsDir, cleanDestination=True
                         with zf.open(member) as optionsFile, \
                              file(targetpath, "wb") as target:
                             shutil.copyfileobj(optionsFile, target)
-    jvmciServices = _filterJVMCIService(servicesMap.keys(), jvmciJars)
+    jvmciServices = _filterJVMCIServices(servicesMap.keys(), jdkJars)
     for serviceName in jvmciServices:
         serviceImpls = servicesMap[serviceName]
         fd, tmp = tempfile.mkstemp(prefix=serviceName)
@@ -672,7 +614,7 @@ def _updateJVMCIFiles(jdkDir):
     jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.endswith('.jar')]
     jreGraalServicesDir = join(jreJVMCIDir, 'services')
     jreGraalOptionsDir = join(jreJVMCIDir, 'options')
-    _extractJVMCIFiles(jvmciJars, jreGraalServicesDir, jreGraalOptionsDir)
+    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreGraalServicesDir, jreGraalOptionsDir)
 
 def _patchGraalVersionConstant(dist):
     """
@@ -731,6 +673,24 @@ def _installDistInJdks(deployableDist):
                 if deployableDist.usesJVMCIClassLoader:
                     # deploy service files
                     _updateJVMCIFiles(jdkDir)
+
+def _getJdkDeployedJars(jdkDir):
+    """
+    Gets jar paths for all deployed distributions in the context of
+    a given JDK directory.
+    """
+    jreLibDir = join(jdkDir, 'jre', 'lib')
+    jars = []
+    for dist in _jdkDeployedDists:
+        jar = basename(mx.distribution(dist.name).path)
+        if dist.isExtension:
+            jars.append(join(jreLibDir, 'ext', jar))
+        elif dist.usesJVMCIClassLoader:
+            jars.append(join(jreLibDir, 'jvmci', jar))
+        else:
+            jars.append(join(jreLibDir, jar))
+    return jars
+
 
 # run a command in the windows SDK Debug Shell
 def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):
@@ -892,8 +852,10 @@ def build(args, vm=None):
         with open(defsPath) as fp:
             defs = fp.read()
         jvmciJars = []
+        jdkJars = []
         for jdkDist in _jdkDeployedDists:
             dist = mx.distribution(jdkDist.name)
+            jdkJars.append(join(_graal_home, dist.path))
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if jdkDist.isExtension:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_EXT_DIR)/' + basename(dist.path)
@@ -905,7 +867,7 @@ def build(args, vm=None):
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + '\n' + defLine)
             shutil.copy(dist.path, opts2.export_dir)
-        services, optionsFiles = _extractJVMCIFiles(jvmciJars, join(opts2.export_dir, 'services'), join(opts2.export_dir, 'options'))
+        services, optionsFiles = _extractJVMCIFiles(jdkJars, jvmciJars, join(opts2.export_dir, 'services'), join(opts2.export_dir, 'options'))
         for service in services:
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/' + service
             if defLine not in defs:

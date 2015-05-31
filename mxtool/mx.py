@@ -5434,8 +5434,8 @@ def show_suites(args):
         _show_section('projects', s.projects)
         _show_section('distributions', s.dists)
 
-def _compile_mx_class(javaClassName, classpath=None, jdk=None):
-    myDir = dirname(__file__)
+def _compile_mx_class(javaClassName, classpath=None, jdk=None, myDir=None):
+    myDir = dirname(__file__) if myDir is None else myDir
     binDir = join(myDir, 'bin' if not jdk else '.jdk' + str(jdk.version))
     javaSource = join(myDir, javaClassName + '.java')
     javaClass = join(binDir, javaClassName + '.class')
