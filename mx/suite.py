@@ -203,7 +203,7 @@ suite = {
     "com.oracle.nfi" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : [],
+      "dependencies" : ["com.oracle.jvmci.service"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.7",
     },
@@ -992,7 +992,7 @@ suite = {
     "com.oracle.truffle.api" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : [],
+      "dependencies" : ["com.oracle.jvmci.service"],
       "javaCompliance" : "1.7",
       "workingSets" : "API,Truffle",
     },
@@ -1301,6 +1301,9 @@ suite = {
         "com.oracle.nfi",
         "com.oracle.truffle.interop",
         "com.oracle.truffle.object.basic",
+      ],
+      "distDependencies" : [
+        "JVMCI_SERVICE",
       ],
     },
 

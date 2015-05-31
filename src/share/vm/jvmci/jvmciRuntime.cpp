@@ -644,32 +644,6 @@ JVM_ENTRY(jobject, JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass servic
   return JNIHandles::make_local(THREAD, JVMCIRuntime::get_service_impls(serviceKlass, THREAD)());
 JVM_END
 
-// private static TruffleRuntime Truffle.createRuntime()
-JVM_ENTRY(jobject, JVM_CreateTruffleRuntime(JNIEnv *env, jclass c))
-  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/truffle/hotspot/HotSpotTruffleRuntime", CHECK_NULL);
-  KlassHandle klass = JVMCIRuntime::resolve_or_fail(name, CHECK_NULL);
-
-  TempNewSymbol makeInstance = SymbolTable::new_symbol("makeInstance", CHECK_NULL);
-  TempNewSymbol sig = SymbolTable::new_symbol("()Lcom/oracle/truffle/api/TruffleRuntime;", CHECK_NULL);
-  JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, klass, makeInstance, sig, CHECK_NULL);
-  return JNIHandles::make_local(THREAD, (oop) result.get_jobject());
-JVM_END
-
-// private static NativeFunctionInterfaceRuntime.createInterface()
-JVM_ENTRY(jobject, JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c))
-  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/graal/truffle/hotspot/HotSpotTruffleRuntime", CHECK_NULL);
-  KlassHandle klass = JVMCIRuntime::resolve_or_fail(name, CHECK_NULL);
-
-  TempNewSymbol makeInstance = SymbolTable::new_symbol("createNativeFunctionInterface", CHECK_NULL);
-  TempNewSymbol sig = SymbolTable::new_symbol("()Lcom/oracle/nfi/api/NativeFunctionInterface;", CHECK_NULL);
-  JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, klass, makeInstance, sig, CHECK_NULL);
-  return JNIHandles::make_local(THREAD, (oop) result.get_jobject());
-JVM_END
-
 Handle JVMCIRuntime::callInitializer(const char* className, const char* methodName, const char* returnType) {
   guarantee(!_HotSpotJVMCIRuntime_initialized, "cannot reinitialize HotSpotJVMCIRuntime");
   Thread* THREAD = Thread::current();

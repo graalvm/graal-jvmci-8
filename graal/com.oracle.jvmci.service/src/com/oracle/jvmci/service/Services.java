@@ -29,9 +29,10 @@ import java.util.*;
 import sun.reflect.*;
 
 /**
- * A mechanism on top of the standard {@link ServiceLoader} that enables a runtime to efficiently
- * load services marked by {@link Service}. This may be important for services loaded early in the
- * runtime initialization process.
+ * A mechanism on top of the standard {@link ServiceLoader} that enables JVMCI enabled runtime to
+ * efficiently load services marked by {@link Service}. This is important to avoid the performance
+ * overhead of the standard service loader mechanism for services loaded in the runtime
+ * initialization process.
  */
 public class Services {
 
@@ -54,6 +55,7 @@ public class Services {
     @SuppressWarnings("unchecked")
     @CallerSensitive
     public static <S> Iterable<S> load(Class<S> service) {
+        // TODO(ds): add SecurityManager checks
         if (Service.class.isAssignableFrom(service)) {
             try {
                 return (Iterable<S>) cache.get(service);
@@ -65,6 +67,51 @@ public class Services {
         // Need to use the ClassLoader of the caller
         ClassLoader cl = Reflection.getCallerClass().getClassLoader();
         return ServiceLoader.load(service, cl);
+    }
+
+    /**
+     * Gets the implementation for a given service for which at most one implementation must be
+     * available.
+     *
+     * @param service the service whose implementation is being requested
+     * @param required specifies if an {@link InternalError} should be thrown if no implementation
+     *            of {@code service} is available
+     */
+    @SuppressWarnings("unchecked")
+    @CallerSensitive
+    public static <S> S loadSingle(Class<S> service, boolean required) {
+        // TODO(ds): add SecurityManager checks
+        Iterable<S> impls = null;
+        if (Service.class.isAssignableFrom(service)) {
+            try {
+                impls = (Iterable<S>) cache.get(service);
+            } catch (UnsatisfiedLinkError e) {
+                // Fall back to standard ServiceLoader
+            }
+        }
+
+        if (impls == null) {
+            // Need to use the ClassLoader of the caller
+            ClassLoader cl = Reflection.getCallerClass().getClassLoader();
+            impls = ServiceLoader.load(service, cl);
+        }
+        S singleImpl = null;
+        for (S impl : impls) {
+            if (singleImpl != null) {
+                throw new InternalError(String.format("Multiple %s implementations found: %s, %s", service.getName(), singleImpl.getClass().getName(), impl.getClass().getName()));
+            }
+            singleImpl = impl;
+        }
+        if (singleImpl == null && required) {
+            String javaHome = System.getProperty("java.home");
+            String vmName = System.getProperty("java.vm.name");
+            Formatter errorMessage = new Formatter();
+            errorMessage.format("The VM does not expose required service %s.%n", service.getName());
+            errorMessage.format("Currently used Java home directory is %s.%n", javaHome);
+            errorMessage.format("Currently used VM configuration is: %s", vmName);
+            throw new UnsupportedOperationException(errorMessage.toString());
+        }
+        return singleImpl;
     }
 
     private static native <S> S[] getServiceImpls(Class<?> service);

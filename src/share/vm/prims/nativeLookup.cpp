@@ -132,11 +132,6 @@ extern "C" {
   jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
   jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
   jobject  JNICALL JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass serviceClass);
-  jobject  JNICALL JVM_CreateTruffleRuntime(JNIEnv *env, jclass c);
-  jobject  JNICALL JVM_CreateNativeFunctionInterface(JNIEnv *env, jclass c);
-#ifdef COMPILERJVMCI
-  void     JNICALL JVM_PrintAndResetJVMCICompRate(JNIEnv *env, jclass c);
-#endif
 #endif
 }
 
@@ -152,8 +147,6 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_com_oracle_jvmci_service_JVMCIClassLoaderFactory_init",            NULL, FN_PTR(JVM_InitJVMCIClassLoader)               },
   { CC"Java_com_oracle_jvmci_runtime_JVMCI_initializeRuntime",                 NULL, FN_PTR(JVM_GetJVMCIRuntime)                    },
   { CC"Java_com_oracle_jvmci_service_Services_getServiceImpls",                NULL, FN_PTR(JVM_GetJVMCIServiceImpls)               },
-  { CC"Java_com_oracle_truffle_api_Truffle_createRuntime",                     NULL, FN_PTR(JVM_CreateTruffleRuntime)               },
-  { CC"Java_com_oracle_nfi_NativeFunctionInterfaceRuntime_createInterface",    NULL, FN_PTR(JVM_CreateNativeFunctionInterface)      },
   { CC"Java_com_oracle_jvmci_hotspot_CompilerToVMImpl_init",                   NULL, FN_PTR(JVM_InitializeJVMCINatives)             },
 #endif
 };
