@@ -43,11 +43,17 @@ public class Services {
 
     /**
      * Gets an {@link Iterable} of the implementations available for a given service.
+     *
+     * @throws SecurityException if a security manager is present and it denies
+     *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings("unchecked")
     @CallerSensitive
     public static <S> Iterable<S> load(Class<S> service) {
-        // TODO(ds): add SecurityManager checks
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new RuntimePermission("jvmciServices"));
+        }
         if (Service.class.isAssignableFrom(service)) {
             try {
                 return (Iterable<S>) cache.get(service);
@@ -68,11 +74,16 @@ public class Services {
      * @param service the service whose implementation is being requested
      * @param required specifies if an {@link InternalError} should be thrown if no implementation
      *            of {@code service} is available
+     * @throws SecurityException if a security manager is present and it denies
+     *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings("unchecked")
     @CallerSensitive
     public static <S> S loadSingle(Class<S> service, boolean required) {
-        // TODO(ds): add SecurityManager checks
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new RuntimePermission("jvmciServices"));
+        }
         Iterable<S> impls = null;
         if (Service.class.isAssignableFrom(service)) {
             try {
@@ -104,6 +115,11 @@ public class Services {
             throw new UnsupportedOperationException(errorMessage.toString());
         }
         return singleImpl;
+    }
+
+    static {
+        Reflection.registerMethodsToFilter(Services.class, "getServiceImpls");
+        Reflection.registerFieldsToFilter(Services.class, "cache");
     }
 
     private static native <S> S[] getServiceImpls(Class<?> service);
