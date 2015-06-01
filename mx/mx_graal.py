@@ -126,7 +126,7 @@ def _get_vm():
     if vm and 'graal' in vm:
         if exists(envPath):
             with open(envPath) as fp:
-                if ('DEFAULT_VM=' + vm) in fp.read():
+                if 'DEFAULT_VM=' + vm in fp.read():
                     mx.log('Please update the DEFAULT_VM value in ' + envPath + ' to replace "graal" with "jvmci"')
         vm = vm.replace('graal', 'jvmci')
     if vm is None:
