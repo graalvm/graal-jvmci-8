@@ -1296,7 +1296,7 @@ def _unittest(args, annotations, prefixCp="", blacklist=None, whitelist=None, ve
         if _get_vm() != 'jvmci':
             prefixArgs = ['-esa', '-ea']
         else:
-            prefixArgs = ['-XX:-BootstrapGraal', '-esa', '-ea']
+            prefixArgs = ['-XX:-BootstrapJVMCI', '-esa', '-ea']
         if gc_after_test:
             prefixArgs.append('-XX:-DisableExplicitGC')
         with open(testfile) as fp:
