@@ -1523,11 +1523,18 @@ class Task:
     # a non-None value from __enter__. The body of a 'with Task(...) as t'
     # statement should check 't' and exit immediately if it is None.
     filters = None
+    filtersExclude = False
 
     def __init__(self, title, tasks=None):
         self.tasks = tasks
         self.title = title
-        self.skipped = tasks is not None and Task.filters is not None and not any([f in title for f in Task.filters])
+        if tasks is not None and Task.filters is not None:
+            if Task.filtersExclude:
+                self.skipped = any([f in title for f in Task.filters])
+            else:
+                self.skipped = not any([f in title for f in Task.filters])
+        else:
+            self.skipped = False
         if not self.skipped:
             self.start = time.time()
             self.end = None
@@ -1710,6 +1717,7 @@ def gate(args, gate_body=_basic_gate_body):
     parser.add_argument('-i', '--omit-ide-clean', action='store_false', dest='cleanIde', help='omit cleaning the ide project files')
     parser.add_argument('-g', '--only-build-jvmci', action='store_false', dest='buildNonJVMCI', help='only build the JVMCI VM')
     parser.add_argument('-t', '--task-filter', help='comma separated list of substrings to select subset of tasks to be run')
+    parser.add_argument('-x', action='store_true', help='makes --task-filter an exclusion instead of inclusion filter')
     parser.add_argument('--jacocout', help='specify the output directory for jacoco report')
 
     args = parser.parse_args(args)
@@ -1717,6 +1725,9 @@ def gate(args, gate_body=_basic_gate_body):
     global _jacoco
     if args.task_filter:
         Task.filters = args.task_filter.split(',')
+        Task.filtersExclude = args.x
+    elif args.x:
+        mx.abort('-x option cannot be used without --task-filter option')
 
     # Force
     if not mx._opts.strict_compliance:
