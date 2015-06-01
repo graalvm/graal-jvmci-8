@@ -555,7 +555,7 @@ def _filterJVMCIServices(serviceImplNames, classpath):
     """
     _, binDir = mx._compile_mx_class('FilterTypes', os.pathsep.join(classpath), myDir=dirname(__file__))
     cmd = [mx.java().java, '-cp', mx._cygpathU2W(os.pathsep.join([binDir] + classpath)), 'FilterTypes', 'com.oracle.jvmci.service.Service'] + serviceImplNames
-    services = subprocess.check_output(cmd, stderr=subprocess.PIPE)
+    services = subprocess.check_output(cmd)
     if len(services) == 0:
         return []
     return services.split('|')
