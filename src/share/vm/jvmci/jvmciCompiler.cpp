@@ -127,11 +127,13 @@ void JVMCICompiler::compile_method(methodHandle method, int entry_bci, JVMCIEnv*
   ResourceMark rm;
   JavaValue result(T_VOID);
   JavaCallArguments args;
+  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime();
+  args.push_oop(receiver);
   args.push_long((jlong) (address) method());
   args.push_int(entry_bci);
   args.push_long((jlong) (address) env);
   args.push_int(env->task()->compile_id());
-  JavaCalls::call_static(&result, SystemDictionary::CompilationTask_klass(), vmSymbols::compileMetaspaceMethod_name(), vmSymbols::compileMetaspaceMethod_signature(), &args, CHECK_ABORT);
+  JavaCalls::call_special(&result, receiver->klass(), vmSymbols::compileMetaspaceMethod_name(), vmSymbols::compileMetaspaceMethod_signature(), &args, CHECK_ABORT);
 
   _methodsCompiled++;
 }
@@ -158,11 +160,10 @@ void JVMCICompiler::print_compilation_timers() {
 void JVMCICompiler::compile_the_world() {
   HandleMark hm;
   JavaThread* THREAD = JavaThread::current();
-  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/HotSpotJVMCIRuntime", CHECK_ABORT);
-  KlassHandle klass = JVMCIRuntime::load_required_class(name);
+  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime();
   TempNewSymbol compileTheWorld = SymbolTable::new_symbol("compileTheWorld", CHECK_ABORT);
   JavaValue result(T_VOID);
   JavaCallArguments args;
-  args.push_oop(JVMCIRuntime::get_HotSpotJVMCIRuntime());
-  JavaCalls::call_special(&result, klass, compileTheWorld, vmSymbols::void_method_signature(), &args, CHECK_ABORT);
+  args.push_oop(receiver);
+  JavaCalls::call_special(&result, receiver->klass(), compileTheWorld, vmSymbols::void_method_signature(), &args, CHECK_ABORT);
 }

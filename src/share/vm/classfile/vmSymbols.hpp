@@ -316,7 +316,6 @@
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_HotSpotObjectConstantImpl,       "com/oracle/jvmci/hotspot/HotSpotObjectConstantImpl"))            \
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_HotSpotMetaspaceConstantImpl,    "com/oracle/jvmci/hotspot/HotSpotMetaspaceConstantImpl"))         \
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_HotSpotStackFrameReference,      "com/oracle/jvmci/hotspot/HotSpotStackFrameReference"))           \
-  JVMCI_ONLY(template(com_oracle_graal_hotspot_CompilationTask,                 "com/oracle/graal/hotspot/CompilationTask"))                      \
   JVMCI_ONLY(template(com_oracle_jvmci_meta_JavaConstant,                       "com/oracle/jvmci/meta/JavaConstant"))                            \
   JVMCI_ONLY(template(com_oracle_jvmci_meta_PrimitiveConstant,                  "com/oracle/jvmci/meta/PrimitiveConstant"))                       \
   JVMCI_ONLY(template(com_oracle_jvmci_meta_RawConstant,                        "com/oracle/jvmci/meta/RawConstant"))                             \

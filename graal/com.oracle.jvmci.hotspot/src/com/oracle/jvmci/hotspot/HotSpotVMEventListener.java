@@ -30,6 +30,12 @@ public interface HotSpotVMEventListener extends Service {
      * Notifies this client that HotSpot is running in CompileTheWorld mode and the JVMCI compiler
      * should now perform its version of CompileTheWorld.
      */
+    void compileMetaspaceMethod(long metaspaceMethod, int entryBCI, long jvmciEnv, int id);
+
+    /**
+     * Notifies this client that HotSpot is running in CompileTheWorld mode and the JVMCI compiler
+     * should now perform its version of CompileTheWorld.
+     */
     void notifyCompileTheWorld() throws Throwable;
 
     /**
