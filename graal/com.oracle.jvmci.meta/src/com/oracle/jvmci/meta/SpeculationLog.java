@@ -20,9 +20,8 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.jvmci.code;
+package com.oracle.jvmci.meta;
 
-import com.oracle.jvmci.meta.JavaConstant;
 import java.util.*;
 import java.util.concurrent.*;
 

@@ -343,6 +343,7 @@ EXPORT_JRE_LIB_DIR = $(EXPORT_JRE_DIR)/lib
 EXPORT_JRE_LIB_EXT_DIR = $(EXPORT_JRE_LIB_DIR)/ext
 EXPORT_JRE_LIB_JVMCI_DIR = $(EXPORT_JRE_LIB_DIR)/jvmci
 EXPORT_JRE_LIB_JVMCI_SERVICES_DIR = $(EXPORT_JRE_LIB_JVMCI_DIR)/services
+EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR = $(EXPORT_JRE_LIB_JVMCI_DIR)/options
 EXPORT_JRE_LIB_ARCH_DIR = $(EXPORT_JRE_LIB_DIR)/$(LIBARCH)
 
 # non-universal macosx builds need to appear universal
@@ -368,6 +369,10 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-hotspot.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIBackendFactory
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotVMEventListener
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.debug.DebugInitializationPropertyProvider
+
+ifneq ("$(wildcard $(SHARED_DIR)/services/com.oracle.jvmci.hotspot.events.EventProvider)","")
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.events.EventProvider
+endif
 
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.api.runtime.GraalRuntimeAccess
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.compiler.match.MatchStatementSet
@@ -398,7 +403,6 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.HotS
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.replacements.InstanceOfSnippets
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.replacements.MonitorSnippets
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.replacements.NewObjectSnippets
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.java.AbstractBytecodeParser
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.alloc.lsra.LinearScan
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.alloc.lsra.LocationMarker
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.alloc.lsra.OptimizingLinearScanWalker

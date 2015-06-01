@@ -128,7 +128,23 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
     /**
      * Returns an object that provides access to the profiling information recorded for this method.
      */
-    ProfilingInfo getProfilingInfo();
+    default ProfilingInfo getProfilingInfo() {
+        return getProfilingInfo(true, true);
+    }
+
+    /**
+     * Returns an object that provides access to the profiling information recorded for this method.
+     *
+     * @param includeNormal if true,
+     *            {@linkplain ProfilingInfo#getDeoptimizationCount(DeoptimizationReason)
+     *            deoptimization counts} will include deoptimization that happened during execution
+     *            of standard non-osr methods.
+     * @param includeOSR if true,
+     *            {@linkplain ProfilingInfo#getDeoptimizationCount(DeoptimizationReason)
+     *            deoptimization counts} will include deoptimization that happened during execution
+     *            of on-stack-replacement methods.
+     */
+    ProfilingInfo getProfilingInfo(boolean includeNormal, boolean includeOSR);
 
     /**
      * Invalidates the profiling information and restarts profiling upon the next invocation.
@@ -295,4 +311,6 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
     default boolean isJavaLangObjectInit() {
         return getDeclaringClass().isJavaLangObject() && getName().equals("<init>");
     }
+
+    SpeculationLog getSpeculationLog();
 }

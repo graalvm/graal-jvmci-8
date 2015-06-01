@@ -1034,7 +1034,7 @@ C2V_END
 #define TYPE                  "Lcom/oracle/jvmci/meta/JavaType;"
 #define METHOD                "Lcom/oracle/jvmci/meta/JavaMethod;"
 #define FIELD                 "Lcom/oracle/jvmci/meta/JavaField;"
-#define SPECULATION_LOG       "Lcom/oracle/jvmci/code/SpeculationLog;"
+#define SPECULATION_LOG       "Lcom/oracle/jvmci/meta/SpeculationLog;"
 #define STRING                "Ljava/lang/String;"
 #define OBJECT                "Ljava/lang/Object;"
 #define CLASS                 "Ljava/lang/Class;"

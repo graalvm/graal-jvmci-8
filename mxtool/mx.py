@@ -1214,6 +1214,7 @@ class Suite:
         #
         # Removed projects and libraries are also removed from
         # distributions in they are listed as dependencies.
+        ommittedDeps = set()
         for d in sorted_deps(includeLibs=True):
             if d.isLibrary():
                 if d.optional:
@@ -1226,11 +1227,13 @@ class Suite:
                         d.optional = True
                     if not path:
                         logv('[omitting optional library {0} as {1} does not exist]'.format(d, d.path))
+                        ommittedDeps.add(d.name)
                         del _libs[d.name]
                         self.libs.remove(d)
             elif d.isProject():
                 if java(d.javaCompliance, cancel='some projects will be omitted which may result in errrors') is None:
                     logv('[omitting project {0} as Java compliance {1} cannot be satisfied by configured JDKs]'.format(d, d.javaCompliance))
+                    ommittedDeps.add(d.name)
                     del _projects[d.name]
                     self.projects.remove(d)
                 else:
@@ -1240,17 +1243,19 @@ class Suite:
                             if not jreLib.is_present_in_jdk(java(d.javaCompliance)):
                                 if jreLib.optional:
                                     logv('[omitting project {0} as dependency {1} is missing]'.format(d, name))
+                                    ommittedDeps.add(d.name)
                                     del _projects[d.name]
                                     self.projects.remove(d)
                                 else:
                                     abort('JRE library {0} required by {1} not found'.format(jreLib, d))
                         elif not dependency(name, fatalIfMissing=False):
                             logv('[omitting project {0} as dependency {1} is missing]'.format(d, name))
+                            ommittedDeps.add(d.name)
                             del _projects[d.name]
                             self.projects.remove(d)
         for dist in _dists.itervalues():
             for name in list(dist.deps):
-                if not dependency(name, fatalIfMissing=False):
+                if name in ommittedDeps:
                     logv('[omitting {0} from distribution {1}]'.format(name, dist))
                     dist.deps.remove(name)
 

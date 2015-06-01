@@ -20,12 +20,15 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.jfr.events;
+package com.oracle.jvmci.hotspot.jfr.events;
 
 import java.net.*;
 
-import com.oracle.graal.hotspot.events.*;
 import com.oracle.jrockit.jfr.*;
+import com.oracle.jvmci.hotspot.*;
+import com.oracle.jvmci.hotspot.events.*;
+import com.oracle.jvmci.hotspot.events.EmptyEventProvider.EmptyCompilerFailureEvent;
+import com.oracle.jvmci.hotspot.events.EmptyEventProvider.EmptyCompilationEvent;
 import com.oracle.jvmci.service.*;
 
 /**
@@ -35,27 +38,30 @@ import com.oracle.jvmci.service.*;
 @ServiceProvider(EventProvider.class)
 public final class JFREventProvider implements EventProvider {
 
-    @SuppressWarnings("deprecation") private final Producer producer;
+    private final boolean enabled;
 
     @SuppressWarnings("deprecation")
     public JFREventProvider() {
-        try {
-            /*
-             * The "HotSpot JVM" producer is a native producer and we cannot use it. So we create
-             * our own. This has the downside that Mission Control is confused and doesn't show
-             * Graal's events in the "Code" tab. There are plans to revise the JFR code for JDK 9.
-             */
-            producer = new Producer("HotSpot JVM", "Oracle Hotspot JVM", "http://www.oracle.com/hotspot/jvm/");
-            producer.register();
-        } catch (URISyntaxException e) {
-            throw new InternalError(e);
-        }
-
-        // Register event classes with Producer.
-        for (Class<?> c : JFREventProvider.class.getDeclaredClasses()) {
-            if (c.isAnnotationPresent(EventDefinition.class)) {
-                assert com.oracle.jrockit.jfr.InstantEvent.class.isAssignableFrom(c) : c;
-                registerEvent(c);
+        enabled = HotSpotJVMCIRuntime.runtime().getConfig().flightRecorder;
+        if (enabled) {
+            try {
+                /*
+                 * The "HotSpot JVM" producer is a native producer and we cannot use it. So we
+                 * create our own. This has the downside that Mission Control is confused and
+                 * doesn't show Graal's events in the "Code" tab. There are plans to revise the JFR
+                 * code for JDK 9.
+                 */
+                Producer producer = new Producer("HotSpot JVM", "Oracle Hotspot JVM", "http://www.oracle.com/hotspot/jvm/");
+                producer.register();
+                // Register event classes with Producer.
+                for (Class<?> c : JFREventProvider.class.getDeclaredClasses()) {
+                    if (c.isAnnotationPresent(EventDefinition.class)) {
+                        assert com.oracle.jrockit.jfr.InstantEvent.class.isAssignableFrom(c) : c;
+                        registerEvent(producer, c);
+                    }
+                }
+            } catch (URISyntaxException e) {
+                throw new InternalError(e);
             }
         }
     }
@@ -67,7 +73,7 @@ public final class JFREventProvider implements EventProvider {
      * @return the {@link EventToken event token}
      */
     @SuppressWarnings({"deprecation", "javadoc", "unchecked"})
-    private EventToken registerEvent(Class<?> c) {
+    private static EventToken registerEvent(Producer producer, Class<?> c) {
         try {
             return producer.addEvent((Class<? extends com.oracle.jrockit.jfr.InstantEvent>) c);
         } catch (InvalidEventDefinitionException | InvalidValueException e) {
@@ -76,7 +82,10 @@ public final class JFREventProvider implements EventProvider {
     }
 
     public CompilationEvent newCompilationEvent() {
-        return new JFRCompilationEvent();
+        if (enabled) {
+            return new JFRCompilationEvent();
+        }
+        return new EmptyCompilationEvent();
     }
 
     /**
@@ -130,7 +139,10 @@ public final class JFREventProvider implements EventProvider {
     }
 
     public CompilerFailureEvent newCompilerFailureEvent() {
-        return new JFRCompilerFailureEvent();
+        if (enabled) {
+            return new JFRCompilerFailureEvent();
+        }
+        return new EmptyCompilerFailureEvent();
     }
 
     /**

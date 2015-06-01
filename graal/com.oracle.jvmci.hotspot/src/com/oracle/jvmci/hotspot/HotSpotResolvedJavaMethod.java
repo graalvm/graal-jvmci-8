@@ -24,7 +24,6 @@ package com.oracle.jvmci.hotspot;
 
 import java.lang.reflect.*;
 
-import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.meta.*;
 
 /**
@@ -85,8 +84,6 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
      */
     boolean hasCompiledCodeAtLevel(int level);
 
-    ProfilingInfo getCompilationProfilingInfo(boolean isOSR);
-
     default boolean isDefault() {
         if (isConstructor()) {
             return false;
@@ -116,6 +113,4 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
     int allocateCompileId(int entryBCI);
 
     boolean hasCodeAtLevel(int entryBCI, int level);
-
-    SpeculationLog getSpeculationLog();
 }

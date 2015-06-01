@@ -239,7 +239,7 @@ class Ticks;
   JVMCI_ONLY(do_klass(StackSlot_klass,                       com_oracle_jvmci_code_StackSlot,                              Jvmci)) \
   JVMCI_ONLY(do_klass(StackLockValue_klass,                  com_oracle_jvmci_code_StackLockValue,                         Jvmci)) \
   JVMCI_ONLY(do_klass(VirtualObject_klass,                   com_oracle_jvmci_code_VirtualObject,                          Jvmci)) \
-  JVMCI_ONLY(do_klass(SpeculationLog_klass,                  com_oracle_jvmci_code_SpeculationLog,                         Jvmci)) \
+  JVMCI_ONLY(do_klass(SpeculationLog_klass,                  com_oracle_jvmci_meta_SpeculationLog,                         Jvmci)) \
   JVMCI_ONLY(do_klass(JavaConstant_klass,                    com_oracle_jvmci_meta_JavaConstant,                           Jvmci)) \
   JVMCI_ONLY(do_klass(PrimitiveConstant_klass,               com_oracle_jvmci_meta_PrimitiveConstant,                      Jvmci)) \
   JVMCI_ONLY(do_klass(RawConstant_klass,                     com_oracle_jvmci_meta_RawConstant,                            Jvmci)) \

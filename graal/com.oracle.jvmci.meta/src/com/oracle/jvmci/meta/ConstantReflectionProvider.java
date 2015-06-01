@@ -64,7 +64,7 @@ public interface ConstantReflectionProvider {
 
     /**
      * Reads a value from the given array at the given offset if it is a stable array. The offset
-     * will decoded relative to the platform addressing into an index into the array. Returns
+     * will be decoded relative to the platform addressing into an index into the array. Returns
      * {@code null} if the constant is not a stable array, if it is a default value, if the offset
      * is out of bounds, or if the value is not available at this point.
      */

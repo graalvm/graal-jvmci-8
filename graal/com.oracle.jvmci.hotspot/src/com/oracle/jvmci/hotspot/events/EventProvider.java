@@ -20,12 +20,14 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.events;
+package com.oracle.jvmci.hotspot.events;
+
+import com.oracle.jvmci.service.*;
 
 /**
  * A provider that provides a specific implementation for events that can be logged in the compiler.
  */
-public interface EventProvider {
+public interface EventProvider extends Service {
 
     /**
      * An instant event is an event that is not considered to have taken any time.
