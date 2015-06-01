@@ -67,7 +67,7 @@ CFLAGS$(HOTSPARC_GENERIC) += $(OPT_CFLAGS/BYFILE)
 # Linker mapfiles
 MAPFILE = $(GAMMADIR)/make/solaris/makefiles/mapfile-vers
 ifdef JVMCI
-MAPFILE += $(GAMMADIR)/make/solaris/makefiles/mapfile-vers-product
+MAPFILE += $(GAMMADIR)/make/solaris/makefiles/mapfile-vers-JVMCI
 endif
 
 ifndef USE_GCC
