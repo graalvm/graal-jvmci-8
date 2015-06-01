@@ -47,7 +47,7 @@ CFLAGS += $(DEBUG_CFLAGS/BYFILE) -D_NMT_NOINLINE_
 MAPFILE = $(GAMMADIR)/make/solaris/makefiles/mapfile-vers \
           $(GAMMADIR)/make/solaris/makefiles/mapfile-vers-debug
 #ifdef JVMCI
-MAPFILE += $(GAMMADIR)/make/solaris/makefiles/mapfile-vers-JVMCI
+MAPFILE += $(GAMMADIR)/make/solaris/makefiles/mapfile-vers-debug
 #endif
 
 # This mapfile is only needed when compiling with dtrace support,

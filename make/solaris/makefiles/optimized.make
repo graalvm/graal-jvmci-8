@@ -55,7 +55,7 @@ CFLAGS$(HOTSPARC_GENERIC) += $(OPT_CFLAGS/BYFILE)
 # Linker mapfiles
 MAPFILE = $(GAMMADIR)/make/solaris/makefiles/mapfile-vers
 #ifdef JVMCI
-MAPFILE += $(GAMMADIR)/make/solaris/makefiles/mapfile-vers-JVMCI
+MAPFILE += $(GAMMADIR)/make/solaris/makefiles/mapfile-vers-optimized
 #endif
 
 # This mapfile is only needed when compiling with dtrace support, 
