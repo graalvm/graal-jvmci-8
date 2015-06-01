@@ -1059,9 +1059,6 @@ void JVMCIRuntime::shutdown() {
     JavaCallArguments args;
     args.push_oop(receiver);
     JavaCalls::call_special(&result, receiver->klass(), vmSymbols::shutdown_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
-
-    JNIHandles::destroy_global(_HotSpotJVMCIRuntime_instance);
-    _HotSpotJVMCIRuntime_instance = NULL;
   }
 }
 
