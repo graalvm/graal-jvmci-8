@@ -54,6 +54,8 @@ _vmChoices = {
     'client-nojvmci' : None,  # all compilation with client compiler, JVMCI omitted
     'original' : None,  # default VM copied from bootstrap JDK
     'graal' : None, # alias for jvmci
+    'server-nograal' : None,  # alias for server-nojvmci
+    'client-nograal' : None,  # alias for client-nojvmci
 }
 
 """ The VM that will be run by the 'vm' command and built by default by the 'build' command.
@@ -121,12 +123,12 @@ def _get_vm():
         return _vm
     vm = mx.get_env('DEFAULT_VM')
     envPath = join(_graal_home, 'mx', 'env')
-    if vm == 'graal':
+    if vm and 'graal' in vm:
         if exists(envPath):
             with open(envPath) as fp:
-                if 'DEFAULT_VM=graal' in fp.read():
-                    mx.log('Please update the DEFAULT_VM entry in ' + envPath + ' to use "jvmci" instead of "graal" as the value')
-        vm = 'jvmci'
+                if ('DEFAULT_VM=' + vm) in fp.read():
+                    mx.log('Please update the DEFAULT_VM value in ' + envPath + ' to replace "graal" with "jvmci"')
+        vm = vm.replace('graal', 'jvmci')
     if vm is None:
         if not mx.is_interactive():
             mx.abort('Need to specify VM with --vm option or DEFAULT_VM environment variable')
@@ -2662,8 +2664,7 @@ def mx_post_parse_cmd_line(opts):  #
         if hasattr(opts, 'vm') and opts.vm is not None:
             global _vm
             _vm = opts.vm
-            if _vm == 'graal':
-                _vm = 'jvmci'
+            _vm = _vm.replace('graal', 'jvmci')
         if hasattr(opts, 'vmbuild') and opts.vmbuild is not None:
             global _vmbuild
             _vmbuild = opts.vmbuild
