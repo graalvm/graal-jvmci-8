@@ -35,7 +35,7 @@ public class FilterTypes {
         for (int i = 1; i < args.length; ++i) {
             String serviceName = args[i];
             Class<?> service = lookupService(serviceName);
-            if (jvmciServiceInterface.isAssignableFrom(service)) {
+            if (service != null && jvmciServiceInterface.isAssignableFrom(service)) {
                 if (buf.length() != 0) {
                     buf.append('|');
                 }
@@ -57,6 +57,7 @@ public class FilterTypes {
     		// Must be stderr to avoid polluting the result being
     		// written to stdout.
     		System.err.println(e);
+    		return null;
     	}
     }
 }
