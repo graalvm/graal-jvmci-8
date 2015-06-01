@@ -358,18 +358,18 @@ suite = {
       "workingSets" : "Graal,HotSpot",
     },
 
-    "com.oracle.graal.hotspot.jfr" : {
+    "com.oracle.jvmci.hotspot.jfr" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.hotspot",
+        "com.oracle.jvmci.hotspot",
         "JFR",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "javaCompliance" : "1.8",
       "profile" : "",
-      "workingSets" : "Graal,HotSpot",
+      "workingSets" : "JVMCI,HotSpot",
     },
 
     "com.oracle.graal.hotspot.amd64" : {
@@ -1268,7 +1268,10 @@ suite = {
       "path" : "build/jvmci-hotspot.jar",
       "subDir" : "graal",
       "sourcesPath" : "build/jvmci-hotspot.src.zip",
-      "dependencies" : ["com.oracle.jvmci.hotspot"],
+      "dependencies" : [
+        "com.oracle.jvmci.hotspot",
+        "com.oracle.jvmci.hotspot.jfr",
+      ],
       "distDependencies" : [
         "JVMCI_API",
       ],
@@ -1282,7 +1285,6 @@ suite = {
         "com.oracle.graal.hotspot.amd64",
         "com.oracle.graal.hotspot.sparc",
         "com.oracle.graal.hotspot",
-        "com.oracle.graal.hotspot.jfr",
       ],
       "exclude" : ["FINDBUGS"],
       "distDependencies" : [

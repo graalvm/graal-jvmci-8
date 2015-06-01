@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.events;
+package com.oracle.jvmci.hotspot.events;
 
 import com.oracle.jvmci.common.*;
 
@@ -34,7 +34,7 @@ public final class EmptyEventProvider implements EventProvider {
         return new EmptyCompilationEvent();
     }
 
-    class EmptyCompilationEvent implements CompilationEvent {
+    public static class EmptyCompilationEvent implements CompilationEvent {
         public void commit() {
             throw JVMCIError.shouldNotReachHere();
         }
@@ -83,7 +83,7 @@ public final class EmptyEventProvider implements EventProvider {
         return new EmptyCompilerFailureEvent();
     }
 
-    class EmptyCompilerFailureEvent implements CompilerFailureEvent {
+    public static class EmptyCompilerFailureEvent implements CompilerFailureEvent {
         public void commit() {
             throw JVMCIError.shouldNotReachHere();
         }

@@ -63,6 +63,10 @@
 
 # Default is build both product fastdebug and create export area
 
+
+# Directory for shared code (e.g. jvmci.jar)
+SHARED_DIR=$(OUTPUTDIR)/shared
+
 # Allow to build HotSpot in local directory from sources specified by GAMMADIR.
 # After make/defs.make GAMMADIR is defined.
 ifdef GAMMADIR
@@ -83,9 +87,6 @@ ifneq ($(ALT_OUTPUTDIR),)
 else
   ALT_OUT=
 endif
-
-# Directory for shared code (e.g. jvmci.jar)
-SHARED_DIR=$(OUTPUTDIR)/shared
 
 # Typical C1/C2 targets made available with this Makefile
 C1_VM_TARGETS=product1 fastdebug1 optimized1 debug1
