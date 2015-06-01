@@ -1205,7 +1205,7 @@ objArrayHandle JVMCIRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) 
   char sep = os::file_separator()[0];
   sprintf(path, "%s%clib%cjvmci%cservices%c%s", home, sep, sep, sep, sep, serviceName);
   ServiceParseClosure closure;
-  parse_lines(path, &closure, true); // TODO(gd) cache parsing results?
+  parse_lines(path, &closure, false);
 
   GrowableArray<char*>* implNames = closure.implNames();
   objArrayOop servicesOop = oopFactory::new_objArray(serviceKlass(), implNames->length(), CHECK_(objArrayHandle()));

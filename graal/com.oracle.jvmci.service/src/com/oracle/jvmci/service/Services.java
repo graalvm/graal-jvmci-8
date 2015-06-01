@@ -22,8 +22,6 @@
  */
 package com.oracle.jvmci.service;
 
-import static java.lang.String.*;
-
 import java.util.*;
 
 import sun.reflect.*;
@@ -39,13 +37,7 @@ public class Services {
     private static final ClassValue<List<Service>> cache = new ClassValue<List<Service>>() {
         @Override
         protected List<Service> computeValue(Class<?> type) {
-            Service[] names = getServiceImpls(type);
-            if (names == null || names.length == 0) {
-                throw new InternalError(
-                                format("No implementations for %s found (ensure %s extends %s and that in suite.py the \"annotationProcessors\" attribute for the project enclosing %s includes \"com.oracle.jvmci.service.processor\")",
-                                                type.getSimpleName(), type.getSimpleName(), Service.class, type.getSimpleName()));
-            }
-            return Arrays.asList(names);
+            return Arrays.asList(getServiceImpls(type));
         }
     };
 
