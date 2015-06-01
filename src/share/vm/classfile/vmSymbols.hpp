@@ -331,6 +331,7 @@
   JVMCI_ONLY(template(com_oracle_jvmci_meta_Assumptions_NoFinalizableSubclass,  "com/oracle/jvmci/meta/Assumptions$NoFinalizableSubclass"))       \
   JVMCI_ONLY(template(com_oracle_jvmci_meta_Assumptions_ConcreteMethod,         "com/oracle/jvmci/meta/Assumptions$ConcreteMethod"))              \
   JVMCI_ONLY(template(com_oracle_jvmci_meta_Assumptions_CallSiteTargetValue,    "com/oracle/jvmci/meta/Assumptions$CallSiteTargetValue"))         \
+  JVMCI_ONLY(template(com_oracle_jvmci_meta_SpeculationLog,                     "com/oracle/jvmci/meta/SpeculationLog"))                          \
   JVMCI_ONLY(template(com_oracle_jvmci_code_CompilationResult_Call,             "com/oracle/jvmci/code/CompilationResult$Call"))                  \
   JVMCI_ONLY(template(com_oracle_jvmci_code_CompilationResult_ConstantReference, "com/oracle/jvmci/code/CompilationResult$ConstantReference"))    \
   JVMCI_ONLY(template(com_oracle_jvmci_code_CompilationResult_DataPatch,        "com/oracle/jvmci/code/CompilationResult$DataPatch"))             \
@@ -352,7 +353,6 @@
   JVMCI_ONLY(template(com_oracle_jvmci_code_VirtualObject,                      "com/oracle/jvmci/code/VirtualObject"))                           \
   JVMCI_ONLY(template(com_oracle_jvmci_code_RegisterSaveLayout,                 "com/oracle/jvmci/code/RegisterSaveLayout"))                      \
   JVMCI_ONLY(template(com_oracle_jvmci_code_InvalidInstalledCodeException,      "com/oracle/jvmci/code/InvalidInstalledCodeException"))           \
-  JVMCI_ONLY(template(com_oracle_jvmci_code_SpeculationLog,                     "com/oracle/jvmci/code/SpeculationLog"))                          \
   JVMCI_ONLY(template(compileMetaspaceMethod_name,                     "compileMetaspaceMethod"))                                                 \
   JVMCI_ONLY(template(compileMetaspaceMethod_signature,                "(JIJI)V"))                                                                \
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_Stable_signature, "Lcom/oracle/jvmci/hotspot/Stable;"))                                            \

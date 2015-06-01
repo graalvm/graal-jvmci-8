@@ -295,4 +295,6 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
     default boolean isJavaLangObjectInit() {
         return getDeclaringClass().isJavaLangObject() && getName().equals("<init>");
     }
+
+    SpeculationLog getSpeculationLog();
 }
