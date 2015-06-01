@@ -81,7 +81,7 @@ suite = {
     },
 
     "FINDBUGS" : {
-      "path" : "lib/findbugs-SuppressFBWarnings.jar",
+      "path" : "graal/findbugs-SuppressFBWarnings.jar",
       "sha1" : "fb78822d27c68fabf2cb2e5e573b3cdb5f9cae2d",
     },
 
