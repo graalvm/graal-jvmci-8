@@ -857,9 +857,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "JUNIT",
         "com.oracle.jvmci.runtime.test",
-        "com.oracle.graal.runtime",
         "com.oracle.graal.java",
       ],
       "checkstyle" : "com.oracle.graal.graph",
