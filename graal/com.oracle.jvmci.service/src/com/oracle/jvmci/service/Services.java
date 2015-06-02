@@ -34,10 +34,23 @@ import sun.reflect.*;
  */
 public class Services {
 
+    /**
+     * Determines whether to suppress the {@link NoClassDefFoundError} raised if a service
+     * implementation class specified in a {@code <jre>/jvmci/services/*} file is missing.
+     */
+    private static final boolean SuppressNoClassDefFoundError = Boolean.getBoolean("jvmci.service.suppressNoClassDefFoundError");
+
     private static final ClassValue<List<Service>> cache = new ClassValue<List<Service>>() {
         @Override
         protected List<Service> computeValue(Class<?> type) {
-            return Arrays.asList(getServiceImpls(type));
+            try {
+                return Arrays.asList(getServiceImpls(type));
+            } catch (NoClassDefFoundError e) {
+                if (SuppressNoClassDefFoundError) {
+                    return Collections.emptyList();
+                }
+                throw e;
+            }
         }
     };
 

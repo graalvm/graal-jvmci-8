@@ -20,20 +20,18 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.sparc.jvmci;
+package com.oracle.jvmci.hotspot.sparc;
 
 import static com.oracle.jvmci.hotspot.InitTimer.*;
 
 import java.util.*;
 
-import com.oracle.graal.hotspot.*;
-import com.oracle.graal.hotspot.sparc.*;
-import com.oracle.graal.sparc.*;
-import com.oracle.graal.sparc.SPARC.CPUFeature;
 import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.hotspot.*;
 import com.oracle.jvmci.runtime.*;
 import com.oracle.jvmci.service.*;
+import com.oracle.jvmci.sparc.*;
+import com.oracle.jvmci.sparc.SPARC.CPUFeature;
 
 @ServiceProvider(HotSpotJVMCIBackendFactory.class)
 public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFactory {

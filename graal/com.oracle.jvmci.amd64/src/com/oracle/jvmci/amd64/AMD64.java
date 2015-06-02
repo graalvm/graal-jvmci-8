@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.amd64;
+package com.oracle.jvmci.amd64;
 
 import com.oracle.jvmci.code.Architecture;
 import com.oracle.jvmci.code.Register;
