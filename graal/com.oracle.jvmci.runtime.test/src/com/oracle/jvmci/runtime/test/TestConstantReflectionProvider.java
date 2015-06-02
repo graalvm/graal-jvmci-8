@@ -20,11 +20,12 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.java.test;
+package com.oracle.jvmci.runtime.test;
 
 import static org.junit.Assert.*;
 
 import java.lang.reflect.*;
+import java.util.*;
 
 import org.junit.*;
 
@@ -39,12 +40,12 @@ public class TestConstantReflectionProvider extends TypeUniverse {
 
     @Test
     public void constantEqualsTest() {
-        for (JavaConstant c1 : constants) {
-            for (JavaConstant c2 : constants) {
+        for (ConstantValue c1 : constants()) {
+            for (ConstantValue c2 : constants()) {
                 // test symmetry
-                assertEquals(constantReflection.constantEquals(c1, c2), constantReflection.constantEquals(c2, c1));
-                if (c1.getKind() != Kind.Object && c2.getKind() != Kind.Object) {
-                    assertEquals(c1.equals(c2), constantReflection.constantEquals(c2, c1));
+                assertEquals(constantReflection.constantEquals(c1.value, c2.value), constantReflection.constantEquals(c2.value, c1.value));
+                if (c1.value.getKind() != Kind.Object && c2.value.getKind() != Kind.Object) {
+                    assertEquals(c1.value.equals(c2.value), constantReflection.constantEquals(c2.value, c1.value));
                 }
             }
         }
@@ -52,52 +53,73 @@ public class TestConstantReflectionProvider extends TypeUniverse {
 
     @Test
     public void readArrayLengthTest() {
-        for (JavaConstant c : constants) {
+        for (ConstantValue cv : constants()) {
+            JavaConstant c = cv.value;
             Integer actual = constantReflection.readArrayLength(c);
-            if (c.getKind() != Kind.Object || c.isNull() || !snippetReflection.asObject(Object.class, c).getClass().isArray()) {
+            if (c.getKind() != Kind.Object || c.isNull() || !cv.boxed.getClass().isArray()) {
                 assertNull(actual);
             } else {
                 assertNotNull(actual);
                 int actualInt = actual;
-                assertEquals(Array.getLength(snippetReflection.asObject(Object.class, c)), actualInt);
+                assertEquals(Array.getLength(cv.boxed), actualInt);
             }
         }
     }
 
+    static class PrimitiveConstants {
+        static final long LONG_CONST = 42;
+        static final int INT_CONST = 66;
+        static final byte BYTE_CONST = 123;
+        static final boolean BOOL_CONST = true;
+    }
+
+    static class BoxedConstants {
+        static final Long LONG_CONST = 42L;
+        static final Integer INT_CONST = 66;
+        static final Byte BYTE_CONST = 123;
+        static final Boolean BOOL_CONST = true;
+    }
+
     @Test
     public void boxTest() {
-        for (JavaConstant c : constants) {
+        for (ConstantValue cv : constants()) {
+            JavaConstant c = cv.value;
             JavaConstant boxed = constantReflection.boxPrimitive(c);
-            if (c.getKind().isPrimitive()) {
+            if (boxed != null && c.getKind().isPrimitive()) {
                 assertTrue(boxed.getKind().isObject());
                 assertFalse(boxed.isNull());
             }
         }
 
-        assertEquals(Long.valueOf(42), snippetReflection.asObject(Long.class, constantReflection.boxPrimitive(JavaConstant.forLong(42))));
-        assertEquals(Integer.valueOf(66), snippetReflection.asObject(Integer.class, constantReflection.boxPrimitive(JavaConstant.forInt(66))));
-        assertEquals(Byte.valueOf((byte) 123), snippetReflection.asObject(Byte.class, constantReflection.boxPrimitive(JavaConstant.forByte((byte) 123))));
-        assertSame(Boolean.TRUE, snippetReflection.asObject(Boolean.class, constantReflection.boxPrimitive(JavaConstant.forBoolean(true))));
+        List<ConstantValue> primitiveConstants = readConstants(PrimitiveConstants.class);
+        List<ConstantValue> boxedConstants = readConstants(BoxedConstants.class);
+        for (int i = 0; i < primitiveConstants.size(); i++) {
+            ConstantValue prim = primitiveConstants.get(i);
+            ConstantValue box = boxedConstants.get(i);
+            assertEquals(box.value, constantReflection.boxPrimitive(prim.value));
+        }
 
         assertNull(constantReflection.boxPrimitive(JavaConstant.NULL_POINTER));
-        assertNull(constantReflection.boxPrimitive(snippetReflection.forObject("abc")));
     }
 
     @Test
     public void unboxTest() {
-        for (JavaConstant c : constants) {
+        for (ConstantValue cv : constants()) {
+            JavaConstant c = cv.value;
             JavaConstant unboxed = c.isNull() ? null : constantReflection.unboxPrimitive(c);
             if (unboxed != null) {
                 assertFalse(unboxed.getKind().isObject());
             }
         }
-
-        assertEquals(JavaConstant.forLong(42), constantReflection.unboxPrimitive(snippetReflection.forObject(Long.valueOf(42))));
-        assertEquals(JavaConstant.forInt(66), constantReflection.unboxPrimitive(snippetReflection.forObject(Integer.valueOf(66))));
-        assertEquals(JavaConstant.forByte((byte) 123), constantReflection.unboxPrimitive(snippetReflection.forObject(Byte.valueOf((byte) 123))));
-        assertSame(JavaConstant.forBoolean(true), constantReflection.unboxPrimitive(snippetReflection.forObject(Boolean.TRUE)));
+        List<ConstantValue> primitiveConstants = readConstants(PrimitiveConstants.class);
+        List<ConstantValue> boxedConstants = readConstants(BoxedConstants.class);
+        for (int i = 0; i < primitiveConstants.size(); i++) {
+            ConstantValue prim = primitiveConstants.get(i);
+            ConstantValue box = boxedConstants.get(i);
+            assert prim.getSimpleName().equals(box.getSimpleName());
+            assertEquals(prim.value, constantReflection.unboxPrimitive(box.value));
+        }
 
         assertNull(constantReflection.unboxPrimitive(JavaConstant.NULL_POINTER));
-        assertNull(constantReflection.unboxPrimitive(snippetReflection.forObject("abc")));
     }
 }

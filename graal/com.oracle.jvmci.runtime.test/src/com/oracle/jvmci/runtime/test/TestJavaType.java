@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,29 +20,29 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.java.test;
+package com.oracle.jvmci.runtime.test;
 
-import com.oracle.jvmci.meta.ResolvedJavaMethod;
-import java.lang.reflect.*;
-import java.util.*;
+import com.oracle.jvmci.meta.JavaType;
+import com.oracle.jvmci.meta.Kind;
+import static org.junit.Assert.*;
+
+import org.junit.*;
 
 /**
- * Context for method related tests.
+ * Tests for {@link JavaType}.
  */
-public class MethodUniverse extends TypeUniverse {
+public class TestJavaType extends TypeUniverse {
 
-    public final Map<Method, ResolvedJavaMethod> methods = new HashMap<>();
-    public final Map<Constructor<?>, ResolvedJavaMethod> constructors = new HashMap<>();
+    public TestJavaType() {
+    }
 
-    public MethodUniverse() {
+    @Test
+    public void getKindTest() {
         for (Class<?> c : classes) {
-            for (Method m : c.getDeclaredMethods()) {
-                ResolvedJavaMethod method = metaAccess.lookupJavaMethod(m);
-                methods.put(m, method);
-            }
-            for (Constructor<?> m : c.getDeclaredConstructors()) {
-                constructors.put(m, metaAccess.lookupJavaMethod(m));
-            }
+            JavaType type = metaAccess.lookupJavaType(c);
+            Kind expected = Kind.fromJavaClass(c);
+            Kind actual = type.getKind();
+            assertEquals(expected, actual);
         }
     }
 }

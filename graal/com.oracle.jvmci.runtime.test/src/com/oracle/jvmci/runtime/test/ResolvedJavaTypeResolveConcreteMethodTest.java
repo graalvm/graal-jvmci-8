@@ -20,25 +20,20 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.java.test;
+package com.oracle.jvmci.runtime.test;
 
-import com.oracle.jvmci.meta.ResolvedJavaMethod;
-import com.oracle.jvmci.meta.ResolvedJavaType;
-import com.oracle.jvmci.meta.MetaAccessProvider;
 import static org.junit.Assert.*;
 
 import org.junit.*;
 
-import com.oracle.graal.api.runtime.*;
-import com.oracle.graal.phases.util.*;
-import com.oracle.graal.runtime.*;
+import com.oracle.jvmci.meta.*;
+import com.oracle.jvmci.runtime.*;
 
 public class ResolvedJavaTypeResolveConcreteMethodTest {
     public final MetaAccessProvider metaAccess;
 
     public ResolvedJavaTypeResolveConcreteMethodTest() {
-        Providers providers = Graal.getRequiredCapability(RuntimeProvider.class).getHostBackend().getProviders();
-        metaAccess = providers.getMetaAccess();
+        metaAccess = JVMCI.getRuntime().getHostJVMCIBackend().getMetaAccess();
     }
 
     protected abstract static class A {

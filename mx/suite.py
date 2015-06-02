@@ -180,6 +180,19 @@ suite = {
       "workingSets" : "API,JVMCI",
     },
 
+    "com.oracle.jvmci.runtime.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "JUNIT",
+        "com.oracle.jvmci.common",
+        "com.oracle.jvmci.runtime",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,JVMCI",
+    },
+
     "com.oracle.jvmci.hotspot" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -845,6 +858,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "JUNIT",
+        "com.oracle.jvmci.runtime.test",
         "com.oracle.graal.runtime",
         "com.oracle.graal.java",
       ],

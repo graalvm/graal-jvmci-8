@@ -20,14 +20,8 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.java.test;
+package com.oracle.jvmci.runtime.test;
 
-import com.oracle.jvmci.meta.JavaConstant;
-import com.oracle.jvmci.meta.Kind;
-import com.oracle.jvmci.meta.ResolvedJavaMethod;
-import com.oracle.jvmci.meta.ResolvedJavaField;
-import com.oracle.jvmci.meta.TrustedInterface;
-import com.oracle.jvmci.meta.ResolvedJavaType;
 import static java.lang.reflect.Modifier.*;
 import static org.junit.Assert.*;
 
@@ -40,8 +34,9 @@ import org.junit.*;
 
 import sun.reflect.ConstantPool;
 
-import com.oracle.jvmci.meta.Assumptions.AssumptionResult;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.meta.Assumptions.AssumptionResult;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Tests for {@link ResolvedJavaType}.
@@ -128,16 +123,16 @@ public class TestResolvedJavaType extends TypeUniverse {
 
     @Test
     public void isInstanceTest() {
-        for (JavaConstant c : constants) {
+        for (ConstantValue cv : constants()) {
+            JavaConstant c = cv.value;
             if (c.getKind() == Kind.Object && !c.isNull()) {
-                Object o = snippetReflection.asObject(Object.class, c);
-                Class<? extends Object> cls = o.getClass();
-                while (cls != null) {
-                    ResolvedJavaType type = metaAccess.lookupJavaType(cls);
-                    boolean expected = cls.isInstance(o);
-                    boolean actual = type.isInstance(c);
-                    assertEquals(expected, actual);
-                    cls = cls.getSuperclass();
+                ResolvedJavaType cType = metaAccess.lookupJavaType(c);
+                for (ResolvedJavaType t : javaTypes) {
+                    if (t.isAssignableFrom(cType)) {
+                        assertTrue(t.isInstance(c));
+                    } else {
+                        assertFalse(t.isInstance(c));
+                    }
                 }
             }
         }
@@ -676,7 +671,7 @@ public class TestResolvedJavaType extends TypeUniverse {
         return null;
     }
 
-    private boolean isHiddenFromReflection(ResolvedJavaField f) {
+    private static boolean isHiddenFromReflection(ResolvedJavaField f) {
         if (f.getDeclaringClass().equals(metaAccess.lookupJavaType(Throwable.class)) && f.getName().equals("backtrace")) {
             return true;
         }

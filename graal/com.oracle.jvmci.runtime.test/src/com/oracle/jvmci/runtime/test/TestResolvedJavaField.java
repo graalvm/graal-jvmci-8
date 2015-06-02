@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.java.test;
+package com.oracle.jvmci.runtime.test;
 
 import static org.junit.Assert.*;
 
@@ -78,26 +78,34 @@ public class TestResolvedJavaField extends FieldUniverse {
         }
     }
 
+    static class ReadConstantValueTestConstants {
+        String stringField = "field";
+        final String constantStringField = "constantField";
+
+        static final Object CONST1 = new ReadConstantValueTestConstants();
+        static final Object CONST2 = null;
+        static final Object CONST3 = new String();
+    }
+
     @Test
     public void readConstantValueTest() throws NoSuchFieldException {
-        ResolvedJavaField field = metaAccess.lookupJavaField(getClass().getDeclaredField("stringField"));
-        for (Object receiver : new Object[]{this, null, new String()}) {
-            JavaConstant value = constantReflection.readConstantFieldValue(field, snippetReflection.forObject(receiver));
+        ResolvedJavaField field = metaAccess.lookupJavaField(ReadConstantValueTestConstants.class.getDeclaredField("stringField"));
+        List<ConstantValue> receiverConstants = readConstants(ReadConstantValueTestConstants.class);
+        for (ConstantValue receiver : receiverConstants) {
+            JavaConstant value = constantReflection.readConstantFieldValue(field, receiver.value);
             assertNull(value);
         }
 
-        ResolvedJavaField constField = metaAccess.lookupJavaField(getClass().getDeclaredField("constantStringField"));
-        for (Object receiver : new Object[]{this, null, new String()}) {
-            JavaConstant value = constantReflection.readConstantFieldValue(constField, snippetReflection.forObject(receiver));
+        ResolvedJavaField constField = metaAccess.lookupJavaField(ReadConstantValueTestConstants.class.getDeclaredField("constantStringField"));
+        for (ConstantValue receiver : receiverConstants) {
+            JavaConstant value = constantReflection.readConstantFieldValue(constField, receiver.value);
             if (value != null) {
                 Object expected = "constantField";
-                assertTrue(snippetReflection.asObject(Object.class, value) == expected);
+                String actual = ((ReadConstantValueTestConstants) receiver.boxed).constantStringField;
+                assertTrue(actual + " != " + expected, actual == expected);
             }
         }
     }
-
-    String stringField = "field";
-    final String constantStringField = "constantField";
 
     private Method findTestMethod(Method apiMethod) {
         String testName = apiMethod.getName() + "Test";

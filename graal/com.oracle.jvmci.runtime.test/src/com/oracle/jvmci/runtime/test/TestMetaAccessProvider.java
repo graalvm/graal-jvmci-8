@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.java.test;
+package com.oracle.jvmci.runtime.test;
 
 import static com.oracle.jvmci.meta.MetaUtil.*;
 import static org.junit.Assert.*;
@@ -79,9 +79,10 @@ public class TestMetaAccessProvider extends TypeUniverse {
 
     @Test
     public void lookupJavaTypeConstantTest() {
-        for (JavaConstant c : constants) {
+        for (ConstantValue cv : constants()) {
+            JavaConstant c = cv.value;
             if (c.getKind() == Kind.Object && !c.isNull()) {
-                Object o = snippetReflection.asObject(Object.class, c);
+                Object o = cv.boxed;
                 ResolvedJavaType type = metaAccess.lookupJavaType(c);
                 assertNotNull(type);
                 assertTrue(type.equals(metaAccess.lookupJavaType(o.getClass())));

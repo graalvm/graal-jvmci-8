@@ -20,29 +20,44 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.java.test;
+package com.oracle.jvmci.runtime.test;
 
-import com.oracle.jvmci.meta.JavaType;
-import com.oracle.jvmci.meta.Kind;
 import static org.junit.Assert.*;
+
+import java.lang.reflect.*;
+import java.util.*;
 
 import org.junit.*;
 
-/**
- * Tests for {@link JavaType}.
- */
-public class TestJavaType extends TypeUniverse {
+import com.oracle.jvmci.meta.*;
 
-    public TestJavaType() {
+/**
+ * Tests for {@link JavaMethod}.
+ */
+public class TestJavaMethod extends MethodUniverse {
+
+    @Test
+    public void getNameTest() {
+        for (Map.Entry<Method, ResolvedJavaMethod> e : methods.entrySet()) {
+            String expected = e.getKey().getName();
+            String actual = e.getValue().getName();
+            assertEquals(expected, actual);
+        }
     }
 
     @Test
-    public void getKindTest() {
-        for (Class<?> c : classes) {
-            JavaType type = metaAccess.lookupJavaType(c);
-            Kind expected = Kind.fromJavaClass(c);
-            Kind actual = type.getKind();
-            assertEquals(expected, actual);
+    public void getDeclaringClassTest() {
+        for (Map.Entry<Method, ResolvedJavaMethod> e : methods.entrySet()) {
+            Class<?> expected = e.getKey().getDeclaringClass();
+            ResolvedJavaType actual = e.getValue().getDeclaringClass();
+            assertTrue(actual.equals(metaAccess.lookupJavaType(expected)));
+        }
+    }
+
+    @Test
+    public void getSignatureTest() {
+        for (Map.Entry<Method, ResolvedJavaMethod> e : methods.entrySet()) {
+            assertTrue(new NameAndSignature(e.getKey()).signatureEquals(e.getValue()));
         }
     }
 }

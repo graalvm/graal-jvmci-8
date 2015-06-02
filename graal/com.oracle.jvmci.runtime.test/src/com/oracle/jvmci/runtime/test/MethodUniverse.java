@@ -20,24 +20,28 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.java.test;
+package com.oracle.jvmci.runtime.test;
 
-import com.oracle.jvmci.meta.ResolvedJavaField;
+import com.oracle.jvmci.meta.ResolvedJavaMethod;
 import java.lang.reflect.*;
 import java.util.*;
 
 /**
- * Context for field related tests.
+ * Context for method related tests.
  */
-public class FieldUniverse extends TypeUniverse {
+public class MethodUniverse extends TypeUniverse {
 
-    public final Map<Field, ResolvedJavaField> fields = new HashMap<>();
+    public static final Map<Method, ResolvedJavaMethod> methods = new HashMap<>();
+    public static final Map<Constructor<?>, ResolvedJavaMethod> constructors = new HashMap<>();
 
-    public FieldUniverse() {
+    {
         for (Class<?> c : classes) {
-            for (Field f : c.getDeclaredFields()) {
-                ResolvedJavaField field = metaAccess.lookupJavaField(f);
-                fields.put(f, field);
+            for (Method m : c.getDeclaredMethods()) {
+                ResolvedJavaMethod method = metaAccess.lookupJavaMethod(m);
+                methods.put(m, method);
+            }
+            for (Constructor<?> m : c.getDeclaredConstructors()) {
+                constructors.put(m, metaAccess.lookupJavaMethod(m));
             }
         }
     }

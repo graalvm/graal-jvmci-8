@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.java.test;
+package com.oracle.jvmci.runtime.test;
 
 import com.oracle.jvmci.meta.JavaConstant;
 import com.oracle.jvmci.meta.Kind;
