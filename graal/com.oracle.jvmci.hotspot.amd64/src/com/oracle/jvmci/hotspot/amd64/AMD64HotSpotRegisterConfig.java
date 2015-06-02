@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.amd64;
+package com.oracle.jvmci.hotspot.amd64;
 
 import com.oracle.jvmci.amd64.*;
 import com.oracle.jvmci.code.Register;
@@ -37,13 +37,11 @@ import com.oracle.jvmci.meta.PlatformKind;
 import com.oracle.jvmci.meta.AllocatableValue;
 import com.oracle.jvmci.meta.Kind;
 
-import static com.oracle.graal.compiler.common.GraalOptions.*;
 import static com.oracle.jvmci.amd64.AMD64.*;
 
 import java.util.*;
 
 import com.oracle.jvmci.code.CallingConvention.Type;
-import com.oracle.graal.compiler.common.*;
 import com.oracle.jvmci.common.*;
 import com.oracle.jvmci.hotspot.*;
 
@@ -56,9 +54,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
     private final int maxFrameSize;
 
     /**
-     * The same as {@link #allocatable}, except if parameter registers are removed with the
-     * {@link GraalOptions#RegisterPressure} option. The caller saved registers always include all
-     * parameter registers.
+     * The caller saved registers always include all parameter registers.
      */
     private final Register[] callerSaved;
 
@@ -126,7 +122,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
 
     public AMD64HotSpotRegisterConfig(Architecture architecture, HotSpotVMConfig config) {
         this(architecture, config, initAllocatable(config.useCompressedOops));
-        assert callerSaved.length == allocatable.length || RegisterPressure.getValue() != null;
+        assert callerSaved.length >= allocatable.length;
     }
 
     public AMD64HotSpotRegisterConfig(Architecture architecture, HotSpotVMConfig config, Register[] allocatable) {

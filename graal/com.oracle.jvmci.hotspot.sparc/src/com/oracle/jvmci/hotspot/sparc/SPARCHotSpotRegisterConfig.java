@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.sparc;
+package com.oracle.jvmci.hotspot.sparc;
 
 import com.oracle.jvmci.code.Architecture;
 import com.oracle.jvmci.code.TargetDescription;
@@ -42,8 +42,6 @@ import static com.oracle.jvmci.sparc.SPARC.*;
 import java.util.*;
 
 import com.oracle.jvmci.code.CallingConvention.Type;
-import com.oracle.graal.asm.*;
-import com.oracle.graal.lir.framemap.*;
 import com.oracle.jvmci.common.*;
 import com.oracle.jvmci.hotspot.*;
 
@@ -108,7 +106,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
     /**
      * Registers saved by the callee. This lists all L and I registers which are saved in the
-     * register window. {@link FrameMap} uses this array to calculate the spill area size.
+     * register window.
      */
     private final Register[] calleeSaveRegisters = {l0, l1, l2, l3, l4, l5, l6, l7, i0, i1, i2, i3, i4, i5, i6, i7};
 
@@ -248,7 +246,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
             if (locations[i] == null) {
                 // Stack slot is always aligned to its size in bytes but minimum wordsize
                 int typeSize = SPARC.spillSlotSize(target, kind);
-                currentStackOffset = NumUtil.roundUp(currentStackOffset, typeSize);
+                currentStackOffset = roundUp(currentStackOffset, typeSize);
                 locations[i] = StackSlot.get(target.getLIRKind(kind.getStackKind()), currentStackOffset, !type.out);
                 currentStackOffset += typeSize;
             }
@@ -257,6 +255,10 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         Kind returnKind = returnType == null ? Kind.Void : returnType.getKind();
         AllocatableValue returnLocation = returnKind == Kind.Void ? Value.ILLEGAL : getReturnRegister(returnKind, type).asValue(target.getLIRKind(returnKind.getStackKind()));
         return new CallingConvention(currentStackOffset, returnLocation, locations);
+    }
+
+    private static int roundUp(int number, int mod) {
+        return ((number + mod - 1) / mod) * mod;
     }
 
     @Override

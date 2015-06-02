@@ -153,15 +153,15 @@ suite = {
   },
 
   "projects" : {
-                
+
     # ------------- JVMCI -------------
-    
+
     "com.oracle.jvmci.service" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "API,JVMCI",
     },
 
     "com.oracle.jvmci.service.processor" : {
@@ -170,7 +170,7 @@ suite = {
       "dependencies" : ["com.oracle.jvmci.service"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Codegen,HotSpot",
+      "workingSets" : "JVMCI,Codegen,HotSpot",
     },
 
     "com.oracle.jvmci.common" : {
@@ -256,7 +256,7 @@ suite = {
       "dependencies" : ["com.oracle.jvmci.hotspotvmconfig", "com.oracle.jvmci.common"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,HotSpot,Codegen",
+      "workingSets" : "JVMCI,HotSpot,Codegen",
     },
 
     "com.oracle.jvmci.debug" : {
@@ -337,7 +337,20 @@ suite = {
       "dependencies" : ["com.oracle.jvmci.code"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,AMD64",
+      "workingSets" : "JVMCI,AMD64",
+    },
+
+    "com.oracle.jvmci.hotspot.amd64" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.amd64",
+        "com.oracle.jvmci.hotspot",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,HotSpot,AMD64",
     },
 
     "com.oracle.jvmci.sparc" : {
@@ -346,11 +359,24 @@ suite = {
       "dependencies" : ["com.oracle.jvmci.code"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,SPARC",
+      "workingSets" : "JVMCI,SPARC",
+    },
+
+    "com.oracle.jvmci.hotspot.sparc" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.sparc",
+        "com.oracle.jvmci.hotspot",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,HotSpot,SPARC",
     },
 
     # ------------- NFI -------------
-    
+
     "com.oracle.nfi" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -372,7 +398,7 @@ suite = {
     },
 
     # ------------- Graal -------------
-    
+
     "com.oracle.graal.api.collections" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -454,6 +480,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.jvmci.hotspot.amd64",
         "com.oracle.graal.compiler.amd64",
         "com.oracle.graal.hotspot",
         "com.oracle.graal.replacements.amd64",
@@ -468,6 +495,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.jvmci.hotspot.sparc",
         "com.oracle.graal.compiler.sparc",
         "com.oracle.graal.replacements.sparc",
       ],
@@ -1009,7 +1037,7 @@ suite = {
     },
 
     # ------------- Truffle -------------
-    
+
     "com.oracle.truffle.api" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -1189,7 +1217,7 @@ suite = {
     },
 
     # ------------- GraalTruffle -------------
-    
+
     "com.oracle.graal.truffle" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
