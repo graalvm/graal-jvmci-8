@@ -97,7 +97,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
     /**
      * Try to convert {@code offset} into an an index into {@code array}.
      *
-     * @return -1 if the offset isn't within the array or the computed index
+     * @return the computed index or -1 if the offset isn't within the array
      */
     private int indexForOffset(JavaConstant array, long offset) {
         if (array.getKind() != Kind.Object || array.isNull()) {

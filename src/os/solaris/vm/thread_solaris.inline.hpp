@@ -47,7 +47,7 @@ inline Thread* ThreadLocalStorage::thread()  {
   uintptr_t raw = pd_raw_thread_id();
   int ix = pd_cache_index(raw);
   Thread* candidate = ThreadLocalStorage::_get_thread_cache[ix];
-  if (candidate->self_raw_id() == raw) {
+  if (candidate != NULL && candidate->self_raw_id() == raw) {
     // hit
     return candidate;
   } else {

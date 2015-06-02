@@ -22,9 +22,7 @@
  */
 package com.oracle.jvmci.code;
 
-import com.oracle.jvmci.meta.Constant;
-import com.oracle.jvmci.meta.ResolvedJavaMethod;
-import com.oracle.jvmci.meta.JavaConstant;
+import com.oracle.jvmci.meta.*;
 import com.oracle.jvmci.code.CompilationResult.DataPatch;
 import com.oracle.jvmci.code.DataSection.Data;
 

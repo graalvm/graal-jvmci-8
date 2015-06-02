@@ -11,6 +11,7 @@
 ^mx/includes
 ^build/
 ^build-nograal/
+^build-nojvmci/
 ^dist/
 ^java/
 ^lib/

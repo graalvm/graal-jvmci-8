@@ -81,7 +81,7 @@ suite = {
     },
 
     "FINDBUGS" : {
-      "path" : "lib/findbugs-SuppressFBWarnings.jar",
+      "path" : "graal/findbugs-SuppressFBWarnings.jar",
       "sha1" : "fb78822d27c68fabf2cb2e5e573b3cdb5f9cae2d",
     },
 
@@ -166,7 +166,7 @@ suite = {
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "API,JVMCI",
     },
 
     "com.oracle.jvmci.runtime" : {
@@ -177,7 +177,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "API,JVMCI",
     },
 
     "com.oracle.jvmci.hotspot" : {
@@ -197,7 +197,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "JVMCI",
     },
 
     "com.oracle.nfi" : {
@@ -275,7 +275,7 @@ suite = {
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "API,JVMCI",
     },
 
     "com.oracle.jvmci.code" : {
@@ -284,7 +284,7 @@ suite = {
       "dependencies" : ["com.oracle.jvmci.meta"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal",
+      "workingSets" : "API,JVMCI",
     },
 
     "com.oracle.graal.api.replacements" : {
@@ -328,7 +328,7 @@ suite = {
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,HotSpot",
+      "workingSets" : "JVMCI,HotSpot",
     },
 
     "com.oracle.jvmci.hotspotvmconfig.processor" : {
@@ -358,18 +358,18 @@ suite = {
       "workingSets" : "Graal,HotSpot",
     },
 
-    "com.oracle.graal.hotspot.jfr" : {
+    "com.oracle.jvmci.hotspot.jfr" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.hotspot",
+        "com.oracle.jvmci.hotspot",
         "JFR",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "javaCompliance" : "1.8",
       "profile" : "",
-      "workingSets" : "Graal,HotSpot",
+      "workingSets" : "JVMCI,HotSpot",
     },
 
     "com.oracle.graal.hotspot.amd64" : {
@@ -431,7 +431,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal",
+      "workingSets" : "JVMCI",
     },
 
     "com.oracle.jvmci.options.processor" : {
@@ -442,7 +442,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Codegen",
+      "workingSets" : "JVMCI,Codegen",
     },
 
     "com.oracle.jvmci.options.test" : {
@@ -455,7 +455,7 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : ["com.oracle.jvmci.options.processor"],
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal",
+      "workingSets" : "JVMCI",
     },
 
     "com.oracle.graal.nodeinfo" : {
@@ -512,7 +512,7 @@ suite = {
         "com.oracle.jvmci.service",
       ],
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Debug",
+      "workingSets" : "JVMCI,Debug",
     },
 
     "com.oracle.jvmci.debug.test" : {
@@ -524,7 +524,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Debug,Test",
+      "workingSets" : "JVMCI,Debug,Test",
     },
 
     "com.oracle.graal.lir" : {
@@ -1268,7 +1268,10 @@ suite = {
       "path" : "build/jvmci-hotspot.jar",
       "subDir" : "graal",
       "sourcesPath" : "build/jvmci-hotspot.src.zip",
-      "dependencies" : ["com.oracle.jvmci.hotspot"],
+      "dependencies" : [
+        "com.oracle.jvmci.hotspot",
+        "com.oracle.jvmci.hotspot.jfr",
+      ],
       "distDependencies" : [
         "JVMCI_API",
       ],
@@ -1282,7 +1285,6 @@ suite = {
         "com.oracle.graal.hotspot.amd64",
         "com.oracle.graal.hotspot.sparc",
         "com.oracle.graal.hotspot",
-        "com.oracle.graal.hotspot.jfr",
       ],
       "exclude" : ["FINDBUGS"],
       "distDependencies" : [

@@ -54,6 +54,8 @@ _vmChoices = {
     'client-nojvmci' : None,  # all compilation with client compiler, JVMCI omitted
     'original' : None,  # default VM copied from bootstrap JDK
     'graal' : None, # alias for jvmci
+    'server-nograal' : None,  # alias for server-nojvmci
+    'client-nograal' : None,  # alias for client-nojvmci
 }
 
 """ The VM that will be run by the 'vm' command and built by default by the 'build' command.
@@ -121,12 +123,12 @@ def _get_vm():
         return _vm
     vm = mx.get_env('DEFAULT_VM')
     envPath = join(_graal_home, 'mx', 'env')
-    if vm == 'graal':
+    if vm and 'graal' in vm:
         if exists(envPath):
             with open(envPath) as fp:
-                if 'DEFAULT_VM=graal' in fp.read():
-                    mx.log('Please update the DEFAULT_VM entry in ' + envPath + ' to use "jvmci" instead of "graal" as the value')
-        vm = 'jvmci'
+                if 'DEFAULT_VM=' + vm in fp.read():
+                    mx.log('Please update the DEFAULT_VM value in ' + envPath + ' to replace "graal" with "jvmci"')
+        vm = vm.replace('graal', 'jvmci')
     if vm is None:
         if not mx.is_interactive():
             mx.abort('Need to specify VM with --vm option or DEFAULT_VM environment variable')
@@ -555,7 +557,7 @@ def _filterJVMCIServices(serviceImplNames, classpath):
     """
     _, binDir = mx._compile_mx_class('FilterTypes', os.pathsep.join(classpath), myDir=dirname(__file__))
     cmd = [mx.java().java, '-cp', mx._cygpathU2W(os.pathsep.join([binDir] + classpath)), 'FilterTypes', 'com.oracle.jvmci.service.Service'] + serviceImplNames
-    services = subprocess.check_output(cmd, stderr=subprocess.PIPE)
+    services = subprocess.check_output(cmd)
     if len(services) == 0:
         return []
     return services.split('|')
@@ -1296,7 +1298,7 @@ def _unittest(args, annotations, prefixCp="", blacklist=None, whitelist=None, ve
         if _get_vm() != 'jvmci':
             prefixArgs = ['-esa', '-ea']
         else:
-            prefixArgs = ['-XX:-BootstrapGraal', '-esa', '-ea']
+            prefixArgs = ['-XX:-BootstrapJVMCI', '-esa', '-ea']
         if gc_after_test:
             prefixArgs.append('-XX:-DisableExplicitGC')
         with open(testfile) as fp:
@@ -1523,11 +1525,18 @@ class Task:
     # a non-None value from __enter__. The body of a 'with Task(...) as t'
     # statement should check 't' and exit immediately if it is None.
     filters = None
+    filtersExclude = False
 
     def __init__(self, title, tasks=None):
         self.tasks = tasks
         self.title = title
-        self.skipped = tasks is not None and Task.filters is not None and not any([f in title for f in Task.filters])
+        if tasks is not None and Task.filters is not None:
+            if Task.filtersExclude:
+                self.skipped = any([f in title for f in Task.filters])
+            else:
+                self.skipped = not any([f in title for f in Task.filters])
+        else:
+            self.skipped = False
         if not self.skipped:
             self.start = time.time()
             self.end = None
@@ -1710,6 +1719,7 @@ def gate(args, gate_body=_basic_gate_body):
     parser.add_argument('-i', '--omit-ide-clean', action='store_false', dest='cleanIde', help='omit cleaning the ide project files')
     parser.add_argument('-g', '--only-build-jvmci', action='store_false', dest='buildNonJVMCI', help='only build the JVMCI VM')
     parser.add_argument('-t', '--task-filter', help='comma separated list of substrings to select subset of tasks to be run')
+    parser.add_argument('-x', action='store_true', help='makes --task-filter an exclusion instead of inclusion filter')
     parser.add_argument('--jacocout', help='specify the output directory for jacoco report')
 
     args = parser.parse_args(args)
@@ -1717,6 +1727,9 @@ def gate(args, gate_body=_basic_gate_body):
     global _jacoco
     if args.task_filter:
         Task.filters = args.task_filter.split(',')
+        Task.filtersExclude = args.x
+    elif args.x:
+        mx.abort('-x option cannot be used without --task-filter option')
 
     # Force
     if not mx._opts.strict_compliance:
@@ -2651,8 +2664,7 @@ def mx_post_parse_cmd_line(opts):  #
         if hasattr(opts, 'vm') and opts.vm is not None:
             global _vm
             _vm = opts.vm
-            if _vm == 'graal':
-                _vm = 'jvmci'
+            _vm = _vm.replace('graal', 'jvmci')
         if hasattr(opts, 'vmbuild') and opts.vmbuild is not None:
             global _vmbuild
             _vmbuild = opts.vmbuild

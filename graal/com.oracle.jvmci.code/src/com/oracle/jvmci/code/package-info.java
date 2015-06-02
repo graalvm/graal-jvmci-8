@@ -23,7 +23,7 @@
 /**
  * Package that defines the interface between a Java application that wants to install code and the runtime.
  * The runtime provides in implementation of the {@link com.oracle.jvmci.code.CodeCacheProvider} interface.
- * The method {@link com.oracle.jvmci.code.CodeCacheProvider#addMethod(com.oracle.jvmci.meta.ResolvedJavaMethod, CompilationResult, SpeculationLog, InstalledCode)}
+ * The method {@link com.oracle.jvmci.code.CodeCacheProvider#addMethod(com.oracle.jvmci.meta.ResolvedJavaMethod, CompilationResult, com.oracle.jvmci.meta.SpeculationLog, InstalledCode)}
  * can be used to install code for a given method.
  */
 package com.oracle.jvmci.code;

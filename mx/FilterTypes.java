@@ -34,8 +34,8 @@ public class FilterTypes {
         StringBuilder buf = new StringBuilder();
         for (int i = 1; i < args.length; ++i) {
             String serviceName = args[i];
-            Class<?> service = Class.forName(serviceName, false, FilterTypes.class.getClassLoader());
-            if (jvmciServiceInterface.isAssignableFrom(service)) {
+            Class<?> service = lookupService(serviceName);
+            if (service != null && jvmciServiceInterface.isAssignableFrom(service)) {
                 if (buf.length() != 0) {
                     buf.append('|');
                 }
@@ -44,5 +44,20 @@ public class FilterTypes {
             }
         }
         System.out.print(buf);
+    }
+    
+    private static Class<?> lookupService(String serviceName) {
+    	try {
+    		// This can fail in the case of running against a JDK
+    		// with out of date JVMCI jars. In that case, just print
+    		// a warning sinc the expectation is that the jars will be
+    		// updated later on.
+    	    return Class.forName(serviceName, false, FilterTypes.class.getClassLoader());
+    	} catch (ClassNotFoundException e) {
+    		// Must be stderr to avoid polluting the result being
+    		// written to stdout.
+    		System.err.println(e);
+    		return null;
+    	}
     }
 }

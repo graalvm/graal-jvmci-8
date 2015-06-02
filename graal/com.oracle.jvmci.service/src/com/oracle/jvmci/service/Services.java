@@ -22,8 +22,6 @@
  */
 package com.oracle.jvmci.service;
 
-import static java.lang.String.*;
-
 import java.util.*;
 
 import sun.reflect.*;
@@ -39,23 +37,23 @@ public class Services {
     private static final ClassValue<List<Service>> cache = new ClassValue<List<Service>>() {
         @Override
         protected List<Service> computeValue(Class<?> type) {
-            Service[] names = getServiceImpls(type);
-            if (names == null || names.length == 0) {
-                throw new InternalError(
-                                format("No implementations for %s found (ensure %s extends %s and that in suite.py the \"annotationProcessors\" attribute for the project enclosing %s includes \"com.oracle.jvmci.service.processor\")",
-                                                type.getSimpleName(), type.getSimpleName(), Service.class, type.getSimpleName()));
-            }
-            return Arrays.asList(names);
+            return Arrays.asList(getServiceImpls(type));
         }
     };
 
     /**
      * Gets an {@link Iterable} of the implementations available for a given service.
+     *
+     * @throws SecurityException if a security manager is present and it denies
+     *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings("unchecked")
     @CallerSensitive
     public static <S> Iterable<S> load(Class<S> service) {
-        // TODO(ds): add SecurityManager checks
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new RuntimePermission("jvmciServices"));
+        }
         if (Service.class.isAssignableFrom(service)) {
             try {
                 return (Iterable<S>) cache.get(service);
@@ -76,11 +74,16 @@ public class Services {
      * @param service the service whose implementation is being requested
      * @param required specifies if an {@link InternalError} should be thrown if no implementation
      *            of {@code service} is available
+     * @throws SecurityException if a security manager is present and it denies
+     *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings("unchecked")
     @CallerSensitive
     public static <S> S loadSingle(Class<S> service, boolean required) {
-        // TODO(ds): add SecurityManager checks
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new RuntimePermission("jvmciServices"));
+        }
         Iterable<S> impls = null;
         if (Service.class.isAssignableFrom(service)) {
             try {
@@ -112,6 +115,11 @@ public class Services {
             throw new UnsupportedOperationException(errorMessage.toString());
         }
         return singleImpl;
+    }
+
+    static {
+        Reflection.registerMethodsToFilter(Services.class, "getServiceImpls");
+        Reflection.registerFieldsToFilter(Services.class, "cache");
     }
 
     private static native <S> S[] getServiceImpls(Class<?> service);

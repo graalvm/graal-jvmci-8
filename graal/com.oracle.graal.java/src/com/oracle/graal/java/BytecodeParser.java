@@ -77,7 +77,7 @@ public class BytecodeParser implements GraphBuilderContext {
         public static final OptionValue<Integer> TraceBytecodeParserLevel = new OptionValue<>(0);
 
         @Option(help = "Inlines trivial methods during bytecode parsing.", type = OptionType.Expert)//
-        public static final StableOptionValue<Boolean> InlineDuringParsing = new StableOptionValue<>(false);
+        public static final StableOptionValue<Boolean> InlineDuringParsing = new StableOptionValue<>(true);
 
         @Option(help = "Inlines intrinsic methods during bytecode parsing.", type = OptionType.Expert)//
         public static final StableOptionValue<Boolean> InlineIntrinsicsDuringParsing = new StableOptionValue<>(true);
@@ -377,7 +377,7 @@ public class BytecodeParser implements GraphBuilderContext {
             stream.setBCI(0);
 
             BciBlock startBlock = blockMap.getStartBlock();
-            if (startInstruction == graph.start()) {
+            if (this.parent == null) {
                 StartNode startNode = graph.start();
                 if (method.isSynchronized()) {
                     assert !parsingIntrinsic();
