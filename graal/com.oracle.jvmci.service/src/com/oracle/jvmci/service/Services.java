@@ -84,13 +84,16 @@ public class Services {
         if (sm != null) {
             sm.checkPermission(new RuntimePermission("jvmciServices"));
         }
-        Iterable<S> impls = null;
+        Iterable<S> impls;
         if (Service.class.isAssignableFrom(service)) {
             try {
                 impls = (Iterable<S>) cache.get(service);
             } catch (UnsatisfiedLinkError e) {
                 // Fall back to standard ServiceLoader
+                impls = null;
             }
+        } else {
+            impls = null;
         }
 
         if (impls == null) {
