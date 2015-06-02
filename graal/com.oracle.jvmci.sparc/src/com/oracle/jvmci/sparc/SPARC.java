@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.sparc;
+package com.oracle.jvmci.sparc;
 
 import com.oracle.jvmci.code.Architecture;
 import com.oracle.jvmci.code.Register;
