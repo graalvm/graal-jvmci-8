@@ -614,9 +614,9 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
 def _updateJVMCIFiles(jdkDir):
     jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')
     jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.endswith('.jar')]
-    jreGraalServicesDir = join(jreJVMCIDir, 'services')
-    jreGraalOptionsDir = join(jreJVMCIDir, 'options')
-    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreGraalServicesDir, jreGraalOptionsDir)
+    jreJVMCIServicesDir = join(jreJVMCIDir, 'services')
+    jreJVMCIOptionsDir = join(jreJVMCIDir, 'options')
+    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreJVMCIServicesDir, jreJVMCIOptionsDir)
 
 def _patchGraalVersionConstant(dist):
     """
