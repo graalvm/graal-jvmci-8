@@ -1104,7 +1104,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : ["com.oracle.truffle.api"],
       "checkstyle" : "com.oracle.truffle.api",
-      "javaCompliance" : "1.8",
+      "javaCompliance" : "1.7",
       "workingSets" : "Truffle,Tools",
     },
 
@@ -1315,6 +1315,7 @@ suite = {
         "com.oracle.nfi",
         "com.oracle.truffle.interop",
         "com.oracle.truffle.object.basic",
+        "com.oracle.truffle.tools"
       ],
       "distDependencies" : [
         "JVMCI_SERVICE",
