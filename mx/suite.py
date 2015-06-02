@@ -1320,7 +1320,8 @@ suite = {
       "subDir" : "graal",
       "sourcesPath" : "build/jvmci-hotspot.src.zip",
       "dependencies" : [
-        "com.oracle.jvmci.hotspot",
+        "com.oracle.jvmci.hotspot.amd64",
+        "com.oracle.jvmci.hotspot.sparc",
         "com.oracle.jvmci.hotspot.jfr",
       ],
       "distDependencies" : [

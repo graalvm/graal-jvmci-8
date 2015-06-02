@@ -220,7 +220,12 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             hostBackend = registerBackend(factory.createJVMCIBackend(this, null));
         }
 
-        vmEventListener = Services.loadSingle(HotSpotVMEventListener.class, true);
+        HotSpotVMEventListener listener = Services.loadSingle(HotSpotVMEventListener.class, false);
+        if (listener == null) {
+            listener = new HotSpotVMEventListener() {
+            };
+        }
+        vmEventListener = listener;
     }
 
     private JVMCIBackend registerBackend(JVMCIBackend backend) {

@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.amd64.jvmci;
+package com.oracle.jvmci.hotspot.amd64;
 
 import static com.oracle.jvmci.hotspot.InitTimer.*;
 
@@ -29,7 +29,6 @@ import java.util.*;
 import com.oracle.jvmci.amd64.*;
 import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.hotspot.*;
-import com.oracle.jvmci.hotspot.amd64.*;
 import com.oracle.jvmci.meta.*;
 import com.oracle.jvmci.runtime.*;
 import com.oracle.jvmci.service.*;
