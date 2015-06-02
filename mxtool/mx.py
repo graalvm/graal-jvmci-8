@@ -633,6 +633,7 @@ def download_file_with_sha1(name, path, urls, sha1, sha1path, resolve, mustExist
         if canSymlink and 'symlink' in dir(os):
             if exists(path):
                 os.unlink(path)
+            print 'Path ' + cachePath + ' path: ' + path
             os.symlink(cachePath, path)
         else:
             shutil.copy(cachePath, path)
@@ -4429,7 +4430,7 @@ def _netbeansinit_project(p, jdks=None, files=None, libFiles=None):
 
     out.close('target')
     out.open('target', {'name' : 'compile'})
-    out.open('exec', {'executable' : sys.executable})
+    out.open('exec', {'executable' : sys.executable, 'failonerror' : 'true'})
     out.element('env', {'key' : 'JAVA_HOME', 'value' : jdk.jdk})
     out.element('arg', {'value' : os.path.abspath(__file__)})
     out.element('arg', {'value' : 'build'})
