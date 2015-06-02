@@ -37,6 +37,8 @@ import sun.misc.*;
 import com.oracle.jvmci.meta.*;
 import com.oracle.jvmci.runtime.*;
 
+//JaCoCo Exclude
+
 /**
  * Context for type related tests.
  */
