@@ -20,12 +20,9 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot;
+package com.oracle.jvmci.hotspot;
 
-import com.oracle.jvmci.code.TargetDescription;
-import com.oracle.jvmci.code.Architecture;
-import com.oracle.jvmci.code.ReferenceMap;
-import com.oracle.jvmci.hotspot.*;
+import com.oracle.jvmci.code.*;
 
 public class HotSpotTargetDescription extends TargetDescription {
 
