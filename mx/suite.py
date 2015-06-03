@@ -342,7 +342,6 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "JUNIT",
-        "com.oracle.jvmci.debug",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -443,7 +442,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.jvmci.test",
-        "com.oracle.jvmci.common",
+        "com.oracle.jvmci.debug",
         "com.oracle.jvmci.runtime",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -456,6 +455,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.jvmci.asm.test",
+        "com.oracle.jvmci.common",
         "com.oracle.jvmci.asm.amd64",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -716,7 +716,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.jvmci.asm.sparc",
-        "com.oracle.graal.compiler",
+        "com.oracle.graal.lir",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -932,7 +932,10 @@ suite = {
     "com.oracle.graal.compiler.sparc" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.graal.lir.sparc"],
+      "dependencies" : [
+        "com.oracle.graal.compiler",
+        "com.oracle.graal.lir.sparc"
+      ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,SPARC",
@@ -1027,8 +1030,8 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.test",
         "com.oracle.jvmci.debug",
+        "JUNIT",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",

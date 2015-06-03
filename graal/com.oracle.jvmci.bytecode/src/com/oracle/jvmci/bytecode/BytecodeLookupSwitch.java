@@ -20,17 +20,17 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.bytecode;
+package com.oracle.jvmci.bytecode;
 
 /**
- * A utility for processing {@link Bytecodes#TABLESWITCH} bytecodes.
+ * A utility for processing {@link Bytecodes#LOOKUPSWITCH} bytecodes.
  */
-public class BytecodeTableSwitch extends BytecodeSwitch {
+public class BytecodeLookupSwitch extends BytecodeSwitch {
 
-    private static final int OFFSET_TO_LOW_KEY = 4;
-    private static final int OFFSET_TO_HIGH_KEY = 8;
-    private static final int OFFSET_TO_FIRST_JUMP_OFFSET = 12;
-    private static final int JUMP_OFFSET_SIZE = 4;
+    private static final int OFFSET_TO_NUMBER_PAIRS = 4;
+    private static final int OFFSET_TO_FIRST_PAIR_MATCH = 8;
+    private static final int OFFSET_TO_FIRST_PAIR_OFFSET = 12;
+    private static final int PAIR_SIZE = 8;
 
     /**
      * Constructor for a {@link BytecodeStream}.
@@ -38,45 +38,27 @@ public class BytecodeTableSwitch extends BytecodeSwitch {
      * @param stream the {@code BytecodeStream} containing the switch instruction
      * @param bci the index in the stream of the switch instruction
      */
-    public BytecodeTableSwitch(BytecodeStream stream, int bci) {
+    public BytecodeLookupSwitch(BytecodeStream stream, int bci) {
         super(stream, bci);
-    }
-
-    /**
-     * Gets the low key of the table switch.
-     *
-     * @return the low key
-     */
-    public int lowKey() {
-        return stream.readInt(alignedBci + OFFSET_TO_LOW_KEY);
-    }
-
-    /**
-     * Gets the high key of the table switch.
-     *
-     * @return the high key
-     */
-    public int highKey() {
-        return stream.readInt(alignedBci + OFFSET_TO_HIGH_KEY);
-    }
-
-    @Override
-    public int keyAt(int i) {
-        return lowKey() + i;
     }
 
     @Override
     public int offsetAt(int i) {
-        return stream.readInt(alignedBci + OFFSET_TO_FIRST_JUMP_OFFSET + JUMP_OFFSET_SIZE * i);
+        return stream.readInt(alignedBci + OFFSET_TO_FIRST_PAIR_OFFSET + PAIR_SIZE * i);
+    }
+
+    @Override
+    public int keyAt(int i) {
+        return stream.readInt(alignedBci + OFFSET_TO_FIRST_PAIR_MATCH + PAIR_SIZE * i);
     }
 
     @Override
     public int numberOfCases() {
-        return highKey() - lowKey() + 1;
+        return stream.readInt(alignedBci + OFFSET_TO_NUMBER_PAIRS);
     }
 
     @Override
     public int size() {
-        return alignedBci + OFFSET_TO_FIRST_JUMP_OFFSET + JUMP_OFFSET_SIZE * numberOfCases() - bci;
+        return alignedBci + OFFSET_TO_FIRST_PAIR_MATCH + PAIR_SIZE * numberOfCases() - bci;
     }
 }

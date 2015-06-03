@@ -27,7 +27,7 @@ import static com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 
 import java.lang.invoke.*;
 
-import com.oracle.graal.bytecode.*;
+import com.oracle.jvmci.bytecode.*;
 import com.oracle.jvmci.common.*;
 import com.oracle.jvmci.meta.*;
 
