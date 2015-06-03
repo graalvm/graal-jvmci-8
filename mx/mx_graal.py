@@ -99,6 +99,7 @@ _jdkDeployedDists = [
     JDKDeployedDist('TRUFFLE'),
     JDKDeployedDist('JVMCI_SERVICE'),
     JDKDeployedDist('JVMCI_API', usesJVMCIClassLoader=True),
+    JDKDeployedDist('JVMCI_UTIL', usesJVMCIClassLoader=True),
     JDKDeployedDist('JVMCI_HOTSPOT', usesJVMCIClassLoader=True),
     JDKDeployedDist('GRAAL', usesJVMCIClassLoader=True),
     JDKDeployedDist('GRAAL_TRUFFLE', usesJVMCIClassLoader=True)

@@ -3,6 +3,8 @@ suite = {
   "name" : "graal",
   "libraries" : {
 
+    # ------------- Libraries -------------
+
       "JLINE" : {
       "path" : "lib/jline-2.11.jar",
       "urls" : [
@@ -154,7 +156,7 @@ suite = {
 
   "projects" : {
 
-    # ------------- JVMCI -------------
+    # ------------- JVMCI:Service -------------
 
     "com.oracle.jvmci.service" : {
       "subDir" : "graal",
@@ -172,6 +174,8 @@ suite = {
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,Codegen,HotSpot",
     },
+
+    # ------------- JVMCI:API -------------
 
     "com.oracle.jvmci.common" : {
       "subDir" : "graal",
@@ -220,43 +224,6 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
-    },
-
-    "com.oracle.jvmci.hotspot" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.hotspotvmconfig",
-        "com.oracle.jvmci.options",
-        "com.oracle.jvmci.debug",
-        "com.oracle.jvmci.runtime",
-        "com.oracle.jvmci.common",
-        "FINDBUGS",
-      ],
-      "annotationProcessors" : [
-        "com.oracle.jvmci.hotspotvmconfig.processor",
-        "com.oracle.jvmci.options.processor",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI",
-    },
-
-    "com.oracle.jvmci.hotspotvmconfig" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,HotSpot",
-    },
-
-    "com.oracle.jvmci.hotspotvmconfig.processor" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.jvmci.hotspotvmconfig", "com.oracle.jvmci.common"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,HotSpot,Codegen",
     },
 
     "com.oracle.jvmci.debug" : {
@@ -317,19 +284,7 @@ suite = {
       "workingSets" : "JVMCI",
     },
 
-    "com.oracle.jvmci.hotspot.jfr" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.hotspot",
-        "JFR",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
-      "javaCompliance" : "1.8",
-      "profile" : "",
-      "workingSets" : "JVMCI,HotSpot",
-    },
+    # ------------- JVMCI:Util -------------
 
     "com.oracle.jvmci.amd64" : {
       "subDir" : "graal",
@@ -338,6 +293,54 @@ suite = {
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,AMD64",
+    },
+
+    "com.oracle.jvmci.sparc" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.jvmci.code"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,SPARC",
+    },
+
+    # ------------- JVMCI:HotSpot -------------
+
+    "com.oracle.jvmci.hotspot" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.hotspotvmconfig",
+        "com.oracle.jvmci.options",
+        "com.oracle.jvmci.debug",
+        "com.oracle.jvmci.runtime",
+        "com.oracle.jvmci.common",
+        "FINDBUGS",
+      ],
+      "annotationProcessors" : [
+        "com.oracle.jvmci.hotspotvmconfig.processor",
+        "com.oracle.jvmci.options.processor",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI",
+    },
+
+    "com.oracle.jvmci.hotspotvmconfig" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,HotSpot",
+    },
+
+    "com.oracle.jvmci.hotspotvmconfig.processor" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.jvmci.hotspotvmconfig", "com.oracle.jvmci.common"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,HotSpot,Codegen",
     },
 
     "com.oracle.jvmci.hotspot.amd64" : {
@@ -353,15 +356,6 @@ suite = {
       "workingSets" : "JVMCI,HotSpot,AMD64",
     },
 
-    "com.oracle.jvmci.sparc" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.jvmci.code"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,SPARC",
-    },
-
     "com.oracle.jvmci.hotspot.sparc" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -373,6 +367,20 @@ suite = {
       "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,SPARC",
+    },
+
+    "com.oracle.jvmci.hotspot.jfr" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.hotspot",
+        "JFR",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
+      "javaCompliance" : "1.8",
+      "profile" : "",
+      "workingSets" : "JVMCI,HotSpot",
     },
 
     # ------------- NFI -------------
@@ -1291,6 +1299,8 @@ suite = {
 
   "distributions" : {
 
+    # ------------- Distributions -------------
+
     "JVMCI_SERVICE" : {
       "path" : "build/jvmci-service.jar",
       "subDir" : "graal",
@@ -1315,6 +1325,19 @@ suite = {
       ],
     },
 
+    "JVMCI_UTIL" : {
+      "path" : "build/jvmci-util.jar",
+      "subDir" : "graal",
+      "sourcesPath" : "build/jvmci-util.src.zip",
+      "dependencies" : [
+        "com.oracle.jvmci.amd64",
+        "com.oracle.jvmci.sparc",
+      ],
+      "distDependencies" : [
+        "JVMCI_API",
+      ],
+    },
+
     "JVMCI_HOTSPOT" : {
       "path" : "build/jvmci-hotspot.jar",
       "subDir" : "graal",
@@ -1326,6 +1349,7 @@ suite = {
       ],
       "distDependencies" : [
         "JVMCI_API",
+        "JVMCI_UTIL",
       ],
     },
 
