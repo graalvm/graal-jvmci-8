@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot;
+package com.oracle.jvmci.hotspot;
 
 import static java.lang.Thread.*;
 
@@ -31,7 +31,6 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import com.oracle.jvmci.hotspot.*;
 import com.sun.management.ThreadMXBean;
 
 @SuppressWarnings("unused")

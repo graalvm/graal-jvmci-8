@@ -27,9 +27,10 @@ import static java.util.FormattableFlags.*;
 
 import java.util.*;
 
+import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.meta.*;
 
-public abstract class HotSpotMethod implements JavaMethod, Formattable {
+public abstract class HotSpotMethod implements JavaMethod, Formattable, JavaMethodContex {
 
     protected String name;
 
@@ -59,5 +60,9 @@ public abstract class HotSpotMethod implements JavaMethod, Formattable {
     public void formatTo(Formatter formatter, int flags, int width, int precision) {
         String base = (flags & ALTERNATE) == ALTERNATE ? getName() : toString();
         formatter.format(applyFormattingFlagsAndWidth(base, flags & ~ALTERNATE, width));
+    }
+
+    public JavaMethod asJavaMethod() {
+        return this;
     }
 }

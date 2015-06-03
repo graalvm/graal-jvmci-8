@@ -197,7 +197,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
 
-    private final HotSpotVMEventListener vmEventListener;
+    private final Iterable<HotSpotVMEventListener> vmEventListeners;
 
     private HotSpotJVMCIRuntime() {
         CompilerToVM toVM = new CompilerToVMImpl();
@@ -220,12 +220,12 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             hostBackend = registerBackend(factory.createJVMCIBackend(this, null));
         }
 
-        HotSpotVMEventListener listener = Services.loadSingle(HotSpotVMEventListener.class, false);
-        if (listener == null) {
-            listener = new HotSpotVMEventListener() {
-            };
+        Iterable<HotSpotVMEventListener> listeners = Services.load(HotSpotVMEventListener.class);
+        if (!listeners.iterator().hasNext()) {
+            listeners = Arrays.asList(new HotSpotVMEventListener() {
+            });
         }
-        vmEventListener = listener;
+        vmEventListeners = listeners;
     }
 
     private JVMCIBackend registerBackend(JVMCIBackend backend) {
@@ -299,7 +299,9 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     @SuppressWarnings({"unused"})
     private void compileMetaspaceMethod(long metaspaceMethod, int entryBCI, long jvmciEnv, int id) {
-        vmEventListener.compileMetaspaceMethod(metaspaceMethod, entryBCI, jvmciEnv, id);
+        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
+            vmEventListener.compileMetaspaceMethod(metaspaceMethod, entryBCI, jvmciEnv, id);
+        }
     }
 
     /**
@@ -307,7 +309,9 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     @SuppressWarnings({"unused"})
     private void compileTheWorld() throws Throwable {
-        vmEventListener.notifyCompileTheWorld();
+        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
+            vmEventListener.notifyCompileTheWorld();
+        }
     }
 
     /**
@@ -317,6 +321,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     @SuppressWarnings({"unused"})
     private void shutdown() throws Exception {
-        vmEventListener.notifyShutdown();
+        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
+            vmEventListener.notifyShutdown();
+        }
     }
 }

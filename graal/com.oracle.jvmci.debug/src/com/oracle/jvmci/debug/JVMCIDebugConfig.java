@@ -20,23 +20,22 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.compiler;
+package com.oracle.jvmci.debug;
 
 import java.io.*;
 import java.util.*;
 
-import com.oracle.graal.graph.*;
-import com.oracle.graal.lir.*;
-import com.oracle.graal.lir.alloc.lsra.*;
-import com.oracle.graal.nodeinfo.*;
-import com.oracle.graal.nodes.*;
-import com.oracle.graal.nodes.util.*;
 import com.oracle.jvmci.code.*;
-import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.meta.*;
 import com.oracle.jvmci.options.*;
 
-public class GraalDebugConfig implements DebugConfig {
+public class JVMCIDebugConfig implements DebugConfig {
+    @SuppressWarnings("all")
+    private static boolean assertionsEnabled() {
+        boolean assertionsEnabled = false;
+        assert assertionsEnabled = true;
+        return assertionsEnabled;
+    }
 
     // @formatter:off
     @Option(help = "Pattern for scope(s) in which dumping is enabled (see DebugFilter and Debug.dump)", type = OptionType.Debug)
@@ -45,7 +44,12 @@ public class GraalDebugConfig implements DebugConfig {
                    "An empty value enables all metrics unconditionally.", type = OptionType.Debug)
     public static final OptionValue<String> Meter = new OptionValue<>(null);
     @Option(help = "Pattern for scope(s) in which verification is enabled (see DebugFilter and Debug.verify).", type = OptionType.Debug)
-    public static final OptionValue<String> Verify = new OptionValue<>(null);
+    public static final OptionValue<String> Verify = new OptionValue<String>() {
+        @Override
+        protected String defaultValue() {
+            return assertionsEnabled() ? "" : null;
+        }
+    };
     @Option(help = "Pattern for scope(s) in which memory use tracking is enabled (see DebugFilter and Debug.metric). " +
                    "An empty value enables all memory use trackers unconditionally.", type = OptionType.Debug)
     public static final OptionValue<String> TrackMemUse = new OptionValue<>(null);
@@ -81,7 +85,7 @@ public class GraalDebugConfig implements DebugConfig {
         return option.getValue() != null && !option.getValue().isEmpty();
     }
 
-    static boolean areDebugScopePatternsEnabled() {
+    public static boolean areDebugScopePatternsEnabled() {
         return DumpOnError.getValue() || Dump.getValue() != null || Log.getValue() != null || areScopedMetricsOrTimersEnabled();
     }
 
@@ -105,7 +109,7 @@ public class GraalDebugConfig implements DebugConfig {
     private final PrintStream output;
     private final Set<Object> extraFilters = new HashSet<>();
 
-    public GraalDebugConfig(String logFilter, String meterFilter, String trackMemUseFilter, String timerFilter, String dumpFilter, String verifyFilter, String methodFilter, PrintStream output,
+    public JVMCIDebugConfig(String logFilter, String meterFilter, String trackMemUseFilter, String timerFilter, String dumpFilter, String verifyFilter, String methodFilter, PrintStream output,
                     List<DebugDumpHandler> dumpHandlers, List<DebugVerifyHandler> verifyHandlers) {
         this.logFilter = DebugFilter.parse(logFilter);
         this.meterFilter = DebugFilter.parse(meterFilter);
@@ -116,7 +120,7 @@ public class GraalDebugConfig implements DebugConfig {
         if (methodFilter == null || methodFilter.isEmpty()) {
             this.methodFilter = null;
         } else {
-            this.methodFilter = com.oracle.graal.compiler.MethodFilter.parse(methodFilter);
+            this.methodFilter = com.oracle.jvmci.debug.MethodFilter.parse(methodFilter);
         }
 
         // Report the filters that have been configured so the user can verify it's what they expect
@@ -195,14 +199,8 @@ public class GraalDebugConfig implements DebugConfig {
      * @return the {@link JavaMethod} represented by {@code context} or null
      */
     public static JavaMethod asJavaMethod(Object context) {
-        if (context instanceof JavaMethod) {
-            return (JavaMethod) context;
-        }
-        if (context instanceof StructuredGraph) {
-            ResolvedJavaMethod method = ((StructuredGraph) context).method();
-            if (method != null) {
-                return method;
-            }
+        if (context instanceof JavaMethodContex) {
+            return ((JavaMethodContex) context).asJavaMethod();
         }
         return null;
     }
@@ -219,7 +217,7 @@ public class GraalDebugConfig implements DebugConfig {
                     JavaMethod method = asJavaMethod(o);
                     if (method != null) {
                         if (!MethodFilterRootOnly.getValue()) {
-                            if (com.oracle.graal.compiler.MethodFilter.matches(methodFilter, method)) {
+                            if (com.oracle.jvmci.debug.MethodFilter.matches(methodFilter, method)) {
                                 return true;
                             }
                         } else {
@@ -233,7 +231,7 @@ public class GraalDebugConfig implements DebugConfig {
                     }
                 }
             }
-            if (lastMethod != null && com.oracle.graal.compiler.MethodFilter.matches(methodFilter, lastMethod)) {
+            if (lastMethod != null && com.oracle.jvmci.debug.MethodFilter.matches(methodFilter, lastMethod)) {
                 return true;
             }
             return false;
@@ -272,50 +270,13 @@ public class GraalDebugConfig implements DebugConfig {
         }
         Debug.setConfig(Debug.fixedConfig(Debug.DEFAULT_LOG_LEVEL, Debug.DEFAULT_LOG_LEVEL, false, false, false, false, dumpHandlers, verifyHandlers, output));
         Debug.log(String.format("Exception occurred in scope: %s", Debug.currentScope()));
-        boolean dumpedLIR = false;
-        Interval[] intervals = null;
         for (Object o : Debug.context()) {
-            if (o instanceof Graph) {
-                Debug.log("Context obj %s", o);
-                if (DumpOnError.getValue()) {
-                    Debug.dump(o, "Exception graph: " + e);
-                } else {
-                    Debug.log("Use -G:+DumpOnError to enable dumping of graphs on this error");
-                }
-            } else if (o instanceof LIR) {
-                Debug.log("Context obj %s", o);
-                if (DumpOnError.getValue()) {
-                    Debug.dump(o, "Exception LIR: " + e);
-                    dumpedLIR = true;
-                    if (intervals != null) {
-                        Debug.dump(intervals, "Exception Intervals: " + e);
-                        intervals = null;
-                    }
-                } else {
-                    Debug.log("Use -G:+DumpOnError to enable dumping of graphs on this error");
-                }
-            } else if (o instanceof Interval[]) {
-                if (DumpOnError.getValue()) {
-                    if (dumpedLIR) {
-                        // Can only dump intervals if LIR has been dumped.
-                        Debug.dump(o, "Exception Intervals: " + e);
-                    } else {
-                        intervals = (Interval[]) o;
-                    }
-                } else {
-                    Debug.log("Use -G:+DumpOnError to enable dumping of intervals on this error");
-                }
-            } else if (o instanceof Node) {
-                String location = GraphUtil.approxSourceLocation((Node) o);
-                String node = ((Node) o).toString(Verbosity.Debugger);
-                if (location != null) {
-                    Debug.log("Context obj %s (approx. location: %s)", node, location);
-                } else {
-                    Debug.log("Context obj %s", node);
-                }
+            if (DumpOnError.getValue()) {
+                Debug.dump(o, "Exception");
             } else {
                 Debug.log("Context obj %s", o);
             }
+
         }
         return null;
     }

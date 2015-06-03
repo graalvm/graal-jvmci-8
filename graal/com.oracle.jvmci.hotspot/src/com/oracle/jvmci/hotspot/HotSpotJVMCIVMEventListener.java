@@ -20,26 +20,39 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot;
+package com.oracle.jvmci.hotspot;
 
-import com.oracle.jvmci.hotspot.*;
+import static com.oracle.jvmci.hotspot.CompileTheWorld.Options.*;
+
+import com.oracle.jvmci.debug.*;
+import com.oracle.jvmci.hotspot.CompileTheWorld.Config;
 import com.oracle.jvmci.service.*;
 
 @ServiceProvider(HotSpotVMEventListener.class)
-public class HotSpotGraalVMEventListener implements HotSpotVMEventListener {
+public class HotSpotJVMCIVMEventListener implements HotSpotVMEventListener {
 
     @Override
     public void notifyCompileTheWorld() throws Throwable {
-
+        CompilerToVM compilerToVM = HotSpotJVMCIRuntime.runtime().getCompilerToVM();
+        int iterations = CompileTheWorld.Options.CompileTheWorldIterations.getValue();
+        for (int i = 0; i < iterations; i++) {
+            compilerToVM.resetCompilationStatistics();
+            TTY.println("CompileTheWorld : iteration " + i);
+            CompileTheWorld ctw = new CompileTheWorld(CompileTheWorldClasspath.getValue(), new Config(CompileTheWorldConfig.getValue()), CompileTheWorldStartAt.getValue(),
+                            CompileTheWorldStopAt.getValue(), CompileTheWorldMethodFilter.getValue(), CompileTheWorldExcludeMethodFilter.getValue(), CompileTheWorldVerbose.getValue());
+            ctw.compile();
+        }
+        System.exit(0);
     }
 
     @Override
     public void notifyShutdown() {
-        HotSpotGraalRuntime.runtime().shutdown();
+        // nothing to do
     }
 
     @Override
     public void compileMetaspaceMethod(long metaspaceMethod, int entryBCI, long jvmciEnv, int id) {
-
+        HotSpotResolvedJavaMethod method = HotSpotResolvedJavaMethodImpl.fromMetaspace(metaspaceMethod);
+        CompilationTask.compileMethod(method, entryBCI, jvmciEnv, id);
     }
 }

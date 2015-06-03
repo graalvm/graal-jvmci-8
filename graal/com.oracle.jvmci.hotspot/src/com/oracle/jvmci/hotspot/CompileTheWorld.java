@@ -20,14 +20,16 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot;
+package com.oracle.jvmci.hotspot;
 
-import static com.oracle.graal.compiler.common.GraalOptions.*;
-import static com.oracle.graal.hotspot.HotSpotGraalRuntime.*;
-import static com.oracle.graal.nodes.StructuredGraph.*;
+//import static com.oracle.graal.compiler.common.GraalOptions.*;
+//import static com.oracle.graal.hotspot.HotSpotGraalRuntime.*;
+//import static com.oracle.graal.nodes.StructuredGraph.*;
+import static com.oracle.jvmci.compiler.Compiler.*;
 import static com.oracle.jvmci.debug.internal.MemUseTrackerImpl.*;
 
 import java.io.*;
+import java.lang.annotation.*;
 import java.lang.reflect.*;
 import java.net.*;
 import java.util.*;
@@ -36,18 +38,16 @@ import java.util.concurrent.atomic.*;
 import java.util.jar.*;
 import java.util.stream.*;
 
-import com.oracle.graal.bytecode.*;
-import com.oracle.graal.compiler.*;
-import com.oracle.graal.compiler.CompilerThreadFactory.DebugConfigAccess;
-import com.oracle.graal.printer.*;
-import com.oracle.graal.replacements.*;
+import com.oracle.jvmci.compiler.*;
+import com.oracle.jvmci.compiler.CompilerThreadFactory.DebugConfigAccess;
+import com.oracle.jvmci.compiler.Compiler;
 import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.debug.internal.*;
-import com.oracle.jvmci.hotspot.*;
 import com.oracle.jvmci.meta.*;
 import com.oracle.jvmci.options.*;
 import com.oracle.jvmci.options.OptionUtils.OptionConsumer;
 import com.oracle.jvmci.options.OptionValue.OverrideScope;
+import com.oracle.jvmci.runtime.*;
 
 /**
  * This class implements compile-the-world functionality in Graal.
@@ -90,7 +90,7 @@ public final class CompileTheWorld {
          * Overrides {@link #CompileTheWorldStartAt} and {@link #CompileTheWorldStopAt} from
          * {@code -XX} HotSpot options of the same name if the latter have non-default values.
          */
-        static void overrideWithNativeOptions(HotSpotVMConfig c) {
+        public static void overrideWithNativeOptions(HotSpotVMConfig c) {
             if (c.compileTheWorldStartAt != 1) {
                 CompileTheWorldStartAt.setValue(c.compileTheWorldStartAt);
             }
@@ -141,9 +141,6 @@ public final class CompileTheWorld {
             put(desc.getOptionValue(), value);
         }
     }
-
-    // Some runtime instances we need.
-    private final HotSpotGraalRuntimeProvider runtime = runtime();
 
     /** List of Zip/Jar files to compile (see {@link Options#CompileTheWorldClasspath}). */
     private final String files;
@@ -200,6 +197,7 @@ public final class CompileTheWorld {
         // ...but we want to see exceptions.
         config.putIfAbsent(PrintBailout, true);
         config.putIfAbsent(PrintStackTraceOnException, true);
+        config.putIfAbsent(HotSpotResolvedJavaMethodImpl.Options.UseProfilingInformation, false);
     }
 
     /**
@@ -210,8 +208,8 @@ public final class CompileTheWorld {
      */
     public void compile() throws Throwable {
         // By default only report statistics for the CTW threads themselves
-        if (GraalDebugConfig.DebugValueThreadFilter.hasDefaultValue()) {
-            GraalDebugConfig.DebugValueThreadFilter.setValue("^CompileTheWorld");
+        if (JVMCIDebugConfig.DebugValueThreadFilter.hasDefaultValue()) {
+            JVMCIDebugConfig.DebugValueThreadFilter.setValue("^CompileTheWorld");
         }
 
         if (SUN_BOOT_CLASS_PATH.equals(files)) {
@@ -260,7 +258,7 @@ public final class CompileTheWorld {
         long start = System.currentTimeMillis();
 
         CompilerThreadFactory factory = new CompilerThreadFactory("CompileTheWorld", new DebugConfigAccess() {
-            public GraalDebugConfig getDebugConfig() {
+            public JVMCIDebugConfig getDebugConfig() {
                 if (Debug.isEnabled() && DebugScope.getConfig() == null) {
                     return DebugEnvironment.initialize(System.out);
                 }
@@ -347,7 +345,7 @@ public final class CompileTheWorld {
                             HotSpotResolvedObjectType objectType = HotSpotResolvedObjectTypeImpl.fromObjectClass(javaClass);
                             ConstantPool constantPool = objectType.constantPool();
                             for (int cpi = 1; cpi < constantPool.length(); cpi++) {
-                                constantPool.loadReferencedType(cpi, Bytecodes.LDC);
+                                constantPool.loadReferencedType(cpi, HotSpotConstantPool.Bytecodes.LDC);
                             }
                         } catch (Throwable t) {
                             // If something went wrong during pre-loading we just ignore it.
@@ -355,7 +353,7 @@ public final class CompileTheWorld {
                         }
 
                         // Are we compiling this class?
-                        MetaAccessProvider metaAccess = runtime.getHostProviders().getMetaAccess();
+                        MetaAccessProvider metaAccess = JVMCI.getRuntime().getHostJVMCIBackend().getMetaAccess();
                         if (classFileCounter >= startAt) {
                             println("CompileTheWorld (%d) : %s", classFileCounter, className);
 
@@ -424,22 +422,6 @@ public final class CompileTheWorld {
         }
     }
 
-    class CTWCompilationTask extends CompilationTask {
-
-        CTWCompilationTask(HotSpotBackend backend, HotSpotResolvedJavaMethod method) {
-            super(backend, method, INVOCATION_ENTRY_BCI, 0L, method.allocateCompileId(INVOCATION_ENTRY_BCI), false);
-        }
-
-        /**
-         * Returns empty profiling info to be as close to the CTW behavior of C1 and C2 as possible.
-         */
-        @Override
-        protected ProfilingInfo getProfilingInfo() {
-            // Be optimistic and return false for exceptionSeen.
-            return DefaultProfilingInfo.get(TriState.FALSE);
-        }
-    }
-
     private void compileMethod(HotSpotResolvedJavaMethod method) throws InterruptedException, ExecutionException {
         if (methodFilters != null && !MethodFilter.matches(methodFilters, method)) {
             return;
@@ -468,8 +450,7 @@ public final class CompileTheWorld {
             long start = System.currentTimeMillis();
             long allocatedAtStart = getCurrentThreadAllocatedBytes();
 
-            HotSpotBackend backend = runtime.getHostBackend();
-            CompilationTask task = new CTWCompilationTask(backend, method);
+            CompilationTask task = new CompilationTask(method, Compiler.INVOCATION_ENTRY_BCI, 0L, method.allocateCompileId(Compiler.INVOCATION_ENTRY_BCI), false);
             task.runCompilation();
 
             memoryUsed.getAndAdd(getCurrentThreadAllocatedBytes() - allocatedAtStart);
@@ -487,11 +468,11 @@ public final class CompileTheWorld {
      *
      * @return true if it can be compiled, false otherwise
      */
-    private boolean canBeCompiled(HotSpotResolvedJavaMethod javaMethod, int modifiers) {
+    private static boolean canBeCompiled(HotSpotResolvedJavaMethod javaMethod, int modifiers) {
         if (Modifier.isAbstract(modifiers) || Modifier.isNative(modifiers)) {
             return false;
         }
-        HotSpotVMConfig c = runtime.getConfig();
+        HotSpotVMConfig c = HotSpotJVMCIRuntime.runtime().getConfig();
         if (c.dontCompileHugeMethods && javaMethod.getCodeSize() > c.hugeMethodLimit) {
             return false;
         }
@@ -500,8 +481,10 @@ public final class CompileTheWorld {
             return false;
         }
         // Skip @Snippets for now
-        if (javaMethod.getAnnotation(Snippet.class) != null) {
-            return false;
+        for (Annotation annotation : javaMethod.getAnnotations()) {
+            if (annotation.annotationType().getName().equals("com.oracle.graal.replacements.Snippet")) {
+                return false;
+            }
         }
         return true;
     }

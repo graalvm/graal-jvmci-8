@@ -38,7 +38,7 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
     /**
      * Subset of JVM bytecode opcodes used by {@link HotSpotConstantPool}.
      */
-    static class Bytecodes {
+    public static class Bytecodes {
         public static final int LDC = 18; // 0x12
         public static final int LDC_W = 19; // 0x13
         public static final int LDC2_W = 20; // 0x14

@@ -514,6 +514,8 @@ public class CompilationResult {
      */
     private ResolvedJavaMethod[] methods;
 
+    private int bytecodeSize;
+
     public CompilationResult() {
         this(null);
     }
@@ -647,6 +649,14 @@ public class CompilationResult {
      */
     public ResolvedJavaMethod[] getMethods() {
         return methods;
+    }
+
+    public void setBytecodeSize(int bytecodeSize) {
+        this.bytecodeSize = bytecodeSize;
+    }
+
+    public int getBytecodeSize() {
+        return bytecodeSize;
     }
 
     public DataSection getDataSection() {

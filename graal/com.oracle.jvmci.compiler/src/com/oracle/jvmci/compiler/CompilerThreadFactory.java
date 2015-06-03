@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.compiler;
+package com.oracle.jvmci.compiler;
 
 import java.util.concurrent.*;
 
@@ -39,7 +39,7 @@ public class CompilerThreadFactory implements ThreadFactory {
          * Get a thread-local debug configuration for the current thread. This will be null if
          * debugging is {@linkplain Debug#isEnabled() disabled}.
          */
-        GraalDebugConfig getDebugConfig();
+        JVMCIDebugConfig getDebugConfig();
     }
 
     protected final String threadNamePrefix;

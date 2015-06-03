@@ -20,14 +20,14 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.compiler;
+package com.oracle.jvmci.compiler;
 
-import com.oracle.graal.compiler.CompilerThreadFactory.DebugConfigAccess;
+import com.oracle.jvmci.compiler.CompilerThreadFactory.*;
 import com.oracle.jvmci.debug.*;
 
 /**
  * A compiler thread is a daemon thread that runs at {@link Thread#MAX_PRIORITY} and executes in the
- * context of a thread-local {@linkplain GraalDebugConfig debug configuration}.
+ * context of a thread-local {@linkplain JVMCIDebugConfig debug configuration}.
  */
 public class CompilerThread extends Thread {
 
@@ -43,7 +43,7 @@ public class CompilerThread extends Thread {
 
     @Override
     public void run() {
-        GraalDebugConfig debugConfig = debugConfigAccess.getDebugConfig();
+        JVMCIDebugConfig debugConfig = debugConfigAccess.getDebugConfig();
         setContextClassLoader(getClass().getClassLoader());
         try {
             super.run();

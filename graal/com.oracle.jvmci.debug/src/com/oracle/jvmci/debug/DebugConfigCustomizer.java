@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,28 +20,10 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.hotspot.test;
+package com.oracle.jvmci.debug;
 
-import static com.oracle.jvmci.compiler.Compiler.*;
+import com.oracle.jvmci.service.*;
 
-import org.junit.*;
-
-import com.oracle.graal.compiler.test.*;
-import com.oracle.jvmci.hotspot.*;
-import com.oracle.jvmci.hotspot.CompileTheWorld.Config;
-
-/**
- * Tests {@link CompileTheWorld} functionality.
- */
-public class CompileTheWorldTest extends GraalCompilerTest {
-
-    @Test
-    public void testRtJar() throws Throwable {
-        boolean originalSetting = ExitVMOnException.getValue();
-        // Compile a couple classes in rt.jar
-        String file = System.getProperty("java.home") + "/lib/rt.jar";
-        new CompileTheWorld(file, new Config(null), 1, 5, null, null, false).compile();
-        assert ExitVMOnException.getValue() == originalSetting;
-    }
-
+public interface DebugConfigCustomizer extends Service {
+    void customize(DebugConfig config);
 }

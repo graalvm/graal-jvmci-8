@@ -20,23 +20,22 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.compiler;
+package com.oracle.jvmci.debug;
 
 import java.util.*;
 import java.util.regex.*;
 
-import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.debug.internal.*;
 
 /**
- * Implements the filter specified by the {@link GraalDebugConfig#Dump},
- * {@link GraalDebugConfig#Log}, {@link GraalDebugConfig#Meter} and {@link GraalDebugConfig#Time}
+ * Implements the filter specified by the {@link JVMCIDebugConfig#Dump},
+ * {@link JVMCIDebugConfig#Log}, {@link JVMCIDebugConfig#Meter} and {@link JVMCIDebugConfig#Time}
  * options.
  * <p>
  * These options enable the associated debug facility if their filter matches the
  * {@linkplain DebugScope#getQualifiedName() name} of the {@linkplain Debug#currentScope() current
- * scope}. For the {@link GraalDebugConfig#Dump} and {@link GraalDebugConfig#Log} options, the log
- * or dump level is set. The {@link GraalDebugConfig#Meter} and {@link GraalDebugConfig#Time}
+ * scope}. For the {@link JVMCIDebugConfig#Dump} and {@link JVMCIDebugConfig#Log} options, the log
+ * or dump level is set. The {@link JVMCIDebugConfig#Meter} and {@link JVMCIDebugConfig#Time}
  * options don't have a level, for them {@code level = 0} means disabled and a {@code level > 0}
  * means enabled.
  * <p>

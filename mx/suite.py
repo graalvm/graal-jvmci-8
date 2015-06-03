@@ -231,6 +231,8 @@ suite = {
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "dependencies" : [
+        "com.oracle.jvmci.options",
+        "com.oracle.jvmci.code",
         "com.oracle.jvmci.service",
       ],
       "javaCompliance" : "1.8",
@@ -253,6 +255,18 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI",
+    },
+
+    "com.oracle.jvmci.compiler" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.debug",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "annotationProcessors" : ["com.oracle.jvmci.options.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",
     },
@@ -306,15 +320,15 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.jvmci.hotspotvmconfig",
-        "com.oracle.jvmci.options",
-        "com.oracle.jvmci.debug",
+        "FINDBUGS",
         "com.oracle.jvmci.runtime",
         "com.oracle.jvmci.common",
-        "FINDBUGS",
+        "com.oracle.jvmci.compiler",
       ],
       "annotationProcessors" : [
         "com.oracle.jvmci.hotspotvmconfig.processor",
         "com.oracle.jvmci.options.processor",
+        "com.oracle.jvmci.service.processor",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -480,8 +494,8 @@ suite = {
       "dependencies" : [
         "com.oracle.jvmci.hotspot",
         "com.oracle.graal.replacements",
-        "com.oracle.graal.printer",
         "com.oracle.graal.runtime",
+        "com.oracle.graal.code",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : [
@@ -731,9 +745,9 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.compiler",
-        "com.oracle.graal.java",
         "com.oracle.graal.api.directives",
+        "com.oracle.graal.java",
+        "com.oracle.graal.loop",
         "com.oracle.graal.word",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -751,6 +765,7 @@ suite = {
       "dependencies" : [
           "com.oracle.graal.replacements",
           "com.oracle.graal.lir.amd64",
+          "com.oracle.graal.compiler",
           ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -763,6 +778,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
           "com.oracle.graal.replacements",
+          "com.oracle.graal.compiler",
           ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -802,6 +818,7 @@ suite = {
         "com.oracle.graal.api.replacements",
         "com.oracle.graal.lir",
         "com.oracle.graal.bytecode",
+        "com.oracle.jvmci.compiler",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -962,7 +979,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.phases",
-        "com.oracle.graal.graphbuilderconf"
+        "com.oracle.graal.graphbuilderconf",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
@@ -985,10 +1002,8 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.options",
         "com.oracle.jvmci.debug",
         "com.oracle.jvmci.common",
-        "com.oracle.jvmci.code",
       ],
       "annotationProcessors" : ["com.oracle.jvmci.options.processor"],
       "checkstyle" : "com.oracle.graal.graph",
@@ -1025,9 +1040,9 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.test",
         "com.oracle.graal.api.directives",
-        "com.oracle.graal.printer",
+        "com.oracle.graal.java",
+        "com.oracle.graal.test",
         "com.oracle.graal.runtime",
         "JAVA_ALLOCATION_INSTRUMENTER",
       ],
@@ -1228,7 +1243,6 @@ suite = {
       "dependencies" : [
         "com.oracle.truffle.api",
         "com.oracle.graal.runtime",
-        "com.oracle.graal.printer",
         "com.oracle.graal.replacements",
       ],
       "checkstyle" : "com.oracle.graal.graph",
