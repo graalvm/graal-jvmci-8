@@ -20,23 +20,21 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.asm.test;
+package com.oracle.jvmci.asm.test;
 
 import java.lang.reflect.*;
 
 import org.junit.*;
 
-import com.oracle.graal.api.runtime.*;
-import com.oracle.graal.phases.util.*;
-import com.oracle.graal.runtime.*;
-import com.oracle.graal.test.*;
 import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.debug.Debug.Scope;
 import com.oracle.jvmci.meta.*;
+import com.oracle.jvmci.runtime.*;
 import com.oracle.jvmci.service.*;
+import com.oracle.jvmci.test.*;
 
-public abstract class AssemblerTest extends GraalTest {
+public abstract class AssemblerTest extends TestBase {
 
     private final MetaAccessProvider metaAccess;
     protected final CodeCacheProvider codeCache;
@@ -46,7 +44,7 @@ public abstract class AssemblerTest extends GraalTest {
     }
 
     public AssemblerTest() {
-        Providers providers = Graal.getRequiredCapability(RuntimeProvider.class).getHostBackend().getProviders();
+        JVMCIBackend providers = JVMCI.getRuntime().getHostJVMCIBackend();
         this.metaAccess = providers.getMetaAccess();
         this.codeCache = providers.getCodeCache();
     }

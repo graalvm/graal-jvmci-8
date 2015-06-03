@@ -20,11 +20,11 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.asm.amd64.test;
+package com.oracle.jvmci.asm.amd64.test;
 
-import com.oracle.graal.asm.test.*;
 import com.oracle.jvmci.amd64.*;
 import com.oracle.jvmci.asm.amd64.*;
+import com.oracle.jvmci.asm.test.*;
 import com.oracle.jvmci.code.RegisterConfig;
 import com.oracle.jvmci.code.TargetDescription;
 import com.oracle.jvmci.code.Register;

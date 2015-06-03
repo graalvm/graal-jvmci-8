@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.test;
+package com.oracle.jvmci.test;
 
 import java.io.*;
 import java.lang.reflect.*;
@@ -30,11 +30,9 @@ import org.junit.*;
 import org.junit.internal.*;
 
 /**
- * Base class for Graal tests.
- * <p>
- * This contains common utility methods and classes that are used in tests.
+ * Base class that contains common utility methods and classes useful in unit tests.
  */
-public class GraalTest {
+public class TestBase {
 
     protected Method getMethod(String methodName) {
         return getMethod(getClass(), methodName);
@@ -274,7 +272,7 @@ public class GraalTest {
         // Trim the assert frames from the stack trace
         StackTraceElement[] trace = e.getStackTrace();
         int start = 1; // Skip this frame
-        String thisClassName = GraalTest.class.getName();
+        String thisClassName = TestBase.class.getName();
         while (start < trace.length && trace[start].getClassName().equals(thisClassName) && (trace[start].getMethodName().equals("assertTrue") || trace[start].getMethodName().equals("assertFalse"))) {
             start++;
         }

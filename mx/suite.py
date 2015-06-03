@@ -310,7 +310,7 @@ suite = {
       "dependencies" : ["com.oracle.jvmci.code"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Assembler",
+      "workingSets" : "JVMCI,Assembler",
     },
 
     "com.oracle.jvmci.asm.amd64" : {
@@ -322,7 +322,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Assembler,AMD64",
+      "workingSets" : "JVMCI,Assembler,AMD64",
     },
 
     "com.oracle.jvmci.asm.sparc" : {
@@ -334,8 +334,21 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Assembler,SPARC",
+      "workingSets" : "JVMCI,Assembler,SPARC",
     },
+
+    "com.oracle.jvmci.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "JUNIT",
+        "com.oracle.jvmci.debug",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,Test",
+    },
+
 
     # ------------- JVMCI:HotSpot -------------
 
@@ -988,7 +1001,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "JUNIT",
+        "com.oracle.jvmci.test",
         "com.oracle.jvmci.debug",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -1024,23 +1037,24 @@ suite = {
       "jacoco" : "exclude",
     },
 
-    "com.oracle.graal.asm.test" : {
+    "com.oracle.jvmci.asm.test" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.test",
-        "com.oracle.graal.runtime",
+        "com.oracle.jvmci.test",
+        "com.oracle.jvmci.common",
+        "com.oracle.jvmci.runtime",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Assembler,Test",
     },
 
-    "com.oracle.graal.asm.amd64.test" : {
+    "com.oracle.jvmci.asm.amd64.test" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.graal.asm.test",
+        "com.oracle.jvmci.asm.test",
         "com.oracle.jvmci.asm.amd64",
       ],
       "checkstyle" : "com.oracle.graal.graph",
