@@ -25,15 +25,11 @@ package com.oracle.jvmci.hotspot;
 import static com.oracle.jvmci.hotspot.HotSpotCompressedNullConstant.*;
 
 import java.lang.reflect.*;
-import java.util.*;
 
 import com.oracle.jvmci.code.*;
-import com.oracle.jvmci.code.CodeUtil.DefaultRefMapFormatter;
-import com.oracle.jvmci.code.CodeUtil.RefMapFormatter;
 import com.oracle.jvmci.code.CompilationResult.Call;
 import com.oracle.jvmci.code.CompilationResult.ConstantReference;
 import com.oracle.jvmci.code.CompilationResult.DataPatch;
-import com.oracle.jvmci.code.CompilationResult.Infopoint;
 import com.oracle.jvmci.code.CompilationResult.Mark;
 import com.oracle.jvmci.code.DataSection.Data;
 import com.oracle.jvmci.code.DataSection.DataBuilder;
@@ -59,75 +55,8 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
     }
 
     @Override
-    public String disassemble(CompilationResult compResult, InstalledCode installedCode) {
-        byte[] code = installedCode == null ? Arrays.copyOf(compResult.getTargetCode(), compResult.getTargetCodeSize()) : installedCode.getCode();
-        if (code == null) {
-            // Method was deoptimized/invalidated
-            return "";
-        }
-        long start = installedCode == null ? 0L : installedCode.getStart();
-        HexCodeFile hcf = new HexCodeFile(code, start, target.arch.getName(), target.wordSize * 8);
-        if (compResult != null) {
-            HexCodeFile.addAnnotations(hcf, compResult.getAnnotations());
-            addExceptionHandlersComment(compResult, hcf);
-            Register fp = regConfig.getFrameRegister();
-            RefMapFormatter slotFormatter = new DefaultRefMapFormatter(target.arch, target.wordSize, fp, 0);
-            for (Infopoint infopoint : compResult.getInfopoints()) {
-                if (infopoint instanceof Call) {
-                    Call call = (Call) infopoint;
-                    if (call.debugInfo != null) {
-                        hcf.addComment(call.pcOffset + call.size, CodeUtil.append(new StringBuilder(100), call.debugInfo, slotFormatter).toString());
-                    }
-                    addOperandComment(hcf, call.pcOffset, "{" + getTargetName(call) + "}");
-                } else {
-                    if (infopoint.debugInfo != null) {
-                        hcf.addComment(infopoint.pcOffset, CodeUtil.append(new StringBuilder(100), infopoint.debugInfo, slotFormatter).toString());
-                    }
-                    addOperandComment(hcf, infopoint.pcOffset, "{infopoint: " + infopoint.reason + "}");
-                }
-            }
-            for (DataPatch site : compResult.getDataPatches()) {
-                hcf.addOperandComment(site.pcOffset, "{" + site.reference.toString() + "}");
-            }
-            for (Mark mark : compResult.getMarks()) {
-                hcf.addComment(mark.pcOffset, getMarkIdName((int) mark.id));
-            }
-        }
-        String hcfEmbeddedString = hcf.toEmbeddedString();
-        return HexCodeFileDisTool.tryDisassemble(hcfEmbeddedString);
-    }
-
-    /**
-     * Interface to the tool for disassembling an {@link HexCodeFile#toEmbeddedString() embedded}
-     * {@link HexCodeFile}.
-     */
-    static class HexCodeFileDisTool {
-        static final Method processMethod;
-        static {
-            Method toolMethod = null;
-            try {
-                Class<?> toolClass = Class.forName("com.oracle.max.hcfdis.HexCodeFileDis", true, ClassLoader.getSystemClassLoader());
-                toolMethod = toolClass.getDeclaredMethod("processEmbeddedString", String.class);
-            } catch (Exception e) {
-                // Tool not available on the class path
-            }
-            processMethod = toolMethod;
-        }
-
-        public static String tryDisassemble(String hcfEmbeddedString) {
-            if (processMethod != null) {
-                try {
-                    return (String) processMethod.invoke(null, hcfEmbeddedString);
-                } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-                    // If the tool is available, for now let's be noisy when it fails
-                    throw new JVMCIError(e);
-                }
-            }
-            return hcfEmbeddedString;
-        }
-    }
-
-    private String getMarkIdName(int markId) {
+    public String getMarkName(Mark mark) {
+        int markId = (int) mark.id;
         Field[] fields = runtime.getConfig().getClass().getDeclaredFields();
         for (Field f : fields) {
             if (f.getName().startsWith("MARKID_")) {
@@ -140,13 +69,14 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
                 }
             }
         }
-        return String.valueOf(markId);
+        return CodeCacheProvider.super.getMarkName(mark);
     }
 
     /**
      * Decodes a call target to a mnemonic if possible.
      */
-    private String getTargetName(Call call) {
+    @Override
+    public String getTargetName(Call call) {
         Field[] fields = runtime.getConfig().getClass().getDeclaredFields();
         for (Field f : fields) {
             if (f.getName().endsWith("Stub")) {
@@ -160,25 +90,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
                 }
             }
         }
-        return String.valueOf(call.target);
-    }
-
-    private static void addExceptionHandlersComment(CompilationResult compResult, HexCodeFile hcf) {
-        if (!compResult.getExceptionHandlers().isEmpty()) {
-            String nl = HexCodeFile.NEW_LINE;
-            StringBuilder buf = new StringBuilder("------ Exception Handlers ------").append(nl);
-            for (CompilationResult.ExceptionHandler e : compResult.getExceptionHandlers()) {
-                buf.append("    ").append(e.pcOffset).append(" -> ").append(e.handlerPos).append(nl);
-                hcf.addComment(e.pcOffset, "[exception -> " + e.handlerPos + "]");
-                hcf.addComment(e.handlerPos, "[exception handler for " + e.pcOffset + "]");
-            }
-            hcf.addComment(0, buf.toString());
-        }
-    }
-
-    private static void addOperandComment(HexCodeFile hcf, int pos, String comment) {
-        String oldValue = hcf.addOperandComment(pos, comment);
-        assert oldValue == null : "multiple comments for operand of instruction at " + pos + ": " + comment + ", " + oldValue;
+        return CodeCacheProvider.super.getTargetName(call);
     }
 
     @Override

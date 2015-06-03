@@ -22,9 +22,11 @@
  */
 package com.oracle.jvmci.code;
 
-import com.oracle.jvmci.meta.*;
+import com.oracle.jvmci.code.CompilationResult.Call;
 import com.oracle.jvmci.code.CompilationResult.DataPatch;
+import com.oracle.jvmci.code.CompilationResult.Mark;
 import com.oracle.jvmci.code.DataSection.Data;
+import com.oracle.jvmci.meta.*;
 
 /**
  * Access to code cache related details and requirements.
@@ -54,16 +56,18 @@ public interface CodeCacheProvider {
     InstalledCode setDefaultMethod(ResolvedJavaMethod method, CompilationResult compResult);
 
     /**
-     * Returns a disassembly of some compiled code.
-     *
-     * @param compResult some compiled code
-     * @param installedCode the result of installing the code in {@code compResult} or null if the
-     *            code has not yet been installed
-     *
-     * @return a disassembly. This will be of length 0 if the runtime does not support
-     *         disassembling.
+     * Gets a name for a {@link Mark} mark.
      */
-    String disassemble(CompilationResult compResult, InstalledCode installedCode);
+    default String getMarkName(Mark mark) {
+        return String.valueOf(mark.id);
+    }
+
+    /**
+     * Gets a name for the {@linkplain Call#target target} of a {@link Call}.
+     */
+    default String getTargetName(Call call) {
+        return String.valueOf(call.target);
+    }
 
     /**
      * Gets the register configuration to use when compiling a given method.
