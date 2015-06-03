@@ -429,6 +429,31 @@ suite = {
       "workingSets" : "JVMCI,HotSpot",
     },
 
+    "com.oracle.jvmci.asm.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.test",
+        "com.oracle.jvmci.common",
+        "com.oracle.jvmci.runtime",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,Assembler,Test",
+    },
+
+    "com.oracle.jvmci.asm.amd64.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.jvmci.asm.test",
+        "com.oracle.jvmci.asm.amd64",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,Assembler,AMD64,Test",
+    },
+
     # ------------- NFI -------------
 
     "com.oracle.nfi" : {
@@ -1035,31 +1060,6 @@ suite = {
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Test",
       "jacoco" : "exclude",
-    },
-
-    "com.oracle.jvmci.asm.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.test",
-        "com.oracle.jvmci.common",
-        "com.oracle.jvmci.runtime",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Assembler,Test",
-    },
-
-    "com.oracle.jvmci.asm.amd64.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.asm.test",
-        "com.oracle.jvmci.asm.amd64",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Assembler,AMD64,Test",
     },
 
     # ------------- Truffle -------------

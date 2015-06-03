@@ -56,7 +56,6 @@ public interface Value extends KindProvider, TrustedInterface {
      * Warning: Use with caution! Usually equivalence {@link #equals(Object)} is sufficient and
      * should be used.
      */
-    @ExcludeFromIdentityComparisonVerification
     default boolean identityEquals(Value other) {
         return this == other;
     }

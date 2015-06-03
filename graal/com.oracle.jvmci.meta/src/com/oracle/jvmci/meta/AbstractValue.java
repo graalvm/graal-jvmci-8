@@ -92,7 +92,6 @@ public abstract class AbstractValue implements Value, KindProvider {
      * Warning: Use with caution! Usually equivalence {@link #equals(Object)} is sufficient and
      * should be used.
      */
-    @ExcludeFromIdentityComparisonVerification
     public final boolean identityEquals(AbstractValue other) {
         return this == other;
     }
