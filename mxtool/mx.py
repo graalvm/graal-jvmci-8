@@ -167,6 +167,9 @@ class Distribution:
                 srcArc = arc if unified else srcArcRaw
                 services = {}
                 def overwriteCheck(zf, arcname, source):
+                    if os.path.basename(arcname).startswith('.'):
+                        logv('Excluding dotfile: ' + source)
+                        return True
                     if not hasattr(zf, '_provenance'):
                         zf._provenance = {}
                     existingSource = zf._provenance.get(arcname, None)
