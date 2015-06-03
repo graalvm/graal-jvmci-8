@@ -415,6 +415,14 @@ suite = {
       "workingSets" : "JVMCI,HotSpot,SPARC",
     },
 
+    "com.oracle.jvmci.bytecode" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,Java",
+    },
+
     "com.oracle.jvmci.hotspot.jfr" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -797,7 +805,7 @@ suite = {
         "com.oracle.graal.graph",
         "com.oracle.graal.api.replacements",
         "com.oracle.graal.lir",
-        "com.oracle.graal.bytecode",
+        "com.oracle.jvmci.bytecode",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -950,14 +958,6 @@ suite = {
       "workingSets" : "Graal",
     },
 
-    "com.oracle.graal.bytecode" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "Graal,Java",
-    },
-
     "com.oracle.graal.java" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -1038,8 +1038,8 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
+        "com.oracle.jvmci.test",
         "com.oracle.graal.api.directives",
-        "com.oracle.graal.test",
         "com.oracle.graal.printer",
         "com.oracle.graal.runtime",
         "JAVA_ALLOCATION_INSTRUMENTER",
@@ -1348,6 +1348,7 @@ suite = {
       "subDir" : "graal",
       "sourcesPath" : "build/jvmci-util.src.zip",
       "dependencies" : [
+        "com.oracle.jvmci.bytecode",
         "com.oracle.jvmci.asm.amd64",
         "com.oracle.jvmci.asm.sparc",
       ],
