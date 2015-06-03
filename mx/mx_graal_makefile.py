@@ -1,4 +1,3 @@
-import mx, os, sys
 #
 # ----------------------------------------------------------------------------------------------------
 #
@@ -25,136 +24,142 @@ import mx, os, sys
 #
 # ----------------------------------------------------------------------------------------------------
 #
+import mx, os
+from argparse import ArgumentParser, REMAINDER
 
+
+class Makefile:
+    def __init__(self):
+        self.rules = []
+        self.definitions = []
+        
+    def add_rule(self, s):
+        self.rules.append(s)
+        
+    def add_definition(self, s):
+        self.definitions.append(s)
+        
+    def generate(self):
+        return "\n\n".join(self.definitions + self.rules)
+    
 
 def build_makefile(args):
-    """Build a Makefile from the suitte.py to build graa.jar without python"""
-    if len(args) == 0 or args[0] == "-":
-        do_build_makefile(lambda l: sys.stdout.write(l + os.linesep))
-    elif args[0] == "-o":
-        with open(args[1], "w") as f:
-            do_build_makefile(lambda l: f.write(l + os.linesep))
+    """Creates a Makefile which is able to build distributions without mx"""
+    parser = ArgumentParser(prog='mx makefile')
+    parser.add_argument('-o', action='store', dest='output', help='Write contents to this file.')
+    parser.add_argument('selectedDists', help="Selected distribution names which are going to be built with make.", nargs=REMAINDER)
+    args = parser.parse_args(args)
+    
+    if args.selectedDists == None or len(args.selectedDists) == 0:
+        parser.print_help()
+        return
+    mf = Makefile()
+    if do_build_makefile(mf, args.selectedDists):
+        contents = mf.generate()
+        if args.output == None:
+            print contents
+        else:
+            with open(args.output, "w") as f:
+                f.write(contents)
+    
 
-def relative_dep_path(d):
-    if isinstance(d, str): d = mx.dependency(d)
-    return os.path.basename(d.get_path(False))
-
-def createMakeRule(p, bootClasspath):
-    def filterDeps(deps, t):
-        def typeFilter(project): # filters
-            if isinstance(project, str):
-                project = mx.dependency(project, True)
-            return isinstance(project, t)
-        return [d for d in deps if typeFilter(d)]
+def filter_projects(deps, t):
+    def typeFilter(project): # filters
+        if isinstance(project, str):
+            project = mx.dependency(project, True)
+        return isinstance(project, t)
+    return [d for d in deps if typeFilter(d)]
 
 
-    canonicalDeps = p.canonical_deps()
-    canonicalProjectDep = filterDeps(canonicalDeps, mx.Project)
-    canonicalProjectDepDirs = ['$(TARGET)/' +i for i in canonicalProjectDep]
-    canonicalLibDep = filterDeps(canonicalDeps, mx.Library)
-    canonicalLibDepJars = ["$(LIB)/" + relative_dep_path(d) for d in canonicalLibDep]
-
-    allDep = p.all_deps([], True, False, includeAnnotationProcessors=True)
-    allProcessorDistNames = [x.definedAnnotationProcessorsDist.name for x in filterDeps(allDep, mx.Project) if x.definedAnnotationProcessors != None]
-    allProjectDep = filterDeps(allDep, mx.Project)
-    allProjectDepDir = ['$(TARGET)/' +i.name for i in allProjectDep]
-    allLibDep = filterDeps(allDep, mx.Library)
-    allLibDepJar = ["$(LIB)/" + relative_dep_path(d) for d in allLibDep]
-
-    processor = p.annotation_processors_path()
-    if processor != None: processor = processor.replace(p.suite.dir, "$(TARGET)")
-
-    cp = allLibDepJar +allProjectDepDir
+def make_dist_rule(dist, mf, bootClassPath=None):
+    def path_dist_relative(p):
+        return os.path.relpath(p, dist.suite.dir)
+    jarPath = path_dist_relative(dist.path)
+    sourcesVariableName = dist.name + "_SRC"
+    depJarVariableName = dist.name + "_DEP_JARS";
+    sources = []
+    resources = []
+    sortedDeps = dist.sorted_deps(True, transitive=False, includeAnnotationProcessors=True)
+    projects = filter_projects(sortedDeps, mx.Project)
+    targetPathPrefix = "$(TARGET)" + os.path.sep
+    libraryDeps = [path_dist_relative(l.get_path(False)) for l in filter_projects(sortedDeps, mx.Library)]
+    
+    annotationProcessorDeps = set()
+    distDeps = dist.get_dist_deps(includeSelf=False, transitive=True)
+    distDepProjects = set()
+    for d in distDeps: 
+        distDepProjects.update(d.sorted_deps(includeLibs=False, transitive=True))
+    classPath = [targetPathPrefix + path_dist_relative(d.path) for d in distDeps] + libraryDeps
+    
+    for p in projects:
+        if p.definedAnnotationProcessors != None and p.definedAnnotationProcessorsDist != dist:
+            annotationProcessorDeps.add(p)
+    for p in projects:
+        projectDir = path_dist_relative(p.dir)
+        if p not in distDepProjects and p not in annotationProcessorDeps:
+            generatedSource = [path_dist_relative(p.source_gen_dir())] if len(annotationProcessorDeps) > 0 else []
+            
+            for d in p.srcDirs + generatedSource:
+                src = projectDir + os.path.sep + d
+                sources.append("$(shell find {} -type file -name *.java 2> /dev/null)".format(src))
+                metaInf = src + os.path.sep + "META-INF";
+                if os.path.exists(metaInf):
+                    resources.append(metaInf)
+        
+            
+    sourceLines = sourcesVariableName + " = " + ("\n" + sourcesVariableName + " += ").join(sources)
+    annotationProcessorPaths = []
+    annotationProcessorDistNames = []
+    annotationProcessorDistVariableNames = []
+    for p in annotationProcessorDeps:
+        annotationProcessorPaths.append(path_dist_relative(p.definedAnnotationProcessorsDist.path))
+        name = p.definedAnnotationProcessorsDist.name
+        annotationProcessorDistNames.append(name)
+        annotationProcessorDistVariableNames.append("$(" + name + "_JAR)")
+    
     props = {
-             'name': p.name,
-             'project_deps': ' '.join(canonicalProjectDepDirs + canonicalLibDepJars + allProcessorDistNames),
-             'cp_deps': ('-cp ' + ':'.join(cp)) if len(cp) > 0 else '',
-             'cp_boot': ('-bootclasspath ' + bootClasspath) if len(bootClasspath) > 0 else '',
-             'processor': ('-processorpath ' + processor) if processor != None else ''
-    }
-    return """$(TARGET)/{name}: $(shell find graal/{name}/src/ -type f -name *.java) {project_deps}
+           "name": dist.name,
+           "jarPath": targetPathPrefix + jarPath,
+           "depends": "",
+           "depJarsVariableAccess": "$(" + depJarVariableName + ")" if len(classPath) > 0 else "",
+           "depJarsVariable": depJarVariableName,
+           "sourceLines": sourceLines,
+           "sourcesVariableName": sourcesVariableName,
+           "annotationProcessors": " ".join(annotationProcessorDistVariableNames),
+           "cpAnnotationProcessors": "-processorpath " + ":".join(annotationProcessorDistVariableNames) if len(annotationProcessorDistVariableNames) > 0 else "",
+           "bootCp": ("-bootclasspath " + bootClassPath) if bootClassPath != None else "",
+           "cpDeps": ("-cp " + ":".join(classPath)) if len(classPath) > 0 else "",
+           "jarDeps": " ".join(classPath),
+           "copyResources": "cp -r {} $(TMP)".format(" ".join(resources)) if len(resources) > 0 else "",
+           "targetPathPrefix": targetPathPrefix
+           }
+    
+    mf.add_definition(sourceLines)
+    mf.add_definition("{name}_JAR = {jarPath}".format(**props))
+    if len(classPath) > 0: mf.add_definition("{depJarsVariable} = {jarDeps}".format(**props))
+    mf.add_rule("""$({name}_JAR): $({sourcesVariableName}) {annotationProcessors} {depJarsVariableAccess} $(TARGET)/build
 \t$(eval TMP := $(shell mktemp -d))
-\ttest ! -d $(TARGET)/{name} || cp -Rp $(TARGET)/{name} $(TMP)
-\t$(JAVAC) -d $(TMP) {cp_boot} {processor} {cp_deps} $(shell find graal/{name}/src/ -type f -name *.java)
-\ttest ! -d graal/{name}/src/META-INF || (mkdir -p $(TARGET)/{name}/META-INF/ &&  cp -r graal/{name}/src/META-INF/ $(TARGET)/{name}/)
-\tmkdir -p $(TARGET)/{name}
-\tcp -r $(TMP)/* $(TARGET)/{name}
-\ttouch $(TARGET)/{name}
-\trm -r $(TMP)
-""".format(**props)
-
-def createDistributionRule(dist):
-    sorted_deps = set(dist.sorted_deps(False, True))
-    depDirs = ' '.join(['$(TARGET)/' + i.name for i in sorted_deps])
-    depDirsStar = ' '.join(['$(TARGET)/' + i.name + '/*' for i in sorted_deps])
-    jarPath = os.path.relpath(dist.path, dist.suite.dir)
-    jarDir = os.path.dirname(jarPath)
-    props = {
-             'dist_name': dist.name,
-             'depDirs': depDirs,
-             'depDirsStar': depDirsStar,
-             'jar_path': jarPath,
-             'jar_dir': jarDir,
-             'providers_dir': '$(TMP)/META-INF/providers/ ',
-             'services_dir': '$(TMP)/META-INF/services/'
-             }
-    return """{dist_name}: {depDirs}
-\t$(eval TMP := $(shell mktemp -d))
-\tmkdir -p $(TARGET){jar_dir}
-\ttouch $(TARGET)/{jar_path}
-\tcp -r {depDirsStar} $(TMP)
-\ttest -d {services_dir} || mkdir -p {services_dir} 
-\ttest ! -d {providers_dir} || (cd {providers_dir} && for i in $$(ls); do c=$$(cat $$i); echo $$i >> {services_dir}$$c; done)
-\ttest ! -d {providers_dir} || rm -r {providers_dir}
-\t$(JAR) cvf $(TARGET){jar_path} -C $(TMP) .
-\trm -r $(TMP)
-""".format(**props)
-
-def createDownloadRule(lib):
-    http_urls = [u for u in lib.urls if u.startswith("http")]
-    if len(http_urls) == 0: http_urls = [u for u in lib.urls if u.startswith("jar")]
-    if len(http_urls) == 0: raise BaseException("No http url specified for downloading library %s: available urls: %s" % (lib.name, lib.urls))
-    url = http_urls[0]
-    tofile = '$(LIB)/' + relative_dep_path(lib)
-    if url.startswith("jar"):
-        props = {
-            'url': url[url.find(":")+1:url.rfind("!")],
-            'archive_file': url[url.rfind("!")+1:],
-            'dest': tofile
-        }
-        dl = """\t$(eval TMP := $(shell mktemp -d))
-\tcd $(TMP) && $(WGET) -O dl.zip {url} && $(JAR) xf dl.zip
-\tmv $(TMP)/{archive_file} {dest}
-\trm -rf $(TMP)""".format(**props)
-    else:
-        dl = "\t$(WGET) -O {} {}".format(tofile, url)
-    return """{}:\n{}""".format(tofile, dl)
+\t$(JAVAC) -d $(TMP) {cpAnnotationProcessors} {bootCp} {cpDeps} $({sourcesVariableName})
+\t{copyResources}
+\t$(call process_options,$(TMP))
+\tmkdir -p $$(dirname $({name}_JAR))
+\t$(JAR) cf $({name}_JAR) -C $(TMP) .
+\trm -r $(TMP)""".format(**props))
+    return
 
 
-def create_suite_build(suite, out):
-    for p in suite.projects:
-        java = mx.java(p.javaCompliance)
-        bootClassPath = java.bootclasspath()
-        bootClassPath = bootClassPath.replace(java.jdk, "$(JDK)")
-        out(createMakeRule(p, bootClassPath))
-    for l in suite.libs:
-        out(createDownloadRule(l))
-
-    distributionNames = []
-    for d in suite.dists:
-        distributionNames.append(d.name)
-        out(createDistributionRule(d))
-    out("{0}: {1}\n.PHONY: {1}".format(suite.name, " ".join(distributionNames)))
-
-
-def do_build_makefile(out):
-    out("""VERBOSE=
-TARGET=build/
-LIB=$(TARGET)/lib
+def do_build_makefile(mf, selectedDists):
+    java = mx.java()
+    bootClassPath = java.bootclasspath()
+    bootClassPath = bootClassPath.replace(java.jdk, "$(JDK)")
+    jdkBootClassPathVariableName = "JDK_BOOTCLASSPATH"
+    
+    mf.add_definition("""VERBOSE=
+TARGET=.
 JDK=
 
 WGET=wget
-JAVAC=$(JDK)/bin/javac
+JAVAC=$(JDK)/bin/javac -g -target """ + str(java.javaCompliance) + """
 JAR=$(JDK)/bin/jar
 
 
@@ -165,20 +170,50 @@ ifneq ($(VERBOSE),)
 SHELL=sh -x
 endif
 
+define process_options =
+$(eval providers=$(1)/META-INF/providers/)
+$(eval services=$(1)/META-INF/services/)
+test -d $(services) || mkdir -p $(services)
+test ! -d $(providers) ||   (cd $(providers) && for i in $$(ls $(providers)); do c=$$(cat $$i); echo $$i >> $(services)$$c; rm $$i; done)
+endef
+
 all: default
 
-$(TARGET):
-\tmkdir -p $(TARGET)
+$(TARGET)/build:
+\tmkdir -p $(TARGET)/build
 
 $(LIB):
 \tmkdir -p $(LIB)
 """)
-    suiteNames = []
-    for s in mx.suites():
-        suiteNames.append(s.name)
-        create_suite_build(s, out)
+    s = mx.suite("graal")
+    dists = set()
+    ap = set()
+    projects = set()
 
-    out("""default: $(TARGET) $(LIB) {0}
-.PHONY: {0}
-    """.format(" ".join(suiteNames)))
+    for d in s.dists:
+        if d.name in selectedDists:
+            dists.update(d.get_dist_deps(True, True))
+            projects.update(d.sorted_deps(includeLibs=False, transitive=True))
+    for p in projects:
+        deps = p.all_deps([], False, includeSelf=True, includeJreLibs=False, includeAnnotationProcessors=True)
+        for d in deps:
+            if d.definedAnnotationProcessorsDist != None:
+                apd = d.definedAnnotationProcessorsDist
+                ap.add(apd)
+    
+    if len(dists) > 0:
+        mf.add_definition(jdkBootClassPathVariableName + " = " + bootClassPath)
+        bootClassPathVarAccess = "$(" + jdkBootClassPathVariableName + ")"
+        for d in ap: make_dist_rule(d, mf, bootClassPathVarAccess)
+        for d in dists: make_dist_rule(d, mf, bootClassPathVarAccess)
+        mf.add_rule("default: $({}_JAR)\n.PHONY: default".format("_JAR) $(".join([d.name for d in dists])))
+        return True
+    else:
+        for d in dists:
+            selectedDists.remove(d.name)
+        print "Distribution(s) '" + "', '".join(selectedDists) + "' does not exist."
+            
+    
+            
+    
 
