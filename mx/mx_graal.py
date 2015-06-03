@@ -620,16 +620,23 @@ def _updateJVMCIFiles(jdkDir):
 
 def _patchGraalVersionConstant(dist):
     """
-    Patches the constant "@@graal.version@@" in the constant pool of Graal.class
+    Patches the constant "@@@@@@@@@@@@@@@@graal.version@@@@@@@@@@@@@@@@" in the constant pool of Graal.class
     with the computed Graal version string.
     """
     zf = zipfile.ZipFile(dist.path, 'r')
     graalClassfilePath = 'com/oracle/graal/api/runtime/Graal.class'
     graalClassfile = zf.read(graalClassfilePath)
-    versionSpec = '{:' + str(len('@@graal.version@@')) + '}'
+    placeholder = '@@@@@@@@@@@@@@@@graal.version@@@@@@@@@@@@@@@@'
+    placeholderLen = len(placeholder)
+    versionSpec = '{:' + str(placeholderLen) + '}'
     versionStr = versionSpec.format(graal_version())
-    if '@@graal.version@@' not in graalClassfile:
-        assert versionStr in graalClassfile, 'could not find "@@graal.version@@" or "' + versionStr + '" constant in ' + dist.path + '!' + graalClassfilePath
+
+    if len(versionStr) > placeholderLen:
+        # Truncate the version string if necessary
+        assert versionStr.startswith('unknown'), versionStr
+        versionStr = versionStr[:placeholderLen]
+    if placeholder not in graalClassfile:
+        assert versionStr in graalClassfile, 'could not find "' + placeholder + '" or "' + versionStr + '" constant in ' + dist.path + '!' + graalClassfilePath
         zf.close()
         return False
 
@@ -637,7 +644,7 @@ def _patchGraalVersionConstant(dist):
     zfOut = zipfile.ZipFile(zfOutPath, 'w')
     for zi in zf.infolist():
         if zi.filename == graalClassfilePath:
-            data = graalClassfile.replace('@@graal.version@@', versionStr)
+            data = graalClassfile.replace(placeholder, versionStr)
         else:
             data = zf.read(zi)
         zfOut.writestr(zi, data)
