@@ -4908,8 +4908,8 @@ def fsckprojects(args):
         distIdeDirs = [d.get_ide_project_dir() for d in suite.dists if d.get_ide_project_dir() is not None]
         for dirpath, dirnames, files in os.walk(suite.dir):
             if dirpath == suite.dir:
-                # no point in traversing .hg or lib/
-                dirnames[:] = [d for d in dirnames if d not in ['.hg', 'lib']]
+                # no point in traversing .hg, lib, or .workspace
+                dirnames[:] = [d for d in dirnames if d not in ['.hg', 'lib', '.workspace']]
             elif dirpath in projectDirs:
                 # don't traverse subdirs of an existing project in this suite
                 dirnames[:] = []
