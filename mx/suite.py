@@ -360,6 +360,7 @@ suite = {
         "com.oracle.jvmci.options",
         "com.oracle.jvmci.debug",
         "com.oracle.jvmci.runtime",
+        "com.oracle.jvmci.bytecode",
         "com.oracle.jvmci.common",
         "FINDBUGS",
       ],
