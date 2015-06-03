@@ -626,7 +626,11 @@ def _patchGraalVersionConstant(dist):
     """
     zf = zipfile.ZipFile(dist.path, 'r')
     graalClassfilePath = 'com/oracle/graal/api/runtime/Graal.class'
-    graalClassfile = zf.read(graalClassfilePath)
+    try:
+        graalClassfile = zf.read(graalClassfilePath)
+    except KeyError:
+        mx.log(graalClassfilePath + ' is not present in ' + dist.path)
+        return
     placeholder = '@@@@@@@@@@@@@@@@graal.version@@@@@@@@@@@@@@@@'
     placeholderLen = len(placeholder)
     versionSpec = '{:' + str(placeholderLen) + '}'

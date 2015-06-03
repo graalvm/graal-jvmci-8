@@ -364,6 +364,7 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/truffle.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/graal.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/graal-truffle.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-api.jar
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-util.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-hotspot.jar
 
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIBackendFactory
