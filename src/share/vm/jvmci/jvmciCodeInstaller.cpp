@@ -69,83 +69,59 @@ Method* getMethodFromHotSpotMethod(oop hotspot_method) {
   return asMethod(HotSpotResolvedJavaMethodImpl::metaspaceMethod(hotspot_method));
 }
 
-const int MapWordBits = 64;
-
-static int entry_value(typeArrayOop words, int i) {
-  jint words_idx = i / MapWordBits;
-  assert(words_idx >= 0 && words_idx < words->length(), "unexpected index");
-  jlong word = words->long_at(words_idx);
-  return (word >> (i % MapWordBits)) & 15LL;
-}
-
-static int fixedmap_size(oop bitset) {
-  typeArrayOop arr = HotSpotOopMap::words(bitset);
-  return arr->length() * MapWordBits;
-}
-
-static void set_vmreg_oops(OopMap* map, VMReg reg, typeArrayOop words, int idx) {
-  int value = entry_value(words, 4 * idx);
-  switch (value) {
-    case 10:
-      map->set_oop(reg);
-      break;
-    case 5:
-      map->set_narrowoop(reg);
-      map->set_narrowoop(reg->next());
-      break;
-    case 1:
-      map->set_narrowoop(reg);
-      break;
-    case 4:
-      map->set_narrowoop(reg->next());
-      break;
-    case 0:
-      break;
-    default:
-      assert(false, err_msg("unexpected bit pattern at %d = 0x%x", idx, value));
-      ShouldNotReachHere();
-  }
-}
-
 // creates a HotSpot oop map out of the byte arrays provided by DebugInfo
-static OopMap* create_oop_map(jint total_frame_size, jint parameter_count, oop debug_info) {
-  OopMap* map = new OopMap(total_frame_size, parameter_count);
+OopMap* CodeInstaller::create_oop_map(oop debug_info) {
   oop reference_map = DebugInfo::referenceMap(debug_info);
-  oop register_map = HotSpotReferenceMap::registerRefMap(reference_map);
-  oop frame_map = HotSpotReferenceMap::frameRefMap(reference_map);
-  oop callee_save_info = (oop) DebugInfo::calleeSaveInfo(debug_info);
-
-  if (register_map != NULL) {
-    typeArrayOop words = HotSpotOopMap::words(register_map);
-    int mapIdx = 0;
-    for (jint i = 0; i < RegisterImpl::number_of_registers; i++) {
-      set_vmreg_oops(map, as_Register(i)->as_VMReg(), words, mapIdx);
-      mapIdx++;
-    }
-#ifdef TARGET_ARCH_x86
-    for (jint i = 0; i < XMMRegisterImpl::number_of_registers; i++) {
-      VMReg reg = as_XMMRegister(i)->as_VMReg();
-      for (jint j = 0; j < 4; j++) {
-        set_vmreg_oops(map, reg->next(2 * j), words, mapIdx++);
-      }
-    }
-#endif
+  OopMap* map = new OopMap(_total_frame_size, _parameter_count);
+  objArrayOop objects = HotSpotReferenceMap::objects(reference_map);
+  typeArrayOop bytesPerArray = HotSpotReferenceMap::bytesPerElement(reference_map);
+  for (int i = 0; i < objects->length(); i++) {
+    oop value = objects->obj_at(i);
+    oop lirKind = AbstractValue::lirKind(value);
+    oop platformKind = LIRKind::platformKind(lirKind);
+    int bytesPerElement = bytesPerArray->int_at(i);
+    assert(bytesPerElement == 4 || bytesPerElement == 8, "wrong sizes");
+    jint referenceMask = LIRKind::referenceMask(lirKind);
+    assert(referenceMask != 0, "must be a reference type");
+    assert(referenceMask != -1, "must not be a derived reference type");
+    
+    VMReg vmReg;
+    if (value->is_a(RegisterValue::klass())) {
+      oop reg = RegisterValue::reg(value);
+      jint number = code_Register::number(reg);
+      vmReg = CodeInstaller::get_hotspot_reg(number);
+    } else if (value->is_a(StackSlot::klass())) {
+      jint offset = StackSlot::offset(value);
 #ifdef TARGET_ARCH_sparc
-    for (jint i = 0; i < FloatRegisterImpl::number_of_registers; i++) {
-      VMReg reg = as_FloatRegister(i)->as_VMReg();
-      set_vmreg_oops(map, reg, words, mapIdx++);
-    }
+      if(offset >= 0) {
+        offset += 128;
+      }
 #endif
+      if (StackSlot::addFrameSize(value)) {
+        offset += _total_frame_size;
+      }
+      assert(offset % 4 == 0, "must be aligned");
+      vmReg = VMRegImpl::stack2reg(offset / 4);
+    }
+      
+    int bit = 1;
+    while (referenceMask != 0) {
+      if (referenceMask & bit) {
+        if (bytesPerElement == 8) {
+          map->set_oop(vmReg);
+        } else {
+          map->set_narrowoop(vmReg);
+        }
+        referenceMask &= ~bit;
+      }
+      vmReg = vmReg->next();
+      if (bytesPerElement == 8) {
+        vmReg = vmReg->next();
+      }
+      bit <<= 1;
+    }
   }
-
-  typeArrayOop words = HotSpotOopMap::words(frame_map);
-  int size = fixedmap_size(frame_map) / 4;
-  for (jint i = 0; i < size; i++) {
-    // HotSpot stack slots are 4 bytes
-    VMReg reg = VMRegImpl::stack2reg(i * VMRegImpl::slots_per_word);
-    set_vmreg_oops(map, reg, words, i);
-  }
-
+  oop callee_save_info = (oop) DebugInfo::calleeSaveInfo(debug_info);
   if (callee_save_info != NULL) {
     objArrayOop registers = RegisterSaveLayout::registers(callee_save_info);
     typeArrayOop slots = RegisterSaveLayout::slots(callee_save_info);
@@ -261,7 +237,17 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, GrowableArray<ScopeValue*>
       return value;
     }
   } else if (value->is_a(StackSlot::klass())) {
-      Location::Type locationType;
+    jint offset = StackSlot::offset(value);
+#ifdef TARGET_ARCH_sparc
+    if(offset >= 0) {
+      offset += 128;
+    }
+#endif
+    if (StackSlot::addFrameSize(value)) {
+      offset += _total_frame_size;
+    }
+
+    Location::Type locationType;
     if (type == T_LONG) {
       locationType = reference ? Location::oop : Location::lng;
     } else if (type == T_INT) {
@@ -277,15 +263,6 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, GrowableArray<ScopeValue*>
     } else {
       assert(type == T_OBJECT && reference, "unexpected type in stack slot");
       locationType = Location::oop;
-    }
-    jint offset = StackSlot::offset(value);
-#ifdef TARGET_ARCH_sparc
-    if(offset >= 0) {
-      offset += 128;
-    }
-#endif
-    if (StackSlot::addFrameSize(value)) {
-      offset += _total_frame_size;
     }
     ScopeValue* value = new LocationValue(Location::new_stk_loc(locationType, offset));
     if (type == T_DOUBLE || (type == T_LONG && !reference)) {
@@ -856,7 +833,7 @@ void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, oop site)
 
   // address instruction = _instructions->start() + pc_offset;
   // jint next_pc_offset = Assembler::locate_next_instruction(instruction) - _instructions->start();
-  _debug_recorder->add_safepoint(pc_offset, create_oop_map(_total_frame_size, _parameter_count, debug_info));
+  _debug_recorder->add_safepoint(pc_offset, create_oop_map(debug_info));
   record_scope(pc_offset, debug_info);
   _debug_recorder->end_safepoint(pc_offset);
 }
@@ -891,7 +868,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, oop site) {
   jint next_pc_offset = CodeInstaller::pd_next_offset(inst, pc_offset, hotspot_method);
 
   if (debug_info != NULL) {
-    _debug_recorder->add_safepoint(next_pc_offset, create_oop_map(_total_frame_size, _parameter_count, debug_info));
+    _debug_recorder->add_safepoint(next_pc_offset, create_oop_map(debug_info));
     record_scope(next_pc_offset, debug_info);
   }
 

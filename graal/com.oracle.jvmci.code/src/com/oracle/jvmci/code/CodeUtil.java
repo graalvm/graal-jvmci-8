@@ -429,15 +429,8 @@ public class CodeUtil {
         }
         String nl = NEW_LINE;
         ReferenceMap refMap = info.getReferenceMap();
-        if (refMap != null && refMap.hasRegisterRefMap()) {
-            sb.append("  reg-ref-map:");
-            refMap.appendRegisterMap(sb, formatter);
-            sb.append(nl);
-        }
-        if (refMap != null && refMap.hasFrameRefMap()) {
-            sb.append("frame-ref-map:");
-            refMap.appendFrameMap(sb, formatter);
-            sb.append(nl);
+        if (refMap != null) {
+            sb.append(refMap.toString());
         }
         RegisterSaveLayout calleeSaveInfo = info.getCalleeSaveInfo();
         if (calleeSaveInfo != null) {

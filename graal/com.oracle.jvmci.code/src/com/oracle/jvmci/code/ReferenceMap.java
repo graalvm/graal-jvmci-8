@@ -22,20 +22,24 @@
  */
 package com.oracle.jvmci.code;
 
-import com.oracle.jvmci.meta.LIRKind;
-import com.oracle.jvmci.code.CodeUtil.RefMapFormatter;
+import com.oracle.jvmci.meta.*;
 
-public abstract class ReferenceMap implements Cloneable {
+public abstract class ReferenceMap {
 
-    public abstract void setRegister(int idx, LIRKind kind);
+    /**
+     * Empty out the reference map.
+     */
+    public abstract void reset();
 
-    public abstract void setStackSlot(int offset, LIRKind kind);
+    /**
+     * Add {@code value} to the current set of reference values.
+     *
+     * @param v
+     */
+    public abstract void addLiveValue(Value v);
 
-    public abstract boolean hasRegisterRefMap();
-
-    public abstract boolean hasFrameRefMap();
-
-    public abstract void appendRegisterMap(StringBuilder sb, RefMapFormatter formatterArg);
-
-    public abstract void appendFrameMap(StringBuilder sb, RefMapFormatter formatterArg);
+    /**
+     * Perform any final encoding needed before use.
+     */
+    public abstract void finish();
 }

@@ -27,7 +27,6 @@ import static java.util.Collections.*;
 
 import java.util.*;
 
-import com.oracle.jvmci.code.CodeUtil.RefMapFormatter;
 import com.oracle.jvmci.meta.Assumptions.Assumption;
 import com.oracle.jvmci.meta.*;
 
@@ -858,17 +857,8 @@ public class CompilationResult {
         if (info != null) {
             ReferenceMap refMap = info.getReferenceMap();
             if (refMap != null) {
-                RefMapFormatter formatter = new CodeUtil.NumberedRefMapFormatter();
-                if (refMap.hasFrameRefMap()) {
-                    sb.append(" stackMap[");
-                    refMap.appendFrameMap(sb, formatter);
-                    sb.append(']');
-                }
-                if (refMap.hasRegisterRefMap()) {
-                    sb.append(" registerMap[");
-                    refMap.appendRegisterMap(sb, formatter);
-                    sb.append(']');
-                }
+                sb.append(refMap.toString());
+                sb.append(']');
             }
             RegisterSaveLayout calleeSaveInfo = info.getCalleeSaveInfo();
             if (calleeSaveInfo != null) {
