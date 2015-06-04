@@ -157,6 +157,7 @@ public:
                        JVMCIEnv*                 env,
                        int                       compile_id,
                        bool                      has_unsafe_access,
+                       bool                      has_wide_vector,
                        Handle                    installed_code,
                        Handle                    compiled_code,
                        Handle                    speculation_log);

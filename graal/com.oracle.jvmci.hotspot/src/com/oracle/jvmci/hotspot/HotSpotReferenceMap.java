@@ -33,6 +33,7 @@ public final class HotSpotReferenceMap extends ReferenceMap {
 
     private Value[] objects;
     private int[] bytesPerElement;
+    private int maxRegisterSize;
     private ArrayList<Value> objectValues;
 
     private final TargetDescription target;
@@ -47,6 +48,7 @@ public final class HotSpotReferenceMap extends ReferenceMap {
         objectValues = new ArrayList<>();
         objects = Value.NO_VALUES;
         bytesPerElement = null;
+        maxRegisterSize = 0;
     }
 
     @Override
@@ -57,6 +59,12 @@ public final class HotSpotReferenceMap extends ReferenceMap {
         LIRKind lirKind = v.getLIRKind();
         if (!lirKind.isValue()) {
             objectValues.add(v);
+        }
+        if (isRegister(v)) {
+            int size = target.getSizeInBytes(lirKind.getPlatformKind());
+            if (size > maxRegisterSize) {
+                maxRegisterSize = size;
+            }
         }
     }
 

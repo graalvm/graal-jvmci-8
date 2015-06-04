@@ -70,6 +70,8 @@ private:
   jobject       _comments_handle;
 #endif
 
+  bool          _has_wide_vector;
+
   MarkId        _next_call_type;
   address       _invoke_mark_pc;
 

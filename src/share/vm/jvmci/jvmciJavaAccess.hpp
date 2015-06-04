@@ -159,6 +159,7 @@ void jvmci_compute_offsets();
   start_class(HotSpotReferenceMap)                                                                                                                             \
     objArrayOop_field(HotSpotReferenceMap, objects, "[Lcom/oracle/jvmci/meta/Value;")                                                                          \
     typeArrayOop_field(HotSpotReferenceMap, bytesPerElement, "[I")                                                                                             \
+    int_field(HotSpotReferenceMap, maxRegisterSize)                                                                                                            \
   end_class                                                                                                                                                    \
   start_class(RegisterSaveLayout)                                                                                                                              \
     objArrayOop_field(RegisterSaveLayout, registers, "[Lcom/oracle/jvmci/code/Register;")                                                                      \

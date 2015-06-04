@@ -72,6 +72,9 @@ Method* getMethodFromHotSpotMethod(oop hotspot_method) {
 // creates a HotSpot oop map out of the byte arrays provided by DebugInfo
 OopMap* CodeInstaller::create_oop_map(oop debug_info) {
   oop reference_map = DebugInfo::referenceMap(debug_info);
+  if (HotSpotReferenceMap::maxRegisterSize(reference_map) > 16) {
+    _has_wide_vector = true;
+  }
   OopMap* map = new OopMap(_total_frame_size, _parameter_count);
   objArrayOop objects = HotSpotReferenceMap::objects(reference_map);
   typeArrayOop bytesPerArray = HotSpotReferenceMap::bytesPerElement(reference_map);
@@ -447,8 +450,10 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
       // Make sure a valid compile_id is associated with every compile
       id = CompileBroker::assign_compile_id_unlocked(Thread::current(), method, entry_bci);
     }
-    result = JVMCIEnv::register_method(method, nm, entry_bci, &_offsets, _custom_stack_area_offset, &buffer, stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
-        JVMCICompiler::instance(), _debug_recorder, _dependencies, env, id, false, installed_code, compiled_code, speculation_log);
+    result = JVMCIEnv::register_method(method, nm, entry_bci, &_offsets, _custom_stack_area_offset, &buffer,
+                                       stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
+                                       JVMCICompiler::instance(), _debug_recorder, _dependencies, env, id,
+                                       false, _has_wide_vector, installed_code, compiled_code, speculation_log);
     cb = nm;
   }
 
@@ -490,6 +495,8 @@ void CodeInstaller::initialize_fields(oop compiled_code) {
 #endif
 
   _next_call_type = INVOKE_INVALID;
+
+  _has_wide_vector = false;
 }
 
 int CodeInstaller::estimate_stub_entries() {
