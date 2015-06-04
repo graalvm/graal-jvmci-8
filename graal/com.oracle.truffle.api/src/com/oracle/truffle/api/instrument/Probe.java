@@ -24,6 +24,7 @@
  */
 package com.oracle.truffle.api.instrument;
 
+import java.io.*;
 import java.lang.ref.*;
 import java.util.*;
 
@@ -100,6 +101,16 @@ import com.oracle.truffle.api.utilities.*;
  */
 public final class Probe {
 
+    private static final boolean TRACE = false;
+    private static final String TRACE_PREFIX = "PROBE: ";
+    private static final PrintStream OUT = System.out;
+
+    private static void trace(String format, Object... args) {
+        if (TRACE) {
+            OUT.println(TRACE_PREFIX + String.format(format, args));
+        }
+    }
+
     private static final List<ASTProber> astProbers = new ArrayList<>();
 
     private static final List<ProbeListener> probeListeners = new ArrayList<>();
@@ -162,8 +173,17 @@ public final class Probe {
      */
     public static void applyASTProbers(Node node) {
 
+        String name = "<?>";
         final Source source = findSource(node);
-
+        if (source != null) {
+            name = source.getShortName();
+        } else {
+            final SourceSection sourceSection = node.getEncapsulatingSourceSection();
+            if (sourceSection != null) {
+                name = sourceSection.getShortDescription();
+            }
+        }
+        trace("START %s", name);
         for (ProbeListener listener : probeListeners) {
             listener.startASTProbing(source);
         }
@@ -173,6 +193,7 @@ public final class Probe {
         for (ProbeListener listener : probeListeners) {
             listener.endASTProbing(source);
         }
+        trace("FINISHED %s", name);
     }
 
     /**
@@ -286,6 +307,10 @@ public final class Probe {
         this.sourceSection = sourceSection;
         probes.add(new WeakReference<>(this));
         registerProbeNodeClone(probeNode);
+        if (TRACE) {
+            final String location = this.sourceSection == null ? "<unknown>" : sourceSection.getShortDescription();
+            trace("ADDED %s %s %s", "Probe@", location, getTagsDescription());
+        }
         for (ProbeListener listener : probeListeners) {
             listener.newProbeInserted(this);
         }
@@ -331,6 +356,9 @@ public final class Probe {
             }
             if (tagTrapsChanged) {
                 invalidateProbeUnchanged();
+            }
+            if (TRACE) {
+                trace("TAGGED as %s: %s", tag, getShortDescription());
             }
         }
     }

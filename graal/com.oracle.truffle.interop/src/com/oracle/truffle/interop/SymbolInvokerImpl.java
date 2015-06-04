@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,8 +29,8 @@ import java.io.*;
 import com.oracle.truffle.api.*;
 import com.oracle.truffle.api.frame.*;
 import com.oracle.truffle.api.impl.*;
-import com.oracle.truffle.api.instrument.*;
 import com.oracle.truffle.api.interop.*;
+import com.oracle.truffle.api.interop.exception.UnsupportedMessageException;
 import com.oracle.truffle.api.nodes.*;
 import com.oracle.truffle.interop.messages.*;
 import com.oracle.truffle.interop.node.*;
@@ -40,10 +40,48 @@ public final class SymbolInvokerImpl extends SymbolInvoker {
 
     @Override
     protected Object invoke(Object symbol, Object... arr) throws IOException {
-        ForeignObjectAccessNode executeMain = ForeignObjectAccessNode.getAccess(Execute.create(Receiver.create(), arr.length));
-        CallTarget callTarget = Truffle.getRuntime().createCallTarget(new TemporaryRoot(executeMain, (TruffleObject) symbol, arr));
+        if (symbol instanceof String) {
+            return symbol;
+        }
+        if (symbol instanceof Number) {
+            return symbol;
+        }
+        if (symbol instanceof Boolean) {
+            return symbol;
+        }
+        ForeignObjectAccessNode callMain = ForeignObjectAccessNode.getAccess(Execute.create(Receiver.create(), arr.length));
+        CallTarget callMainTarget = Truffle.getRuntime().createCallTarget(new TemporaryRoot(callMain, (TruffleObject) symbol, arr));
         VirtualFrame frame = Truffle.getRuntime().createVirtualFrame(arr, UNUSED_FRAMEDESCRIPTOR);
-        return callTarget.call(frame);
+        Object ret = callMainTarget.call(frame);
+        if (ret instanceof TruffleObject) {
+            TruffleObject tret = (TruffleObject) ret;
+            Object isBoxedResult;
+            try {
+                ForeignObjectAccessNode isBoxed = ForeignObjectAccessNode.getAccess(IsBoxed.create(Receiver.create()));
+                CallTarget isBoxedTarget = Truffle.getRuntime().createCallTarget(new TemporaryRoot(isBoxed, tret));
+                isBoxedResult = isBoxedTarget.call(frame);
+            } catch (UnsupportedMessageException ex) {
+                isBoxedResult = false;
+            }
+            if (Boolean.TRUE.equals(isBoxedResult)) {
+                ForeignObjectAccessNode unbox = ForeignObjectAccessNode.getAccess(Unbox.create(Receiver.create()));
+                CallTarget unboxTarget = Truffle.getRuntime().createCallTarget(new TemporaryRoot(unbox, tret));
+                Object unboxResult = unboxTarget.call(frame);
+                return unboxResult;
+            } else {
+                try {
+                    ForeignObjectAccessNode isNull = ForeignObjectAccessNode.getAccess(IsNull.create(Receiver.create()));
+                    CallTarget isNullTarget = Truffle.getRuntime().createCallTarget(new TemporaryRoot(isNull, tret));
+                    Object isNullResult = isNullTarget.call(frame);
+                    if (Boolean.TRUE.equals(isNullResult)) {
+                        return null;
+                    }
+                } catch (UnsupportedMessageException ex) {
+                    // fallthrough
+                }
+            }
+        }
+        return ret;
     }
 
     private static class TemporaryRoot extends RootNode {
@@ -55,11 +93,6 @@ public final class SymbolInvokerImpl extends SymbolInvoker {
             this.foreignAccess = foreignAccess;
             this.function = function;
             this.args = args;
-        }
-
-        @Override
-        public void applyInstrumentation() {
-            Probe.applyASTProbers(foreignAccess);
         }
 
         @Override

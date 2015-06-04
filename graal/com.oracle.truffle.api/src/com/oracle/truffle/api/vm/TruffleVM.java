@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -40,12 +40,12 @@ import com.oracle.truffle.api.source.*;
 /**
  * Virtual machine for Truffle based languages. Use {@link #newVM()} to create new isolated virtual
  * machine ready for execution of various languages. All the languages in a single virtual machine
- * see each other exported global symbols and can co-operate. Use {@link #newVM()} multiple times to
+ * see each other exported global symbols and can cooperate. Use {@link #newVM()} multiple times to
  * create different, isolated virtual machines completely separated from each other.
  * <p>
  * Once instantiated use {@link #eval(java.net.URI)} with a reference to a file or URL or directly
  * pass code snippet into the virtual machine via {@link #eval(java.lang.String, java.lang.String)}.
- * Support for individual languages is initialized on demand - e.g. once a file of certain mime type
+ * Support for individual languages is initialized on demand - e.g. once a file of certain MIME type
  * is about to be processed, its appropriate engine (if found), is initialized. Once an engine gets
  * initialized, it remains so, until the virtual machine isn't garbage collected.
  * <p>
@@ -104,9 +104,15 @@ public final class TruffleVM {
                 LOG.log(Level.CONFIG, "Cannot process " + u + " as language definition", ex);
                 continue;
             }
-            Language l = new Language(p);
-            for (String mimeType : l.getMimeTypes()) {
-                langs.put(mimeType, l);
+            for (int cnt = 1;; cnt++) {
+                String prefix = "language" + cnt + ".";
+                if (p.getProperty(prefix + "name") == null) {
+                    break;
+                }
+                Language l = new Language(prefix, p);
+                for (String mimeType : l.getMimeTypes()) {
+                    langs.put(mimeType, l);
+                }
             }
         }
     }
@@ -190,7 +196,7 @@ public final class TruffleVM {
         }
 
         /**
-         * Changes the defaut input for languages running in <em>to be created</em>
+         * Changes the default input for languages running in <em>to be created</em>
          * {@link TruffleVM virtual machine}. The default is to use {@link System#out}.
          *
          * @param r the reader to use as input
@@ -224,7 +230,7 @@ public final class TruffleVM {
     /**
      * Descriptions of languages supported in this Truffle virtual machine.
      *
-     * @return an immutable map with keys being mimetypes and values the {@link Language
+     * @return an immutable map with keys being MIME types and values the {@link Language
      *         descriptions} of associated languages
      */
     public Map<String, Language> getLanguages() {
@@ -233,7 +239,7 @@ public final class TruffleVM {
 
     /**
      * Evaluates file located on a given URL. Is equivalent to loading the content of a file and
-     * executing it via {@link #eval(java.lang.String, java.lang.String)} with a mime type guess
+     * executing it via {@link #eval(java.lang.String, java.lang.String)} with a MIME type guess
      * based on the file's extension and/or content.
      *
      * @param location the location of a file to execute
@@ -263,43 +269,43 @@ public final class TruffleVM {
         }
         TruffleLanguage l = getTruffleLang(mimeType);
         if (l == null) {
-            throw new IOException("No language for " + location + " with mime type " + mimeType + " found. Supported types: " + langs.keySet());
+            throw new IOException("No language for " + location + " with MIME type " + mimeType + " found. Supported types: " + langs.keySet());
         }
         return SPI.eval(l, s);
     }
 
     /**
-     * Evaluates code snippet. Chooses a language registered for a given mime type (throws
+     * Evaluates code snippet. Chooses a language registered for a given MIME type (throws
      * {@link IOException} if there is none). And passes the specified code to it for execution.
      *
-     * @param mimeType mime type of the code snippet - chooses the right language
+     * @param mimeType MIME type of the code snippet - chooses the right language
      * @param reader the source of code snippet to execute
-     * @return result of an exceution, possibly <code>null</code>
+     * @return result of an execution, possibly <code>null</code>
      * @throws IOException thrown to signal errors while processing the code
      */
     public Object eval(String mimeType, Reader reader) throws IOException {
         checkThread();
         TruffleLanguage l = getTruffleLang(mimeType);
         if (l == null) {
-            throw new IOException("No language for mime type " + mimeType + " found. Supported types: " + langs.keySet());
+            throw new IOException("No language for MIME type " + mimeType + " found. Supported types: " + langs.keySet());
         }
         return SPI.eval(l, Source.fromReader(reader, mimeType));
     }
 
     /**
-     * Evaluates code snippet. Chooses a language registered for a given mime type (throws
+     * Evaluates code snippet. Chooses a language registered for a given MIME type (throws
      * {@link IOException} if there is none). And passes the specified code to it for execution.
      *
-     * @param mimeType mime type of the code snippet - chooses the right language
+     * @param mimeType MIME type of the code snippet - chooses the right language
      * @param code the code snippet to execute
-     * @return result of an exceution, possibly <code>null</code>
+     * @return result of an execution, possibly <code>null</code>
      * @throws IOException thrown to signal errors while processing the code
      */
     public Object eval(String mimeType, String code) throws IOException {
         checkThread();
         TruffleLanguage l = getTruffleLang(mimeType);
         if (l == null) {
-            throw new IOException("No language for mime type " + mimeType + " found. Supported types: " + langs.keySet());
+            throw new IOException("No language for MIME type " + mimeType + " found. Supported types: " + langs.keySet());
         }
         return SPI.eval(l, Source.fromText(code, mimeType));
     }
@@ -309,13 +315,13 @@ public final class TruffleVM {
      * program via one of your {@link #eval(java.lang.String, java.lang.String)} and then look
      * expected symbol up using this method.
      * <p>
-     * The names of the symbols are language dependant, but for example the Java language bindings
+     * The names of the symbols are language dependent, but for example the Java language bindings
      * follow the specification for method references:
      * <ul>
      * <li>"java.lang.Exception::new" is a reference to constructor of {@link Exception}
      * <li>"java.lang.Integer::valueOf" is a reference to static method in {@link Integer} class
      * </ul>
-     * Once an symbol is obtained, it remembers values for fast acces and is ready for being
+     * Once an symbol is obtained, it remembers values for fast access and is ready for being
      * invoked.
      *
      * @param globalName the name of the symbol to find
@@ -327,10 +333,20 @@ public final class TruffleVM {
         Object global = null;
         for (Language dl : langs.values()) {
             TruffleLanguage l = dl.getImpl();
-            obj = SPI.findExportedSymbol(l, globalName);
+            obj = SPI.findExportedSymbol(l, globalName, true);
             if (obj != null) {
                 global = SPI.languageGlobal(l);
                 break;
+            }
+        }
+        if (obj == null) {
+            for (Language dl : langs.values()) {
+                TruffleLanguage l = dl.getImpl();
+                obj = SPI.findExportedSymbol(l, globalName, false);
+                if (obj != null) {
+                    global = SPI.languageGlobal(l);
+                    break;
+                }
             }
         }
         return obj == null ? null : new Symbol(obj, global);
@@ -391,28 +407,30 @@ public final class TruffleVM {
      * Description of a language registered in {@link TruffleVM Truffle virtual machine}. Languages
      * are registered by {@link Registration} annotation which stores necessary information into a
      * descriptor inside of the language's JAR file. When a new {@link TruffleVM} is created, it
-     * reads all available descritors and creates {@link Language} objects to represent them. One
-     * can obtain a {@link #getName() name} or list of supported {@link #getMimeTypes() mimetypes}
+     * reads all available descriptors and creates {@link Language} objects to represent them. One
+     * can obtain a {@link #getName() name} or list of supported {@link #getMimeTypes() MIME types}
      * for each language. The actual language implementation is not initialized until
      * {@link TruffleVM#eval(java.lang.String, java.lang.String) a code is evaluated} in it.
      */
     public final class Language {
         private final Properties props;
         private TruffleLanguage impl;
+        private final String prefix;
 
-        Language(Properties props) {
+        Language(String prefix, Properties props) {
+            this.prefix = prefix;
             this.props = props;
         }
 
         /**
-         * Mimetypes recognized by the language.
+         * MIME types recognized by the language.
          *
-         * @return returns immutable set of recognized mimetypes
+         * @return returns immutable set of recognized MIME types
          */
         public Set<String> getMimeTypes() {
             TreeSet<String> ts = new TreeSet<>();
             for (int i = 0;; i++) {
-                String mt = props.getProperty("mimeType." + i);
+                String mt = props.getProperty(prefix + "mimeType." + i);
                 if (mt == null) {
                     break;
                 }
@@ -427,12 +445,12 @@ public final class TruffleVM {
          * @return string giving the language a name
          */
         public String getName() {
-            return props.getProperty("name");
+            return props.getProperty(prefix + "name");
         }
 
         TruffleLanguage getImpl() {
             if (impl == null) {
-                String n = props.getProperty("className");
+                String n = props.getProperty(prefix + "className");
                 try {
                     Class<?> langClazz = Class.forName(n, true, loader());
                     Constructor<?> constructor = langClazz.getConstructor(Env.class);
@@ -459,7 +477,17 @@ public final class TruffleVM {
                 if (l == ownLang) {
                     continue;
                 }
-                Object obj = SPI.findExportedSymbol(l, globalName);
+                Object obj = SPI.findExportedSymbol(l, globalName, true);
+                if (obj != null) {
+                    return obj;
+                }
+            }
+            for (Language dl : uniqueLang) {
+                TruffleLanguage l = dl.getImpl();
+                if (l == ownLang) {
+                    continue;
+                }
+                Object obj = SPI.findExportedSymbol(l, globalName, false);
                 if (obj != null) {
                     return obj;
                 }
@@ -478,8 +506,8 @@ public final class TruffleVM {
         }
 
         @Override
-        public Object findExportedSymbol(TruffleLanguage l, String globalName) {
-            return super.findExportedSymbol(l, globalName);
+        public Object findExportedSymbol(TruffleLanguage l, String globalName, boolean onlyExplicit) {
+            return super.findExportedSymbol(l, globalName, onlyExplicit);
         }
 
         @Override

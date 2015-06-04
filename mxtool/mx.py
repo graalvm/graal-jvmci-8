@@ -124,7 +124,7 @@ class Distribution:
         self.javaCompliance = JavaCompliance(javaCompliance) if javaCompliance else None
         self.isProcessorDistribution = isProcessorDistribution
 
-    def sorted_deps(self, includeLibs=False, transitive=False):
+    def sorted_deps(self, includeLibs=False, transitive=False, includeAnnotationProcessors=False):
         deps = []
         if transitive:
             for depDist in [distribution(name) for name in self.distDependencies]:
@@ -135,13 +135,23 @@ class Distribution:
             excl = [dependency(d) for d in self.excludedDependencies]
         except SystemExit as e:
             abort('invalid excluded dependency for {0} distribution: {1}'.format(self.name, e))
-        return deps + [d for d in sorted_deps(self.deps, includeLibs=includeLibs) if d not in excl]
+        return deps + [d for d in sorted_deps(self.deps, includeLibs=includeLibs, includeAnnotationProcessors=includeAnnotationProcessors) if d not in excl]
 
     def __str__(self):
         return self.name
 
     def add_update_listener(self, listener):
         self.update_listeners.add(listener)
+
+    def get_dist_deps(self, includeSelf=True, transitive=False):
+        deps = set()
+        if includeSelf:
+            deps.add(self)
+        deps.update([distribution(name) for name in self.distDependencies])
+        if transitive:
+            for depName in self.distDependencies:
+                deps.update(distribution(depName).get_dist_deps(False, False))
+        return list(deps)
 
     """
     Gets the directory in which the IDE project configuration
@@ -167,6 +177,9 @@ class Distribution:
                 srcArc = arc if unified else srcArcRaw
                 services = {}
                 def overwriteCheck(zf, arcname, source):
+                    if os.path.basename(arcname).startswith('.'):
+                        logv('Excluding dotfile: ' + source)
+                        return True
                     if not hasattr(zf, '_provenance'):
                         zf._provenance = {}
                     existingSource = zf._provenance.get(arcname, None)
@@ -633,6 +646,7 @@ def download_file_with_sha1(name, path, urls, sha1, sha1path, resolve, mustExist
         if canSymlink and 'symlink' in dir(os):
             if exists(path):
                 os.unlink(path)
+            print 'Path ' + cachePath + ' path: ' + path
             os.symlink(cachePath, path)
         else:
             shutil.copy(cachePath, path)
@@ -4429,7 +4443,7 @@ def _netbeansinit_project(p, jdks=None, files=None, libFiles=None):
 
     out.close('target')
     out.open('target', {'name' : 'compile'})
-    out.open('exec', {'executable' : sys.executable})
+    out.open('exec', {'executable' : sys.executable, 'failonerror' : 'true'})
     out.element('env', {'key' : 'JAVA_HOME', 'value' : jdk.jdk})
     out.element('arg', {'value' : os.path.abspath(__file__)})
     out.element('arg', {'value' : 'build'})
@@ -4904,8 +4918,8 @@ def fsckprojects(args):
         distIdeDirs = [d.get_ide_project_dir() for d in suite.dists if d.get_ide_project_dir() is not None]
         for dirpath, dirnames, files in os.walk(suite.dir):
             if dirpath == suite.dir:
-                # no point in traversing .hg or lib/
-                dirnames[:] = [d for d in dirnames if d not in ['.hg', 'lib']]
+                # no point in traversing .hg, lib, or .workspace
+                dirnames[:] = [d for d in dirnames if d not in ['.hg', 'lib', '.workspace']]
             elif dirpath in projectDirs:
                 # don't traverse subdirs of an existing project in this suite
                 dirnames[:] = []

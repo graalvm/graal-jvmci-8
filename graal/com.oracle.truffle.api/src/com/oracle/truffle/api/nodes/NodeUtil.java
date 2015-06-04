@@ -454,14 +454,13 @@ public final class NodeUtil {
     }
 
     public static <T> T findFirstNodeInstance(Node root, Class<T> clazz) {
-        for (Node childNode : findNodeChildren(root)) {
-            if (clazz.isInstance(childNode)) {
-                return clazz.cast(childNode);
-            } else {
-                T node = findFirstNodeInstance(childNode, clazz);
-                if (node != null) {
-                    return node;
-                }
+        if (clazz.isInstance(root)) {
+            return clazz.cast(root);
+        }
+        for (Node child : root.getChildren()) {
+            T node = findFirstNodeInstance(child, clazz);
+            if (node != null) {
+                return node;
             }
         }
         return null;
@@ -473,23 +472,6 @@ public final class NodeUtil {
             public boolean visit(Node node) {
                 if (clazz.isInstance(node)) {
                     nodeList.add(clazz.cast(node));
-                }
-                return true;
-            }
-        });
-        return nodeList;
-    }
-
-    /**
-     * Like {@link #findAllNodeInstances(Node, Class)} but do not visit children of found nodes.
-     */
-    public static <T> List<T> findNodeInstancesShallow(final Node root, final Class<T> clazz) {
-        final List<T> nodeList = new ArrayList<>();
-        root.accept(new NodeVisitor() {
-            public boolean visit(Node node) {
-                if (clazz.isInstance(node)) {
-                    nodeList.add(clazz.cast(node));
-                    return false;
                 }
                 return true;
             }

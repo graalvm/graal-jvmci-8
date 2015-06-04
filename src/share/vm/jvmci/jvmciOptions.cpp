@@ -90,7 +90,7 @@ public:
         type = _boolean;
         break;
       default:
-        warn_and_abort("unkown type");
+        warn_and_abort("unknown type");
         return;
     }
     char* name2 = NEW_C_HEAP_ARRAY(char, (strlen(name) + 1 + strlen(help) + 1 + strlen(declaringClass) + 1 + strlen(fieldClass) + 1), mtCompiler);

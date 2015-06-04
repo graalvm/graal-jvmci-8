@@ -578,8 +578,10 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
                 for member in zf.namelist():
-                    if member.startswith('META-INF/services'):
+                    if member.startswith('META-INF/services') and member:
                         serviceName = basename(member)
+                        if serviceName == "":
+                            continue # Zip files may contain empty entries for directories (jar -cf ... creates such)
                         # we don't handle directories
                         assert serviceName and member == 'META-INF/services/' + serviceName
                         with zf.open(member) as serviceFile:
@@ -590,6 +592,8 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
                                     serviceImpls.append(line)
                     elif member.startswith('META-INF/options'):
                         filename = basename(member)
+                        if filename == "":
+                            continue # Zip files may contain empty entries for directories (jar -cf ... creates such)
                         # we don't handle directories
                         assert filename and member == 'META-INF/options/' + filename
                         targetpath = join(optionsDir, filename)
@@ -614,22 +618,33 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
 def _updateJVMCIFiles(jdkDir):
     jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')
     jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.endswith('.jar')]
-    jreGraalServicesDir = join(jreJVMCIDir, 'services')
-    jreGraalOptionsDir = join(jreJVMCIDir, 'options')
-    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreGraalServicesDir, jreGraalOptionsDir)
+    jreJVMCIServicesDir = join(jreJVMCIDir, 'services')
+    jreJVMCIOptionsDir = join(jreJVMCIDir, 'options')
+    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreJVMCIServicesDir, jreJVMCIOptionsDir)
 
 def _patchGraalVersionConstant(dist):
     """
-    Patches the constant "@@graal.version@@" in the constant pool of Graal.class
+    Patches the constant "@@@@@@@@@@@@@@@@graal.version@@@@@@@@@@@@@@@@" in the constant pool of Graal.class
     with the computed Graal version string.
     """
     zf = zipfile.ZipFile(dist.path, 'r')
     graalClassfilePath = 'com/oracle/graal/api/runtime/Graal.class'
-    graalClassfile = zf.read(graalClassfilePath)
-    versionSpec = '{:' + str(len('@@graal.version@@')) + '}'
+    try:
+        graalClassfile = zf.read(graalClassfilePath)
+    except KeyError:
+        mx.log(graalClassfilePath + ' is not present in ' + dist.path)
+        return
+    placeholder = '@@@@@@@@@@@@@@@@graal.version@@@@@@@@@@@@@@@@'
+    placeholderLen = len(placeholder)
+    versionSpec = '{:' + str(placeholderLen) + '}'
     versionStr = versionSpec.format(graal_version())
-    if '@@graal.version@@' not in graalClassfile:
-        assert versionStr in graalClassfile, 'could not find "@@graal.version@@" or "' + versionStr + '" constant in ' + dist.path + '!' + graalClassfilePath
+
+    if len(versionStr) > placeholderLen:
+        # Truncate the version string if necessary
+        assert versionStr.startswith('unknown'), versionStr
+        versionStr = versionStr[:placeholderLen]
+    if placeholder not in graalClassfile:
+        assert versionStr in graalClassfile, 'could not find "' + placeholder + '" or "' + versionStr + '" constant in ' + dist.path + '!' + graalClassfilePath
         zf.close()
         return False
 
@@ -637,7 +652,7 @@ def _patchGraalVersionConstant(dist):
     zfOut = zipfile.ZipFile(zfOutPath, 'w')
     for zi in zf.infolist():
         if zi.filename == graalClassfilePath:
-            data = graalClassfile.replace('@@graal.version@@', versionStr)
+            data = graalClassfile.replace(placeholder, versionStr)
         else:
             data = zf.read(zi)
         zfOut.writestr(zi, data)

@@ -32,6 +32,8 @@ import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.common.*;
 import com.oracle.jvmci.meta.*;
 
+// JaCoCo Exclude
+
 /**
  * HotSpot implementation of {@link MetaAccessProvider}.
  */

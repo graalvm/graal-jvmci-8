@@ -148,12 +148,17 @@ public class SLMain extends TruffleLanguage {
         }
     }
 
-    /* Demonstrate per-type tabulation of node execution counts */
+    /* Enables demonstration of per-type tabulation of node execution counts */
     private static boolean nodeExecCounts = false;
-    /* Demonstrate per-line tabulation of STATEMENT node execution counts */
+    /* Enables demonstration of per-line tabulation of STATEMENT node execution counts */
     private static boolean statementCounts = false;
-    /* Demonstrate per-line tabulation of STATEMENT coverage */
+    /* Enables demonstration of er-line tabulation of STATEMENT coverage */
     private static boolean coverage = false;
+
+    /* Small tools that can be installed for demonstration */
+    private static NodeExecCounter nodeExecCounter = null;
+    private static NodeExecCounter statementExecCounter = null;
+    private static CoverageTracker coverageTracker = null;
 
     /**
      * The main entry point. Use the mx command "mx sl" to run it with the correct class path setup.
@@ -161,6 +166,8 @@ public class SLMain extends TruffleLanguage {
     public static void main(String[] args) throws IOException {
         TruffleVM vm = TruffleVM.newVM().build();
         assert vm.getLanguages().containsKey("application/x-sl");
+
+        setupToolDemos();
 
         int repeats = 1;
         if (args.length >= 2) {
@@ -179,8 +186,12 @@ public class SLMain extends TruffleLanguage {
         while (repeats-- > 0) {
             main.invoke(null);
         }
+        reportToolDemos();
     }
 
+    /**
+     * Temporary method during API evolution, supports debugger integration.
+     */
     public static void run(Source source) throws IOException {
         TruffleVM vm = TruffleVM.newVM().build();
         assert vm.getLanguages().containsKey("application/x-sl");
@@ -202,28 +213,6 @@ public class SLMain extends TruffleLanguage {
         if (logOutput != null) {
             logOutput.println("== running on " + Truffle.getRuntime().getName());
             // logOutput.println("Source = " + source.getCode());
-        }
-
-        if (statementCounts || coverage) {
-            Probe.registerASTProber(new SLStandardASTProber());
-        }
-
-        NodeExecCounter nodeExecCounter = null;
-        if (nodeExecCounts) {
-            nodeExecCounter = new NodeExecCounter();
-            nodeExecCounter.install();
-        }
-
-        NodeExecCounter statementExecCounter = null;
-        if (statementCounts) {
-            statementExecCounter = new NodeExecCounter(StandardSyntaxTag.STATEMENT);
-            statementExecCounter.install();
-        }
-
-        CoverageTracker coverageTracker = null;
-        if (coverage) {
-            coverageTracker = new CoverageTracker();
-            coverageTracker.install();
         }
 
         /* Parse the SL source file. */
@@ -253,7 +242,7 @@ public class SLMain extends TruffleLanguage {
                 /* Call the main entry point, without any arguments. */
                 try {
                     result = main.invoke(null);
-                    if (result != SLNull.SINGLETON) {
+                    if (result != null) {
                         out.println(result);
                     }
                 } catch (UnsupportedSpecializationException ex) {
@@ -271,18 +260,6 @@ public class SLMain extends TruffleLanguage {
 
         } finally {
             printScript("after execution", LAST.context, logOutput, printASTToLog, printSourceAttributionToLog, dumpASTToIGV);
-        }
-        if (nodeExecCounter != null) {
-            nodeExecCounter.print(System.out);
-            nodeExecCounter.dispose();
-        }
-        if (statementExecCounter != null) {
-            statementExecCounter.print(System.out);
-            statementExecCounter.dispose();
-        }
-        if (coverageTracker != null) {
-            coverageTracker.print(System.out);
-            coverageTracker.dispose();
         }
         return totalRuntime;
     }
@@ -382,12 +359,16 @@ public class SLMain extends TruffleLanguage {
 
     @Override
     protected Object eval(Source code) throws IOException {
-        context.executeMain(code);
+        try {
+            context.executeMain(code);
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
         return null;
     }
 
     @Override
-    protected Object findExportedSymbol(String globalName) {
+    protected Object findExportedSymbol(String globalName, boolean onlyExplicit) {
         for (SLFunction f : context.getFunctionRegistry().getFunctions()) {
             if (globalName.equals(f.getName())) {
                 return f;
@@ -404,6 +385,41 @@ public class SLMain extends TruffleLanguage {
     @Override
     protected boolean isObjectOfLanguage(Object object) {
         return object instanceof SLFunction;
+    }
+
+    private static void setupToolDemos() {
+        if (statementCounts || coverage) {
+            Probe.registerASTProber(new SLStandardASTProber());
+        }
+        if (nodeExecCounts) {
+            nodeExecCounter = new NodeExecCounter();
+            nodeExecCounter.install();
+        }
+
+        if (statementCounts) {
+            statementExecCounter = new NodeExecCounter(StandardSyntaxTag.STATEMENT);
+            statementExecCounter.install();
+        }
+
+        if (coverage) {
+            coverageTracker = new CoverageTracker();
+            coverageTracker.install();
+        }
+    }
+
+    private static void reportToolDemos() {
+        if (nodeExecCounter != null) {
+            nodeExecCounter.print(System.out);
+            nodeExecCounter.dispose();
+        }
+        if (statementExecCounter != null) {
+            statementExecCounter.print(System.out);
+            statementExecCounter.dispose();
+        }
+        if (coverageTracker != null) {
+            coverageTracker.print(System.out);
+            coverageTracker.dispose();
+        }
     }
 
 }
