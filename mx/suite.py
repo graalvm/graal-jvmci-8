@@ -1085,6 +1085,7 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.7",
+      "annotationProcessors" : ["com.oracle.truffle.dsl.processor"],
       "workingSets" : "API,Truffle,Test",
       "jacoco" : "exclude",
     },
