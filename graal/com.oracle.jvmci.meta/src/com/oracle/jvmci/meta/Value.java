@@ -28,6 +28,8 @@ package com.oracle.jvmci.meta;
  */
 public interface Value extends KindProvider, TrustedInterface {
 
+    Value[] NO_VALUES = new Value[0];
+
     AllocatableValue ILLEGAL = new AllocatableValue(LIRKind.Illegal) {
 
         @Override
