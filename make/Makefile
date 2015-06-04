@@ -323,6 +323,7 @@ endif
 # Builds code that can be shared among different build flavors
 buildshared:
 	$(PYTHON) -u $(GAMMADIR)/mxtool/mx.py build --no-native --export-dir $(SHARED_DIR)
+	#cd .. && $(MAKE) -f make/jvmci.make TARGET=build/make MX_TARGET=. HS_COMMON_SRC=$(HS_COMMON_SRC) JDK=$(ABS_BOOTDIR) EXPORT_DIR=$(SHARED_DIR) VERBOSE=0 export
 
 # Export file rule
 generic_export: $(EXPORT_LIST)

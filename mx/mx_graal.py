@@ -579,8 +579,10 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
                 for member in zf.namelist():
-                    if member.startswith('META-INF/services'):
+                    if member.startswith('META-INF/services') and member:
                         serviceName = basename(member)
+                        if serviceName == "":
+                            continue # Zip files may contain empty entries for directories (jar -cf ... creates such)
                         # we don't handle directories
                         assert serviceName and member == 'META-INF/services/' + serviceName
                         with zf.open(member) as serviceFile:
@@ -591,6 +593,8 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
                                     serviceImpls.append(line)
                     elif member.startswith('META-INF/options'):
                         filename = basename(member)
+                        if filename == "":
+                            continue # Zip files may contain empty entries for directories (jar -cf ... creates such)
                         # we don't handle directories
                         assert filename and member == 'META-INF/options/' + filename
                         targetpath = join(optionsDir, filename)

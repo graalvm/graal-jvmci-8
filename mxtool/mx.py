@@ -142,10 +142,10 @@ class Distribution:
 
     def add_update_listener(self, listener):
         self.update_listeners.add(listener)
-        
+
     def get_dist_deps(self, includeSelf=True, transitive=False):
         deps = set()
-        if includeSelf: 
+        if includeSelf:
             deps.add(self)
         deps.update([distribution(name) for name in self.distDependencies])
         if transitive:
