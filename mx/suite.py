@@ -286,6 +286,74 @@ suite = {
 
     # ------------- JVMCI:Util -------------
 
+    "com.oracle.graal.asm" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["com.oracle.jvmci.code"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Assembler",
+    },
+
+    "com.oracle.graal.asm.amd64" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.asm",
+        "com.oracle.jvmci.amd64",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Assembler,AMD64",
+    },
+
+    "com.oracle.graal.asm.sparc" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.asm",
+        "com.oracle.jvmci.sparc",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Assembler,SPARC",
+    },
+
+    "com.oracle.graal.bytecode" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Java",
+    },
+
+    "com.oracle.graal.asm.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.test",
+        "com.oracle.jvmci.runtime",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Assembler,Test",
+    },
+
+    "com.oracle.graal.asm.amd64.test" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "com.oracle.graal.asm.test",
+        "com.oracle.jvmci.common",
+        "com.oracle.graal.asm.amd64",
+      ],
+      "checkstyle" : "com.oracle.graal.graph",
+      "javaCompliance" : "1.8",
+      "workingSets" : "Graal,Assembler,AMD64,Test",
+    },
+
+    # ------------- JVMCI:HotSpot -------------
+
     "com.oracle.jvmci.amd64" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -304,53 +372,6 @@ suite = {
       "workingSets" : "JVMCI,SPARC",
     },
 
-    "com.oracle.jvmci.asm" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.jvmci.code"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,Assembler",
-    },
-
-    "com.oracle.jvmci.asm.amd64" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.asm",
-        "com.oracle.jvmci.amd64",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,Assembler,AMD64",
-    },
-
-    "com.oracle.jvmci.asm.sparc" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.asm",
-        "com.oracle.jvmci.sparc",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,Assembler,SPARC",
-    },
-
-    "com.oracle.jvmci.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "JUNIT",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,Test",
-    },
-
-
-    # ------------- JVMCI:HotSpot -------------
-
     "com.oracle.jvmci.hotspot" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -359,7 +380,6 @@ suite = {
         "com.oracle.jvmci.options",
         "com.oracle.jvmci.debug",
         "com.oracle.jvmci.runtime",
-        "com.oracle.jvmci.bytecode",
         "com.oracle.jvmci.common",
         "FINDBUGS",
       ],
@@ -415,14 +435,6 @@ suite = {
       "workingSets" : "JVMCI,HotSpot,SPARC",
     },
 
-    "com.oracle.jvmci.bytecode" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,Java",
-    },
-
     "com.oracle.jvmci.hotspot.jfr" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
@@ -435,32 +447,6 @@ suite = {
       "javaCompliance" : "1.8",
       "profile" : "",
       "workingSets" : "JVMCI,HotSpot",
-    },
-
-    "com.oracle.jvmci.asm.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.test",
-        "com.oracle.jvmci.debug",
-        "com.oracle.jvmci.runtime",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,Assembler,Test",
-    },
-
-    "com.oracle.jvmci.asm.amd64.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.asm.test",
-        "com.oracle.jvmci.common",
-        "com.oracle.jvmci.asm.amd64",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,Assembler,AMD64,Test",
     },
 
     # ------------- NFI -------------
@@ -610,7 +596,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.asm.amd64",
+        "com.oracle.graal.asm.amd64",
         "com.oracle.graal.hotspot.test",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -669,7 +655,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.compiler.common",
-        "com.oracle.jvmci.asm",
+        "com.oracle.graal.asm",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -704,7 +690,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.lir",
-        "com.oracle.jvmci.asm.amd64",
+        "com.oracle.graal.asm.amd64",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -715,7 +701,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.asm.sparc",
+        "com.oracle.graal.asm.sparc",
         "com.oracle.graal.lir",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -806,7 +792,7 @@ suite = {
         "com.oracle.graal.graph",
         "com.oracle.graal.api.replacements",
         "com.oracle.graal.lir",
-        "com.oracle.jvmci.bytecode",
+        "com.oracle.graal.bytecode",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -1042,7 +1028,7 @@ suite = {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "com.oracle.jvmci.test",
+        "com.oracle.graal.test",
         "com.oracle.graal.api.directives",
         "com.oracle.graal.printer",
         "com.oracle.graal.runtime",
@@ -1311,7 +1297,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "com.oracle.graal.truffle.hotspot",
-        "com.oracle.jvmci.asm.sparc",
+        "com.oracle.graal.asm.sparc",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
@@ -1348,20 +1334,6 @@ suite = {
       ],
     },
 
-    "JVMCI_UTIL" : {
-      "path" : "build/jvmci-util.jar",
-      "subDir" : "graal",
-      "sourcesPath" : "build/jvmci-util.src.zip",
-      "dependencies" : [
-        "com.oracle.jvmci.bytecode",
-        "com.oracle.jvmci.asm.amd64",
-        "com.oracle.jvmci.asm.sparc",
-      ],
-      "distDependencies" : [
-        "JVMCI_API",
-      ],
-    },
-
     "JVMCI_HOTSPOT" : {
       "path" : "build/jvmci-hotspot.jar",
       "subDir" : "graal",
@@ -1373,7 +1345,6 @@ suite = {
       ],
       "distDependencies" : [
         "JVMCI_API",
-        "JVMCI_UTIL",
       ],
     },
 
