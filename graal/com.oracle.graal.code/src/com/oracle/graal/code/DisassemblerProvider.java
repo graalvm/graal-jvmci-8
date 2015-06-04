@@ -20,19 +20,47 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.jvmci.code;
+package com.oracle.graal.code;
+
+import com.oracle.jvmci.code.*;
+import com.oracle.jvmci.service.*;
 
 /**
  * Interface providing capability for disassembling machine code.
  */
-public interface DisassemblerProvider {
+public interface DisassemblerProvider extends Service {
 
     /**
-     * Gets a textual disassembly of some given installed code.
+     * Gets a textual disassembly of a given compilation result.
      *
+     * @param codeCache the object used for code {@link CodeCacheProvider#addMethod code
+     *            installation}
+     * @param compResult a compilation result
+     * @return a non-zero length string containing a disassembly of {@code compResult} or null it
+     *         could not be disassembled
+     */
+    default String disassembleCompiledCode(CodeCacheProvider codeCache, CompilationResult compResult) {
+        return null;
+    }
+
+    /**
+     * Gets a textual disassembly of a given installed code.
+     *
+     * @param codeCache the object used for code {@link CodeCacheProvider#addMethod code
+     *            installation}
+     * @param compResult a compiled code that was installed to produce {@code installedCode}. This
+     *            will be null if not available.
+     * @param installedCode
      * @return a non-zero length string containing a disassembly of {@code code} or null if
      *         {@code code} is {@link InstalledCode#isValid() invalid} or it could not be
      *         disassembled for some other reason
      */
-    String disassemble(InstalledCode code);
+    default String disassembleInstalledCode(CodeCacheProvider codeCache, CompilationResult compResult, InstalledCode installedCode) {
+        return null;
+    }
+
+    /**
+     * Gets the name denoting the format of the disassmembly return by this object.
+     */
+    String getName();
 }
