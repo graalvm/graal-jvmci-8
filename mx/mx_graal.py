@@ -839,7 +839,7 @@ def build(args, vm=None):
     The global '--vm' and '--vmbuild' options select which VM type and build target to build."""
 
     # Turn all jdk distributions into non HotSpot; this is only necessary as long we support building/exporting JVMCI with make and mx
-    if not ("-m" in args or "--use-make" in args):
+    if "--avoid-make" not in args:
         for jdkDist in _jdkDeployedDists:
             if jdkDist.partOfHotSpot:
                 jdkDist.partOfHotSpot = False
@@ -862,7 +862,7 @@ def build(args, vm=None):
     parser = AP()
     parser.add_argument('--export-dir', help='directory to which JVMCI and Graal jars and jvmci.options will be copied', metavar='<path>')
     parser.add_argument('-D', action='append', help='set a HotSpot build variable (run \'mx buildvars\' to list variables)', metavar='name=value')
-    parser.add_argument('-m', '--use-make', action='store_true', help='Use the jvmci.make file to build and export JVMCI')
+    parser.add_argument('--avoid-make', action='store_true', help='Do not use jvmci.make file to build and export JVMCI')
     opts2 = mx.build(['--source', '1.7'] + args, parser=parser)
     assert len(opts2.remainder) == 0
 
@@ -893,7 +893,7 @@ def build(args, vm=None):
             shutil.copy(dist.path, opts2.export_dir)
 
         services, optionsFiles = _extractJVMCIFiles(jdkJars, jvmciJars, join(opts2.export_dir, 'services'), join(opts2.export_dir, 'options'))
-        if not opts2.use_make:
+        if opts2.avoid_make:
             for service in services:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/' + service
                 if defLine not in defs:
@@ -1054,7 +1054,7 @@ def build(args, vm=None):
                         setMakeVar('STRIP_POLICY', 'no_strip')
             # This removes the need to unzip the *.diz files before debugging in gdb
             setMakeVar('ZIP_DEBUGINFO_FILES', '0', env=env)
-            if opts2.use_make:
+            if not opts2.avoid_make:
                 setMakeVar('JVMCI_USE_MAKE', '1')
             # Clear this variable as having it set can cause very confusing build problems
             env.pop('CLASSPATH', None)
@@ -1066,7 +1066,7 @@ def build(args, vm=None):
             envPrefix = ' '.join([key + '=' + env[key] for key in env.iterkeys() if not os.environ.has_key(key) or env[key] != os.environ[key]])
             if len(envPrefix):
                 mx.log('env ' + envPrefix + ' \\')
-            makeTarget = "all_" + build + buildSuffix if opts2.use_make else build + buildSuffix
+            makeTarget = "all_" + build + buildSuffix if not opts2.avoid_make else build + buildSuffix
             runCmd.append(makeTarget)
 
             if not mx._opts.verbose:

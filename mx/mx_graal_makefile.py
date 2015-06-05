@@ -48,17 +48,18 @@ def build_makefile(args):
     parser = ArgumentParser(prog='mx makefile')
     parser.add_argument('-o', action='store', dest='output', help='Write contents to this file.')
     parser.add_argument('selectedDists', help="Selected distribution names which are going to be built with make.", nargs=REMAINDER)
-    args = parser.parse_args(args)
+    opts = parser.parse_args(args)
 
-    if args.selectedDists == None or len(args.selectedDists) == 0:
-        args.selectedDists = [d.name for d in mx_graal._jdkDeployedDists if d.partOfHotSpot]
+    if opts.selectedDists == None or len(opts.selectedDists) == 0:
+        opts.selectedDists = [d.name for d in mx_graal._jdkDeployedDists if d.partOfHotSpot]
     mf = Makefile()
-    if do_build_makefile(mf, args.selectedDists):
+    commandline = " ".join(["mx.sh", "makefile"] + args)
+    if do_build_makefile(mf, opts.selectedDists, commandline):
         contents = mf.generate()
-        if args.output == None:
+        if opts.output == None:
             print contents
         else:
-            with open(args.output, "w") as f:
+            with open(opts.output, "w") as f:
                 f.write(contents)
 
 
@@ -72,13 +73,21 @@ def filter_projects(deps, t):
 def get_jdk_deployed_dists():
     return [d.name for d in mx_graal._jdkDeployedDists]
 
+def update_list(li, elements):
+    for e in elements:
+        if e not in li:
+            li.append(e)
+
 def make_dist_rule(dist, mf, bootClassPath=None):
     def path_dist_relative(p):
         return os.path.relpath(p, dist.suite.dir)
+    def short_dist_name(name):
+        return name.replace("COM_ORACLE_", "")
+    shortName = short_dist_name(dist.name)
     jdkDeployedDists = get_jdk_deployed_dists()
     jarPath = path_dist_relative(dist.path)
-    sourcesVariableName = dist.name + "_SRC"
-    depJarVariableName = dist.name + "_DEP_JARS"
+    sourcesVariableName = shortName + "_SRC"
+    depJarVariableName = shortName + "_DEP_JARS"
     sources = []
     resources = []
     sortedDeps = dist.sorted_deps(True, transitive=False, includeAnnotationProcessors=True)
@@ -86,17 +95,17 @@ def make_dist_rule(dist, mf, bootClassPath=None):
     targetPathPrefix = "$(TARGET)" + os.path.sep
     libraryDeps = [path_dist_relative(l.get_path(False)) for l in filter_projects(sortedDeps, mx.Library)]
 
-    annotationProcessorDeps = set()
+    annotationProcessorDeps = []
     distDeps = dist.get_dist_deps(includeSelf=False, transitive=True)
-    distDepProjects = set()
+    distDepProjects = []
     for d in distDeps:
-        distDepProjects.update(d.sorted_deps(includeLibs=False, transitive=True))
+        update_list(distDepProjects, d.sorted_deps(includeLibs=False, transitive=True))
 
     classPath = [targetPathPrefix + path_dist_relative(d.path) for d in distDeps] + libraryDeps \
         + [path_dist_relative(mx.dependency(name).path) for name in dist.excludedDependencies]
     for p in projects:
         if p.definedAnnotationProcessors != None and p.definedAnnotationProcessorsDist != dist:
-            annotationProcessorDeps.add(p)
+            update_list(annotationProcessorDeps, [p])
     for p in projects:
         projectDir = path_dist_relative(p.dir)
         if p not in distDepProjects and p not in annotationProcessorDeps:
@@ -116,12 +125,12 @@ def make_dist_rule(dist, mf, bootClassPath=None):
     apDistVariableNames = []
     for p in annotationProcessorDeps:
         apPaths.append(path_dist_relative(p.definedAnnotationProcessorsDist.path))
-        name = p.definedAnnotationProcessorsDist.name
+        name = short_dist_name(p.definedAnnotationProcessorsDist.name)
         apDistNames.append(name)
         apDistVariableNames.append("$(" + name + "_JAR)")
     shouldExport = dist.name in jdkDeployedDists
     props = {
-           "name": dist.name,
+           "name": shortName,
            "jarPath": targetPathPrefix + jarPath,
            "depends": "",
            "depJarsVariableAccess": "$(" + depJarVariableName + ")" if len(classPath) > 0 else "",
@@ -131,7 +140,7 @@ def make_dist_rule(dist, mf, bootClassPath=None):
            "annotationProcessors": " ".join(apDistVariableNames),
            "cpAnnotationProcessors": "-processorpath " + ":".join(apDistVariableNames) if len(apDistVariableNames) > 0 else "",
            "bootCp": ("-bootclasspath " + bootClassPath) if bootClassPath != None else "",
-           "cpDeps": ("-cp " + ":".join(classPath)) if len(classPath) > 0 else "",
+           "cpDeps": ("-cp $(shell echo $(" + depJarVariableName + ") | tr ' ' ':')") if len(classPath) > 0 else "",
            "jarDeps": " ".join(classPath),
            "copyResources": "cp -r {} $(TMP)".format(" ".join(resources)) if len(resources) > 0 else "",
            "targetPathPrefix": targetPathPrefix,
@@ -154,33 +163,36 @@ def make_dist_rule(dist, mf, bootClassPath=None):
 
 
 
-def do_build_makefile(mf, selectedDists):
+def do_build_makefile(mf, selectedDists, commandline):
     java = mx.java()
     bootClassPath = java.bootclasspath()
-    bootClassPath = bootClassPath.replace(java.jdk, "$(JDK)")
+    bootClassPath = bootClassPath.replace(java.jdk, "$(ABS_BOOTDIR)")
     jdkBootClassPathVariableName = "JDK_BOOTCLASSPATH"
 
-    mf.add_definition("""VERBOSE=
-TARGET=.
-JDK=
+    mf.add_definition("""# This Makefile is generated automatically, do not edit
+# This file was build with command: """ + commandline + """
 
-WGET=wget
-JAVAC=$(JDK)/bin/javac -g -target """ + str(java.javaCompliance) + """
-JAR=$(JDK)/bin/jar
+VERBOSE=
+TARGET=.
+# Bootstrap JDK to be used (for javac and jar)
+ABS_BOOTDIR=
+
+JAVAC=$(ABS_BOOTDIR)/bin/javac -g -target """ + str(java.javaCompliance) + """
+JAR=$(ABS_BOOTDIR)/bin/jar
 
 EXPORT_DIR=export
 EXPORTED_FILES_ADDITIONAL=$(TARGET)/options $(TARGET)/services
 HS_COMMON_SRC=.
-# where all other stuff built by mx (graal.jar) resides
-MX_TARGET=.
+
+# Directories, where the generated property-files reside within the JAR files
 PROVIDERS_INF=/META-INF/providers/
 SERVICES_INF=/META-INF/services/
 OPTIONS_INF=/META-INF/options/
 
-ifeq ($(JDK),)
-    $(error Variable JDK must be set to a JDK installation.)
-    endif
-    ifneq ($(VERBOSE),)
+ifeq ($(ABS_BOOTDIR),)
+    $(error Variable ABS_BOOTDIR must be set to a JDK installation.)
+endif
+ifneq ($(VERBOSE),)
     SHELL=sh -x
 endif
 
@@ -216,20 +228,20 @@ export: all
 
 """)
     s = mx.suite("graal")
-    dists = set()
-    ap = set()
-    projects = set()
+    dists = []
+    ap = []
+    projects = []
     for d in s.dists:
         if d.name in selectedDists:
-            dists.update(d.get_dist_deps(True, True))
-            projects.update(d.sorted_deps(includeLibs=False, transitive=True))
+            update_list(dists, d.get_dist_deps(True, True))
+            update_list(projects, d.sorted_deps(includeLibs=False, transitive=True))
 
     for p in projects:
         deps = p.all_deps([], False, includeSelf=True, includeJreLibs=False, includeAnnotationProcessors=True)
         for d in deps:
             if d.definedAnnotationProcessorsDist != None:
                 apd = d.definedAnnotationProcessorsDist
-                ap.add(apd)
+                update_list(ap, [apd])
 
     if len(dists) > 0:
         mf.add_definition(jdkBootClassPathVariableName + " = " + bootClassPath)
