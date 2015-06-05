@@ -144,7 +144,7 @@ def make_dist_rule(dist, mf, bootClassPath=None):
     if len(classPath) > 0: mf.add_definition("{depJarsVariable} = {jarDeps}".format(**props))
     if shouldExport: mf.add_definition("EXPORTED_FILES += $({name}_JAR)".format(**props))
     mf.add_rule("""$({name}_JAR): $({sourcesVariableName}) {annotationProcessors} {depJarsVariableAccess}
-\t$(eval TMP := $(shell mktemp -d))
+\t$(eval TMP := $(shell mktemp -d {name}_XXXXX))
 \t$(JAVAC) -d $(TMP) {cpAnnotationProcessors} {bootCp} {cpDeps} $({sourcesVariableName})
 \t{copyResources}
 \t$(call process_options,$(TMP),{shouldExport})
@@ -199,7 +199,7 @@ define process_options =
 endef
 
 define extract =
-    $(eval TMP := $(shell mktemp -d))
+    $(eval TMP := $(shell mktemp -d $(1)_XXXXX))
     mkdir -p $(2);
     cd $(TMP) && $(JAR) xf $(abspath $(1)) && \
         ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))))
