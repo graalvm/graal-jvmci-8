@@ -973,19 +973,6 @@ suite = {
       "workingSets" : "Graal,Java",
     },
 
-    "com.oracle.graal.java.test" : {
-      "subDir" : "graal",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.runtime.test",
-        "com.oracle.graal.java",
-      ],
-      "checkstyle" : "com.oracle.graal.graph",
-      "javaCompliance" : "1.8",
-      "workingSets" : "API,Graal,Test",
-      "jacoco" : "exclude",
-    },
-
     "com.oracle.graal.graphbuilderconf" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
