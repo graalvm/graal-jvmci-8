@@ -90,16 +90,17 @@ _minVersion = mx.VersionSpec('1.8')
 _untilVersion = None
 
 class JDKDeployedDist:
-    def __init__(self, name, isExtension=False, usesJVMCIClassLoader=False):
+    def __init__(self, name, isExtension=False, usesJVMCIClassLoader=False, partOfHotSpot=False):
         self.name = name
         self.isExtension = isExtension
         self.usesJVMCIClassLoader = usesJVMCIClassLoader
+        self.partOfHotSpot = partOfHotSpot # true when this distribution is delivered with HotSpot
 
 _jdkDeployedDists = [
     JDKDeployedDist('TRUFFLE'),
-    JDKDeployedDist('JVMCI_SERVICE'),
-    JDKDeployedDist('JVMCI_API', usesJVMCIClassLoader=True),
-    JDKDeployedDist('JVMCI_HOTSPOT', usesJVMCIClassLoader=True),
+    JDKDeployedDist('JVMCI_SERVICE', partOfHotSpot=True),
+    JDKDeployedDist('JVMCI_API', usesJVMCIClassLoader=True, partOfHotSpot=True),
+    JDKDeployedDist('JVMCI_HOTSPOT', usesJVMCIClassLoader=True, partOfHotSpot=True),
     JDKDeployedDist('GRAAL', usesJVMCIClassLoader=True),
     JDKDeployedDist('GRAAL_TRUFFLE', usesJVMCIClassLoader=True)
 ]
@@ -856,6 +857,7 @@ def build(args, vm=None):
     parser = AP()
     parser.add_argument('--export-dir', help='directory to which JVMCI and Graal jars and jvmci.options will be copied', metavar='<path>')
     parser.add_argument('-D', action='append', help='set a HotSpot build variable (run \'mx buildvars\' to list variables)', metavar='name=value')
+    parser.add_argument('-m', '--use-make', action='store_true', help='Use the jvmci.make file to build and export JVMCI')
     opts2 = mx.build(['--source', '1.7'] + args, parser=parser)
     assert len(opts2.remainder) == 0
 
@@ -872,27 +874,33 @@ def build(args, vm=None):
         jdkJars = []
         for jdkDist in _jdkDeployedDists:
             dist = mx.distribution(jdkDist.name)
-            jdkJars.append(join(_graal_home, dist.path))
+            exportedByMx = not(opts2.use_make and jdkDist.partOfHotSpot)
+            if exportedByMx:
+                jdkJars.append(join(_graal_home, dist.path))
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if jdkDist.isExtension:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_EXT_DIR)/' + basename(dist.path)
             elif jdkDist.usesJVMCIClassLoader:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/' + basename(dist.path)
-                jvmciJars.append(dist.path)
+                if exportedByMx:
+                    jvmciJars.append(dist.path)
             else:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + '\n' + defLine)
-            shutil.copy(dist.path, opts2.export_dir)
+            if exportedByMx:
+                shutil.copy(dist.path, opts2.export_dir)
+
         services, optionsFiles = _extractJVMCIFiles(jdkJars, jvmciJars, join(opts2.export_dir, 'services'), join(opts2.export_dir, 'options'))
-        for service in services:
-            defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/' + service
-            if defLine not in defs:
-                mx.abort('Missing following line in ' + defsPath + ' for service from ' + dist.name + '\n' + defLine)
-        for optionsFile in optionsFiles:
-            defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/' + optionsFile
-            if defLine not in defs:
-                mx.abort('Missing following line in ' + defsPath + ' for options from ' + dist.name + '\n' + defLine)
+        if not opts2.use_make:
+            for service in services:
+                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/' + service
+                if defLine not in defs:
+                    mx.abort('Missing following line in ' + defsPath + ' for service from ' + dist.name + '\n' + defLine)
+            for optionsFile in optionsFiles:
+                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/' + optionsFile
+                if defLine not in defs:
+                    mx.abort('Missing following line in ' + defsPath + ' for options from ' + dist.name + '\n' + defLine)
         jvmciOptions = join(_graal_home, 'jvmci.options')
         if exists(jvmciOptions):
             shutil.copy(jvmciOptions, opts2.export_dir)
@@ -1019,6 +1027,7 @@ def build(args, vm=None):
             setMakeVar('ARCH_DATA_MODEL', '64', env=env)
             setMakeVar('HOTSPOT_BUILD_JOBS', str(cpus), env=env)
             setMakeVar('ALT_BOOTDIR', mx.java().jdk, env=env)
+            setMakeVar("EXPORT_PATH", jdk)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
             if vm.endswith('nojvmci'):
@@ -1044,7 +1053,8 @@ def build(args, vm=None):
                         setMakeVar('STRIP_POLICY', 'no_strip')
             # This removes the need to unzip the *.diz files before debugging in gdb
             setMakeVar('ZIP_DEBUGINFO_FILES', '0', env=env)
-
+            if opts2.use_make:
+                setMakeVar('JVMCI_USE_MAKE', '1')
             # Clear this variable as having it set can cause very confusing build problems
             env.pop('CLASSPATH', None)
 
@@ -1055,8 +1065,8 @@ def build(args, vm=None):
             envPrefix = ' '.join([key + '=' + env[key] for key in env.iterkeys() if not os.environ.has_key(key) or env[key] != os.environ[key]])
             if len(envPrefix):
                 mx.log('env ' + envPrefix + ' \\')
-
-            runCmd.append(build + buildSuffix)
+            makeTarget = "all_" + build + buildSuffix if opts2.use_make else build + buildSuffix
+            runCmd.append(makeTarget)
 
             if not mx._opts.verbose:
                 mx.log(' '.join(runCmd))

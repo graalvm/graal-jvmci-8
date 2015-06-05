@@ -51,8 +51,7 @@ def build_makefile(args):
     args = parser.parse_args(args)
 
     if args.selectedDists == None or len(args.selectedDists) == 0:
-        parser.print_help()
-        return
+        args.selectedDists = [d.name for d in mx_graal._jdkDeployedDists if d.partOfHotSpot]
     mf = Makefile()
     if do_build_makefile(mf, args.selectedDists):
         contents = mf.generate()
@@ -190,7 +189,7 @@ define process_options =
     $(eval services=$(1)/$(SERVICES_INF))
     $(eval options=$(1)/$(OPTIONS_INF))
     test -d $(services) || mkdir -p $(services)
-    test ! -d $(providers) || (cd $(providers) && for i in $$(ls $(providers)); do c=$$(cat $$i); echo $$i >> $(services)$$c; rm $$i; done)
+    test ! -d $(providers) || (cd $(providers) && for i in $$(ls); do c=$$(cat $$i); echo $$i >> $(abspath $(services))/$$c; rm $$i; done)
 
     # We're building all projects together with one javac call; thus we cannot determine, from which project the generated file is thus we hardcode it for now
     $(eval vmconfig=$(1)/hotspot/HotSpotVMConfig.inline.hpp)
@@ -200,7 +199,7 @@ endef
 
 define extract =
     $(eval TMP := $(shell mktemp -d $(1)_XXXXX))
-    mkdir -p $(2);
+    mkdir -p $(2)
     cd $(TMP) && $(JAR) xf $(abspath $(1)) && \
         ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))))
     rm -r $(TMP)
@@ -224,17 +223,13 @@ export: all
         if d.name in selectedDists:
             dists.update(d.get_dist_deps(True, True))
             projects.update(d.sorted_deps(includeLibs=False, transitive=True))
+
     for p in projects:
         deps = p.all_deps([], False, includeSelf=True, includeJreLibs=False, includeAnnotationProcessors=True)
         for d in deps:
             if d.definedAnnotationProcessorsDist != None:
                 apd = d.definedAnnotationProcessorsDist
                 ap.add(apd)
-
-    for d in mx_graal._jdkDeployedDists:
-        dist = mx.distribution(d.name)
-        if dist not in dists: # this sould go away
-            mf.add_definition("EXPORTED_FILES += $(MX_TARGET)/{}".format(os.path.relpath(dist.path, dist.suite.dir)))
 
     if len(dists) > 0:
         mf.add_definition(jdkBootClassPathVariableName + " = " + bootClassPath)

@@ -360,19 +360,28 @@ EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/jni.h
 EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/$(JDK_INCLUDE_SUBDIR)/jni_md.h
 EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/jmm.h
 EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/jvmci-service.jar
-EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/truffle.jar
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/graal.jar
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/graal-truffle.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-api.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-hotspot.jar
 
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIBackendFactory
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotVMEventListener
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.debug.DebugInitializationPropertyProvider
 
 ifneq ("$(wildcard $(SHARED_DIR)/services/com.oracle.jvmci.hotspot.events.EventProvider)","")
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.events.EventProvider
 endif
+
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotConstantReflectionProvider
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaFieldImpl
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaMethodImpl
+
+ifeq ($(JVMCI_USE_MAKE),)
+EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/truffle.jar
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/graal.jar
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/graal-truffle.jar
+
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotVMEventListener
+
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.debug.DebugInitializationPropertyProvider
 
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.api.runtime.GraalRuntimeAccess
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.code.DisassemblerProvider
@@ -386,11 +395,6 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.truffle.Loo
 
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.truffle.api.TruffleRuntimeAccess
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.nfi.api.NativeFunctionInterfaceAccess
-
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotConstantReflectionProvider
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaFieldImpl
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaMethodImpl
 
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.common.GraalOptions
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.GraalCompiler
@@ -425,6 +429,7 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.truffle.Truf
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.virtual.phases.ea.PartialEscapePhase
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.asm.CompilationResultBuilder
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.java.BytecodeParser
+endif
 
 .PHONY: $(HS_ALT_MAKE)/defs.make
 

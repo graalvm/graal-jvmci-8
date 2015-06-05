@@ -304,4 +304,3 @@ ifeq ($(ENABLE_FULL_DEBUG_SYMBOLS),1)
   endif
 endif
 EXPORT_LIST += $(EXPORT_LIB_DIR)/sa-jdi.jar
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.debug.DebugInitializationPropertyProvider
