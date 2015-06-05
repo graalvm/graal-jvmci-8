@@ -325,7 +325,7 @@ buildshared:
 	$(PYTHON) -u $(GAMMADIR)/mxtool/mx.py build --no-native --export-dir $(SHARED_DIR)
 else
 buildshared:
-	cd .. && $(MAKE) -f make/jvmci.make TARGET=build/make MX_TARGET=. HS_COMMON_SRC=$(HS_COMMON_SRC) JDK=$(ABS_BOOTDIR) EXPORT_DIR=$(SHARED_DIR) VERBOSE=0 export
+	cd .. && $(MAKE) -f make/jvmci.make TARGET=build/make MX_TARGET=. HS_COMMON_SRC=$(HS_COMMON_SRC) JDK=$(ABS_BOOTDIR) EXPORT_DIR=$(SHARED_DIR) export
 endif
 
 

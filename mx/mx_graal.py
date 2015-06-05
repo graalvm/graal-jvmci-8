@@ -495,7 +495,7 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
     if installJars:
         for jdkDist in _jdkDeployedDists:
             dist = mx.distribution(jdkDist.name)
-            if exists(dist.path):
+            if exists(dist.path) and jdkDist.partOfHotSpot:
                 _installDistInJdks(jdkDist)
 
     if vmToCheck is not None:
@@ -666,7 +666,6 @@ def _installDistInJdks(deployableDist):
     """
     Installs the jar(s) for a given Distribution into all existing JVMCI JDKs
     """
-
     dist = mx.distribution(deployableDist.name)
     if dist.name == 'GRAAL':
         _patchGraalVersionConstant(dist)
@@ -839,6 +838,12 @@ def build(args, vm=None):
 
     The global '--vm' and '--vmbuild' options select which VM type and build target to build."""
 
+    # Turn all jdk distributions into non HotSpot; this is only necessary as long we support building/exporting JVMCI with make and mx
+    if not ("-m" in args or "--use-make" in args):
+        for jdkDist in _jdkDeployedDists:
+            if jdkDist.partOfHotSpot:
+                jdkDist.partOfHotSpot = False
+
     # Override to fail quickly if extra arguments are given
     # at the end of the command line. This allows for a more
     # helpful error message.
@@ -874,21 +879,17 @@ def build(args, vm=None):
         jdkJars = []
         for jdkDist in _jdkDeployedDists:
             dist = mx.distribution(jdkDist.name)
-            exportedByMx = not(opts2.use_make and jdkDist.partOfHotSpot)
-            if exportedByMx:
-                jdkJars.append(join(_graal_home, dist.path))
+            jdkJars.append(join(_graal_home, dist.path))
             defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if jdkDist.isExtension:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_EXT_DIR)/' + basename(dist.path)
             elif jdkDist.usesJVMCIClassLoader:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/' + basename(dist.path)
-                if exportedByMx:
-                    jvmciJars.append(dist.path)
+                jvmciJars.append(dist.path)
             else:
                 defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
             if defLine not in defs:
                 mx.abort('Missing following line in ' + defsPath + '\n' + defLine)
-            if exportedByMx:
                 shutil.copy(dist.path, opts2.export_dir)
 
         services, optionsFiles = _extractJVMCIFiles(jdkJars, jvmciJars, join(opts2.export_dir, 'services'), join(opts2.export_dir, 'options'))
@@ -1103,6 +1104,9 @@ def build(args, vm=None):
                         # Legacy support
                         f.write('-graal ALIASED_TO -jvmci\n')
 
+        for jdkDist in _jdkDeployedDists: # Install non HotSpot distribution
+            if not jdkDist.partOfHotSpot:
+                _installDistInJdks(jdkDist)
         if exists(timestampFile):
             os.utime(timestampFile, None)
         else:
@@ -2708,6 +2712,7 @@ def mx_post_parse_cmd_line(opts):  #
         def _close(jdkDeployable):
             def _install(dist):
                 assert dist.name == jdkDeployable.name, dist.name + "!=" + jdkDeployable.name
-                _installDistInJdks(jdkDeployable)
+                if not jdkDist.partOfHotSpot:
+                    _installDistInJdks(jdkDeployable)
             return _install
         mx.distribution(jdkDist.name).add_update_listener(_close(jdkDist))
