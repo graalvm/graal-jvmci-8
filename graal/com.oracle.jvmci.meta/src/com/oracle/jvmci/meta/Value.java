@@ -28,7 +28,14 @@ package com.oracle.jvmci.meta;
  */
 public interface Value extends KindProvider, TrustedInterface {
 
-    AllocatableValue ILLEGAL = new AllocatableValue(LIRKind.Illegal) {
+    Value[] NO_VALUES = new Value[0];
+
+    AllocatableValue ILLEGAL = new IllegalValue();
+
+    public final class IllegalValue extends AllocatableValue {
+        private IllegalValue() {
+            super(LIRKind.Illegal);
+        }
 
         @Override
         public String toString() {
@@ -39,9 +46,9 @@ public interface Value extends KindProvider, TrustedInterface {
         public boolean equals(Object other) {
             // Due to de-serialization this object may exist multiple times. So we compare classes
             // instead of the individual objects. (This anonymous class has always the same meaning)
-            return other != null && this.getClass() == other.getClass();
+            return other instanceof IllegalValue;
         }
-    };
+    }
 
     LIRKind getLIRKind();
 

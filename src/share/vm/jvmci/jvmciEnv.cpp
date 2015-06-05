@@ -483,6 +483,7 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
                                 JVMCIEnv* env,
                                 int compile_id,
                                 bool has_unsafe_access,
+                                bool has_wide_vector,
                                 Handle installed_code,
                                 Handle compiled_code,
                                 Handle speculation_log) {
@@ -546,12 +547,7 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
         }
       } else {
         nm->set_has_unsafe_access(has_unsafe_access);
-#ifdef TARGET_ARCH_x86
-        // It might be preferable to set this only for methods which
-        // use vector instructions but we currently don't track this
-        // and it probably wouldn't make much difference.
-        nm->set_has_wide_vectors(MaxVectorSize > 16);
-#endif
+        nm->set_has_wide_vectors(has_wide_vector);
 
         // Record successful registration.
         // (Put nm into the task handle *before* publishing to the Java heap.)

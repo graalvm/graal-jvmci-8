@@ -157,15 +157,13 @@ void jvmci_compute_offsets();
     objArrayOop_field(DebugInfo, virtualObjectMapping, "[Lcom/oracle/jvmci/meta/Value;")                                                                       \
   end_class                                                                                                                                                    \
   start_class(HotSpotReferenceMap)                                                                                                                             \
-    oop_field(HotSpotReferenceMap, registerRefMap, "Lcom/oracle/jvmci/hotspot/HotSpotReferenceMap$HotSpotOopMap;")                                             \
-    oop_field(HotSpotReferenceMap, frameRefMap, "Lcom/oracle/jvmci/hotspot/HotSpotReferenceMap$HotSpotOopMap;")                                                \
+    objArrayOop_field(HotSpotReferenceMap, objects, "[Lcom/oracle/jvmci/meta/Value;")                                                                          \
+    typeArrayOop_field(HotSpotReferenceMap, bytesPerElement, "[I")                                                                                             \
+    int_field(HotSpotReferenceMap, maxRegisterSize)                                                                                                            \
   end_class                                                                                                                                                    \
   start_class(RegisterSaveLayout)                                                                                                                              \
     objArrayOop_field(RegisterSaveLayout, registers, "[Lcom/oracle/jvmci/code/Register;")                                                                      \
     typeArrayOop_field(RegisterSaveLayout, slots, "[I")                                                                                                        \
-  end_class                                                                                                                                                    \
-  start_class(HotSpotOopMap)                                                                                                                                   \
-    typeArrayOop_field(HotSpotOopMap, words, "[J")                                                                                                             \
   end_class                                                                                                                                                    \
   start_class(BytecodeFrame)                                                                                                                                   \
     objArrayOop_field(BytecodeFrame, values, "[Lcom/oracle/jvmci/meta/Value;")                                                                                 \
@@ -223,15 +221,9 @@ void jvmci_compute_offsets();
   start_class(RegisterValue)                                                                                                                                   \
     oop_field(RegisterValue, reg, "Lcom/oracle/jvmci/code/Register;")                                                                                          \
   end_class                                                                                                                                                    \
-  start_class(RegisterCategory)                                                                                                                                \
-    oop_field(RegisterCategory, name, "Ljava/lang/String;")                                                                                                    \
-    int_field(RegisterCategory, referenceMapOffset)                                                                                                            \
-    int_field(RegisterCategory, referenceMapShift)                                                                                                             \
-  end_class                                                                                                                                                    \
   start_class(code_Register)                                                                                                                                   \
     int_field(code_Register, number)                                                                                                                           \
     int_field(code_Register, encoding)                                                                                                                         \
-    oop_field(code_Register, registerCategory, "Lcom/oracle/jvmci/code/Register$RegisterCategory;")                                                            \
   end_class                                                                                                                                                    \
   start_class(StackSlot)                                                                                                                                       \
     int_field(StackSlot, offset)                                                                                                                               \

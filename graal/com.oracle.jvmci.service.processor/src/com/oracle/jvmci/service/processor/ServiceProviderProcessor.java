@@ -38,6 +38,7 @@ import com.oracle.jvmci.service.*;
 public class ServiceProviderProcessor extends AbstractProcessor {
 
     private final Set<TypeElement> processed = new HashSet<>();
+    private TypeElement baseJVMCIServiceInterface;
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -45,6 +46,11 @@ public class ServiceProviderProcessor extends AbstractProcessor {
     }
 
     private boolean verifyAnnotation(TypeMirror serviceInterface, TypeElement serviceProvider) {
+        if (!processingEnv.getTypeUtils().isSubtype(serviceInterface, baseJVMCIServiceInterface.asType())) {
+            String msg = String.format("Service interface class %s doesn't extend JVMCI service interface %s", serviceInterface, baseJVMCIServiceInterface);
+            processingEnv.getMessager().printMessage(Kind.ERROR, msg, serviceProvider);
+            return false;
+        }
         if (!processingEnv.getTypeUtils().isSubtype(serviceProvider.asType(), serviceInterface)) {
             String msg = String.format("Service provider class %s doesn't implement service interface %s", serviceProvider.getSimpleName(), serviceInterface);
             processingEnv.getMessager().printMessage(Kind.ERROR, msg, serviceProvider);
@@ -100,6 +106,8 @@ public class ServiceProviderProcessor extends AbstractProcessor {
         if (roundEnv.processingOver()) {
             return true;
         }
+
+        baseJVMCIServiceInterface = processingEnv.getElementUtils().getTypeElement("com.oracle.jvmci.service.Service");
 
         for (Element element : roundEnv.getElementsAnnotatedWith(ServiceProvider.class)) {
             assert element.getKind().isClass();

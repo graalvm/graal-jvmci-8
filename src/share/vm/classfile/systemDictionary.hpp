@@ -205,7 +205,6 @@ class Ticks;
   JVMCI_ONLY(do_klass(HotSpotCompiledNmethod_klass,          com_oracle_jvmci_hotspot_HotSpotCompiledNmethod,              Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotForeignCallTarget_klass,        com_oracle_jvmci_hotspot_HotSpotForeignCallTarget,            Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotReferenceMap_klass,             com_oracle_jvmci_hotspot_HotSpotReferenceMap,                 Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotOopMap_klass,                   com_oracle_jvmci_hotspot_HotSpotReferenceMap_HotSpotOopMap,   Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotInstalledCode_klass,            com_oracle_jvmci_hotspot_HotSpotInstalledCode,                Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotNmethod_klass,                  com_oracle_jvmci_hotspot_HotSpotNmethod,                      Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotResolvedJavaMethodImpl_klass,   com_oracle_jvmci_hotspot_HotSpotResolvedJavaMethodImpl,       Jvmci)) \

@@ -309,21 +309,25 @@ generic_buildjvmci: $(HOTSPOT_SCRIPT) buildshared
 			$(MAKE_ARGS) $(VM_TARGET) 
 
 
-
-ifeq (, $(shell python2.7 --version 2>/dev/null && echo ok))
-  ifeq (, $(shell python2.6 --version 2>/dev/null && echo ok))
-    PYTHON=python
+ifeq ($(JVMCI_USE_MAKE),)
+  ifeq (, $(shell python2.7 --version 2>/dev/null && echo ok))
+    ifeq (, $(shell python2.6 --version 2>/dev/null && echo ok))
+      PYTHON=python
+    else
+      PYTHON=python2.6
+    endif
   else
-    PYTHON=python2.6
+    PYTHON=python2.7
   endif
-else
-  PYTHON=python2.7
-endif
-
-# Builds code that can be shared among different build flavors
+  
+  # Builds code that can be shared among different build flavors
 buildshared:
 	$(PYTHON) -u $(GAMMADIR)/mxtool/mx.py build --no-native --export-dir $(SHARED_DIR)
-	#cd .. && $(MAKE) -f make/jvmci.make TARGET=build/make MX_TARGET=. HS_COMMON_SRC=$(HS_COMMON_SRC) JDK=$(ABS_BOOTDIR) EXPORT_DIR=$(SHARED_DIR) VERBOSE=0 export
+else
+buildshared:
+	cd .. && $(MAKE) -f make/jvmci.make TARGET=build/make MX_TARGET=. HS_COMMON_SRC=$(HS_COMMON_SRC) JDK=$(ABS_BOOTDIR) EXPORT_DIR=$(SHARED_DIR) export
+endif
+
 
 # Export file rule
 generic_export: $(EXPORT_LIST)

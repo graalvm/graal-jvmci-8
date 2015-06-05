@@ -306,7 +306,6 @@
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_HotSpotCompiledNmethod,          "com/oracle/jvmci/hotspot/HotSpotCompiledNmethod"))               \
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_HotSpotForeignCallTarget,        "com/oracle/jvmci/hotspot/HotSpotForeignCallTarget"))             \
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_HotSpotReferenceMap,             "com/oracle/jvmci/hotspot/HotSpotReferenceMap"))                  \
-  JVMCI_ONLY(template(com_oracle_jvmci_hotspot_HotSpotReferenceMap_HotSpotOopMap, "com/oracle/jvmci/hotspot/HotSpotReferenceMap$HotSpotOopMap"))  \
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_CompilerToVMImpl,                "com/oracle/jvmci/hotspot/CompilerToVMImpl"))                     \
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_HotSpotInstalledCode,            "com/oracle/jvmci/hotspot/HotSpotInstalledCode"))                 \
   JVMCI_ONLY(template(com_oracle_jvmci_hotspot_HotSpotNmethod,                  "com/oracle/jvmci/hotspot/HotSpotNmethod"))                       \

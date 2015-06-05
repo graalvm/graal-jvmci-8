@@ -70,6 +70,8 @@ private:
   jobject       _comments_handle;
 #endif
 
+  bool          _has_wide_vector;
+
   MarkId        _next_call_type;
   address       _invoke_mark_pc;
 
@@ -138,6 +140,8 @@ private:
   void site_Call(CodeBuffer& buffer, jint pc_offset, oop site);
   void site_DataPatch(CodeBuffer& buffer, jint pc_offset, oop site);
   void site_Mark(CodeBuffer& buffer, jint pc_offset, oop site);
+
+  OopMap* create_oop_map(oop debug_info);
 
   void record_scope(jint pc_offset, oop debug_info);
   void record_scope(jint pc_offset, oop code_pos, GrowableArray<ScopeValue*>* objects);
