@@ -27,10 +27,7 @@ import java.util.*;
 import sun.reflect.*;
 
 /**
- * A mechanism on top of the standard {@link ServiceLoader} that enables JVMCI enabled runtime to
- * efficiently load services marked by {@link Service}. This is important to avoid the performance
- * overhead of the standard service loader mechanism for services loaded in the runtime
- * initialization process.
+ * An mechanism for loading {@linkplain Service JVMCI services}.
  */
 public class Services {
 
@@ -55,29 +52,23 @@ public class Services {
     };
 
     /**
-     * Gets an {@link Iterable} of the implementations available for a given service.
+     * Gets an {@link Iterable} of the implementations available for a given JVMCI service.
      *
      * @throws SecurityException if a security manager is present and it denies
      *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings("unchecked")
     @CallerSensitive
-    public static <S> Iterable<S> load(Class<S> service) {
+    public static <S extends Service> Iterable<S> load(Class<S> service) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new RuntimePermission("jvmciServices"));
         }
-        if (Service.class.isAssignableFrom(service)) {
-            try {
-                return (Iterable<S>) cache.get(service);
-            } catch (UnsatisfiedLinkError e) {
-                // Fall back to standard ServiceLoader
-            }
+        try {
+            return (Iterable<S>) cache.get(service);
+        } catch (UnsatisfiedLinkError e) {
+            return Collections.emptyList();
         }
-
-        // Need to use the ClassLoader of the caller
-        ClassLoader cl = Reflection.getCallerClass().getClassLoader();
-        return ServiceLoader.load(service, cl);
     }
 
     /**
@@ -92,28 +83,18 @@ public class Services {
      */
     @SuppressWarnings("unchecked")
     @CallerSensitive
-    public static <S> S loadSingle(Class<S> service, boolean required) {
+    public static <S extends Service> S loadSingle(Class<S> service, boolean required) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new RuntimePermission("jvmciServices"));
         }
         Iterable<S> impls;
-        if (Service.class.isAssignableFrom(service)) {
-            try {
-                impls = (Iterable<S>) cache.get(service);
-            } catch (UnsatisfiedLinkError e) {
-                // Fall back to standard ServiceLoader
-                impls = null;
-            }
-        } else {
-            impls = null;
+        try {
+            impls = (Iterable<S>) cache.get(service);
+        } catch (UnsatisfiedLinkError e) {
+            impls = Collections.emptyList();
         }
 
-        if (impls == null) {
-            // Need to use the ClassLoader of the caller
-            ClassLoader cl = Reflection.getCallerClass().getClassLoader();
-            impls = ServiceLoader.load(service, cl);
-        }
         S singleImpl = null;
         for (S impl : impls) {
             if (singleImpl != null) {

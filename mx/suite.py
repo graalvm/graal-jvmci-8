@@ -252,9 +252,6 @@ suite = {
     "com.oracle.jvmci.options" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.jvmci.service",
-      ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",

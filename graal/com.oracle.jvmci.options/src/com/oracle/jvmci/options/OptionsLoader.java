@@ -24,8 +24,6 @@ package com.oracle.jvmci.options;
 
 import java.util.*;
 
-import com.oracle.jvmci.service.*;
-
 /**
  * Helper class used to load option descriptors. Only to be used in the slow-path.
  */
@@ -36,7 +34,7 @@ public class OptionsLoader {
      * Initializes {@link #options} from {@link Options} services.
      */
     static {
-        for (Options opts : Services.load(Options.class)) {
+        for (Options opts : ServiceLoader.load(Options.class, OptionsLoader.class.getClassLoader())) {
             for (OptionDescriptor desc : opts) {
                 String name = desc.getName();
                 OptionDescriptor existing = options.put(name, desc);
