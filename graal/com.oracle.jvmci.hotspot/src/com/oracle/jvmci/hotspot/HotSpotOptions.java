@@ -25,7 +25,6 @@ package com.oracle.jvmci.hotspot;
 import java.util.*;
 
 import com.oracle.jvmci.options.*;
-import com.oracle.jvmci.service.*;
 
 //JaCoCo Exclude
 
@@ -42,7 +41,8 @@ public class HotSpotOptions {
      */
     static void printFlags() {
         SortedMap<String, OptionDescriptor> options = new TreeMap<>();
-        for (Options opts : Services.load(Options.class)) {
+
+        for (Options opts : ServiceLoader.load(Options.class, HotSpotOptions.class.getClassLoader())) {
             for (OptionDescriptor desc : opts) {
                 if (isHotSpotOption(desc)) {
                     String name = desc.getName();

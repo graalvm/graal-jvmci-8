@@ -22,8 +22,18 @@
  */
 package com.oracle.jvmci.service;
 
+import java.util.*;
+
 /**
- * Denotes a service that may be efficiently loaded by {@link Services#load(Class)}.
+ * Denotes a JVMCI service that can be loaded by {@link Services#load(Class)} or
+ * {@link Services#loadSingle(Class, boolean)}. JVMCI services differ from
+ * {@linkplain ServiceLoader#load(Class) standard} services in that they may have implementations
+ * hidden behind a class loader not accessible to applications. For this reason,
+ * {@link Services#load(Class)} and {@link Services#loadSingle(Class, boolean)} perform
+ * {@link SecurityManager} checks.
+ *
+ * @see Services
+ * @see ServiceProvider
  */
 public interface Service {
 }
