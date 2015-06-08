@@ -1,7 +1,6 @@
 # This Makefile is generated automatically, do not edit
-# This file was build with command: mx.sh makefile -o make/jvmci.make
+# This file was built with the command: mx.sh makefile -o make/jvmci.make
 
-VERBOSE=
 TARGET=.
 # Bootstrap JDK to be used (for javac and jar)
 ABS_BOOTDIR=
@@ -9,7 +8,6 @@ ABS_BOOTDIR=
 JAVAC=$(ABS_BOOTDIR)/bin/javac -g -target 1.8
 JAR=$(ABS_BOOTDIR)/bin/jar
 
-EXPORT_DIR=export
 EXPORTED_FILES_ADDITIONAL=$(TARGET)/options $(TARGET)/services
 HS_COMMON_SRC=.
 
@@ -21,7 +19,7 @@ OPTIONS_INF=/META-INF/options/
 ifeq ($(ABS_BOOTDIR),)
     $(error Variable ABS_BOOTDIR must be set to a JDK installation.)
 endif
-ifneq ($(VERBOSE),)
+ifneq ($(MAKE_VERBOSE),)
     SHELL=sh -x
 endif
 
@@ -32,7 +30,8 @@ define process_options
     test -d $(services) || mkdir -p $(services)
     test ! -d $(providers) || (cd $(providers) && for i in $$(ls); do c=$$(cat $$i); echo $$i >> $(abspath $(services))/$$c; rm $$i; done)
 
-    # We're building all projects together with one javac call; thus we cannot determine, from which project the generated file is thus we hardcode it for now
+    # Since all projects are built together with one javac call we cannot determine
+    # which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
     $(eval vmconfig=$(1)/hotspot/HotSpotVMConfig.inline.hpp)
     $(eval vmconfigDest=$(HS_COMMON_SRC)/../graal/com.oracle.jvmci.hotspot/src_gen/hotspot)
     test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
