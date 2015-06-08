@@ -211,7 +211,7 @@ ifneq ($(INCLUDE_JVMCI), true)
   JVMCI_SPECIFIC_FILES   := jvmci\* 
 else
   JVMCI_SPECIFIC_FILES   :=
-  Src_Dirs_I += $(HS_COMMON_SRC)/../graal/com.oracle.jvmci.hotspot/src_gen/hotspot
+  Src_Dirs_I += $(HS_COMMON_SRC)/../jvmci/com.oracle.jvmci.hotspot/src_gen/hotspot
 endif
 
 # Always exclude these.

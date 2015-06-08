@@ -33,7 +33,7 @@ define process_options
     # Since all projects are built together with one javac call we cannot determine
     # which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
     $(eval vmconfig=$(1)/hotspot/HotSpotVMConfig.inline.hpp)
-    $(eval vmconfigDest=$(HS_COMMON_SRC)/../graal/com.oracle.jvmci.hotspot/src_gen/hotspot)
+    $(eval vmconfigDest=$(HS_COMMON_SRC)/../jvmci/com.oracle.jvmci.hotspot/src_gen/hotspot)
     test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
@@ -57,70 +57,70 @@ export: all
 
 JDK_BOOTCLASSPATH = $(ABS_BOOTDIR)/jre/lib/resources.jar:$(ABS_BOOTDIR)/jre/lib/rt.jar:$(ABS_BOOTDIR)/jre/lib/jsse.jar:$(ABS_BOOTDIR)/jre/lib/jce.jar:$(ABS_BOOTDIR)/jre/lib/charsets.jar:$(ABS_BOOTDIR)/jre/lib/jfr.jar
 
-JVMCI_OPTIONS_PROCESSOR_SRC = $(shell find graal/com.oracle.jvmci.options/src -type f -name *.java 2> /dev/null)
-JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.options.processor/src -type f -name *.java 2> /dev/null)
+JVMCI_OPTIONS_PROCESSOR_SRC = $(shell find jvmci/com.oracle.jvmci.options/src -type f -name *.java 2> /dev/null)
+JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find jvmci/com.oracle.jvmci.options.processor/src -type f -name *.java 2> /dev/null)
 
-JVMCI_OPTIONS_PROCESSOR_JAR = $(TARGET)/graal/com.oracle.jvmci.options.processor/ap/com.oracle.jvmci.options.processor.jar
+JVMCI_OPTIONS_PROCESSOR_JAR = $(TARGET)/jvmci/com.oracle.jvmci.options.processor/ap/com.oracle.jvmci.options.processor.jar
 
-JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC = $(shell find graal/com.oracle.jvmci.hotspotvmconfig/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.common/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.hotspotvmconfig.processor/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC = $(shell find jvmci/com.oracle.jvmci.hotspotvmconfig/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find jvmci/com.oracle.jvmci.common/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find jvmci/com.oracle.jvmci.hotspotvmconfig.processor/src -type f -name *.java 2> /dev/null)
 
-JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/graal/com.oracle.jvmci.hotspotvmconfig.processor/ap/com.oracle.jvmci.hotspotvmconfig.processor.jar
+JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/jvmci/com.oracle.jvmci.hotspotvmconfig.processor/ap/com.oracle.jvmci.hotspotvmconfig.processor.jar
 
-JVMCI_SERVICE_PROCESSOR_SRC = $(shell find graal/com.oracle.jvmci.service/src -type f -name *.java 2> /dev/null)
-JVMCI_SERVICE_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.service.processor/src -type f -name *.java 2> /dev/null)
+JVMCI_SERVICE_PROCESSOR_SRC = $(shell find jvmci/com.oracle.jvmci.service/src -type f -name *.java 2> /dev/null)
+JVMCI_SERVICE_PROCESSOR_SRC += $(shell find jvmci/com.oracle.jvmci.service.processor/src -type f -name *.java 2> /dev/null)
 
-JVMCI_SERVICE_PROCESSOR_JAR = $(TARGET)/graal/com.oracle.jvmci.service.processor/ap/com.oracle.jvmci.service.processor.jar
+JVMCI_SERVICE_PROCESSOR_JAR = $(TARGET)/jvmci/com.oracle.jvmci.service.processor/ap/com.oracle.jvmci.service.processor.jar
 
-JVMCI_API_SRC = $(shell find graal/com.oracle.jvmci.meta/src -type f -name *.java 2> /dev/null)
-JVMCI_API_SRC += $(shell find graal/com.oracle.jvmci.code/src -type f -name *.java 2> /dev/null)
-JVMCI_API_SRC += $(shell find graal/com.oracle.jvmci.runtime/src -type f -name *.java 2> /dev/null)
-JVMCI_API_SRC += $(shell find graal/com.oracle.jvmci.options/src -type f -name *.java 2> /dev/null)
-JVMCI_API_SRC += $(shell find graal/com.oracle.jvmci.common/src -type f -name *.java 2> /dev/null)
-JVMCI_API_SRC += $(shell find graal/com.oracle.jvmci.debug/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC = $(shell find jvmci/com.oracle.jvmci.meta/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.code/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.runtime/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.options/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.common/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.debug/src -type f -name *.java 2> /dev/null)
 
 JVMCI_API_JAR = $(TARGET)/build/jvmci-api.jar
 
-JVMCI_API_DEP_JARS = $(TARGET)/build/jvmci-service.jar graal/findbugs-SuppressFBWarnings.jar
+JVMCI_API_DEP_JARS = $(TARGET)/build/jvmci-service.jar jvmci/findbugs-SuppressFBWarnings.jar
 
 EXPORTED_FILES += $(JVMCI_API_JAR)
 
-JVMCI_SERVICE_SRC = $(shell find graal/com.oracle.jvmci.service/src -type f -name *.java 2> /dev/null)
+JVMCI_SERVICE_SRC = $(shell find jvmci/com.oracle.jvmci.service/src -type f -name *.java 2> /dev/null)
 
 JVMCI_SERVICE_JAR = $(TARGET)/build/jvmci-service.jar
 
-JVMCI_SERVICE_DEP_JARS = graal/findbugs-SuppressFBWarnings.jar
+JVMCI_SERVICE_DEP_JARS = jvmci/findbugs-SuppressFBWarnings.jar
 
 EXPORTED_FILES += $(JVMCI_SERVICE_JAR)
 
-JVMCI_HOTSPOT_SRC = $(shell find graal/com.oracle.jvmci.hotspotvmconfig/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspotvmconfig/graal/com.oracle.jvmci.hotspotvmconfig/src_gen -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.amd64/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.amd64/graal/com.oracle.jvmci.amd64/src_gen -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.compiler/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.compiler/graal/com.oracle.jvmci.compiler/src_gen -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot/graal/com.oracle.jvmci.hotspot/src_gen -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot.amd64/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot.amd64/graal/com.oracle.jvmci.hotspot.amd64/src_gen -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.sparc/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.sparc/graal/com.oracle.jvmci.sparc/src_gen -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot.sparc/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot.sparc/graal/com.oracle.jvmci.hotspot.sparc/src_gen -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot.jfr/src -type f -name *.java 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot.jfr/graal/com.oracle.jvmci.hotspot.jfr/src_gen -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC = $(shell find jvmci/com.oracle.jvmci.hotspotvmconfig/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspotvmconfig/jvmci/com.oracle.jvmci.hotspotvmconfig/src_gen -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.amd64/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.amd64/jvmci/com.oracle.jvmci.amd64/src_gen -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.compiler/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.compiler/jvmci/com.oracle.jvmci.compiler/src_gen -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot/jvmci/com.oracle.jvmci.hotspot/src_gen -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.amd64/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.amd64/jvmci/com.oracle.jvmci.hotspot.amd64/src_gen -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.sparc/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.sparc/jvmci/com.oracle.jvmci.sparc/src_gen -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.sparc/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.sparc/jvmci/com.oracle.jvmci.hotspot.sparc/src_gen -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.jfr/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.jfr/jvmci/com.oracle.jvmci.hotspot.jfr/src_gen -type f -name *.java 2> /dev/null)
 
 JVMCI_HOTSPOT_JAR = $(TARGET)/build/jvmci-hotspot.jar
 
-JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/build/jvmci-api.jar $(TARGET)/build/jvmci-service.jar graal/findbugs-SuppressFBWarnings.jar
+JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/build/jvmci-api.jar $(TARGET)/build/jvmci-service.jar jvmci/findbugs-SuppressFBWarnings.jar
 
 EXPORTED_FILES += $(JVMCI_HOTSPOT_JAR)
 
 $(JVMCI_OPTIONS_PROCESSOR_JAR): $(JVMCI_OPTIONS_PROCESSOR_SRC)  
 	$(eval TMP := $(shell mktemp -d JVMCI_OPTIONS_PROCESSOR_XXXXX))
 	$(JAVAC) -d $(TMP)  -bootclasspath $(JDK_BOOTCLASSPATH)  $(JVMCI_OPTIONS_PROCESSOR_SRC)
-	cp -r graal/com.oracle.jvmci.options.processor/src/META-INF $(TMP)
+	cp -r jvmci/com.oracle.jvmci.options.processor/src/META-INF $(TMP)
 	$(call process_options,$(TMP),False)
 	mkdir -p $$(dirname $(JVMCI_OPTIONS_PROCESSOR_JAR))
 	$(JAR) cf $(JVMCI_OPTIONS_PROCESSOR_JAR) -C $(TMP) .
@@ -129,7 +129,7 @@ $(JVMCI_OPTIONS_PROCESSOR_JAR): $(JVMCI_OPTIONS_PROCESSOR_SRC)
 $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR): $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)  
 	$(eval TMP := $(shell mktemp -d JVMCI_HOTSPOTVMCONFIG_PROCESSOR_XXXXX))
 	$(JAVAC) -d $(TMP)  -bootclasspath $(JDK_BOOTCLASSPATH)  $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)
-	cp -r graal/com.oracle.jvmci.hotspotvmconfig.processor/src/META-INF $(TMP)
+	cp -r jvmci/com.oracle.jvmci.hotspotvmconfig.processor/src/META-INF $(TMP)
 	$(call process_options,$(TMP),False)
 	mkdir -p $$(dirname $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR))
 	$(JAR) cf $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR) -C $(TMP) .
@@ -138,7 +138,7 @@ $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR): $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)
 $(JVMCI_SERVICE_PROCESSOR_JAR): $(JVMCI_SERVICE_PROCESSOR_SRC)  
 	$(eval TMP := $(shell mktemp -d JVMCI_SERVICE_PROCESSOR_XXXXX))
 	$(JAVAC) -d $(TMP)  -bootclasspath $(JDK_BOOTCLASSPATH)  $(JVMCI_SERVICE_PROCESSOR_SRC)
-	cp -r graal/com.oracle.jvmci.service.processor/src/META-INF $(TMP)
+	cp -r jvmci/com.oracle.jvmci.service.processor/src/META-INF $(TMP)
 	$(call process_options,$(TMP),False)
 	mkdir -p $$(dirname $(JVMCI_SERVICE_PROCESSOR_JAR))
 	$(JAR) cf $(JVMCI_SERVICE_PROCESSOR_JAR) -C $(TMP) .

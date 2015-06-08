@@ -204,7 +204,7 @@ define process_options
     # Since all projects are built together with one javac call we cannot determine
     # which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
     $(eval vmconfig=$(1)/hotspot/HotSpotVMConfig.inline.hpp)
-    $(eval vmconfigDest=$(HS_COMMON_SRC)/../graal/com.oracle.jvmci.hotspot/src_gen/hotspot)
+    $(eval vmconfigDest=$(HS_COMMON_SRC)/../jvmci/com.oracle.jvmci.hotspot/src_gen/hotspot)
     test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
