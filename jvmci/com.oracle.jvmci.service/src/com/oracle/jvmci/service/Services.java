@@ -31,11 +31,13 @@ import sun.reflect.*;
  */
 public class Services {
 
+    private static final String SUPPRESS_PROPERTY_NAME = "jvmci.service.suppressNoClassDefFoundError";
+
     /**
      * Determines whether to suppress the {@link NoClassDefFoundError} raised if a service
      * implementation class specified in a {@code <jre>/jvmci/services/*} file is missing.
      */
-    private static final boolean SuppressNoClassDefFoundError = Boolean.getBoolean("jvmci.service.suppressNoClassDefFoundError");
+    private static final boolean SuppressNoClassDefFoundError = Boolean.getBoolean(SUPPRESS_PROPERTY_NAME);
 
     private static final ClassValue<List<Service>> cache = new ClassValue<List<Service>>() {
         @Override
@@ -45,8 +47,13 @@ public class Services {
             } catch (NoClassDefFoundError e) {
                 if (SuppressNoClassDefFoundError) {
                     return Collections.emptyList();
+                } else {
+                    NoClassDefFoundError newEx = new NoClassDefFoundError(e.getMessage() + "  (suppress with -D" + SUPPRESS_PROPERTY_NAME + "=true)");
+                    if (e.getCause() != null) {
+                        newEx.initCause(e.getCause());
+                    }
+                    throw newEx;
                 }
-                throw e;
             }
         }
     };
