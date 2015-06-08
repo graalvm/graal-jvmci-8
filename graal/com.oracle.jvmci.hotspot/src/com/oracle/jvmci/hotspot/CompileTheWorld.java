@@ -247,6 +247,10 @@ public final class CompileTheWorld {
         }
     }
 
+    @SuppressWarnings("unused")
+    private static void dummy() {
+    }
+
     /**
      * Compiles all methods in all classes in the Zip/Jar files passed.
      *
@@ -265,6 +269,16 @@ public final class CompileTheWorld {
                 return null;
             }
         });
+
+        try {
+            // compile dummy method to get compiler initilized outside of the config debug override.
+            HotSpotResolvedJavaMethod dummyMethod = (HotSpotResolvedJavaMethod) JVMCI.getRuntime().getHostJVMCIBackend().getMetaAccess().lookupJavaMethod(
+                            CompileTheWorld.class.getDeclaredMethod("dummy"));
+            CompilationTask task = new CompilationTask(dummyMethod, Compiler.INVOCATION_ENTRY_BCI, 0L, dummyMethod.allocateCompileId(Compiler.INVOCATION_ENTRY_BCI), false);
+            task.runCompilation();
+        } catch (NoSuchMethodException | SecurityException e1) {
+            e1.printStackTrace();
+        }
 
         /*
          * Always use a thread pool, even for single threaded mode since it simplifies the use of
