@@ -838,12 +838,6 @@ def build(args, vm=None):
 
     The global '--vm' and '--vmbuild' options select which VM type and build target to build."""
 
-    # Turn all jdk distributions into non HotSpot; this is only necessary as long we support building/exporting JVMCI with make and mx
-    if "--avoid-make" not in args:
-        for jdkDist in _jdkDeployedDists:
-            if jdkDist.partOfHotSpot:
-                jdkDist.partOfHotSpot = False
-
     # Override to fail quickly if extra arguments are given
     # at the end of the command line. This allows for a more
     # helpful error message.
@@ -860,51 +854,10 @@ def build(args, vm=None):
 
     # Call mx.build to compile the Java sources
     parser = AP()
-    parser.add_argument('--export-dir', help='directory to which JVMCI and Graal jars and jvmci.options will be copied', metavar='<path>')
     parser.add_argument('-D', action='append', help='set a HotSpot build variable (run \'mx buildvars\' to list variables)', metavar='name=value')
-    parser.add_argument('--avoid-make', action='store_true', help='Do not use jvmci.make file to build and export JVMCI')
+
     opts2 = mx.build(['--source', '1.7'] + args, parser=parser)
     assert len(opts2.remainder) == 0
-
-    if opts2.export_dir is not None:
-        if not exists(opts2.export_dir):
-            os.makedirs(opts2.export_dir)
-        else:
-            assert os.path.isdir(opts2.export_dir), '{0} is not a directory'.format(opts2.export_dir)
-
-        defsPath = join(_graal_home, 'make', 'defs.make')
-        with open(defsPath) as fp:
-            defs = fp.read()
-        jvmciJars = []
-        jdkJars = []
-        for jdkDist in _jdkDeployedDists:
-            dist = mx.distribution(jdkDist.name)
-            jdkJars.append(join(_graal_home, dist.path))
-            defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
-            if jdkDist.isExtension:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_EXT_DIR)/' + basename(dist.path)
-            elif jdkDist.usesJVMCIClassLoader:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/' + basename(dist.path)
-                jvmciJars.append(dist.path)
-            else:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
-            if defLine not in defs:
-                mx.abort('Missing following line in ' + defsPath + '\n' + defLine)
-            shutil.copy(dist.path, opts2.export_dir)
-
-        services, optionsFiles = _extractJVMCIFiles(jdkJars, jvmciJars, join(opts2.export_dir, 'services'), join(opts2.export_dir, 'options'))
-        if opts2.avoid_make:
-            for service in services:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/' + service
-                if defLine not in defs:
-                    mx.abort('Missing following line in ' + defsPath + ' for service from ' + dist.name + '\n' + defLine)
-            for optionsFile in optionsFiles:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/' + optionsFile
-                if defLine not in defs:
-                    mx.abort('Missing following line in ' + defsPath + ' for options from ' + dist.name + '\n' + defLine)
-        jvmciOptions = join(_graal_home, 'jvmci.options')
-        if exists(jvmciOptions):
-            shutil.copy(jvmciOptions, opts2.export_dir)
 
     if not _vmSourcesAvailable or not opts2.native:
         return
@@ -1054,8 +1007,12 @@ def build(args, vm=None):
                         setMakeVar('STRIP_POLICY', 'no_strip')
             # This removes the need to unzip the *.diz files before debugging in gdb
             setMakeVar('ZIP_DEBUGINFO_FILES', '0', env=env)
-            if not opts2.avoid_make:
-                setMakeVar('JVMCI_USE_MAKE', '1')
+
+            if buildSuffix == "1":
+                setMakeVar("JVM_VARIANTS", "client")
+            elif buildSuffix == "":
+                setMakeVar("JVM_VARIANTS", "server")
+
             # Clear this variable as having it set can cause very confusing build problems
             env.pop('CLASSPATH', None)
 
@@ -1066,8 +1023,10 @@ def build(args, vm=None):
             envPrefix = ' '.join([key + '=' + env[key] for key in env.iterkeys() if not os.environ.has_key(key) or env[key] != os.environ[key]])
             if len(envPrefix):
                 mx.log('env ' + envPrefix + ' \\')
-            makeTarget = "all_" + build + buildSuffix if not opts2.avoid_make else build + buildSuffix
-            runCmd.append(makeTarget)
+
+            runCmd.append(build + buildSuffix)
+            runCmd.append("docs")
+            runCmd.append("export_" + build)
 
             if not mx._opts.verbose:
                 mx.log(' '.join(runCmd))

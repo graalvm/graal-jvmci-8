@@ -376,6 +376,7 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotS
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.CompileTheWorld
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.compiler.Compiler
 
+<<<<<<< local
 ifeq ($(JVMCI_USE_MAKE),)
 EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/truffle.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/graal.jar
@@ -434,6 +435,8 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.virtual.phas
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.asm.CompilationResultBuilder
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.java.BytecodeParser
 endif
+=======
+>>>>>>> other
 
 .PHONY: $(HS_ALT_MAKE)/defs.make
 

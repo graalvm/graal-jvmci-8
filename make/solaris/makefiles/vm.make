@@ -334,7 +334,10 @@ DEST_JVM           = $(DEST_SUBDIR)/$(LIBJVM)
 DEST_JVM_DEBUGINFO = $(DEST_SUBDIR)/$(LIBJVM_DEBUGINFO)
 DEST_JVM_DIZ       = $(DEST_SUBDIR)/$(LIBJVM_DIZ)
 
-install_jvm: $(LIBJVM)
+$(DEST_SUBDIR):
+	mkdir $(DEST_SUBDIR)
+
+install_jvm: $(LIBJVM) $(DEST_SUBDIR)
 	@echo "Copying $(LIBJVM) to $(DEST_JVM)"
 	$(QUIETLY) test ! -f $(LIBJVM_DEBUGINFO) || \
 	    cp -f $(LIBJVM_DEBUGINFO) $(DEST_JVM_DEBUGINFO)
