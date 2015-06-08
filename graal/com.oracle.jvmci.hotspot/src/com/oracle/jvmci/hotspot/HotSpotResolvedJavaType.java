@@ -29,7 +29,7 @@ import com.oracle.jvmci.meta.*;
 public abstract class HotSpotResolvedJavaType extends HotSpotJavaType implements ResolvedJavaType {
 
     /**
-     * Gets the Graal mirror for a {@link Class} object.
+     * Gets the JVMCI mirror for a {@link Class} object.
      *
      * @return the {@link HotSpotResolvedJavaType} corresponding to {@code javaClass}
      */

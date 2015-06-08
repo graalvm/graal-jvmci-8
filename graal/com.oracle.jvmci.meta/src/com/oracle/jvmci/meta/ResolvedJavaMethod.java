@@ -37,7 +37,7 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
      * {@link #getDeclaringClass() holder} is not {@link ResolvedJavaType#isLinked() linked}.
      *
      * The contained constant pool indices may not be the ones found in the original class file but
-     * they can be used with the Graal API (e.g. methods in {@link ConstantPool}).
+     * they can be used with the JVMCI API (e.g. methods in {@link ConstantPool}).
      *
      * @return the bytecode of the method, or {@code null} if {@code getCodeSize() == 0} or if the
      *         code is not ready.

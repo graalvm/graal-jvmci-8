@@ -27,10 +27,10 @@ import java.util.*;
 import java.util.stream.*;
 import java.util.zip.*;
 
-public class GraalJars implements Iterable<ZipEntry> {
+public class JVMCIJars implements Iterable<ZipEntry> {
     private final List<ZipFile> jars = new ArrayList<>(2);
 
-    public GraalJars() {
+    public JVMCIJars() {
         String classPath = System.getProperty("java.class.path");
         for (String e : classPath.split(File.pathSeparator)) {
             if (e.endsWith(File.separatorChar + "graal.jar") || e.endsWith(File.separatorChar + "graal-truffle.jar")) {

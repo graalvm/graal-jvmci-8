@@ -37,7 +37,7 @@ import com.sun.management.ThreadMXBean;
 public final class CompilationStatistics {
 
     private static final long RESOLUTION = 100000000;
-    private static final boolean ENABLED = Boolean.getBoolean("graal.comp.stats");
+    private static final boolean ENABLED = Boolean.getBoolean("jvmci.comp.stats");
 
     private static final CompilationStatistics DUMMY = new CompilationStatistics(null, false);
 

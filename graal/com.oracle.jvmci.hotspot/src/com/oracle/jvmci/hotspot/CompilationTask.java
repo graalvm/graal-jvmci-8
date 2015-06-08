@@ -74,15 +74,15 @@ public class CompilationTask {
     private static final com.sun.management.ThreadMXBean threadMXBean = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
 
     /**
-     * The address of the GraalEnv associated with this compilation or 0L if no such object exists.
+     * The address of the JVMCIEnv associated with this compilation or 0L if no such object exists.
      */
-    private final long graalEnv;
+    private final long jvmciEnv;
 
-    public CompilationTask(HotSpotResolvedJavaMethod method, int entryBCI, long graalEnv, int id, boolean installAsDefault) {
+    public CompilationTask(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id, boolean installAsDefault) {
         this.method = method;
         this.entryBCI = entryBCI;
         this.id = id;
-        this.graalEnv = graalEnv;
+        this.jvmciEnv = jvmciEnv;
         this.installAsDefault = installAsDefault;
     }
 
@@ -126,7 +126,7 @@ public class CompilationTask {
         CompilationEvent compilationEvent = eventProvider.newCompilationEvent();
 
         // If there is already compiled code for this method on our level we simply return.
-        // Graal compiles are always at the highest compile level, even in non-tiered mode so we
+        // JVMCI compiles are always at the highest compile level, even in non-tiered mode so we
         // only need to check for that value.
         if (method.hasCodeAtLevel(entryBCI, config.compilationLevelFullOptimization)) {
             return;
@@ -169,7 +169,7 @@ public class CompilationTask {
                     if (printAfterCompilation) {
                         TTY.println(getMethodDescription() + String.format(" | %4dms %5dB %5dkB", stop - start, targetCodeSize, allocatedBytes));
                     } else if (printCompilation) {
-                        TTY.println(String.format("%-6d Graal %-70s %-45s %-50s | %4dms %5dB %5dkB", id, "", "", "", stop - start, targetCodeSize, allocatedBytes));
+                        TTY.println(String.format("%-6d JVMCI %-70s %-45s %-50s | %4dms %5dB %5dkB", id, "", "", "", stop - start, targetCodeSize, allocatedBytes));
                     }
                 }
             }
@@ -227,8 +227,8 @@ public class CompilationTask {
                 compilationEvent.commit();
             }
 
-            if (graalEnv != 0) {
-                long ctask = unsafe.getAddress(graalEnv + config.jvmciEnvTaskOffset);
+            if (jvmciEnv != 0) {
+                long ctask = unsafe.getAddress(jvmciEnv + config.jvmciEnvTaskOffset);
                 assert ctask != 0L;
                 unsafe.putInt(ctask + config.compileTaskNumInlinedBytecodesOffset, compiledBytecodes);
             }
@@ -248,14 +248,14 @@ public class CompilationTask {
         if (config.ciTime || config.ciTimeEach || CompiledBytecodes.isEnabled()) {
             return true;
         }
-        if (graalEnv == 0 || unsafe.getByte(graalEnv + config.jvmciEnvJvmtiCanHotswapOrPostBreakpointOffset) != 0) {
+        if (jvmciEnv == 0 || unsafe.getByte(jvmciEnv + config.jvmciEnvJvmtiCanHotswapOrPostBreakpointOffset) != 0) {
             return true;
         }
         return false;
     }
 
     private String getMethodDescription() {
-        return String.format("%-6d Graal %-70s %-45s %-50s %s", id, method.getDeclaringClass().getName(), method.getName(), method.getSignature().toMethodDescriptor(),
+        return String.format("%-6d JVMCI %-70s %-45s %-50s %s", id, method.getDeclaringClass().getName(), method.getName(), method.getSignature().toMethodDescriptor(),
                         entryBCI == Compiler.INVOCATION_ENTRY_BCI ? "" : "(OSR@" + entryBCI + ") ");
     }
 
@@ -263,7 +263,7 @@ public class CompilationTask {
         final HotSpotCodeCacheProvider codeCache = (HotSpotCodeCacheProvider) HotSpotJVMCIRuntime.runtime().getHostJVMCIBackend().getCodeCache();
         InstalledCode installedCode = null;
         try (Scope s = Debug.scope("CodeInstall", new DebugDumpScope(String.valueOf(id), true), codeCache, method)) {
-            installedCode = codeCache.installMethod(method, compResult, graalEnv, installAsDefault);
+            installedCode = codeCache.installMethod(method, compResult, jvmciEnv, installAsDefault);
         } catch (Throwable e) {
             throw Debug.handle(e);
         }
@@ -278,13 +278,13 @@ public class CompilationTask {
     /**
      * Compiles a method to machine code.
      */
-    public static void compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long graalEnv, int id) {
+    public static void compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
         // Ensure a debug configuration for this thread is initialized
         if (Debug.isEnabled() && DebugScope.getConfig() == null) {
             DebugEnvironment.initialize(TTY.cachedOut);
         }
 
-        CompilationTask task = new CompilationTask(method, entryBCI, graalEnv, id, true);
+        CompilationTask task = new CompilationTask(method, entryBCI, jvmciEnv, id, true);
         try (DebugConfigScope dcs = setConfig(new TopLevelDebugConfig())) {
             task.runCompilation();
         }

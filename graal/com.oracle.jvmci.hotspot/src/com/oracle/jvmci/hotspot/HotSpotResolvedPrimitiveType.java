@@ -40,7 +40,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     private final Kind kind;
 
     /**
-     * Creates the Graal mirror for a primitive {@link Kind}.
+     * Creates the JVMCI mirror for a primitive {@link Kind}.
      *
      * <p>
      * <b>NOTE</b>: Creating an instance of this class does not install the mirror for the

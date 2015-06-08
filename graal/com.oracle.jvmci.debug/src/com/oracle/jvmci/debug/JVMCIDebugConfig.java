@@ -73,7 +73,7 @@ public class JVMCIDebugConfig implements DebugConfig {
     public static final OptionValue<Boolean> SuppressZeroDebugValues = new OptionValue<>(true);
     @Option(help = "Only report debug values for maps which match the regular expression.", type = OptionType.Debug)
     public static final OptionValue<String> DebugValueThreadFilter = new OptionValue<>(null);
-    @Option(help = "Send Graal IR to dump handlers on error", type = OptionType.Debug)
+    @Option(help = "Send JVMCI compiler IR to dump handlers on error", type = OptionType.Debug)
     public static final OptionValue<Boolean> DumpOnError = new OptionValue<>(false);
     @Option(help = "Intercept also bailout exceptions", type = OptionType.Debug)
     public static final OptionValue<Boolean> InterceptBailout = new OptionValue<>(false);

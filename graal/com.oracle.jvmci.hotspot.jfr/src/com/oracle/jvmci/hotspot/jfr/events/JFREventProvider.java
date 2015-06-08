@@ -48,7 +48,7 @@ public final class JFREventProvider implements EventProvider {
                 /*
                  * The "HotSpot JVM" producer is a native producer and we cannot use it. So we
                  * create our own. This has the downside that Mission Control is confused and
-                 * doesn't show Graal's events in the "Code" tab. There are plans to revise the JFR
+                 * doesn't show JVMCI events in the "Code" tab. There are plans to revise the JFR
                  * code for JDK 9.
                  */
                 Producer producer = new Producer("HotSpot JVM", "Oracle Hotspot JVM", "http://www.oracle.com/hotspot/jvm/");

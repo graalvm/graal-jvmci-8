@@ -29,7 +29,7 @@ import sun.misc.*;
 public class UnsafeAccess {
 
     /**
-     * An instance of {@link Unsafe} for use within Graal.
+     * An instance of {@link Unsafe} for use within JVMCI.
      */
     public static final Unsafe unsafe;
 

@@ -22,9 +22,6 @@
  */
 package com.oracle.jvmci.hotspot;
 
-//import static com.oracle.graal.compiler.common.GraalOptions.*;
-//import static com.oracle.graal.hotspot.HotSpotGraalRuntime.*;
-//import static com.oracle.graal.nodes.StructuredGraph.*;
 import static com.oracle.jvmci.compiler.Compiler.*;
 import static com.oracle.jvmci.debug.internal.MemUseTrackerImpl.*;
 
@@ -50,7 +47,7 @@ import com.oracle.jvmci.options.OptionValue.OverrideScope;
 import com.oracle.jvmci.runtime.*;
 
 /**
- * This class implements compile-the-world functionality in Graal.
+ * This class implements compile-the-world functionality with JVMCI.
  */
 public final class CompileTheWorld {
 
@@ -101,14 +98,14 @@ public final class CompileTheWorld {
     }
 
     /**
-     * A mechanism for overriding Graal options that affect compilation. A {@link Config} object
+     * A mechanism for overriding JVMCI options that affect compilation. A {@link Config} object
      * should be used in a try-with-resources statement to ensure overriding of options is scoped
      * properly. For example:
      *
      * <pre>
      *     Config config = ...;
      *     try (AutoCloseable s = config == null ? null : config.apply()) {
-     *         // perform a Graal compilation
+     *         // perform a JVMCI compilation
      *     }
      * </pre>
      */

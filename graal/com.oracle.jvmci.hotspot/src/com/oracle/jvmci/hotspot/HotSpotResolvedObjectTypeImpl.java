@@ -58,7 +58,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     private HotSpotResolvedObjectType arrayOfType;
 
     /**
-     * Gets the Graal mirror for a {@link Class} object.
+     * Gets the JVMCI mirror for a {@link Class} object.
      *
      * @return the {@link HotSpotResolvedJavaType} corresponding to {@code javaClass}
      */
@@ -67,7 +67,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     }
 
     /**
-     * Gets the Graal mirror from a HotSpot metaspace Klass native object.
+     * Gets the JVMCI mirror from a HotSpot metaspace Klass native object.
      *
      * @param metaspaceKlass a metaspace Klass object
      * @return the {@link ResolvedJavaType} corresponding to {@code metaspaceKlass}
@@ -80,7 +80,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     }
 
     /**
-     * Creates the Graal mirror for a {@link Class} object.
+     * Creates the JVMCI mirror for a {@link Class} object.
      *
      * <p>
      * <b>NOTE</b>: Creating an instance of this class does not install the mirror for the

@@ -41,16 +41,16 @@ import com.oracle.jvmci.options.*;
  */
 final class OptionsVerifier extends ClassVisitor {
 
-    public static void checkClass(Class<?> cls, OptionDescriptor option, Set<Class<?>> checked, GraalJars graalJars) throws IOException {
+    public static void checkClass(Class<?> cls, OptionDescriptor option, Set<Class<?>> checked, JVMCIJars jvmciJars) throws IOException {
         if (!checked.contains(cls)) {
             checked.add(cls);
             Class<?> superclass = cls.getSuperclass();
             if (superclass != null && !superclass.equals(Object.class)) {
-                checkClass(superclass, option, checked, graalJars);
+                checkClass(superclass, option, checked, jvmciJars);
             }
 
             String classFilePath = cls.getName().replace('.', '/') + ".class";
-            ClassReader cr = new ClassReader(Objects.requireNonNull(graalJars.getInputStream(classFilePath), "Could not find class file for " + cls.getName()));
+            ClassReader cr = new ClassReader(Objects.requireNonNull(jvmciJars.getInputStream(classFilePath), "Could not find class file for " + cls.getName()));
 
             ClassVisitor cv = new OptionsVerifier(cls, option);
             cr.accept(cv, 0);

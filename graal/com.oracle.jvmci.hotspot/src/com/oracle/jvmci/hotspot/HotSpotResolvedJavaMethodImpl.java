@@ -407,7 +407,7 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
         return false;
     }
 
-    private static final String TraceMethodDataFilter = System.getProperty("graal.traceMethodDataFilter");
+    private static final String TraceMethodDataFilter = System.getProperty("jvmci.traceMethodDataFilter");
 
     @Override
     public ProfilingInfo getProfilingInfo(boolean includeNormal, boolean includeOSR) {
@@ -666,7 +666,7 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
     }
 
     /**
-     * The {@link SpeculationLog} for methods compiled by Graal hang off this per-declaring-type
+     * The {@link SpeculationLog} for methods compiled by JVMCI hang off this per-declaring-type
      * {@link ClassValue}. The raw Method* value is safe to use as a key in the map as a) it is
      * never moves and b) we never read from it.
      * <p>

@@ -33,10 +33,6 @@ public class DebugEnvironment {
 
     public static JVMCIDebugConfig initialize(PrintStream log) {
 
-        // Ensure Graal runtime is initialized prior to Debug being initialized as the former
-        // may include processing command line options used by the latter.
-        // Graal.getRuntime();
-
         if (!Debug.isEnabled()) {
             log.println("WARNING: Scope debugging needs to be enabled with -esa or -D" + Debug.Initialization.INITIALIZER_PROPERTY_NAME + "=true");
             return null;
