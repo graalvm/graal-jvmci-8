@@ -2824,7 +2824,7 @@ def build(args, parser=None):
         nonjavafiletuples = []
         for sourceDir in sourceDirs:
             for root, _, files in os.walk(sourceDir):
-                javafiles = [join(root, name) for name in files if name.endswith('.java') and name != 'package-info.java']
+                javafiles = [join(root, name) for name in files if name.endswith('.java')]
                 javafilelist += javafiles
 
                 nonjavafiletuples += [(sourceDir, [join(root, name) for name in files if not name.endswith('.java')])]
