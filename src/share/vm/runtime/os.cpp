@@ -1192,9 +1192,6 @@ bool os::set_boot_path(char fileSep, char pathSep) {
 #ifdef JVMCI
         "%/lib/jvmci-service.jar:"
 #endif
-#ifndef NO_TRUFFLE_JAR
-        "%/lib/truffle.jar:"
-#endif
         "%/classes";
     char* sysclasspath = format_boot_path(classpath_format, home, home_len, fileSep, pathSep);
     if (sysclasspath == NULL) return false;
