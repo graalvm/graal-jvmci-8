@@ -25,7 +25,7 @@ ifneq ($(VERBOSE),)
     SHELL=sh -x
 endif
 
-define process_options =
+define process_options
     $(eval providers=$(1)/$(PROVIDERS_INF))
     $(eval services=$(1)/$(SERVICES_INF))
     $(eval options=$(1)/$(OPTIONS_INF))
@@ -38,12 +38,12 @@ define process_options =
     test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
-define extract =
+define extract
     $(eval TMP := $(shell mktemp -d $(1)_XXXXX))
-    mkdir -p $(2)
-    cd $(TMP) && $(JAR) xf $(abspath $(1)) &&         ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))))
-    rm -r $(TMP)
-    cp $(1) $(2)
+    mkdir -p $(2);
+    cd $(TMP) && $(JAR) xf $(abspath $(1)) &&         ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))));
+    rm -r $(TMP);
+    cp $(1) $(2);
 endef
 
 
@@ -58,17 +58,16 @@ export: all
 
 JDK_BOOTCLASSPATH = $(ABS_BOOTDIR)/jre/lib/resources.jar:$(ABS_BOOTDIR)/jre/lib/rt.jar:$(ABS_BOOTDIR)/jre/lib/jsse.jar:$(ABS_BOOTDIR)/jre/lib/jce.jar:$(ABS_BOOTDIR)/jre/lib/charsets.jar:$(ABS_BOOTDIR)/jre/lib/jfr.jar
 
+JVMCI_OPTIONS_PROCESSOR_SRC = $(shell find graal/com.oracle.jvmci.options/src -type f -name *.java 2> /dev/null)
+JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.options.processor/src -type f -name *.java 2> /dev/null)
+
+JVMCI_OPTIONS_PROCESSOR_JAR = $(TARGET)/graal/com.oracle.jvmci.options.processor/ap/com.oracle.jvmci.options.processor.jar
+
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC = $(shell find graal/com.oracle.jvmci.hotspotvmconfig/src -type f -name *.java 2> /dev/null)
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.common/src -type f -name *.java 2> /dev/null)
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.hotspotvmconfig.processor/src -type f -name *.java 2> /dev/null)
 
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/graal/com.oracle.jvmci.hotspotvmconfig.processor/ap/com.oracle.jvmci.hotspotvmconfig.processor.jar
-
-JVMCI_OPTIONS_PROCESSOR_SRC = $(shell find graal/com.oracle.jvmci.service/src -type f -name *.java 2> /dev/null)
-JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.options/src -type f -name *.java 2> /dev/null)
-JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.options.processor/src -type f -name *.java 2> /dev/null)
-
-JVMCI_OPTIONS_PROCESSOR_JAR = $(TARGET)/graal/com.oracle.jvmci.options.processor/ap/com.oracle.jvmci.options.processor.jar
 
 JVMCI_SERVICE_PROCESSOR_SRC = $(shell find graal/com.oracle.jvmci.service/src -type f -name *.java 2> /dev/null)
 JVMCI_SERVICE_PROCESSOR_SRC += $(shell find graal/com.oracle.jvmci.service.processor/src -type f -name *.java 2> /dev/null)
@@ -100,6 +99,8 @@ JVMCI_HOTSPOT_SRC = $(shell find graal/com.oracle.jvmci.hotspotvmconfig/src -typ
 JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspotvmconfig/graal/com.oracle.jvmci.hotspotvmconfig/src_gen -type f -name *.java 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.amd64/src -type f -name *.java 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.amd64/graal/com.oracle.jvmci.amd64/src_gen -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.compiler/src -type f -name *.java 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.compiler/graal/com.oracle.jvmci.compiler/src_gen -type f -name *.java 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot/src -type f -name *.java 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot/graal/com.oracle.jvmci.hotspot/src_gen -type f -name *.java 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find graal/com.oracle.jvmci.hotspot.amd64/src -type f -name *.java 2> /dev/null)
@@ -117,15 +118,6 @@ JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/build/jvmci-api.jar $(TARGET)/build/jvmci-ser
 
 EXPORTED_FILES += $(JVMCI_HOTSPOT_JAR)
 
-$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR): $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)  
-	$(eval TMP := $(shell mktemp -d JVMCI_HOTSPOTVMCONFIG_PROCESSOR_XXXXX))
-	$(JAVAC) -d $(TMP)  -bootclasspath $(JDK_BOOTCLASSPATH)  $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)
-	cp -r graal/com.oracle.jvmci.hotspotvmconfig.processor/src/META-INF $(TMP)
-	$(call process_options,$(TMP),False)
-	mkdir -p $$(dirname $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR))
-	$(JAR) cf $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR) -C $(TMP) .
-	rm -r $(TMP)
-
 $(JVMCI_OPTIONS_PROCESSOR_JAR): $(JVMCI_OPTIONS_PROCESSOR_SRC)  
 	$(eval TMP := $(shell mktemp -d JVMCI_OPTIONS_PROCESSOR_XXXXX))
 	$(JAVAC) -d $(TMP)  -bootclasspath $(JDK_BOOTCLASSPATH)  $(JVMCI_OPTIONS_PROCESSOR_SRC)
@@ -133,6 +125,15 @@ $(JVMCI_OPTIONS_PROCESSOR_JAR): $(JVMCI_OPTIONS_PROCESSOR_SRC)
 	$(call process_options,$(TMP),False)
 	mkdir -p $$(dirname $(JVMCI_OPTIONS_PROCESSOR_JAR))
 	$(JAR) cf $(JVMCI_OPTIONS_PROCESSOR_JAR) -C $(TMP) .
+	rm -r $(TMP)
+
+$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR): $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)  
+	$(eval TMP := $(shell mktemp -d JVMCI_HOTSPOTVMCONFIG_PROCESSOR_XXXXX))
+	$(JAVAC) -d $(TMP)  -bootclasspath $(JDK_BOOTCLASSPATH)  $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)
+	cp -r graal/com.oracle.jvmci.hotspotvmconfig.processor/src/META-INF $(TMP)
+	$(call process_options,$(TMP),False)
+	mkdir -p $$(dirname $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR))
+	$(JAR) cf $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR) -C $(TMP) .
 	rm -r $(TMP)
 
 $(JVMCI_SERVICE_PROCESSOR_JAR): $(JVMCI_SERVICE_PROCESSOR_SRC)  

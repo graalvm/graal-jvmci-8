@@ -196,7 +196,7 @@ ifneq ($(VERBOSE),)
     SHELL=sh -x
 endif
 
-define process_options =
+define process_options
     $(eval providers=$(1)/$(PROVIDERS_INF))
     $(eval services=$(1)/$(SERVICES_INF))
     $(eval options=$(1)/$(OPTIONS_INF))
@@ -209,13 +209,13 @@ define process_options =
     test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
-define extract =
+define extract
     $(eval TMP := $(shell mktemp -d $(1)_XXXXX))
-    mkdir -p $(2)
+    mkdir -p $(2);
     cd $(TMP) && $(JAR) xf $(abspath $(1)) && \
-        ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))))
-    rm -r $(TMP)
-    cp $(1) $(2)
+        ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))));
+    rm -r $(TMP);
+    cp $(1) $(2);
 endef
 
 
