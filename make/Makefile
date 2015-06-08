@@ -312,6 +312,7 @@ buildshared:
 	cd .. && $(MAKE) -f make/jvmci.make TARGET=build/make MX_TARGET=. HS_COMMON_SRC=$(HS_COMMON_SRC) ABS_BOOTDIR=$(ABS_BOOTDIR) EXPORT_DIR=$(SHARED_DIR) export
 
 # Export file rule
+$(info $(EXPORT_LIST))
 generic_export: $(EXPORT_LIST)
 
 export_product:
