@@ -651,7 +651,15 @@ def download_file_with_sha1(name, path, urls, sha1, sha1path, resolve, mustExist
         if canSymlink and 'symlink' in dir(os):
             if exists(path):
                 os.unlink(path)
-            os.symlink(cachePath, path)
+            try:
+                os.symlink(cachePath, path)
+            except OSError as e:
+                # When doing parallel building, the symlink can fail
+                # if another thread wins the race to create the symlink
+                if not exists(path):
+                    # It was some other error
+                    raise e
+
         else:
             shutil.copy(cachePath, path)
 
