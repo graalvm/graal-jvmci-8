@@ -3396,7 +3396,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   if (parse_result != JNI_OK) return parse_result;
 
 #ifdef JVMCI
-  OptionsValueTable* options = JVMCIRuntime::parse_arguments();
+  OptionValuesTable* options = JVMCIRuntime::parse_arguments();
   if (options == NULL) {
     return JNI_ERR;
   }

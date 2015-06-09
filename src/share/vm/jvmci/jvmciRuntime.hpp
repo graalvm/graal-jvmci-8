@@ -67,7 +67,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
    * leading "-G:" prefix. These option values are set prior to processing of any JVMCI
    * options present on the command line.
    */
-  static void parse_jvmci_options_file(OptionsValueTable* options);
+  static void parse_jvmci_options_file(OptionValuesTable* options);
 
   static void print_flags_helper(TRAPS);
 
@@ -84,11 +84,11 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
    * Parses the JVMCI specific VM options that were presented by the launcher and sets
    * the relevants Java fields.
    */
-  static OptionsValueTable* parse_arguments();
+  static OptionValuesTable* parse_arguments();
 
-  static bool parse_argument(OptionsValueTable* options, const char* arg);
+  static bool parse_argument(OptionValuesTable* options, const char* arg);
 
-  static void set_options(OptionsValueTable* options, TRAPS);
+  static void set_options(OptionValuesTable* options, TRAPS);
 
   /**
    * Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.

@@ -56,20 +56,20 @@ inline unsigned int compute_string_hash(const char *s, int n) {
   return val;
 }
 
-class OptionsTable : public JVMCIHashtable<const char*, OptionDesc> {
+class OptionDescsTable : public JVMCIHashtable<const char*, OptionDesc> {
 protected:
   unsigned int compute_hash(const char* key) { return compute_string_hash(key, (int)strlen(key)); }
   bool key_equals(const char* k1, const char* k2) { return strcmp(k1, k2) == 0; }
   const char* get_key(OptionDesc value) { return value.name; } ;
   const char* get_key(OptionDesc* value) { return value->name; } ;
 public:
-  OptionsTable() : JVMCIHashtable<const char*, OptionDesc>(100) {}
-  ~OptionsTable();
+  OptionDescsTable() : JVMCIHashtable<const char*, OptionDesc>(100) {}
+  ~OptionDescsTable();
   using JVMCIHashtable<const char*, OptionDesc>::get;
   OptionDesc* get(const char* name, size_t arglen);
   OptionDesc * fuzzy_match(const char* name, size_t length);
 
-  static OptionsTable* load_options();
+  static OptionDescsTable* load_options();
 };
 
 struct OptionValue {
@@ -84,19 +84,19 @@ struct OptionValue {
   };
 };
 
-class OptionsValueTable : public JVMCIHashtable<const char*, OptionValue> {
-  OptionsTable* _table;
+class OptionValuesTable : public JVMCIHashtable<const char*, OptionValue> {
+  OptionDescsTable* _table;
 protected:
   unsigned int compute_hash(const char* key) { return compute_string_hash(key, (int)strlen(key)); }
   bool key_equals(const char* k1, const char* k2) { return strcmp(k1, k2) == 0; }
   const char* get_key(OptionValue value) { return value.desc.name; } ;
   const char* get_key(OptionValue* value) { return value->desc.name; } ;
 public:
-  OptionsValueTable(OptionsTable* table) : _table(table), JVMCIHashtable<const char*, OptionValue>(100) {}
-  ~OptionsValueTable();
+  OptionValuesTable(OptionDescsTable* table) : _table(table), JVMCIHashtable<const char*, OptionValue>(100) {}
+  ~OptionValuesTable();
   using JVMCIHashtable<const char*, OptionValue>::get;
   OptionValue* get(const char* name, size_t arglen);
-  OptionsTable* options_table() { return _table; }
+  OptionDescsTable* options_table() { return _table; }
 };
 
 
