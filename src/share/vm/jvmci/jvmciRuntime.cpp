@@ -1181,7 +1181,7 @@ public:
   ServiceParseClosure() : _implNames() {}
   void do_line(char* line) {
     size_t lineLen = strlen(line);
-    char* implName = NEW_C_HEAP_ARRAY(char, lineLen + 1, mtCompiler); // TODO (gd) i'm leaking
+    char* implName = NEW_RESOURCE_ARRAY(char, lineLen + 1);
     // Turn all '.'s into '/'s
     for (size_t index = 0; index < lineLen; ++index) {
       if (line[index] == '.') {
