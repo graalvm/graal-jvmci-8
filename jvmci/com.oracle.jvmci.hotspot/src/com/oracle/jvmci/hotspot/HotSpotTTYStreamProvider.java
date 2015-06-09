@@ -32,7 +32,6 @@ import com.oracle.jvmci.service.*;
 class HotSpotTTYStreamProvider implements TTYStreamProvider {
 
     public PrintStream getStream() {
-        CompilerToVM compilerToVm = HotSpotJVMCIRuntime.runtime().getCompilerToVM();
-        return Options.LogFile.getStream(compilerToVm);
+        return Options.LogFile.getStream();
     }
 }

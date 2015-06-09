@@ -144,8 +144,6 @@ public final class DebugScope implements Debug.Scope {
             logScopeName = true;
         }
 
-        // Be pragmatic: provide a default log stream to prevent a crash if the stream is not
-        // set while logging
         this.output = TTY.out;
         assert context != null;
     }

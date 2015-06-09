@@ -40,7 +40,7 @@ public class PrintStreamOption extends OptionValue<String> {
      * The print stream to which output will be written.
      *
      * Declared {@code volatile} to enable safe use of double-checked locking in
-     * {@link #getStream(CompilerToVM)} and {@link #setValue(Object)}.
+     * {@link #getStream()} and {@link #setValue(Object)}.
      */
     private volatile PrintStream ps;
 
@@ -72,7 +72,7 @@ public class PrintStreamOption extends OptionValue<String> {
      * Gets the print stream configured by this option. If no file is configured, the print stream
      * will output to {@link CompilerToVM#writeDebugOutput(byte[], int, int)}.
      */
-    public PrintStream getStream(final CompilerToVM compilerToVM) {
+    public PrintStream getStream() {
         if (ps == null) {
             if (getValue() != null) {
                 synchronized (this) {
@@ -94,6 +94,15 @@ public class PrintStreamOption extends OptionValue<String> {
                 }
             } else {
                 OutputStream ttyOut = new OutputStream() {
+                    CompilerToVM vm;
+
+                    private CompilerToVM vm() {
+                        if (vm == null) {
+                            vm = HotSpotJVMCIRuntime.runtime().getCompilerToVM();
+                        }
+                        return vm;
+                    }
+
                     @Override
                     public void write(byte[] b, int off, int len) throws IOException {
                         if (b == null) {
@@ -103,7 +112,7 @@ public class PrintStreamOption extends OptionValue<String> {
                         } else if (len == 0) {
                             return;
                         }
-                        compilerToVM.writeDebugOutput(b, off, len);
+                        vm().writeDebugOutput(b, off, len);
                     }
 
                     @Override
@@ -113,7 +122,7 @@ public class PrintStreamOption extends OptionValue<String> {
 
                     @Override
                     public void flush() throws IOException {
-                        compilerToVM.flushDebugOutput();
+                        vm().flushDebugOutput();
                     }
                 };
                 ps = new PrintStream(ttyOut);
