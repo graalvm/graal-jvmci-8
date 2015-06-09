@@ -74,11 +74,17 @@ JVMCI_SERVICE_PROCESSOR_SRC += $(shell find jvmci/com.oracle.jvmci.service.proce
 JVMCI_SERVICE_PROCESSOR_JAR = $(TARGET)/jvmci/com.oracle.jvmci.service.processor/ap/com.oracle.jvmci.service.processor.jar
 
 JVMCI_API_SRC = $(shell find jvmci/com.oracle.jvmci.meta/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.meta/jvmci/com.oracle.jvmci.meta/src_gen -type f -name *.java 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.code/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.code/jvmci/com.oracle.jvmci.code/src_gen -type f -name *.java 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.runtime/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.runtime/jvmci/com.oracle.jvmci.runtime/src_gen -type f -name *.java 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.options/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.options/jvmci/com.oracle.jvmci.options/src_gen -type f -name *.java 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.common/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.common/jvmci/com.oracle.jvmci.common/src_gen -type f -name *.java 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.debug/src -type f -name *.java 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.debug/jvmci/com.oracle.jvmci.debug/src_gen -type f -name *.java 2> /dev/null)
 
 JVMCI_API_JAR = $(TARGET)/build/jvmci-api.jar
 
@@ -144,9 +150,9 @@ $(JVMCI_SERVICE_PROCESSOR_JAR): $(JVMCI_SERVICE_PROCESSOR_SRC)
 	$(JAR) cf $(JVMCI_SERVICE_PROCESSOR_JAR) -C $(TMP) .
 	rm -r $(TMP)
 
-$(JVMCI_API_JAR): $(JVMCI_API_SRC)  $(JVMCI_API_DEP_JARS)
+$(JVMCI_API_JAR): $(JVMCI_API_SRC) $(JVMCI_OPTIONS_PROCESSOR_JAR) $(JVMCI_API_DEP_JARS)
 	$(eval TMP := $(shell mktemp -d JVMCI_API_XXXXX))
-	$(JAVAC) -d $(TMP)  -bootclasspath $(JDK_BOOTCLASSPATH) -cp $(shell echo $(JVMCI_API_DEP_JARS) | tr ' ' ':') $(JVMCI_API_SRC)
+	$(JAVAC) -d $(TMP) -processorpath $(JVMCI_OPTIONS_PROCESSOR_JAR) -bootclasspath $(JDK_BOOTCLASSPATH) -cp $(shell echo $(JVMCI_API_DEP_JARS) | tr ' ' ':') $(JVMCI_API_SRC)
 	
 	$(call process_options,$(TMP),True)
 	mkdir -p $$(dirname $(JVMCI_API_JAR))

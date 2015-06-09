@@ -235,6 +235,7 @@ suite = {
         "com.oracle.jvmci.code",
         "com.oracle.jvmci.service",
       ],
+      "annotationProcessors" : ["com.oracle.jvmci.options.processor"],
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,Debug",
     },
