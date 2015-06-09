@@ -113,7 +113,7 @@ def make_dist_rule(dist, mf, bootClassPath=None):
 
             for d in p.srcDirs + generatedSource:
                 src = projectDir + os.path.sep + d
-                sources.append("$(shell find {} -type f -name *.java 2> /dev/null)".format(src))
+                sources.append("$(shell find {} -type f -name '*.java' 2> /dev/null)".format(src))
                 metaInf = src + os.path.sep + "META-INF"
                 if os.path.exists(metaInf):
                     resources.append(metaInf)
