@@ -46,13 +46,13 @@ public class ServiceProviderProcessor extends AbstractProcessor {
     }
 
     private boolean verifyAnnotation(TypeMirror serviceInterface, TypeElement serviceProvider) {
-        if (!processingEnv.getTypeUtils().isSubtype(serviceInterface, baseJVMCIServiceInterface.asType())) {
-            String msg = String.format("Service interface class %s doesn't extend JVMCI service interface %s", serviceInterface, baseJVMCIServiceInterface);
+        if (!processingEnv.getTypeUtils().isSubtype(serviceProvider.asType(), baseJVMCIServiceInterface.asType())) {
+            String msg = String.format("Service implementation class %s must implement %s", serviceProvider.getSimpleName(), baseJVMCIServiceInterface);
             processingEnv.getMessager().printMessage(Kind.ERROR, msg, serviceProvider);
             return false;
         }
         if (!processingEnv.getTypeUtils().isSubtype(serviceProvider.asType(), serviceInterface)) {
-            String msg = String.format("Service provider class %s doesn't implement service interface %s", serviceProvider.getSimpleName(), serviceInterface);
+            String msg = String.format("Service provider class %s must implement service interface %s", serviceProvider.getSimpleName(), serviceInterface);
             processingEnv.getMessager().printMessage(Kind.ERROR, msg, serviceProvider);
             return false;
         }

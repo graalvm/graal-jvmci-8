@@ -550,18 +550,24 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _filterJVMCIServices(serviceImplNames, classpath):
+def _filterJVMCIServices(servicesMap, classpath):
     """
     Filters and returns the names in 'serviceImplNames' that denote
     types available in 'classpath' implementing or extending
     com.oracle.jvmci.service.Service.
     """
     _, binDir = mx._compile_mx_class('FilterTypes', os.pathsep.join(classpath), myDir=dirname(__file__))
-    cmd = [mx.java().java, '-cp', mx._cygpathU2W(os.pathsep.join([binDir] + classpath)), 'FilterTypes', 'com.oracle.jvmci.service.Service'] + serviceImplNames
-    services = subprocess.check_output(cmd)
-    if len(services) == 0:
-        return []
-    return services.split('|')
+    serialized = [k + '=' + ','.join(v) for k, v in servicesMap.iteritems()]
+    cmd = [mx.java().java, '-cp', mx._cygpathU2W(os.pathsep.join([binDir] + classpath)), 'FilterTypes', 'com.oracle.jvmci.service.Service'] + serialized
+    serialized = subprocess.check_output(cmd)
+    if len(serialized) == 0:
+        return {}
+    servicesMap = {}
+    for e in serialized.split(' '):
+        k, v = e.split('=')
+        impls = v.split(',')
+        servicesMap[k] = impls
+    return servicesMap
 
 def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestination=True):
     if cleanDestination:
@@ -602,9 +608,8 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
                         with zf.open(member) as optionsFile, \
                              file(targetpath, "wb") as target:
                             shutil.copyfileobj(optionsFile, target)
-    jvmciServices = _filterJVMCIServices(servicesMap.keys(), jdkJars)
-    for serviceName in jvmciServices:
-        serviceImpls = servicesMap[serviceName]
+    servicesMap = _filterJVMCIServices(servicesMap, jdkJars)
+    for serviceName, serviceImpls in servicesMap.iteritems():
         fd, tmp = tempfile.mkstemp(prefix=serviceName)
         f = os.fdopen(fd, 'w+')
         for serviceImpl in serviceImpls:
@@ -614,7 +619,6 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
         shutil.move(tmp, target)
         if mx.get_os() != 'windows':
             os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
-    return (jvmciServices, optionsFiles)
 
 def _updateJVMCIFiles(jdkDir):
     jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')

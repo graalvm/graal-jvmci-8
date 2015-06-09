@@ -25,9 +25,8 @@ package com.oracle.jvmci.service;
 import java.lang.annotation.*;
 
 /**
- * Annotates a class that implements a {@linkplain Service JVMCI service}. This annotation is used
- * by the JVMCI build system to deploy the necessary files used to {@linkplain Services#load(Class)
- * load} JVMCI services at runtime.
+ * Annotates a JVMCI implementation of a service. This annotation is used by the JVMCI build system
+ * to deploy the necessary files used to {@linkplain Services#load(Class) load} services at runtime.
  */
 @Retention(RetentionPolicy.CLASS)
 @Target(ElementType.TYPE)

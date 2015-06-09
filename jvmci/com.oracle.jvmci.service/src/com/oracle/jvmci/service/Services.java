@@ -27,7 +27,7 @@ import java.util.*;
 import sun.reflect.*;
 
 /**
- * An mechanism for loading {@linkplain Service JVMCI services}.
+ * An mechanism for loading services that have a {@linkplain Service JVMCI implementation}.
  */
 public class Services {
 
@@ -39,9 +39,9 @@ public class Services {
      */
     private static final boolean SuppressNoClassDefFoundError = Boolean.getBoolean(SUPPRESS_PROPERTY_NAME);
 
-    private static final ClassValue<List<Service>> cache = new ClassValue<List<Service>>() {
+    private static final ClassValue<List<?>> cache = new ClassValue<List<?>>() {
         @Override
-        protected List<Service> computeValue(Class<?> type) {
+        protected List<?> computeValue(Class<?> type) {
             try {
                 return Arrays.asList(getServiceImpls(type));
             } catch (NoClassDefFoundError e) {
@@ -59,14 +59,14 @@ public class Services {
     };
 
     /**
-     * Gets an {@link Iterable} of the implementations available for a given JVMCI service.
+     * Gets an {@link Iterable} of the JVMCI implementations available for a given service.
      *
      * @throws SecurityException if a security manager is present and it denies
      *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings("unchecked")
     @CallerSensitive
-    public static <S extends Service> Iterable<S> load(Class<S> service) {
+    public static <S> Iterable<S> load(Class<S> service) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new RuntimePermission("jvmciServices"));
@@ -79,8 +79,8 @@ public class Services {
     }
 
     /**
-     * Gets the implementation for a given service for which at most one implementation must be
-     * available.
+     * Gets the JVMCI implementation for a given service for which at most one implementation must
+     * be available.
      *
      * @param service the service whose implementation is being requested
      * @param required specifies if an {@link InternalError} should be thrown if no implementation
@@ -88,9 +88,9 @@ public class Services {
      * @throws SecurityException if a security manager is present and it denies
      *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked"})
     @CallerSensitive
-    public static <S extends Service> S loadSingle(Class<S> service, boolean required) {
+    public static <S> S loadSingle(Class<S> service, boolean required) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new RuntimePermission("jvmciServices"));

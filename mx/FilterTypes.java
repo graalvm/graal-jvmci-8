@@ -23,41 +23,46 @@
 
 public class FilterTypes {
 
-    /**
-     * Prints to {@link System#out} the values in {@code args[1 .. N]} that denote classes that are
-     * {@link Class#isAssignableFrom(Class) assignable} to the type denoted in {@code args[0]}. The
-     * values are separated by {@code "|"}.
-     */
     public static void main(String... args) throws Exception {
         Class<?> jvmciServiceInterface = Class.forName(args[0]);
-        boolean needSep = false;
         StringBuilder buf = new StringBuilder();
         for (int i = 1; i < args.length; ++i) {
-            String serviceName = args[i];
-            Class<?> service = lookupService(serviceName);
-            if (service != null && jvmciServiceInterface.isAssignableFrom(service)) {
-                if (buf.length() != 0) {
-                    buf.append('|');
+            String[] e = args[i].split("=");
+            String serviceName = e[0];
+            String implNames = e[1];
+
+            StringBuilder impls = new StringBuilder();
+            for (String implName : implNames.split(",")) {
+                Class<?> impl = lookup(implName);
+                if (impl != null && jvmciServiceInterface.isAssignableFrom(impl)) {
+                    if (impls.length() != 0) {
+                        impls.append(',');
+                    }
+                    impls.append(implName);
                 }
-                buf.append(serviceName);
-                needSep = true;
+            }
+            if (impls.length() != 0) {
+                if (buf.length() != 0) {
+                    buf.append(' ');
+                }
+                buf.append(serviceName).append('=').append(impls);
             }
         }
         System.out.print(buf);
     }
-    
-    private static Class<?> lookupService(String serviceName) {
-    	try {
-    		// This can fail in the case of running against a JDK
-    		// with out of date JVMCI jars. In that case, just print
-    		// a warning sinc the expectation is that the jars will be
-    		// updated later on.
-    	    return Class.forName(serviceName, false, FilterTypes.class.getClassLoader());
-    	} catch (ClassNotFoundException e) {
-    		// Must be stderr to avoid polluting the result being
-    		// written to stdout.
-    		System.err.println(e);
-    		return null;
-    	}
+
+    private static Class<?> lookup(String name) {
+        try {
+            // This can fail in the case of running against a JDK
+            // with out of date JVMCI jars. In that case, just print
+            // a warning since the expectation is that the jars will be
+            // updated later on.
+            return Class.forName(name, false, FilterTypes.class.getClassLoader());
+        } catch (ClassNotFoundException e) {
+            // Must be stderr to avoid polluting the result being
+            // written to stdout.
+            System.err.println(e);
+            return null;
+        }
     }
 }
