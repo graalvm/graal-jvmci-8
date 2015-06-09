@@ -12,9 +12,9 @@ EXPORTED_FILES_ADDITIONAL=$(TARGET)/options $(TARGET)/services
 HS_COMMON_SRC=.
 
 # Directories, where the generated property-files reside within the JAR files
-PROVIDERS_INF=/META-INF/providers/
-SERVICES_INF=/META-INF/services/
-OPTIONS_INF=/META-INF/options/
+PROVIDERS_INF=/META-INF/providers
+SERVICES_INF=/META-INF/services
+OPTIONS_INF=/META-INF/options
 
 ifeq ($(ABS_BOOTDIR),)
     $(error Variable ABS_BOOTDIR must be set to a JDK installation.)
@@ -40,7 +40,8 @@ endef
 define extract
     $(eval TMP := $(shell mktemp -d $(1)_XXXXX))
     mkdir -p $(2);
-    cd $(TMP) && $(JAR) xf $(abspath $(1)) &&         ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))));
+    cd $(TMP) && $(JAR) xf $(abspath $(1)) && \
+        ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))));
     rm -r $(TMP);
     cp $(1) $(2);
 endef
