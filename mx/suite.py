@@ -1359,6 +1359,7 @@ suite = {
         "com.oracle.graal.hotspot.amd64",
         "com.oracle.graal.hotspot.sparc",
         "com.oracle.graal.hotspot",
+        "com.oracle.graal.printer",
       ],
       "exclude" : ["FINDBUGS"],
       "distDependencies" : [
