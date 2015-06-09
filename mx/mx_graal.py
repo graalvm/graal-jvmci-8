@@ -2404,7 +2404,7 @@ def jacocoreport(args):
 def sl(args):
     """run an SL program"""
     vmArgs, slArgs = _extract_VM_args(args)
-    vm(vmArgs + ['-cp', mx.classpath(["TRUFFLE", "com.oracle.truffle.sl"]), "com.oracle.truffle.sl.SLMain"] + slArgs)
+    vm(vmArgs + ['-cp', mx.classpath(["TRUFFLE", "com.oracle.truffle.sl"]), "com.oracle.truffle.sl.SLLanguage"] + slArgs)
 
 def sldebug(args):
     """run a simple command line debugger for the Simple Language"""

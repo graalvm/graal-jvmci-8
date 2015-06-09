@@ -1224,10 +1224,7 @@ suite = {
      "com.oracle.truffle.sl.tools" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : [
-        "com.oracle.truffle.sl",
-        "com.oracle.truffle.tools.debug.shell",
-      ],
+      "dependencies" : ["com.oracle.truffle.tools.debug.shell"],
       "checkstyle" : "com.oracle.truffle.api",
       "javaCompliance" : "1.8",
       "workingSets" : "Truffle,SimpleLanguage,Tools",
