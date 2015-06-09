@@ -829,7 +829,7 @@ def graal_version(dev_suffix='dev'):
                 major, minor = map(int, most_recent_tag_version.split('.'))
                 cached_graal_version = str(major) + '.' + str(minor + 1) + '-' + dev_suffix
         else:
-            cached_graal_version = 'unknown-{0}-{1}'.format(platform.node(), time.strftime('%Y-%m-%d_%H-%M-%S_%Z'))
+            cached_graal_version = 'unknown-{0}'.format(platform.node())
 
     return cached_graal_version
 
