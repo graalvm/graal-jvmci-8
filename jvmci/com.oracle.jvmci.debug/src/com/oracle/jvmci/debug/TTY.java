@@ -69,7 +69,7 @@ public class TTY {
                 }
                 if (suppressed) {
                     previous = out();
-                    out.set(LogStream.SINK);
+                    log.set(LogStream.SINK);
                 }
             }
         }
@@ -81,7 +81,7 @@ public class TTY {
          */
         public Filter() {
             previous = out();
-            out.set(LogStream.SINK);
+            log.set(LogStream.SINK);
         }
 
         /**
@@ -91,31 +91,30 @@ public class TTY {
         public void remove() {
             assert thread == Thread.currentThread();
             if (previous != null) {
-                out.set(previous);
+                log.set(previous);
             }
         }
     }
 
-    public static final PrintStream cachedOut;
+    /**
+     * The {@link PrintStream} to which all non-suppressed output from {@link TTY} is written.
+     */
+    public static final PrintStream out;
     static {
         TTYStreamProvider p = Services.loadSingle(TTYStreamProvider.class, false);
-        cachedOut = p == null ? System.out : p.getStream();
+        out = p == null ? System.out : p.getStream();
     }
 
-    private static LogStream createLog() {
-        return new LogStream(cachedOut);
-    }
-
-    private static final ThreadLocal<LogStream> out = new ThreadLocal<LogStream>() {
+    private static final ThreadLocal<LogStream> log = new ThreadLocal<LogStream>() {
 
         @Override
         protected LogStream initialValue() {
-            return createLog();
+            return new LogStream(out);
         }
     };
 
     public static boolean isSuppressed() {
-        return out.get() == LogStream.SINK;
+        return log.get() == LogStream.SINK;
     }
 
     /**
@@ -125,7 +124,7 @@ public class TTY {
      * current thread.
      */
     public static LogStream out() {
-        return out.get();
+        return log.get();
     }
 
     /**

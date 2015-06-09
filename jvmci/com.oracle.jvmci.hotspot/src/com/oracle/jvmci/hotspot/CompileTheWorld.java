@@ -470,7 +470,7 @@ public final class CompileTheWorld {
         } catch (Throwable t) {
             // Catch everything and print a message
             println("CompileTheWorld (%d) : Error compiling method: %s", counter, method.format("%H.%n(%p):%r"));
-            t.printStackTrace(TTY.cachedOut);
+            t.printStackTrace(TTY.out);
         }
     }
 

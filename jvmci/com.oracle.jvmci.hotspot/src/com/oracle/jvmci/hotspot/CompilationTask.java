@@ -181,16 +181,16 @@ public class CompilationTask {
         } catch (BailoutException bailout) {
             BAILOUTS.increment();
             if (ExitVMOnBailout.getValue()) {
-                TTY.cachedOut.println(method.format("Bailout in %H.%n(%p)"));
-                bailout.printStackTrace(TTY.cachedOut);
+                TTY.out.println(method.format("Bailout in %H.%n(%p)"));
+                bailout.printStackTrace(TTY.out);
                 System.exit(-1);
             } else if (PrintBailout.getValue()) {
-                TTY.cachedOut.println(method.format("Bailout in %H.%n(%p)"));
-                bailout.printStackTrace(TTY.cachedOut);
+                TTY.out.println(method.format("Bailout in %H.%n(%p)"));
+                bailout.printStackTrace(TTY.out);
             }
         } catch (Throwable t) {
             if (PrintStackTraceOnException.getValue() || ExitVMOnException.getValue()) {
-                t.printStackTrace(TTY.cachedOut);
+                t.printStackTrace(TTY.out);
             }
 
             // Log a failure event.
@@ -281,7 +281,7 @@ public class CompilationTask {
     public static void compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
         // Ensure a debug configuration for this thread is initialized
         if (Debug.isEnabled() && DebugScope.getConfig() == null) {
-            DebugEnvironment.initialize(TTY.cachedOut);
+            DebugEnvironment.initialize(TTY.out);
         }
 
         CompilationTask task = new CompilationTask(method, entryBCI, jvmciEnv, id, true);
