@@ -1020,6 +1020,7 @@ suite = {
         "com.oracle.graal.java",
         "com.oracle.graal.compiler",
       ],
+      "annotationProcessors" : ["com.oracle.jvmci.service.processor"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "Graal,Graph",
