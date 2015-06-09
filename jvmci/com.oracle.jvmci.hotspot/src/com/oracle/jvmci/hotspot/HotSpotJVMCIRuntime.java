@@ -30,7 +30,6 @@ import java.util.*;
 
 import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.common.*;
-import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.hotspot.logging.*;
 import com.oracle.jvmci.meta.*;
 import com.oracle.jvmci.options.*;
@@ -68,7 +67,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * Do deferred initialization.
      */
     public void completeInitialization() {
-        TTY.initialize(Options.LogFile.getStream(compilerToVm));
 
         // Proxies for the VM/Compiler interfaces cannot be initialized
         // in the constructor as proxy creation causes static

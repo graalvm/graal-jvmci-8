@@ -27,6 +27,8 @@ import java.lang.reflect.*;
 import java.util.*;
 import java.util.regex.*;
 
+import com.oracle.jvmci.service.*;
+
 /**
  * A collection of static methods for printing debug and informational output to a global
  * {@link LogStream}. The output can be (temporarily) suppressed per thread through use of a
@@ -94,17 +96,13 @@ public class TTY {
         }
     }
 
-    public static PrintStream cachedOut;
-
-    public static void initialize(PrintStream ps) {
-        cachedOut = ps;
+    public static final PrintStream cachedOut;
+    static {
+        TTYStreamProvider p = Services.loadSingle(TTYStreamProvider.class, false);
+        cachedOut = p == null ? System.out : p.getStream();
     }
 
     private static LogStream createLog() {
-        if (cachedOut == null) {
-            // In case initialize() was not called.
-            cachedOut = System.out;
-        }
         return new LogStream(cachedOut);
     }
 
