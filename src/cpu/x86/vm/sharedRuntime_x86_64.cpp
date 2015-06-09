@@ -70,32 +70,9 @@ class RegisterSaver {
   // Capture info about frame layout.  Layout offsets are in jint
   // units because compiler frame slots are jints.
 #define DEF_XMM_OFFS(regnum) xmm ## regnum ## _off = xmm_off + (regnum)*16/BytesPerInt, xmm ## regnum ## H_off
-#define DEF_YMM_HI_OFFS(regnum) ymm_hi ## regnum ## _off = ymm_off + (regnum)*16/BytesPerInt
   enum layout {
     fpu_state_off = frame::arg_reg_save_area_bytes/BytesPerInt, // fxsave save area
-#if defined(COMPILER2) || defined(JVMCI)
-    ymm_off       = fpu_state_off,            // offset in fxsave save area
-    DEF_YMM_HI_OFFS(0),
-    DEF_YMM_HI_OFFS(1),
-    DEF_YMM_HI_OFFS(2),
-    DEF_YMM_HI_OFFS(3),
-    DEF_YMM_HI_OFFS(4),
-    DEF_YMM_HI_OFFS(5),
-    DEF_YMM_HI_OFFS(6),
-    DEF_YMM_HI_OFFS(7),
-    DEF_YMM_HI_OFFS(8),
-    DEF_YMM_HI_OFFS(9),
-    DEF_YMM_HI_OFFS(10),
-    DEF_YMM_HI_OFFS(11),
-    DEF_YMM_HI_OFFS(12),
-    DEF_YMM_HI_OFFS(13),
-    DEF_YMM_HI_OFFS(14),
-    DEF_YMM_HI_OFFS(15),
-    ymm_hi_save_size = 16 * 16 / BytesPerInt,
-#else
-    ymm_hi_save_size = 0,
-#endif
-    xmm_off       = fpu_state_off + 160/BytesPerInt + ymm_hi_save_size,            // offset in fxsave save area
+    xmm_off       = fpu_state_off + 160/BytesPerInt,            // offset in fxsave save area
     DEF_XMM_OFFS(0),
     DEF_XMM_OFFS(1),
     DEF_XMM_OFFS(2),
@@ -112,7 +89,7 @@ class RegisterSaver {
     DEF_XMM_OFFS(13),
     DEF_XMM_OFFS(14),
     DEF_XMM_OFFS(15),
-    fpu_state_end = fpu_state_off + ((FPUStateSizeInWords-1)*wordSize / BytesPerInt) + ymm_hi_save_size,
+    fpu_state_end = fpu_state_off + ((FPUStateSizeInWords-1)*wordSize / BytesPerInt),
     fpu_stateH_end,
     r15_off, r15H_off,
     r14_off, r14H_off,
@@ -162,6 +139,21 @@ class RegisterSaver {
 };
 
 OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_frame_words, int* total_frame_words, bool save_vectors) {
+  int vect_words = 0;
+  int ymmhi_offset = -1;
+#if defined(COMPILER2) || defined(JVMCI)
+  if (save_vectors) {
+    assert(UseAVX > 0, "256bit vectors are supported only with AVX");
+    assert(MaxVectorSize == 32, "only 256bit vectors are supported now");
+    // Save upper half of YMM registes
+    vect_words = 16 * 16 / wordSize;
+    ymmhi_offset = additional_frame_words;
+    additional_frame_words += vect_words;
+  }
+#else
+  assert(!save_vectors, "vectors are generated only by C2 and JVMCI");
+#endif
+
   // Always make the frame size 16-byte aligned
   int frame_size_in_bytes = round_to(additional_frame_words*wordSize +
                                      reg_save_size*BytesPerInt, 16);
@@ -182,32 +174,26 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
   __ enter();          // rsp becomes 16-byte aligned here
   __ push_CPU_state(); // Push a multiple of 16 bytes
 
-#if defined(COMPILER2) || defined(JVMCI)
-  __ subptr(rsp, 256); // Save upper half of YMM registers
-  if (save_vectors) {
-    assert(UseAVX > 0, "256bit vectors are supported only with AVX");
-    assert(MaxVectorSize == 32, "only 256bit vectors are supported now");
-    // Save upper half of YMM registers
-    __ vextractf128h(Address(rsp, ymm_hi0_off * BytesPerInt),  xmm0);
-    __ vextractf128h(Address(rsp, ymm_hi1_off * BytesPerInt),  xmm1);
-    __ vextractf128h(Address(rsp, ymm_hi2_off * BytesPerInt),  xmm2);
-    __ vextractf128h(Address(rsp, ymm_hi3_off * BytesPerInt),  xmm3);
-    __ vextractf128h(Address(rsp, ymm_hi4_off * BytesPerInt),  xmm4);
-    __ vextractf128h(Address(rsp, ymm_hi5_off * BytesPerInt),  xmm5);
-    __ vextractf128h(Address(rsp, ymm_hi6_off * BytesPerInt),  xmm6);
-    __ vextractf128h(Address(rsp, ymm_hi7_off * BytesPerInt),  xmm7);
-    __ vextractf128h(Address(rsp, ymm_hi8_off * BytesPerInt),  xmm8);
-    __ vextractf128h(Address(rsp, ymm_hi9_off * BytesPerInt),  xmm9);
-    __ vextractf128h(Address(rsp, ymm_hi10_off * BytesPerInt), xmm10);
-    __ vextractf128h(Address(rsp, ymm_hi11_off * BytesPerInt), xmm11);
-    __ vextractf128h(Address(rsp, ymm_hi12_off * BytesPerInt), xmm12);
-    __ vextractf128h(Address(rsp, ymm_hi13_off * BytesPerInt), xmm13);
-    __ vextractf128h(Address(rsp, ymm_hi14_off * BytesPerInt), xmm14);
-    __ vextractf128h(Address(rsp, ymm_hi15_off * BytesPerInt), xmm15);
+  if (vect_words > 0) {
+    assert(vect_words*wordSize == 256, "");
+    __ subptr(rsp, 256); // Save upper half of YMM registes
+    __ vextractf128h(Address(rsp,  0),xmm0);
+    __ vextractf128h(Address(rsp, 16),xmm1);
+    __ vextractf128h(Address(rsp, 32),xmm2);
+    __ vextractf128h(Address(rsp, 48),xmm3);
+    __ vextractf128h(Address(rsp, 64),xmm4);
+    __ vextractf128h(Address(rsp, 80),xmm5);
+    __ vextractf128h(Address(rsp, 96),xmm6);
+    __ vextractf128h(Address(rsp,112),xmm7);
+    __ vextractf128h(Address(rsp,128),xmm8);
+    __ vextractf128h(Address(rsp,144),xmm9);
+    __ vextractf128h(Address(rsp,160),xmm10);
+    __ vextractf128h(Address(rsp,176),xmm11);
+    __ vextractf128h(Address(rsp,192),xmm12);
+    __ vextractf128h(Address(rsp,208),xmm13);
+    __ vextractf128h(Address(rsp,224),xmm14);
+    __ vextractf128h(Address(rsp,240),xmm15);
   }
-#else
-  assert(!save_vectors, "vectors are generated only by C2 and JVMCI");
-#endif
   if (frame::arg_reg_save_area_bytes != 0) {
     // Allocate argument register save area
     __ subptr(rsp, frame::arg_reg_save_area_bytes);
@@ -222,6 +208,7 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
   OopMap* map = new OopMap(frame_size_in_slots, 0);
 
 #define STACK_OFFSET(x) VMRegImpl::stack2reg((x) + additional_frame_slots)
+#define YMMHI_STACK_OFFSET(x) VMRegImpl::stack2reg((x / VMRegImpl::stack_slot_size) + ymmhi_offset)
 
   map->set_callee_saved(STACK_OFFSET( rax_off ), rax->as_VMReg());
   map->set_callee_saved(STACK_OFFSET( rcx_off ), rcx->as_VMReg());
@@ -259,22 +246,23 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
 
 #if defined(COMPILER2) || defined(JVMCI)
   if (save_vectors) {
-    map->set_callee_saved(STACK_OFFSET(ymm_hi0_off ), xmm0->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi1_off ), xmm1->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi2_off ), xmm2->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi3_off ), xmm3->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi4_off ), xmm4->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi5_off ), xmm5->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi6_off ), xmm6->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi7_off ), xmm7->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi8_off ), xmm8->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi9_off ), xmm9->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi10_off), xmm10->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi11_off), xmm11->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi12_off), xmm12->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi13_off), xmm13->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi14_off), xmm14->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(STACK_OFFSET(ymm_hi15_off), xmm15->as_VMReg()->next()->next()->next()->next());
+    assert(ymmhi_offset != -1, "save area must exist");
+    map->set_callee_saved(YMMHI_STACK_OFFSET(  0), xmm0->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 16), xmm1->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 32), xmm2->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 48), xmm3->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 64), xmm4->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 80), xmm5->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 96), xmm6->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(112), xmm7->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(128), xmm8->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(144), xmm9->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(160), xmm10->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(176), xmm11->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(192), xmm12->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(208), xmm13->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(224), xmm14->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(240), xmm15->as_VMReg()->next()->next()->next()->next());
   }
 #endif
 
@@ -326,24 +314,24 @@ void RegisterSaver::restore_live_registers(MacroAssembler* masm, bool restore_ve
     // Restore upper half of YMM registes.
     assert(UseAVX > 0, "256bit vectors are supported only with AVX");
     assert(MaxVectorSize == 32, "only 256bit vectors are supported now");
-    __ vinsertf128h(xmm0,  Address(rsp, ymm_hi0_off * BytesPerInt));
-    __ vinsertf128h(xmm1,  Address(rsp, ymm_hi1_off * BytesPerInt));
-    __ vinsertf128h(xmm2,  Address(rsp, ymm_hi2_off * BytesPerInt));
-    __ vinsertf128h(xmm3,  Address(rsp, ymm_hi3_off * BytesPerInt));
-    __ vinsertf128h(xmm4,  Address(rsp, ymm_hi4_off * BytesPerInt));
-    __ vinsertf128h(xmm5,  Address(rsp, ymm_hi5_off * BytesPerInt));
-    __ vinsertf128h(xmm6,  Address(rsp, ymm_hi6_off * BytesPerInt));
-    __ vinsertf128h(xmm7,  Address(rsp, ymm_hi7_off * BytesPerInt));
-    __ vinsertf128h(xmm8,  Address(rsp, ymm_hi8_off * BytesPerInt));
-    __ vinsertf128h(xmm9,  Address(rsp, ymm_hi9_off * BytesPerInt));
-    __ vinsertf128h(xmm10, Address(rsp, ymm_hi10_off * BytesPerInt));
-    __ vinsertf128h(xmm11, Address(rsp, ymm_hi11_off * BytesPerInt));
-    __ vinsertf128h(xmm12, Address(rsp, ymm_hi12_off * BytesPerInt));
-    __ vinsertf128h(xmm13, Address(rsp, ymm_hi13_off * BytesPerInt));
-    __ vinsertf128h(xmm14, Address(rsp, ymm_hi14_off * BytesPerInt));
-    __ vinsertf128h(xmm15, Address(rsp, ymm_hi15_off * BytesPerInt));
+    __ vinsertf128h(xmm0, Address(rsp,  0));
+    __ vinsertf128h(xmm1, Address(rsp, 16));
+    __ vinsertf128h(xmm2, Address(rsp, 32));
+    __ vinsertf128h(xmm3, Address(rsp, 48));
+    __ vinsertf128h(xmm4, Address(rsp, 64));
+    __ vinsertf128h(xmm5, Address(rsp, 80));
+    __ vinsertf128h(xmm6, Address(rsp, 96));
+    __ vinsertf128h(xmm7, Address(rsp,112));
+    __ vinsertf128h(xmm8, Address(rsp,128));
+    __ vinsertf128h(xmm9, Address(rsp,144));
+    __ vinsertf128h(xmm10, Address(rsp,160));
+    __ vinsertf128h(xmm11, Address(rsp,176));
+    __ vinsertf128h(xmm12, Address(rsp,192));
+    __ vinsertf128h(xmm13, Address(rsp,208));
+    __ vinsertf128h(xmm14, Address(rsp,224));
+    __ vinsertf128h(xmm15, Address(rsp,240));
+    __ addptr(rsp, 256);
   }
-  __ addptr(rsp, 256);
 #else
   assert(!restore_vectors, "vectors are generated only by C2 and JVMCI");
 #endif
@@ -4230,4 +4218,3 @@ void OptoRuntime::generate_exception_blob() {
   _exception_blob =  ExceptionBlob::create(&buffer, oop_maps, SimpleRuntimeFrame::framesize >> 1);
 }
 #endif // COMPILER2
-
