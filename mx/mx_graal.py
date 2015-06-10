@@ -1013,9 +1013,7 @@ def build(args, vm=None):
             setMakeVar('ZIP_DEBUGINFO_FILES', '0', env=env)
 
             if buildSuffix == "1":
-                setMakeVar("JVM_VARIANTS", "client")
-            elif buildSuffix == "":
-                setMakeVar("JVM_VARIANTS", "server")
+                setMakeVar("BUILD_CLIENT_ONLY", "true")
 
             # Clear this variable as having it set can cause very confusing build problems
             env.pop('CLASSPATH', None)
