@@ -398,7 +398,6 @@ suite = {
     "com.oracle.nfi" : {
       "subDir" : "graal",
       "sourceDirs" : ["src"],
-      "dependencies" : ["com.oracle.jvmci.service"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.7",
     },
@@ -1359,6 +1358,7 @@ suite = {
       ],
       "exclude" : ["FINDBUGS"],
       "distDependencies" : [
+        "JVMCI_SERVICE",
         "JVMCI_HOTSPOT",
         "TRUFFLE",
       ],
@@ -1374,9 +1374,6 @@ suite = {
         "com.oracle.nfi",
         "com.oracle.truffle.object.basic",
         "com.oracle.truffle.tools"
-      ],
-      "distDependencies" : [
-        "JVMCI_SERVICE",
       ],
     },
 

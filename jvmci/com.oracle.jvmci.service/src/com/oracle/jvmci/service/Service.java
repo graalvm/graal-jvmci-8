@@ -23,10 +23,13 @@
 package com.oracle.jvmci.service;
 
 /**
- * Marker interface for a service implementation that can be loaded by {@link Services#load(Class)}
- * or {@link Services#loadSingle(Class, boolean)}. These implementations are hidden behind a class
- * loader not accessible to applications. For this reason, {@link Services#load(Class)} and
+ * Marker interface for a service provider that can be loaded by {@link Services#load(Class)} or
+ * {@link Services#loadSingle(Class, boolean)}. These providers are hidden behind a class loader not
+ * accessible to applications. For this reason, {@link Services#load(Class)} and
  * {@link Services#loadSingle(Class, boolean)} perform {@link SecurityManager} checks.
+ *
+ * If this marker interface is applied to a service interface <i>S</I> as opposed to a service
+ * provider, then all providers implementing <i>S</i> have the semantics described above.
  *
  * @see Services
  * @see ServiceProvider
