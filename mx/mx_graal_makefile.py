@@ -113,7 +113,7 @@ def make_dist_rule(dist, mf, bootClassPath=None):
 
             for d in p.srcDirs + generatedSource:
                 src = projectDir + os.path.sep + d
-                sources.append("$(shell find {} -type f -name '*.java' 2> /dev/null)".format(src))
+                sources.append("$(shell find {} -type f 2> /dev/null)".format(src))
                 metaInf = src + os.path.sep + "META-INF"
                 if os.path.exists(metaInf):
                     resources.append(metaInf)
@@ -139,10 +139,11 @@ def make_dist_rule(dist, mf, bootClassPath=None):
            "sourcesVariableName": sourcesVariableName,
            "annotationProcessors": " ".join(apDistVariableNames),
            "cpAnnotationProcessors": "-processorpath " + ":".join(apDistVariableNames) if len(apDistVariableNames) > 0 else "",
+           "cpAnnotationProcessors2": ":".join(apDistVariableNames),
            "bootCp": ("-bootclasspath " + bootClassPath) if bootClassPath != None else "",
            "cpDeps": ("-cp $(shell echo $(" + depJarVariableName + ") | tr ' ' ':')") if len(classPath) > 0 else "",
            "jarDeps": " ".join(classPath),
-           "copyResources": "cp -r {} $(TMP)".format(" ".join(resources)) if len(resources) > 0 else "",
+           "copyResources": " ".join(resources),
            "targetPathPrefix": targetPathPrefix,
            "shouldExport": shouldExport,
            }
@@ -152,13 +153,8 @@ def make_dist_rule(dist, mf, bootClassPath=None):
     if len(classPath) > 0: mf.add_definition("{depJarsVariable} = {jarDeps}".format(**props))
     if shouldExport: mf.add_definition("EXPORTED_FILES += $({name}_JAR)".format(**props))
     mf.add_rule("""$({name}_JAR): $({sourcesVariableName}) {annotationProcessors} {depJarsVariableAccess}
-\t$(eval TMP := $(shell mktemp -d {name}_XXXXX))
-\t$(JAVAC) -d $(TMP) {cpAnnotationProcessors} {bootCp} {cpDeps} $({sourcesVariableName})
-\t{copyResources}
-\t$(call process_options,$(TMP),{shouldExport})
-\tmkdir -p $$(dirname $({name}_JAR))
-\t$(JAR) cf $({name}_JAR) -C $(TMP) .
-\trm -r $(TMP)""".format(**props))
+\t$(call build_and_jar,{cpAnnotationProcessors2},$(shell echo {depJarsVariableAccess} | tr ' ' ':'),{copyResources},$({name}_JAR))
+""".format(**props))
     return
 
 
@@ -190,39 +186,50 @@ OPTIONS_INF=/META-INF/options
 ifeq ($(ABS_BOOTDIR),)
     $(error Variable ABS_BOOTDIR must be set to a JDK installation.)
 endif
-ifneq ($(MAKE_VERBOSE),)
-    SHELL=sh -x
+ifeq ($(MAKE_VERBOSE),)
+    QUIETLY=@
 endif
 
 define process_options
     $(eval providers=$(1)/$(PROVIDERS_INF))
     $(eval services=$(1)/$(SERVICES_INF))
     $(eval options=$(1)/$(OPTIONS_INF))
-    test -d $(services) || mkdir -p $(services)
-    test ! -d $(providers) || (cd $(providers) && for i in $$(ls); do c=$$(cat $$i); echo $$i >> $(abspath $(services))/$$c; rm $$i; done)
+    $(QUIETLY) test -d $(services) || mkdir -p $(services)
+    $(QUIETLY) test ! -d $(providers) || (cd $(providers) && for i in $$(ls); do c=$$(cat $$i); echo $$i >> $(abspath $(services))/$$c; rm $$i; done)
 
-    # Since all projects are built together with one javac call we cannot determine
-    # which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
+    @# Since all projects are built together with one javac call we cannot determine
+    @# which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
     $(eval vmconfig=$(1)/hotspot/HotSpotVMConfig.inline.hpp)
     $(eval vmconfigDest=$(HS_COMMON_SRC)/../jvmci/com.oracle.jvmci.hotspot/src_gen/hotspot)
-    test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
+    $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
 define extract
-    $(eval TMP := $(shell mktemp -d $(1)_XXXXX))
-    mkdir -p $(2);
-    cd $(TMP) && $(JAR) xf $(abspath $(1)) && \\
+    $(eval TMP := $(shell mktemp -d tmp_XXXXX))
+    $(QUIETLY) mkdir -p $(2);
+    $(QUIETLY) cd $(TMP) && $(JAR) xf $(abspath $(1)) && \\
         ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))));
-    rm -r $(TMP);
-    cp $(1) $(2);
+    $(QUIETLY) rm -r $(TMP);
+    $(QUIETLY) cp $(1) $(2);
 endef
 
+define build_and_jar
+    $(info Building $(4))
+    $(eval TMP := $(shell mktemp -d JVMCI_HOTSPOT_XXXXX))
+    $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$?);
+    $(QUIETLY) test "$(3)" = "" || cp -r $(3) $(TMP);
+    $(QUIETLY) $(call process_options,$(TMP));
+    $(QUIETLY) mkdir -p $(shell dirname $(4))
+    $(QUIETLY) $(JAR) cf $(4) -C $(TMP) .
+    $(QUIETLY) rm -r $(TMP);
+endef
 
 all: default
 
 export: all
-\tmkdir -p $(EXPORT_DIR)
-\t$(foreach export,$(EXPORTED_FILES),$(call extract,$(export),$(EXPORT_DIR)))
+\t$(info Put $(EXPORTED_FILES) into SHARED_DIR $(SHARED_DIR))
+\t$(QUIETLY) mkdir -p $(SHARED_DIR)
+\t$(foreach export,$(EXPORTED_FILES),$(call extract,$(export),$(SHARED_DIR)))
 .PHONY: export
 
 """)
