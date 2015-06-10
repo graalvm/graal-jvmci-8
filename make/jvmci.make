@@ -38,7 +38,7 @@ define process_options
 endef
 
 define extract
-    $(eval TMP := $(shell mktemp -d tmp_XXXXX))
+    $(eval TMP := $(shell mktemp -d $(TARGET)/tmp_XXXXX))
     $(QUIETLY) mkdir -p $(2);
     $(QUIETLY) cd $(TMP) && $(JAR) xf $(abspath $(1)) && \
         ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))));
@@ -48,7 +48,7 @@ endef
 
 define build_and_jar
     $(info Building $(4))
-    $(eval TMP := $(shell mktemp -d JVMCI_HOTSPOT_XXXXX))
+    $(eval TMP := $(shell mkdir -p $(TARGET) && mktemp -d $(TARGET)/tmp_XXXXX))
     $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$?);
     $(QUIETLY) test "$(3)" = "" || cp -r $(3) $(TMP);
     $(QUIETLY) $(call process_options,$(TMP));
