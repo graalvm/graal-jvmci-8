@@ -27,15 +27,15 @@ import java.util.*;
 import sun.reflect.*;
 
 /**
- * An mechanism for loading services that have a {@linkplain Service JVMCI implementation}.
+ * An mechanism for accessing {@link Service JVMCI service providers}.
  */
 public class Services {
 
     private static final String SUPPRESS_PROPERTY_NAME = "jvmci.service.suppressNoClassDefFoundError";
 
     /**
-     * Determines whether to suppress the {@link NoClassDefFoundError} raised if a service
-     * implementation class specified in a {@code <jre>/jvmci/services/*} file is missing.
+     * Determines whether to suppress the {@link NoClassDefFoundError} raised if a service provider
+     * class specified in a {@code <jre>/jvmci/services/*} file is missing.
      */
     private static final boolean SuppressNoClassDefFoundError = Boolean.getBoolean(SUPPRESS_PROPERTY_NAME);
 
@@ -59,7 +59,7 @@ public class Services {
     };
 
     /**
-     * Gets an {@link Iterable} of the JVMCI implementations available for a given service.
+     * Gets an {@link Iterable} of the JVMCI providers available for a given service.
      *
      * @throws SecurityException if a security manager is present and it denies
      *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
@@ -79,12 +79,11 @@ public class Services {
     }
 
     /**
-     * Gets the JVMCI implementation for a given service for which at most one implementation must
-     * be available.
+     * Gets the JVMCI provider for a given service for which at most one provider must be available.
      *
-     * @param service the service whose implementation is being requested
-     * @param required specifies if an {@link InternalError} should be thrown if no implementation
-     *            of {@code service} is available
+     * @param service the service whose provider is being requested
+     * @param required specifies if an {@link InternalError} should be thrown if no provider of
+     *            {@code service} is available
      * @throws SecurityException if a security manager is present and it denies
      *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
@@ -95,21 +94,21 @@ public class Services {
         if (sm != null) {
             sm.checkPermission(new RuntimePermission("jvmciServices"));
         }
-        Iterable<S> impls;
+        Iterable<S> providers;
         try {
-            impls = (Iterable<S>) cache.get(service);
+            providers = (Iterable<S>) cache.get(service);
         } catch (UnsatisfiedLinkError e) {
-            impls = Collections.emptyList();
+            providers = Collections.emptyList();
         }
 
-        S singleImpl = null;
-        for (S impl : impls) {
-            if (singleImpl != null) {
-                throw new InternalError(String.format("Multiple %s implementations found: %s, %s", service.getName(), singleImpl.getClass().getName(), impl.getClass().getName()));
+        S singleProvider = null;
+        for (S provider : providers) {
+            if (singleProvider != null) {
+                throw new InternalError(String.format("Multiple %s providers found: %s, %s", service.getName(), singleProvider.getClass().getName(), provider.getClass().getName()));
             }
-            singleImpl = impl;
+            singleProvider = provider;
         }
-        if (singleImpl == null && required) {
+        if (singleProvider == null && required) {
             String javaHome = System.getProperty("java.home");
             String vmName = System.getProperty("java.vm.name");
             Formatter errorMessage = new Formatter();
@@ -118,7 +117,7 @@ public class Services {
             errorMessage.format("Currently used VM configuration is: %s", vmName);
             throw new UnsupportedOperationException(errorMessage.toString());
         }
-        return singleImpl;
+        return singleProvider;
     }
 
     static {
