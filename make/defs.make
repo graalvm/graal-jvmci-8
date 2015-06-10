@@ -113,6 +113,11 @@ ifeq ($(JVM_VARIANTS),)
   endif
 endif
 
+# If we build a no-jvmci-version, we suffix the compiler dir with -nojvmci
+ifeq ($(COMPILER_DIR_SUFFIX)$(INCLUDE_JVMCI),)
+	COMPILER_DIR_SUFFIX=-nojvmci
+endif
+
 # hotspot version definitions
 include $(GAMMADIR)/make/hotspot_version
 
