@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,7 +27,6 @@ import static com.oracle.graal.compiler.common.GraalOptions.*;
 import static com.oracle.graal.compiler.common.type.StampFactory.*;
 import static com.oracle.graal.graphbuilderconf.IntrinsicContext.CompilationContext.*;
 import static com.oracle.graal.java.BytecodeParser.Options.*;
-import static com.oracle.graal.nodes.StructuredGraph.*;
 import static com.oracle.graal.nodes.type.StampTool.*;
 import static com.oracle.jvmci.code.TypeCheckHints.*;
 import static com.oracle.jvmci.common.JVMCIError.*;
@@ -62,6 +61,7 @@ import com.oracle.graal.nodes.util.*;
 import com.oracle.graal.phases.*;
 import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.common.*;
+import com.oracle.jvmci.compiler.Compiler;
 import com.oracle.jvmci.debug.*;
 import com.oracle.jvmci.debug.Debug.Scope;
 import com.oracle.jvmci.meta.*;
@@ -1524,7 +1524,7 @@ public class BytecodeParser implements GraphBuilderContext {
     private void parseAndInlineCallee(ResolvedJavaMethod targetMethod, ValueNode[] args, IntrinsicContext calleeIntrinsicContext) {
         try (IntrinsicScope s = calleeIntrinsicContext != null && !parsingIntrinsic() ? new IntrinsicScope(this, targetMethod.getSignature().toParameterKinds(!targetMethod.isStatic()), args) : null) {
 
-            BytecodeParser parser = graphBuilderInstance.createBytecodeParser(graph, this, targetMethod, INVOCATION_ENTRY_BCI, calleeIntrinsicContext);
+            BytecodeParser parser = graphBuilderInstance.createBytecodeParser(graph, this, targetMethod, Compiler.INVOCATION_ENTRY_BCI, calleeIntrinsicContext);
             FrameStateBuilder startFrameState = new FrameStateBuilder(parser, targetMethod, graph);
             if (!targetMethod.isStatic()) {
                 args[0] = nullCheckedValue(args[0]);
@@ -2203,7 +2203,7 @@ public class BytecodeParser implements GraphBuilderContext {
                     ValueNode exception = frameState.stack[0];
                     FixedNode trueSuccessor = graph.add(new DeoptimizeNode(InvalidateReprofile, UnreachedCode));
                     FixedNode nextDispatch = createTarget(nextBlock, frameState);
-                    append(new IfNode(graph.unique(new InstanceOfNode((ResolvedJavaType) catchType, exception, null)), trueSuccessor, nextDispatch, 0));
+                    append(new IfNode(graph.unique(InstanceOfNode.create((ResolvedJavaType) catchType, exception, null)), trueSuccessor, nextDispatch, 0));
                     return;
                 }
             }
@@ -2220,7 +2220,7 @@ public class BytecodeParser implements GraphBuilderContext {
             frameState.push(Kind.Object, exception);
             FixedNode nextDispatch = createTarget(nextBlock, frameState);
             checkCast.setNext(catchSuccessor);
-            append(new IfNode(graph.unique(new InstanceOfNode((ResolvedJavaType) catchType, exception, null)), checkCast, nextDispatch, 0.5));
+            append(new IfNode(graph.unique(InstanceOfNode.create((ResolvedJavaType) catchType, exception, null)), checkCast, nextDispatch, 0.5));
         } else {
             handleUnresolvedExceptionType(catchType);
         }
@@ -2294,7 +2294,7 @@ public class BytecodeParser implements GraphBuilderContext {
                     throw new BailoutException("OSR into a JSR scope is not supported");
                 }
                 EntryMarkerNode x = append(new EntryMarkerNode());
-                frameState.insertProxies(value -> ProxyNode.forValue(value, x, graph));
+                frameState.insertProxies(value -> graph.unique(new EntryProxyNode(value, x)));
                 x.setStateAfter(createFrameState(bci, x));
             }
 
@@ -2900,7 +2900,7 @@ public class BytecodeParser implements GraphBuilderContext {
     private JavaField lookupField(int cpi, int opcode) {
         maybeEagerlyResolve(cpi, opcode);
         JavaField result = constantPool.lookupField(cpi, opcode);
-        if (graphBuilderConfig.unresolvedIsError()) {
+        if (graphBuilderConfig.eagerResolving()) {
             assert result instanceof ResolvedJavaField : "Not resolved: " + result;
             ResolvedJavaType declaringClass = ((ResolvedJavaField) result).getDeclaringClass();
             if (!declaringClass.isInitialized()) {

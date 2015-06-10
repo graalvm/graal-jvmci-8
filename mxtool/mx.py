@@ -144,13 +144,18 @@ class Distribution:
         self.update_listeners.add(listener)
 
     def get_dist_deps(self, includeSelf=True, transitive=False):
-        deps = set()
+        deps = []
         if includeSelf:
-            deps.add(self)
-        deps.update([distribution(name) for name in self.distDependencies])
+            deps.append(self)
+        for name in self.distDependencies:
+            dist = distribution(name)
+            if dist not in deps:
+                deps.append(dist)
         if transitive:
             for depName in self.distDependencies:
-                deps.update(distribution(depName).get_dist_deps(False, False))
+                for recDep in distribution(depName).get_dist_deps(False, True):
+                    if recDep not in deps:
+                        deps.append(recDep)
         return list(deps)
 
     """
@@ -646,8 +651,15 @@ def download_file_with_sha1(name, path, urls, sha1, sha1path, resolve, mustExist
         if canSymlink and 'symlink' in dir(os):
             if exists(path):
                 os.unlink(path)
-            print 'Path ' + cachePath + ' path: ' + path
-            os.symlink(cachePath, path)
+            try:
+                os.symlink(cachePath, path)
+            except OSError as e:
+                # When doing parallel building, the symlink can fail
+                # if another thread wins the race to create the symlink
+                if not exists(path):
+                    # It was some other error
+                    raise e
+
         else:
             shutil.copy(cachePath, path)
 
@@ -2824,7 +2836,7 @@ def build(args, parser=None):
         nonjavafiletuples = []
         for sourceDir in sourceDirs:
             for root, _, files in os.walk(sourceDir):
-                javafiles = [join(root, name) for name in files if name.endswith('.java') and name != 'package-info.java']
+                javafiles = [join(root, name) for name in files if name.endswith('.java')]
                 javafilelist += javafiles
 
                 nonjavafiletuples += [(sourceDir, [join(root, name) for name in files if not name.endswith('.java')])]
@@ -2833,8 +2845,9 @@ def build(args, parser=None):
                     for javafile in javafiles:
                         classfile = TimeStampFile(outputDir + javafile[len(sourceDir):-len('java')] + 'class')
                         if not classfile.exists() or classfile.isOlderThan(javafile):
-                            buildReason = 'class file(s) out of date'
-                            break
+                            if basename(classfile.path) != 'package-info.class':
+                                buildReason = 'class file(s) out of date'
+                                break
 
         apsOutOfDate = p.update_current_annotation_processors_file()
         if apsOutOfDate:

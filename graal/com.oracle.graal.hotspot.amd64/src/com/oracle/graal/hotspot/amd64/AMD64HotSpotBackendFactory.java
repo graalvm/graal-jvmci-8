@@ -91,7 +91,7 @@ public class AMD64HotSpotBackendFactory implements HotSpotBackendFactory {
                 replacements.setGraphBuilderPlugins(plugins);
             }
             try (InitTimer rt = timer("create Suites provider")) {
-                suites = createSuites(runtime, plugins);
+                suites = createSuites(runtime, plugins, codeCache, registers);
             }
             providers = new HotSpotProviders(metaAccess, codeCache, constantReflection, foreignCalls, lowerer, replacements, suites, registers, snippetReflection, wordTypes, plugins);
         }
@@ -125,8 +125,8 @@ public class AMD64HotSpotBackendFactory implements HotSpotBackendFactory {
         return new AMD64HotSpotForeignCallsProvider(runtime, metaAccess, codeCache, nativeABICallerSaveRegisters);
     }
 
-    protected HotSpotSuitesProvider createSuites(HotSpotGraalRuntimeProvider runtime, Plugins plugins) {
-        return new HotSpotSuitesProvider(runtime, plugins);
+    protected HotSpotSuitesProvider createSuites(HotSpotGraalRuntimeProvider runtime, Plugins plugins, CodeCacheProvider codeCache, HotSpotRegistersProvider registers) {
+        return new HotSpotSuitesProvider(runtime, plugins, new AMD64HotSpotAddressLowering(codeCache, runtime.getConfig().getOopEncoding().base, registers.getHeapBaseRegister()));
     }
 
     protected HotSpotSnippetReflectionProvider createSnippetReflection(HotSpotGraalRuntimeProvider runtime) {

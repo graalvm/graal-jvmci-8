@@ -27,10 +27,10 @@
 #include "runtime/arguments.hpp"
 #include "utilities/hashtable.inline.hpp"
 
-class OptionsParseClosure : public ParseClosure {
-  OptionsTable* _table;
+class OptionDescParseClosure : public ParseClosure {
+  OptionDescsTable* _table;
 public:
-  OptionsParseClosure(OptionsTable* table) : _table(table) {}
+  OptionDescParseClosure(OptionDescsTable* table) : _table(table) {}
   void do_line(char* line) {
     char* idx = strchr(line, '\t');
     if (idx == NULL) {
@@ -118,13 +118,13 @@ class FreeNamesClosure : public ValueClosure<OptionDesc> {
   }
 };
 
-OptionsTable::~OptionsTable() {
+OptionDescsTable::~OptionDescsTable() {
   FreeNamesClosure closure;
   for_each(&closure);
 }
 
-OptionsTable* OptionsTable::load_options() {
-  OptionsTable* table = new OptionsTable();
+OptionDescsTable* OptionDescsTable::load_options() {
+  OptionDescsTable* table = new OptionDescsTable();
   // Add PrintFlags option manually
   OptionDesc printFlagsDesc;
   printFlagsDesc.name = PRINT_FLAGS_ARG;
@@ -142,7 +142,7 @@ OptionsTable* OptionsTable::load_options() {
   if (dir != NULL) {
     struct dirent *entry;
     char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(optionsDir), mtInternal);
-    OptionsParseClosure closure(table);
+    OptionDescParseClosure closure(table);
     while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL && !closure.is_aborted()) {
       const char* name = entry->d_name;
       char optionFilePath[JVM_MAXPATHLEN];
@@ -162,7 +162,7 @@ OptionsTable* OptionsTable::load_options() {
   return table;
 }
 
-OptionDesc* OptionsTable::get(const char* name, size_t arglen) {
+OptionDesc* OptionDescsTable::get(const char* name, size_t arglen) {
   char nameOnly[256];
   guarantee(arglen < 256, "Max supported option name len is 256");
   strncpy(nameOnly, name, arglen);
@@ -213,7 +213,7 @@ public:
   }
 };
 
-OptionDesc * OptionsTable::fuzzy_match(const char* name, size_t length) {
+OptionDesc * OptionDescsTable::fuzzy_match(const char* name, size_t length) {
   FuzzyMatchClosure closure(name);
   for_each(&closure);
   return closure.get_match();
@@ -227,7 +227,7 @@ class FreeStringsClosure : public ValueClosure<OptionValue> {
   }
 };
 
-OptionsValueTable::~OptionsValueTable() {
+OptionValuesTable::~OptionValuesTable() {
   FreeStringsClosure closure;
   for_each(&closure);
   delete _table;
@@ -235,7 +235,7 @@ OptionsValueTable::~OptionsValueTable() {
 
 
 
-OptionValue* OptionsValueTable::get(const char* name, size_t arglen) {
+OptionValue* OptionValuesTable::get(const char* name, size_t arglen) {
   char nameOnly[256];
   guarantee(arglen < 256, "Max supported option name len is 256");
   strncpy(nameOnly, name, arglen);

@@ -28,11 +28,11 @@
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/macros.hpp"
 
-// Sets the default values for platform dependent flags used by the Graal compiler.
-// (see graalGlobals.hpp)
+// Sets the default values for platform dependent flags used by the JVMCI compiler.
+// (see jvmciGlobals.hpp)
 
-#ifdef COMPILERGRAAL
+#ifdef COMPILERJVMCI
 #error Unimplemented
-#endif // COMPILERGRAAL
+#endif // COMPILERJVMCI
 
-#endif // CPU_PPC_VM_GRAALGLOBALS_PPC_HPP
+#endif // CPU_PPC_VM_JVMCIGLOBALS_PPC_HPP

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -46,6 +46,7 @@ import static com.oracle.graal.replacements.SnippetTemplate.*;
 import java.util.*;
 
 import com.oracle.graal.api.replacements.*;
+import com.oracle.graal.compiler.common.type.*;
 import com.oracle.graal.graph.Node.ConstantNodeParameter;
 import com.oracle.graal.graph.Node.NodeIntrinsic;
 import com.oracle.graal.graph.iterators.*;
@@ -57,6 +58,7 @@ import com.oracle.graal.nodes.CallTargetNode.InvokeKind;
 import com.oracle.graal.nodes.debug.*;
 import com.oracle.graal.nodes.extended.*;
 import com.oracle.graal.nodes.java.*;
+import com.oracle.graal.nodes.memory.address.*;
 import com.oracle.graal.nodes.spi.*;
 import com.oracle.graal.nodes.type.*;
 import com.oracle.graal.phases.common.inlining.*;
@@ -107,14 +109,9 @@ public class MonitorSnippets implements Snippets {
     public static final boolean CHECK_BALANCED_MONITORS = Boolean.getBoolean("graal.monitors.checkBalanced");
 
     @Snippet
-    public static void monitorenter(Object object, @ConstantParameter int lockDepth, @ConstantParameter Register threadRegister, @ConstantParameter Register stackPointerRegister,
+    public static void monitorenter(Object object, KlassPointer hub, @ConstantParameter int lockDepth, @ConstantParameter Register threadRegister, @ConstantParameter Register stackPointerRegister,
                     @ConstantParameter boolean trace) {
         verifyOop(object);
-
-        if (object == null) {
-            DeoptimizeNode.deopt(DeoptimizationAction.InvalidateReprofile, DeoptimizationReason.NullCheckException);
-        }
-        GuardingNode anchorNode = SnippetAnchorNode.anchor();
 
         // Load the mark word - this includes a null-check on object
         final Word mark = loadWordFromObject(object, markOffset());
@@ -141,7 +138,6 @@ public class MonitorSnippets implements Snippets {
             } else {
                 // The bias pattern is present in the object's mark word. Need to check
                 // whether the bias owner and the epoch are both still current.
-                KlassPointer hub = loadHubIntrinsic(object, anchorNode);
                 final Word prototypeMarkWord = hub.readWord(prototypeMarkWordOffset(), PROTOTYPE_MARK_WORD_LOCATION);
                 final Word thread = registerAsWord(threadRegister);
                 final Word tmp = prototypeMarkWord.or(thread).xor(mark).and(~ageMaskInPlace());
@@ -185,7 +181,7 @@ public class MonitorSnippets implements Snippets {
                         Word biasedMark = unbiasedMark.or(thread);
                         trace(trace, "     unbiasedMark: 0x%016lx\n", unbiasedMark);
                         trace(trace, "       biasedMark: 0x%016lx\n", biasedMark);
-                        if (probability(VERY_FAST_PATH_PROBABILITY, compareAndSwap(object, markOffset(), unbiasedMark, biasedMark, MARK_WORD_LOCATION).equal(unbiasedMark))) {
+                        if (probability(VERY_FAST_PATH_PROBABILITY, compareAndSwap(OffsetAddressNode.address(object, markOffset()), unbiasedMark, biasedMark, MARK_WORD_LOCATION).equal(unbiasedMark))) {
                             // Object is now biased to current thread -> done
                             traceObject(trace, "+lock{bias:acquired}", object, true);
                             lockBiasAcquired.inc();
@@ -205,7 +201,7 @@ public class MonitorSnippets implements Snippets {
                         // the bias from one thread to another directly in this situation.
                         Word biasedMark = prototypeMarkWord.or(thread);
                         trace(trace, "       biasedMark: 0x%016lx\n", biasedMark);
-                        if (probability(VERY_FAST_PATH_PROBABILITY, compareAndSwap(object, markOffset(), mark, biasedMark, MARK_WORD_LOCATION).equal(mark))) {
+                        if (probability(VERY_FAST_PATH_PROBABILITY, compareAndSwap(OffsetAddressNode.address(object, markOffset()), mark, biasedMark, MARK_WORD_LOCATION).equal(mark))) {
                             // Object is now biased to current thread -> done
                             traceObject(trace, "+lock{bias:transfer}", object, true);
                             lockBiasTransfer.inc();
@@ -228,7 +224,7 @@ public class MonitorSnippets implements Snippets {
                     // that another thread raced us for the privilege of revoking the
                     // bias of this particular object, so it's okay to continue in the
                     // normal locking code.
-                    Word result = compareAndSwap(object, markOffset(), mark, prototypeMarkWord, MARK_WORD_LOCATION);
+                    Word result = compareAndSwap(OffsetAddressNode.address(object, markOffset()), mark, prototypeMarkWord, MARK_WORD_LOCATION);
 
                     // Fall through to the normal CAS-based lock, because no matter what
                     // the result of the above CAS, some thread must have succeeded in
@@ -251,7 +247,7 @@ public class MonitorSnippets implements Snippets {
 
         // Test if the object's mark word is unlocked, and if so, store the
         // (address of) the lock slot into the object's mark word.
-        Word currentMark = compareAndSwap(object, markOffset(), unlockedMark, lock, MARK_WORD_LOCATION);
+        Word currentMark = compareAndSwap(OffsetAddressNode.address(object, markOffset()), unlockedMark, lock, MARK_WORD_LOCATION);
         if (currentMark.notEqual(unlockedMark)) {
             trace(trace, "      currentMark: 0x%016lx\n", currentMark);
             // The mark word in the object header was not the same.
@@ -342,7 +338,8 @@ public class MonitorSnippets implements Snippets {
             // Test if object's mark word is pointing to the displaced mark word, and if so, restore
             // the displaced mark in the object - if the object's mark word is not pointing to
             // the displaced mark word, do unlocking via runtime call.
-            if (probability(VERY_SLOW_PATH_PROBABILITY, DirectCompareAndSwapNode.compareAndSwap(object, markOffset(), lock, displacedMark, MARK_WORD_LOCATION).notEqual(lock))) {
+            if (probability(VERY_SLOW_PATH_PROBABILITY,
+                            DirectCompareAndSwapNode.compareAndSwap(OffsetAddressNode.address(object, markOffset()), lock, displacedMark, MARK_WORD_LOCATION).notEqual(lock))) {
                 // The object's mark word was not pointing to the displaced header,
                 // we do unlocking via runtime call.
                 traceObject(trace, "-lock{stub}", object, false);
@@ -445,9 +442,11 @@ public class MonitorSnippets implements Snippets {
             this.useFastLocking = useFastLocking;
         }
 
-        public void lower(MonitorEnterNode monitorenterNode, HotSpotRegistersProvider registers, LoweringTool tool) {
+        public void lower(RawMonitorEnterNode monitorenterNode, HotSpotRegistersProvider registers, LoweringTool tool) {
             StructuredGraph graph = monitorenterNode.graph();
             checkBalancedMonitors(graph, tool);
+
+            assert ((ObjectStamp) monitorenterNode.object().stamp()).nonNull();
 
             Arguments args;
             if (useFastLocking) {
@@ -456,6 +455,7 @@ public class MonitorSnippets implements Snippets {
                 args = new Arguments(monitorenterStub, graph.getGuardsStage(), tool.getLoweringStage());
             }
             args.add("object", monitorenterNode.object());
+            args.add("hub", monitorenterNode.getHub());
             args.addConst("lockDepth", monitorenterNode.getMonitorId().getLockDepth());
             args.addConst("threadRegister", registers.getThreadRegister());
             args.addConst("stackPointerRegister", registers.getStackPointerRegister());

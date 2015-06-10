@@ -256,6 +256,7 @@ public class LoweringPhase extends BasePhase<PhaseContext> {
         @Override
         public void run(StructuredGraph graph) {
             schedule.apply(graph, false);
+            schedule.getCFG().computePostdominators();
             Block startBlock = schedule.getCFG().getStartBlock();
             ProcessFrame rootFrame = new ProcessFrame(startBlock, graph.createNodeBitMap(), startBlock.getBeginNode(), null);
             LoweringPhase.processBlock(rootFrame);
@@ -283,7 +284,13 @@ public class LoweringPhase extends BasePhase<PhaseContext> {
 
             @Override
             public Frame<?> enterAlwaysReached(Block b) {
-                return new ProcessFrame(b, activeGuards, anchor, this);
+                AnchoringNode newAnchor = anchor;
+                if (parent != null && b.getLoop() != parent.block.getLoop() && !b.isLoopHeader()) {
+                    // We are exiting a loop => cannot reuse the anchor without inserting loop
+                    // proxies.
+                    newAnchor = b.getBeginNode();
+                }
+                return new ProcessFrame(b, activeGuards, newAnchor, this);
             }
 
             @Override

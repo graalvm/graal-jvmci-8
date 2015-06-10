@@ -75,8 +75,8 @@ class BuildConfig {
                 outDir = outDir.substring(0, lastDirectorySeparator);
             }
             outDir += Util.sep + build + Util.sep + "jre" + Util.sep + "bin";
-            if (flavour.equals("graal")) {
-                outDir += Util.sep + "graal";
+            if (flavour.equals("jvmci")) {
+                outDir += Util.sep + "jvmci";
             } else if (flavour.equals("compiler1")) {
                 outDir += Util.sep + "client";
             } else {
@@ -559,7 +559,7 @@ class GraalDebugConfig extends GenericDebugNonKernelConfig {
     }
 
     GraalDebugConfig() {
-        initNames("graal", "debug", "jvm.dll");
+        initNames("jvmci", "debug", "jvm.dll");
         init(getIncludes(), getDefines());
     }
 }
@@ -570,7 +570,7 @@ class GraalFastDebugConfig extends GenericDebugNonKernelConfig {
     }
 
     GraalFastDebugConfig() {
-        initNames("graal", "fastdebug", "jvm.dll");
+        initNames("jvmci", "fastdebug", "jvm.dll");
         init(getIncludes(), getDefines());
     }
 }
@@ -655,7 +655,7 @@ abstract class ProductConfig extends BuildConfig {
 
 class GraalProductConfig extends ProductConfig {
     GraalProductConfig() {
-        initNames("graal", "product", "jvm.dll");
+        initNames("jvmci", "product", "jvm.dll");
         init(getIncludes(), getDefines());
     }
 }

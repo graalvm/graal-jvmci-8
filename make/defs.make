@@ -373,63 +373,9 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotS
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaFieldImpl
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaMethodImpl
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.CompileTheWorld
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.compiler.Compiler
 
-ifeq ($(JVMCI_USE_MAKE),)
-EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/truffle.jar
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/graal.jar
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/graal-truffle.jar
-
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotVMEventListener
-
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.debug.DebugInitializationPropertyProvider
-
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.api.runtime.GraalRuntimeAccess
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.code.DisassemblerProvider
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.compiler.match.MatchStatementSet
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.hotspot.HotSpotBackendFactory
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.nodes.spi.ReplacementsProvider
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.phases.tiers.CompilerConfiguration
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.truffle.hotspot.nfi.RawNativeCallNodeFactory
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.truffle.OptimizedCallTargetInstrumentationFactory
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.graal.truffle.LoopNodeFactory
-
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.truffle.api.TruffleRuntimeAccess
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.nfi.api.NativeFunctionInterfaceAccess
-
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.common.GraalOptions
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.GraalCompiler
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.GraalDebugConfig
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.phases.HighTier
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.compiler.phases.LowTier
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.graph.Graph
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.CompileTheWorld
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.debug.BenchmarkCounters
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.HotSpotBackend
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.HotSpotGraalRuntime
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.replacements.InstanceOfSnippets
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.replacements.MonitorSnippets
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.hotspot.replacements.NewObjectSnippets
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.alloc.lsra.LinearScan
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.alloc.lsra.LocationMarker
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.alloc.lsra.OptimizingLinearScanWalker
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.constopt.ConstantLoadOptimization
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.gen.LIRGenerator
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.phases.LIRPhase
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.phases.PostAllocationOptimizationStage
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.ssa.SSADestructionPhase
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.stackslotalloc.LSStackSlotAllocator
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.loop.LoopPolicies
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.phases.common.DeadCodeEliminationPhase
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.phases.common.inlining.InliningPhase
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.phases.tiers.Suites
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.printer.NoDeadCodeVerifyHandler
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.replacements.StandardGraphBuilderPlugins
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.truffle.PartialEvaluator
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.truffle.TruffleCompilerOptions
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.virtual.phases.ea.PartialEscapePhase
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.lir.asm.CompilationResultBuilder
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.graal.java.BytecodeParser
-endif
 
 .PHONY: $(HS_ALT_MAKE)/defs.make
 

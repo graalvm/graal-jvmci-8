@@ -120,18 +120,21 @@ public class CheckCastNode extends FixedWithNextNode implements Canonicalizable,
     public void lower(LoweringTool tool) {
         Stamp newStamp = StampFactory.declaredTrusted(type).improveWith(object().stamp());
         LogicNode condition;
+        LogicNode innerNode = null;
         ValueNode theValue = object;
         if (newStamp.isEmpty()) {
             // This is a check cast that will always fail
             condition = LogicConstantNode.contradiction(graph());
             newStamp = StampFactory.declaredTrusted(type);
         } else if (StampTool.isPointerNonNull(object)) {
-            condition = graph().addWithoutUnique(new InstanceOfNode(type, object, profile));
+            condition = graph().addWithoutUnique(InstanceOfNode.create(type, object, profile));
+            innerNode = condition;
         } else {
             if (profile != null && profile.getNullSeen() == TriState.FALSE) {
                 FixedGuardNode nullCheck = graph().add(new FixedGuardNode(graph().unique(new IsNullNode(object)), UnreachedCode, InvalidateReprofile, true));
                 PiNode nullGuarded = graph().unique(new PiNode(object, object().stamp().join(StampFactory.objectNonNull()), nullCheck));
-                InstanceOfNode typeTest = graph().addWithoutUnique(new InstanceOfNode(type, nullGuarded, profile));
+                LogicNode typeTest = graph().addWithoutUnique(InstanceOfNode.create(type, nullGuarded, profile));
+                innerNode = typeTest;
                 graph().addBeforeFixed(this, nullCheck);
                 condition = typeTest;
                 /*
@@ -145,15 +148,20 @@ public class CheckCastNode extends FixedWithNextNode implements Canonicalizable,
             } else {
                 // TODO (ds) replace with probability of null-seen when available
                 double shortCircuitProbability = NOT_FREQUENT_PROBABILITY;
-                InstanceOfNode typeTest = graph().addWithoutUnique(new InstanceOfNode(type, object, profile));
+                LogicNode typeTest = graph().addOrUnique(InstanceOfNode.create(type, object, profile));
+                innerNode = typeTest;
                 condition = LogicNode.or(graph().unique(new IsNullNode(object)), typeTest, shortCircuitProbability);
             }
         }
         GuardingNode guard = tool.createGuard(next(), condition, forStoreCheck ? ArrayStoreException : ClassCastException, InvalidateReprofile, false);
         ValueAnchorNode valueAnchor = graph().add(new ValueAnchorNode((ValueNode) guard));
-        PiNode piNode = graph().unique(new PiNode(theValue, newStamp, valueAnchor));
+        PiNode piNode = graph().unique(new PiNode(theValue, newStamp, (ValueNode) guard));
         this.replaceAtUsages(piNode);
         graph().replaceFixedWithFixed(this, valueAnchor);
+
+        if (innerNode instanceof Lowerable) {
+            tool.getLowerer().lower(innerNode, tool);
+        }
     }
 
     @Override

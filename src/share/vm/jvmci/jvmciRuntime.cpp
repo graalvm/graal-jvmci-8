@@ -729,13 +729,13 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
   }
 }
 
-OptionsValueTable* JVMCIRuntime::parse_arguments() {
-  OptionsTable* table = OptionsTable::load_options();
+OptionValuesTable* JVMCIRuntime::parse_arguments() {
+  OptionDescsTable* table = OptionDescsTable::load_options();
   if (table == NULL) {
     return NULL;
   }
 
-  OptionsValueTable* options = new OptionsValueTable(table);
+  OptionValuesTable* options = new OptionValuesTable(table);
 
   // Process option overrides from jvmci.options first
   parse_jvmci_options_file(options);
@@ -752,7 +752,7 @@ OptionsValueTable* JVMCIRuntime::parse_arguments() {
   return options;
 }
 
-void not_found(OptionsTable* table, const char* argname, size_t namelen) {
+void not_found(OptionDescsTable* table, const char* argname, size_t namelen) {
   jio_fprintf(defaultStream::error_stream(),"Unrecognized VM option '%.*s'\n", namelen, argname);
   OptionDesc* fuzzy_matched = table->fuzzy_match(argname, strlen(argname));
   if (fuzzy_matched != NULL) {
@@ -764,8 +764,8 @@ void not_found(OptionsTable* table, const char* argname, size_t namelen) {
   }
 }
 
-bool JVMCIRuntime::parse_argument(OptionsValueTable* options, const char* arg) {
-  OptionsTable* table = options->options_table();
+bool JVMCIRuntime::parse_argument(OptionValuesTable* options, const char* arg) {
+  OptionDescsTable* table = options->options_table();
   char first = arg[0];
   const char* name;
   size_t name_len;
@@ -862,9 +862,9 @@ bool JVMCIRuntime::parse_argument(OptionsValueTable* options, const char* arg) {
 }
 
 class JVMCIOptionParseClosure : public ParseClosure {
-  OptionsValueTable* _options;
+  OptionValuesTable* _options;
 public:
-  JVMCIOptionParseClosure(OptionsValueTable* options) : _options(options) {}
+  JVMCIOptionParseClosure(OptionValuesTable* options) : _options(options) {}
   void do_line(char* line) {
     if (!JVMCIRuntime::parse_argument(_options, line)) {
       warn("There was an error parsing an argument. Skipping it.");
@@ -872,7 +872,7 @@ public:
   }
 };
 
-void JVMCIRuntime::parse_jvmci_options_file(OptionsValueTable* options) {
+void JVMCIRuntime::parse_jvmci_options_file(OptionValuesTable* options) {
   const char* home = Arguments::get_java_home();
   size_t path_len = strlen(home) + strlen("/lib/jvmci.options") + 1;
   char path[JVM_MAXPATHLEN];
@@ -1010,7 +1010,7 @@ public:
   }
 };
 
-void JVMCIRuntime::set_options(OptionsValueTable* options, TRAPS) {
+void JVMCIRuntime::set_options(OptionValuesTable* options, TRAPS) {
   ensure_jvmci_class_loader_is_initialized();
   {
     ResourceMark rm;
@@ -1181,7 +1181,7 @@ public:
   ServiceParseClosure() : _implNames() {}
   void do_line(char* line) {
     size_t lineLen = strlen(line);
-    char* implName = NEW_C_HEAP_ARRAY(char, lineLen + 1, mtCompiler); // TODO (gd) i'm leaking
+    char* implName = NEW_RESOURCE_ARRAY(char, lineLen + 1);
     // Turn all '.'s into '/'s
     for (size_t index = 0; index < lineLen; ++index) {
       if (line[index] == '.') {

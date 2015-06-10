@@ -550,18 +550,24 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _filterJVMCIServices(serviceImplNames, classpath):
+def _filterJVMCIServices(servicesMap, classpath):
     """
     Filters and returns the names in 'serviceImplNames' that denote
     types available in 'classpath' implementing or extending
     com.oracle.jvmci.service.Service.
     """
     _, binDir = mx._compile_mx_class('FilterTypes', os.pathsep.join(classpath), myDir=dirname(__file__))
-    cmd = [mx.java().java, '-cp', mx._cygpathU2W(os.pathsep.join([binDir] + classpath)), 'FilterTypes', 'com.oracle.jvmci.service.Service'] + serviceImplNames
-    services = subprocess.check_output(cmd)
-    if len(services) == 0:
-        return []
-    return services.split('|')
+    serialized = [k + '=' + ','.join(v) for k, v in servicesMap.iteritems()]
+    cmd = [mx.java().java, '-cp', mx._cygpathU2W(os.pathsep.join([binDir] + classpath)), 'FilterTypes', 'com.oracle.jvmci.service.Service'] + serialized
+    serialized = subprocess.check_output(cmd)
+    if len(serialized) == 0:
+        return {}
+    servicesMap = {}
+    for e in serialized.split(' '):
+        k, v = e.split('=')
+        impls = v.split(',')
+        servicesMap[k] = impls
+    return servicesMap
 
 def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestination=True):
     if cleanDestination:
@@ -602,9 +608,8 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
                         with zf.open(member) as optionsFile, \
                              file(targetpath, "wb") as target:
                             shutil.copyfileobj(optionsFile, target)
-    jvmciServices = _filterJVMCIServices(servicesMap.keys(), jdkJars)
-    for serviceName in jvmciServices:
-        serviceImpls = servicesMap[serviceName]
+    servicesMap = _filterJVMCIServices(servicesMap, jdkJars)
+    for serviceName, serviceImpls in servicesMap.iteritems():
         fd, tmp = tempfile.mkstemp(prefix=serviceName)
         f = os.fdopen(fd, 'w+')
         for serviceImpl in serviceImpls:
@@ -614,7 +619,6 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestina
         shutil.move(tmp, target)
         if mx.get_os() != 'windows':
             os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
-    return (jvmciServices, optionsFiles)
 
 def _updateJVMCIFiles(jdkDir):
     jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')
@@ -829,7 +833,7 @@ def graal_version(dev_suffix='dev'):
                 major, minor = map(int, most_recent_tag_version.split('.'))
                 cached_graal_version = str(major) + '.' + str(minor + 1) + '-' + dev_suffix
         else:
-            cached_graal_version = 'unknown-{0}-{1}'.format(platform.node(), time.strftime('%Y-%m-%d_%H-%M-%S_%Z'))
+            cached_graal_version = 'unknown-{0}'.format(platform.node())
 
     return cached_graal_version
 
@@ -837,12 +841,6 @@ def build(args, vm=None):
     """build the VM binary
 
     The global '--vm' and '--vmbuild' options select which VM type and build target to build."""
-
-    # Turn all jdk distributions into non HotSpot; this is only necessary as long we support building/exporting JVMCI with make and mx
-    if not ("-m" in args or "--use-make" in args):
-        for jdkDist in _jdkDeployedDists:
-            if jdkDist.partOfHotSpot:
-                jdkDist.partOfHotSpot = False
 
     # Override to fail quickly if extra arguments are given
     # at the end of the command line. This allows for a more
@@ -860,51 +858,10 @@ def build(args, vm=None):
 
     # Call mx.build to compile the Java sources
     parser = AP()
-    parser.add_argument('--export-dir', help='directory to which JVMCI and Graal jars and jvmci.options will be copied', metavar='<path>')
     parser.add_argument('-D', action='append', help='set a HotSpot build variable (run \'mx buildvars\' to list variables)', metavar='name=value')
-    parser.add_argument('-m', '--use-make', action='store_true', help='Use the jvmci.make file to build and export JVMCI')
+
     opts2 = mx.build(['--source', '1.7'] + args, parser=parser)
     assert len(opts2.remainder) == 0
-
-    if opts2.export_dir is not None:
-        if not exists(opts2.export_dir):
-            os.makedirs(opts2.export_dir)
-        else:
-            assert os.path.isdir(opts2.export_dir), '{0} is not a directory'.format(opts2.export_dir)
-
-        defsPath = join(_graal_home, 'make', 'defs.make')
-        with open(defsPath) as fp:
-            defs = fp.read()
-        jvmciJars = []
-        jdkJars = []
-        for jdkDist in _jdkDeployedDists:
-            dist = mx.distribution(jdkDist.name)
-            jdkJars.append(join(_graal_home, dist.path))
-            defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
-            if jdkDist.isExtension:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_EXT_DIR)/' + basename(dist.path)
-            elif jdkDist.usesJVMCIClassLoader:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/' + basename(dist.path)
-                jvmciJars.append(dist.path)
-            else:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/' + basename(dist.path)
-            if defLine not in defs:
-                mx.abort('Missing following line in ' + defsPath + '\n' + defLine)
-                shutil.copy(dist.path, opts2.export_dir)
-
-        services, optionsFiles = _extractJVMCIFiles(jdkJars, jvmciJars, join(opts2.export_dir, 'services'), join(opts2.export_dir, 'options'))
-        if not opts2.use_make:
-            for service in services:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/' + service
-                if defLine not in defs:
-                    mx.abort('Missing following line in ' + defsPath + ' for service from ' + dist.name + '\n' + defLine)
-            for optionsFile in optionsFiles:
-                defLine = 'EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/' + optionsFile
-                if defLine not in defs:
-                    mx.abort('Missing following line in ' + defsPath + ' for options from ' + dist.name + '\n' + defLine)
-        jvmciOptions = join(_graal_home, 'jvmci.options')
-        if exists(jvmciOptions):
-            shutil.copy(jvmciOptions, opts2.export_dir)
 
     if not _vmSourcesAvailable or not opts2.native:
         return
@@ -969,7 +926,7 @@ def build(args, vm=None):
             mustBuild = False
             timestamp = os.path.getmtime(timestampFile)
             sources = []
-            for d in ['src', 'make', join('graal', 'com.oracle.jvmci.hotspot', 'src_gen', 'hotspot')]:
+            for d in ['src', 'make', join('jvmci', 'com.oracle.jvmci.hotspot', 'src_gen', 'hotspot')]:
                 for root, dirnames, files in os.walk(join(_graal_home, d)):
                     # ignore <graal>/src/share/tools
                     if root == join(_graal_home, 'src', 'share'):
@@ -1054,8 +1011,12 @@ def build(args, vm=None):
                         setMakeVar('STRIP_POLICY', 'no_strip')
             # This removes the need to unzip the *.diz files before debugging in gdb
             setMakeVar('ZIP_DEBUGINFO_FILES', '0', env=env)
-            if opts2.use_make:
-                setMakeVar('JVMCI_USE_MAKE', '1')
+
+            if buildSuffix == "1":
+                setMakeVar("JVM_VARIANTS", "client")
+            elif buildSuffix == "":
+                setMakeVar("JVM_VARIANTS", "server")
+
             # Clear this variable as having it set can cause very confusing build problems
             env.pop('CLASSPATH', None)
 
@@ -1066,8 +1027,10 @@ def build(args, vm=None):
             envPrefix = ' '.join([key + '=' + env[key] for key in env.iterkeys() if not os.environ.has_key(key) or env[key] != os.environ[key]])
             if len(envPrefix):
                 mx.log('env ' + envPrefix + ' \\')
-            makeTarget = "all_" + build + buildSuffix if opts2.use_make else build + buildSuffix
-            runCmd.append(makeTarget)
+
+            runCmd.append(build + buildSuffix)
+            runCmd.append("docs")
+            runCmd.append("export_" + build)
 
             if not mx._opts.verbose:
                 mx.log(' '.join(runCmd))
@@ -1178,9 +1141,11 @@ def _parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
         if  len(ignoredArgs) > 0:
             mx.log("Warning: The following options will be ignored by the vm because they come after the '-version' argument: " + ' '.join(ignoredArgs))
 
-    if vm == 'original':
-        truffle_jar = mx.archive(['@TRUFFLE'])[0]
-        args = ['-Xbootclasspath/p:' + truffle_jar] + args
+    # Unconditionally prepend Truffle to the boot class path.
+    # This used to be done by the VM itself but was removed to
+    # separate the VM from Truffle.
+    truffle_jar = mx.archive(['@TRUFFLE'])[0]
+    args = ['-Xbootclasspath/p:' + truffle_jar] + args
 
     args = mx.java().processArgs(args)
     return (pfx, exe, vm, args, cwd)

@@ -208,7 +208,7 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
   OopMap* map = new OopMap(frame_size_in_slots, 0);
 
 #define STACK_OFFSET(x) VMRegImpl::stack2reg((x) + additional_frame_slots)
-#define YMMHI_STACK_OFFSET(x) VMRegImpl::stack2reg((x) + ymmhi_offset)
+#define YMMHI_STACK_OFFSET(x) VMRegImpl::stack2reg((x / VMRegImpl::stack_slot_size) + ymmhi_offset)
 
   map->set_callee_saved(STACK_OFFSET( rax_off ), rax->as_VMReg());
   map->set_callee_saved(STACK_OFFSET( rcx_off ), rcx->as_VMReg());
@@ -247,22 +247,22 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
 #if defined(COMPILER2) || defined(JVMCI)
   if (save_vectors) {
     assert(ymmhi_offset != -1, "save area must exist");
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm0_off ), xmm0->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm1_off ), xmm1->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm2_off ), xmm2->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm3_off ), xmm3->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm4_off ), xmm4->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm5_off ), xmm5->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm6_off ), xmm6->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm7_off ), xmm7->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm8_off ), xmm8->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm9_off ), xmm9->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm10_off), xmm10->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm11_off), xmm11->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm12_off), xmm12->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm13_off), xmm13->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm14_off), xmm14->as_VMReg()->next()->next()->next()->next());
-    map->set_callee_saved(YMMHI_STACK_OFFSET(xmm15_off), xmm15->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(  0), xmm0->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 16), xmm1->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 32), xmm2->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 48), xmm3->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 64), xmm4->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 80), xmm5->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET( 96), xmm6->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(112), xmm7->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(128), xmm8->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(144), xmm9->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(160), xmm10->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(176), xmm11->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(192), xmm12->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(208), xmm13->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(224), xmm14->as_VMReg()->next()->next()->next()->next());
+    map->set_callee_saved(YMMHI_STACK_OFFSET(240), xmm15->as_VMReg()->next()->next()->next()->next());
   }
 #endif
 
