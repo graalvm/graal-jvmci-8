@@ -1,5 +1,4 @@
 # This Makefile is generated automatically, do not edit
-# This file was built with the command: mx.sh makefile -o ./make/jvmci.make
 
 TARGET=.
 # Bootstrap JDK to be used (for javac and jar)

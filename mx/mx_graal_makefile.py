@@ -159,7 +159,6 @@ def do_build_makefile(mf, selectedDists, commandline):
     jdkBootClassPathVariableName = "JDK_BOOTCLASSPATH"
 
     mf.add_definition("""# This Makefile is generated automatically, do not edit
-# This file was built with the command: """ + commandline + """
 
 TARGET=.
 # Bootstrap JDK to be used (for javac and jar)
