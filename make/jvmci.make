@@ -23,6 +23,10 @@ ifeq ($(MAKE_VERBOSE),)
     QUIETLY=@
 endif
 
+# Required to construct a whitespace for use with subst
+space :=
+space +=
+
 # Takes the option files of the options annotation processor and merges them into a single file
 # Arguments:
 #  1: directory with contents of the JAR file
@@ -53,7 +57,7 @@ define extract
     $(QUIETLY) cp $(1) $(2);
 endef
 
-# Calls $(JAVAC) with the bootclasspath $(JDK_BOOTCLASSPATH); sources are taken from the automatic variable $?
+# Calls $(JAVAC) with the bootclasspath $(JDK_BOOTCLASSPATH); sources are taken from the automatic variable $^
 # Arguments:
 #  1: processorpath
 #  2: classpath
@@ -62,12 +66,17 @@ endef
 define build_and_jar
     $(info Building $(4))
     $(eval TMP := $(shell mkdir -p $(TARGET) && mktemp -d $(TARGET)/tmp_XXXXX))
-    $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$?);
+    $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$^);
     $(QUIETLY) test "$(3)" = "" || cp -r $(3) $(TMP);
     $(QUIETLY) $(call process_options,$(TMP));
     $(QUIETLY) mkdir -p $(shell dirname $(4))
     $(QUIETLY) $(JAR) cf $(4) -C $(TMP) .
     $(QUIETLY) rm -r $(TMP);
+endef
+
+# Verifies if the defs.make contain the exported files of services/
+define verify_export_def_make
+    $(foreach file,$(1),$(if $(shell grep '$(2)$(file)' $(3) > /dev/null && echo found), , $(error "Pattern '$(2)$(file)' not found in $(3)")))
 endef
 
 all: default
@@ -76,6 +85,8 @@ export: all
 	$(info Put $(EXPORTED_FILES) into SHARED_DIR $(SHARED_DIR))
 	$(QUIETLY) mkdir -p $(SHARED_DIR)
 	$(foreach export,$(EXPORTED_FILES),$(call extract,$(export),$(SHARED_DIR)))
+	$(call verify_export_def_make,$(notdir $(wildcard $(SHARED_DIR)/services/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/,make/defs.make)
+	$(call verify_export_def_make,$(notdir $(wildcard $(SHARED_DIR)/options/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/,make/defs.make)
 .PHONY: export
 
 
@@ -135,27 +146,27 @@ JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/build/jvmci-api.jar $(TARGET)/build/jvmci-ser
 EXPORTED_FILES += $(JVMCI_HOTSPOT_JAR)
 
 $(JVMCI_OPTIONS_PROCESSOR_JAR): $(JVMCI_OPTIONS_PROCESSOR_SRC)  
-	$(call build_and_jar,,$(shell echo  | tr ' ' ':'),jvmci/com.oracle.jvmci.options.processor/src/META-INF,$(JVMCI_OPTIONS_PROCESSOR_JAR))
+	$(call build_and_jar,,$(subst  $(space),:,),jvmci/com.oracle.jvmci.options.processor/src/META-INF,$(JVMCI_OPTIONS_PROCESSOR_JAR))
 
 
 $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR): $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)  
-	$(call build_and_jar,,$(shell echo  | tr ' ' ':'),jvmci/com.oracle.jvmci.hotspotvmconfig.processor/src/META-INF,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR))
+	$(call build_and_jar,,$(subst  $(space),:,),jvmci/com.oracle.jvmci.hotspotvmconfig.processor/src/META-INF,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR))
 
 
 $(JVMCI_SERVICE_PROCESSOR_JAR): $(JVMCI_SERVICE_PROCESSOR_SRC)  
-	$(call build_and_jar,,$(shell echo  | tr ' ' ':'),jvmci/com.oracle.jvmci.service.processor/src/META-INF,$(JVMCI_SERVICE_PROCESSOR_JAR))
+	$(call build_and_jar,,$(subst  $(space),:,),jvmci/com.oracle.jvmci.service.processor/src/META-INF,$(JVMCI_SERVICE_PROCESSOR_JAR))
 
 
 $(JVMCI_API_JAR): $(JVMCI_API_SRC) $(JVMCI_OPTIONS_PROCESSOR_JAR) $(JVMCI_API_DEP_JARS)
-	$(call build_and_jar,$(JVMCI_OPTIONS_PROCESSOR_JAR),$(shell echo $(JVMCI_API_DEP_JARS) | tr ' ' ':'),,$(JVMCI_API_JAR))
+	$(call build_and_jar,$(JVMCI_OPTIONS_PROCESSOR_JAR),$(subst  $(space),:,$(JVMCI_API_DEP_JARS)),,$(JVMCI_API_JAR))
 
 
 $(JVMCI_SERVICE_JAR): $(JVMCI_SERVICE_SRC)  $(JVMCI_SERVICE_DEP_JARS)
-	$(call build_and_jar,,$(shell echo $(JVMCI_SERVICE_DEP_JARS) | tr ' ' ':'),,$(JVMCI_SERVICE_JAR))
+	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_SERVICE_DEP_JARS)),,$(JVMCI_SERVICE_JAR))
 
 
 $(JVMCI_HOTSPOT_JAR): $(JVMCI_HOTSPOT_SRC) $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR) $(JVMCI_OPTIONS_PROCESSOR_JAR) $(JVMCI_SERVICE_PROCESSOR_JAR) $(JVMCI_HOTSPOT_DEP_JARS)
-	$(call build_and_jar,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR):$(JVMCI_OPTIONS_PROCESSOR_JAR):$(JVMCI_SERVICE_PROCESSOR_JAR),$(shell echo $(JVMCI_HOTSPOT_DEP_JARS) | tr ' ' ':'),,$(JVMCI_HOTSPOT_JAR))
+	$(call build_and_jar,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR):$(JVMCI_OPTIONS_PROCESSOR_JAR):$(JVMCI_SERVICE_PROCESSOR_JAR),$(subst  $(space),:,$(JVMCI_HOTSPOT_DEP_JARS)),,$(JVMCI_HOTSPOT_JAR))
 
 
 default: $(JVMCI_API_JAR) $(JVMCI_SERVICE_JAR) $(JVMCI_HOTSPOT_JAR)
