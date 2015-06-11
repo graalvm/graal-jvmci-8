@@ -44,7 +44,9 @@ class Makefile:
 
 
 def build_makefile(args):
-    """Creates a Makefile which is able to build distributions without mx"""
+    """Creates a Makefile which is able to build distributions without mx
+
+    The return value indicates how many files were modified"""
     parser = ArgumentParser(prog='mx makefile')
     parser.add_argument('-o', action='store', dest='output', help='Write contents to this file.')
     parser.add_argument('selectedDists', help="Selected distribution names which are going to be built with make.", nargs=REMAINDER)
@@ -59,9 +61,9 @@ def build_makefile(args):
         if opts.output == None:
             print contents
         else:
-            with open(opts.output, "w") as f:
-                f.write(contents)
-
+            if mx.update_file(opts.output, contents):
+                return 1
+    return 0
 
 def filter_projects(deps, t):
     def typeFilter(project): # filters
@@ -166,7 +168,6 @@ ABS_BOOTDIR=
 JAVAC=$(ABS_BOOTDIR)/bin/javac -g -target """ + str(java.javaCompliance) + """
 JAR=$(ABS_BOOTDIR)/bin/jar
 
-EXPORTED_FILES_ADDITIONAL=$(TARGET)/options $(TARGET)/services
 HS_COMMON_SRC=.
 
 # Directories, where the generated property-files reside within the JAR files

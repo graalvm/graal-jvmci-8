@@ -1734,6 +1734,12 @@ def gate(args, gate_body=_basic_gate_body):
         with Task('Pylint', tasks) as t:
             if t: mx.pylint([])
 
+        with Task('Check jvmci.make in sync with suite.py', tasks) as t:
+            if t:
+                jvmciMake = join(_graal_home, 'make', 'jvmci.make')
+                if mx_graal_makefile.build_makefile(['-o', jvmciMake]) != 0:
+                    t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
+
         def _clean(name='Clean'):
             with Task(name, tasks) as t:
                 if t:
@@ -1761,7 +1767,7 @@ def gate(args, gate_body=_basic_gate_body):
             if t:
                 mx.log(time.strftime('%d %b %Y %H:%M:%S - Ensuring mx/projects files are canonicalized...'))
                 if mx.canonicalizeprojects([]) != 0:
-                    t.abort('Rerun "mx canonicalizeprojects" and check-in the modified mx/projects files.')
+                    t.abort('Rerun "mx canonicalizeprojects" and check-in the modified mx/suite*.py files.')
 
         if mx.get_env('JDT'):
             with Task('BuildJavaWithEcj', tasks):
