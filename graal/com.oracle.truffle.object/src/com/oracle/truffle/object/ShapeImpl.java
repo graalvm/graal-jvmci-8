@@ -80,7 +80,6 @@ public abstract class ShapeImpl extends Shape {
 
     protected final int depth;
     protected final int propertyCount;
-    protected Property[] propertyArray;
 
     protected final Assumption validAssumption;
     @CompilationFinal protected volatile Assumption leafAssumption;
@@ -121,11 +120,9 @@ public abstract class ShapeImpl extends Shape {
 
         if (parent != null) {
             this.propertyCount = makePropertyCount(parent, propertyMap);
-            this.propertyArray = makePropertiesList(parent, propertyMap);
             this.depth = parent.depth + 1;
         } else {
             this.propertyCount = 0;
-            this.propertyArray = null;
             this.depth = 0;
         }
 
@@ -154,30 +151,6 @@ public abstract class ShapeImpl extends Shape {
 
     private static int makePropertyCount(ShapeImpl parent, PropertyMap propertyMap) {
         return parent.propertyCount + ((propertyMap.size() > parent.propertyMap.size() && !propertyMap.getLastProperty().isHidden() && !propertyMap.getLastProperty().isShadow()) ? 1 : 0);
-    }
-
-    private static Property[] makePropertiesList(ShapeImpl parent, PropertyMap propertyMap) {
-        Property[] properties = parent.propertyArray;
-        if (properties != null && propertyMap.size() != parent.propertyMap.size()) {
-            Property lastProperty = propertyMap.getLastProperty();
-            if (lastProperty != null && !lastProperty.isHidden()) {
-                propertyListAllocCount.inc();
-                if (!lastProperty.isShadow()) {
-                    properties = Arrays.copyOf(properties, properties.length + 1);
-                    properties[properties.length - 1] = lastProperty;
-                } else {
-                    properties = Arrays.copyOf(properties, properties.length);
-                    for (int i = 0; i < properties.length; i++) {
-                        if (properties[i].isSame(lastProperty)) {
-                            properties[i] = lastProperty;
-                        }
-                    }
-                }
-            } else {
-                propertyListShareCount.inc();
-            }
-        }
-        return properties;
     }
 
     @Override
@@ -343,7 +316,7 @@ public abstract class ShapeImpl extends Shape {
         return addPropertyInternal(property);
     }
 
-    protected final void onPropertyTransition(Property property) {
+    private void onPropertyTransition(Property property) {
         if (sharedData instanceof ShapeListener) {
             ((ShapeListener) sharedData).onPropertyTransition(property.getKey());
         }
@@ -698,6 +671,10 @@ public abstract class ShapeImpl extends Shape {
      */
     @Override
     public ShapeImpl replaceProperty(Property oldProperty, Property newProperty) {
+        return indirectReplaceProperty(oldProperty, newProperty);
+    }
+
+    protected final ShapeImpl indirectReplaceProperty(Property oldProperty, Property newProperty) {
         assert oldProperty.getKey().equals(newProperty.getKey());
 
         Transition replacePropertyTransition = new Transition.IndirectReplacePropertyTransition(oldProperty, newProperty);
@@ -726,7 +703,24 @@ public abstract class ShapeImpl extends Shape {
                 newShape = newShape.applyTransition(transition, false);
             }
         }
+
         addIndirectTransition(replacePropertyTransition, newShape);
+        return newShape;
+    }
+
+    protected final ShapeImpl directReplaceProperty(Property oldProperty, Property newProperty) {
+        assert oldProperty.getKey().equals(newProperty.getKey());
+        onPropertyTransition(oldProperty);
+
+        Transition replacePropertyTransition = new Transition.DirectReplacePropertyTransition(oldProperty, newProperty);
+        ShapeImpl cachedShape = queryTransition(replacePropertyTransition);
+        if (cachedShape != null) {
+            return cachedShape;
+        }
+        PropertyMap newPropertyMap = this.getPropertyMap().replaceCopy(oldProperty, newProperty);
+        ShapeImpl newShape = createShape(getLayout(), getSharedData(), this, getObjectType(), newPropertyMap, replacePropertyTransition, allocator(), getId());
+
+        addDirectTransition(replacePropertyTransition, newShape);
         return newShape;
     }
 
@@ -880,43 +874,7 @@ public abstract class ShapeImpl extends Shape {
 
     @Override
     public final Iterable<Property> getProperties() {
-        if (getPropertyCount() != 0 && propertyArray == null) {
-            CompilerDirectives.transferToInterpreter();
-            propertyArray = createPropertiesArray();
-        }
-        return new Iterable<Property>() {
-            public Iterator<Property> iterator() {
-                return new Iterator<Property>() {
-                    private int cursor;
-
-                    public boolean hasNext() {
-                        return cursor < getPropertyCount();
-                    }
-
-                    public Property next() {
-                        if (hasNext()) {
-                            return propertyArray[cursor++];
-                        }
-                        throw new NoSuchElementException();
-                    }
-
-                    public void remove() {
-                        throw new UnsupportedOperationException();
-                    }
-                };
-            }
-        };
-    }
-
-    private Property[] createPropertiesArray() {
-        propertyListAllocCount.inc();
-        Property[] propertiesArray = new Property[getPropertyCount()];
-        List<Property> ownProperties = getPropertyList();
-        assert ownProperties.size() == getPropertyCount();
-        for (int i = 0; i < getPropertyCount(); i++) {
-            propertiesArray[i] = ownProperties.get(i);
-        }
-        return propertiesArray;
+        return getPropertyList();
     }
 
     @Override
@@ -1121,9 +1079,6 @@ public abstract class ShapeImpl extends Shape {
     private static final DebugCounter shapeCloneCount = DebugCounter.create("Shapes allocated cloned");
     private static final DebugCounter shapeCacheHitCount = DebugCounter.create("Shape cache hits");
     private static final DebugCounter shapeCacheMissCount = DebugCounter.create("Shape cache misses");
-
-    protected static final DebugCounter propertyListAllocCount = DebugCounter.create("Property lists allocated");
-    protected static final DebugCounter propertyListShareCount = DebugCounter.create("Property lists shared");
 
     public ForeignAccess getForeignAccessFactory() {
         return getObjectType().getForeignAccessFactory();

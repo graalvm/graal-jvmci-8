@@ -315,7 +315,8 @@ buildshared:
 		TARGET=build/make \
 		HS_COMMON_SRC=$(HS_COMMON_SRC) \
 		ABS_BOOTDIR=$(ABS_BOOTDIR) \
-		EXPORT_DIR=$(SHARED_DIR) export
+		SHARED_DIR=$(SHARED_DIR) \
+		MAKE_VERBOSE=$(MAKE_VERBOSE) export
 
 # Export file rule
 generic_export: $(EXPORT_LIST)

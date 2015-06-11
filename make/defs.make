@@ -113,6 +113,11 @@ ifeq ($(JVM_VARIANTS),)
   endif
 endif
 
+# If we build a no-jvmci-version, we suffix the compiler dir with -nojvmci
+ifeq ($(COMPILER_DIR_SUFFIX)$(subst false,,$(INCLUDE_JVMCI)),)
+	COMPILER_DIR_SUFFIX=-nojvmci
+endif
+
 # hotspot version definitions
 include $(GAMMADIR)/make/hotspot_version
 
@@ -364,6 +369,9 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-api.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-hotspot.jar
 
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIBackendFactory
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotVMEventListener
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.options.Options
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.debug.TTYStreamProvider
 
 ifneq ("$(wildcard $(SHARED_DIR)/services/com.oracle.jvmci.hotspot.events.EventProvider)","")
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.events.EventProvider
@@ -375,6 +383,7 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotS
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaMethodImpl
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.CompileTheWorld
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.compiler.Compiler
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.debug.JVMCIDebugConfig
 
 
 .PHONY: $(HS_ALT_MAKE)/defs.make
