@@ -27,7 +27,9 @@ import java.util.*;
 import sun.reflect.*;
 
 /**
- * An mechanism for accessing {@link Service JVMCI service providers}.
+ * An mechanism for accessing service providers via JVMCI. These providers are loaded via a JVMCI
+ * class loader that is hidden from application code. Hence the {@link SecurityManager} checks in
+ * {@link #load(Class)} and {@link #loadSingle(Class, boolean)}.
  */
 public class Services {
 

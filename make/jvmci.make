@@ -8,13 +8,12 @@ ABS_BOOTDIR=
 JAVAC=$(ABS_BOOTDIR)/bin/javac -g -target 1.8
 JAR=$(ABS_BOOTDIR)/bin/jar
 
-EXPORTED_FILES_ADDITIONAL=$(TARGET)/options $(TARGET)/services
 HS_COMMON_SRC=.
 
 # Directories, where the generated property-files reside within the JAR files
-PROVIDERS_INF=/META-INF/providers
-SERVICES_INF=/META-INF/services
-OPTIONS_INF=/META-INF/options
+PROVIDERS_INF=/META-INF/jvmci.providers
+SERVICES_INF=/META-INF/jvmci.services
+OPTIONS_INF=/META-INF/jvmci.options
 
 ifeq ($(ABS_BOOTDIR),)
     $(error Variable ABS_BOOTDIR must be set to a JDK installation.)
@@ -27,13 +26,13 @@ endif
 space :=
 space +=
 
-# Takes the option files of the options annotation processor and merges them into a single file
+# Takes the provider files created by ServiceProviderProcessor (the processor
+# for the @ServiceProvider annotation) and merges them into a single file.
 # Arguments:
 #  1: directory with contents of the JAR file
-define process_options
+define process_providers
     $(eval providers=$(1)/$(PROVIDERS_INF))
     $(eval services=$(1)/$(SERVICES_INF))
-    $(eval options=$(1)/$(OPTIONS_INF))
     $(QUIETLY) test -d $(services) || mkdir -p $(services)
     $(QUIETLY) test ! -d $(providers) || (cd $(providers) && for i in $$(ls); do c=$$(cat $$i); echo $$i >> $(abspath $(services))/$$c; rm $$i; done)
 
@@ -44,20 +43,33 @@ define process_options
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
-# Extracts META-INF/services and META-INF/options of a JAR file into a given directory
+# Reads the files in jvmci.options/ created by OptionProcessor (the processor for the @Option annotation)
+# and appends to services/com.oracle.jvmci.options.Options entries for the providers
+# also created by the same processor.
+# Arguments:
+#  1: directory with contents of the JAR file
+define process_options
+    $(eval options=$(1)/$(OPTIONS_INF))
+    $(eval services=$(1)/META-INF/services)
+    $(QUIETLY) test -d $(services) || mkdir -p $(services)
+    $(QUIETLY) test ! -d $(options) || (cd $(options) && for i in $$(ls); do echo $${i}_Options >> $(abspath $(services))/com.oracle.jvmci.options.Options; done)
+endef
+
+# Extracts META-INF/jvmci.services and META-INF/jvmci.options of a JAR file into a given directory
 # Arguments:
 #  1: JAR file to extract
 #  2: target directory
 define extract
     $(eval TMP := $(shell mktemp -d $(TARGET)/tmp_XXXXX))
-    $(QUIETLY) mkdir -p $(2);
+    $(QUIETLY) mkdir -p $(2)
     $(QUIETLY) cd $(TMP) && $(JAR) xf $(abspath $(1)) && \
-        ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) &&  (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))));
-    $(QUIETLY) rm -r $(TMP);
-    $(QUIETLY) cp $(1) $(2);
+        ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) && \
+         (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))))
+    $(QUIETLY) rm -r $(TMP)
+    $(QUIETLY) cp $(1) $(2)
 endef
 
-# Calls $(JAVAC) with the bootclasspath $(JDK_BOOTCLASSPATH); sources are taken from the automatic variable $^
+# Calls $(JAVAC) with the boot class path $(JDK_BOOTCLASSPATH) and sources taken from the automatic variable $^
 # Arguments:
 #  1: processorpath
 #  2: classpath
@@ -66,17 +78,22 @@ endef
 define build_and_jar
     $(info Building $(4))
     $(eval TMP := $(shell mkdir -p $(TARGET) && mktemp -d $(TARGET)/tmp_XXXXX))
-    $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$^);
-    $(QUIETLY) test "$(3)" = "" || cp -r $(3) $(TMP);
-    $(QUIETLY) $(call process_options,$(TMP));
+    $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$^)
+    $(QUIETLY) test "$(3)" = "" || cp -r $(3) $(TMP)
+    $(QUIETLY) $(call process_options,$(TMP))
+    $(QUIETLY) $(call process_providers,$(TMP))
     $(QUIETLY) mkdir -p $(shell dirname $(4))
     $(QUIETLY) $(JAR) cf $(4) -C $(TMP) .
-    $(QUIETLY) rm -r $(TMP);
+    $(QUIETLY) rm -r $(TMP)
 endef
 
-# Verifies if the defs.make contain the exported files of services/
-define verify_export_def_make
-    $(foreach file,$(1),$(if $(shell grep '$(2)$(file)' $(3) > /dev/null && echo found), , $(error "Pattern '$(2)$(file)' not found in $(3)")))
+# Verifies that make/defs.make contains a line for each file in a list of files.
+# Arguments:
+#  1: list of files
+#  2: prefix to apply to each file to create match pattern
+define verify_defs_make
+    $(eval defs=make/defs.make)
+    $(foreach file,$(1),$(if $(shell grep '$(2)$(file)' $(defs) > /dev/null && echo found), , $(error "Pattern '$(2)$(file)' not found in $(defs)")))
 endef
 
 all: default
@@ -85,8 +102,8 @@ export: all
 	$(info Put $(EXPORTED_FILES) into SHARED_DIR $(SHARED_DIR))
 	$(QUIETLY) mkdir -p $(SHARED_DIR)
 	$(foreach export,$(EXPORTED_FILES),$(call extract,$(export),$(SHARED_DIR)))
-	$(call verify_export_def_make,$(notdir $(wildcard $(SHARED_DIR)/services/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/,make/defs.make)
-	$(call verify_export_def_make,$(notdir $(wildcard $(SHARED_DIR)/options/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/,make/defs.make)
+	$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.services/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/)
+	$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.options/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/)
 .PHONY: export
 
 

@@ -37,8 +37,11 @@ import com.oracle.jvmci.options.*;
 
 /**
  * Processes static fields annotated with {@link Option}. An {@link Options} service is generated
- * for each top level class containing at least one such field. These service objects can be
- * retrieved as follows:
+ * for each top level class containing at least one such field. The name of the generated class for
+ * top level class {@code com.foo.Bar} is {@code com.foo.Bar_Options}.
+ *
+ * The build system is expected to create the appropriate entries in {@code META-INF/services/} such
+ * that these service objects can be retrieved as follows:
  *
  * <pre>
  * ServiceLoader&lt;Options&gt; sl = ServiceLoader.load(Options.class);
@@ -210,23 +213,14 @@ public class OptionProcessor extends AbstractProcessor {
         }
 
         try {
-            createProviderFile(pkg, optionsClassName, originatingElements);
             createOptionsFile(info, pkg, topDeclaringClass.toString(), originatingElements);
         } catch (IOException e) {
             processingEnv.getMessager().printMessage(Kind.ERROR, e.getMessage(), info.topDeclaringType);
         }
     }
 
-    private void createProviderFile(String pkg, String providerClassName, Element... originatingElements) throws IOException {
-        String filename = "META-INF/providers/" + pkg + "." + providerClassName;
-        FileObject file = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", filename, originatingElements);
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(file.openOutputStream(), "UTF-8"));
-        writer.println(Options.class.getName());
-        writer.close();
-    }
-
     private void createOptionsFile(OptionsInfo info, String pkg, String relativeName, Element... originatingElements) throws IOException {
-        String filename = "META-INF/options/" + pkg + "." + relativeName;
+        String filename = "META-INF/jvmci.options/" + pkg + "." + relativeName;
         FileObject file = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", filename, originatingElements);
         PrintWriter writer = new PrintWriter(new OutputStreamWriter(file.openOutputStream(), "UTF-8"));
         Types types = processingEnv.getTypeUtils();
@@ -267,7 +261,7 @@ public class OptionProcessor extends AbstractProcessor {
             case "String":
                 return 's';
             default:
-                processingEnv.getMessager().printMessage(Kind.ERROR, "Unsoported option type: " + option.type, option.field);
+                processingEnv.getMessager().printMessage(Kind.ERROR, "Unsupported option type: " + option.type, option.field);
                 throw new IllegalArgumentException();
         }
     }

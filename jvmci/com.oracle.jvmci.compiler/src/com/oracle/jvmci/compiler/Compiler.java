@@ -25,9 +25,8 @@ package com.oracle.jvmci.compiler;
 import com.oracle.jvmci.code.*;
 import com.oracle.jvmci.meta.*;
 import com.oracle.jvmci.options.*;
-import com.oracle.jvmci.service.*;
 
-public interface Compiler extends Service {
+public interface Compiler {
     int INVOCATION_ENTRY_BCI = -1;
 
     @Option(help = "", type = OptionType.Debug) OptionValue<String> PrintFilter = new OptionValue<>(null);

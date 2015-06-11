@@ -22,9 +22,7 @@
  */
 package com.oracle.jvmci.hotspot;
 
-import com.oracle.jvmci.service.*;
-
-public interface HotSpotVMEventListener extends Service {
+public interface HotSpotVMEventListener {
 
     /**
      * Notifies this client that HotSpot is running in CompileTheWorld mode and the JVMCI compiler

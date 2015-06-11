@@ -22,12 +22,10 @@
  */
 package com.oracle.jvmci.hotspot.events;
 
-import com.oracle.jvmci.service.*;
-
 /**
  * A provider that provides a specific implementation for events that can be logged in the compiler.
  */
-public interface EventProvider extends Service {
+public interface EventProvider {
 
     /**
      * An instant event is an event that is not considered to have taken any time.

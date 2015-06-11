@@ -22,11 +22,9 @@
  */
 package com.oracle.jvmci.debug;
 
-import com.oracle.jvmci.service.*;
-
 /**
  * Sets one or more system properties used during initialization of the {@link Debug} class.
  */
-public interface DebugInitializationPropertyProvider extends Service {
+public interface DebugInitializationPropertyProvider {
     void apply();
 }

@@ -23,9 +23,8 @@
 package com.oracle.jvmci.hotspot;
 
 import com.oracle.jvmci.runtime.*;
-import com.oracle.jvmci.service.*;
 
-public interface HotSpotJVMCIBackendFactory extends Service {
+public interface HotSpotJVMCIBackendFactory {
 
     JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, JVMCIBackend host);
 

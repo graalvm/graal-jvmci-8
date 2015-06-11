@@ -22,8 +22,6 @@
  */
 package com.oracle.jvmci.debug;
 
-import com.oracle.jvmci.service.*;
-
-public interface DebugConfigCustomizer extends Service {
+public interface DebugConfigCustomizer {
     void customize(DebugConfig config);
 }

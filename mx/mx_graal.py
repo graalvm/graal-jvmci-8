@@ -550,71 +550,50 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _filterJVMCIServices(servicesMap, classpath):
-    """
-    Filters and returns the names in 'serviceImplNames' that denote
-    types available in 'classpath' implementing or extending
-    com.oracle.jvmci.service.Service.
-    """
-    _, binDir = mx._compile_mx_class('FilterTypes', os.pathsep.join(classpath), myDir=dirname(__file__))
-    serialized = [k + '=' + ','.join(v) for k, v in servicesMap.iteritems()]
-    cmd = [mx.java().java, '-cp', mx._cygpathU2W(os.pathsep.join([binDir] + classpath)), 'FilterTypes', 'com.oracle.jvmci.service.Service'] + serialized
-    serialized = subprocess.check_output(cmd)
-    if len(serialized) == 0:
-        return {}
-    servicesMap = {}
-    for e in serialized.split(' '):
-        k, v = e.split('=')
-        impls = v.split(',')
-        servicesMap[k] = impls
-    return servicesMap
-
-def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, cleanDestination=True):
-    if cleanDestination:
-        if exists(servicesDir):
-            shutil.rmtree(servicesDir)
-        if exists(optionsDir):
-            shutil.rmtree(optionsDir)
+def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir):
+    if exists(servicesDir):
+        shutil.rmtree(servicesDir)
+    if exists(optionsDir):
+        shutil.rmtree(optionsDir)
     if not exists(servicesDir):
         os.makedirs(servicesDir)
     if not exists(optionsDir):
         os.makedirs(optionsDir)
-    servicesMap = {}
+    jvmciServices = {}
     optionsFiles = []
     for jar in jvmciJars:
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
                 for member in zf.namelist():
-                    if member.startswith('META-INF/services') and member:
-                        serviceName = basename(member)
-                        if serviceName == "":
+                    if member.startswith('META-INF/jvmci.services') and member:
+                        service = basename(member)
+                        if service == "":
                             continue # Zip files may contain empty entries for directories (jar -cf ... creates such)
                         # we don't handle directories
-                        assert serviceName and member == 'META-INF/services/' + serviceName
+                        assert service and member == 'META-INF/jvmci.services/' + service
                         with zf.open(member) as serviceFile:
-                            serviceImpls = servicesMap.setdefault(serviceName, [])
+                            providers = jvmciServices.setdefault(service, [])
                             for line in serviceFile.readlines():
                                 line = line.strip()
                                 if line:
-                                    serviceImpls.append(line)
-                    elif member.startswith('META-INF/options'):
+                                    providers.append(line)
+                    elif member.startswith('META-INF/jvmci.options'):
                         filename = basename(member)
                         if filename == "":
                             continue # Zip files may contain empty entries for directories (jar -cf ... creates such)
                         # we don't handle directories
-                        assert filename and member == 'META-INF/options/' + filename
+                        assert filename and member == 'META-INF/jvmci.options/' + filename
                         targetpath = join(optionsDir, filename)
                         optionsFiles.append(filename)
                         with zf.open(member) as optionsFile, \
                              file(targetpath, "wb") as target:
                             shutil.copyfileobj(optionsFile, target)
-    servicesMap = _filterJVMCIServices(servicesMap, jdkJars)
-    for serviceName, serviceImpls in servicesMap.iteritems():
-        fd, tmp = tempfile.mkstemp(prefix=serviceName)
+    for service, providers in jvmciServices.iteritems():
+        fd, tmp = tempfile.mkstemp(prefix=service)
         f = os.fdopen(fd, 'w+')
-        for serviceImpl in serviceImpls:
-            f.write(serviceImpl + os.linesep)
-        target = join(servicesDir, serviceName)
+        for provider in providers:
+            f.write(provider + os.linesep)
+        target = join(servicesDir, service)
         f.close()
         shutil.move(tmp, target)
         if mx.get_os() != 'windows':

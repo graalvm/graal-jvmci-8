@@ -38,7 +38,6 @@ import com.oracle.jvmci.service.*;
 public class ServiceProviderProcessor extends AbstractProcessor {
 
     private final Set<TypeElement> processed = new HashSet<>();
-    private TypeElement baseJVMCIServiceInterface;
 
     @Override
     public SourceVersion getSupportedSourceVersion() {
@@ -46,11 +45,6 @@ public class ServiceProviderProcessor extends AbstractProcessor {
     }
 
     private boolean verifyAnnotation(TypeMirror serviceInterface, TypeElement serviceProvider) {
-        if (!processingEnv.getTypeUtils().isSubtype(serviceProvider.asType(), baseJVMCIServiceInterface.asType())) {
-            String msg = String.format("Service implementation class %s must implement %s", serviceProvider.getSimpleName(), baseJVMCIServiceInterface);
-            processingEnv.getMessager().printMessage(Kind.ERROR, msg, serviceProvider);
-            return false;
-        }
         if (!processingEnv.getTypeUtils().isSubtype(serviceProvider.asType(), serviceInterface)) {
             String msg = String.format("Service provider class %s must implement service interface %s", serviceProvider.getSimpleName(), serviceInterface);
             processingEnv.getMessager().printMessage(Kind.ERROR, msg, serviceProvider);
@@ -90,7 +84,7 @@ public class ServiceProviderProcessor extends AbstractProcessor {
             return;
         }
 
-        String filename = "META-INF/providers/" + serviceProvider.getQualifiedName();
+        String filename = "META-INF/jvmci.providers/" + serviceProvider.getQualifiedName();
         try {
             FileObject file = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", filename, serviceProvider);
             PrintWriter writer = new PrintWriter(new OutputStreamWriter(file.openOutputStream(), "UTF-8"));
@@ -106,8 +100,6 @@ public class ServiceProviderProcessor extends AbstractProcessor {
         if (roundEnv.processingOver()) {
             return true;
         }
-
-        baseJVMCIServiceInterface = processingEnv.getElementUtils().getTypeElement("com.oracle.jvmci.service.Service");
 
         for (Element element : roundEnv.getElementsAnnotatedWith(ServiceProvider.class)) {
             assert element.getKind().isClass();
