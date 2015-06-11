@@ -43,7 +43,9 @@
 \javafilelist.txt$
 \.hprof\.txt$
 ^graal/.*/build.xml
+^jvmci/.*/build.xml
 ^graal/.*/nbproject/
+^jvmci/.*/nbproject/
 dist
 ^doc/.*/dot_temp_
 ^doc/doxygen/.*$
