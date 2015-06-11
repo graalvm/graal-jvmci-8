@@ -114,7 +114,7 @@ ifeq ($(JVM_VARIANTS),)
 endif
 
 # If we build a no-jvmci-version, we suffix the compiler dir with -nojvmci
-ifeq ($(COMPILER_DIR_SUFFIX)$(INCLUDE_JVMCI),)
+ifeq ($(COMPILER_DIR_SUFFIX)$(subst false,,$(INCLUDE_JVMCI)),)
 	COMPILER_DIR_SUFFIX=-nojvmci
 endif
 

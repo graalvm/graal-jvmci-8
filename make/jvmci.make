@@ -86,17 +86,11 @@ JVMCI_SERVICE_PROCESSOR_SRC += $(shell find jvmci/com.oracle.jvmci.service.proce
 JVMCI_SERVICE_PROCESSOR_JAR = $(TARGET)/jvmci/com.oracle.jvmci.service.processor/ap/com.oracle.jvmci.service.processor.jar
 
 JVMCI_API_SRC = $(shell find jvmci/com.oracle.jvmci.meta/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.meta/jvmci/com.oracle.jvmci.meta/src_gen -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.code/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.code/jvmci/com.oracle.jvmci.code/src_gen -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.runtime/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.runtime/jvmci/com.oracle.jvmci.runtime/src_gen -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.options/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.options/jvmci/com.oracle.jvmci.options/src_gen -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.common/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.common/jvmci/com.oracle.jvmci.common/src_gen -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.debug/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/com.oracle.jvmci.debug/jvmci/com.oracle.jvmci.debug/src_gen -type f 2> /dev/null)
 
 JVMCI_API_JAR = $(TARGET)/build/jvmci-api.jar
 
@@ -113,21 +107,13 @@ JVMCI_SERVICE_DEP_JARS = jvmci/findbugs-SuppressFBWarnings.jar
 EXPORTED_FILES += $(JVMCI_SERVICE_JAR)
 
 JVMCI_HOTSPOT_SRC = $(shell find jvmci/com.oracle.jvmci.hotspotvmconfig/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspotvmconfig/jvmci/com.oracle.jvmci.hotspotvmconfig/src_gen -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.amd64/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.amd64/jvmci/com.oracle.jvmci.amd64/src_gen -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.compiler/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.compiler/jvmci/com.oracle.jvmci.compiler/src_gen -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot/jvmci/com.oracle.jvmci.hotspot/src_gen -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.amd64/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.amd64/jvmci/com.oracle.jvmci.hotspot.amd64/src_gen -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.sparc/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.sparc/jvmci/com.oracle.jvmci.sparc/src_gen -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.sparc/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.sparc/jvmci/com.oracle.jvmci.hotspot.sparc/src_gen -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.jfr/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/com.oracle.jvmci.hotspot.jfr/jvmci/com.oracle.jvmci.hotspot.jfr/src_gen -type f 2> /dev/null)
 
 JVMCI_HOTSPOT_JAR = $(TARGET)/build/jvmci-hotspot.jar
 

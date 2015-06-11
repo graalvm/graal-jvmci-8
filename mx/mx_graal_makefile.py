@@ -109,10 +109,7 @@ def make_dist_rule(dist, mf, bootClassPath=None):
     for p in projects:
         projectDir = path_dist_relative(p.dir)
         if p not in distDepProjects and p not in annotationProcessorDeps:
-            generatedSource = [path_dist_relative(p.source_gen_dir())] if len(annotationProcessorDeps) > 0 else []
-
-            for d in p.srcDirs + generatedSource:
-                src = projectDir + os.path.sep + d
+            for src in [projectDir + os.path.sep + d for d in p.srcDirs]:
                 sources.append("$(shell find {} -type f 2> /dev/null)".format(src))
                 metaInf = src + os.path.sep + "META-INF"
                 if os.path.exists(metaInf):
