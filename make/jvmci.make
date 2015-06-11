@@ -23,6 +23,9 @@ ifeq ($(MAKE_VERBOSE),)
     QUIETLY=@
 endif
 
+# Takes the option files of the options annotation processor and merges them into a single file
+# Arguments:
+#  1: directory with contents of the JAR file
 define process_options
     $(eval providers=$(1)/$(PROVIDERS_INF))
     $(eval services=$(1)/$(SERVICES_INF))
@@ -37,6 +40,10 @@ define process_options
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
+# Extracts META-INF/services and META-INF/options of a JAR file into a given directory
+# Arguments:
+#  1: JAR file to extract
+#  2: target directory
 define extract
     $(eval TMP := $(shell mktemp -d $(TARGET)/tmp_XXXXX))
     $(QUIETLY) mkdir -p $(2);
@@ -46,6 +53,12 @@ define extract
     $(QUIETLY) cp $(1) $(2);
 endef
 
+# Calls $(JAVAC) with the bootclasspath $(JDK_BOOTCLASSPATH); sources are taken from the automatic variable $?
+# Arguments:
+#  1: processorpath
+#  2: classpath
+#  3: resources to copy
+#  4: target JAR file
 define build_and_jar
     $(info Building $(4))
     $(eval TMP := $(shell mkdir -p $(TARGET) && mktemp -d $(TARGET)/tmp_XXXXX))

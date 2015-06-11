@@ -78,7 +78,7 @@ def update_list(li, elements):
         if e not in li:
             li.append(e)
 
-def make_dist_rule(dist, mf, bootClassPath=None):
+def make_dist_rule(dist, mf):
     def path_dist_relative(p):
         return os.path.relpath(p, dist.suite.dir)
     def short_dist_name(name):
@@ -129,20 +129,14 @@ def make_dist_rule(dist, mf, bootClassPath=None):
     props = {
            "name": shortName,
            "jarPath": targetPathPrefix + jarPath,
-           "depends": "",
            "depJarsVariableAccess": "$(" + depJarVariableName + ")" if len(classPath) > 0 else "",
            "depJarsVariable": depJarVariableName,
            "sourceLines": sourceLines,
            "sourcesVariableName": sourcesVariableName,
            "annotationProcessors": " ".join(apDistVariableNames),
-           "cpAnnotationProcessors": "-processorpath " + ":".join(apDistVariableNames) if len(apDistVariableNames) > 0 else "",
-           "cpAnnotationProcessors2": ":".join(apDistVariableNames),
-           "bootCp": ("-bootclasspath " + bootClassPath) if bootClassPath != None else "",
-           "cpDeps": ("-cp $(shell echo $(" + depJarVariableName + ") | tr ' ' ':')") if len(classPath) > 0 else "",
+           "cpAnnotationProcessors": ":".join(apDistVariableNames),
            "jarDeps": " ".join(classPath),
-           "copyResources": " ".join(resources),
-           "targetPathPrefix": targetPathPrefix,
-           "shouldExport": shouldExport,
+           "copyResources": " ".join(resources)
            }
 
     mf.add_definition(sourceLines)
@@ -150,7 +144,7 @@ def make_dist_rule(dist, mf, bootClassPath=None):
     if len(classPath) > 0: mf.add_definition("{depJarsVariable} = {jarDeps}".format(**props))
     if shouldExport: mf.add_definition("EXPORTED_FILES += $({name}_JAR)".format(**props))
     mf.add_rule("""$({name}_JAR): $({sourcesVariableName}) {annotationProcessors} {depJarsVariableAccess}
-\t$(call build_and_jar,{cpAnnotationProcessors2},$(shell echo {depJarsVariableAccess} | tr ' ' ':'),{copyResources},$({name}_JAR))
+\t$(call build_and_jar,{cpAnnotationProcessors},$(shell echo {depJarsVariableAccess} | tr ' ' ':'),{copyResources},$({name}_JAR))
 """.format(**props))
     return
 
@@ -187,6 +181,9 @@ ifeq ($(MAKE_VERBOSE),)
     QUIETLY=@
 endif
 
+# Takes the option files of the options annotation processor and merges them into a single file
+# Arguments:
+#  1: directory with contents of the JAR file
 define process_options
     $(eval providers=$(1)/$(PROVIDERS_INF))
     $(eval services=$(1)/$(SERVICES_INF))
@@ -201,6 +198,10 @@ define process_options
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
+# Extracts META-INF/services and META-INF/options of a JAR file into a given directory
+# Arguments:
+#  1: JAR file to extract
+#  2: target directory
 define extract
     $(eval TMP := $(shell mktemp -d $(TARGET)/tmp_XXXXX))
     $(QUIETLY) mkdir -p $(2);
@@ -210,6 +211,12 @@ define extract
     $(QUIETLY) cp $(1) $(2);
 endef
 
+# Calls $(JAVAC) with the bootclasspath $(JDK_BOOTCLASSPATH); sources are taken from the automatic variable $?
+# Arguments:
+#  1: processorpath
+#  2: classpath
+#  3: resources to copy
+#  4: target JAR file
 define build_and_jar
     $(info Building $(4))
     $(eval TMP := $(shell mkdir -p $(TARGET) && mktemp -d $(TARGET)/tmp_XXXXX))
@@ -248,9 +255,8 @@ export: all
 
     if len(dists) > 0:
         mf.add_definition(jdkBootClassPathVariableName + " = " + bootClassPath)
-        bootClassPathVarAccess = "$(" + jdkBootClassPathVariableName + ")"
-        for d in ap: make_dist_rule(d, mf, bootClassPathVarAccess)
-        for d in dists: make_dist_rule(d, mf, bootClassPathVarAccess)
+        for d in ap: make_dist_rule(d, mf)
+        for d in dists: make_dist_rule(d, mf)
         mf.add_rule("default: $({}_JAR)\n.PHONY: default".format("_JAR) $(".join([d.name for d in dists])))
         return True
     else:
