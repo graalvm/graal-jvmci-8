@@ -1276,7 +1276,7 @@ class Suite:
                         del _libs[d.name]
                         self.libs.remove(d)
             elif d.isProject():
-                if java(d.javaCompliance, cancel='some projects will be omitted which may result in errrors') is None:
+                if java(d.javaCompliance, cancel='some projects will be omitted which may result in errors') is None:
                     logv('[omitting project {0} as Java compliance {1} cannot be satisfied by configured JDKs]'.format(d, d.javaCompliance))
                     ommittedDeps.add(d.name)
                     del _projects[d.name]
@@ -1840,13 +1840,13 @@ def java_version(versionCheck, versionDescription=None, purpose=None):
     return jdk
 
 def _find_jdk(versionCheck=None, versionDescription=None, purpose=None, cancel=None):
-    if not versionCheck:
-        versionCheck = lambda v: True
     assert not versionDescription or versionCheck
     if not versionCheck and not purpose:
         isDefaultJdk = True
     else:
         isDefaultJdk = False
+    if not versionCheck:
+        versionCheck = lambda v: True
 
     candidateJdks = []
     source = ''
@@ -1935,7 +1935,7 @@ def _find_jdk(versionCheck=None, versionDescription=None, purpose=None, cancel=N
         selected = configs[0]
         msg = 'Selected ' + str(selected) + ' as '
         if isDefaultJdk:
-            msg += 'default'
+            msg += 'default '
         msg += 'JDK'
         if versionDescription:
             msg = msg + ' ' + versionDescription
@@ -1961,26 +1961,30 @@ def _find_jdk(versionCheck=None, versionDescription=None, purpose=None, cancel=N
     envPath = join(_primary_suite.mxDir, 'env')
     if is_interactive() and ask_yes_no('Persist this setting by adding "{0}={1}" to {2}'.format(varName, selected.jdk, envPath), 'y'):
         envLines = []
-        with open(envPath) as fp:
-            append = True
-            for line in fp:
-                if line.rstrip().startswith(varName):
-                    _, currentValue = line.split('=', 1)
-                    currentValue = currentValue.strip()
-                    if not allowMultiple and currentValue:
-                        if not ask_yes_no('{0} is already set to {1}, overwrite with {2}?'.format(varName, currentValue, selected.jdk), 'n'):
-                            return selected
+        if exists(envPath):
+            with open(envPath) as fp:
+                append = True
+                for line in fp:
+                    if line.rstrip().startswith(varName):
+                        _, currentValue = line.split('=', 1)
+                        currentValue = currentValue.strip()
+                        if not allowMultiple and currentValue:
+                            if not ask_yes_no('{0} is already set to {1}, overwrite with {2}?'.format(varName, currentValue, selected.jdk), 'n'):
+                                return selected
+                            else:
+                                line = varName + '=' + selected.jdk + os.linesep
                         else:
-                            line = varName + '=' + selected.jdk + os.linesep
-                    else:
-                        line = line.rstrip()
-                        if currentValue:
-                            line += os.pathsep
-                        line += selected.jdk + os.linesep
-                    append = False
-                envLines.append(line)
+                            line = line.rstrip()
+                            if currentValue:
+                                line += os.pathsep
+                            line += selected.jdk + os.linesep
+                        append = False
+                    envLines.append(line)
+        else:
+            append = True
+
         if append:
-            envLines.append(varName + '=' + selected.jdk)
+            envLines.append(varName + '=' + selected.jdk + os.linesep)
 
         with open(envPath, 'w') as fp:
             for line in envLines:
