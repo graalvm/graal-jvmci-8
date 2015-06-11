@@ -144,7 +144,7 @@ def make_dist_rule(dist, mf):
     if len(classPath) > 0: mf.add_definition("{depJarsVariable} = {jarDeps}".format(**props))
     if shouldExport: mf.add_definition("EXPORTED_FILES += $({name}_JAR)".format(**props))
     mf.add_rule("""$({name}_JAR): $({sourcesVariableName}) {annotationProcessors} {depJarsVariableAccess}
-\t$(call build_and_jar,{cpAnnotationProcessors},$(shell echo {depJarsVariableAccess} | tr ' ' ':'),{copyResources},$({name}_JAR))
+\t$(call build_and_jar,{cpAnnotationProcessors},$(subst  $(space),:,{depJarsVariableAccess}),{copyResources},$({name}_JAR))
 """.format(**props))
     return
 
@@ -181,6 +181,10 @@ ifeq ($(MAKE_VERBOSE),)
     QUIETLY=@
 endif
 
+# Required to construct a whitespace for use with subst
+space :=
+space +=
+
 # Takes the option files of the options annotation processor and merges them into a single file
 # Arguments:
 #  1: directory with contents of the JAR file
@@ -211,7 +215,7 @@ define extract
     $(QUIETLY) cp $(1) $(2);
 endef
 
-# Calls $(JAVAC) with the bootclasspath $(JDK_BOOTCLASSPATH); sources are taken from the automatic variable $?
+# Calls $(JAVAC) with the bootclasspath $(JDK_BOOTCLASSPATH); sources are taken from the automatic variable $^
 # Arguments:
 #  1: processorpath
 #  2: classpath
@@ -220,12 +224,17 @@ endef
 define build_and_jar
     $(info Building $(4))
     $(eval TMP := $(shell mkdir -p $(TARGET) && mktemp -d $(TARGET)/tmp_XXXXX))
-    $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$?);
+    $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$^);
     $(QUIETLY) test "$(3)" = "" || cp -r $(3) $(TMP);
     $(QUIETLY) $(call process_options,$(TMP));
     $(QUIETLY) mkdir -p $(shell dirname $(4))
     $(QUIETLY) $(JAR) cf $(4) -C $(TMP) .
     $(QUIETLY) rm -r $(TMP);
+endef
+
+# Verifies if the defs.make contain the exported files of services/
+define verify_export_def_make
+    $(foreach file,$(1),$(if $(shell grep '$(2)$(file)' $(3) > /dev/null && echo found), , $(error "Pattern '$(2)$(file)' not found in $(3)")))
 endef
 
 all: default
@@ -234,6 +243,8 @@ export: all
 \t$(info Put $(EXPORTED_FILES) into SHARED_DIR $(SHARED_DIR))
 \t$(QUIETLY) mkdir -p $(SHARED_DIR)
 \t$(foreach export,$(EXPORTED_FILES),$(call extract,$(export),$(SHARED_DIR)))
+\t$(call verify_export_def_make,$(notdir $(wildcard $(SHARED_DIR)/services/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/,make/defs.make)
+\t$(call verify_export_def_make,$(notdir $(wildcard $(SHARED_DIR)/options/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/,make/defs.make)
 .PHONY: export
 
 """)
