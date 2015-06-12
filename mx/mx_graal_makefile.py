@@ -65,6 +65,9 @@ def build_makefile(args):
                 return 1
     return 0
 
+def short_dist_name(name):
+    return name.replace("COM_ORACLE_", "")
+
 def filter_projects(deps, t):
     def typeFilter(project): # filters
         if isinstance(project, str):
@@ -83,8 +86,6 @@ def update_list(li, elements):
 def make_dist_rule(dist, mf):
     def path_dist_relative(p):
         return os.path.relpath(p, dist.suite.dir)
-    def short_dist_name(name):
-        return name.replace("COM_ORACLE_", "")
     shortName = short_dist_name(dist.name)
     jdkDeployedDists = get_jdk_deployed_dists()
     jarPath = path_dist_relative(dist.path)
@@ -173,6 +174,8 @@ HS_COMMON_SRC=.
 PROVIDERS_INF=/META-INF/jvmci.providers
 SERVICES_INF=/META-INF/jvmci.services
 OPTIONS_INF=/META-INF/jvmci.options
+
+JARS = $(foreach dist,$(DISTRIBUTIONS),$($(dist)_JAR))
 
 ifeq ($(ABS_BOOTDIR),)
     $(error Variable ABS_BOOTDIR must be set to a JDK installation.)
@@ -267,6 +270,11 @@ export: all
 \t$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.options/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/)
 .PHONY: export
 
+clean:
+\t$(QUIETLY) rm $(JARS) 2> /dev/null || true
+\t$(QUIETLY) rmdir -p $(dir $(JARS)) 2> /dev/null || true
+.PHONY: export clean
+
 """)
     s = mx.suite("graal")
     dists = []
@@ -288,7 +296,8 @@ export: all
         mf.add_definition(jdkBootClassPathVariableName + " = " + bootClassPath)
         for d in ap: make_dist_rule(d, mf)
         for d in dists: make_dist_rule(d, mf)
-        mf.add_rule("default: $({}_JAR)\n.PHONY: default\n".format("_JAR) $(".join([d.name for d in dists])))
+        mf.add_definition("DISTRIBUTIONS = " + " ".join([short_dist_name(d.name) for d in dists+ap]))
+        mf.add_rule("default: $({}_JAR)\n.PHONY: default\n".format("_JAR) $(".join([short_dist_name(d.name) for d in dists])))
         return True
     else:
         for d in dists:

@@ -14,6 +14,8 @@ PROVIDERS_INF=/META-INF/jvmci.providers
 SERVICES_INF=/META-INF/jvmci.services
 OPTIONS_INF=/META-INF/jvmci.options
 
+JARS = $(foreach dist,$(DISTRIBUTIONS),$($(dist)_JAR))
+
 ifeq ($(ABS_BOOTDIR),)
     $(error Variable ABS_BOOTDIR must be set to a JDK installation.)
 endif
@@ -107,6 +109,11 @@ export: all
 	$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.options/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/)
 .PHONY: export
 
+clean:
+	$(QUIETLY) rm $(JARS) 2> /dev/null || true
+	$(QUIETLY) rmdir -p $(dir $(JARS)) 2> /dev/null || true
+.PHONY: export clean
+
 
 
 JDK_BOOTCLASSPATH = $(ABS_BOOTDIR)/jre/lib/resources.jar:$(ABS_BOOTDIR)/jre/lib/rt.jar:$(ABS_BOOTDIR)/jre/lib/jsse.jar:$(ABS_BOOTDIR)/jre/lib/jce.jar:$(ABS_BOOTDIR)/jre/lib/charsets.jar:$(ABS_BOOTDIR)/jre/lib/jfr.jar
@@ -162,6 +169,8 @@ JVMCI_HOTSPOT_JAR = $(TARGET)/build/jvmci-hotspot.jar
 JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/build/jvmci-api.jar $(TARGET)/build/jvmci-service.jar jvmci/findbugs-SuppressFBWarnings.jar
 
 EXPORTED_FILES += $(JVMCI_HOTSPOT_JAR)
+
+DISTRIBUTIONS = JVMCI_API JVMCI_SERVICE JVMCI_HOTSPOT JVMCI_OPTIONS_PROCESSOR JVMCI_HOTSPOTVMCONFIG_PROCESSOR JVMCI_SERVICE_PROCESSOR
 
 $(JVMCI_OPTIONS_PROCESSOR_JAR): $(JVMCI_OPTIONS_PROCESSOR_SRC)  
 	$(call build_and_jar,,$(subst  $(space),:,),jvmci/com.oracle.jvmci.options.processor/src/META-INF,$(JVMCI_OPTIONS_PROCESSOR_JAR))
