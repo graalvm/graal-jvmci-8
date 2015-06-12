@@ -288,7 +288,7 @@ export: all
         mf.add_definition(jdkBootClassPathVariableName + " = " + bootClassPath)
         for d in ap: make_dist_rule(d, mf)
         for d in dists: make_dist_rule(d, mf)
-        mf.add_rule("default: $({}_JAR)\n.PHONY: default".format("_JAR) $(".join([d.name for d in dists])))
+        mf.add_rule("default: $({}_JAR)\n.PHONY: default\n".format("_JAR) $(".join([d.name for d in dists])))
         return True
     else:
         for d in dists:
