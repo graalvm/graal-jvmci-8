@@ -2607,7 +2607,7 @@ def update_file(path, content, showDiff=False):
             return False
 
         if existed and _opts.backup_modified:
-                shutil.move(path, path + '.orig')
+            shutil.move(path, path + '.orig')
 
         with open(path, 'wb') as f:
             f.write(content)
