@@ -31,7 +31,10 @@ import sun.reflect.*;
  * class loader that is hidden from application code. Hence the {@link SecurityManager} checks in
  * {@link #load(Class)} and {@link #loadSingle(Class, boolean)}.
  */
-public class Services {
+public final class Services {
+
+    private Services() {
+    }
 
     private static final String SUPPRESS_PROPERTY_NAME = "jvmci.service.suppressNoClassDefFoundError";
 
