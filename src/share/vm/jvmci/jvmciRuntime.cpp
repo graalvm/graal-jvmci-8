@@ -768,7 +768,7 @@ void JVMCIRuntime::parse_properties(SystemProperty** plist) {
     struct dirent *entry;
     char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(jvmciDir), mtInternal);
     JVMCIPropertiesFileClosure closure(plist);
-    const int suffix_len = strlen(".properties");
+    const unsigned suffix_len = strlen(".properties");
     while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL && !closure.is_aborted()) {
       const char* name = entry->d_name;
       if (strlen(name) > suffix_len && strcmp(name + strlen(name) - suffix_len, ".properties") == 0) {
