@@ -137,9 +137,7 @@ def _get_vm():
         items = [k for k in _vmChoices.keys() if _vmChoices[k] is not None]
         descriptions = [_vmChoices[k] for k in _vmChoices.keys() if _vmChoices[k] is not None]
         vm = mx.select_items(items, descriptions, allowMultiple=False)
-        if mx.ask_yes_no('Persist this choice by adding "DEFAULT_VM=' + vm + '" to ' + envPath, 'y'):
-            with open(envPath, 'a') as fp:
-                print >> fp, 'DEFAULT_VM=' + vm
+        mx.ask_persist_env('DEFAULT_VM', vm)
     _vm = vm
     return vm
 
@@ -1808,7 +1806,7 @@ def _igvJdk():
     v8 = mx.VersionSpec("1.8")
     def _igvJdkVersionCheck(version):
         return version >= v8 and (version < v8u20 or version >= v8u40)
-    return mx.java_version(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").jdk
+    return mx.java(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").jdk
 
 def _igvBuildEnv():
         # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
@@ -2617,10 +2615,12 @@ def mx_init(suite):
 
 def mx_post_parse_cmd_line(opts):  #
     # TODO _minVersion check could probably be part of a Suite in mx?
-    if mx.java().version < _minVersion:
-        mx.abort('Requires Java version ' + str(_minVersion) + ' or greater for JAVA_HOME, got version ' + str(mx.java().version))
-    if _untilVersion and mx.java().version >= _untilVersion:
-        mx.abort('Requires Java version strictly before ' + str(_untilVersion) + ' for JAVA_HOME, got version ' + str(mx.java().version))
+    def _versionCheck(version):
+        return version >= _minVersion and (not _untilVersion or version >= _untilVersion)
+    versionDesc = ">=" + str(_minVersion)
+    if _untilVersion:
+        versionDesc += " and <=" + str(_untilVersion)
+    mx.java(_versionCheck, versionDescription=versionDesc, defaultJdk=True)
 
     if _vmSourcesAvailable:
         if hasattr(opts, 'vm') and opts.vm is not None:
