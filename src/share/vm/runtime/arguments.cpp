@@ -44,6 +44,9 @@
 #include "utilities/macros.hpp"
 #include "utilities/stringUtils.hpp"
 #include "utilities/taskqueue.hpp"
+#ifdef JVMCI
+#include "jvmci/jvmciRuntime.hpp"
+#endif
 #ifdef TARGET_OS_FAMILY_linux
 # include "os_linux.inline.hpp"
 #endif
@@ -213,6 +216,10 @@ void Arguments::init_system_properties() {
 
   // Set OS specific system properties values
   os::init_system_properties_values();
+
+#ifdef JVMCI
+  JVMCIRuntime::parse_properties(&_system_properties);
+#endif
 }
 
 

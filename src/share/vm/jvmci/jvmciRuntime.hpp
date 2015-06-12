@@ -26,6 +26,7 @@
 
 #include "interpreter/interpreter.hpp"
 #include "memory/allocation.hpp"
+#include "runtime/arguments.hpp"
 #include "runtime/deoptimization.hpp"
 #include "jvmci/jvmciOptions.hpp"
 
@@ -79,6 +80,11 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
   static Handle create_Service(const char* name, TRAPS);
 
  public:
+
+  /**
+   * Parses *.properties files in jre/lib/jvmci/ and adds the properties to plist.
+   */
+  static void parse_properties(SystemProperty** plist);
 
   /**
    * Parses the JVMCI specific VM options that were presented by the launcher and sets

@@ -34,7 +34,6 @@
 #include "prims/jvm.h"
 #include "runtime/biasedLocking.hpp"
 #include "runtime/interfaceSupport.hpp"
-#include "runtime/arguments.hpp"
 #include "runtime/reflection.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/defaultStream.hpp"
@@ -726,6 +725,60 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
     klass->initialize(CHECK_ABORT);
     _FactoryKlass = klass();
     assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
+  }
+}
+
+/**
+ * Closure for parsing a line from a *.properties file in jre/lib/jvmci/properties.
+ * The line must match the regular expression "[^=]+=.*". That is one or more
+ * characters other than '=' followed by '=' followed by zero or more characters.
+ * Everything before the '=' is the property name and everything after '=' is the value.
+ * No special processing of whitespace or any escape characters is performed.
+ * Also, no check is made whether an existing property is overridden.
+ */
+class JVMCIPropertiesFileClosure : public ParseClosure {
+  SystemProperty** _plist;
+public:
+  JVMCIPropertiesFileClosure(SystemProperty** plist) : _plist(plist) {}
+  void do_line(char* line) {
+    size_t len = strlen(line);
+    char* sep = strchr(line, '=');
+    if (sep == NULL) {
+      warn_and_abort("invalid format: could not find '=' character");
+      return;
+    }
+    if (sep == line) {
+      warn_and_abort("invalid format: name cannot be empty");
+      return;
+    }
+    *sep = '\0';
+    const char* name = line;
+    char* value = sep + 1;
+    Arguments::PropertyList_add(_plist, name, value);
+  }
+};
+
+void JVMCIRuntime::parse_properties(SystemProperty** plist) {
+  char jvmciDir[JVM_MAXPATHLEN];
+  const char* fileSep = os::file_separator();
+  jio_snprintf(jvmciDir, sizeof(jvmciDir), "%s%slib%sjvmci",
+               Arguments::get_java_home(), fileSep, fileSep, fileSep);
+  DIR* dir = os::opendir(jvmciDir);
+  if (dir != NULL) {
+    struct dirent *entry;
+    char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(jvmciDir), mtInternal);
+    JVMCIPropertiesFileClosure closure(plist);
+    const int suffix_len = strlen(".properties");
+    while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL && !closure.is_aborted()) {
+      const char* name = entry->d_name;
+      if (strlen(name) > suffix_len && strcmp(name + strlen(name) - suffix_len, ".properties") == 0) {
+        char propertiesFilePath[JVM_MAXPATHLEN];
+        jio_snprintf(propertiesFilePath, sizeof(propertiesFilePath), "%s%s%s",jvmciDir, fileSep, name);
+        JVMCIRuntime::parse_lines(propertiesFilePath, &closure, false);
+      }
+    }
+    FREE_C_HEAP_ARRAY(char, dbuf, mtInternal);
+    os::closedir(dir);
   }
 }
 
