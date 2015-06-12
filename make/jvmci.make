@@ -98,11 +98,11 @@ define verify_defs_make
 endef
 
 all: default
+	$(info Put $(EXPORTED_FILES) into SHARED_DIR $(SHARED_DIR))
+	$(QUIETLY) $(shell mkdir -p $(SHARED_DIR))
+	$(foreach export,$(EXPORTED_FILES),$(call extract,$(export),$(SHARED_DIR)))
 
 export: all
-	$(info Put $(EXPORTED_FILES) into SHARED_DIR $(SHARED_DIR))
-	$(QUIETLY) mkdir -p $(SHARED_DIR)
-	$(foreach export,$(EXPORTED_FILES),$(call extract,$(export),$(SHARED_DIR)))
 	$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.services/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/)
 	$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.options/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/)
 .PHONY: export
