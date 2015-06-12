@@ -74,7 +74,11 @@ define build_and_jar
     $(QUIETLY) rm -r $(TMP);
 endef
 
-# Verifies if the defs.make contain the exported files of services/
+# Verifies if the defs.make contain the exported files of services/ or options/
+# Arguments:
+#  1: files to check
+#  2: prefix for pattern to check
+#  3: path to defs.make file
 define verify_export_def_make
     $(foreach file,$(1),$(if $(shell grep '$(2)$(file)' $(3) > /dev/null && echo found), , $(error "Pattern '$(2)$(file)' not found in $(3)")))
 endef
