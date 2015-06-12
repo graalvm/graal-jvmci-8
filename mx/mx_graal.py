@@ -606,53 +606,32 @@ def _updateJVMCIFiles(jdkDir):
     jreJVMCIOptionsDir = join(jreJVMCIDir, 'options')
     _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreJVMCIServicesDir, jreJVMCIOptionsDir)
 
-def _patchGraalVersionConstant(dist):
+def _updateGraalPropertiesFile(jreLibDir):
     """
-    Patches the constant "@@@@@@@@@@@@@@@@graal.version@@@@@@@@@@@@@@@@" in the constant pool of Graal.class
-    with the computed Graal version string.
+    Updates (or creates) 'jreLibDir'/jvmci/graal.properties to set/modify the
+    graal.version property.
     """
-    zf = zipfile.ZipFile(dist.path, 'r')
-    graalClassfilePath = 'com/oracle/graal/api/runtime/Graal.class'
-    try:
-        graalClassfile = zf.read(graalClassfilePath)
-    except KeyError:
-        mx.log(graalClassfilePath + ' is not present in ' + dist.path)
-        return
-    placeholder = '@@@@@@@@@@@@@@@@graal.version@@@@@@@@@@@@@@@@'
-    placeholderLen = len(placeholder)
-    versionSpec = '{:' + str(placeholderLen) + '}'
-    versionStr = versionSpec.format(graal_version())
-
-    if len(versionStr) > placeholderLen:
-        # Truncate the version string if necessary
-        assert versionStr.startswith('unknown'), versionStr
-        versionStr = versionStr[:placeholderLen]
-    if placeholder not in graalClassfile:
-        assert versionStr in graalClassfile, 'could not find "' + placeholder + '" or "' + versionStr + '" constant in ' + dist.path + '!' + graalClassfilePath
-        zf.close()
-        return False
-
-    zfOutFd, zfOutPath = tempfile.mkstemp(suffix='', prefix=basename(dist.path) + '.', dir=dirname(dist.path))
-    zfOut = zipfile.ZipFile(zfOutPath, 'w')
-    for zi in zf.infolist():
-        if zi.filename == graalClassfilePath:
-            data = graalClassfile.replace(placeholder, versionStr)
-        else:
-            data = zf.read(zi)
-        zfOut.writestr(zi, data)
-    zfOut.close()
-    os.close(zfOutFd)
-    zf.close()
-    shutil.move(zfOutPath, dist.path)
+    version = graal_version()
+    graalProperties = join(jreLibDir, 'jvmci', 'graal.properties')
+    if not exists(graalProperties):
+        with open(graalProperties, 'w') as fp:
+            print >> fp, 'graal.version=' + version
+    else:
+        content = []
+        with open(graalProperties) as fp:
+            for line in fp:
+                if line.startswith('graal.version='):
+                    content.append('graal.version=' + version)
+                else:
+                    content.append(line.rstrip(os.linesep))
+        with open(graalProperties, 'w') as fp:
+            fp.write(os.linesep.join(content))
 
 def _installDistInJdks(deployableDist):
     """
     Installs the jar(s) for a given Distribution into all existing JVMCI JDKs
     """
     dist = mx.distribution(deployableDist.name)
-    if dist.name == 'GRAAL':
-        _patchGraalVersionConstant(dist)
-
     jdks = _jdksDir()
     if exists(jdks):
         for e in os.listdir(jdks):
@@ -673,6 +652,8 @@ def _installDistInJdks(deployableDist):
                 if deployableDist.usesJVMCIClassLoader:
                     # deploy service files
                     _updateJVMCIFiles(jdkDir)
+                if dist.name == 'GRAAL':
+                    _updateGraalPropertiesFile(jreLibDir)
 
 def _getJdkDeployedJars(jdkDir):
     """
@@ -812,7 +793,7 @@ def graal_version(dev_suffix='dev'):
                 major, minor = map(int, most_recent_tag_version.split('.'))
                 cached_graal_version = str(major) + '.' + str(minor + 1) + '-' + dev_suffix
         else:
-            cached_graal_version = 'unknown-{0}'.format(platform.node())
+            cached_graal_version = 'unknown-{0}-{1}'.format(platform.node(), time.strftime('%Y-%m-%d_%H-%M-%S_%Z'))
 
     return cached_graal_version
 
