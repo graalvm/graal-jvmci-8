@@ -61,7 +61,7 @@ def build_makefile(args):
         if opts.output == None:
             print contents
         else:
-            if mx.update_file(opts.output, contents):
+            if mx.update_file(opts.output, contents, showDiff=True):
                 return 1
     return 0
 

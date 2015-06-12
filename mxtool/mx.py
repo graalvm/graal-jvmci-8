@@ -2591,7 +2591,7 @@ def download(path, urls, verbose=False):
     abort('Could not download to ' + path + ' from any of the following URLs:\n\n    ' +
               '\n    '.join(urls) + '\n\nPlease use a web browser to do the download manually')
 
-def update_file(path, content):
+def update_file(path, content, showDiff=False):
     """
     Updates a file with some given content if the content differs from what's in
     the file already. The return value indicates if the file was updated.
@@ -2607,12 +2607,19 @@ def update_file(path, content):
             return False
 
         if existed and _opts.backup_modified:
-            shutil.move(path, path + '.orig')
+                shutil.move(path, path + '.orig')
 
         with open(path, 'wb') as f:
             f.write(content)
 
-        log(('modified ' if existed else 'created ') + path)
+        if existed:
+            log('modified ' + path)
+            if showDiff:
+                log('diff: ' + path)
+                log(''.join(difflib.unified_diff(old.splitlines(1), content.splitlines(1))))
+
+        else:
+            log('created ' + path)
         return True
     except IOError as e:
         abort('Error while writing to ' + path + ': ' + str(e))
