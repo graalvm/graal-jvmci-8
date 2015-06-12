@@ -190,15 +190,15 @@ space +=
 # Arguments:
 #  1: directory with contents of the JAR file
 define process_providers
-    $(eval providers=$(1)/$(PROVIDERS_INF))
-    $(eval services=$(1)/$(SERVICES_INF))
+    $(eval providers := $(1)/$(PROVIDERS_INF))
+    $(eval services := $(1)/$(SERVICES_INF))
     $(QUIETLY) test -d $(services) || mkdir -p $(services)
     $(QUIETLY) test ! -d $(providers) || (cd $(providers) && for i in $$(ls); do c=$$(cat $$i); echo $$i >> $(abspath $(services))/$$c; rm $$i; done)
 
     @# Since all projects are built together with one javac call we cannot determine
     @# which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
-    $(eval vmconfig=$(1)/hotspot/HotSpotVMConfig.inline.hpp)
-    $(eval vmconfigDest=$(HS_COMMON_SRC)/../jvmci/com.oracle.jvmci.hotspot/src_gen/hotspot)
+    $(eval vmconfig := $(1)/hotspot/HotSpotVMConfig.inline.hpp)
+    $(eval vmconfigDest := $(HS_COMMON_SRC)/../jvmci/com.oracle.jvmci.hotspot/src_gen/hotspot)
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
@@ -208,8 +208,8 @@ endef
 # Arguments:
 #  1: directory with contents of the JAR file
 define process_options
-    $(eval options=$(1)/$(OPTIONS_INF))
-    $(eval services=$(1)/META-INF/services)
+    $(eval options := $(1)/$(OPTIONS_INF))
+    $(eval services := $(1)/META-INF/services)
     $(QUIETLY) test -d $(services) || mkdir -p $(services)
     $(QUIETLY) test ! -d $(options) || (cd $(options) && for i in $$(ls); do echo $${i}_Options >> $(abspath $(services))/com.oracle.jvmci.options.Options; done)
 endef
@@ -217,14 +217,13 @@ endef
 # Extracts META-INF/jvmci.services and META-INF/jvmci.options of a JAR file into a given directory
 # Arguments:
 #  1: JAR file to extract
-#  2: target directory
+#  2: target directory (which already exists)
 define extract
     $(eval TMP := $(shell mktemp -d $(TARGET)/tmp_XXXXX))
-    $(QUIETLY) mkdir -p $(2)
     $(QUIETLY) cd $(TMP) && $(JAR) xf $(abspath $(1)) && \\
         ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) && \\
-         (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))))
-    $(QUIETLY) rm -r $(TMP)
+         (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))));
+    $(QUIETLY) rm -r $(TMP);
     $(QUIETLY) cp $(1) $(2)
 endef
 
@@ -252,8 +251,8 @@ endef
 #  1: list of service or option files
 #  2: prefix to apply to each file to create match pattern
 define verify_defs_make
-    $(eval defs=make/defs.make)
-    $(eval exports=$(shell grep '$(2)' make/defs.make | sed 's:.*$(2)::g'))
+    $(eval defs := make/defs.make)
+    $(eval exports := $(shell grep '$(2)' make/defs.make | sed 's:.*$(2)::g'))
     $(foreach file,$(1),$(if $(findstring $(file),$(exports)), ,$(error "Pattern '$(2)$(file)' not found in $(defs)")))
     $(foreach export,$(exports),$(if $(findstring $(export),$(1)), ,$(error "The line '$(2)$(export)' should not be in $(defs)")))
 endef
