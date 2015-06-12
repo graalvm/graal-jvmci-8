@@ -1713,11 +1713,11 @@ def gate(args, gate_body=_basic_gate_body):
         with Task('Pylint', tasks) as t:
             if t: mx.pylint([])
 
-        with Task('Check jvmci.make in sync with suite.py', tasks) as t:
-            if t:
-                jvmciMake = join('make', 'jvmci.make')
-                if mx_graal_makefile.build_makefile(['-o', jvmciMake]) != 0:
-                    t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
+        # with Task('Check jvmci.make in sync with suite.py', tasks) as t:
+        #     if t:
+        #         jvmciMake = join('make', 'jvmci.make')
+        #         if mx_graal_makefile.build_makefile(['-o', jvmciMake]) != 0:
+        #             t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
 
         def _clean(name='Clean'):
             with Task(name, tasks) as t:
