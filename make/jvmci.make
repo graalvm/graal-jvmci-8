@@ -86,13 +86,16 @@ define build_and_jar
     $(QUIETLY) rm -r $(TMP)
 endef
 
-# Verifies that make/defs.make contains a line for each file in a list of files.
+# Verifies that make/defs.make contains an appropriate line for each JVMCI service or option
+# and that only existing JVMCI services and options are exported.
 # Arguments:
-#  1: list of files
+#  1: list of service or option files
 #  2: prefix to apply to each file to create match pattern
 define verify_defs_make
     $(eval defs=make/defs.make)
-    $(foreach file,$(1),$(if $(shell grep '$(2)$(file)' $(defs) > /dev/null && echo found), , $(error "Pattern '$(2)$(file)' not found in $(defs)")))
+    $(eval exports=$(shell grep '$(2)' make/defs.make | sed 's:.*$(2)::g'))
+    $(foreach file,$(1),$(if $(findstring $(file),$(exports)), ,$(error "Pattern '$(2)$(file)' not found in $(defs)")))
+    $(foreach export,$(exports),$(if $(findstring $(export),$(1)), ,$(error "The line '$(2)$(export)' should not be in $(defs)")))
 endef
 
 all: default
