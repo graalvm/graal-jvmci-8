@@ -281,35 +281,51 @@ public class MetaUtil {
      * @return the internal name form of the class name
      */
     public static String toInternalName(String className) {
-        String prefix = "";
-        String base = className;
-        while (base.endsWith("[]")) {
-            prefix += "[";
-            base = base.substring(base.length() - 2);
+        if (className.startsWith("[")) {
+            /* Already in the correct array style. */
+            return className.replace('.', '/');
         }
 
-        switch (className) {
-            case "boolean":
-                return prefix + "Z";
-            case "byte":
-                return prefix + "B";
-            case "short":
-                return prefix + "S";
-            case "char":
-                return prefix + "C";
-            case "int":
-                return prefix + "I";
-            case "float":
-                return prefix + "F";
-            case "long":
-                return prefix + "J";
-            case "double":
-                return prefix + "D";
-            case "void":
-                return prefix + "V";
-            default:
-                return prefix + "L" + className.replace('.', '/') + ";";
+        StringBuilder result = new StringBuilder();
+        String base = className;
+        while (base.endsWith("[]")) {
+            result.append("[");
+            base = base.substring(0, base.length() - 2);
         }
+
+        switch (base) {
+            case "boolean":
+                result.append("Z");
+                break;
+            case "byte":
+                result.append("B");
+                break;
+            case "short":
+                result.append("S");
+                break;
+            case "char":
+                result.append("C");
+                break;
+            case "int":
+                result.append("I");
+                break;
+            case "float":
+                result.append("F");
+                break;
+            case "long":
+                result.append("J");
+                break;
+            case "double":
+                result.append("D");
+                break;
+            case "void":
+                result.append("V");
+                break;
+            default:
+                result.append("L").append(base.replace('.', '/')).append(";");
+                break;
+        }
+        return result.toString();
     }
 
     /**

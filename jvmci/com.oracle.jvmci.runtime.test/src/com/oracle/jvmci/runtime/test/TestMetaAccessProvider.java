@@ -42,9 +42,11 @@ public class TestMetaAccessProvider extends TypeUniverse {
             ResolvedJavaType type = metaAccess.lookupJavaType(c);
             assertNotNull(type);
             assertEquals(c.getModifiers(), type.getModifiers());
+            assertEquals(type.getName(), toInternalName(c.getName()));
+            assertEquals(type.getName(), toInternalName(type.toJavaName()));
+            assertEquals(c.getName(), type.toClassName());
             if (!type.isArray()) {
-                assertEquals(type.getName(), toInternalName(c.getName()));
-                assertEquals(type.toJavaName(), c.getName());
+                assertEquals(c.getName(), type.toJavaName());
             }
         }
     }
