@@ -155,7 +155,7 @@ def make_dist_rule(dist, mf):
 
 def do_build_makefile(mf, selectedDists, commandline):
     java = mx.java()
-    bootClassPath = os.path.realpath(java.bootclasspath())
+    bootClassPath = java.bootclasspath()
     bootClassPath = bootClassPath.replace(os.path.realpath(java.jdk), "$(ABS_BOOTDIR)")
     jdkBootClassPathVariableName = "JDK_BOOTCLASSPATH"
 
