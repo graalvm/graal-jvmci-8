@@ -266,7 +266,7 @@ endef
 
 all: default
 \t$(info Put $(EXPORTED_FILES) into SHARED_DIR $(SHARED_DIR))
-\t$(QUIETLY) $(shell mkdir -p $(SHARED_DIR))
+\t$(shell mkdir -p $(SHARED_DIR))
 \t$(foreach export,$(EXPORTED_FILES),$(call extract,$(export),$(SHARED_DIR)))
 
 export: all
