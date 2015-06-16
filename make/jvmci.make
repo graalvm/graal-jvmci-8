@@ -91,12 +91,16 @@ endef
 # and that only existing JVMCI services and options are exported.
 # Arguments:
 #  1: list of service or option files
-#  2: prefix to apply to each file to create match pattern
+#  2: variable name for directory of service or option files
 define verify_defs_make
     $(eval defs := make/defs.make)
-    $(eval exports := $(shell grep '$(2)' make/defs.make | sed 's:.*$(2)::g'))
-    $(foreach file,$(1),$(if $(findstring $(file),$(exports)), ,$(error "Pattern '$(2)$(file)' not found in $(defs)")))
-    $(foreach export,$(exports),$(if $(findstring $(export),$(1)), ,$(error "The line '$(2)$(export)' should not be in $(defs)")))
+    $(eval uncondPattern := EXPORT_LIST += $$$$($(2))/)
+    $(eval condPattern := CONDITIONAL_EXPORT_LIST += $$$$($(2))/)
+    $(eval unconditionalExports := $(shell grep '^EXPORT_LIST += $$($2)' make/defs.make | sed 's:.*($(2))/::g'))
+    $(eval conditionalExports := $(shell grep '^CONDITIONAL_EXPORT_LIST += $$($2)' make/defs.make | sed 's:.*($(2))/::g'))
+    $(eval allExports := $(unconditionalExports) $(conditionalExports))
+    $(foreach file,$(1),$(if $(findstring $(file),$(allExports)), ,$(error "Line matching '$(uncondPattern)$(file)' or '$(condPattern)$(file)' not found in $(defs)")))
+    $(foreach export,$(unconditionalExports),$(if $(findstring $(export),$(1)), ,$(error "The line '$(uncondPattern)$(export)' should not be in $(defs)")))
 endef
 
 all: default
@@ -105,8 +109,8 @@ all: default
 	$(foreach export,$(EXPORTED_FILES),$(call extract,$(export),$(SHARED_DIR)))
 
 export: all
-	$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.services/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/)
-	$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.options/*)),EXPORT_LIST += $$(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/)
+	$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.services/*)),EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)
+	$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.options/*)),EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)
 .PHONY: export
 
 clean:

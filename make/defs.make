@@ -373,7 +373,7 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.Hot
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.debug.TTYStreamProvider
 
 ifneq ("$(wildcard $(SHARED_DIR)/services/com.oracle.jvmci.hotspot.events.EventProvider)","")
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.events.EventProvider
+CONDITIONAL_EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.events.EventProvider
 endif
 
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotConstantReflectionProvider
@@ -384,6 +384,9 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.Comp
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.compiler.Compiler
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.debug.JVMCIDebugConfig
 
+# The use of CONDITIONAL_EXPORT_LIST is for the checking
+# done by verify_defs_make in jvmci.make
+EXPORT_LIST += $(CONDITIONAL_EXPORT_LIST)
 
 .PHONY: $(HS_ALT_MAKE)/defs.make
 
