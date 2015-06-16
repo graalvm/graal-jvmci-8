@@ -1092,8 +1092,10 @@ const Type *TypeD::xdual() const {
 bool TypeD::eq( const Type *t ) const {
   if( g_isnan(_d) ||
       g_isnan(t->getd()) ) {
-    // One or both are NANs.  If both are NANs return true, else false.
-    return (g_isnan(_d) && g_isnan(t->getd()));
+    // it is important, when two different NaNs are used in one method, the NaNs are treated
+    // as different NaNs (as C1 does)
+    jdouble td = t->getd();
+    return *((jlong*)(&_d)) == *(jlong*)(&td);
   }
   if (_d == t->getd()) {
     // (NaN is impossible at this point, since it is not equal even to itself)
