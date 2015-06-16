@@ -589,7 +589,10 @@ class Project(Dependency):
     """
     def annotation_processors_path(self):
         aps = [project(ap) for ap in self.annotation_processors()]
-        libAps = [dep for dep in self.all_deps([], includeLibs=True, includeSelf=False) if dep.isLibrary() and hasattr(dep, 'annotationProcessor') and getattr(dep, 'annotationProcessor').lower() == 'true']
+        libAps = set()
+        for dep in self.all_deps([], includeLibs=True, includeSelf=False):
+            if dep.isLibrary() and hasattr(dep, 'annotationProcessor') and getattr(dep, 'annotationProcessor').lower() == 'true':
+                libAps = libAps.union(dep.all_deps([], includeLibs=True, includeSelf=True))
         if len(aps) + len(libAps):
             return os.pathsep.join([ap.definedAnnotationProcessorsDist.path for ap in aps if ap.definedAnnotationProcessorsDist] + [lib.get_path(False) for lib in libAps])
         return None
