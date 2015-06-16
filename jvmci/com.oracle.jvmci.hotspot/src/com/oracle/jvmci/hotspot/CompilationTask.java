@@ -66,11 +66,13 @@ public class CompilationTask {
      */
     private final boolean installAsDefault;
 
-    /**
-     * A {@link com.sun.management.ThreadMXBean} to be able to query some information about the
-     * current compiler thread, e.g. total allocated bytes.
-     */
-    private static final com.sun.management.ThreadMXBean threadMXBean = (com.sun.management.ThreadMXBean) Management.getThreadMXBean();
+    static class Lazy {
+        /**
+         * A {@link com.sun.management.ThreadMXBean} to be able to query some information about the
+         * current compiler thread, e.g. total allocated bytes.
+         */
+        static final com.sun.management.ThreadMXBean threadMXBean = (com.sun.management.ThreadMXBean) Management.getThreadMXBean();
+    }
 
     /**
      * The address of the JVMCIEnv associated with this compilation or 0L if no such object exists.
@@ -135,13 +137,21 @@ public class CompilationTask {
         try (DebugCloseable a = CompilationTime.start()) {
             CompilationStatistics stats = CompilationStatistics.create(method, isOSR);
             final boolean printCompilation = PrintCompilation.getValue() && !TTY.isSuppressed();
+            final boolean printAfterCompilation = PrintAfterCompilation.getValue() && !TTY.isSuppressed();
             if (printCompilation) {
                 TTY.println(getMethodDescription() + "...");
             }
 
             TTY.Filter filter = new TTY.Filter(PrintFilter.getValue(), method);
-            final long start = System.currentTimeMillis();
-            final long allocatedBytesBefore = threadMXBean.getThreadAllocatedBytes(threadId);
+            final long start;
+            final long allocatedBytesBefore;
+            if (printAfterCompilation || printCompilation) {
+                start = System.currentTimeMillis();
+                allocatedBytesBefore = printAfterCompilation || printCompilation ? Lazy.threadMXBean.getThreadAllocatedBytes(threadId) : 0L;
+            } else {
+                start = 0L;
+                allocatedBytesBefore = 0L;
+            }
 
             try (Scope s = Debug.scope("Compiling", new DebugDumpScope(String.valueOf(id), true))) {
                 // Begin the compilation event.
@@ -157,12 +167,11 @@ public class CompilationTask {
                 compilationEvent.end();
 
                 filter.remove();
-                final boolean printAfterCompilation = PrintAfterCompilation.getValue() && !TTY.isSuppressed();
 
                 if (printAfterCompilation || printCompilation) {
                     final long stop = System.currentTimeMillis();
                     final int targetCodeSize = result != null ? result.getTargetCodeSize() : -1;
-                    final long allocatedBytesAfter = threadMXBean.getThreadAllocatedBytes(threadId);
+                    final long allocatedBytesAfter = Lazy.threadMXBean.getThreadAllocatedBytes(threadId);
                     final long allocatedBytes = (allocatedBytesAfter - allocatedBytesBefore) / 1024;
 
                     if (printAfterCompilation) {
