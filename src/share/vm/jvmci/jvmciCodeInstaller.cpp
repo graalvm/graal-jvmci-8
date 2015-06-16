@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -69,6 +69,31 @@ Method* getMethodFromHotSpotMethod(oop hotspot_method) {
   return asMethod(HotSpotResolvedJavaMethodImpl::metaspaceMethod(hotspot_method));
 }
 
+VMReg getVMRegFromLocation(oop location, int total_frame_size) {
+  oop reg = code_Location::reg(location);
+  jint offset = code_Location::offset(location);
+
+  if (reg != NULL) {
+    // register
+    jint number = code_Register::number(reg);
+    VMReg vmReg = CodeInstaller::get_hotspot_reg(number);
+    assert(offset % 4 == 0, "must be aligned");
+    return vmReg->next(offset / 4);
+  } else {
+    // stack slot
+#ifdef TARGET_ARCH_sparc
+    if(offset >= 0) {
+      offset += 128;
+    }
+#endif
+    if (code_Location::addFrameSize(location)) {
+      offset += total_frame_size;
+    }
+    assert(offset % 4 == 0, "must be aligned");
+    return VMRegImpl::stack2reg(offset / 4);
+  }
+}
+
 // creates a HotSpot oop map out of the byte arrays provided by DebugInfo
 OopMap* CodeInstaller::create_oop_map(oop debug_info) {
   oop reference_map = DebugInfo::referenceMap(debug_info);
@@ -77,53 +102,29 @@ OopMap* CodeInstaller::create_oop_map(oop debug_info) {
   }
   OopMap* map = new OopMap(_total_frame_size, _parameter_count);
   objArrayOop objects = HotSpotReferenceMap::objects(reference_map);
-  typeArrayOop bytesPerArray = HotSpotReferenceMap::bytesPerElement(reference_map);
+  objArrayOop derivedBase = HotSpotReferenceMap::derivedBase(reference_map);
+  typeArrayOop sizeInBytes = HotSpotReferenceMap::sizeInBytes(reference_map);
   for (int i = 0; i < objects->length(); i++) {
-    oop value = objects->obj_at(i);
-    oop lirKind = AbstractValue::lirKind(value);
-    oop platformKind = LIRKind::platformKind(lirKind);
-    int bytesPerElement = bytesPerArray->int_at(i);
-    assert(bytesPerElement == 4 || bytesPerElement == 8, "wrong sizes");
-    jint referenceMask = LIRKind::referenceMask(lirKind);
-    assert(referenceMask != 0, "must be a reference type");
-    assert(referenceMask != -1, "must not be a derived reference type");
-    
-    VMReg vmReg;
-    if (value->is_a(RegisterValue::klass())) {
-      oop reg = RegisterValue::reg(value);
-      jint number = code_Register::number(reg);
-      vmReg = CodeInstaller::get_hotspot_reg(number);
-    } else if (value->is_a(StackSlot::klass())) {
-      jint offset = StackSlot::offset(value);
-#ifdef TARGET_ARCH_sparc
-      if(offset >= 0) {
-        offset += 128;
-      }
-#endif
-      if (StackSlot::addFrameSize(value)) {
-        offset += _total_frame_size;
-      }
-      assert(offset % 4 == 0, "must be aligned");
-      vmReg = VMRegImpl::stack2reg(offset / 4);
-    }
-      
-    int bit = 1;
-    while (referenceMask != 0) {
-      if (referenceMask & bit) {
-        if (bytesPerElement == 8) {
-          map->set_oop(vmReg);
-        } else {
-          map->set_narrowoop(vmReg);
-        }
-        referenceMask &= ~bit;
-      }
-      vmReg = vmReg->next();
-      if (bytesPerElement == 8) {
-        vmReg = vmReg->next();
-      }
-      bit <<= 1;
+    oop location = objects->obj_at(i);
+    oop baseLocation = derivedBase->obj_at(i);
+    int bytes = sizeInBytes->int_at(i);
+
+    VMReg vmReg = getVMRegFromLocation(location, _total_frame_size);
+    if (baseLocation != NULL) {
+      // derived oop
+      assert(bytes == 8, "derived oop can't be compressed");
+      VMReg baseReg = getVMRegFromLocation(baseLocation, _total_frame_size);
+      map->set_derived_oop(vmReg, baseReg);
+    } else if (bytes == 8) {
+      // wide oop
+      map->set_oop(vmReg);
+    } else {
+      // narrow oop
+      assert(bytes == 4, "wrong size");
+      map->set_narrowoop(vmReg);
     }
   }
+
   oop callee_save_info = (oop) DebugInfo::calleeSaveInfo(debug_info);
   if (callee_save_info != NULL) {
     objArrayOop registers = RegisterSaveLayout::registers(callee_save_info);

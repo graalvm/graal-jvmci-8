@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -157,8 +157,9 @@ void jvmci_compute_offsets();
     objArrayOop_field(DebugInfo, virtualObjectMapping, "[Lcom/oracle/jvmci/meta/Value;")                                                                       \
   end_class                                                                                                                                                    \
   start_class(HotSpotReferenceMap)                                                                                                                             \
-    objArrayOop_field(HotSpotReferenceMap, objects, "[Lcom/oracle/jvmci/meta/Value;")                                                                          \
-    typeArrayOop_field(HotSpotReferenceMap, bytesPerElement, "[I")                                                                                             \
+    objArrayOop_field(HotSpotReferenceMap, objects, "[Lcom/oracle/jvmci/code/Location;")                                                                       \
+    objArrayOop_field(HotSpotReferenceMap, derivedBase, "[Lcom/oracle/jvmci/code/Location;")                                                                   \
+    typeArrayOop_field(HotSpotReferenceMap, sizeInBytes, "[I")                                                                                                 \
     int_field(HotSpotReferenceMap, maxRegisterSize)                                                                                                            \
   end_class                                                                                                                                                    \
   start_class(RegisterSaveLayout)                                                                                                                              \
@@ -220,6 +221,11 @@ void jvmci_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(RegisterValue)                                                                                                                                   \
     oop_field(RegisterValue, reg, "Lcom/oracle/jvmci/code/Register;")                                                                                          \
+  end_class                                                                                                                                                    \
+  start_class(code_Location)                                                                                                                                   \
+    oop_field(code_Location, reg, "Lcom/oracle/jvmci/code/Register;")                                                                                          \
+    int_field(code_Location, offset)                                                                                                                           \
+    boolean_field(code_Location, addFrameSize)                                                                                                                 \
   end_class                                                                                                                                                    \
   start_class(code_Register)                                                                                                                                   \
     int_field(code_Register, number)                                                                                                                           \

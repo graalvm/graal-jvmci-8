@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,28 +27,35 @@ import static com.oracle.jvmci.code.ValueUtil.*;
 import java.util.*;
 
 import com.oracle.jvmci.code.*;
+import com.oracle.jvmci.common.*;
 import com.oracle.jvmci.meta.*;
 
 public final class HotSpotReferenceMap extends ReferenceMap {
 
-    private Value[] objects;
-    private int[] bytesPerElement;
+    private Location[] objects;
+    private Location[] derivedBase;
+    private int[] sizeInBytes;
     private int maxRegisterSize;
+
     private ArrayList<Value> objectValues;
+    private int objectCount;
 
     private final TargetDescription target;
 
     public HotSpotReferenceMap(TargetDescription target) {
         this.target = target;
-        this.objects = Value.NO_VALUES;
+        this.objectCount = 0;
     }
 
     @Override
     public void reset() {
-        objectValues = new ArrayList<>();
-        objects = Value.NO_VALUES;
-        bytesPerElement = null;
+        objects = null;
+        derivedBase = null;
+        sizeInBytes = null;
         maxRegisterSize = 0;
+
+        objectValues = new ArrayList<>();
+        objectCount = 0;
     }
 
     @Override
@@ -59,6 +66,11 @@ public final class HotSpotReferenceMap extends ReferenceMap {
         LIRKind lirKind = v.getLIRKind();
         if (!lirKind.isValue()) {
             objectValues.add(v);
+            if (lirKind.isDerivedReference()) {
+                objectCount++;
+            } else {
+                objectCount += lirKind.getReferenceCount();
+            }
         }
         if (isRegister(v)) {
             int size = target.getSizeInBytes(lirKind.getPlatformKind());
@@ -70,17 +82,45 @@ public final class HotSpotReferenceMap extends ReferenceMap {
 
     @Override
     public void finish() {
-        objects = objectValues.toArray(new Value[objectValues.size()]);
-        this.bytesPerElement = new int[objects.length];
-        for (int i = 0; i < objects.length; i++) {
-            bytesPerElement[i] = bytesPerElement(objects[i].getLIRKind());
+        objects = new Location[objectCount];
+        derivedBase = new Location[objectCount];
+        sizeInBytes = new int[objectCount];
+
+        int idx = 0;
+        for (Value obj : objectValues) {
+            LIRKind kind = obj.getLIRKind();
+            int bytes = bytesPerElement(kind);
+            if (kind.isDerivedReference()) {
+                throw JVMCIError.unimplemented("derived references not yet implemented");
+            } else {
+                for (int i = 0; i < kind.getPlatformKind().getVectorLength(); i++) {
+                    if (kind.isReference(i)) {
+                        objects[idx] = toLocation(obj, i * bytes);
+                        derivedBase[idx] = null;
+                        sizeInBytes[idx] = bytes;
+                        idx++;
+                    }
+                }
+            }
         }
+
+        assert idx == objectCount;
         objectValues = null;
+        objectCount = 0;
     }
 
     private int bytesPerElement(LIRKind kind) {
         PlatformKind platformKind = kind.getPlatformKind();
         return target.getSizeInBytes(platformKind) / platformKind.getVectorLength();
+    }
+
+    private static Location toLocation(Value v, int offset) {
+        if (isRegister(v)) {
+            return Location.subregister(asRegister(v), offset);
+        } else {
+            StackSlot s = asStackSlot(v);
+            return Location.stack(s.getRawOffset() + offset, s.getRawAddFrameSize());
+        }
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -344,6 +344,7 @@
   JVMCI_ONLY(template(com_oracle_jvmci_code_BytecodeFrame,                      "com/oracle/jvmci/code/BytecodeFrame"))                           \
   JVMCI_ONLY(template(com_oracle_jvmci_code_BytecodePosition,                   "com/oracle/jvmci/code/BytecodePosition"))                        \
   JVMCI_ONLY(template(com_oracle_jvmci_code_DebugInfo,                          "com/oracle/jvmci/code/DebugInfo"))                               \
+  JVMCI_ONLY(template(com_oracle_jvmci_code_Location,                           "com/oracle/jvmci/code/Location"))                                \
   JVMCI_ONLY(template(com_oracle_jvmci_code_Register,                           "com/oracle/jvmci/code/Register"))                                \
   JVMCI_ONLY(template(com_oracle_jvmci_code_RegisterValue,                      "com/oracle/jvmci/code/RegisterValue"))                           \
   JVMCI_ONLY(template(com_oracle_jvmci_code_Register_RegisterCategory,          "com/oracle/jvmci/code/Register$RegisterCategory"))               \

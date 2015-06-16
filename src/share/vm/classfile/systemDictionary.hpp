@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -232,6 +232,7 @@ class Ticks;
   JVMCI_ONLY(do_klass(CompilationResult_Site_klass,          com_oracle_jvmci_code_CompilationResult_Site,                 Jvmci)) \
   JVMCI_ONLY(do_klass(InfopointReason_klass,                 com_oracle_jvmci_code_InfopointReason,                        Jvmci)) \
   JVMCI_ONLY(do_klass(InstalledCode_klass,                   com_oracle_jvmci_code_InstalledCode,                          Jvmci)) \
+  JVMCI_ONLY(do_klass(code_Location_klass,                   com_oracle_jvmci_code_Location,                               Jvmci)) \
   JVMCI_ONLY(do_klass(code_Register_klass,                   com_oracle_jvmci_code_Register,                               Jvmci)) \
   JVMCI_ONLY(do_klass(RegisterValue_klass,                   com_oracle_jvmci_code_RegisterValue,                          Jvmci)) \
   JVMCI_ONLY(do_klass(RegisterCategory_klass,                com_oracle_jvmci_code_Register_RegisterCategory,              Jvmci)) \
