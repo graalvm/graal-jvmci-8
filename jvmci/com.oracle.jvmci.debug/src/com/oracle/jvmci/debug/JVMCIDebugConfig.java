@@ -272,7 +272,7 @@ public class JVMCIDebugConfig implements DebugConfig {
         Debug.log(String.format("Exception occurred in scope: %s", Debug.currentScope()));
         for (Object o : Debug.context()) {
             if (DumpOnError.getValue()) {
-                Debug.dump(o, "Exception");
+                Debug.dump(o, "Exception: " + e.toString());
             } else {
                 Debug.log("Context obj %s", o);
             }
