@@ -244,7 +244,7 @@ define build_and_jar
     $(QUIETLY) $(call process_options,$(TMP))
     $(QUIETLY) $(call process_providers,$(TMP))
     $(QUIETLY) mkdir -p $(shell dirname $(4))
-    $(QUIETLY) $(JAR) cf $(4) -C $(TMP) .
+    $(QUIETLY) $(JAR) -0cf $(4) -C $(TMP) .
     $(QUIETLY) rm -r $(TMP)
 endef
 
