@@ -69,4 +69,23 @@ public final class Location {
     public boolean isStack() {
         return reg == null;
     }
+
+    @Override
+    public String toString() {
+        if (isRegister()) {
+            if (offset == 0) {
+                return reg.name;
+            } else {
+                return reg.name + ":" + offset;
+            }
+        } else {
+            if (!addFrameSize) {
+                return "out:" + offset;
+            } else if (offset >= 0) {
+                return "in:" + offset;
+            } else {
+                return "stack:" + (-offset);
+            }
+        }
+    }
 }
