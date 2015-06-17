@@ -1008,20 +1008,26 @@ def build(args, vm=None):
                 lines.append(line)
 
         if not found:
-            mx.log('Appending "' + prefix + 'KNOWN" to ' + jvmCfg)
+            mx.log('Prepending "' + prefix + 'KNOWN" to ' + jvmCfg)
             if mx.get_os() != 'windows':
                 os.chmod(jvmCfg, JDK_UNIX_PERMISSIONS_FILE)
             with open(jvmCfg, 'w') as f:
+                written = False
                 for line in lines:
+                    if line.startswith('#'):
+                        f.write(line)
+                        continue
+                    if not written:
+                        f.write(vmKnown)
+                        if vm == 'jvmci':
+                            # Legacy support
+                            f.write('-graal ALIASED_TO -jvmci\n')
+                        written = True
                     if line.startswith(prefix):
                         line = vmKnown
-                        found = True
+                        if written:
+                            continue
                     f.write(line)
-                if not found:
-                    f.write(vmKnown)
-                    if vm == 'jvmci':
-                        # Legacy support
-                        f.write('-graal ALIASED_TO -jvmci\n')
 
         for jdkDist in _jdkDeployedDists: # Install non HotSpot distribution
             if not jdkDist.partOfHotSpot:
