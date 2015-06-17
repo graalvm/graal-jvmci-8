@@ -1013,12 +1013,12 @@ class Suite:
         self.primary = primary
         self.requiredMxVersion = None
         self.name = _suitename(mxDir)  # validated in _load_projects
+        _suites[self.name] = self
         if load:
             # just check that there are no imports
             self._load_imports()
             self._load_env()
             self._load_commands()
-        _suites[self.name] = self
 
     def __str__(self):
         return self.name
@@ -3847,7 +3847,7 @@ def make_eclipse_attach(suite, hostname, port, name=None, deps=None):
     launchFile = join(eclipseLaunches, name + '.launch')
     return update_file(launchFile, launch), launchFile
 
-def make_eclipse_launch(javaArgs, jre, name=None, deps=None):
+def make_eclipse_launch(suite, javaArgs, jre, name=None, deps=None):
     """
     Creates an Eclipse launch configuration file for running/debugging a Java command.
     """
@@ -3909,7 +3909,7 @@ def make_eclipse_launch(javaArgs, jre, name=None, deps=None):
     launch.close('launchConfiguration')
     launch = launch.xml(newl='\n', standalone='no') % slm.xml(escape=True, standalone='no')
 
-    eclipseLaunches = join('mx', 'eclipse-launches')
+    eclipseLaunches = join(suite.mxDir, 'eclipse-launches')
     if not exists(eclipseLaunches):
         os.makedirs(eclipseLaunches)
     return update_file(join(eclipseLaunches, name + '.launch'), launch)
@@ -5676,11 +5676,9 @@ _argParser = ArgParser()
 def _suitename(mxDir):
     base = os.path.basename(mxDir)
     parts = base.split('.')
-    # temporary workaround until mx.graal exists
-    if len(parts) == 1:
-        return 'graal'
-    else:
-        return parts[1]
+    assert len(parts) == 2
+    assert parts[0] == 'mx'
+    return parts[1]
 
 def _is_suite_dir(d, mxDirName=None):
     """
@@ -5688,11 +5686,10 @@ def _is_suite_dir(d, mxDirName=None):
     If mxDirName is None, matches any suite name, otherwise checks for exactly that suite.
     """
     if os.path.isdir(d):
-        for f in os.listdir(d):
-            if (mxDirName == None and (f == 'mx' or fnmatch.fnmatch(f, 'mx.*'))) or f == mxDirName:
-                mxDir = join(d, f)
-                if exists(mxDir) and isdir(mxDir) and (exists(join(mxDir, 'suite.py'))):
-                    return mxDir
+        for f in [mxDirName] if mxDirName else [e for e in os.listdir(d) if e.startswith('mx.')]:
+            mxDir = join(d, f)
+            if exists(mxDir) and isdir(mxDir) and (exists(join(mxDir, 'suite.py'))):
+                return mxDir
 
 def _check_primary_suite():
     if _primary_suite is None:
