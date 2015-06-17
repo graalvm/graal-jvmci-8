@@ -1179,9 +1179,6 @@ class Suite:
 
     def _load_commands(self):
         commandsName = self._find_commands(self._commands_name())
-        if commandsName is None:
-            # backwards compatibility
-            commandsName = self._find_commands('commands')
         if commandsName is not None:
             if commandsName in sys.modules:
                 abort(commandsName + '.py in suite ' + self.name + ' duplicates ' + sys.modules[commandsName].__file__)
