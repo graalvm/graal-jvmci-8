@@ -916,6 +916,14 @@ C2V_VMENTRY(void, resolveInvokeDynamic, (JNIEnv*, jobject, jlong metaspace_const
   cp_cache_entry->set_dynamic_call(cp, callInfo);
 C2V_END
 
+C2V_VMENTRY(void, resolveInvokeHandle, (JNIEnv*, jobject, jlong metaspace_constant_pool, jint index))
+  ConstantPool* cp = (ConstantPool*)metaspace_constant_pool;
+  CallInfo callInfo;
+  LinkResolver::resolve_invokehandle(callInfo, cp, index, CHECK);
+  ConstantPoolCacheEntry* cp_cache_entry = cp_cache_entry = cp->cache()->entry_at(cp->decode_cpcache_index(index));
+  cp_cache_entry->set_method_handle(cp, callInfo);
+C2V_END
+
 C2V_VMENTRY(jboolean, shouldDebugNonSafepoints, (JNIEnv*, jobject))
   //see compute_recording_non_safepoints in debugInfroRec.cpp
   if (JvmtiExport::should_post_compiled_method_load() && FLAG_IS_DEFAULT(DebugNonSafepoints)) {
@@ -1076,6 +1084,7 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"constantPoolRemapInstructionOperandFromCache", CC"("METASPACE_CONSTANT_POOL"I)I",                                        FN_PTR(constantPoolRemapInstructionOperandFromCache)},
   {CC"resolveField",                                 CC"("METASPACE_CONSTANT_POOL"IB[J)"METASPACE_KLASS,                       FN_PTR(resolveField)},
   {CC"resolveInvokeDynamic",                         CC"("METASPACE_CONSTANT_POOL"I)V",                                        FN_PTR(resolveInvokeDynamic)},
+  {CC"resolveInvokeHandle",                          CC"("METASPACE_CONSTANT_POOL"I)V",                                        FN_PTR(resolveInvokeHandle)},
   {CC"resolveMethod",                                CC"("METASPACE_KLASS METASPACE_METHOD METASPACE_KLASS")"METASPACE_METHOD, FN_PTR(resolveMethod)},
   {CC"getVtableIndexForInterface",                   CC"("METASPACE_KLASS METASPACE_METHOD")I",                                FN_PTR(getVtableIndexForInterface)},
   {CC"getClassInitializer",                          CC"("METASPACE_KLASS")"METASPACE_METHOD,                                  FN_PTR(getClassInitializer)},

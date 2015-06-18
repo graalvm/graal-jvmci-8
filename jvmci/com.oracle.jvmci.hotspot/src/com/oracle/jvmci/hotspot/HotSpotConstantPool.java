@@ -118,6 +118,7 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
          */
         static class TagValueMap {
             private static final JVM_CONSTANT[] table = new JVM_CONSTANT[ExternalMax + 1 + (InternalMax - InternalMin) + 1];
+
             static {
                 assert InternalMin > ExternalMax;
                 for (JVM_CONSTANT e : values()) {
@@ -616,9 +617,12 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
             assert getTagAt(index - 1) == JVM_CONSTANT.Double || getTagAt(index - 1) == JVM_CONSTANT.Long;
             return;
         }
+        int methodRefCacheIndex = -1;
         switch (tag) {
-            case Fieldref:
             case MethodRef:
+                methodRefCacheIndex = toConstantPoolIndex(cpi, opcode);
+                // fall through
+            case Fieldref:
             case InterfaceMethodref:
                 index = getUncachedKlassRefIndexAt(index);
                 tag = getTagAt(index);
@@ -633,6 +637,9 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                 if (!klass.isPrimitive() && !klass.isArray()) {
                     unsafe.ensureClassInitialized(klass);
                 }
+                if (methodRefCacheIndex != -1 && isInvokeHandle(methodRefCacheIndex, type)) {
+                    runtime().getCompilerToVM().resolveInvokeHandle(metaspaceConstantPool, methodRefCacheIndex);
+                }
                 break;
             case InvokeDynamic:
                 if (isInvokedynamicIndex(cpi)) {
@@ -643,6 +650,11 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                 // nothing
                 break;
         }
+    }
+
+    private boolean isInvokeHandle(int methodRefCpi, HotSpotResolvedObjectTypeImpl klass) {
+        assert getTagAt(runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, methodRefCpi)) == JVM_CONSTANT.MethodRef;
+        return ResolvedJavaMethod.isSignaturePolymorphic(klass, getNameRefAt(methodRefCpi), runtime().getHostJVMCIBackend().getMetaAccess());
     }
 
     @Override
