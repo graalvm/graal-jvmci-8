@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.test;
+package com.oracle.mxtool.junit;
 
 import java.io.*;
 
@@ -28,16 +28,16 @@ import org.junit.internal.*;
 import org.junit.runner.*;
 import org.junit.runner.notification.*;
 
-public class GraalTextListener implements GraalJUnitRunListener {
+public class TextRunListener implements MxRunListener {
 
     private final PrintStream fWriter;
     protected Failure lastFailure;
 
-    public GraalTextListener(JUnitSystem system) {
+    public TextRunListener(JUnitSystem system) {
         this(system.out());
     }
 
-    public GraalTextListener(PrintStream writer) {
+    public TextRunListener(PrintStream writer) {
         fWriter = writer;
     }
 
@@ -110,7 +110,7 @@ public class GraalTextListener implements GraalJUnitRunListener {
     public void testFinishedDelimiter() {
     }
 
-    public static RunListener createRunListener(GraalJUnitRunListener l) {
+    public static RunListener createRunListener(MxRunListener l) {
         return new TextListener(l.getWriter()) {
             private Class<?> lastClass;
             private boolean failed;

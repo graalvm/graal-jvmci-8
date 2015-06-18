@@ -20,47 +20,20 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.test;
+package com.oracle.mxtool.junit;
 
-import static com.oracle.jvmci.debug.AnsiColor.*;
-
-import org.junit.runner.*;
 import org.junit.runner.notification.*;
 
-/**
- * Color support for JUnit test output using ANSI escapes codes.
- */
-public class AnsiTerminalDecorator extends GraalJUnitRunListenerDecorator {
+public class EagerStackTraceDecorator extends MxRunListenerDecorator {
 
-    public AnsiTerminalDecorator(GraalJUnitRunListener l) {
+    public EagerStackTraceDecorator(MxRunListener l) {
         super(l);
     }
 
     @Override
-    public void testSucceeded(Description description) {
-        getWriter().print(GREEN);
-        super.testSucceeded(description);
-        getWriter().print(RESET);
-    }
-
-    @Override
-    public void testAssumptionFailure(Failure failure) {
-        getWriter().print(BLUE);
-        super.testAssumptionFailure(failure);
-        getWriter().print(RESET);
-    }
-
-    @Override
     public void testFailed(Failure failure) {
-        getWriter().print(RED);
         super.testFailed(failure);
-        getWriter().print(RESET);
+        failure.getException().printStackTrace(getWriter());
     }
 
-    @Override
-    public void testIgnored(Description description) {
-        getWriter().print(MAGENTA);
-        super.testIgnored(description);
-        getWriter().print(RESET);
-    }
 }

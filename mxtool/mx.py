@@ -33,7 +33,12 @@ Version 1.x supports a single suite of projects.
 Full documentation can be found at https://wiki.openjdk.java.net/display/Graal/The+mx+Tool
 """
 
-import sys, os, errno, time, subprocess, shlex, types, StringIO, zipfile, signal, xml.sax.saxutils, tempfile, fnmatch, platform
+import sys
+if __name__ == '__main__':
+    # Rename this module as 'mx' so it is not re-executed when imported by other modules.
+    sys.modules['mx'] = sys.modules.pop('__main__')
+
+import os, errno, time, subprocess, shlex, types, StringIO, zipfile, signal, xml.sax.saxutils, tempfile, platform
 import textwrap
 import socket
 import tarfile
@@ -42,6 +47,7 @@ import xml.parsers.expat
 import shutil, re, xml.dom.minidom
 import pipes
 import difflib
+import mx_unittest
 from collections import Callable
 from threading import Thread
 from argparse import ArgumentParser, REMAINDER
@@ -99,6 +105,7 @@ _jreLibs = dict()
 _dists = dict()
 _suites = dict()
 _annotationProcessors = None
+_mx_suite = None
 _primary_suite_path = None
 _primary_suite = None
 _opts = None
@@ -1039,10 +1046,10 @@ class Suite:
             except AssertionError as ae:
                 abort('Exception while parsing "mxversion" in project file: ' + str(ae))
 
-        libsMap = suiteDict['libraries']
-        jreLibsMap = suiteDict['jrelibraries']
-        projsMap = suiteDict['projects']
-        distsMap = suiteDict['distributions']
+        libsMap = suiteDict.get('libraries', {})
+        jreLibsMap = suiteDict.get('jrelibraries', {})
+        projsMap = suiteDict.get('projects', {})
+        distsMap = suiteDict.get('distributions', {})
 
         def pop_list(attrs, name, context):
             v = attrs.pop(name, None)
@@ -1705,6 +1712,31 @@ def sorted_project_deps(projects, includeLibs=False, includeJreLibs=False, inclu
         p.all_deps(deps, includeLibs=includeLibs, includeJreLibs=includeJreLibs, includeAnnotationProcessors=includeAnnotationProcessors)
     return deps
 
+def extract_VM_args(args, useDoubleDash=False, allowClasspath=False):
+    """
+    Partitions 'args' into a leading sequence of HotSpot VM options and the rest. If
+    'useDoubleDash' then 'args' is partititioned by the first instance of "--". If
+    not 'allowClasspath' then mx aborts if "-cp" or "-classpath" is in 'args'.
+
+   """
+    for i in range(len(args)):
+        if useDoubleDash:
+            if args[i] == '--':
+                vmArgs = args[:i]
+                remainder = args[i + 1:]
+                return vmArgs, remainder
+        else:
+            if not args[i].startswith('-'):
+                if i != 0 and (args[i - 1] == '-cp' or args[i - 1] == '-classpath'):
+                    if not allowClasspath:
+                        abort('Cannot supply explicit class path option')
+                    else:
+                        continue
+                vmArgs = args[:i]
+                remainder = args[i:]
+                return vmArgs, remainder
+    return args, []
+
 class ArgParser(ArgumentParser):
     # Override parent to append the list of available commands
     def format_help(self):
@@ -2053,7 +2085,6 @@ def _find_jdk_in_candidates(candidates, versionCheck, warn=False, source=None):
     if filtered:
         return filtered[0]
     return None
-
 
 def run_java(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, addDefaultArgs=True, javaConfig=None):
     if not javaConfig:
@@ -5003,18 +5034,18 @@ def fsckprojects(args):
         log('fsckprojects command must be run in an interactive shell')
         return
     hg = HgConfig()
+    projectDirs = [p.dir for suite in suites() for p in suite.projects]
+    distIdeDirs = [d.get_ide_project_dir() for suite in suites() for d in suite.dists if d.get_ide_project_dir() is not None]
     for suite in suites(True):
-        projectDirs = [p.dir for p in suite.projects]
-        distIdeDirs = [d.get_ide_project_dir() for d in suite.dists if d.get_ide_project_dir() is not None]
         for dirpath, dirnames, files in os.walk(suite.dir):
             if dirpath == suite.dir:
                 # no point in traversing .hg, lib, or .workspace
                 dirnames[:] = [d for d in dirnames if d not in ['.hg', 'lib', '.workspace']]
             elif dirpath in projectDirs:
-                # don't traverse subdirs of an existing project in this suite
+                # don't traverse subdirs of an existing project
                 dirnames[:] = []
             elif dirpath in distIdeDirs:
-                # don't traverse subdirs of an existing distributions in this suite
+                # don't traverse subdirs of an existing distribution
                 dirnames[:] = []
             else:
                 projectConfigFiles = frozenset(['.classpath', '.project', 'nbproject'])
@@ -5024,7 +5055,7 @@ def fsckprojects(args):
                     indicatorsInHg = hg.locate(suite.dir, indicators)
                     # Only proceed if there are indicator files that are not under HG
                     if len(indicators) > len(indicatorsInHg):
-                        if not is_interactive() or ask_yes_no(dirpath + ' looks like a removed project -- delete it', 'n'):
+                        if ask_yes_no(dirpath + ' looks like a removed project -- delete it', 'n'):
                             shutil.rmtree(dirpath)
                             log('Deleted ' + dirpath)
 
@@ -5669,6 +5700,7 @@ _commands = {
     'netbeansinit': [netbeansinit, ''],
     'suites': [show_suites, ''],
     'projects': [show_projects, ''],
+    'unittest' : [mx_unittest.unittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
 }
 
 _argParser = ArgParser()
@@ -5727,6 +5759,11 @@ def _findPrimarySuiteMxDir():
     return _findPrimarySuiteMxDirFrom(dirname(__file__))
 
 def main():
+    mxMxDir = _is_suite_dir(dirname(__file__))
+    assert mxMxDir
+    global _mx_suite
+    _mx_suite = _loadSuite(mxMxDir)
+
     primarySuiteMxDir = _findPrimarySuiteMxDir()
     if primarySuiteMxDir:
         global _primary_suite
@@ -5785,9 +5822,6 @@ version = VersionSpec("1.0")
 currentUmask = None
 
 if __name__ == '__main__':
-    # rename this module as 'mx' so it is not imported twice by the commands.py modules
-    sys.modules['mx'] = sys.modules.pop('__main__')
-
     # Capture the current umask since there's no way to query it without mutating it.
     currentUmask = os.umask(0)
     os.umask(currentUmask)
