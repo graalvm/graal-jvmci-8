@@ -23,10 +23,9 @@
 package com.oracle.jvmci.hotspot;
 
 import static com.oracle.jvmci.common.UnsafeAccess.*;
-import static com.oracle.jvmci.debug.Debug.*;
 import static com.oracle.jvmci.compiler.Compiler.*;
+import static com.oracle.jvmci.debug.Debug.*;
 
-import java.lang.management.*;
 import java.util.concurrent.*;
 
 import com.oracle.jvmci.code.*;
@@ -54,14 +53,6 @@ public class CompilationTask {
         } else {
             eventProvider = provider;
         }
-
-        com.sun.management.ThreadMXBean bean;
-        try {
-            bean = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
-        } catch (UnsatisfiedLinkError err) {
-            bean = null;
-        }
-        threadMXBean = bean;
     }
     private static final Compiler compiler = Services.loadSingle(Compiler.class, true);
 
@@ -79,7 +70,7 @@ public class CompilationTask {
      * A {@link com.sun.management.ThreadMXBean} to be able to query some information about the
      * current compiler thread, e.g. total allocated bytes.
      */
-    private static final com.sun.management.ThreadMXBean threadMXBean;
+    private static final com.sun.management.ThreadMXBean threadMXBean = (com.sun.management.ThreadMXBean) Management.getThreadMXBean();
 
     /**
      * The address of the JVMCIEnv associated with this compilation or 0L if no such object exists.
@@ -150,7 +141,7 @@ public class CompilationTask {
 
             TTY.Filter filter = new TTY.Filter(PrintFilter.getValue(), method);
             final long start = System.currentTimeMillis();
-            final long allocatedBytesBefore = threadMXBean == null ? 0 : threadMXBean.getThreadAllocatedBytes(threadId);
+            final long allocatedBytesBefore = threadMXBean.getThreadAllocatedBytes(threadId);
 
             try (Scope s = Debug.scope("Compiling", new DebugDumpScope(String.valueOf(id), true))) {
                 // Begin the compilation event.
@@ -171,7 +162,7 @@ public class CompilationTask {
                 if (printAfterCompilation || printCompilation) {
                     final long stop = System.currentTimeMillis();
                     final int targetCodeSize = result != null ? result.getTargetCodeSize() : -1;
-                    final long allocatedBytesAfter = threadMXBean == null ? 0 : threadMXBean.getThreadAllocatedBytes(threadId);
+                    final long allocatedBytesAfter = threadMXBean.getThreadAllocatedBytes(threadId);
                     final long allocatedBytes = (allocatedBytesAfter - allocatedBytesBefore) / 1024;
 
                     if (printAfterCompilation) {

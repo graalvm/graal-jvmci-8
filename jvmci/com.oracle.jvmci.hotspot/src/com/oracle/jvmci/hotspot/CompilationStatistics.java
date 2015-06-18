@@ -26,12 +26,12 @@ import static java.lang.Thread.*;
 
 import java.io.*;
 import java.lang.annotation.*;
-import java.lang.management.*;
 import java.lang.reflect.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-import com.sun.management.ThreadMXBean;
+import com.oracle.jvmci.debug.*;
+import com.sun.management.*;
 
 @SuppressWarnings("unused")
 public final class CompilationStatistics {
@@ -64,7 +64,7 @@ public final class CompilationStatistics {
     private static long zeroTime = System.nanoTime();
 
     private static long getThreadAllocatedBytes() {
-        ThreadMXBean thread = (ThreadMXBean) ManagementFactory.getThreadMXBean();
+        ThreadMXBean thread = (ThreadMXBean) Management.getThreadMXBean();
         return thread.getThreadAllocatedBytes(currentThread().getId());
     }
 

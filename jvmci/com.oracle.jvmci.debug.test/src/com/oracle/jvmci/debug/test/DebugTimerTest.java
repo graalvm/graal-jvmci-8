@@ -32,7 +32,12 @@ import com.oracle.jvmci.debug.*;
 
 public class DebugTimerTest {
 
-    private static final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+    private static final ThreadMXBean threadMXBean = Management.getThreadMXBean();
+
+    @Before
+    public void checkCaps() {
+        Assume.assumeTrue("skipping management interface test", threadMXBean.isCurrentThreadCpuTimeSupported());
+    }
 
     /**
      * Actively spins the current thread for at least a given number of milliseconds in such a way

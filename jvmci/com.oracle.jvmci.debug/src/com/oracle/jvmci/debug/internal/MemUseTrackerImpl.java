@@ -25,14 +25,12 @@ package com.oracle.jvmci.debug.internal;
 import static com.oracle.jvmci.debug.DebugCloseable.*;
 import static java.lang.Thread.*;
 
-import java.lang.management.*;
-
 import com.oracle.jvmci.debug.*;
-import com.sun.management.ThreadMXBean;
+import com.sun.management.*;
 
 public final class MemUseTrackerImpl extends AccumulatedDebugValue implements DebugMemUseTracker {
 
-    private static final ThreadMXBean threadMXBean = (ThreadMXBean) ManagementFactory.getThreadMXBean();
+    private static final ThreadMXBean threadMXBean = (ThreadMXBean) Management.getThreadMXBean();
 
     /**
      * The amount of memory allocated by {@link ThreadMXBean#getThreadAllocatedBytes(long)} itself.

@@ -31,7 +31,7 @@ import com.oracle.jvmci.debug.*;
 
 public final class TimerImpl extends AccumulatedDebugValue implements DebugTimer {
 
-    private static final ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+    private static final ThreadMXBean threadMXBean = Management.getThreadMXBean();
 
     /**
      * Records the most recent active timer.
