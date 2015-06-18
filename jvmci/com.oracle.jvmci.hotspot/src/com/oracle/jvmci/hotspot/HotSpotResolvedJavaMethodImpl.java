@@ -188,7 +188,7 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
 
     @Override
     public boolean canBeStaticallyBound() {
-        return (isFinal() || isPrivate() || isStatic() || holder.isFinal()) && isConcrete();
+        return (isFinal() || isPrivate() || isStatic() || holder.isLeaf()) && isConcrete();
     }
 
     @Override

@@ -77,6 +77,10 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
      */
     int getModifiers();
 
+    default boolean isFinal() {
+        return ModifiersProvider.super.isFinalFlagSet();
+    }
+
     /**
      * Determines if this method is a synthetic method as defined by the Java Language
      * Specification.
