@@ -23,6 +23,7 @@
 package com.oracle.jvmci.meta;
 
 import java.io.*;
+import java.lang.reflect.*;
 import java.util.*;
 
 /**
@@ -353,5 +354,18 @@ public class MetaUtil {
             return "null";
         }
         return obj.getClass().getName() + "@" + System.identityHashCode(obj);
+    }
+
+    /**
+     * Used to lookup constants from {@link Modifier} that are not public (VARARGS, SYNTHETIC etc.).
+     */
+    static int getNonPublicModifierStaticField(String name) {
+        try {
+            Field field = Modifier.class.getDeclaredField(name);
+            field.setAccessible(true);
+            return field.getInt(null);
+        } catch (NoSuchFieldException | SecurityException | IllegalArgumentException | IllegalAccessException e) {
+            throw new InternalError(e);
+        }
     }
 }

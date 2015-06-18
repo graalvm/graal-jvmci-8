@@ -40,13 +40,12 @@ public class TestMetaAccessProvider extends TypeUniverse {
     public void lookupJavaTypeTest() {
         for (Class<?> c : classes) {
             ResolvedJavaType type = metaAccess.lookupJavaType(c);
-            assertNotNull(type);
-            assertEquals(c.getModifiers(), type.getModifiers());
-            assertEquals(type.getName(), toInternalName(c.getName()));
-            assertEquals(type.getName(), toInternalName(type.toJavaName()));
-            assertEquals(c.getName(), type.toClassName());
+            assertNotNull(c.toString(), type);
+            assertEquals(c.toString(), type.getName(), toInternalName(c.getName()));
+            assertEquals(c.toString(), type.getName(), toInternalName(type.toJavaName()));
+            assertEquals(c.toString(), c.getName(), type.toClassName());
             if (!type.isArray()) {
-                assertEquals(c.getName(), type.toJavaName());
+                assertEquals(c.toString(), c.getName(), type.toJavaName());
             }
         }
     }
@@ -57,9 +56,6 @@ public class TestMetaAccessProvider extends TypeUniverse {
             for (Method reflect : c.getDeclaredMethods()) {
                 ResolvedJavaMethod method = metaAccess.lookupJavaMethod(reflect);
                 assertNotNull(method);
-                int expected = reflect.getModifiers() & Modifier.methodModifiers();
-                int actual = method.getModifiers();
-                assertEquals(String.format("%s: 0x%x != 0x%x", reflect, expected, actual), expected, actual);
                 assertTrue(method.getDeclaringClass().equals(metaAccess.lookupJavaType(reflect.getDeclaringClass())));
             }
         }
@@ -71,9 +67,6 @@ public class TestMetaAccessProvider extends TypeUniverse {
             for (Field reflect : c.getDeclaredFields()) {
                 ResolvedJavaField field = metaAccess.lookupJavaField(reflect);
                 assertNotNull(field);
-                int expected = reflect.getModifiers();
-                int actual = field.getModifiers();
-                assertEquals(String.format("%s: 0x%x != 0x%x", reflect, expected, actual), expected, actual);
                 assertTrue(field.getDeclaringClass().equals(metaAccess.lookupJavaType(reflect.getDeclaringClass())));
             }
         }

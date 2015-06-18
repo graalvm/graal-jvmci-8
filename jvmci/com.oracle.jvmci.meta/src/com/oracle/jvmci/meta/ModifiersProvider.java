@@ -31,9 +31,17 @@ import java.lang.reflect.*;
  * language {@linkplain #getModifiers() modifiers}.
  */
 public interface ModifiersProvider {
+    int BRIDGE = MetaUtil.getNonPublicModifierStaticField("BRIDGE");
+    int VARARGS = MetaUtil.getNonPublicModifierStaticField("VARARGS");
+    int SYNTHETIC = MetaUtil.getNonPublicModifierStaticField("SYNTHETIC");
+    int ANNOTATION = MetaUtil.getNonPublicModifierStaticField("ANNOTATION");
+    int ENUM = MetaUtil.getNonPublicModifierStaticField("ENUM");
+    int MANDATED = MetaUtil.getNonPublicModifierStaticField("MANDATED");
 
     /**
-     * Returns the Java language modifiers for this element.
+     * Returns the Java Virtual Machine modifiers for this element. Note that this can differ from
+     * standard Java Reflection modifiers. For example at the JVM level, classes (
+     * {@link ResolvedJavaType}) can not be private or protected.
      */
     int getModifiers();
 
@@ -136,5 +144,18 @@ public interface ModifiersProvider {
      */
     default boolean isConcrete() {
         return !isAbstract();
+    }
+
+    static int jvmClassModifiers() {
+        // no SUPER
+        return PUBLIC | FINAL | INTERFACE | ABSTRACT | ANNOTATION | ENUM | SYNTHETIC;
+    }
+
+    static int jvmMethodModifiers() {
+        return PUBLIC | PRIVATE | PROTECTED | STATIC | FINAL | SYNCHRONIZED | BRIDGE | VARARGS | NATIVE | ABSTRACT | STRICT | SYNTHETIC;
+    }
+
+    static int jvmFieldModifiers() {
+        return PUBLIC | PRIVATE | PROTECTED | STATIC | FINAL | VOLATILE | TRANSIENT | ENUM | SYNTHETIC;
     }
 }

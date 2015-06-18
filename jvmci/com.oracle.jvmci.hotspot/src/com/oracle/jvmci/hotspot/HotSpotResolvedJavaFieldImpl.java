@@ -24,7 +24,6 @@ package com.oracle.jvmci.hotspot;
 
 import static com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 import static com.oracle.jvmci.hotspot.HotSpotResolvedJavaFieldImpl.Options.*;
-import static com.oracle.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
 
 import java.lang.annotation.*;
 import java.lang.reflect.*;
@@ -126,7 +125,7 @@ public class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, H
 
     @Override
     public int getModifiers() {
-        return modifiers & getReflectionFieldModifiers();
+        return modifiers & ModifiersProvider.jvmFieldModifiers();
     }
 
     @Override

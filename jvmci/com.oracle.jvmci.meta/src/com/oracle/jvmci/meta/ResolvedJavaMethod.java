@@ -23,6 +23,7 @@
 package com.oracle.jvmci.meta;
 
 import java.lang.annotation.*;
+import java.lang.invoke.*;
 import java.lang.reflect.*;
 
 /**
@@ -80,7 +81,31 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
      * Determines if this method is a synthetic method as defined by the Java Language
      * Specification.
      */
-    boolean isSynthetic();
+    default boolean isSynthetic() {
+        return (SYNTHETIC & getModifiers()) == SYNTHETIC;
+    }
+
+    /**
+     * Checks that the method is a <a
+     * href="http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.6">varargs</a>
+     * method.
+     *
+     * @return whether the method is a varargs method
+     */
+    default boolean isVarArgs() {
+        return (VARARGS & getModifiers()) == VARARGS;
+    }
+
+    /**
+     * Checks that the method is a <a
+     * href="http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-4.html#jvms-4.6">bridge</a>
+     * method.
+     *
+     * @return whether the method is a bridge method
+     */
+    default boolean isBridge() {
+        return (BRIDGE & getModifiers()) == BRIDGE;
+    }
 
     /**
      * Returns {@code true} if this method is a default method; returns {@code false} otherwise.

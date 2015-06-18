@@ -183,7 +183,7 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
 
     @Override
     public int getModifiers() {
-        return getAllModifiers() & Modifier.methodModifiers();
+        return getAllModifiers() & ModifiersProvider.jvmMethodModifiers();
     }
 
     @Override
@@ -472,12 +472,6 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
         }
         Method javaMethod = toJava();
         return javaMethod == null ? null : javaMethod.getAnnotation(annotationClass);
-    }
-
-    @Override
-    public boolean isSynthetic() {
-        int modifiers = getAllModifiers();
-        return (runtime().getConfig().syntheticFlag & modifiers) != 0;
     }
 
     public boolean isDefault() {

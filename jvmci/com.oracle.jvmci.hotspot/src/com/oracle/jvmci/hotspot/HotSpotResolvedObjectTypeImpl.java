@@ -118,7 +118,11 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
 
     @Override
     public int getModifiers() {
-        return mirror().getModifiers();
+        if (isArray()) {
+            return (getElementalType().getModifiers() & (Modifier.PUBLIC | Modifier.PRIVATE | Modifier.PROTECTED)) | Modifier.FINAL | Modifier.ABSTRACT;
+        } else {
+            return getAccessFlags() & ModifiersProvider.jvmClassModifiers();
+        }
     }
 
     public int getAccessFlags() {
@@ -473,19 +477,10 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
         return result;
     }
 
-    /**
-     * Gets the mask used to filter out HotSpot internal flags for fields when a {@link Field}
-     * object is created. This is the value of {@code JVM_RECOGNIZED_FIELD_MODIFIERS} in
-     * {@code jvm.h}, <b>not</b> {@link Modifier#fieldModifiers()}.
-     */
-    public static int getReflectionFieldModifiers() {
-        return runtime().getConfig().recognizedFieldModifiers;
-    }
-
     public synchronized HotSpotResolvedJavaField createField(String fieldName, JavaType type, long offset, int rawFlags) {
         HotSpotResolvedJavaField result = null;
 
-        final int flags = rawFlags & getReflectionFieldModifiers();
+        final int flags = rawFlags & ModifiersProvider.jvmFieldModifiers();
 
         final long id = offset + ((long) flags << 32);
 

@@ -22,9 +22,6 @@
  */
 package com.oracle.jvmci.runtime.test;
 
-import com.oracle.jvmci.meta.ExceptionHandler;
-import com.oracle.jvmci.meta.ResolvedJavaMethod;
-import com.oracle.jvmci.meta.ConstantPool;
 import static org.junit.Assert.*;
 
 import java.lang.annotation.*;
@@ -32,6 +29,8 @@ import java.lang.reflect.*;
 import java.util.*;
 
 import org.junit.*;
+
+import com.oracle.jvmci.meta.*;
 
 /**
  * Tests for {@link ResolvedJavaMethod}.
@@ -81,9 +80,15 @@ public class TestResolvedJavaMethod extends MethodUniverse {
     public void getModifiersTest() {
         for (Map.Entry<Method, ResolvedJavaMethod> e : methods.entrySet()) {
             ResolvedJavaMethod m = e.getValue();
-            int expected = e.getKey().getModifiers() & Modifier.methodModifiers();
+            int expected = e.getKey().getModifiers();
             int actual = m.getModifiers();
-            assertEquals(expected, actual);
+            assertEquals(String.format("%s: 0x%x != 0x%x", m, expected, actual), expected, actual);
+        }
+        for (Map.Entry<Constructor<?>, ResolvedJavaMethod> e : constructors.entrySet()) {
+            ResolvedJavaMethod m = e.getValue();
+            int expected = e.getKey().getModifiers();
+            int actual = m.getModifiers();
+            assertEquals(String.format("%s: 0x%x != 0x%x", m, expected, actual), expected, actual);
         }
     }
 
@@ -124,6 +129,30 @@ public class TestResolvedJavaMethod extends MethodUniverse {
         for (Map.Entry<Constructor<?>, ResolvedJavaMethod> e : constructors.entrySet()) {
             ResolvedJavaMethod m = e.getValue();
             assertEquals(e.getKey().isSynthetic(), m.isSynthetic());
+        }
+    }
+
+    @Test
+    public void isBridgeTest() {
+        for (Map.Entry<Method, ResolvedJavaMethod> e : methods.entrySet()) {
+            ResolvedJavaMethod m = e.getValue();
+            assertEquals(e.getKey().isBridge(), m.isBridge());
+        }
+        for (Map.Entry<Constructor<?>, ResolvedJavaMethod> e : constructors.entrySet()) {
+            ResolvedJavaMethod m = e.getValue();
+            assertEquals(false, m.isBridge());
+        }
+    }
+
+    @Test
+    public void isVarArgsTest() {
+        for (Map.Entry<Method, ResolvedJavaMethod> e : methods.entrySet()) {
+            ResolvedJavaMethod m = e.getValue();
+            assertEquals(e.getKey().isVarArgs(), m.isVarArgs());
+        }
+        for (Map.Entry<Constructor<?>, ResolvedJavaMethod> e : constructors.entrySet()) {
+            ResolvedJavaMethod m = e.getValue();
+            assertEquals(e.getKey().isVarArgs(), m.isVarArgs());
         }
     }
 
