@@ -351,4 +351,13 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider {
      * where the JVM verifier would not give any guarantees other than {@link Object}.
      */
     boolean isTrustedInterfaceType();
+
+    default ResolvedJavaMethod findMethod(String name, Signature signature) {
+        for (ResolvedJavaMethod method : getDeclaredMethods()) {
+            if (method.getName().equals(name) && method.getSignature().equals(signature)) {
+                return method;
+            }
+        }
+        return null;
+    }
 }

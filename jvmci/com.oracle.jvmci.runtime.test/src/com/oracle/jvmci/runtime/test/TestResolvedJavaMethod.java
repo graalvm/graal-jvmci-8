@@ -25,6 +25,7 @@ package com.oracle.jvmci.runtime.test;
 import static org.junit.Assert.*;
 
 import java.lang.annotation.*;
+import java.lang.invoke.*;
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -361,6 +362,20 @@ public class TestResolvedJavaMethod extends MethodUniverse {
         }
     }
 
+    @Test
+    public void isSignaturePolymorphicTest() {
+        ResolvedJavaType methodHandleType = metaAccess.lookupJavaType(MethodHandle.class);
+        assertTrue(ResolvedJavaMethod.isSignaturePolymorphic(methodHandleType, "invokeExact", metaAccess));
+        assertTrue(ResolvedJavaMethod.isSignaturePolymorphic(methodHandleType, "invoke", metaAccess));
+        assertTrue(ResolvedJavaMethod.isSignaturePolymorphic(methodHandleType, "invokeBasic", metaAccess));
+        assertTrue(ResolvedJavaMethod.isSignaturePolymorphic(methodHandleType, "linkToVirtual", metaAccess));
+        assertTrue(ResolvedJavaMethod.isSignaturePolymorphic(methodHandleType, "linkToStatic", metaAccess));
+        assertTrue(ResolvedJavaMethod.isSignaturePolymorphic(methodHandleType, "linkToSpecial", metaAccess));
+        assertTrue(ResolvedJavaMethod.isSignaturePolymorphic(methodHandleType, "linkToInterface", metaAccess));
+        assertFalse(ResolvedJavaMethod.isSignaturePolymorphic(methodHandleType, "type", metaAccess));
+        assertFalse(ResolvedJavaMethod.isSignaturePolymorphic(metaAccess.lookupJavaType(Object.class), "toString", metaAccess));
+    }
+
     private Method findTestMethod(Method apiMethod) {
         String testName = apiMethod.getName() + "Test";
         for (Method m : getClass().getDeclaredMethods()) {
@@ -400,6 +415,9 @@ public class TestResolvedJavaMethod extends MethodUniverse {
     public void testCoverage() {
         Set<String> known = new HashSet<>(Arrays.asList(untestedApiMethods));
         for (Method m : ResolvedJavaMethod.class.getDeclaredMethods()) {
+            if (Modifier.isStatic(m.getModifiers())) {
+                continue;
+            }
             if (findTestMethod(m) == null) {
                 assertTrue("test missing for " + m, known.contains(m.getName()));
             } else {

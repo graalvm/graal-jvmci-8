@@ -338,4 +338,22 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
     }
 
     SpeculationLog getSpeculationLog();
+
+    /**
+     * Determines if the method identified by its holder and name is a <a
+     * href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.9">signature
+     * polymorphic</a> method.
+     */
+    static boolean isSignaturePolymorphic(JavaType holder, String name, MetaAccessProvider metaAccess) {
+        if (!holder.getName().equals("Ljava/lang/invoke/MethodHandle;")) {
+            return false;
+        }
+        ResolvedJavaType methodHandleType = metaAccess.lookupJavaType(MethodHandle.class);
+        Signature signature = metaAccess.parseMethodDescriptor("([Ljava/lang/Object;)Ljava/lang/Object;");
+        ResolvedJavaMethod method = methodHandleType.findMethod(name, signature);
+        if (method == null) {
+            return false;
+        }
+        return method.isNative() && method.isVarArgs();
+    }
 }

@@ -771,6 +771,10 @@ public class TestResolvedJavaType extends TypeUniverse {
         }
     }
 
+    static class SubD extends D {
+
+    }
+
     @Test
     public void getClassInitializerTest() {
         assertNotNull(metaAccess.lookupJavaType(A.class).getClassInitializer());
@@ -830,6 +834,29 @@ public class TestResolvedJavaType extends TypeUniverse {
             if (TrustedInterface.class.isAssignableFrom(c)) {
                 assertTrue(type.isTrustedInterfaceType());
             }
+        }
+    }
+
+    @Test
+    public void findMethodTest() {
+        try {
+            ResolvedJavaMethod findFoo = metaAccess.lookupJavaType(D.class).findMethod("foo", metaAccess.parseMethodDescriptor("()V"));
+            ResolvedJavaMethod expectedFoo = metaAccess.lookupJavaMethod(D.class.getDeclaredMethod("foo"));
+            assertEquals(expectedFoo, findFoo);
+
+            ResolvedJavaMethod wrongReturnTypeFoo = metaAccess.lookupJavaType(D.class).findMethod("foo", metaAccess.parseMethodDescriptor("()I"));
+            assertNull(wrongReturnTypeFoo);
+
+            ResolvedJavaMethod wrongArgumentsFoo = metaAccess.lookupJavaType(D.class).findMethod("foo", metaAccess.parseMethodDescriptor("(I)V"));
+            assertNull(wrongArgumentsFoo);
+
+            ResolvedJavaMethod wrongNameFoo = metaAccess.lookupJavaType(D.class).findMethod("bar", metaAccess.parseMethodDescriptor("()V"));
+            assertNull(wrongNameFoo);
+
+            ResolvedJavaMethod wrongClassFoo = metaAccess.lookupJavaType(SubD.class).findMethod("foo", metaAccess.parseMethodDescriptor("()V"));
+            assertNull(wrongClassFoo);
+        } catch (NoSuchMethodException | SecurityException e) {
+            throw new RuntimeException(e);
         }
     }
 
