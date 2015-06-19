@@ -3,7 +3,6 @@
 ^build-nojvmci/
 ^dist/
 ^java/
-^lib/
 ^jdk1.(7|8).0
 ^java64/
 ^work/
@@ -62,6 +61,7 @@ javadoc/
 ^tags
 
 syntax: glob
+lib
 currentAnnotationProcessors
 ecj.jar
 jmh

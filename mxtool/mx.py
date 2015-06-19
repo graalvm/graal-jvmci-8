@@ -47,11 +47,13 @@ import xml.parsers.expat
 import shutil, re, xml.dom.minidom
 import pipes
 import difflib
-import mx_unittest
 from collections import Callable
 from threading import Thread
 from argparse import ArgumentParser, REMAINDER
 from os.path import join, basename, dirname, exists, getmtime, isabs, expandvars, isdir, isfile
+
+import mx_unittest
+import mx_findbugs
 
 try:
     # needed to work around https://bugs.python.org/issue1927
@@ -5708,6 +5710,7 @@ _commands = {
     'eclipseinit': [eclipseinit, ''],
     'eclipseformat': [eclipseformat, ''],
     'exportlibs': [exportlibs, ''],
+    'findbugs': [mx_findbugs.findbugs, ''],
     'findclass': [findclass, ''],
     'fsckprojects': [fsckprojects, ''],
     'help': [help_, '[command]'],
