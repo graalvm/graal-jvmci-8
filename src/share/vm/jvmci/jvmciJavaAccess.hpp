@@ -92,6 +92,7 @@ void jvmci_compute_offsets();
     int_field(HotSpotCompiledNmethod, entryBCI)                                                                                                                \
     int_field(HotSpotCompiledNmethod, id)                                                                                                                      \
     long_field(HotSpotCompiledNmethod, jvmciEnv)                                                                                                               \
+    boolean_field(HotSpotCompiledNmethod, hasUnsafeAccess)                                                                                                     \
   end_class                                                                                                                                                    \
   start_class(HotSpotForeignCallTarget)                                                                                                                        \
     long_field(HotSpotForeignCallTarget, address)                                                                                                              \
