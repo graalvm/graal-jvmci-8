@@ -838,6 +838,23 @@ public class TestResolvedJavaType extends TypeUniverse {
     }
 
     @Test
+    public void isLeafTest() {
+        for (Class<?> c : classes) {
+            ResolvedJavaType type = metaAccess.lookupJavaType(c);
+            ResolvedJavaType arrayType = c != void.class ? metaAccess.lookupJavaType(getArrayClass(c)) : null;
+            if (c.isPrimitive()) {
+                assertTrue(type.isLeaf());
+                assertTrue(arrayType == null || arrayType.isLeaf());
+            } else {
+                assertTrue(c.toString(), type.isLeaf() == arrayType.isLeaf());
+                if (!c.isArray()) {
+                    assertTrue(c.toString(), type.isLeaf() == Modifier.isFinal(c.getModifiers()));
+                }
+            }
+        }
+    }
+
+    @Test
     public void findMethodTest() {
         try {
             ResolvedJavaMethod findFoo = metaAccess.lookupJavaType(D.class).findMethod("foo", metaAccess.parseMethodDescriptor("()V"));
