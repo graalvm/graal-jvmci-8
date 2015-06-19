@@ -28,21 +28,18 @@
 
 import os, stat, errno, sys, shutil, zipfile, tarfile, tempfile, re, time, datetime, platform, subprocess, StringIO, socket
 from os.path import join, exists, dirname, basename
-from argparse import ArgumentParser, RawDescriptionHelpFormatter, REMAINDER
+from argparse import ArgumentParser, REMAINDER
 from outputparser import OutputParser, ValuesMatcher
 import mx
+import mx_unittest
 import xml.dom.minidom
 import sanitycheck
 import itertools
 import json, textwrap
-import fnmatch
 import mx_graal_makefile
 
-# This works because when mx loads this file, it makes sure __file__ gets an absolute path
-_graal_home = dirname(dirname(__file__))
-
-""" Used to distinguish an exported GraalVM (see 'mx export'). """
-_vmSourcesAvailable = exists(join(_graal_home, 'make')) and exists(join(_graal_home, 'src'))
+_suite = mx.suite('graal')
+_graal_home = _suite.dir
 
 """ The VMs that can be built and run along with an optional description. Only VMs with a
     description are listed in the dialogue for setting the default VM (see _get_vm()). """
@@ -123,7 +120,7 @@ def _get_vm():
     if _vm:
         return _vm
     vm = mx.get_env('DEFAULT_VM')
-    envPath = join(_graal_home, 'mx', 'env')
+    envPath = join(_suite.mxDir, 'env')
     if vm and 'graal' in vm:
         if exists(envPath):
             with open(envPath) as fp:
@@ -321,7 +318,7 @@ def export(args):
 
 def _run_benchmark(args, availableBenchmarks, runBenchmark):
 
-    vmOpts, benchmarksAndOptions = _extract_VM_args(args, useDoubleDash=availableBenchmarks is None)
+    vmOpts, benchmarksAndOptions = mx.extract_VM_args(args, useDoubleDash=availableBenchmarks is None)
 
     if availableBenchmarks is None:
         harnessArgs = benchmarksAndOptions
@@ -414,7 +411,7 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
     Get the JDK into which Graal is installed, creating it first if necessary.
     """
     if not build:
-        build = _vmbuild if _vmSourcesAvailable else 'product'
+        build = _vmbuild
     jdk = join(_jdksDir(), build)
     if create:
         srcJdk = mx.java().jdk
@@ -762,7 +759,7 @@ def buildvars(args):
         mx.log(textwrap.fill(buildVars[n], initial_indent='    ', subsequent_indent='    ', width=200))
 
     mx.log('')
-    mx.log('Note that these variables can be given persistent values in the file ' + join(_graal_home, 'mx', 'env') + ' (see \'mx about\').')
+    mx.log('Note that these variables can be given persistent values in the file ' + join(_suite.mxDir, 'env') + ' (see \'mx about\').')
 
 cached_graal_version = None
 
@@ -821,7 +818,7 @@ def build(args, vm=None):
     opts2 = mx.build(['--source', '1.7'] + args, parser=parser)
     assert len(opts2.remainder) == 0
 
-    if not _vmSourcesAvailable or not opts2.native:
+    if not opts2.native:
         return
 
     builds = [_vmbuild]
@@ -1059,12 +1056,12 @@ def _parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
     elif _vm_cwd is not None and _vm_cwd != cwd:
         mx.abort("conflicting working directories: do not set --vmcwd for this command")
 
-    build = vmbuild if vmbuild else _vmbuild if _vmSourcesAvailable else 'product'
+    build = vmbuild if vmbuild else _vmbuild
     jdk = _jdk(build, vmToCheck=vm, installJars=False)
     _updateInstalledJVMCIOptionsFile(jdk)
     mx.expand_project_in_args(args)
     if _make_eclipse_launch:
-        mx.make_eclipse_launch(args, 'graal-' + build, name=None, deps=mx.project('com.oracle.graal.hotspot').all_deps([], True))
+        mx.make_eclipse_launch(_suite, args, 'graal-' + build, name=None, deps=mx.project('com.oracle.graal.hotspot').all_deps([], True))
     if _jacoco == 'on' or _jacoco == 'append':
         jacocoagent = mx.library("JACOCOAGENT", True)
         # Exclude all compiler tests and snippets
@@ -1126,268 +1123,40 @@ def _find_classes_with_annotations(p, pkgRoot, annotations, includeInnerClasses=
     matches = lambda line: len([a for a in annotations if line == a or line.startswith(a + '(')]) != 0
     return p.find_classes_with_matching_source_line(pkgRoot, matches, includeInnerClasses)
 
-def _extract_VM_args(args, allowClasspath=False, useDoubleDash=False, defaultAllVMArgs=True):
-    """
-    Partitions a command line into a leading sequence of HotSpot VM options and the rest.
-    """
-    for i in range(0, len(args)):
-        if useDoubleDash:
-            if args[i] == '--':
-                vmArgs = args[:i]
-                remainder = args[i + 1:]
-                return vmArgs, remainder
-        else:
-            if not args[i].startswith('-'):
-                if i != 0 and (args[i - 1] == '-cp' or args[i - 1] == '-classpath'):
-                    if not allowClasspath:
-                        mx.abort('Cannot supply explicit class path option')
-                    else:
-                        continue
-                vmArgs = args[:i]
-                remainder = args[i:]
-                return vmArgs, remainder
-
-    if defaultAllVMArgs:
-        return args, []
-    else:
-        return [], args
-
-def _run_tests(args, harness, annotations, testfile, blacklist, whitelist, regex):
-
-
-    vmArgs, tests = _extract_VM_args(args)
-    for t in tests:
-        if t.startswith('-'):
-            mx.abort('VM option ' + t + ' must precede ' + tests[0])
-
-    candidates = {}
-    for p in mx.projects_opt_limit_to_suites():
-        if mx.java().javaCompliance < p.javaCompliance:
-            continue
-        for c in _find_classes_with_annotations(p, None, annotations).keys():
-            candidates[c] = p
-
-    classes = []
-    if len(tests) == 0:
-        classes = candidates.keys()
-        projectsCp = mx.classpath([pcp.name for pcp in mx.projects_opt_limit_to_suites() if pcp.javaCompliance <= mx.java().javaCompliance])
-    else:
-        projs = set()
-        found = False
-        if len(tests) == 1 and '#' in tests[0]:
-            words = tests[0].split('#')
-            if len(words) != 2:
-                mx.abort("Method specification is class#method: " + tests[0])
-            t, method = words
-
-            for c, p in candidates.iteritems():
-                # prefer exact matches first
-                if t == c:
-                    found = True
-                    classes.append(c)
-                    projs.add(p.name)
-            if not found:
-                for c, p in candidates.iteritems():
-                    if t in c:
-                        found = True
-                        classes.append(c)
-                        projs.add(p.name)
-            if not found:
-                mx.log('warning: no tests matched by substring "' + t)
-            elif len(classes) != 1:
-                mx.abort('More than one test matches substring {0} {1}'.format(t, classes))
-
-            classes = [c + "#" + method for c in classes]
-        else:
-            for t in tests:
-                if '#' in t:
-                    mx.abort('Method specifications can only be used in a single test: ' + t)
-                for c, p in candidates.iteritems():
-                    if t in c:
-                        found = True
-                        classes.append(c)
-                        projs.add(p.name)
-                if not found:
-                    mx.log('warning: no tests matched by substring "' + t)
-        projectsCp = mx.classpath(projs)
-
-    if blacklist:
-        classes = [c for c in classes if not any((glob.match(c) for glob in blacklist))]
-
-    if whitelist:
-        classes = [c for c in classes if any((glob.match(c) for glob in whitelist))]
-
-    if regex:
-        classes = [c for c in classes if re.search(regex, c)]
-
-    if len(classes) != 0:
-        f_testfile = open(testfile, 'w')
-        for c in classes:
-            f_testfile.write(c + '\n')
-        f_testfile.close()
-        harness(projectsCp, vmArgs)
-
-def _unittest(args, annotations, prefixCp="", blacklist=None, whitelist=None, verbose=False, fail_fast=False, enable_timing=False, regex=None, color=False, eager_stacktrace=False, gc_after_test=False):
-    testfile = os.environ.get('MX_TESTFILE', None)
-    if testfile is None:
-        (_, testfile) = tempfile.mkstemp(".testclasses", "graal")
-        os.close(_)
-
-    coreCp = mx.classpath(['com.oracle.graal.test', 'HCFDIS'])
-
-    coreArgs = []
-    if verbose:
-        coreArgs.append('-JUnitVerbose')
-    if fail_fast:
-        coreArgs.append('-JUnitFailFast')
-    if enable_timing:
-        coreArgs.append('-JUnitEnableTiming')
-    if color:
-        coreArgs.append('-JUnitColor')
-    if eager_stacktrace:
-        coreArgs.append('-JUnitEagerStackTrace')
-    if gc_after_test:
-        coreArgs.append('-JUnitGCAfterTest')
-
-
-    def harness(projectsCp, vmArgs):
-        if _get_vm() != 'jvmci':
-            prefixArgs = ['-esa', '-ea']
-        else:
-            prefixArgs = ['-XX:-BootstrapJVMCI', '-esa', '-ea']
-        if gc_after_test:
-            prefixArgs.append('-XX:-DisableExplicitGC')
-        with open(testfile) as fp:
-            testclasses = [l.rstrip() for l in fp.readlines()]
-
-        # Remove entries from class path that are in graal.jar and
-        # run the VM in a mode where application/test classes can
-        # access core Graal classes.
-        cp = prefixCp + coreCp + os.pathsep + projectsCp
-        if isJVMCIEnabled(_get_vm()):
-            excluded = set()
-            for jdkDist in _jdkDeployedDists:
-                dist = mx.distribution(jdkDist.name)
-                excluded.update([d.output_dir() for d in dist.sorted_deps()])
-            cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
-            vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
-
-        # suppress menubar and dock when running on Mac
-        vmArgs = ['-Djava.awt.headless=true'] + vmArgs
-
-        if len(testclasses) == 1:
-            # Execute Junit directly when one test is being run. This simplifies
-            # replaying the VM execution in a native debugger (e.g., gdb).
-            vm(prefixArgs + vmArgs + ['-cp', mx._separatedCygpathU2W(cp), 'com.oracle.graal.test.GraalJUnitCore'] + coreArgs + testclasses)
-        else:
-            vm(prefixArgs + vmArgs + ['-cp', mx._separatedCygpathU2W(cp), 'com.oracle.graal.test.GraalJUnitCore'] + coreArgs + ['@' + mx._cygpathU2W(testfile)])
-
-    try:
-        _run_tests(args, harness, annotations, testfile, blacklist, whitelist, regex)
-    finally:
-        if os.environ.get('MX_TESTFILE') is None:
-            os.remove(testfile)
-
-_unittestHelpSuffix = """
-    Unittest options:
-
-      --blacklist <file>     run all testcases not specified in the blacklist
-      --whitelist <file>     run only testcases which are included
-                             in the given whitelist
-      --verbose              enable verbose JUnit output
-      --fail-fast            stop after first JUnit test class that has a failure
-      --enable-timing        enable JUnit test timing
-      --regex <regex>        run only testcases matching a regular expression
-      --color                enable colors output
-      --eager-stacktrace     print stacktrace eagerly
-      --gc-after-test        force a GC after each test
-
-    To avoid conflicts with VM options '--' can be used as delimiter.
-
-    If filters are supplied, only tests whose fully qualified name
-    includes a filter as a substring are run.
-
-    For example, this command line:
-
-       mx unittest -G:Dump= -G:MethodFilter=BC_aload.* -G:+PrintCFG BC_aload
-
-    will run all JUnit test classes that contain 'BC_aload' in their
-    fully qualified name and will pass these options to the VM:
-
-        -G:Dump= -G:MethodFilter=BC_aload.* -G:+PrintCFG
-
-    To get around command line length limitations on some OSes, the
-    JUnit class names to be executed are written to a file that a
-    custom JUnit wrapper reads and passes onto JUnit proper. The
-    MX_TESTFILE environment variable can be set to specify a
-    file which will not be deleted once the unittests are done
-    (unlike the temporary file otherwise used).
-
-    As with all other commands, using the global '-v' before 'unittest'
-    command will cause mx to show the complete command line
-    it uses to run the VM.
-"""
+def _find_classpath_arg(vmArgs):
+    for index in range(len(vmArgs)):
+        if vmArgs[index] in ['-cp', '-classpath']:
+            return index + 1, vmArgs[index + 1]
 
 def unittest(args):
-    """run the JUnit tests (all testcases){0}"""
+    def vmLauncher(vmArgs, mainClass, mainClassArgs):
+        if isJVMCIEnabled(_get_vm()):
+            # Remove entries from class path that are in JVMCI loaded jars
+            cpIndex, cp = _find_classpath_arg(vmArgs)
+            if cp:
+                excluded = set()
+                for jdkDist in _jdkDeployedDists:
+                    dist = mx.distribution(jdkDist.name)
+                    excluded.update([d.output_dir() for d in dist.sorted_deps()])
+                cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
+                vmArgs[cpIndex] = cp
 
-    parser = ArgumentParser(prog='mx unittest',
-          description='run the JUnit tests',
-          add_help=False,
-          formatter_class=RawDescriptionHelpFormatter,
-          epilog=_unittestHelpSuffix,
-        )
-    parser.add_argument('--blacklist', help='run all testcases not specified in the blacklist', metavar='<path>')
-    parser.add_argument('--whitelist', help='run testcases specified in whitelist only', metavar='<path>')
-    parser.add_argument('--verbose', help='enable verbose JUnit output', action='store_true')
-    parser.add_argument('--fail-fast', help='stop after first JUnit test class that has a failure', action='store_true')
-    parser.add_argument('--enable-timing', help='enable JUnit test timing', action='store_true')
-    parser.add_argument('--regex', help='run only testcases matching a regular expression', metavar='<regex>')
-    parser.add_argument('--color', help='enable color output', action='store_true')
-    parser.add_argument('--eager-stacktrace', help='print stacktrace eagerly', action='store_true')
-    parser.add_argument('--gc-after-test', help='force a GC after each test', action='store_true')
+            # Run the VM in a mode where application/test classes can
+            # access JVMCI loaded classes.
+            vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
 
-    ut_args = []
-    delimiter = False
-    # check for delimiter
-    while len(args) > 0:
-        arg = args.pop(0)
-        if arg == '--':
-            delimiter = True
-            break
-        ut_args.append(arg)
-
-    if delimiter:
-        # all arguments before '--' must be recognized
-        parsed_args = parser.parse_args(ut_args)
-    else:
-        # parse all know arguments
-        parsed_args, args = parser.parse_known_args(ut_args)
-
-    if parsed_args.whitelist:
-        try:
-            with open(join(_graal_home, parsed_args.whitelist)) as fp:
-                parsed_args.whitelist = [re.compile(fnmatch.translate(l.rstrip())) for l in fp.readlines() if not l.startswith('#')]
-        except IOError:
-            mx.log('warning: could not read whitelist: ' + parsed_args.whitelist)
-    if parsed_args.blacklist:
-        try:
-            with open(join(_graal_home, parsed_args.blacklist)) as fp:
-                parsed_args.blacklist = [re.compile(fnmatch.translate(l.rstrip())) for l in fp.readlines() if not l.startswith('#')]
-        except IOError:
-            mx.log('warning: could not read blacklist: ' + parsed_args.blacklist)
-
-    _unittest(args, ['@Test', '@Parameters'], **parsed_args.__dict__)
+        vm(vmArgs + [mainClass] + mainClassArgs)
+    mx_unittest.unittest(args, vmLauncher=vmLauncher)
 
 def shortunittest(args):
-    """alias for 'unittest --whitelist test/whitelist_shortunittest.txt'{0}"""
+    """alias for 'unittest --whitelist test/whitelist_shortunittest.txt'"""
 
     args = ['--whitelist', 'test/whitelist_shortunittest.txt'] + args
     unittest(args)
 
 def microbench(args):
     """run JMH microbenchmark projects"""
-    vmArgs, jmhArgs = _extract_VM_args(args, useDoubleDash=True)
+    vmArgs, jmhArgs = mx.extract_VM_args(args, useDoubleDash=True)
 
     # look for -f in JMH arguments
     containsF = False
@@ -1862,13 +1631,6 @@ def igv(args):
         if mx.run(['ant', '-f', mx._cygpathU2W(join(_graal_home, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env, nonZeroIsFatal=False):
             mx.abort("IGV ant build & launch failed. Check '" + logFile + "'. You can also try to delete 'src/share/tools/IdealGraphVisualizer/nbplatform'.")
 
-def maven_install_truffle(args):
-    """install Truffle into your local Maven repository"""
-    for name in ['TRUFFLE', 'TRUFFLE-DSL-PROCESSOR']:
-        mx.archive(["@" + name])
-        path = mx._dists[name].path
-        mx.run(['mvn', 'install:install-file', '-DgroupId=com.oracle', '-DartifactId=' + name.lower(), '-Dversion=' + graal_version('SNAPSHOT'), '-Dpackaging=jar', '-Dfile=' + path])
-
 def c1visualizer(args):
     """run the Cl Compiler Visualizer"""
     libpath = join(_graal_home, 'lib')
@@ -2066,7 +1828,7 @@ def buildjmh(args):
     # Ensure the mx injected dependencies are up to date
     makejmhdeps(['-p'] + (['-s', args.settings] if args.settings else []))
 
-    timestamp = mx.TimeStampFile(join(_graal_home, 'mx', 'jmh', jmhPath.replace(os.sep, '_') + '.timestamp'))
+    timestamp = mx.TimeStampFile(join(_suite.mxDir, 'jmh', jmhPath.replace(os.sep, '_') + '.timestamp'))
     mustBuild = args.clean
     if not mustBuild:
         try:
@@ -2110,13 +1872,13 @@ def jmh(args):
         mx.help_(['jmh'])
         mx.abort(1)
 
-    vmArgs, benchmarksAndJsons = _extract_VM_args(args)
+    vmArgs, benchmarksAndJsons = mx.extract_VM_args(args)
     if isJVMCIEnabled(_get_vm()) and  '-XX:-UseJVMCIClassLoader' not in vmArgs:
         vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
 
     benchmarks = [b for b in benchmarksAndJsons if not b.startswith('{')]
     jmhArgJsons = [b for b in benchmarksAndJsons if b.startswith('{')]
-    jmhOutDir = join(_graal_home, 'mx', 'jmh')
+    jmhOutDir = join(_suite.mxDir, 'jmh')
     if not exists(jmhOutDir):
         os.makedirs(jmhOutDir)
     jmhOut = join(jmhOutDir, 'jmh.out')
@@ -2340,12 +2102,12 @@ def jacocoreport(args):
 
 def sl(args):
     """run an SL program"""
-    vmArgs, slArgs = _extract_VM_args(args)
+    vmArgs, slArgs = mx.extract_VM_args(args)
     vm(vmArgs + ['-cp', mx.classpath(["TRUFFLE", "com.oracle.truffle.sl"]), "com.oracle.truffle.sl.SLLanguage"] + slArgs)
 
 def sldebug(args):
     """run a simple command line debugger for the Simple Language"""
-    vmArgs, slArgs = _extract_VM_args(args, useDoubleDash=True)
+    vmArgs, slArgs = mx.extract_VM_args(args, useDoubleDash=True)
     vm(vmArgs + ['-cp', mx.classpath("com.oracle.truffle.sl.tools"), "com.oracle.truffle.sl.tools.debug.SLREPLServer"] + slArgs)
 
 def isJVMCIEnabled(vm):
@@ -2537,6 +2299,9 @@ def checkheaders(args):
             continue
 
         csConfig = join(mx.project(p.checkstyleProj).dir, '.checkstyle_checks.xml')
+        if not exists(csConfig):
+            mx.log('Cannot check headers for ' + p.name + ' - ' + csConfig + ' does not exist')
+            continue
         dom = xml.dom.minidom.parse(csConfig)
         for module in dom.getElementsByTagName('module'):
             if module.getAttribute('name') == 'RegexpHeader':
@@ -2567,12 +2332,12 @@ def mx_init(suite):
         'checkheaders': [checkheaders, ''],
         'clean': [clean, ''],
         'ctw': [ctw, '[-vmoptions|noinline|nocomplex|full]'],
+        'export': [export, '[-options] [zipfile]'],
         'findbugs': [findbugs, ''],
         'generateZshCompletion' : [generateZshCompletion, ''],
         'hsdis': [hsdis, '[att]'],
         'hcfdis': [hcfdis, ''],
         'igv' : [igv, ''],
-        'maven-install-truffle' : [maven_install_truffle, ''],
         'jdkhome': [print_jdkhome, ''],
         'jmh': [jmh, '[VM options] [filters|JMH-args-as-json...]'],
         'dacapo': [dacapo, '[VM options] benchmarks...|"all" [DaCapo options]'],
@@ -2583,9 +2348,9 @@ def mx_init(suite):
         'gate' : [gate, '[-options]'],
         'bench' : [bench, '[-resultfile file] [all(default)|dacapo|specjvm2008|bootstrap]'],
         'microbench' : [microbench, '[VM options] [-- [JMH options]]'],
-        'unittest' : [unittest, '[unittest options] [--] [VM options] [filters...]', _unittestHelpSuffix],
         'makejmhdeps' : [makejmhdeps, ''],
-        'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', _unittestHelpSuffix],
+        'unittest' : [unittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
+        'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
         'jacocoreport' : [jacocoreport, '[output directory]'],
         'site' : [site, '[-options]'],
         'vm': [vm, '[-options] class [args...]'],
@@ -2605,17 +2370,12 @@ def mx_init(suite):
                     'The VM selected by --vm and --vmbuild options is under this directory (i.e., ' +
                     join('<path>', '<jdk-version>', '<vmbuild>', 'jre', 'lib', '<vm>', mx.add_lib_prefix(mx.add_lib_suffix('jvm'))) + ')', default=None, metavar='<path>')
 
-    if _vmSourcesAvailable:
-        mx.add_argument('--vm', action='store', dest='vm', choices=_vmChoices.keys(), help='the VM type to build/run')
-        mx.add_argument('--vmbuild', action='store', dest='vmbuild', choices=_vmbuildChoices, help='the VM build to build/run (default: ' + _vmbuildChoices[0] + ')')
-        mx.add_argument('--ecl', action='store_true', dest='make_eclipse_launch', help='create launch configuration for running VM execution(s) in Eclipse')
-        mx.add_argument('--vmprefix', action='store', dest='vm_prefix', help='prefix for running the VM (e.g. "/usr/bin/gdb --args")', metavar='<prefix>')
-        mx.add_argument('--gdb', action='store_const', const='/usr/bin/gdb --args', dest='vm_prefix', help='alias for --vmprefix "/usr/bin/gdb --args"')
-        mx.add_argument('--lldb', action='store_const', const='lldb --', dest='vm_prefix', help='alias for --vmprefix "lldb --"')
-
-        commands.update({
-            'export': [export, '[-options] [zipfile]'],
-        })
+    mx.add_argument('--vm', action='store', dest='vm', choices=_vmChoices.keys(), help='the VM type to build/run')
+    mx.add_argument('--vmbuild', action='store', dest='vmbuild', choices=_vmbuildChoices, help='the VM build to build/run (default: ' + _vmbuildChoices[0] + ')')
+    mx.add_argument('--ecl', action='store_true', dest='make_eclipse_launch', help='create launch configuration for running VM execution(s) in Eclipse')
+    mx.add_argument('--vmprefix', action='store', dest='vm_prefix', help='prefix for running the VM (e.g. "/usr/bin/gdb --args")', metavar='<prefix>')
+    mx.add_argument('--gdb', action='store_const', const='/usr/bin/gdb --args', dest='vm_prefix', help='alias for --vmprefix "/usr/bin/gdb --args"')
+    mx.add_argument('--lldb', action='store_const', const='lldb --', dest='vm_prefix', help='alias for --vmprefix "lldb --"')
 
     mx.update_commands(suite, commands)
 
@@ -2628,16 +2388,15 @@ def mx_post_parse_cmd_line(opts):  #
         versionDesc += " and <=" + str(_untilVersion)
     mx.java(_versionCheck, versionDescription=versionDesc, defaultJdk=True)
 
-    if _vmSourcesAvailable:
-        if hasattr(opts, 'vm') and opts.vm is not None:
-            global _vm
-            _vm = opts.vm
-            _vm = _vm.replace('graal', 'jvmci')
-        if hasattr(opts, 'vmbuild') and opts.vmbuild is not None:
-            global _vmbuild
-            _vmbuild = opts.vmbuild
-        global _make_eclipse_launch
-        _make_eclipse_launch = getattr(opts, 'make_eclipse_launch', False)
+    if hasattr(opts, 'vm') and opts.vm is not None:
+        global _vm
+        _vm = opts.vm
+        _vm = _vm.replace('graal', 'jvmci')
+    if hasattr(opts, 'vmbuild') and opts.vmbuild is not None:
+        global _vmbuild
+        _vmbuild = opts.vmbuild
+    global _make_eclipse_launch
+    _make_eclipse_launch = getattr(opts, 'make_eclipse_launch', False)
     global _jacoco
     _jacoco = opts.jacoco
     global _vm_cwd

@@ -20,18 +20,18 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.test;
+package com.oracle.mxtool.junit;
 
 import java.io.*;
 
 import org.junit.runner.*;
 import org.junit.runner.notification.*;
 
-public class GraalJUnitRunListenerDecorator implements GraalJUnitRunListener {
+public class MxRunListenerDecorator implements MxRunListener {
 
-    private final GraalJUnitRunListener l;
+    private final MxRunListener l;
 
-    public GraalJUnitRunListenerDecorator(GraalJUnitRunListener l) {
+    public MxRunListenerDecorator(MxRunListener l) {
         this.l = l;
     }
 

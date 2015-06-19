@@ -516,6 +516,8 @@ public class CompilationResult {
 
     private int bytecodeSize;
 
+    private boolean hasUnsafeAccess;
+
     public CompilationResult() {
         this(null);
     }
@@ -937,7 +939,16 @@ public class CompilationResult {
         return name;
     }
 
+    public void setHasUnsafeAccess(boolean hasUnsafeAccess) {
+        this.hasUnsafeAccess = hasUnsafeAccess;
+    }
+
+    public boolean hasUnsafeAccess() {
+        return hasUnsafeAccess;
+    }
+
     public void reset() {
+        hasUnsafeAccess = false;
         infopoints.clear();
         dataPatches.clear();
         exceptionHandlers.clear();

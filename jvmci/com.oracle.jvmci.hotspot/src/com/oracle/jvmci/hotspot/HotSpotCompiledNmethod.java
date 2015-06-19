@@ -35,6 +35,7 @@ public final class HotSpotCompiledNmethod extends HotSpotCompiledCode {
     public final int entryBCI;
     public final int id;
     public final long jvmciEnv;
+    public final boolean hasUnsafeAccess;
 
     /**
      * May be set by VM if code installation fails. It will describe in more detail why installation
@@ -52,6 +53,7 @@ public final class HotSpotCompiledNmethod extends HotSpotCompiledCode {
         this.entryBCI = compResult.getEntryBCI();
         this.id = compResult.getId();
         this.jvmciEnv = jvmciEnv;
+        this.hasUnsafeAccess = compResult.hasUnsafeAccess();
     }
 
     @Override

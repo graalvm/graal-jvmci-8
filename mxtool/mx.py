@@ -33,7 +33,12 @@ Version 1.x supports a single suite of projects.
 Full documentation can be found at https://wiki.openjdk.java.net/display/Graal/The+mx+Tool
 """
 
-import sys, os, errno, time, subprocess, shlex, types, StringIO, zipfile, signal, xml.sax.saxutils, tempfile, fnmatch, platform
+import sys
+if __name__ == '__main__':
+    # Rename this module as 'mx' so it is not re-executed when imported by other modules.
+    sys.modules['mx'] = sys.modules.pop('__main__')
+
+import os, errno, time, subprocess, shlex, types, StringIO, zipfile, signal, xml.sax.saxutils, tempfile, platform
 import textwrap
 import socket
 import tarfile
@@ -42,6 +47,7 @@ import xml.parsers.expat
 import shutil, re, xml.dom.minidom
 import pipes
 import difflib
+import mx_unittest
 from collections import Callable
 from threading import Thread
 from argparse import ArgumentParser, REMAINDER
@@ -99,6 +105,7 @@ _jreLibs = dict()
 _dists = dict()
 _suites = dict()
 _annotationProcessors = None
+_mx_suite = None
 _primary_suite_path = None
 _primary_suite = None
 _opts = None
@@ -451,6 +458,39 @@ class Project(Dependency):
     def append_to_classpath(self, cp, resolve):
         if not self.native:
             cp.append(self.output_dir())
+
+    def eclipse_settings_sources(self):
+        """
+        Gets a dictionary from the name of an Eclipse settings file to
+        the list of files providing its generated content, in overriding order
+        (i.e., settings from files later in the list override settings from
+        files earlier in the list).
+        """
+        if not hasattr(self, '_eclipse_settings'):
+            esdict = {}
+            hasAps = self.annotation_processors_path() is not None
+            # start with the mxtool defaults
+            defaultEclipseSettingsDir = join(_mx_suite.dir, 'eclipse-settings')
+            if exists(defaultEclipseSettingsDir):
+                for name in os.listdir(defaultEclipseSettingsDir):
+                    if isfile(join(defaultEclipseSettingsDir, name)) and name != "org.eclipse.jdt.apt.core.prefs" or hasAps:
+                        esdict[name] = [os.path.abspath(join(defaultEclipseSettingsDir, name))]
+
+            # append suite overrides
+            eclipseSettingsDir = join(self.suite.mxDir, 'eclipse-settings')
+            if exists(eclipseSettingsDir):
+                for name in os.listdir(eclipseSettingsDir):
+                    if isfile(join(eclipseSettingsDir, name)) and name != "org.eclipse.jdt.apt.core.prefs" or hasAps:
+                        esdict.setdefault(name, []).append(os.path.abspath(join(eclipseSettingsDir, name)))
+
+            # check for project overrides
+            projectSettingsDir = join(self.dir, 'eclipse-settings')
+            if exists(projectSettingsDir):
+                for name in os.listdir(projectSettingsDir):
+                    if isfile(join(projectSettingsDir, name)) and name != "org.eclipse.jdt.apt.core.prefs" or hasAps:
+                        esdict.setdefault(name, []).append(os.path.abspath(join(projectSettingsDir, name)))
+            self._eclipse_settings = esdict
+        return self._eclipse_settings
 
     def find_classes_with_matching_source_line(self, pkgRoot, function, includeInnerClasses=False):
         """
@@ -1013,12 +1053,12 @@ class Suite:
         self.primary = primary
         self.requiredMxVersion = None
         self.name = _suitename(mxDir)  # validated in _load_projects
+        _suites[self.name] = self
         if load:
             # just check that there are no imports
             self._load_imports()
             self._load_env()
             self._load_commands()
-        _suites[self.name] = self
 
     def __str__(self):
         return self.name
@@ -1039,10 +1079,10 @@ class Suite:
             except AssertionError as ae:
                 abort('Exception while parsing "mxversion" in project file: ' + str(ae))
 
-        libsMap = suiteDict['libraries']
-        jreLibsMap = suiteDict['jrelibraries']
-        projsMap = suiteDict['projects']
-        distsMap = suiteDict['distributions']
+        libsMap = suiteDict.get('libraries', {})
+        jreLibsMap = suiteDict.get('jrelibraries', {})
+        projsMap = suiteDict.get('projects', {})
+        distsMap = suiteDict.get('distributions', {})
 
         def pop_list(attrs, name, context):
             v = attrs.pop(name, None)
@@ -1179,9 +1219,6 @@ class Suite:
 
     def _load_commands(self):
         commandsName = self._find_commands(self._commands_name())
-        if commandsName is None:
-            # backwards compatibility
-            commandsName = self._find_commands('commands')
         if commandsName is not None:
             if commandsName in sys.modules:
                 abort(commandsName + '.py in suite ' + self.name + ' duplicates ' + sys.modules[commandsName].__file__)
@@ -1708,6 +1745,31 @@ def sorted_project_deps(projects, includeLibs=False, includeJreLibs=False, inclu
         p.all_deps(deps, includeLibs=includeLibs, includeJreLibs=includeJreLibs, includeAnnotationProcessors=includeAnnotationProcessors)
     return deps
 
+def extract_VM_args(args, useDoubleDash=False, allowClasspath=False):
+    """
+    Partitions 'args' into a leading sequence of HotSpot VM options and the rest. If
+    'useDoubleDash' then 'args' is partititioned by the first instance of "--". If
+    not 'allowClasspath' then mx aborts if "-cp" or "-classpath" is in 'args'.
+
+   """
+    for i in range(len(args)):
+        if useDoubleDash:
+            if args[i] == '--':
+                vmArgs = args[:i]
+                remainder = args[i + 1:]
+                return vmArgs, remainder
+        else:
+            if not args[i].startswith('-'):
+                if i != 0 and (args[i - 1] == '-cp' or args[i - 1] == '-classpath'):
+                    if not allowClasspath:
+                        abort('Cannot supply explicit class path option')
+                    else:
+                        continue
+                vmArgs = args[:i]
+                remainder = args[i:]
+                return vmArgs, remainder
+    return args, []
+
 class ArgParser(ArgumentParser):
     # Override parent to append the list of available commands
     def format_help(self):
@@ -2056,7 +2118,6 @@ def _find_jdk_in_candidates(candidates, versionCheck, warn=False, source=None):
     if filtered:
         return filtered[0]
     return None
-
 
 def run_java(args, nonZeroIsFatal=True, out=None, err=None, cwd=None, addDefaultArgs=True, javaConfig=None):
     if not javaConfig:
@@ -2756,9 +2817,9 @@ class JavaCompileTask:
                 jdtArgs += processorArgs
 
                 jdtProperties = join(self.proj.dir, '.settings', 'org.eclipse.jdt.core.prefs')
-                rootJdtProperties = join(self.proj.suite.mxDir, 'eclipse-settings', 'org.eclipse.jdt.core.prefs')
-                if not exists(jdtProperties) or os.path.getmtime(jdtProperties) < os.path.getmtime(rootJdtProperties):
-                    # Try to fix a missing properties file by running eclipseinit
+                jdtPropertiesSources = self.proj.eclipse_settings_sources()['org.eclipse.jdt.core.prefs']
+                if not exists(jdtProperties) or os.path.getmtime(jdtProperties) < min(map(os.path.getmtime, jdtPropertiesSources)):
+                    # Try to fix a missing or out of date properties file by running eclipseinit
                     _eclipseinit_project(self.proj)
                 if not exists(jdtProperties):
                     log('JDT properties file {0} not found'.format(jdtProperties))
@@ -3850,7 +3911,7 @@ def make_eclipse_attach(suite, hostname, port, name=None, deps=None):
     launchFile = join(eclipseLaunches, name + '.launch')
     return update_file(launchFile, launch), launchFile
 
-def make_eclipse_launch(javaArgs, jre, name=None, deps=None):
+def make_eclipse_launch(suite, javaArgs, jre, name=None, deps=None):
     """
     Creates an Eclipse launch configuration file for running/debugging a Java command.
     """
@@ -3912,7 +3973,7 @@ def make_eclipse_launch(javaArgs, jre, name=None, deps=None):
     launch.close('launchConfiguration')
     launch = launch.xml(newl='\n', standalone='no') % slm.xml(escape=True, standalone='no')
 
-    eclipseLaunches = join('mx', 'eclipse-launches')
+    eclipseLaunches = join(suite.mxDir, 'eclipse-launches')
     if not exists(eclipseLaunches):
         os.makedirs(eclipseLaunches)
     return update_file(join(eclipseLaunches, name + '.launch'), launch)
@@ -3934,12 +3995,11 @@ def _check_ide_timestamp(suite, configZip, ide):
         return False
 
     if ide == 'eclipse':
-        eclipseSettingsDir = join(suite.mxDir, 'eclipse-settings')
-        if exists(eclipseSettingsDir):
-            for name in os.listdir(eclipseSettingsDir):
-                path = join(eclipseSettingsDir, name)
-                if configZip.isOlderThan(path):
-                    return False
+        for p in suite.projects:
+            for _, sources in p.eclipse_settings_sources().iteritems():
+                for source in sources:
+                    if configZip.isOlderThan(source):
+                        return False
     return True
 
 def _eclipseinit_project(p, files=None, libFiles=None):
@@ -4124,37 +4184,15 @@ def _eclipseinit_project(p, files=None, libFiles=None):
     if not exists(settingsDir):
         os.mkdir(settingsDir)
 
-    # collect the defaults from mxtool
-    defaultEclipseSettingsDir = join(dirname(__file__), 'eclipse-settings')
-    esdict = {}
-    if exists(defaultEclipseSettingsDir):
-        for name in os.listdir(defaultEclipseSettingsDir):
-            if isfile(join(defaultEclipseSettingsDir, name)):
-                esdict[name] = os.path.abspath(join(defaultEclipseSettingsDir, name))
-
-    # check for suite overrides
-    eclipseSettingsDir = join(p.suite.mxDir, 'eclipse-settings')
-    if exists(eclipseSettingsDir):
-        for name in os.listdir(eclipseSettingsDir):
-            if isfile(join(eclipseSettingsDir, name)):
-                esdict[name] = os.path.abspath(join(eclipseSettingsDir, name))
-
-    # check for project overrides
-    projectSettingsDir = join(p.dir, 'eclipse-settings')
-    if exists(projectSettingsDir):
-        for name in os.listdir(projectSettingsDir):
-            if isfile(join(projectSettingsDir, name)):
-                esdict[name] = os.path.abspath(join(projectSettingsDir, name))
-
     # copy a possibly modified file to the project's .settings directory
-    for name, path in esdict.iteritems():
-        # ignore this file altogether if this project has no annotation processors
-        if name == "org.eclipse.jdt.apt.core.prefs" and not processorPath:
-            continue
-
-        with open(path) as f:
-            content = f.read()
-        content = content.replace('${javaCompliance}', str(p.javaCompliance))
+    for name, sources in p.eclipse_settings_sources().iteritems():
+        out = StringIO.StringIO()
+        print >> out, '# GENERATED -- DO NOT EDIT'
+        for source in sources:
+            print >> out, '# Source:', source
+            with open(source) as f:
+                print >> out, f.read()
+        content = out.getvalue().replace('${javaCompliance}', str(p.javaCompliance))
         if processorPath:
             content = content.replace('org.eclipse.jdt.core.compiler.processAnnotations=disabled', 'org.eclipse.jdt.core.compiler.processAnnotations=enabled')
         update_file(join(settingsDir, name), content)
@@ -5006,18 +5044,18 @@ def fsckprojects(args):
         log('fsckprojects command must be run in an interactive shell')
         return
     hg = HgConfig()
+    projectDirs = [p.dir for suite in suites() for p in suite.projects]
+    distIdeDirs = [d.get_ide_project_dir() for suite in suites() for d in suite.dists if d.get_ide_project_dir() is not None]
     for suite in suites(True):
-        projectDirs = [p.dir for p in suite.projects]
-        distIdeDirs = [d.get_ide_project_dir() for d in suite.dists if d.get_ide_project_dir() is not None]
         for dirpath, dirnames, files in os.walk(suite.dir):
             if dirpath == suite.dir:
                 # no point in traversing .hg, lib, or .workspace
                 dirnames[:] = [d for d in dirnames if d not in ['.hg', 'lib', '.workspace']]
             elif dirpath in projectDirs:
-                # don't traverse subdirs of an existing project in this suite
+                # don't traverse subdirs of an existing project
                 dirnames[:] = []
             elif dirpath in distIdeDirs:
-                # don't traverse subdirs of an existing distributions in this suite
+                # don't traverse subdirs of an existing distribution
                 dirnames[:] = []
             else:
                 projectConfigFiles = frozenset(['.classpath', '.project', 'nbproject'])
@@ -5027,7 +5065,7 @@ def fsckprojects(args):
                     indicatorsInHg = hg.locate(suite.dir, indicators)
                     # Only proceed if there are indicator files that are not under HG
                     if len(indicators) > len(indicatorsInHg):
-                        if not is_interactive() or ask_yes_no(dirpath + ' looks like a removed project -- delete it', 'n'):
+                        if ask_yes_no(dirpath + ' looks like a removed project -- delete it', 'n'):
                             shutil.rmtree(dirpath)
                             log('Deleted ' + dirpath)
 
@@ -5672,6 +5710,7 @@ _commands = {
     'netbeansinit': [netbeansinit, ''],
     'suites': [show_suites, ''],
     'projects': [show_projects, ''],
+    'unittest' : [mx_unittest.unittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
 }
 
 _argParser = ArgParser()
@@ -5679,11 +5718,9 @@ _argParser = ArgParser()
 def _suitename(mxDir):
     base = os.path.basename(mxDir)
     parts = base.split('.')
-    # temporary workaround until mx.graal exists
-    if len(parts) == 1:
-        return 'graal'
-    else:
-        return parts[1]
+    assert len(parts) == 2
+    assert parts[0] == 'mx'
+    return parts[1]
 
 def _is_suite_dir(d, mxDirName=None):
     """
@@ -5691,11 +5728,10 @@ def _is_suite_dir(d, mxDirName=None):
     If mxDirName is None, matches any suite name, otherwise checks for exactly that suite.
     """
     if os.path.isdir(d):
-        for f in os.listdir(d):
-            if (mxDirName == None and (f == 'mx' or fnmatch.fnmatch(f, 'mx.*'))) or f == mxDirName:
-                mxDir = join(d, f)
-                if exists(mxDir) and isdir(mxDir) and (exists(join(mxDir, 'suite.py'))):
-                    return mxDir
+        for f in [mxDirName] if mxDirName else [e for e in os.listdir(d) if e.startswith('mx.')]:
+            mxDir = join(d, f)
+            if exists(mxDir) and isdir(mxDir) and (exists(join(mxDir, 'suite.py'))):
+                return mxDir
 
 def _check_primary_suite():
     if _primary_suite is None:
@@ -5733,6 +5769,11 @@ def _findPrimarySuiteMxDir():
     return _findPrimarySuiteMxDirFrom(dirname(__file__))
 
 def main():
+    mxMxDir = _is_suite_dir(dirname(__file__))
+    assert mxMxDir
+    global _mx_suite
+    _mx_suite = _loadSuite(mxMxDir)
+
     primarySuiteMxDir = _findPrimarySuiteMxDir()
     if primarySuiteMxDir:
         global _primary_suite
@@ -5791,9 +5832,6 @@ version = VersionSpec("1.0")
 currentUmask = None
 
 if __name__ == '__main__':
-    # rename this module as 'mx' so it is not imported twice by the commands.py modules
-    sys.modules['mx'] = sys.modules.pop('__main__')
-
     # Capture the current umask since there's no way to query it without mutating it.
     currentUmask = os.umask(0)
     os.umask(currentUmask)

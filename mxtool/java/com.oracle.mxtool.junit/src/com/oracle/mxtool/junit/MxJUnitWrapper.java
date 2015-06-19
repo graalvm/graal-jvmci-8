@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.test;
+package com.oracle.mxtool.junit;
 
 import java.io.*;
 import java.lang.reflect.Modifier;
@@ -35,7 +35,7 @@ import org.junit.runner.notification.*;
 import org.junit.runners.*;
 import org.junit.runners.model.*;
 
-public class GraalJUnitCore {
+public class MxJUnitWrapper {
 
     /**
      * Run the tests contained in the classes named in the <code>args</code>. A single test method
@@ -49,7 +49,7 @@ public class GraalJUnitCore {
     public static void main(String... args) {
         JUnitSystem system = new RealSystem();
         JUnitCore junitCore = new JUnitCore();
-        system.out().println("GraalJUnitCore");
+        system.out().println("MxJUnitCore");
         system.out().println("JUnit version " + Version.id());
         List<Class<?>> classes = new ArrayList<>();
         String methodName = null;
@@ -105,7 +105,7 @@ public class GraalJUnitCore {
                     }
                 }
                 try {
-                    Class<?> cls = Class.forName(each, false, GraalJUnitCore.class.getClassLoader());
+                    Class<?> cls = Class.forName(each, false, MxJUnitWrapper.class.getClassLoader());
                     if ((cls.getModifiers() & Modifier.ABSTRACT) == 0) {
                         classes.add(cls);
                     }
@@ -117,26 +117,26 @@ public class GraalJUnitCore {
                 }
             }
         }
-        final GraalTextListener textListener;
+        final TextRunListener textListener;
         if (!verbose) {
-            textListener = new GraalTextListener(system);
+            textListener = new TextRunListener(system);
         } else {
-            textListener = new GraalVerboseTextListener(system);
+            textListener = new VerboseTextListener(system);
         }
-        GraalJUnitRunListener graalListener = textListener;
+        MxRunListener mxListener = textListener;
         if (enableTiming) {
-            graalListener = new TimingDecorator(graalListener);
+            mxListener = new TimingDecorator(mxListener);
         }
         if (color) {
-            graalListener = new AnsiTerminalDecorator(graalListener);
+            mxListener = new AnsiTerminalDecorator(mxListener);
         }
         if (eagerStackTrace) {
-            graalListener = new EagerStackTraceDecorator(graalListener);
+            mxListener = new EagerStackTraceDecorator(mxListener);
         }
         if (gcAfterTest) {
-            graalListener = new GCAfterTestDecorator(graalListener);
+            mxListener = new GCAfterTestDecorator(mxListener);
         }
-        junitCore.addListener(GraalTextListener.createRunListener(graalListener));
+        junitCore.addListener(TextRunListener.createRunListener(mxListener));
         Request request;
         if (methodName == null) {
             request = Request.classes(classes.toArray(new Class[0]));

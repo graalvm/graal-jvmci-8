@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.test;
+package com.oracle.mxtool.junit;
 
 import java.io.*;
 
@@ -28,7 +28,7 @@ import org.junit.internal.*;
 import org.junit.runner.*;
 import org.junit.runner.notification.*;
 
-public interface GraalJUnitRunListener {
+public interface MxRunListener {
 
     /**
      * Called before any tests have been run.

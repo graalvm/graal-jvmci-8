@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package com.oracle.graal.test;
+package com.oracle.mxtool.junit;
 
 import java.io.*;
 
@@ -28,13 +28,13 @@ import org.junit.internal.*;
 import org.junit.runner.*;
 import org.junit.runner.notification.*;
 
-public class GraalVerboseTextListener extends GraalTextListener {
+public class VerboseTextListener extends TextRunListener {
 
-    public GraalVerboseTextListener(JUnitSystem system) {
+    public VerboseTextListener(JUnitSystem system) {
         this(system.out());
     }
 
-    public GraalVerboseTextListener(PrintStream writer) {
+    public VerboseTextListener(PrintStream writer) {
         super(writer);
     }
 

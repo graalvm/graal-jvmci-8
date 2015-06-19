@@ -620,7 +620,9 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
         int methodRefCacheIndex = -1;
         switch (tag) {
             case MethodRef:
-                methodRefCacheIndex = toConstantPoolIndex(cpi, opcode);
+                if (Bytecodes.isInvoke(opcode)) {
+                    methodRefCacheIndex = toConstantPoolIndex(cpi, opcode);
+                }
                 // fall through
             case Fieldref:
             case InterfaceMethodref:
