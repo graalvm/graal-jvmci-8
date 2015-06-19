@@ -39,6 +39,10 @@ public interface ResolvedJavaField extends JavaField, ModifiersProvider {
      */
     int getModifiers();
 
+    default boolean isFinal() {
+        return ModifiersProvider.super.isFinalFlagSet();
+    }
+
     /**
      * Determines if this field was injected by the VM. Such a field, for example, is not derived
      * from a class file.
@@ -68,7 +72,7 @@ public interface ResolvedJavaField extends JavaField, ModifiersProvider {
 
     /**
      * Returns an object representing the unique location identity of this resolved Java field.
-     * 
+     *
      * @return the location identity of the field
      */
     LocationIdentity getLocationIdentity();

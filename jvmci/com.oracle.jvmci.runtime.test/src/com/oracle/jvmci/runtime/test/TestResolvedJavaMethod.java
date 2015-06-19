@@ -403,6 +403,7 @@ public class TestResolvedJavaMethod extends MethodUniverse {
         "toParameterTypes",
         "getParameterAnnotation",
         "getSpeculationLog",
+        "isFinal",
         "$jacocoInit"
     };
     // @formatter:on

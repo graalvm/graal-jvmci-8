@@ -127,7 +127,7 @@ public final class Assumptions implements Iterable<Assumptions.Assumption> {
             this.subtype = subtype;
             assert context.isAbstract();
             assert subtype.isConcrete() || context.isInterface() : subtype.toString() + " : " + context.toString();
-            assert !subtype.isArray() || subtype.getElementalType().isFinal() : subtype.toString() + " : " + context.toString();
+            assert !subtype.isArray() || subtype.getElementalType().isFinalFlagSet() : subtype.toString() + " : " + context.toString();
         }
 
         @Override

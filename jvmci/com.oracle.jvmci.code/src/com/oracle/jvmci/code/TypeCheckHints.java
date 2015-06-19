@@ -95,7 +95,7 @@ public class TypeCheckHints {
      */
     public TypeCheckHints(ResolvedJavaType targetType, JavaTypeProfile profile, Assumptions assumptions, double minHintHitProbability, int maxHints) {
         this.profile = profile;
-        if (targetType != null && !canHaveSubtype(targetType)) {
+        if (targetType != null && !!targetType.isLeaf()) {
             exact = targetType;
         } else {
             if (assumptions != null) {
@@ -146,15 +146,5 @@ public class TypeCheckHints {
         }
         hitProbability[0] = hitProb;
         return hintsBuf;
-    }
-
-    /**
-     * Determines if a given type can have subtypes other than itself. This analysis is purely
-     * static; no assumptions are made.
-     *
-     * @return true if {@code type} can have subtypes
-     */
-    public static boolean canHaveSubtype(ResolvedJavaType type) {
-        return !type.getElementalType().isFinal();
     }
 }
