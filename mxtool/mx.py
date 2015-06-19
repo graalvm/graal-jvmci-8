@@ -1844,7 +1844,7 @@ class ArgParser(ArgumentParser):
 
 def _format_commands():
     msg = '\navailable commands:\n\n'
-    for cmd in sorted(_commands.iterkeys()):
+    for cmd in sorted([k for k in _commands.iterkeys() if ':' not in k]) + sorted([k for k in _commands.iterkeys() if ':' in k]):
         c, _ = _commands[cmd][:2]
         doc = c.__doc__
         if doc is None:
@@ -5672,9 +5672,22 @@ def add_argument(*args, **kwargs):
 
 def update_commands(suite, new_commands):
     for key, value in new_commands.iteritems():
-        if _commands.has_key(key):
-            warn("redefining command '" + key + "' in suite " + suite.name)
+        assert ':' not in key
+        old = _commands.get(key)
+        if old is not None:
+            oldSuite = _commandsToSuite.get(key)
+            if not oldSuite:
+                # Core mx command is overridden by first suite
+                # defining command of same name. The core mx
+                # command has its name prefixed with ':'.
+                _commands[':' + key] = old
+            else:
+                # Previously specified command from another suite
+                # is not overridden. Instead, the new command
+                # has a name qualified by the suite name.
+                key = suite.name + ':' + key
         _commands[key] = value
+        _commandsToSuite[key] = suite
 
 def warn(msg):
     if _warn:
@@ -5682,7 +5695,7 @@ def warn(msg):
 
 # Table of commands in alphabetical order.
 # Keys are command names, value are lists: [<function>, <usage msg>, <format args to doc string of function>...]
-# If any of the format args are instances of Callable, then they are called with an 'env' are before being
+# If any of the format args are instances of Callable, then they are called before being
 # used in the call to str.format().
 # Suite extensions should not update this table directly, but use update_commands
 _commands = {
@@ -5712,6 +5725,7 @@ _commands = {
     'projects': [show_projects, ''],
     'unittest' : [mx_unittest.unittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
 }
+_commandsToSuite = {}
 
 _argParser = ArgParser()
 
