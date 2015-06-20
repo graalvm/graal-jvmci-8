@@ -148,7 +148,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     public AssumptionResult<ResolvedJavaType> findLeafConcreteSubtype() {
         HotSpotVMConfig config = runtime().getConfig();
         if (isArray()) {
-            return getElementalType().isFinal() ? new AssumptionResult<>(this) : null;
+            return getElementalType().isLeaf() ? new AssumptionResult<>(this) : null;
         } else if (isInterface()) {
             HotSpotResolvedObjectTypeImpl implementor = getSingleImplementor();
             /*
@@ -284,10 +284,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
 
     @Override
     public HotSpotResolvedObjectType asExactType() {
-        if (isArray()) {
-            return getComponentType().asExactType() != null ? this : null;
-        }
-        return isFinal() ? this : null;
+        return isLeaf() ? this : null;
     }
 
     @Override

@@ -97,6 +97,14 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider {
      */
     int getModifiers();
 
+    /*
+     * The setting of the final bit for types is a bit confusing since arrays are marked as final.
+     * This method provides a semantically equivalent test that appropriate for types.
+     */
+    default boolean isLeaf() {
+        return getElementalType().isFinalFlagSet();
+    }
+
     /**
      * Checks whether this type is initialized. If a type is initialized it implies that it was
      * {@link #isLinked() linked} and that the static initializer has run.
