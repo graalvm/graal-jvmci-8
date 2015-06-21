@@ -3123,9 +3123,16 @@ def build(args, parser=None):
     if len(tasks) != 0:
         if args.java and not args.only:
             files = []
+            rebuiltProjects = frozenset([t.proj for t in tasks.itervalues()])
             for dist in sorted_dists():
                 if dist not in updatedAnnotationProcessorDists:
-                    archive(['@' + dist.name])
+                    projectsInDist = dist.sorted_deps()
+                    n = len(rebuiltProjects.intersection(projectsInDist))
+                    if n != 0:
+                        log('Updating jars for {0} [{1} constituent projects (re)built]'.format(dist.name, n))
+                        dist.make_archive()
+                    else:
+                        logv('[all constituent projects for {0} are up to date - skipping jar updating]'.format(dist.name))
                 if args.check_distributions and not dist.isProcessorDistribution:
                     with zipfile.ZipFile(dist.path, 'r') as zf:
                         files.extend([member for member in zf.namelist() if not member.startswith('META-INF')])
