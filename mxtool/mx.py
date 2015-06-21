@@ -316,7 +316,8 @@ class Distribution:
 
                 for service, providers in services.iteritems():
                     arcname = 'META-INF/services/' + service
-                    arc.zf.writestr(arcname, '\n'.join(providers))
+                    # Convert providers to a set before printing to remove duplicates
+                    arc.zf.writestr(arcname, '\n'.join(frozenset(providers)))
 
         self.notify_updated()
 
@@ -3119,17 +3120,18 @@ def build(args, parser=None):
                 log('Compiling {0} failed'.format(t.proj.name))
             abort('{0} Java compilation tasks failed'.format(len(failed)))
 
-    if args.java and not args.only:
-        files = []
-        for dist in sorted_dists():
-            if dist not in updatedAnnotationProcessorDists:
-                archive(['@' + dist.name])
-            if args.check_distributions and not dist.isProcessorDistribution:
-                with zipfile.ZipFile(dist.path, 'r') as zf:
-                    files.extend([member for member in zf.namelist() if not member.startswith('META-INF')])
-        dups = set([x for x in files if files.count(x) > 1])
-        if len(dups) > 0:
-            abort('Distributions overlap! duplicates: ' + str(dups))
+    if len(tasks) != 0:
+        if args.java and not args.only:
+            files = []
+            for dist in sorted_dists():
+                if dist not in updatedAnnotationProcessorDists:
+                    archive(['@' + dist.name])
+                if args.check_distributions and not dist.isProcessorDistribution:
+                    with zipfile.ZipFile(dist.path, 'r') as zf:
+                        files.extend([member for member in zf.namelist() if not member.startswith('META-INF')])
+            dups = set([x for x in files if files.count(x) > 1])
+            if len(dups) > 0:
+                abort('Distributions overlap! duplicates: ' + str(dups))
 
     if suppliedParser:
         return args
