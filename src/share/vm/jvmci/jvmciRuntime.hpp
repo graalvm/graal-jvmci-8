@@ -75,7 +75,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
   /**
    * Instantiates a service object, calls its default constructor and returns it.
    *
-   * @param name the name of a class implementing com.oracle.jvmci.service.Service
+   * @param name the name of a class implementing jdk.internal.jvmci.service.Service
    */
   static Handle create_Service(const char* name, TRAPS);
 
@@ -139,7 +139,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
 
   /**
    * Given an interface representing a JVMCI service (i.e. sub-interface of
-   * com.oracle.jvmci.api.service.Service), gets an array of objects, one per
+   * jdk.internal.jvmci.api.service.Service), gets an array of objects, one per
    * known implementation of the service.
    */
   static objArrayHandle get_service_impls(KlassHandle serviceKlass, TRAPS);
@@ -212,7 +212,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
   static oopDesc* load_and_clear_exception(JavaThread* thread);
   static void log_printf(JavaThread* thread, oopDesc* format, jlong v1, jlong v2, jlong v3);
   static void log_primitive(JavaThread* thread, jchar typeChar, jlong value, jboolean newline);
-  // Note: Must be kept in sync with constants in com.oracle.jvmci.replacements.Log
+  // Note: Must be kept in sync with constants in jdk.internal.jvmci.replacements.Log
   enum {
     LOG_OBJECT_NEWLINE = 0x01,
     LOG_OBJECT_STRING  = 0x02,
