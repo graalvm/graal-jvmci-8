@@ -1895,9 +1895,9 @@ def java(versionCheck=None, purpose=None, cancel=None, versionDescription=None, 
     # interpret string and compliance as compliance check
     if isinstance(versionCheck, types.StringTypes):
         requiredCompliance = JavaCompliance(versionCheck)
-        versionCheck, versionDescription = _convert_complicance_to_version_check(requiredCompliance)
+        versionCheck, versionDescription = _convert_compliance_to_version_check(requiredCompliance)
     elif isinstance(versionCheck, JavaCompliance):
-        versionCheck, versionDescription = _convert_complicance_to_version_check(versionCheck)
+        versionCheck, versionDescription = _convert_compliance_to_version_check(versionCheck)
 
     global _default_java_home, _extra_java_homes
     if cancel and (versionDescription, purpose) in _canceled_java_requests:
@@ -1924,7 +1924,7 @@ def java(versionCheck=None, purpose=None, cancel=None, versionDescription=None, 
         _canceled_java_requests.add((versionDescription, purpose))
     return jdk
 
-def _convert_complicance_to_version_check(requiredCompliance):
+def _convert_compliance_to_version_check(requiredCompliance):
     if _opts.strict_compliance:
         versionDesc = str(requiredCompliance)
         versionCheck = requiredCompliance.exactMatch
