@@ -29,7 +29,7 @@ import java.nio.*;
 import java.util.*;
 
 import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.code.Register.*;
+import jdk.internal.jvmci.code.Register.RegisterCategory;
 import jdk.internal.jvmci.meta.*;
 
 /**
