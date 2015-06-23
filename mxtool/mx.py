@@ -621,12 +621,18 @@ class Project(Dependency):
             if hasattr(self, '_declaredAnnotationProcessors'):
                 aps = set(self._declaredAnnotationProcessors)
                 for ap in aps:
-                    if project(ap).definedAnnotationProcessorsDist is None:
-                        config = join(project(ap).source_dirs()[0], 'META-INF', 'services', 'javax.annotation.processing.Processor')
-                        if not exists(config):
-                            TimeStampFile(config).touch()
-                        abort('Project ' + ap + ' declared in annotationProcessors property of ' + self.name + ' does not define any annotation processors.\n' +
-                              'Please specify the annotation processors in ' + config)
+                    # ap may be a Project or a Distribution
+                    apd = dependency(ap)
+                    if apd.isLibrary():
+                        # trust it, we could look inside I suppose
+                        pass
+                    elif apd.isProject():
+                        if apd.definedAnnotationProcessorsDist is None:
+                            config = join(project(ap).source_dirs()[0], 'META-INF', 'services', 'javax.annotation.processing.Processor')
+                            if not exists(config):
+                                TimeStampFile(config).touch()
+                            abort('Project ' + ap + ' declared in annotationProcessors property of ' + self.name + ' does not define any annotation processors.\n' +
+                                  'Please specify the annotation processors in ' + config)
 
             allDeps = self.all_deps([], includeLibs=False, includeSelf=False, includeAnnotationProcessors=False)
             for p in allDeps:
@@ -645,13 +651,20 @@ class Project(Dependency):
     annotation processors that will be applied when compiling this project.
     """
     def annotation_processors_path(self):
-        aps = [project(ap) for ap in self.annotation_processors()]
+        aps = [dependency(ap) for ap in self.annotation_processors()]
         libAps = set()
         for dep in self.all_deps([], includeLibs=True, includeSelf=False):
             if dep.isLibrary() and hasattr(dep, 'annotationProcessor') and getattr(dep, 'annotationProcessor').lower() == 'true':
                 libAps = libAps.union(dep.all_deps([], includeLibs=True, includeSelf=True))
         if len(aps) + len(libAps):
-            return os.pathsep.join([ap.definedAnnotationProcessorsDist.path for ap in aps if ap.definedAnnotationProcessorsDist] + [lib.get_path(False) for lib in libAps])
+            apPaths = []
+            for ap in aps:
+                if ap.isLibrary():
+                    for dep in ap.all_deps([], includeLibs=True):
+                        dep.append_to_classpath(apPaths, True)
+                elif ap.definedAnnotationProcessorsDist:
+                    apPaths.append(ap.definedAnnotationProcessorsDist.path)
+            return os.pathsep.join(apPaths + [lib.get_path(False) for lib in libAps])
         return None
 
     def uses_annotation_processor_library(self):
