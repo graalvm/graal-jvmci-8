@@ -36,7 +36,7 @@ void compute_offset(int &dest_offset, Klass* klass, const char* name, const char
 #ifndef PRODUCT
     ik->print_on(tty);
 #endif
-    guarantee(false, err_msg("symbol with name %s and signature %s was not found in symbol table (klass=%s)", name, signature, klass->name()->as_C_string()));
+    fatal(err_msg("symbol with name %s and signature %s was not found in symbol table (klass=%s)", name, signature, klass->name()->as_C_string()));
   }
 
   fieldDescriptor fd;

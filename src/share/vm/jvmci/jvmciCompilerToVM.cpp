@@ -598,7 +598,7 @@ C2V_VMENTRY(jobject, executeCompiledMethodVarargs, (JNIEnv*, jobject, jobject ar
 
   jlong nmethodValue = InstalledCode::address(hotspotInstalledCode);
   if (nmethodValue == 0L) {
-    THROW_(vmSymbols::com_oracle_jvmci_code_InvalidInstalledCodeException(), NULL);
+    THROW_(vmSymbols::jdk_internal_jvmci_code_InvalidInstalledCodeException(), NULL);
   }
   nmethod* nm = (nmethod*) (address) nmethodValue;
   methodHandle mh = nm->method();
@@ -1039,20 +1039,20 @@ C2V_END
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
 
-#define TYPE                  "Lcom/oracle/jvmci/meta/JavaType;"
-#define METHOD                "Lcom/oracle/jvmci/meta/JavaMethod;"
-#define FIELD                 "Lcom/oracle/jvmci/meta/JavaField;"
-#define SPECULATION_LOG       "Lcom/oracle/jvmci/meta/SpeculationLog;"
+#define TYPE                  "Ljdk/internal/jvmci/meta/JavaType;"
+#define METHOD                "Ljdk/internal/jvmci/meta/JavaMethod;"
+#define FIELD                 "Ljdk/internal/jvmci/meta/JavaField;"
+#define SPECULATION_LOG       "Ljdk/internal/jvmci/meta/SpeculationLog;"
 #define STRING                "Ljava/lang/String;"
 #define OBJECT                "Ljava/lang/Object;"
 #define CLASS                 "Ljava/lang/Class;"
 #define STACK_TRACE_ELEMENT   "Ljava/lang/StackTraceElement;"
-#define INSTALLED_CODE        "Lcom/oracle/jvmci/code/InstalledCode;"
-#define RESOLVED_METHOD       "Lcom/oracle/jvmci/meta/ResolvedJavaMethod;"
-#define HS_RESOLVED_METHOD    "Lcom/oracle/jvmci/hotspot/HotSpotResolvedJavaMethod;"
-#define HS_COMPILED_CODE      "Lcom/oracle/jvmci/hotspot/HotSpotCompiledCode;"
-#define HS_CONFIG             "Lcom/oracle/jvmci/hotspot/HotSpotVMConfig;"
-#define HS_STACK_FRAME_REF    "Lcom/oracle/jvmci/hotspot/HotSpotStackFrameReference;"
+#define INSTALLED_CODE        "Ljdk/internal/jvmci/code/InstalledCode;"
+#define RESOLVED_METHOD       "Ljdk/internal/jvmci/meta/ResolvedJavaMethod;"
+#define HS_RESOLVED_METHOD    "Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethod;"
+#define HS_COMPILED_CODE      "Ljdk/internal/jvmci/hotspot/HotSpotCompiledCode;"
+#define HS_CONFIG             "Ljdk/internal/jvmci/hotspot/HotSpotVMConfig;"
+#define HS_STACK_FRAME_REF    "Ljdk/internal/jvmci/hotspot/HotSpotStackFrameReference;"
 #define METASPACE_KLASS       "J"
 #define METASPACE_METHOD      "J"
 #define METASPACE_METHOD_DATA "J"

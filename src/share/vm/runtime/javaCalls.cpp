@@ -424,7 +424,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
       ((JavaThread*) THREAD)->set_jvmci_alternate_call_target(nm->verified_entry_point());
       entry_point = method->adapter()->get_i2c_entry();
     } else {
-      THROW(vmSymbols::com_oracle_jvmci_code_InvalidInstalledCodeException());
+      THROW(vmSymbols::jdk_internal_jvmci_code_InvalidInstalledCodeException());
     }
   }
 #endif

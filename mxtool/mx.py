@@ -47,11 +47,13 @@ import xml.parsers.expat
 import shutil, re, xml.dom.minidom
 import pipes
 import difflib
-import mx_unittest
 from collections import Callable
 from threading import Thread
 from argparse import ArgumentParser, REMAINDER
 from os.path import join, basename, dirname, exists, getmtime, isabs, expandvars, isdir, isfile
+
+import mx_unittest
+import mx_findbugs
 
 try:
     # needed to work around https://bugs.python.org/issue1927
@@ -125,6 +127,7 @@ class Distribution:
         self.sourcesPath = _make_absolute(sourcesPath.replace('/', os.sep), suite.dir) if sourcesPath else None
         self.deps = deps
         self.update_listeners = set()
+        self.archiveparticipant = None
         self.mainClass = mainClass
         self.excludedDependencies = excludedDependencies
         self.distDependencies = distDependencies
@@ -149,6 +152,27 @@ class Distribution:
 
     def add_update_listener(self, listener):
         self.update_listeners.add(listener)
+
+    def set_archiveparticipant(self, archiveparticipant):
+        """
+        Adds an object that participates in the make_archive method of this distribution by defining the following methods:
+
+        __opened__(arc, srcArc, services)
+            Called when archiving starts. The 'arc' and 'srcArc' Archiver objects are for writing to the
+            binary and source jars for the distribution. The 'services' dict is for collating the files
+            that will be written to META-INF/services in the binary jar. It's a map from service names
+            to a list of providers for the named service.
+        __add__(arcname, contents)
+            Submits an entry for addition to the binary archive (via the 'zf' ZipFile field of the 'arc' object).
+            Returns True if this object writes to the archive or wants to exclude the entry from the archive,
+            False if the caller should add the entry.
+        __addsrc__(arcname, contents)
+            Same as __add__ except if targets the source archive.
+        __closing__()
+            Called just before the 'services' are written to the binary archive and both archives are
+            written to their underlying files.
+        """
+        self.archiveparticipant = archiveparticipant
 
     def get_dist_deps(self, includeSelf=True, transitive=False):
         deps = []
@@ -188,7 +212,10 @@ class Distribution:
             with Archiver(None if unified else self.sourcesPath) as srcArcRaw:
                 srcArc = arc if unified else srcArcRaw
                 services = {}
-                jvmciServices = {}
+
+                if self.archiveparticipant:
+                    self.archiveparticipant.__opened__(arc, srcArc, services)
+
                 def overwriteCheck(zf, arcname, source):
                     if os.path.basename(arcname).startswith('.'):
                         logv('Excluding dotfile: ' + source)
@@ -235,15 +262,17 @@ class Distribution:
                                         assert '/' not in service
                                         services.setdefault(service, []).extend(lp.read(arcname).splitlines())
                                     else:
-                                        assert not arcname.startswith('META-INF/jvmci.services/'), 'did not expect to see jvmci.services in ' + lpath
-                                        assert not arcname.startswith('META-INF/jvmci.options/'), 'did not expect to see jvmci.options in ' + lpath
                                         if not overwriteCheck(arc.zf, arcname, lpath + '!' + arcname):
-                                            arc.zf.writestr(arcname, lp.read(arcname))
+                                            contents = lp.read(arcname)
+                                            if not self.archiveparticipant or not self.archiveparticipant.__add__(arcname, contents):
+                                                arc.zf.writestr(arcname, contents)
                         if srcArc.zf and libSourcePath:
                             with zipfile.ZipFile(libSourcePath, 'r') as lp:
                                 for arcname in lp.namelist():
                                     if not overwriteCheck(srcArc.zf, arcname, lpath + '!' + arcname):
-                                        srcArc.zf.writestr(arcname, lp.read(arcname))
+                                        contents = lp.read(arcname)
+                                        if not self.archiveparticipant or not self.archiveparticipant.__addsrc__(arcname, contents):
+                                            srcArc.zf.writestr(arcname, contents)
                     elif dep.isProject():
                         p = dep
 
@@ -259,29 +288,13 @@ class Distribution:
                                 for service in files:
                                     with open(join(root, service), 'r') as fp:
                                         services.setdefault(service, []).extend([provider.strip() for provider in fp.readlines()])
-                            elif relpath == join('META-INF', 'jvmci.services'):
-                                for service in files:
-                                    with open(join(root, service), 'r') as fp:
-                                        jvmciServices.setdefault(service, []).extend([provider.strip() for provider in fp.readlines()])
-                            elif relpath == join('META-INF', 'jvmci.providers'):
-                                for provider in files:
-                                    with open(join(root, provider), 'r') as fp:
-                                        for service in fp:
-                                            jvmciServices.setdefault(service.strip(), []).append(provider)
                             else:
-                                if relpath == join('META-INF', 'jvmci.options'):
-                                    # Need to create service files for the providers of the
-                                    # com.oracle.jvmci.options.Options service created by
-                                    # com.oracle.jvmci.options.processor.OptionProcessor.
-                                    for optionsOwner in files:
-                                        provider = optionsOwner + '_Options'
-                                        providerClassfile = join(outputDir, provider.replace('.', os.sep) + '.class')
-                                        assert exists(providerClassfile), 'missing generated Options provider ' + providerClassfile
-                                        services.setdefault('com.oracle.jvmci.options.Options', []).append(provider)
                                 for f in files:
                                     arcname = join(relpath, f).replace(os.sep, '/')
-                                    if not overwriteCheck(arc.zf, arcname, join(root, f)):
-                                        arc.zf.write(join(root, f), arcname)
+                                    with open(join(root, f), 'r') as fp:
+                                        contents = fp.read()
+                                    if not self.archiveparticipant or not self.archiveparticipant.__add__(arcname, contents):
+                                        arc.zf.writestr(arcname, contents)
                         if srcArc.zf:
                             sourceDirs = p.source_dirs()
                             if p.source_gen_dir():
@@ -293,14 +306,18 @@ class Distribution:
                                         if f.endswith('.java'):
                                             arcname = join(relpath, f).replace(os.sep, '/')
                                             if not overwriteCheck(srcArc.zf, arcname, join(root, f)):
-                                                srcArc.zf.write(join(root, f), arcname)
+                                                with open(join(root, f), 'r') as fp:
+                                                    contents = fp.read()
+                                                if not self.archiveparticipant or not self.archiveparticipant.__addsrc__(arcname, contents):
+                                                    srcArc.zf.writestr(arcname, contents)
+
+                if self.archiveparticipant:
+                    self.archiveparticipant.__closing__()
 
                 for service, providers in services.iteritems():
                     arcname = 'META-INF/services/' + service
-                    arc.zf.writestr(arcname, '\n'.join(providers))
-                for service, providers in jvmciServices.iteritems():
-                    arcname = 'META-INF/jvmci.services/' + service
-                    arc.zf.writestr(arcname, '\n'.join(providers))
+                    # Convert providers to a set before printing to remove duplicates
+                    arc.zf.writestr(arcname, '\n'.join(frozenset(providers)))
 
         self.notify_updated()
 
@@ -604,12 +621,18 @@ class Project(Dependency):
             if hasattr(self, '_declaredAnnotationProcessors'):
                 aps = set(self._declaredAnnotationProcessors)
                 for ap in aps:
-                    if project(ap).definedAnnotationProcessorsDist is None:
-                        config = join(project(ap).source_dirs()[0], 'META-INF', 'services', 'javax.annotation.processing.Processor')
-                        if not exists(config):
-                            TimeStampFile(config).touch()
-                        abort('Project ' + ap + ' declared in annotationProcessors property of ' + self.name + ' does not define any annotation processors.\n' +
-                              'Please specify the annotation processors in ' + config)
+                    # ap may be a Project or a Distribution
+                    apd = dependency(ap)
+                    if apd.isLibrary():
+                        # trust it, we could look inside I suppose
+                        pass
+                    elif apd.isProject():
+                        if apd.definedAnnotationProcessorsDist is None:
+                            config = join(project(ap).source_dirs()[0], 'META-INF', 'services', 'javax.annotation.processing.Processor')
+                            if not exists(config):
+                                TimeStampFile(config).touch()
+                            abort('Project ' + ap + ' declared in annotationProcessors property of ' + self.name + ' does not define any annotation processors.\n' +
+                                  'Please specify the annotation processors in ' + config)
 
             allDeps = self.all_deps([], includeLibs=False, includeSelf=False, includeAnnotationProcessors=False)
             for p in allDeps:
@@ -628,13 +651,20 @@ class Project(Dependency):
     annotation processors that will be applied when compiling this project.
     """
     def annotation_processors_path(self):
-        aps = [project(ap) for ap in self.annotation_processors()]
+        aps = [dependency(ap) for ap in self.annotation_processors()]
         libAps = set()
         for dep in self.all_deps([], includeLibs=True, includeSelf=False):
             if dep.isLibrary() and hasattr(dep, 'annotationProcessor') and getattr(dep, 'annotationProcessor').lower() == 'true':
                 libAps = libAps.union(dep.all_deps([], includeLibs=True, includeSelf=True))
         if len(aps) + len(libAps):
-            return os.pathsep.join([ap.definedAnnotationProcessorsDist.path for ap in aps if ap.definedAnnotationProcessorsDist] + [lib.get_path(False) for lib in libAps])
+            apPaths = []
+            for ap in aps:
+                if ap.isLibrary():
+                    for dep in ap.all_deps([], includeLibs=True):
+                        dep.append_to_classpath(apPaths, True)
+                elif ap.definedAnnotationProcessorsDist:
+                    apPaths.append(ap.definedAnnotationProcessorsDist.path)
+            return os.pathsep.join(apPaths + [lib.get_path(False) for lib in libAps])
         return None
 
     def uses_annotation_processor_library(self):
@@ -1844,7 +1874,7 @@ class ArgParser(ArgumentParser):
 
 def _format_commands():
     msg = '\navailable commands:\n\n'
-    for cmd in sorted(_commands.iterkeys()):
+    for cmd in sorted([k for k in _commands.iterkeys() if ':' not in k]) + sorted([k for k in _commands.iterkeys() if ':' in k]):
         c, _ = _commands[cmd][:2]
         doc = c.__doc__
         if doc is None:
@@ -1865,9 +1895,9 @@ def java(versionCheck=None, purpose=None, cancel=None, versionDescription=None, 
     # interpret string and compliance as compliance check
     if isinstance(versionCheck, types.StringTypes):
         requiredCompliance = JavaCompliance(versionCheck)
-        versionCheck, versionDescription = _convert_complicance_to_version_check(requiredCompliance)
+        versionCheck, versionDescription = _convert_compliance_to_version_check(requiredCompliance)
     elif isinstance(versionCheck, JavaCompliance):
-        versionCheck, versionDescription = _convert_complicance_to_version_check(versionCheck)
+        versionCheck, versionDescription = _convert_compliance_to_version_check(versionCheck)
 
     global _default_java_home, _extra_java_homes
     if cancel and (versionDescription, purpose) in _canceled_java_requests:
@@ -1894,7 +1924,7 @@ def java(versionCheck=None, purpose=None, cancel=None, versionDescription=None, 
         _canceled_java_requests.add((versionDescription, purpose))
     return jdk
 
-def _convert_complicance_to_version_check(requiredCompliance):
+def _convert_compliance_to_version_check(requiredCompliance):
     if _opts.strict_compliance:
         versionDesc = str(requiredCompliance)
         versionCheck = requiredCompliance.exactMatch
@@ -2530,10 +2560,10 @@ class JavaConfig:
             args = []
         if self._bootclasspath:
             args.append('-bootclasspath')
-            args.append(self._bootclasspath)
+            args.append(_separatedCygpathU2W(self._bootclasspath))
         if self._extdirs:
             args.append('-extdirs')
-            args.append(self._extdirs)
+            args.append(_separatedCygpathU2W(self._extdirs))
         return args
 
     """
@@ -2543,7 +2573,7 @@ class JavaConfig:
         args = self.javadocLibOptions(args)
         if self._endorseddirs:
             args.append('-endorseddirs')
-            args.append(self._endorseddirs)
+            args.append(_separatedCygpathU2W(self._endorseddirs))
         return args
 
     def containsJar(self, jar):
@@ -2786,6 +2816,8 @@ class JavaCompileTask:
                     javac = args.alt_javac if args.alt_javac else mainJava.javac
                     self.logCompilation('javac' if not args.alt_javac else args.alt_javac)
                     javacCmd = [javac, '-g', '-J-Xmx1g', '-source', compliance, '-target', compliance, '-classpath', cp, '-d', outputDir]
+                    if _opts.very_verbose:
+                        javacCmd.append('-verbose')
                     jdk.javacLibOptions(javacCmd)
                     if _opts.java_dbg_port is not None:
                         javacCmd += ['-J-Xdebug', '-J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + str(_opts.java_dbg_port)]
@@ -2799,6 +2831,8 @@ class JavaCompileTask:
                     self.logCompilation('javac (with error-prone)')
                     javaArgs = ['-Xmx1g']
                     javacArgs = ['-g', '-source', compliance, '-target', compliance, '-classpath', cp, '-d', outputDir]
+                    if _opts.very_verbose:
+                        javacArgs.append('-verbose')
                     jdk.javacLibOptions(javacCmd)
                     javacArgs += processorArgs
                     javacArgs += ['@' + argfile.name]
@@ -2813,6 +2847,8 @@ class JavaCompileTask:
                 jdtArgs = ['-' + compliance,
                          '-cp', cp, '-g', '-enableJavadoc',
                          '-d', outputDir]
+                if _opts.very_verbose:
+                    jdtArgs.append('-verbose')
                 jdk.javacLibOptions(jdtArgs)
                 jdtArgs += processorArgs
 
@@ -2886,7 +2922,7 @@ def build(args, parser=None):
     parser.add_argument('--alt-javac', dest='alt_javac', help='path to alternative javac executable', metavar='<path>')
     compilerSelect = parser.add_mutually_exclusive_group()
     compilerSelect.add_argument('--error-prone', dest='error_prone', help='path to error-prone.jar', metavar='<path>')
-    compilerSelect.add_argument('--jdt', help='path to ecj.jar, the Eclipse batch compiler', default=_defaultEcjPath(), metavar='<path>')
+    compilerSelect.add_argument('--jdt', help='path to ecj.jar, the stand alone Eclipse batch compiler', default=_defaultEcjPath(), metavar='<path>')
     compilerSelect.add_argument('--force-javac', action='store_true', dest='javac', help='use javac whether ecj.jar is found or not')
 
     if suppliedParser:
@@ -2910,6 +2946,12 @@ def build(args, parser=None):
                 jdtJar = None
             else:
                 abort('Eclipse batch compiler jar does not exist: ' + args.jdt)
+        else:
+            with zipfile.ZipFile(jdtJar, 'r') as zf:
+                if 'org/eclipse/jdt/internal/compiler/apt/' not in zf.namelist():
+                    abort('Specified Eclipse compiler does not include annotation processing support. ' +
+                          'Ensure you are using a stand alone ecj.jar, not org.eclipse.jdt.core_*.jar ' +
+                          'from within the plugins/ directory of an Eclipse IDE installation.')
 
     if args.only is not None:
         # N.B. This build will not include dependencies including annotation processor dependencies
@@ -2980,7 +3022,7 @@ def build(args, parser=None):
                         classfile = TimeStampFile(outputDir + javafile[len(sourceDir):-len('java')] + 'class')
                         if not classfile.exists() or classfile.isOlderThan(javafile):
                             if basename(classfile.path) != 'package-info.class':
-                                buildReason = 'class file(s) out of date'
+                                buildReason = 'class file(s) out of date (witness: ' + classfile.path + ')'
                                 break
 
         apsOutOfDate = p.update_current_annotation_processors_file()
@@ -3105,9 +3147,19 @@ def build(args, parser=None):
 
     if args.java and not args.only:
         files = []
+        rebuiltProjects = frozenset([t.proj for t in tasks.itervalues()])
         for dist in sorted_dists():
-            if dist not in updatedAnnotationProcessorDists:
-                archive(['@' + dist.name])
+            if not exists(dist.path):
+                log('Creating jar for {0}'.format(dist.name))
+                dist.make_archive()
+            elif dist not in updatedAnnotationProcessorDists:
+                projectsInDist = dist.sorted_deps()
+                n = len(rebuiltProjects.intersection(projectsInDist))
+                if n != 0:
+                    log('Updating jar for {0} [{1} constituent projects (re)built]'.format(dist.name, n))
+                    dist.make_archive()
+                else:
+                    logv('[all constituent projects for {0} are up to date - skipping jar updating]'.format(dist.name))
             if args.check_distributions and not dist.isProcessorDistribution:
                 with zipfile.ZipFile(dist.path, 'r') as zf:
                     files.extend([member for member in zf.namelist() if not member.startswith('META-INF')])
@@ -5672,9 +5724,22 @@ def add_argument(*args, **kwargs):
 
 def update_commands(suite, new_commands):
     for key, value in new_commands.iteritems():
-        if _commands.has_key(key):
-            warn("redefining command '" + key + "' in suite " + suite.name)
+        assert ':' not in key
+        old = _commands.get(key)
+        if old is not None:
+            oldSuite = _commandsToSuite.get(key)
+            if not oldSuite:
+                # Core mx command is overridden by first suite
+                # defining command of same name. The core mx
+                # command has its name prefixed with ':'.
+                _commands[':' + key] = old
+            else:
+                # Previously specified command from another suite
+                # is not overridden. Instead, the new command
+                # has a name qualified by the suite name.
+                key = suite.name + ':' + key
         _commands[key] = value
+        _commandsToSuite[key] = suite
 
 def warn(msg):
     if _warn:
@@ -5682,7 +5747,7 @@ def warn(msg):
 
 # Table of commands in alphabetical order.
 # Keys are command names, value are lists: [<function>, <usage msg>, <format args to doc string of function>...]
-# If any of the format args are instances of Callable, then they are called with an 'env' are before being
+# If any of the format args are instances of Callable, then they are called before being
 # used in the call to str.format().
 # Suite extensions should not update this table directly, but use update_commands
 _commands = {
@@ -5695,6 +5760,7 @@ _commands = {
     'eclipseinit': [eclipseinit, ''],
     'eclipseformat': [eclipseformat, ''],
     'exportlibs': [exportlibs, ''],
+    'findbugs': [mx_findbugs.findbugs, ''],
     'findclass': [findclass, ''],
     'fsckprojects': [fsckprojects, ''],
     'help': [help_, '[command]'],
@@ -5712,6 +5778,7 @@ _commands = {
     'projects': [show_projects, ''],
     'unittest' : [mx_unittest.unittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
 }
+_commandsToSuite = {}
 
 _argParser = ArgParser()
 
