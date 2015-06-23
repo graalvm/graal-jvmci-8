@@ -2816,6 +2816,8 @@ class JavaCompileTask:
                     javac = args.alt_javac if args.alt_javac else mainJava.javac
                     self.logCompilation('javac' if not args.alt_javac else args.alt_javac)
                     javacCmd = [javac, '-g', '-J-Xmx1g', '-source', compliance, '-target', compliance, '-classpath', cp, '-d', outputDir]
+                    if _opts.very_verbose:
+                        javacCmd.append('-verbose')
                     jdk.javacLibOptions(javacCmd)
                     if _opts.java_dbg_port is not None:
                         javacCmd += ['-J-Xdebug', '-J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + str(_opts.java_dbg_port)]
@@ -2829,6 +2831,8 @@ class JavaCompileTask:
                     self.logCompilation('javac (with error-prone)')
                     javaArgs = ['-Xmx1g']
                     javacArgs = ['-g', '-source', compliance, '-target', compliance, '-classpath', cp, '-d', outputDir]
+                    if _opts.very_verbose:
+                        javacArgs.append('-verbose')
                     jdk.javacLibOptions(javacCmd)
                     javacArgs += processorArgs
                     javacArgs += ['@' + argfile.name]
@@ -2843,6 +2847,8 @@ class JavaCompileTask:
                 jdtArgs = ['-' + compliance,
                          '-cp', cp, '-g', '-enableJavadoc',
                          '-d', outputDir]
+                if _opts.very_verbose:
+                    jdtArgs.append('-verbose')
                 jdk.javacLibOptions(jdtArgs)
                 jdtArgs += processorArgs
 
