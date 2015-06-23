@@ -3022,7 +3022,7 @@ def build(args, parser=None):
                         classfile = TimeStampFile(outputDir + javafile[len(sourceDir):-len('java')] + 'class')
                         if not classfile.exists() or classfile.isOlderThan(javafile):
                             if basename(classfile.path) != 'package-info.class':
-                                buildReason = 'class file(s) out of date'
+                                buildReason = 'class file(s) out of date (witness: ' + classfile.path + ')'
                                 break
 
         apsOutOfDate = p.update_current_annotation_processors_file()
