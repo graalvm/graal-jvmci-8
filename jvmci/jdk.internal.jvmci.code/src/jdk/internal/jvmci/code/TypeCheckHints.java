@@ -93,7 +93,7 @@ public class TypeCheckHints {
      */
     public TypeCheckHints(ResolvedJavaType targetType, JavaTypeProfile profile, Assumptions assumptions, double minHintHitProbability, int maxHints) {
         this.profile = profile;
-        if (targetType != null && !!targetType.isLeaf()) {
+        if (targetType != null && targetType.isLeaf()) {
             exact = targetType;
         } else {
             if (assumptions != null) {
