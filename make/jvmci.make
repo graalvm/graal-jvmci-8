@@ -125,18 +125,18 @@ JDK_BOOTCLASSPATH = $(ABS_BOOTDIR)/jre/lib/resources.jar:$(ABS_BOOTDIR)/jre/lib/
 JDK_INTERNAL_JVMCI_OPTIONS_PROCESSOR_SRC = $(shell find jvmci/jdk.internal.jvmci.options/src -type f 2> /dev/null)
 JDK_INTERNAL_JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.options.processor/src -type f 2> /dev/null)
 
-JDK_INTERNAL_JVMCI_OPTIONS_PROCESSOR_JAR = $(TARGET)/jvmci/jdk.internal.jvmci.options.processor/ap/jdk.internal.jvmci.options.processor.jar
+JDK_INTERNAL_JVMCI_OPTIONS_PROCESSOR_JAR = $(TARGET)/jdk.internal.jvmci.options.processor.jar
 
 JDK_INTERNAL_JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC = $(shell find jvmci/jdk.internal.jvmci.hotspotvmconfig/src -type f 2> /dev/null)
 JDK_INTERNAL_JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.common/src -type f 2> /dev/null)
 JDK_INTERNAL_JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspotvmconfig.processor/src -type f 2> /dev/null)
 
-JDK_INTERNAL_JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/jvmci/jdk.internal.jvmci.hotspotvmconfig.processor/ap/jdk.internal.jvmci.hotspotvmconfig.processor.jar
+JDK_INTERNAL_JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/jdk.internal.jvmci.hotspotvmconfig.processor.jar
 
 JDK_INTERNAL_JVMCI_SERVICE_PROCESSOR_SRC = $(shell find jvmci/jdk.internal.jvmci.service/src -type f 2> /dev/null)
 JDK_INTERNAL_JVMCI_SERVICE_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.service.processor/src -type f 2> /dev/null)
 
-JDK_INTERNAL_JVMCI_SERVICE_PROCESSOR_JAR = $(TARGET)/jvmci/jdk.internal.jvmci.service.processor/ap/jdk.internal.jvmci.service.processor.jar
+JDK_INTERNAL_JVMCI_SERVICE_PROCESSOR_JAR = $(TARGET)/jdk.internal.jvmci.service.processor.jar
 
 JVMCI_API_SRC = $(shell find jvmci/jdk.internal.jvmci.meta/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.code/src -type f 2> /dev/null)
@@ -145,15 +145,15 @@ JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.options/src -type f 2> /d
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.common/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.debug/src -type f 2> /dev/null)
 
-JVMCI_API_JAR = $(TARGET)/build/jvmci-api.jar
+JVMCI_API_JAR = $(TARGET)/jvmci-api.jar
 
-JVMCI_API_DEP_JARS = $(TARGET)/build/jvmci-service.jar jvmci/findbugs-SuppressFBWarnings.jar
+JVMCI_API_DEP_JARS = $(TARGET)/jvmci-service.jar jvmci/findbugs-SuppressFBWarnings.jar
 
 EXPORTED_FILES += $(JVMCI_API_JAR)
 
 JVMCI_SERVICE_SRC = $(shell find jvmci/jdk.internal.jvmci.service/src -type f 2> /dev/null)
 
-JVMCI_SERVICE_JAR = $(TARGET)/build/jvmci-service.jar
+JVMCI_SERVICE_JAR = $(TARGET)/jvmci-service.jar
 
 JVMCI_SERVICE_DEP_JARS = jvmci/findbugs-SuppressFBWarnings.jar
 
@@ -168,9 +168,9 @@ JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.sparc/src -type f 2> 
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.sparc/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.jfr/src -type f 2> /dev/null)
 
-JVMCI_HOTSPOT_JAR = $(TARGET)/build/jvmci-hotspot.jar
+JVMCI_HOTSPOT_JAR = $(TARGET)/jvmci-hotspot.jar
 
-JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/build/jvmci-api.jar $(TARGET)/build/jvmci-service.jar jvmci/findbugs-SuppressFBWarnings.jar
+JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/jvmci-api.jar $(TARGET)/jvmci-service.jar jvmci/findbugs-SuppressFBWarnings.jar
 
 EXPORTED_FILES += $(JVMCI_HOTSPOT_JAR)
 

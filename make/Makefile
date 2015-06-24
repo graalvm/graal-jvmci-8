@@ -312,7 +312,7 @@ generic_buildjvmci: $(HOTSPOT_SCRIPT) buildshared
 buildshared:
 	cd .. && \
 	$(MAKE) -f make/jvmci.make \
-		TARGET=build/make \
+		TARGET=build/jvmci.make \
 		HS_COMMON_SRC=$(HS_COMMON_SRC) \
 		ABS_BOOTDIR=$(ABS_BOOTDIR) \
 		SHARED_DIR=$(SHARED_DIR) \
