@@ -27,7 +27,6 @@ import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
 import java.lang.invoke.*;
 
 import jdk.internal.jvmci.meta.*;
-import edu.umd.cs.findbugs.annotations.*;
 
 /**
  * Represents a constant non-{@code null} object reference, within the compiler and across the

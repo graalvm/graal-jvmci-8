@@ -23,7 +23,6 @@
 package jdk.internal.jvmci.hotspot;
 
 import jdk.internal.jvmci.debug.*;
-import edu.umd.cs.findbugs.annotations.*;
 
 /**
  * A facility for timing a step in the runtime initialization sequence. This exists separate from

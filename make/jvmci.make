@@ -147,15 +147,13 @@ JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.debug/src -type f 2> /dev
 
 JVMCI_API_JAR = $(TARGET)/jvmci-api.jar
 
-JVMCI_API_DEP_JARS = $(TARGET)/jvmci-service.jar jvmci/findbugs-SuppressFBWarnings.jar
+JVMCI_API_DEP_JARS = $(TARGET)/jvmci-service.jar
 
 EXPORTED_FILES += $(JVMCI_API_JAR)
 
 JVMCI_SERVICE_SRC = $(shell find jvmci/jdk.internal.jvmci.service/src -type f 2> /dev/null)
 
 JVMCI_SERVICE_JAR = $(TARGET)/jvmci-service.jar
-
-JVMCI_SERVICE_DEP_JARS = jvmci/findbugs-SuppressFBWarnings.jar
 
 EXPORTED_FILES += $(JVMCI_SERVICE_JAR)
 
@@ -170,7 +168,7 @@ JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.jfr/src -type
 
 JVMCI_HOTSPOT_JAR = $(TARGET)/jvmci-hotspot.jar
 
-JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/jvmci-api.jar $(TARGET)/jvmci-service.jar jvmci/findbugs-SuppressFBWarnings.jar
+JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/jvmci-api.jar $(TARGET)/jvmci-service.jar
 
 EXPORTED_FILES += $(JVMCI_HOTSPOT_JAR)
 
@@ -192,8 +190,8 @@ $(JVMCI_API_JAR): $(JVMCI_API_SRC) $(JDK_INTERNAL_JVMCI_OPTIONS_PROCESSOR_JAR) $
 	$(call build_and_jar,$(JDK_INTERNAL_JVMCI_OPTIONS_PROCESSOR_JAR),$(subst  $(space),:,$(JVMCI_API_DEP_JARS)),,$(JVMCI_API_JAR))
 
 
-$(JVMCI_SERVICE_JAR): $(JVMCI_SERVICE_SRC)  $(JVMCI_SERVICE_DEP_JARS)
-	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_SERVICE_DEP_JARS)),,$(JVMCI_SERVICE_JAR))
+$(JVMCI_SERVICE_JAR): $(JVMCI_SERVICE_SRC)  
+	$(call build_and_jar,,$(subst  $(space),:,),,$(JVMCI_SERVICE_JAR))
 
 
 $(JVMCI_HOTSPOT_JAR): $(JVMCI_HOTSPOT_SRC) $(JDK_INTERNAL_JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR) $(JDK_INTERNAL_JVMCI_OPTIONS_PROCESSOR_JAR) $(JDK_INTERNAL_JVMCI_SERVICE_PROCESSOR_JAR) $(JVMCI_HOTSPOT_DEP_JARS)

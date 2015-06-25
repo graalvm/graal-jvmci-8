@@ -23,7 +23,6 @@
 package jdk.internal.jvmci.hotspot;
 
 import jdk.internal.jvmci.code.*;
-import edu.umd.cs.findbugs.annotations.*;
 
 /**
  * {@link HotSpotCompiledCode} destined for installation as an nmethod.
@@ -40,7 +39,7 @@ public final class HotSpotCompiledNmethod extends HotSpotCompiledCode {
      * May be set by VM if code installation fails. It will describe in more detail why installation
      * failed (e.g., exactly which dependency failed).
      */
-    @SuppressFBWarnings("UWF_UNWRITTEN_FIELD") private String installationFailureMessage;
+    @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "set by the VM") private String installationFailureMessage;
 
     public HotSpotCompiledNmethod(HotSpotResolvedJavaMethod method, CompilationResult compResult) {
         this(method, compResult, 0L);

@@ -25,7 +25,6 @@ package jdk.internal.jvmci.hotspot;
 import static jdk.internal.jvmci.common.UnsafeAccess.*;
 import jdk.internal.jvmci.code.*;
 import sun.misc.*;
-import edu.umd.cs.findbugs.annotations.*;
 
 /**
  * Implementation of {@link InstalledCode} for HotSpot.
