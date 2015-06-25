@@ -260,7 +260,7 @@ public final class HotSpotObjectConstantImpl extends AbstractValue implements Ho
     @Override
     public String toValueString() {
         if (object instanceof String) {
-            return (String) object;
+            return "\"" + (String) object + "\"";
         } else {
             return Kind.Object.format(object);
         }
