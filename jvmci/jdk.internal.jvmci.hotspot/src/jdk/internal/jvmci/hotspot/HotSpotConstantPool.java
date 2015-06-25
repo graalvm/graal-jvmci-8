@@ -70,6 +70,19 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                     return false;
             }
         }
+
+        /**
+         * See: {@code Rewriter::maybe_rewrite_invokehandle}.
+         */
+        static boolean isInvokeHandleAlias(int opcode) {
+            switch (opcode) {
+                case INVOKEVIRTUAL:
+                case INVOKESPECIAL:
+                    return true;
+                default:
+                    return false;
+            }
+        }
     }
 
     /**
@@ -612,23 +625,19 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                 index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, index);
         }
 
-        JVM_CONSTANT tag = getTagAt(index);
+        final JVM_CONSTANT tag = getTagAt(index);
         if (tag == null) {
             assert getTagAt(index - 1) == JVM_CONSTANT.Double || getTagAt(index - 1) == JVM_CONSTANT.Long;
             return;
         }
-        int methodRefCacheIndex = -1;
         switch (tag) {
             case MethodRef:
-                if (Bytecodes.isInvoke(opcode)) {
-                    methodRefCacheIndex = toConstantPoolIndex(cpi, opcode);
-                }
-                // fall through
             case Fieldref:
             case InterfaceMethodref:
                 index = getUncachedKlassRefIndexAt(index);
-                tag = getTagAt(index);
-                assert tag == JVM_CONSTANT.Class || tag == JVM_CONSTANT.UnresolvedClass || tag == JVM_CONSTANT.UnresolvedClassInError : tag;
+                // Read the tag only once because it could change between multiple reads.
+                final JVM_CONSTANT klassTag = getTagAt(index);
+                assert klassTag == JVM_CONSTANT.Class || klassTag == JVM_CONSTANT.UnresolvedClass || klassTag == JVM_CONSTANT.UnresolvedClassInError : klassTag;
                 // fall through
             case Class:
             case UnresolvedClass:
@@ -639,8 +648,14 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                 if (!klass.isPrimitive() && !klass.isArray()) {
                     unsafe.ensureClassInitialized(klass);
                 }
-                if (methodRefCacheIndex != -1 && isInvokeHandle(methodRefCacheIndex, type)) {
-                    runtime().getCompilerToVM().resolveInvokeHandle(metaspaceConstantPool, methodRefCacheIndex);
+                switch (tag) {
+                    case MethodRef:
+                        if (Bytecodes.isInvokeHandleAlias(opcode)) {
+                            final int methodRefCacheIndex = toConstantPoolIndex(cpi, opcode);
+                            if (isInvokeHandle(methodRefCacheIndex, type)) {
+                                runtime().getCompilerToVM().resolveInvokeHandle(metaspaceConstantPool, methodRefCacheIndex);
+                            }
+                        }
                 }
                 break;
             case InvokeDynamic:
@@ -654,9 +669,9 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
         }
     }
 
-    private boolean isInvokeHandle(int methodRefCpi, HotSpotResolvedObjectTypeImpl klass) {
-        assert getTagAt(runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, methodRefCpi)) == JVM_CONSTANT.MethodRef;
-        return ResolvedJavaMethod.isSignaturePolymorphic(klass, getNameRefAt(methodRefCpi), runtime().getHostJVMCIBackend().getMetaAccess());
+    private boolean isInvokeHandle(int methodRefCacheIndex, HotSpotResolvedObjectTypeImpl klass) {
+        assertTag(runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, methodRefCacheIndex), JVM_CONSTANT.MethodRef);
+        return ResolvedJavaMethod.isSignaturePolymorphic(klass, getNameRefAt(methodRefCacheIndex), runtime().getHostJVMCIBackend().getMetaAccess());
     }
 
     @Override
