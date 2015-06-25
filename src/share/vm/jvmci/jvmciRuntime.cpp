@@ -661,14 +661,14 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
 #ifdef ASSERT
     // This should only be called in the context of the JVMCI class being initialized
     Thread* THREAD = Thread::current();
-    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/runtime/JVMCI", CHECK_ABORT);
+    TempNewSymbol name = SymbolTable::new_symbol("jdk/internal/jvmci/runtime/JVMCI", CHECK_ABORT);
     instanceKlassHandle klass = InstanceKlass::cast(load_required_class(name));
     assert(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
            "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
 #endif
 
-    Handle result = callInitializer("com/oracle/jvmci/hotspot/HotSpotJVMCIRuntime", "runtime",
-                                    "()Lcom/oracle/jvmci/hotspot/HotSpotJVMCIRuntime;");
+    Handle result = callInitializer("jdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime", "runtime",
+                                    "()Ljdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime;");
     _HotSpotJVMCIRuntime_initialized = true;
     _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result());
   }
@@ -676,7 +676,7 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
 
 void JVMCIRuntime::initialize_JVMCI() {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
-    callInitializer("com/oracle/jvmci/runtime/JVMCI",     "getRuntime",      "()Lcom/oracle/jvmci/runtime/JVMCIRuntime;");
+    callInitializer("jdk/internal/jvmci/runtime/JVMCI",     "getRuntime",      "()Ljdk/internal/jvmci/runtime/JVMCIRuntime;");
   }
   assert(_HotSpotJVMCIRuntime_initialized == true, "what?");
 }
@@ -695,7 +695,7 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
   static Klass* _FactoryKlass = NULL;
   if (_FactoryKlass == NULL) {
     Thread* THREAD = Thread::current();
-    TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/service/JVMCIClassLoaderFactory", CHECK_ABORT);
+    TempNewSymbol name = SymbolTable::new_symbol("jdk/internal/jvmci/service/JVMCIClassLoaderFactory", CHECK_ABORT);
     KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, THREAD);
     if (HAS_PENDING_EXCEPTION) {
       static volatile int seen_error = 0;
@@ -1082,7 +1082,7 @@ void JVMCIRuntime::set_options(OptionValuesTable* options, TRAPS) {
 void JVMCIRuntime::print_flags_helper(TRAPS) {
   // TODO(gd) write this in C++?
   HandleMark hm(THREAD);
-  TempNewSymbol name = SymbolTable::new_symbol("com/oracle/jvmci/hotspot/HotSpotOptions", CHECK_ABORT);
+  TempNewSymbol name = SymbolTable::new_symbol("jdk/internal/jvmci/hotspot/HotSpotOptions", CHECK_ABORT);
   KlassHandle hotSpotOptionsClass = load_required_class(name);
   TempNewSymbol setOption = SymbolTable::new_symbol("printFlags", CHECK);
   JavaValue result(T_VOID);

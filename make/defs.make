@@ -368,21 +368,21 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/jvmci-service.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-api.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-hotspot.jar
 
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIBackendFactory
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.HotSpotVMEventListener
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.debug.TTYStreamProvider
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.HotSpotJVMCIBackendFactory
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.HotSpotVMEventListener
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.debug.TTYStreamProvider
 
-ifneq ("$(wildcard $(SHARED_DIR)/services/com.oracle.jvmci.hotspot.events.EventProvider)","")
-CONDITIONAL_EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/com.oracle.jvmci.hotspot.events.EventProvider
+ifneq ("$(wildcard $(SHARED_DIR)/services/jdk.internal.jvmci.hotspot.events.EventProvider)","")
+CONDITIONAL_EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.events.EventProvider
 endif
 
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotConstantReflectionProvider
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotJVMCIRuntime
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaFieldImpl
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.HotSpotResolvedJavaMethodImpl
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.hotspot.CompileTheWorld
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.compiler.Compiler
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/com.oracle.jvmci.debug.JVMCIDebugConfig
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotResolvedJavaFieldImpl
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotResolvedJavaMethodImpl
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.CompileTheWorld
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.compiler.Compiler
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.debug.JVMCIDebugConfig
 
 # The use of CONDITIONAL_EXPORT_LIST is for the checking
 # done by verify_defs_make in jvmci.make

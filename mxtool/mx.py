@@ -316,7 +316,8 @@ class Distribution:
 
                 for service, providers in services.iteritems():
                     arcname = 'META-INF/services/' + service
-                    arc.zf.writestr(arcname, '\n'.join(providers))
+                    # Convert providers to a set before printing to remove duplicates
+                    arc.zf.writestr(arcname, '\n'.join(frozenset(providers)))
 
         self.notify_updated()
 
@@ -620,12 +621,18 @@ class Project(Dependency):
             if hasattr(self, '_declaredAnnotationProcessors'):
                 aps = set(self._declaredAnnotationProcessors)
                 for ap in aps:
-                    if project(ap).definedAnnotationProcessorsDist is None:
-                        config = join(project(ap).source_dirs()[0], 'META-INF', 'services', 'javax.annotation.processing.Processor')
-                        if not exists(config):
-                            TimeStampFile(config).touch()
-                        abort('Project ' + ap + ' declared in annotationProcessors property of ' + self.name + ' does not define any annotation processors.\n' +
-                              'Please specify the annotation processors in ' + config)
+                    # ap may be a Project or a Distribution
+                    apd = dependency(ap)
+                    if apd.isLibrary():
+                        # trust it, we could look inside I suppose
+                        pass
+                    elif apd.isProject():
+                        if apd.definedAnnotationProcessorsDist is None:
+                            config = join(project(ap).source_dirs()[0], 'META-INF', 'services', 'javax.annotation.processing.Processor')
+                            if not exists(config):
+                                TimeStampFile(config).touch()
+                            abort('Project ' + ap + ' declared in annotationProcessors property of ' + self.name + ' does not define any annotation processors.\n' +
+                                  'Please specify the annotation processors in ' + config)
 
             allDeps = self.all_deps([], includeLibs=False, includeSelf=False, includeAnnotationProcessors=False)
             for p in allDeps:
@@ -644,13 +651,20 @@ class Project(Dependency):
     annotation processors that will be applied when compiling this project.
     """
     def annotation_processors_path(self):
-        aps = [project(ap) for ap in self.annotation_processors()]
+        aps = [dependency(ap) for ap in self.annotation_processors()]
         libAps = set()
         for dep in self.all_deps([], includeLibs=True, includeSelf=False):
             if dep.isLibrary() and hasattr(dep, 'annotationProcessor') and getattr(dep, 'annotationProcessor').lower() == 'true':
                 libAps = libAps.union(dep.all_deps([], includeLibs=True, includeSelf=True))
         if len(aps) + len(libAps):
-            return os.pathsep.join([ap.definedAnnotationProcessorsDist.path for ap in aps if ap.definedAnnotationProcessorsDist] + [lib.get_path(False) for lib in libAps])
+            apPaths = []
+            for ap in aps:
+                if ap.isLibrary():
+                    for dep in ap.all_deps([], includeLibs=True):
+                        dep.append_to_classpath(apPaths, True)
+                elif ap.definedAnnotationProcessorsDist:
+                    apPaths.append(ap.definedAnnotationProcessorsDist.path)
+            return os.pathsep.join(apPaths + [lib.get_path(False) for lib in libAps])
         return None
 
     def uses_annotation_processor_library(self):
@@ -1881,9 +1895,9 @@ def java(versionCheck=None, purpose=None, cancel=None, versionDescription=None, 
     # interpret string and compliance as compliance check
     if isinstance(versionCheck, types.StringTypes):
         requiredCompliance = JavaCompliance(versionCheck)
-        versionCheck, versionDescription = _convert_complicance_to_version_check(requiredCompliance)
+        versionCheck, versionDescription = _convert_compliance_to_version_check(requiredCompliance)
     elif isinstance(versionCheck, JavaCompliance):
-        versionCheck, versionDescription = _convert_complicance_to_version_check(versionCheck)
+        versionCheck, versionDescription = _convert_compliance_to_version_check(versionCheck)
 
     global _default_java_home, _extra_java_homes
     if cancel and (versionDescription, purpose) in _canceled_java_requests:
@@ -1910,7 +1924,7 @@ def java(versionCheck=None, purpose=None, cancel=None, versionDescription=None, 
         _canceled_java_requests.add((versionDescription, purpose))
     return jdk
 
-def _convert_complicance_to_version_check(requiredCompliance):
+def _convert_compliance_to_version_check(requiredCompliance):
     if _opts.strict_compliance:
         versionDesc = str(requiredCompliance)
         versionCheck = requiredCompliance.exactMatch
@@ -2546,10 +2560,10 @@ class JavaConfig:
             args = []
         if self._bootclasspath:
             args.append('-bootclasspath')
-            args.append(self._bootclasspath)
+            args.append(_separatedCygpathU2W(self._bootclasspath))
         if self._extdirs:
             args.append('-extdirs')
-            args.append(self._extdirs)
+            args.append(_separatedCygpathU2W(self._extdirs))
         return args
 
     """
@@ -2559,7 +2573,7 @@ class JavaConfig:
         args = self.javadocLibOptions(args)
         if self._endorseddirs:
             args.append('-endorseddirs')
-            args.append(self._endorseddirs)
+            args.append(_separatedCygpathU2W(self._endorseddirs))
         return args
 
     def containsJar(self, jar):
@@ -2802,6 +2816,8 @@ class JavaCompileTask:
                     javac = args.alt_javac if args.alt_javac else mainJava.javac
                     self.logCompilation('javac' if not args.alt_javac else args.alt_javac)
                     javacCmd = [javac, '-g', '-J-Xmx1g', '-source', compliance, '-target', compliance, '-classpath', cp, '-d', outputDir]
+                    if _opts.very_verbose:
+                        javacCmd.append('-verbose')
                     jdk.javacLibOptions(javacCmd)
                     if _opts.java_dbg_port is not None:
                         javacCmd += ['-J-Xdebug', '-J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=' + str(_opts.java_dbg_port)]
@@ -2815,6 +2831,8 @@ class JavaCompileTask:
                     self.logCompilation('javac (with error-prone)')
                     javaArgs = ['-Xmx1g']
                     javacArgs = ['-g', '-source', compliance, '-target', compliance, '-classpath', cp, '-d', outputDir]
+                    if _opts.very_verbose:
+                        javacArgs.append('-verbose')
                     jdk.javacLibOptions(javacCmd)
                     javacArgs += processorArgs
                     javacArgs += ['@' + argfile.name]
@@ -2829,6 +2847,8 @@ class JavaCompileTask:
                 jdtArgs = ['-' + compliance,
                          '-cp', cp, '-g', '-enableJavadoc',
                          '-d', outputDir]
+                if _opts.very_verbose:
+                    jdtArgs.append('-verbose')
                 jdk.javacLibOptions(jdtArgs)
                 jdtArgs += processorArgs
 
@@ -2902,7 +2922,7 @@ def build(args, parser=None):
     parser.add_argument('--alt-javac', dest='alt_javac', help='path to alternative javac executable', metavar='<path>')
     compilerSelect = parser.add_mutually_exclusive_group()
     compilerSelect.add_argument('--error-prone', dest='error_prone', help='path to error-prone.jar', metavar='<path>')
-    compilerSelect.add_argument('--jdt', help='path to ecj.jar, the Eclipse batch compiler', default=_defaultEcjPath(), metavar='<path>')
+    compilerSelect.add_argument('--jdt', help='path to ecj.jar, the stand alone Eclipse batch compiler', default=_defaultEcjPath(), metavar='<path>')
     compilerSelect.add_argument('--force-javac', action='store_true', dest='javac', help='use javac whether ecj.jar is found or not')
 
     if suppliedParser:
@@ -2926,6 +2946,12 @@ def build(args, parser=None):
                 jdtJar = None
             else:
                 abort('Eclipse batch compiler jar does not exist: ' + args.jdt)
+        else:
+            with zipfile.ZipFile(jdtJar, 'r') as zf:
+                if 'org/eclipse/jdt/internal/compiler/apt/' not in zf.namelist():
+                    abort('Specified Eclipse compiler does not include annotation processing support. ' +
+                          'Ensure you are using a stand alone ecj.jar, not org.eclipse.jdt.core_*.jar ' +
+                          'from within the plugins/ directory of an Eclipse IDE installation.')
 
     if args.only is not None:
         # N.B. This build will not include dependencies including annotation processor dependencies
@@ -2996,7 +3022,7 @@ def build(args, parser=None):
                         classfile = TimeStampFile(outputDir + javafile[len(sourceDir):-len('java')] + 'class')
                         if not classfile.exists() or classfile.isOlderThan(javafile):
                             if basename(classfile.path) != 'package-info.class':
-                                buildReason = 'class file(s) out of date'
+                                buildReason = 'class file(s) out of date (witness: ' + classfile.path + ')'
                                 break
 
         apsOutOfDate = p.update_current_annotation_processors_file()
@@ -3121,9 +3147,19 @@ def build(args, parser=None):
 
     if args.java and not args.only:
         files = []
+        rebuiltProjects = frozenset([t.proj for t in tasks.itervalues()])
         for dist in sorted_dists():
-            if dist not in updatedAnnotationProcessorDists:
-                archive(['@' + dist.name])
+            if not exists(dist.path):
+                log('Creating jar for {0}'.format(dist.name))
+                dist.make_archive()
+            elif dist not in updatedAnnotationProcessorDists:
+                projectsInDist = dist.sorted_deps()
+                n = len(rebuiltProjects.intersection(projectsInDist))
+                if n != 0:
+                    log('Updating jar for {0} [{1} constituent projects (re)built]'.format(dist.name, n))
+                    dist.make_archive()
+                else:
+                    logv('[all constituent projects for {0} are up to date - skipping jar updating]'.format(dist.name))
             if args.check_distributions and not dist.isProcessorDistribution:
                 with zipfile.ZipFile(dist.path, 'r') as zf:
                     files.extend([member for member in zf.namelist() if not member.startswith('META-INF')])
@@ -4277,7 +4313,7 @@ def _eclipseinit_suite(args, suite, buildProcessorJars=True, refreshOnly=False):
         out.open('buildSpec')
         dist.dir = projectDir
         dist.javaCompliance = max([p.javaCompliance for p in distProjects])
-        _genEclipseBuilder(out, dist, 'Create' + dist.name + 'Dist', 'archive @' + dist.name, relevantResources=relevantResources, logToFile=True, refresh=False, async=True)
+        _genEclipseBuilder(out, dist, 'Create' + dist.name + 'Dist', '-v archive @' + dist.name, relevantResources=relevantResources, logToFile=True, refresh=False, async=False, logToConsole=False, appendToLogFile=False)
         out.close('buildSpec')
         out.open('natures')
         out.element('nature', data='org.eclipse.jdt.core.javanature')
