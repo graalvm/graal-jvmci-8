@@ -177,12 +177,10 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
      * Reference to the C++ ConstantPool object.
      */
     private final long metaspaceConstantPool;
-    private final Object[] cache;
     private volatile LookupTypeCacheElement lastLookupType;
 
     public HotSpotConstantPool(long metaspaceConstantPool) {
         this.metaspaceConstantPool = metaspaceConstantPool;
-        cache = new Object[length()];
     }
 
     /**
@@ -514,19 +512,10 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
 
     @Override
     public JavaMethod lookupMethod(int cpi, int opcode) {
-        if (opcode != Bytecodes.INVOKEDYNAMIC) {
-            Object result = cache[cpi];
-            if (result != null) {
-                return (ResolvedJavaMethod) result;
-            }
-        }
         final int index = toConstantPoolIndex(cpi, opcode);
         final long metaspaceMethod = runtime().getCompilerToVM().lookupMethodInPool(metaspaceConstantPool, index, (byte) opcode);
         if (metaspaceMethod != 0L) {
             HotSpotResolvedJavaMethod result = HotSpotResolvedJavaMethodImpl.fromMetaspace(metaspaceMethod);
-            if (opcode != Bytecodes.INVOKEDYNAMIC) {
-                cache[cpi] = result;
-            }
             return result;
         } else {
             // Get the method's name and signature.
@@ -561,10 +550,6 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
 
     @Override
     public JavaField lookupField(int cpi, int opcode) {
-        Object resolvedJavaField = cache[cpi];
-        if (resolvedJavaField != null) {
-            return (ResolvedJavaField) resolvedJavaField;
-        }
         final int index = toConstantPoolIndex(cpi, opcode);
         final int nameAndTypeIndex = getNameAndTypeRefIndexAt(index);
         final int nameIndex = getNameRefIndexAt(nameAndTypeIndex);
@@ -592,9 +577,6 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
             final int flags = (int) info[0];
             final long offset = info[1];
             HotSpotResolvedJavaField result = resolvedHolder.createField(name, type, offset, flags);
-            if (type instanceof ResolvedJavaType) {
-                cache[cpi] = result;
-            }
             return result;
         } else {
             return new HotSpotUnresolvedField(holder, name, type);
