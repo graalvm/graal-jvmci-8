@@ -64,9 +64,9 @@ public interface ForeignCallLinkage extends InvokeTarget {
     boolean destroysRegisters();
 
     /**
-     * Determines if this is call to a function that does not deoptimize, and therefore also does
-     * not lock, GC or throw exceptions. That is, the thread's execution state during the call is
-     * never inspected by another thread.
+     * Determines if debug info needs to be associated with this call. Debug info is required if the
+     * function can raise an exception, try to lock, trigger GC or do anything else that requires
+     * the VM to be able to inspect the thread's execution state.
      */
-    boolean canDeoptimize();
+    boolean needsDebugInfo();
 }
