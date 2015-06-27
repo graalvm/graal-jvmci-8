@@ -953,6 +953,7 @@ public class CompilationResult {
         dataPatches.clear();
         exceptionHandlers.clear();
         marks.clear();
+        dataSection.clear();
         if (annotations != null) {
             annotations.clear();
         }

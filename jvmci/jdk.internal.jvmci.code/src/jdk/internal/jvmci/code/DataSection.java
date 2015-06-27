@@ -274,4 +274,11 @@ public final class DataSection implements Iterable<Data> {
     private static int align(int position, int alignment) {
         return ((position + alignment - 1) / alignment) * alignment;
     }
+
+    public void clear() {
+        assert !finalLayout;
+        this.dataItems.clear();
+        this.sectionAlignment = 0;
+        this.sectionSize = 0;
+    }
 }
