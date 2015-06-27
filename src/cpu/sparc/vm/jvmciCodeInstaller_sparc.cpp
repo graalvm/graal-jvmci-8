@@ -66,12 +66,22 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
 
 void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset) {
   address pc = _instructions->start() + pc_offset;
-  address const_start = _constants->start();
-  address dest = _constants->start() + data_offset;
-
-  _instructions->relocate(pc + NativeMovConstReg::sethi_offset, internal_word_Relocation::spec((address) dest));
-  _instructions->relocate(pc + NativeMovConstReg::add_offset, internal_word_Relocation::spec((address) dest));
-  TRACE_jvmci_3("relocating at %p with destination at %p (%d)", pc, dest, data_offset);
+  NativeInstruction* inst = nativeInstruction_at(pc);
+  NativeInstruction* inst1 = nativeInstruction_at(pc + 4);
+  if(inst->is_sethi() && inst1->is_nop()) {
+      address const_start = _constants->start();
+      address dest = _constants->start() + data_offset;
+      if(_constants_size > 0) {
+        _instructions->relocate(pc + NativeMovConstReg::sethi_offset, internal_word_Relocation::spec((address) dest));
+        _instructions->relocate(pc + NativeMovConstReg::add_offset, internal_word_Relocation::spec((address) dest));
+      }
+      TRACE_jvmci_3("relocating at %p (+%d) with destination at %d", pc, pc_offset, data_offset);
+  } else {
+    NativeMovRegMem* load = nativeMovRegMem_at(pc);
+    // The base pointer is set 4k off (see SPARCLoadConstantTableBaseOp)
+    load->set_offset(data_offset - (1<<12));
+    TRACE_jvmci_3("relocating ld at %p (+%d) with destination at %d", pc, pc_offset, data_offset);
+  }
 }
 
 void CodeInstaller::pd_relocate_CodeBlob(CodeBlob* cb, NativeInstruction* inst) {
