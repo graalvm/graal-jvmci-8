@@ -48,20 +48,28 @@ public class MethodIdMap<V> {
      */
     public static class MethodKey<T> {
         final boolean isStatic;
+
+        /**
+         * This method is optional. This is used for new API methods not present in previous JDK
+         * versions.
+         */
+        final boolean isOptional;
+
         final Class<?> declaringClass;
         final String name;
         final Class<?>[] argumentTypes;
         final T value;
         int id;
 
-        MethodKey(T data, boolean isStatic, Class<?> declaringClass, String name, Class<?>... argumentTypes) {
+        MethodKey(T data, boolean isStatic, boolean isOptional, Class<?> declaringClass, String name, Class<?>... argumentTypes) {
             assert isStatic || argumentTypes[0] == declaringClass;
             this.value = data;
             this.isStatic = isStatic;
+            this.isOptional = isOptional;
             this.declaringClass = declaringClass;
             this.name = name;
             this.argumentTypes = argumentTypes;
-            assert resolveJava() != null;
+            assert isOptional || resolveJava() != null;
         }
 
         @Override
@@ -86,7 +94,11 @@ public class MethodIdMap<V> {
         }
 
         private MethodIdHolder resolve(MetaAccessProvider metaAccess) {
-            return (MethodIdHolder) metaAccess.lookupJavaMethod(resolveJava());
+            Executable method = resolveJava();
+            if (method == null) {
+                return null;
+            }
+            return (MethodIdHolder) metaAccess.lookupJavaMethod(method);
         }
 
         private Executable resolveJava() {
@@ -101,6 +113,9 @@ public class MethodIdMap<V> {
                 assert Modifier.isStatic(res.getModifiers()) == isStatic;
                 return res;
             } catch (NoSuchMethodException | SecurityException e) {
+                if (isOptional) {
+                    return null;
+                }
                 throw new InternalError(e);
             }
         }
@@ -149,15 +164,16 @@ public class MethodIdMap<V> {
      *
      * @param value value to be associated with the specified method
      * @param isStatic specifies if the method is static
+     * @param isOptional specifies if the method is optional
      * @param declaringClass the class declaring the method
      * @param name the name of the method
      * @param argumentTypes the argument types of the method. Element 0 of this array must be
      *            {@code declaringClass} iff the method is non-static.
      * @return an object representing the method
      */
-    public MethodKey<V> put(V value, boolean isStatic, Class<?> declaringClass, String name, Class<?>... argumentTypes) {
+    public MethodKey<V> put(V value, boolean isStatic, boolean isOptional, Class<?> declaringClass, String name, Class<?>... argumentTypes) {
         assert isStatic || argumentTypes[0] == declaringClass;
-        MethodKey<V> methodKey = new MethodKey<>(value, isStatic, declaringClass, name, argumentTypes);
+        MethodKey<V> methodKey = new MethodKey<>(value, isStatic, isOptional, declaringClass, name, argumentTypes);
         assert entries == null : "registration is closed";
         assert !registrations.contains(methodKey) : "a value is already registered for " + methodKey;
         registrations.add(methodKey);
@@ -199,21 +215,30 @@ public class MethodIdMap<V> {
                         int max = Integer.MIN_VALUE;
                         for (MethodKey<V> methodKey : registrations) {
                             MethodIdHolder m = methodKey.resolve(metaAccess);
-                            int id = idAllocator.assignId(m);
-                            if (id < minId) {
-                                minId = id;
+                            if (m == null) {
+                                assert methodKey.isOptional;
+                                methodKey.id = -1;
+                            } else {
+                                int id = idAllocator.assignId(m);
+                                if (id < minId) {
+                                    minId = id;
+                                }
+                                if (id > max) {
+                                    max = id;
+                                }
+                                methodKey.id = id;
                             }
-                            if (id > max) {
-                                max = id;
-                            }
-                            methodKey.id = id;
                         }
 
                         int length = (max - minId) + 1;
                         entries = allocateEntries(length);
-                        for (MethodKey<V> m : registrations) {
-                            int index = m.id - minId;
-                            entries[index] = m.value;
+                        for (MethodKey<V> methodKey : registrations) {
+                            if (methodKey.id == -1) {
+                                assert methodKey.isOptional;
+                            } else {
+                                int index = methodKey.id - minId;
+                                entries[index] = methodKey.value;
+                            }
                         }
                     }
                 }
