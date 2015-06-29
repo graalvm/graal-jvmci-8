@@ -827,7 +827,11 @@ void Dependencies::DepStream::print_dependency(Klass* witness, bool verbose, out
   int nargs = argument_count();
   GrowableArray<DepArgument>* args = new GrowableArray<DepArgument>(nargs);
   for (int j = 0; j < nargs; j++) {
-    args->push(argument(j));
+    if (type() == call_site_target_value) {
+      args->push(argument_oop(j));
+    } else {
+      args->push(argument(j));
+    }
   }
   int argslen = args->length();
   Dependencies::print_dependency(type(), args, witness, st);
