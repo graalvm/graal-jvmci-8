@@ -81,11 +81,6 @@ VMReg getVMRegFromLocation(oop location, int total_frame_size) {
     return vmReg->next(offset / 4);
   } else {
     // stack slot
-#ifdef TARGET_ARCH_sparc
-    if(offset >= 0) {
-      offset += 128;
-    }
-#endif
     if (code_Location::addFrameSize(location)) {
       offset += total_frame_size;
     }
@@ -242,11 +237,6 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, GrowableArray<ScopeValue*>
     }
   } else if (value->is_a(StackSlot::klass())) {
     jint offset = StackSlot::offset(value);
-#ifdef TARGET_ARCH_sparc
-    if(offset >= 0) {
-      offset += 128;
-    }
-#endif
     if (StackSlot::addFrameSize(value)) {
       offset += _total_frame_size;
     }
