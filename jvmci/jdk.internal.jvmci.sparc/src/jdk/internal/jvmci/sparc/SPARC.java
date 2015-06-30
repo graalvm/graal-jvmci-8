@@ -242,6 +242,8 @@ public class SPARC extends Architecture {
      */
     public static final int MEMORY_ACCESS_ALIGN = 4;
 
+    public static final int INSTRUCTION_SIZE = 4;
+
     public final Set<CPUFeature> features;
 
     public SPARC(Set<CPUFeature> features) {
