@@ -5831,7 +5831,7 @@ def _findPrimarySuiteMxDir():
     return _findPrimarySuiteMxDirFrom(dirname(__file__))
 
 def main():
-    mxMxDir = _is_suite_dir(dirname(__file__))
+    mxMxDir = _is_suite_dir(os.path.abspath(dirname(__file__)))
     assert mxMxDir
     global _mx_suite
     _mx_suite = _loadSuite(mxMxDir)
