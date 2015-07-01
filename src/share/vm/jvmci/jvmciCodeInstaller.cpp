@@ -81,9 +81,6 @@ VMReg getVMRegFromLocation(oop location, int total_frame_size) {
     return vmReg->next(offset / 4);
   } else {
     // stack slot
-    if (code_Location::addFrameSize(location)) {
-      offset += total_frame_size;
-    }
     assert(offset % 4 == 0, "must be aligned");
     return VMRegImpl::stack2reg(offset / 4);
   }

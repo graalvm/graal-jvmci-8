@@ -226,7 +226,6 @@ void jvmci_compute_offsets();
   start_class(code_Location)                                                                                                                                   \
     oop_field(code_Location, reg, "Ljdk/internal/jvmci/code/Register;")                                                                                          \
     int_field(code_Location, offset)                                                                                                                           \
-    boolean_field(code_Location, addFrameSize)                                                                                                                 \
   end_class                                                                                                                                                    \
   start_class(code_Register)                                                                                                                                   \
     int_field(code_Register, number)                                                                                                                           \

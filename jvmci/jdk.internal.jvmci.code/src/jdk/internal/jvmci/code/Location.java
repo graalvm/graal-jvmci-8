@@ -30,19 +30,17 @@ public final class Location {
 
     public final Register reg;
     public final int offset;
-    public final boolean addFrameSize;
 
-    private Location(Register reg, int offset, boolean addFrameSize) {
+    private Location(Register reg, int offset) {
         this.reg = reg;
         this.offset = offset;
-        this.addFrameSize = addFrameSize;
     }
 
     /**
      * Create a {@link Location} for a register.
      */
     public static Location register(Register reg) {
-        return new Location(reg, 0, false);
+        return new Location(reg, 0);
     }
 
     /**
@@ -52,14 +50,14 @@ public final class Location {
      * @param offset the offset in bytes into the vector register
      */
     public static Location subregister(Register reg, int offset) {
-        return new Location(reg, offset, false);
+        return new Location(reg, offset);
     }
 
     /**
      * Create a {@link Location} for a stack slot.
      */
-    public static Location stack(int offset, boolean addFrameSize) {
-        return new Location(null, offset, addFrameSize);
+    public static Location stack(int offset) {
+        return new Location(null, offset);
     }
 
     public boolean isRegister() {
@@ -72,20 +70,12 @@ public final class Location {
 
     @Override
     public String toString() {
+        String regName;
         if (isRegister()) {
-            if (offset == 0) {
-                return reg.name;
-            } else {
-                return reg.name + ":" + offset;
-            }
+            regName = reg.name + ":";
         } else {
-            if (!addFrameSize) {
-                return "out:" + offset;
-            } else if (offset >= 0) {
-                return "in:" + offset;
-            } else {
-                return "stack:" + (-offset);
-            }
+            regName = "stack:";
         }
+        return regName + offset;
     }
 }

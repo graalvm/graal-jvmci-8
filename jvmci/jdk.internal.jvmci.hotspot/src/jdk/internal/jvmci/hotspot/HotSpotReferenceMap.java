@@ -41,10 +41,12 @@ public final class HotSpotReferenceMap extends ReferenceMap {
     private int objectCount;
 
     private final TargetDescription target;
+    private final int totalFrameSize;
 
-    public HotSpotReferenceMap(TargetDescription target) {
+    public HotSpotReferenceMap(TargetDescription target, int totalFrameSize) {
         this.target = target;
         this.objectCount = 0;
+        this.totalFrameSize = totalFrameSize;
     }
 
     @Override
@@ -114,12 +116,12 @@ public final class HotSpotReferenceMap extends ReferenceMap {
         return target.getSizeInBytes(platformKind) / platformKind.getVectorLength();
     }
 
-    private static Location toLocation(Value v, int offset) {
+    private Location toLocation(Value v, int offset) {
         if (isRegister(v)) {
             return Location.subregister(asRegister(v), offset);
         } else {
             StackSlot s = asStackSlot(v);
-            return Location.stack(s.getRawOffset() + offset, s.getRawAddFrameSize());
+            return Location.stack(s.getOffset(totalFrameSize) + offset);
         }
     }
 
