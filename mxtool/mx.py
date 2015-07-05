@@ -291,7 +291,7 @@ class Distribution:
                             else:
                                 for f in files:
                                     arcname = join(relpath, f).replace(os.sep, '/')
-                                    with open(join(root, f), 'r') as fp:
+                                    with open(join(root, f), 'rb') as fp:
                                         contents = fp.read()
                                     if not self.archiveparticipant or not self.archiveparticipant.__add__(arcname, contents):
                                         arc.zf.writestr(arcname, contents)
