@@ -502,7 +502,7 @@ def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir):
+def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, obsoleteCheck):
 
     oldServices = os.listdir(servicesDir) if exists(servicesDir) else os.makedirs(servicesDir)
     oldOptions = os.listdir(optionsDir) if exists(optionsDir) else os.makedirs(optionsDir)
@@ -529,36 +529,40 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir):
                         optionsFiles.append(filename)
                         with zf.open(member) as optionsFile, \
                              file(targetpath, "wb") as target:
-                            shutil.copyfileobj(optionsFile, target)
+                            if not obsoleteCheck:
+                                shutil.copyfileobj(optionsFile, target)
                             if oldOptions and filename in oldOptions:
                                 oldOptions.remove(filename)
     for service, providers in jvmciServices.iteritems():
-        fd, tmp = tempfile.mkstemp(prefix=service)
-        f = os.fdopen(fd, 'w+')
-        for provider in providers:
-            f.write(provider + os.linesep)
-        target = join(servicesDir, service)
-        f.close()
-        shutil.move(tmp, target)
+        if not obsoleteCheck:
+            fd, tmp = tempfile.mkstemp(prefix=service)
+            f = os.fdopen(fd, 'w+')
+            for provider in providers:
+                f.write(provider + os.linesep)
+            target = join(servicesDir, service)
+            f.close()
+            shutil.move(tmp, target)
+            if mx.get_os() != 'windows':
+                os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
         if oldServices and service in oldServices:
             oldServices.remove(service)
-        if mx.get_os() != 'windows':
-            os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
 
-    if mx.is_interactive():
+    if obsoleteCheck:
         for d, files in [(servicesDir, oldServices), (optionsDir, oldOptions)]:
-            if files and mx.ask_yes_no('These files in ' + d + ' look obsolete:\n  ' + '\n  '.join(files) + '\nDelete them', 'n'):
-                for f in files:
-                    path = join(d, f)
-                    os.remove(path)
-                    mx.log('Deleted ' + path)
+            if files:
+                print 'These files in ' + d + ' look obsolete:\n  ' + '\n  '.join(files)
+                if  mx.is_interactive() and mx.ask_yes_no('Delete them', 'n'):
+                    for f in files:
+                        path = join(d, f)
+                        os.remove(path)
+                        mx.log('Deleted ' + path)
 
-def _updateJVMCIFiles(jdkDir):
+def _updateJVMCIFiles(jdkDir, obsoleteCheck=False):
     jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')
     jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.endswith('.jar')]
     jreJVMCIServicesDir = join(jreJVMCIDir, 'services')
     jreJVMCIOptionsDir = join(jreJVMCIDir, 'options')
-    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreJVMCIServicesDir, jreJVMCIOptionsDir)
+    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreJVMCIServicesDir, jreJVMCIOptionsDir, obsoleteCheck)
 
 def _installDistInJdks(deployableDist):
     """
@@ -587,6 +591,13 @@ def _installDistInJdks(deployableDist):
                     _updateJVMCIFiles(jdkDir)
                 if deployableDist.postJdkInstall:
                     deployableDist.postJdkInstall(jdkDir, targetDir)
+
+def _check_for_obsolete_jvmci_files():
+    jdks = _jdksDir()
+    if exists(jdks):
+        for e in os.listdir(jdks):
+            jdkDir = join(jdks, e)
+            _updateJVMCIFiles(jdkDir, obsoleteCheck=True)
 
 def _getJdkDeployedJars(jdkDir):
     """
@@ -729,6 +740,10 @@ def build(args, vm=None):
 
     if not opts2.native:
         return
+
+    if opts2.java and not opts2.projects and not opts2.only:
+        # Only check deployed JVMCI files on a full build 
+        _check_for_obsolete_jvmci_files()
 
     builds = [_vmbuild]
 
