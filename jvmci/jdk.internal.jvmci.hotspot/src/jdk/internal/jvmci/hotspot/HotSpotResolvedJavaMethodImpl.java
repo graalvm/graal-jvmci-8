@@ -611,7 +611,7 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
      */
     public int vtableEntryOffset(ResolvedJavaType resolved) {
         if (!isInVirtualMethodTable(resolved)) {
-            throw new JVMCIError("%s does not have a vtable entry", this);
+            throw new JVMCIError("%s does not have a vtable entry in type %s", this, resolved);
         }
         HotSpotVMConfig config = runtime().getConfig();
         final int vtableIndex = getVtableIndex((HotSpotResolvedObjectTypeImpl) resolved);
