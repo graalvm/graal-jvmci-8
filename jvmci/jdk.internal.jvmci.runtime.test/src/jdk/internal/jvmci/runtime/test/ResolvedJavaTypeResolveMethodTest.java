@@ -93,9 +93,9 @@ public class ResolvedJavaTypeResolveMethodTest {
         ResolvedJavaMethod di = getMethod(i, "d");
         ResolvedJavaMethod dc = getMethod(c, "d");
 
-        assertEquals(di, i.resolveMethod(di, c, true));
-        assertEquals(di, b.resolveMethod(di, c, true));
-        assertEquals(dc, c.resolveMethod(di, c, true));
+        assertEquals(di, i.resolveMethod(di, c));
+        assertEquals(di, b.resolveMethod(di, c));
+        assertEquals(dc, c.resolveMethod(di, c));
     }
 
     @Test
@@ -105,8 +105,8 @@ public class ResolvedJavaTypeResolveMethodTest {
         ResolvedJavaType c = getType(C.class);
         ResolvedJavaMethod priv = getMethod(a, "priv");
 
-        assertNull(a.resolveMethod(priv, c, true));
-        assertNull(b.resolveMethod(priv, c, true));
+        assertNull(a.resolveMethod(priv, c));
+        assertNull(b.resolveMethod(priv, c));
     }
 
     @Test
@@ -120,16 +120,16 @@ public class ResolvedJavaTypeResolveMethodTest {
         ResolvedJavaMethod absb = getMethod(b, "abs");
         ResolvedJavaMethod abse = getMethod(e, "abs");
 
-        assertEquals(absa, a.resolveMethod(absa, c, true));
-        assertEquals(absa, d.resolveMethod(absa, c, true));
+        assertEquals(absa, a.resolveMethod(absa, c));
+        assertEquals(absa, d.resolveMethod(absa, c));
 
-        assertEquals(absb, b.resolveMethod(absa, c, true));
-        assertEquals(absb, b.resolveMethod(absb, c, true));
-        assertEquals(absb, c.resolveMethod(absa, c, true));
-        assertEquals(absb, c.resolveMethod(absb, c, true));
-        assertEquals(abse, e.resolveMethod(absa, c, true));
-        assertNull(e.resolveMethod(absb, c, true));
-        assertEquals(abse, e.resolveMethod(abse, c, true));
+        assertEquals(absb, b.resolveMethod(absa, c));
+        assertEquals(absb, b.resolveMethod(absb, c));
+        assertEquals(absb, c.resolveMethod(absa, c));
+        assertEquals(absb, c.resolveMethod(absb, c));
+        assertEquals(abse, e.resolveMethod(absa, c));
+        assertNull(e.resolveMethod(absb, c));
+        assertEquals(abse, e.resolveMethod(abse, c));
     }
 
     @Test
@@ -141,14 +141,14 @@ public class ResolvedJavaTypeResolveMethodTest {
         ResolvedJavaMethod v2a = getMethod(a, "v2");
         ResolvedJavaMethod v2b = getMethod(b, "v2");
 
-        assertEquals(v1a, a.resolveMethod(v1a, c, true));
-        assertEquals(v1a, b.resolveMethod(v1a, c, true));
-        assertEquals(v1a, c.resolveMethod(v1a, c, true));
-        assertEquals(v2a, a.resolveMethod(v2a, c, true));
-        assertEquals(v2b, b.resolveMethod(v2a, c, true));
-        assertEquals(v2b, b.resolveMethod(v2b, c, true));
-        assertEquals(v2b, c.resolveMethod(v2a, c, true));
-        assertEquals(v2b, c.resolveMethod(v2b, c, true));
+        assertEquals(v1a, a.resolveMethod(v1a, c));
+        assertEquals(v1a, b.resolveMethod(v1a, c));
+        assertEquals(v1a, c.resolveMethod(v1a, c));
+        assertEquals(v2a, a.resolveMethod(v2a, c));
+        assertEquals(v2b, b.resolveMethod(v2a, c));
+        assertEquals(v2b, b.resolveMethod(v2b, c));
+        assertEquals(v2b, c.resolveMethod(v2a, c));
+        assertEquals(v2b, c.resolveMethod(v2b, c));
 
     }
 

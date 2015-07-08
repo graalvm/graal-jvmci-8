@@ -387,7 +387,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
 
     @Override
     public ResolvedJavaMethod resolveConcreteMethod(ResolvedJavaMethod method, ResolvedJavaType callerType) {
-        ResolvedJavaMethod resolvedMethod = resolveMethod(method, callerType, true);
+        ResolvedJavaMethod resolvedMethod = resolveMethod(method, callerType);
         if (resolvedMethod == null || resolvedMethod.isAbstract()) {
             return null;
         }
@@ -395,10 +395,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     }
 
     @Override
-    public ResolvedJavaMethod resolveMethod(ResolvedJavaMethod method, ResolvedJavaType callerType, boolean includeAbstract) {
-        if (!includeAbstract) {
-            return resolveConcreteMethod(method, callerType);
-        }
+    public ResolvedJavaMethod resolveMethod(ResolvedJavaMethod method, ResolvedJavaType callerType) {
         assert !callerType.isArray();
         if (method.isConcrete() && method.getDeclaringClass().equals(this) && method.isPublic()) {
             return method;
@@ -520,7 +517,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
          * The holder may be a subtype of the declaredHolder so make sure to resolve the method to
          * the correct method for the subtype.
          */
-        HotSpotResolvedJavaMethod resolvedMethod = (HotSpotResolvedJavaMethod) resolveMethod(hmethod, this, true);
+        HotSpotResolvedJavaMethod resolvedMethod = (HotSpotResolvedJavaMethod) resolveMethod(hmethod, this);
         if (resolvedMethod == null) {
             // The type isn't known to implement the method.
             return null;
