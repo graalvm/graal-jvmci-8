@@ -2030,7 +2030,7 @@ class JVMCIArchiveParticipant:
         for service, providers in self.jvmciServices.iteritems():
             arcname = 'META-INF/jvmci.services/' + service
             # Convert providers to a set before printing to remove duplicates
-            self.arc.zf.writestr(arcname, '\n'.join(frozenset(providers)))
+            self.arc.zf.writestr(arcname, '\n'.join(frozenset(providers))+ '\n')
 
 def mx_post_parse_cmd_line(opts):  #
     # TODO _minVersion check could probably be part of a Suite in mx?
