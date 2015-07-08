@@ -1951,48 +1951,45 @@ def checkheaders(args):
         mx.log('{0}: header does not match RegexpHeader defined in {1}'.format(n, v))
     return len(failures)
 
-def mx_init(suite):
-    commands = {
-        'build': [build, ''],
-        'buildjmh': [buildjmh, '[-options]'],
-        'buildvars': [buildvars, ''],
-        'buildvms': [buildvms, '[-options]'],
-        'c1visualizer' : [c1visualizer, ''],
-        'checkheaders': [checkheaders, ''],
-        'clean': [clean, ''],
-        'ctw': [ctw, '[-vmoptions|noinline|nocomplex|full]'],
-        'export': [export, '[-options] [zipfile]'],
-        'hsdis': [hsdis, '[att]'],
-        'hcfdis': [hcfdis, ''],
-        'igv' : [igv, ''],
-        'jdkhome': [print_jdkhome, ''],
-        'jmh': [jmh, '[VM options] [filters|JMH-args-as-json...]'],
-        'gate' : [gate, '[-options]'],
-        'makejmhdeps' : [makejmhdeps, ''],
-        'unittest' : [unittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
-        'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
-        'jacocoreport' : [jacocoreport, '[output directory]'],
-        'vm': [vm, '[-options] class [args...]'],
-        'deoptalot' : [deoptalot, '[n]'],
-        'longtests' : [longtests, ''],
-        'jol' : [jol, ''],
-        'makefile' : [mx_jvmci_makefile.build_makefile, 'build makefiles for JDK build'],
-    }
+mx.update_commands(_suite, {
+    'build': [build, ''],
+    'buildjmh': [buildjmh, '[-options]'],
+    'buildvars': [buildvars, ''],
+    'buildvms': [buildvms, '[-options]'],
+    'c1visualizer' : [c1visualizer, ''],
+    'checkheaders': [checkheaders, ''],
+    'clean': [clean, ''],
+    'ctw': [ctw, '[-vmoptions|noinline|nocomplex|full]'],
+    'export': [export, '[-options] [zipfile]'],
+    'hsdis': [hsdis, '[att]'],
+    'hcfdis': [hcfdis, ''],
+    'igv' : [igv, ''],
+    'jdkhome': [print_jdkhome, ''],
+    'jmh': [jmh, '[VM options] [filters|JMH-args-as-json...]'],
+    'gate' : [gate, '[-options]'],
+    'makejmhdeps' : [makejmhdeps, ''],
+    'unittest' : [unittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
+    'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
+    'jacocoreport' : [jacocoreport, '[output directory]'],
+    'vm': [vm, '[-options] class [args...]'],
+    'deoptalot' : [deoptalot, '[n]'],
+    'longtests' : [longtests, ''],
+    'jol' : [jol, ''],
+    'makefile' : [mx_jvmci_makefile.build_makefile, 'build makefiles for JDK build'],
+})
 
-    mx.add_argument('--jacoco', help='instruments com.oracle.* classes using JaCoCo', default='off', choices=['off', 'on', 'append'])
-    mx.add_argument('--vmcwd', dest='vm_cwd', help='current directory will be changed to <path> before the VM is executed', default=None, metavar='<path>')
-    mx.add_argument('--installed-jdks', help='the base directory in which the JDKs cloned from $JAVA_HOME exist. ' +
-                    'The VM selected by --vm and --vmbuild options is under this directory (i.e., ' +
-                    join('<path>', '<jdk-version>', '<vmbuild>', 'jre', 'lib', '<vm>', mx.add_lib_prefix(mx.add_lib_suffix('jvm'))) + ')', default=None, metavar='<path>')
+mx.add_argument('--jacoco', help='instruments com.oracle.* classes using JaCoCo', default='off', choices=['off', 'on', 'append'])
+mx.add_argument('--vmcwd', dest='vm_cwd', help='current directory will be changed to <path> before the VM is executed', default=None, metavar='<path>')
+mx.add_argument('--installed-jdks', help='the base directory in which the JDKs cloned from $JAVA_HOME exist. ' +
+                'The VM selected by --vm and --vmbuild options is under this directory (i.e., ' +
+                join('<path>', '<jdk-version>', '<vmbuild>', 'jre', 'lib', '<vm>', mx.add_lib_prefix(mx.add_lib_suffix('jvm'))) + ')', default=None, metavar='<path>')
 
-    mx.add_argument('--vm', action='store', dest='vm', choices=_vmChoices.keys(), help='the VM type to build/run')
-    mx.add_argument('--vmbuild', action='store', dest='vmbuild', choices=_vmbuildChoices, help='the VM build to build/run (default: ' + _vmbuildChoices[0] + ')')
-    mx.add_argument('--ecl', action='store_true', dest='make_eclipse_launch', help='create launch configuration for running VM execution(s) in Eclipse')
-    mx.add_argument('--vmprefix', action='store', dest='vm_prefix', help='prefix for running the VM (e.g. "/usr/bin/gdb --args")', metavar='<prefix>')
-    mx.add_argument('--gdb', action='store_const', const='/usr/bin/gdb --args', dest='vm_prefix', help='alias for --vmprefix "/usr/bin/gdb --args"')
-    mx.add_argument('--lldb', action='store_const', const='lldb --', dest='vm_prefix', help='alias for --vmprefix "lldb --"')
-
-    mx.update_commands(suite, commands)
+mx.add_argument('--vm', action='store', dest='vm', choices=_vmChoices.keys(), help='the VM type to build/run')
+mx.add_argument('--vmbuild', action='store', dest='vmbuild', choices=_vmbuildChoices, help='the VM build to build/run (default: ' + _vmbuildChoices[0] + ')')
+mx.add_argument('--ecl', action='store_true', dest='make_eclipse_launch', help='create launch configuration for running VM execution(s) in Eclipse')
+mx.add_argument('--vmprefix', action='store', dest='vm_prefix', help='prefix for running the VM (e.g. "/usr/bin/gdb --args")', metavar='<prefix>')
+mx.add_argument('--gdb', action='store_const', const='/usr/bin/gdb --args', dest='vm_prefix', help='alias for --vmprefix "/usr/bin/gdb --args"')
+mx.add_argument('--lldb', action='store_const', const='lldb --', dest='vm_prefix', help='alias for --vmprefix "lldb --"')
 
 class JVMCIArchiveParticipant:
     def __init__(self, dist):
@@ -2035,7 +2032,7 @@ class JVMCIArchiveParticipant:
             # Convert providers to a set before printing to remove duplicates
             self.arc.zf.writestr(arcname, '\n'.join(frozenset(providers))+ '\n')
 
-def mx_post_parse_cmd_line(opts):  #
+def mx_post_parse_cmd_line(opts):
     # TODO _minVersion check could probably be part of a Suite in mx?
     def _versionCheck(version):
         return version >= _minVersion and (not _untilVersion or version >= _untilVersion)
