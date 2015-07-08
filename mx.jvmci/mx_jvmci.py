@@ -89,11 +89,15 @@ class JDKDeployedDist:
         self.usesJVMCIClassLoader = usesJVMCIClassLoader
         self.partOfHotSpot = partOfHotSpot # true when this distribution is delivered with HotSpot
 
-        # A hook called after the jar(s) for this dist have been deployed into a JDK. If not None,
-        # this hook is called with these arguments:
-        #  jdkDir: the root directory of the JDK
-        #  targetDir: the directory into which the jar(s) were installed
-        self.postJdkInstall = None
+    def onPostJdkInstall(self, jdkDir, targetDir):
+        '''
+        Called after the jar(s) for this dist have been deployed to 'targetDir' which
+        is in the JDK at 'jdkDir'.
+        '''
+        pass
+
+    def dist(self):
+        return mx.distribution(self.name)
 
 """
 List of distributions that are deployed into a JDK by mx.
@@ -610,8 +614,7 @@ def _installDistInJdks(deployableDist):
                 if deployableDist.usesJVMCIClassLoader:
                     # deploy service files
                     _updateJVMCIFiles(jdkDir)
-                if deployableDist.postJdkInstall:
-                    deployableDist.postJdkInstall(jdkDir, targetDir)
+                deployableDist.onPostJdkInstall(jdkDir, targetDir)
 
 def _check_for_obsolete_jvmci_files():
     jdks = _jdksDir()
@@ -763,7 +766,7 @@ def build(args, vm=None):
         return
 
     if opts2.java and not opts2.projects and not opts2.only:
-        # Only check deployed JVMCI files on a full build 
+        # Only check deployed JVMCI files on a full build
         _check_for_obsolete_jvmci_files()
 
     builds = [_vmbuild]
