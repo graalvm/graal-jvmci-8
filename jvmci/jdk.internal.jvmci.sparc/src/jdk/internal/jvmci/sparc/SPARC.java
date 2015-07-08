@@ -244,6 +244,11 @@ public class SPARC extends Architecture {
 
     public static final int INSTRUCTION_SIZE = 4;
 
+    /**
+     * Size to keep free for flushing the register-window to stack.
+     */
+    public static final int REGISTER_SAFE_AREA_SIZE = 128;
+
     public final Set<CPUFeature> features;
 
     public SPARC(Set<CPUFeature> features) {

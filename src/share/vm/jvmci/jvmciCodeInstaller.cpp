@@ -433,7 +433,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
     methodHandle method = getMethodFromHotSpotMethod(HotSpotCompiledNmethod::method(compiled_code));
     jint entry_bci = HotSpotCompiledNmethod::entryBCI(compiled_code);
     jint id = HotSpotCompiledNmethod::id(compiled_code);
-    jboolean has_unsafe_access = HotSpotCompiledNmethod::hasUnsafeAccess(compiled_code);
+    bool has_unsafe_access = HotSpotCompiledNmethod::hasUnsafeAccess(compiled_code) == JNI_TRUE;
     JVMCIEnv* env = (JVMCIEnv*) (address) HotSpotCompiledNmethod::jvmciEnv(compiled_code);
     if (id == -1) {
       // Make sure a valid compile_id is associated with every compile
@@ -442,7 +442,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBl
     result = JVMCIEnv::register_method(method, nm, entry_bci, &_offsets, _custom_stack_area_offset, &buffer,
                                        stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
                                        JVMCICompiler::instance(), _debug_recorder, _dependencies, env, id,
-                                       (bool) has_unsafe_access, _has_wide_vector, installed_code, compiled_code, speculation_log);
+                                       has_unsafe_access, _has_wide_vector, installed_code, compiled_code, speculation_log);
     cb = nm;
   }
 

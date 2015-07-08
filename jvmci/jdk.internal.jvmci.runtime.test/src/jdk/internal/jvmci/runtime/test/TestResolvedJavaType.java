@@ -563,7 +563,7 @@ public class TestResolvedJavaType extends TypeUniverse {
                 for (Method m : c.getDeclaredMethods()) {
                     if (JAVA_VERSION <= 1.7D || (!isStatic(m.getModifiers()) && !isPrivate(m.getModifiers()))) {
                         ResolvedJavaMethod resolved = metaAccess.lookupJavaMethod(m);
-                        ResolvedJavaMethod impl = type.resolveMethod(resolved, context, true);
+                        ResolvedJavaMethod impl = type.resolveMethod(resolved, context);
                         ResolvedJavaMethod expected = resolved.isDefault() || resolved.isAbstract() ? resolved : null;
                         assertEquals(m.toString(), expected, impl);
                     } else {
