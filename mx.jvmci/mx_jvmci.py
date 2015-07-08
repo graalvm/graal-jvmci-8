@@ -114,6 +114,27 @@ def isVMSupported(vm):
         return False
     return True
 
+def get_vm_cwd():
+    """
+    Get the current working directory to switch to before running the VM.
+    """
+    return _vm_cwd
+
+def get_installed_jdks():
+    """
+    Get the base directory in which the JDKs cloned from $JAVA_HOME exist.
+    """
+    return _installed_jdks
+
+def get_vm_prefix():
+    """
+    Get the prefix for running the VM ("/usr/bin/gdb --args").
+    """
+    return _vm_prefix
+
+def get_vm_choices():
+    return _vmChoices
+
 def get_vm():
     """
     Gets the configured VM, presenting a dialogue if there is no currently configured VM.
@@ -317,7 +338,7 @@ def export(args):
         n = _writeJson("jvmci", {'javacompiler' : 'javac'})
         tar.add(n, n)
 
-def _vmLibDirInJdk(jdk):
+def vmLibDirInJdk(jdk):
     """
     Gets the directory within a JDK where the server and client
     sub-directories are located.
@@ -329,7 +350,7 @@ def _vmLibDirInJdk(jdk):
         return join(jdk, 'jre', 'bin')
     return join(jdk, 'jre', 'lib', mx.get_arch())
 
-def _vmJliLibDirs(jdk):
+def getVmJliLibDirs(jdk):
     """
     Get the directories within a JDK where the jli library designates to.
     """
@@ -340,14 +361,14 @@ def _vmJliLibDirs(jdk):
         return [join(jdk, 'jre', 'bin'), join(jdk, 'bin')]
     return [join(jdk, 'jre', 'lib', mx.get_arch(), 'jli'), join(jdk, 'lib', mx.get_arch(), 'jli')]
 
-def _vmCfgInJdk(jdk, jvmCfgFile='jvm.cfg'):
+def getVmCfgInJdk(jdk, jvmCfgFile='jvm.cfg'):
     """
     Get the jvm.cfg file.
     """
     mxos = mx.get_os()
     if mxos == "windows" or mxos == "cygwin":
         return join(jdk, 'jre', 'lib', mx.get_arch(), jvmCfgFile)
-    return join(_vmLibDirInJdk(jdk), jvmCfgFile)
+    return join(vmLibDirInJdk(jdk), jvmCfgFile)
 
 def _jdksDir():
     return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, 'jdk' + str(mx.java().version)))
@@ -363,7 +384,7 @@ def _handle_missing_VM(bld, vm=None):
             return
     mx.abort('You need to run "mx --vm ' + vm + ' --vmbuild ' + bld + ' build" to build the selected VM')
 
-def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
+def get_jdk(build=None, vmToCheck=None, create=False, installJars=True):
     """
     Get the JDK into which JVMCI is installed, creating it first if necessary.
     """
@@ -378,7 +399,7 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
 
             # Make a copy of the default VM so that this JDK can be
             # reliably used as the bootstrap for a HotSpot build.
-            jvmCfg = _vmCfgInJdk(jdk)
+            jvmCfg = getVmCfgInJdk(jdk)
             if not exists(jvmCfg):
                 mx.abort(jvmCfg + ' does not exist')
 
@@ -401,7 +422,7 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
 
             assert defaultVM is not None, 'Could not find default VM in ' + jvmCfg
             chmodRecursive(jdk, JDK_UNIX_PERMISSIONS_DIR)
-            shutil.move(join(_vmLibDirInJdk(jdk), defaultVM), join(_vmLibDirInJdk(jdk), 'original'))
+            shutil.move(join(vmLibDirInJdk(jdk), defaultVM), join(vmLibDirInJdk(jdk), 'original'))
 
             if mx.get_os() != 'windows':
                 os.chmod(jvmCfg, JDK_UNIX_PERMISSIONS_FILE)
@@ -435,7 +456,7 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
 
             # Install a copy of the disassembler library
             try:
-                hsdis([], copyToDir=_vmLibDirInJdk(jdk))
+                hsdis([], copyToDir=vmLibDirInJdk(jdk))
             except SystemExit:
                 pass
     else:
@@ -451,7 +472,7 @@ def _jdk(build=None, vmToCheck=None, create=False, installJars=True):
                 _installDistInJdks(jdkDist)
 
     if vmToCheck is not None:
-        jvmCfg = _vmCfgInJdk(jdk)
+        jvmCfg = getVmCfgInJdk(jdk)
         found = False
         with open(jvmCfg) as f:
             for line in f:
@@ -483,7 +504,7 @@ def _makeHotspotGeneratedSourcesDir():
         os.makedirs(hsSrcGenDir)
     return hsSrcGenDir
 
-def _copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
+def copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
     name = os.path.basename(src)
     dstLib = join(dst, name)
     if mx.get_env('SYMLINK_GRAAL_JAR', None) == 'true':
@@ -583,9 +604,9 @@ def _installDistInJdks(deployableDist):
                     targetDir = jreLibDir
                 if not exists(targetDir):
                     os.makedirs(targetDir)
-                _copyToJdk(dist.path, targetDir)
+                copyToJdk(dist.path, targetDir)
                 if dist.sourcesPath:
-                    _copyToJdk(dist.sourcesPath, jdkDir)
+                    copyToJdk(dist.sourcesPath, jdkDir)
                 if deployableDist.usesJVMCIClassLoader:
                     # deploy service files
                     _updateJVMCIFiles(jdkDir)
@@ -684,7 +705,7 @@ def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo
 
 def jdkhome(vm=None):
     """return the JDK directory selected for the 'vm' command"""
-    return _jdk(installJars=False)
+    return get_jdk(installJars=False)
 
 def print_jdkhome(args, vm=None):
     """print the JDK directory selected for the 'vm' command"""
@@ -776,7 +797,7 @@ def build(args, vm=None):
     isWindows = platform.system() == 'Windows' or "CYGWIN" in platform.system()
     for build in builds:
         installJars = vm != 'original' and (isWindows or not opts2.java)
-        jdk = _jdk(build, create=True, installJars=installJars)
+        jdk = get_jdk(build, create=True, installJars=installJars)
 
         if vm == 'original':
             if build != 'product':
@@ -787,7 +808,7 @@ def build(args, vm=None):
             mx.log('The ' + vm + ' VM is not supported on this platform - skipping')
             continue
 
-        vmDir = join(_vmLibDirInJdk(jdk), vm)
+        vmDir = join(vmLibDirInJdk(jdk), vm)
         if not exists(vmDir):
             chmodRecursive(jdk, JDK_UNIX_PERMISSIONS_DIR)
             mx.log('Creating VM directory in JDK: ' + vmDir)
@@ -914,7 +935,7 @@ def build(args, vm=None):
                 mx.log('--------------------------------------------------------')
             mx.run(runCmd, err=filterXusage, env=env)
 
-        jvmCfg = _vmCfgInJdk(jdk)
+        jvmCfg = getVmCfgInJdk(jdk)
         if not exists(jvmCfg):
             mx.abort(jvmCfg + ' does not exist')
 
@@ -984,7 +1005,7 @@ def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
         mx.abort("conflicting working directories: do not set --vmcwd for this command")
 
     build = vmbuild if vmbuild else _vmbuild
-    jdk = _jdk(build, vmToCheck=vm, installJars=False)
+    jdk = get_jdk(build, vmToCheck=vm, installJars=False)
     _updateInstalledJVMCIOptionsFile(jdk)
     mx.expand_project_in_args(args)
     if _make_eclipse_launch:
@@ -1182,7 +1203,7 @@ def ctw(args):
     if args.jar:
         jar = os.path.abspath(args.jar)
     else:
-        jar = join(_jdk(installJars=False), 'jre', 'lib', 'rt.jar')
+        jar = join(get_jdk(installJars=False), 'jre', 'lib', 'rt.jar')
         vmargs.append('-G:CompileTheWorldExcludeMethodFilter=sun.awt.X11.*.*')
 
     vmargs += ['-XX:+CompileTheWorld']
@@ -1280,7 +1301,7 @@ def _jvmci_gate_runner(args, tasks):
                     buildvms(['--vms', 'server-nojvmci', '--builds', 'product,optimized'])
 
 """
-List of function called by the gate once common gate tasks have been executed.
+List of functions called by the gate once common gate tasks have been executed.
 Each function is called with these arguments:
   args: the argparse.Namespace object containing result of parsing gate command line
   tasks: list of Task to which extra Tasks should be added
@@ -1620,7 +1641,7 @@ def buildjmh(args):
             else:
                 buildOutput.append(x)
         env = os.environ.copy()
-        env['JAVA_HOME'] = _jdk(vmToCheck='server')
+        env['JAVA_HOME'] = get_jdk(vmToCheck='server')
         env['MAVEN_OPTS'] = '-server -XX:-UseJVMCIClassLoader'
         mx.log("Building benchmarks...")
         cmd = ['mvn']
