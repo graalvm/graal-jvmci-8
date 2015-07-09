@@ -37,35 +37,35 @@ import java.util.*;
  *
  * <p>
  * If the result value is created from one or more input values, the {@link LIRKind} should be
- * created with {@link LIRKind#derive}(inputs). If the result has a different {@link PlatformKind}
- * than the inputs, {@link LIRKind#derive}(inputs).{@link #changeType}(resultKind) should be used.
+ * created with {@link LIRKind#combine}(inputs). If the result has a different {@link PlatformKind}
+ * than the inputs, {@link LIRKind#combine}(inputs).{@link #changeType}(resultKind) should be used.
  * <p>
  * If the result is an exact copy of one of the inputs, {@link Value#getLIRKind()} can be used. Note
  * that this is only correct for move-like operations, like conditional move or compare-and-swap.
- * For convert operations, {@link LIRKind#derive} should be used.
+ * For convert operations, {@link LIRKind#combine} should be used.
  * <p>
  * If it is known that the result will be a reference (e.g. pointer arithmetic where the end result
  * is a valid oop), {@link LIRKind#reference} should be used.
  * <p>
  * If it is known that the result will neither be a reference nor be derived from a reference,
  * {@link LIRKind#value} can be used. If the operation producing this value has inputs, this is very
- * likely wrong, and {@link LIRKind#derive} should be used instead.
+ * likely wrong, and {@link LIRKind#combine} should be used instead.
  * <p>
- * If it is known that the result is derived from a reference, {@link LIRKind#derivedReference} can
- * be used. In most cases, {@link LIRKind#derive} should be used instead, since it is able to detect
- * this automatically.
+ * If it is known that the result is derived from a reference in a way that the garbage collector
+ * can not track, {@link LIRKind#unknownReference} can be used. In most cases,
+ * {@link LIRKind#combine} should be used instead, since it is able to detect this automatically.
  */
 public final class LIRKind {
 
     /**
-     * The non-type. This uses {@link #derivedReference}, so it can never be part of an oop map.
+     * The non-type. This uses {@link #unknownReference}, so it can never be part of an oop map.
      */
-    public static final LIRKind Illegal = derivedReference(Kind.Illegal);
+    public static final LIRKind Illegal = unknownReference(Kind.Illegal);
 
     private final PlatformKind platformKind;
     private final int referenceMask;
 
-    private static final int DERIVED_REFERENCE = -1;
+    private static final int UNKNOWN_REFERENCE = -1;
 
     private LIRKind(PlatformKind platformKind, int referenceMask) {
         this.platformKind = platformKind;
@@ -75,7 +75,7 @@ public final class LIRKind {
     /**
      * Create a {@link LIRKind} of type {@code platformKind} that contains a primitive value. Should
      * be only used when it's guaranteed that the value is not even indirectly derived from a
-     * reference. Otherwise, {@link #derive(Value...)} should be used instead.
+     * reference. Otherwise, {@link #combine(Value...)} should be used instead.
      */
     public static LIRKind value(PlatformKind platformKind) {
         assert platformKind != Kind.Object : "Object should always be used as reference type";
@@ -94,30 +94,30 @@ public final class LIRKind {
 
     /**
      * Create a {@link LIRKind} of type {@code platformKind} that contains a value that is derived
-     * from a reference. Values of this {@link LIRKind} can not be live at safepoints. In most
-     * cases, this should not be called directly. {@link #derive} should be used instead to
-     * automatically propagate this information.
+     * from a reference in a non-linear way. Values of this {@link LIRKind} can not be live at
+     * safepoints. In most cases, this should not be called directly. {@link #combine} should be
+     * used instead to automatically propagate this information.
      */
-    public static LIRKind derivedReference(PlatformKind platformKind) {
-        return new LIRKind(platformKind, DERIVED_REFERENCE);
+    public static LIRKind unknownReference(PlatformKind platformKind) {
+        return new LIRKind(platformKind, UNKNOWN_REFERENCE);
     }
 
     /**
      * Derive a new type from inputs. The result will have the {@link PlatformKind} of one of the
-     * inputs. If all inputs are values, the result is a value. Otherwise, the result is a derived
+     * inputs. If all inputs are values, the result is a value. Otherwise, the result is an unknown
      * reference.
      *
      * This method should be used to construct the result {@link LIRKind} of any operation that
      * modifies values (e.g. arithmetics).
      */
-    public static LIRKind derive(Value... inputs) {
+    public static LIRKind combine(Value... inputs) {
         assert inputs.length > 0;
         for (Value input : inputs) {
             LIRKind kind = input.getLIRKind();
-            if (kind.isDerivedReference()) {
+            if (kind.isUnknownReference()) {
                 return kind;
             } else if (!kind.isValue()) {
-                return kind.makeDerivedReference();
+                return kind.makeUnknownReference();
             }
         }
 
@@ -128,10 +128,10 @@ public final class LIRKind {
     /**
      * Merge the types of the inputs. The result will have the {@link PlatformKind} of one of the
      * inputs. If all inputs are values (references), the result is a value (reference). Otherwise,
-     * the result is a derived reference.
+     * the result is an unknown reference.
      *
-     * This method should be used to construct the result {@link LIRKind} of merge operation that do
-     * not modify values (e.g. phis).
+     * This method should be used to construct the result {@link LIRKind} of merge operation that
+     * does not modify values (e.g. phis).
      */
     public static LIRKind merge(Value... inputs) {
         assert inputs.length > 0;
@@ -150,9 +150,9 @@ public final class LIRKind {
 
         for (LIRKind kind : kinds) {
 
-            if (kind.isDerivedReference()) {
+            if (kind.isUnknownReference()) {
                 /**
-                 * Kind is a derived reference therefore the result can only be also a derived
+                 * Kind is an unknown reference, therefore the result can only be also an unknown
                  * reference.
                  */
                 mergeKind = kind;
@@ -167,10 +167,10 @@ public final class LIRKind {
                 /* Kind is a value. */
                 if (mergeKind.referenceMask != 0) {
                     /*
-                     * Inputs consists of values and references. Make the result a derived
+                     * Inputs consists of values and references. Make the result an unknown
                      * reference.
                      */
-                    mergeKind = mergeKind.makeDerivedReference();
+                    mergeKind = mergeKind.makeUnknownReference();
                     break;
                 }
                 /* Check that other inputs are also values. */
@@ -178,9 +178,9 @@ public final class LIRKind {
                 /* Kind is a reference. */
                 if (mergeKind.referenceMask != kind.referenceMask) {
                     /*
-                     * Reference maps do not match so the result can only be a derived reference.
+                     * Reference maps do not match so the result can only be an unknown reference.
                      */
-                    mergeKind = mergeKind.makeDerivedReference();
+                    mergeKind = mergeKind.makeUnknownReference();
                     break;
                 }
             }
@@ -207,8 +207,8 @@ public final class LIRKind {
     public LIRKind changeType(PlatformKind newPlatformKind) {
         if (newPlatformKind == platformKind) {
             return this;
-        } else if (isDerivedReference()) {
-            return derivedReference(newPlatformKind);
+        } else if (isUnknownReference()) {
+            return unknownReference(newPlatformKind);
         } else if (referenceMask == 0) {
             // value type
             return new LIRKind(newPlatformKind, 0);
@@ -216,7 +216,7 @@ public final class LIRKind {
             // reference type
             int newLength = Math.min(32, newPlatformKind.getVectorLength());
             int newReferenceMask = referenceMask & (0xFFFFFFFF >>> (32 - newLength));
-            assert newReferenceMask != DERIVED_REFERENCE;
+            assert newReferenceMask != UNKNOWN_REFERENCE;
             return new LIRKind(newPlatformKind, newReferenceMask);
         }
     }
@@ -226,8 +226,8 @@ public final class LIRKind {
      * new kind is longer than this, the reference positions are repeated to fill the vector.
      */
     public LIRKind repeat(PlatformKind newPlatformKind) {
-        if (isDerivedReference()) {
-            return derivedReference(newPlatformKind);
+        if (isUnknownReference()) {
+            return unknownReference(newPlatformKind);
         } else if (referenceMask == 0) {
             // value type
             return new LIRKind(newPlatformKind, 0);
@@ -243,16 +243,17 @@ public final class LIRKind {
                 newReferenceMask |= referenceMask << i;
             }
 
-            assert newReferenceMask != DERIVED_REFERENCE;
+            assert newReferenceMask != UNKNOWN_REFERENCE;
             return new LIRKind(newPlatformKind, newReferenceMask);
         }
     }
 
     /**
-     * Create a new {@link LIRKind} with the same type, but marked as containing a derivedReference.
+     * Create a new {@link LIRKind} with the same type, but marked as containing an
+     * {@link LIRKind#unknownReference}.
      */
-    public LIRKind makeDerivedReference() {
-        return new LIRKind(platformKind, DERIVED_REFERENCE);
+    public LIRKind makeUnknownReference() {
+        return new LIRKind(platformKind, UNKNOWN_REFERENCE);
     }
 
     /**
@@ -263,15 +264,15 @@ public final class LIRKind {
     }
 
     /**
-     * Check whether this value is derived from a reference. If this returns {@code true}, this
-     * value must not be live at safepoints.
+     * Check whether this value is derived from a reference in a non-linear way. If this returns
+     * {@code true}, this value must not be live at safepoints.
      */
-    public boolean isDerivedReference() {
-        return referenceMask == DERIVED_REFERENCE;
+    public boolean isUnknownReference() {
+        return referenceMask == UNKNOWN_REFERENCE;
     }
 
     public int getReferenceCount() {
-        assert !isDerivedReference();
+        assert !isUnknownReference();
         return Integer.bitCount(referenceMask);
     }
 
@@ -284,7 +285,7 @@ public final class LIRKind {
      */
     public boolean isReference(int idx) {
         assert 0 <= idx && idx < platformKind.getVectorLength() : "invalid index " + idx + " in " + this;
-        return !isDerivedReference() && (referenceMask & 1 << idx) != 0;
+        return !isUnknownReference() && (referenceMask & 1 << idx) != 0;
     }
 
     /**
@@ -298,7 +299,7 @@ public final class LIRKind {
     public String toString() {
         if (isValue()) {
             return platformKind.name();
-        } else if (isDerivedReference()) {
+        } else if (isUnknownReference()) {
             return platformKind.name() + "[*]";
         } else {
             StringBuilder ret = new StringBuilder();
@@ -348,7 +349,7 @@ public final class LIRKind {
          * (phi-)moves from e.g. integer to short can happen. Therefore we compare stack kinds.
          */
         if (toStackKind(src.getPlatformKind()).equals(toStackKind(dst.getPlatformKind()))) {
-            return !src.isDerivedReference() || dst.isDerivedReference();
+            return !src.isUnknownReference() || dst.isUnknownReference();
         }
         return false;
     }

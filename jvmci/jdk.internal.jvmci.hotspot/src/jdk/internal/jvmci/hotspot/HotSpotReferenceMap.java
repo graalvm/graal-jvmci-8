@@ -68,7 +68,7 @@ public final class HotSpotReferenceMap extends ReferenceMap {
         LIRKind lirKind = v.getLIRKind();
         if (!lirKind.isValue()) {
             objectValues.add(v);
-            if (lirKind.isDerivedReference()) {
+            if (lirKind.isUnknownReference()) {
                 objectCount++;
             } else {
                 objectCount += lirKind.getReferenceCount();
@@ -92,7 +92,7 @@ public final class HotSpotReferenceMap extends ReferenceMap {
         for (Value obj : objectValues) {
             LIRKind kind = obj.getLIRKind();
             int bytes = bytesPerElement(kind);
-            if (kind.isDerivedReference()) {
+            if (kind.isUnknownReference()) {
                 throw JVMCIError.unimplemented("derived references not yet implemented");
             } else {
                 for (int i = 0; i < kind.getPlatformKind().getVectorLength(); i++) {
