@@ -53,7 +53,7 @@ def build_makefile(args):
     opts = parser.parse_args(args)
 
     if opts.selectedDists == None or len(opts.selectedDists) == 0:
-        opts.selectedDists = [d.name for d in mx_jvmci._jdkDeployedDists if d.partOfHotSpot]
+        opts.selectedDists = [d.name for d in mx_jvmci.jdkDeployedDists if d.partOfHotSpot]
     mf = Makefile()
     commandline = " ".join(["mx.sh", "makefile"] + args)
     if do_build_makefile(mf, opts.selectedDists, commandline):
@@ -76,7 +76,7 @@ def filter_projects(deps, t):
     return [d for d in deps if typeFilter(d)]
 
 def get_jdk_deployed_dists():
-    return [d.name for d in mx_jvmci._jdkDeployedDists]
+    return [d.name for d in mx_jvmci.jdkDeployedDists]
 
 def update_list(li, elements):
     for e in elements:
@@ -115,7 +115,7 @@ def make_dist_rule(dist, mf):
             for src in [projectDir + '/' + d for d in p.srcDirs]:
                 sources.append("$(shell find {} -type f 2> /dev/null)".format(src))
                 metaInf = src + "/META-INF"
-                if os.path.exists(metaInf):
+                if os.path.exists(os.path.join(dist.suite.dir, metaInf)):
                     resources.append(metaInf)
 
 
@@ -280,7 +280,7 @@ clean:
 .PHONY: export clean
 
 """)
-    s = mx.suite("graal")
+    s = mx_jvmci._suite
     dists = []
     ap = []
     projects = []

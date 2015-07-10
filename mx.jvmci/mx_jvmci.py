@@ -1345,7 +1345,7 @@ def gate(args):
     try:
         with Task('Check jvmci.make in sync with suite.py', tasks) as t:
             if t:
-                jvmciMake = join('make', 'jvmci.make')
+                jvmciMake = join(_suite.dir, 'make', 'jvmci.make')
                 if mx_jvmci_makefile.build_makefile(['-o', jvmciMake]) != 0:
                     t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
 
@@ -1575,8 +1575,8 @@ def makejmhdeps(args):
 
     def makejmhdep(artifactId, groupId, deps):
         path = artifactId + '.jar'
+        allDeps = []
         if args.permissive:
-            allDeps = []
             for name in deps:
                 dist = mx.distribution(name, fatalIfMissing=False)
                 if dist:
@@ -1587,7 +1587,7 @@ def makejmhdeps(args):
                             mx.log('Skipping dependency ' + groupId + '.' + artifactId + ' as ' + name + ' cannot be resolved')
                             return
                     allDeps.append(name)
-        d = mx.Distribution(_suite, name=artifactId, path=path, sourcesPath=path, deps=allDeps, mainClass=None, excludedDependencies=[], distDependencies=[], javaCompliance=None)
+        d = mx.Distribution(_suite, name=artifactId, subDir=_suite.dir, path=path, sourcesPath=path, deps=allDeps, mainClass=None, excludedDependencies=[], distDependencies=[], javaCompliance=None)
         d.make_archive()
         cmd = ['mvn', 'install:install-file', '-DgroupId=' + groupId, '-DartifactId=' + artifactId,
                '-Dversion=1.0-SNAPSHOT', '-Dpackaging=jar', '-Dfile=' + d.path]
