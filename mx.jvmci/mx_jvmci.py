@@ -1589,13 +1589,16 @@ def makejmhdeps(args):
                     allDeps.append(name)
         d = mx.Distribution(_suite, name=artifactId, subDir=_suite.dir, path=path, sourcesPath=path, deps=allDeps, mainClass=None, excludedDependencies=[], distDependencies=[], javaCompliance=None)
         d.make_archive()
+        env = os.environ.copy()
+        env['JAVA_HOME'] = get_jdk(vmToCheck='server')
+        env['MAVEN_OPTS'] = '-server -XX:-UseJVMCIClassLoader'
         cmd = ['mvn', 'install:install-file', '-DgroupId=' + groupId, '-DartifactId=' + artifactId,
                '-Dversion=1.0-SNAPSHOT', '-Dpackaging=jar', '-Dfile=' + d.path]
         if not mx._opts.verbose:
             cmd.append('-q')
         if args.settings:
             cmd = cmd + ['-s', args.settings]
-        mx.run(cmd)
+        mx.run(cmd, env=env)
         os.unlink(d.path)
 
     jmhPath = _get_jmh_path()
