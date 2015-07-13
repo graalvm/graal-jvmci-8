@@ -79,7 +79,8 @@ void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset
   }else {
     int const_size = align_size_up(_constants->end()-_constants->start(), CodeEntryAlignment);
     NativeMovRegMem* load = nativeMovRegMem_at(pc);
-    load->set_offset(- (const_size - data_offset));
+    // This offset must match with SPARCLoadConstantTableBaseOp.emitCode
+    load->set_offset(- (const_size - data_offset + Assembler::min_simm13()));
     TRACE_jvmci_3("relocating ld at %p (+%d) with destination at %d", pc, pc_offset, data_offset);
   }
 }
