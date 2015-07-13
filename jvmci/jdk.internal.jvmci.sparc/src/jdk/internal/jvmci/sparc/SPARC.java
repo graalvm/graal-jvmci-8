@@ -286,8 +286,10 @@ public class SPARC extends Architecture {
     public PlatformKind getLargestStorableKind(RegisterCategory category) {
         if (category.equals(CPU)) {
             return Kind.Long;
-        } else if (category.equals(FPUs)) {
+        } else if (category.equals(FPUd)) {
             return Kind.Double;
+        } else if (category.equals(FPUs)) {
+            return Kind.Float;
         } else {
             return Kind.Illegal;
         }
