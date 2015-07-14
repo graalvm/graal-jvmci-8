@@ -318,6 +318,10 @@ public class SPARC extends Architecture {
         return true;
     }
 
+    public static boolean isGlobalRegister(Register r) {
+        return isCPURegister(r) && g0.number <= r.number && r.number <= g7.number;
+    }
+
     public static boolean isSingleFloatRegister(Register r) {
         return r.name.startsWith("f");
     }
