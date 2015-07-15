@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,8 +24,6 @@ package jdk.internal.jvmci.code;
 
 import java.util.*;
 
-import jdk.internal.jvmci.meta.*;
-
 /**
  * Represents the debugging information for a particular point of execution. This information
  * includes:
@@ -42,7 +40,7 @@ public final class DebugInfo {
 
     private final BytecodePosition bytecodePosition;
     private final ReferenceMap referenceMap;
-    @SuppressWarnings("unused") private final Value[] virtualObjectMapping;
+    @SuppressWarnings("unused") private final VirtualObject[] virtualObjectMapping;
     private RegisterSaveLayout calleeSaveInfo;
 
     /**
@@ -53,7 +51,7 @@ public final class DebugInfo {
      * @param referenceMap the reference map
      * @param virtualObjectMapping the mapping of {@link VirtualObject}s to their real values
      */
-    public DebugInfo(BytecodePosition codePos, ReferenceMap referenceMap, Value[] virtualObjectMapping) {
+    public DebugInfo(BytecodePosition codePos, ReferenceMap referenceMap, VirtualObject[] virtualObjectMapping) {
         this.bytecodePosition = codePos;
         this.referenceMap = referenceMap;
         this.virtualObjectMapping = virtualObjectMapping;

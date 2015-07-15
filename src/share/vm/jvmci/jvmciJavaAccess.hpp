@@ -155,7 +155,7 @@ void jvmci_compute_offsets();
     oop_field(DebugInfo, bytecodePosition, "Ljdk/internal/jvmci/code/BytecodePosition;")                                                                         \
     oop_field(DebugInfo, referenceMap, "Ljdk/internal/jvmci/code/ReferenceMap;")                                                                                 \
     oop_field(DebugInfo, calleeSaveInfo, "Ljdk/internal/jvmci/code/RegisterSaveLayout;")                                                                         \
-    objArrayOop_field(DebugInfo, virtualObjectMapping, "[Ljdk/internal/jvmci/meta/Value;")                                                                       \
+    objArrayOop_field(DebugInfo, virtualObjectMapping, "[Ljdk/internal/jvmci/code/VirtualObject;")                                                               \
   end_class                                                                                                                                                    \
   start_class(HotSpotReferenceMap)                                                                                                                             \
     objArrayOop_field(HotSpotReferenceMap, objects, "[Ljdk/internal/jvmci/code/Location;")                                                                       \
