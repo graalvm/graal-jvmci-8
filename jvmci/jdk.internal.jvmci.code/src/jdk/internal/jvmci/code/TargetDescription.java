@@ -136,6 +136,4 @@ public abstract class TargetDescription {
                 return LIRKind.Illegal;
         }
     }
-
-    public abstract ReferenceMap createReferenceMap(boolean hasRegisters, int stackSlotCount, int totalFrameSize);
 }

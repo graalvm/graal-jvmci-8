@@ -39,7 +39,7 @@ import java.util.*;
 public final class DebugInfo {
 
     private final BytecodePosition bytecodePosition;
-    private final ReferenceMap referenceMap;
+    private ReferenceMap referenceMap;
     @SuppressWarnings("unused") private final VirtualObject[] virtualObjectMapping;
     private RegisterSaveLayout calleeSaveInfo;
 
@@ -48,17 +48,19 @@ public final class DebugInfo {
      *
      * @param codePos the {@linkplain BytecodePosition code position} or {@linkplain BytecodeFrame
      *            frame} info
-     * @param referenceMap the reference map
      * @param virtualObjectMapping the mapping of {@link VirtualObject}s to their real values
      */
-    public DebugInfo(BytecodePosition codePos, ReferenceMap referenceMap, VirtualObject[] virtualObjectMapping) {
+    public DebugInfo(BytecodePosition codePos, VirtualObject[] virtualObjectMapping) {
         this.bytecodePosition = codePos;
-        this.referenceMap = referenceMap;
         this.virtualObjectMapping = virtualObjectMapping;
     }
 
     public DebugInfo(BytecodePosition codePos) {
-        this(codePos, null, null);
+        this(codePos, null);
+    }
+
+    public void setReferenceMap(ReferenceMap referenceMap) {
+        this.referenceMap = referenceMap;
     }
 
     /**

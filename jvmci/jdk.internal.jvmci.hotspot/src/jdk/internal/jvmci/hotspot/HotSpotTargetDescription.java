@@ -29,9 +29,4 @@ public class HotSpotTargetDescription extends TargetDescription {
     public HotSpotTargetDescription(Architecture arch, boolean isMP, int stackAlignment, int implicitNullCheckLimit, boolean inlineObjects) {
         super(arch, isMP, stackAlignment, implicitNullCheckLimit, inlineObjects);
     }
-
-    @Override
-    public ReferenceMap createReferenceMap(boolean hasRegisters, int stackSlotCount, int totalFrameSize) {
-        return new HotSpotReferenceMap(this, totalFrameSize);
-    }
 }
