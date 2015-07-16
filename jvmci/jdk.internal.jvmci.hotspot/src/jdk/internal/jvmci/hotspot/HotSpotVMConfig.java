@@ -808,6 +808,8 @@ public class HotSpotVMConfig {
     @HotSpotVMField(name = "oopDesc::_mark", type = "markOop", get = HotSpotVMField.Type.OFFSET) @Stable public int markOffset;
     @HotSpotVMField(name = "oopDesc::_metadata._klass", type = "Klass*", get = HotSpotVMField.Type.OFFSET) @Stable public int hubOffset;
 
+    @HotSpotVMField(name = "Handle::_handle", type = "oop*", get = HotSpotVMField.Type.OFFSET) @Stable public int handleHandleOffset;
+
     @HotSpotVMField(name = "Klass::_prototype_header", type = "markOop", get = HotSpotVMField.Type.OFFSET) @Stable public int prototypeMarkWordOffset;
     @HotSpotVMField(name = "Klass::_subklass", type = "Klass*", get = HotSpotVMField.Type.OFFSET) @Stable public int subklassOffset;
     @HotSpotVMField(name = "Klass::_next_sibling", type = "Klass*", get = HotSpotVMField.Type.OFFSET) @Stable public int nextSiblingOffset;
@@ -1090,10 +1092,28 @@ public class HotSpotVMConfig {
 
     @HotSpotVMType(name = "ConstantPool", get = HotSpotVMType.Type.SIZE) @Stable public int constantPoolSize;
     @HotSpotVMField(name = "ConstantPool::_tags", type = "Array<u1>*", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolTagsOffset;
+    @HotSpotVMField(name = "ConstantPool::_cache", type = "ConstantPoolCache*", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolCacheOffset;
     @HotSpotVMField(name = "ConstantPool::_pool_holder", type = "InstanceKlass*", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolHolderOffset;
     @HotSpotVMField(name = "ConstantPool::_length", type = "int", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolLengthOffset;
+    @HotSpotVMField(name = "ConstantPool::_resolved_references", type = "jobject", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolResolvedReferencesOffset;
+    @HotSpotVMField(name = "ConstantPool::_reference_map", type = "Array<u2>*", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolReferenceMapOffset;
 
     @HotSpotVMConstant(name = "ConstantPool::CPCACHE_INDEX_TAG") @Stable public int constantPoolCpCacheIndexTag;
+
+    @HotSpotVMType(name = "ConstantPoolCache", get = HotSpotVMType.Type.SIZE) @Stable public int constantPoolCacheSize;
+    @HotSpotVMField(name = "ConstantPoolCache::_length", type = "int", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolCacheLengthOffset;
+
+    @HotSpotVMType(name = "ConstantPoolCacheEntry", get = HotSpotVMType.Type.SIZE) @Stable public int constantPoolCacheEntrySize;
+    @HotSpotVMField(name = "ConstantPoolCacheEntry::_indices", type = "intx", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolCacheEntryIndicesOffset;
+    @HotSpotVMField(name = "ConstantPoolCacheEntry::_f1", type = "volatile Metadata*", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolCacheEntryF1Offset;
+    @HotSpotVMField(name = "ConstantPoolCacheEntry::_f2", type = "intx", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolCacheEntryF2Offset;
+    @HotSpotVMField(name = "ConstantPoolCacheEntry::_flags", type = "intx", get = HotSpotVMField.Type.OFFSET) @Stable public int constantPoolCacheEntryFlagsOffset;
+
+    @HotSpotVMConstant(name = "ConstantPoolCacheEntry::has_appendix_shift") @Stable public int constantPoolCacheEntryHasAppendixShift;
+
+    @HotSpotVMConstant(name = "ConstantPoolCacheEntry::cp_index_mask") @Stable public int constantPoolCacheEntryCpIndexMask;
+
+    @HotSpotVMConstant(name = "ConstantPoolCacheEntry::_indy_resolved_references_appendix_offset") @Stable public int constantPoolCacheEntryIndyResolvedReferencesAppendixOffset;
 
     @HotSpotVMConstant(name = "JVM_CONSTANT_Utf8") @Stable public int jvmConstantUtf8;
     @HotSpotVMConstant(name = "JVM_CONSTANT_Integer") @Stable public int jvmConstantInteger;
