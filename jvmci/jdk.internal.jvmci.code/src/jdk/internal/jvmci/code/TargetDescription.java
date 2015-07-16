@@ -29,7 +29,7 @@ import static jdk.internal.jvmci.meta.MetaUtil.*;
  * Represents the target machine for a compiler, including the CPU architecture, the size of
  * pointers and references, alignment of stacks, caches, etc.
  */
-public abstract class TargetDescription {
+public class TargetDescription {
 
     public final Architecture arch;
 
