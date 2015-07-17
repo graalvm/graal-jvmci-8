@@ -765,7 +765,7 @@ def build(args, vm=None):
     if not opts2.native:
         return
 
-    if opts2.java and not opts2.projects and not opts2.only:
+    if opts2.java and not opts2.dependencies and not opts2.only:
         # Only check deployed JVMCI files on a full build
         _check_for_obsolete_jvmci_files()
 
@@ -1012,7 +1012,7 @@ def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
     _updateInstalledJVMCIOptionsFile(jdk)
     mx.expand_project_in_args(args)
     if _make_eclipse_launch:
-        mx.make_eclipse_launch(_suite, args, _suite.name + '-' + build, name=None, deps=mx.sorted_deps(includeLibs=True))
+        mx.make_eclipse_launch(_suite, args, _suite.name + '-' + build, name=None, deps=mx.dependencies())
     if _jacoco == 'on' or _jacoco == 'append':
         jacocoagent = mx.library("JACOCOAGENT", True)
         # Exclude all compiler tests and snippets
