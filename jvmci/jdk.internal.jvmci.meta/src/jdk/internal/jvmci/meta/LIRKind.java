@@ -27,7 +27,7 @@ import java.util.*;
 /**
  * Represents the type of values in the LIR. It is composed of a {@link PlatformKind} that gives the
  * low level representation of the value, and a {@link #referenceMask} that describes the location
- * of object references in the value.
+ * of object references in the value, and optionally a {@link #derivedReferenceBase}.
  *
  * <h2>Constructing {@link LIRKind} instances</h2>
  *
@@ -65,11 +65,16 @@ public final class LIRKind {
     private final PlatformKind platformKind;
     private final int referenceMask;
 
+    private AllocatableValue derivedReferenceBase;
+
     private static final int UNKNOWN_REFERENCE = -1;
 
-    private LIRKind(PlatformKind platformKind, int referenceMask) {
+    private LIRKind(PlatformKind platformKind, int referenceMask, AllocatableValue derivedReferenceBase) {
         this.platformKind = platformKind;
         this.referenceMask = referenceMask;
+        this.derivedReferenceBase = derivedReferenceBase;
+
+        assert derivedReferenceBase == null || !derivedReferenceBase.getLIRKind().isDerivedReference() : "derived reference can't have another derived reference as base";
     }
 
     /**
@@ -79,7 +84,7 @@ public final class LIRKind {
      */
     public static LIRKind value(PlatformKind platformKind) {
         assert platformKind != Kind.Object : "Object should always be used as reference type";
-        return new LIRKind(platformKind, 0);
+        return new LIRKind(platformKind, 0, null);
     }
 
     /**
@@ -87,9 +92,16 @@ public final class LIRKind {
      * reference.
      */
     public static LIRKind reference(PlatformKind platformKind) {
+        return derivedReference(platformKind, null);
+    }
+
+    /**
+     * Create a {@link LIRKind} of type {@code platformKind} that contains a derived reference.
+     */
+    public static LIRKind derivedReference(PlatformKind platformKind, AllocatableValue base) {
         int length = platformKind.getVectorLength();
         assert 0 < length && length < 32 : "vector of " + length + " references not supported";
-        return new LIRKind(platformKind, (1 << length) - 1);
+        return new LIRKind(platformKind, (1 << length) - 1, base);
     }
 
     /**
@@ -99,7 +111,25 @@ public final class LIRKind {
      * used instead to automatically propagate this information.
      */
     public static LIRKind unknownReference(PlatformKind platformKind) {
-        return new LIRKind(platformKind, UNKNOWN_REFERENCE);
+        return new LIRKind(platformKind, UNKNOWN_REFERENCE, null);
+    }
+
+    /**
+     * Create a derived reference.
+     *
+     * @param base An {@link AllocatableValue} containing the base pointer of the derived reference.
+     */
+    public LIRKind makeDerivedReference(AllocatableValue base) {
+        assert !isUnknownReference() && derivedReferenceBase == null;
+        if (Value.ILLEGAL.equals(base)) {
+            return makeUnknownReference();
+        } else {
+            if (isValue()) {
+                return derivedReference(platformKind, base);
+            } else {
+                return new LIRKind(platformKind, referenceMask, base);
+            }
+        }
     }
 
     /**
@@ -140,6 +170,42 @@ public final class LIRKind {
             kinds.add(inputs[i].getLIRKind());
         }
         return merge(kinds);
+    }
+
+    /**
+     * Helper method to construct derived reference kinds. Returns the base value of a reference or
+     * derived reference. For values it returns {@code null}, and for unknown references it returns
+     * {@link Value#ILLEGAL}.
+     */
+    public static AllocatableValue derivedBaseFromValue(AllocatableValue value) {
+        LIRKind kind = value.getLIRKind();
+        if (kind.isValue()) {
+            return null;
+        } else if (kind.isDerivedReference()) {
+            return kind.getDerivedReferenceBase();
+        } else if (kind.isUnknownReference()) {
+            return Value.ILLEGAL;
+        } else {
+            // kind is a reference
+            return value;
+        }
+    }
+
+    /**
+     * Helper method to construct derived reference kinds. If one of {@code base1} or {@code base2}
+     * are set, it creates a derived reference using it as the base. If both are set, the result is
+     * an unknown reference.
+     */
+    public static LIRKind combineDerived(LIRKind kind, AllocatableValue base1, AllocatableValue base2) {
+        if (base1 == null && base2 == null) {
+            return kind;
+        } else if (base1 == null) {
+            return kind.makeDerivedReference(base2);
+        } else if (base2 == null) {
+            return kind.makeDerivedReference(base1);
+        } else {
+            return kind.makeUnknownReference();
+        }
     }
 
     /**
@@ -211,13 +277,13 @@ public final class LIRKind {
             return unknownReference(newPlatformKind);
         } else if (referenceMask == 0) {
             // value type
-            return new LIRKind(newPlatformKind, 0);
+            return LIRKind.value(newPlatformKind);
         } else {
             // reference type
             int newLength = Math.min(32, newPlatformKind.getVectorLength());
             int newReferenceMask = referenceMask & (0xFFFFFFFF >>> (32 - newLength));
             assert newReferenceMask != UNKNOWN_REFERENCE;
-            return new LIRKind(newPlatformKind, newReferenceMask);
+            return new LIRKind(newPlatformKind, newReferenceMask, derivedReferenceBase);
         }
     }
 
@@ -230,7 +296,7 @@ public final class LIRKind {
             return unknownReference(newPlatformKind);
         } else if (referenceMask == 0) {
             // value type
-            return new LIRKind(newPlatformKind, 0);
+            return LIRKind.value(newPlatformKind);
         } else {
             // reference type
             int oldLength = platformKind.getVectorLength();
@@ -244,7 +310,7 @@ public final class LIRKind {
             }
 
             assert newReferenceMask != UNKNOWN_REFERENCE;
-            return new LIRKind(newPlatformKind, newReferenceMask);
+            return new LIRKind(newPlatformKind, newReferenceMask, derivedReferenceBase);
         }
     }
 
@@ -253,7 +319,7 @@ public final class LIRKind {
      * {@link LIRKind#unknownReference}.
      */
     public LIRKind makeUnknownReference() {
-        return new LIRKind(platformKind, UNKNOWN_REFERENCE);
+        return new LIRKind(platformKind, UNKNOWN_REFERENCE, null);
     }
 
     /**
@@ -261,6 +327,28 @@ public final class LIRKind {
      */
     public PlatformKind getPlatformKind() {
         return platformKind;
+    }
+
+    /**
+     * Check whether this value is a derived reference.
+     */
+    public boolean isDerivedReference() {
+        return getDerivedReferenceBase() != null;
+    }
+
+    /**
+     * Get the base value of a derived reference.
+     */
+    public AllocatableValue getDerivedReferenceBase() {
+        return derivedReferenceBase;
+    }
+
+    /**
+     * Change the base value of a derived reference. This must be called on derived references only.
+     */
+    public void setDerivedReferenceBase(AllocatableValue derivedReferenceBase) {
+        assert isDerivedReference();
+        this.derivedReferenceBase = derivedReferenceBase;
     }
 
     /**
