@@ -545,7 +545,7 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, obsoleteChec
                             providers = jvmciServices.setdefault(service, [])
                             for line in serviceFile.readlines():
                                 line = line.strip()
-                                if line:
+                                if line and line not in providers:
                                     providers.append(line)
                     elif member.startswith('META-INF/jvmci.options/') and member != 'META-INF/jvmci.options/':
                         filename = basename(member)
