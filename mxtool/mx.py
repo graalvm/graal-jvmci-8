@@ -647,7 +647,7 @@ class Project(Dependency):
         return self._annotationProcessors
 
     """
-    Gets the class path composed of the distribution jars containing the 
+    Gets the class path composed of the distribution jars containing the
     annotation processors that will be applied when compiling this project.
     """
     def annotation_processors_path(self):
@@ -800,7 +800,7 @@ This mechanism exists primarily to be able to support code
 that may use functionality in one JRE (e.g., Oracle JRE)
 that is not present in another JRE (e.g., OpenJDK). A
 motivating example is the Java Flight Recorder library
-found in the Oracle JRE. 
+found in the Oracle JRE.
 """
 class JreLibrary(BaseLibrary):
     def __init__(self, suite, name, jar, optional):
