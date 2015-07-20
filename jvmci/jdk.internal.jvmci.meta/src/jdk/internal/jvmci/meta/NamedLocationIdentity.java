@@ -29,18 +29,17 @@ import jdk.internal.jvmci.meta.Kind.*;
 /**
  * A {@link LocationIdentity} with a name.
  */
-public final class NamedLocationIdentity extends LocationIdentity implements FormatWithToString {
+public class NamedLocationIdentity extends LocationIdentity implements FormatWithToString {
 
     /**
      * Map for asserting all {@link NamedLocationIdentity} instances have a unique name.
      */
     static class DB {
-        private static final HashMap<String, NamedLocationIdentity> map = new HashMap<>();
+        private static final HashSet<String> map = new HashSet<>();
 
-        static boolean checkUnique(NamedLocationIdentity identity) {
-            NamedLocationIdentity oldValue = map.put(identity.name, identity);
-            if (oldValue != null) {
-                throw new AssertionError("identity " + identity + " already exists");
+        static boolean checkUnique(String name) {
+            if (!map.add(name)) {
+                throw new AssertionError("identity " + name + " already exists");
             }
             return true;
         }
@@ -49,9 +48,10 @@ public final class NamedLocationIdentity extends LocationIdentity implements For
     private final String name;
     private final boolean immutable;
 
-    private NamedLocationIdentity(String name, boolean immutable) {
+    protected NamedLocationIdentity(String name, boolean immutable) {
         this.name = name;
         this.immutable = immutable;
+        assert DB.checkUnique(name);
     }
 
     /**
@@ -82,9 +82,7 @@ public final class NamedLocationIdentity extends LocationIdentity implements For
      * @param immutable true if the location is immutable
      */
     private static NamedLocationIdentity create(String name, boolean immutable) {
-        NamedLocationIdentity id = new NamedLocationIdentity(name, immutable);
-        assert DB.checkUnique(id);
-        return id;
+        return new NamedLocationIdentity(name, immutable);
     }
 
     @Override
