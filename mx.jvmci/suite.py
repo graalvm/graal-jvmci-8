@@ -126,7 +126,6 @@ suite = {
         "JUNIT",
         "jdk.internal.jvmci.debug",
       ],
-      "annotationProcessors" : ["JVMCI_OPTIONS_PROCESSOR"],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,Debug,Test",
@@ -171,7 +170,6 @@ suite = {
         "JUNIT",
       ],
       "checkstyle" : "com.oracle.graal.graph",
-      "annotationProcessors" : ["JVMCI_OPTIONS_PROCESSOR"],
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",
     },
@@ -241,7 +239,6 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : [
-        "JVMCI_HOTSPOTVMCONFIG_PROCESSOR",
         "JVMCI_SERVICE_PROCESSOR",
       ],
       "javaCompliance" : "1.8",
@@ -257,7 +254,6 @@ suite = {
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : [
-        "JVMCI_HOTSPOTVMCONFIG_PROCESSOR",
         "JVMCI_SERVICE_PROCESSOR",
       ],
       "javaCompliance" : "1.8",
