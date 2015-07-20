@@ -430,7 +430,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
         assert !isInterface();
 
         HotSpotVMConfig config = runtime().getConfig();
-        final int layoutHelper = unsafe.getInt(getMetaspaceKlass() + config.klassLayoutHelperOffset);
+        final int layoutHelper = layoutHelper();
         assert layoutHelper > config.klassLayoutHelperNeutralValue : "must be instance";
 
         // See: Klass::layout_helper_size_in_bytes
@@ -440,6 +440,11 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
         boolean needsSlowPath = (layoutHelper & config.klassLayoutHelperInstanceSlowPathBit) != 0;
 
         return needsSlowPath ? -size : size;
+    }
+
+    public int layoutHelper() {
+        HotSpotVMConfig config = runtime().getConfig();
+        return unsafe.getInt(getMetaspaceKlass() + config.klassLayoutHelperOffset);
     }
 
     public synchronized HotSpotResolvedJavaMethod createMethod(long metaspaceMethod) {

@@ -88,6 +88,8 @@ public interface HotSpotResolvedObjectType extends ResolvedJavaType {
 
     long prototypeMarkWord();
 
+    int layoutHelper();
+
     HotSpotResolvedObjectType getEnclosingType();
 
     ResolvedJavaMethod getClassInitializer();
