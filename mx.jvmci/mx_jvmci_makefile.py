@@ -52,7 +52,7 @@ def build_makefile(args):
     parser.add_argument('selectedDists', help="Selected distribution names which are going to be built with make.", nargs=REMAINDER)
     opts = parser.parse_args(args)
 
-    if opts.selectedDists == None or len(opts.selectedDists) == 0:
+    if not opts.selectedDists:
         opts.selectedDists = [d.name for d in mx_jvmci.jdkDeployedDists if d.partOfHotSpot]
     mf = Makefile()
     commandline = " ".join(["mx.sh", "makefile"] + args)
@@ -65,72 +65,47 @@ def build_makefile(args):
                 return 1
     return 0
 
-def short_dist_name(name):
-    return name.replace("COM_ORACLE_", "")
-
-def filter_projects(deps, t):
-    def typeFilter(project): # filters
-        if isinstance(project, str):
-            project = mx.dependency(project, True)
-        return isinstance(project, t)
-    return [d for d in deps if typeFilter(d)]
-
 def get_jdk_deployed_dists():
     return [d.name for d in mx_jvmci.jdkDeployedDists]
-
-def update_list(li, elements):
-    for e in elements:
-        if e not in li:
-            li.append(e)
 
 def make_dist_rule(dist, mf):
     def path_dist_relative(p):
         return os.path.relpath(p, dist.suite.dir)
-    shortName = short_dist_name(dist.name)
     jdkDeployedDists = get_jdk_deployed_dists()
     jarName = os.path.basename(dist.path)
-    sourcesVariableName = shortName + "_SRC"
-    depJarVariableName = shortName + "_DEP_JARS"
+    sourcesVariableName = dist.name + "_SRC"
+    depJarVariableName = dist.name + "_DEP_JARS"
     sources = []
     resources = []
-    sortedDeps = dist.sorted_deps(True, transitive=False, includeAnnotationProcessors=True)
-    projects = filter_projects(sortedDeps, mx.Project)
+    projects = [p for p in dist.archived_deps() if p.isJavaProject()]
     targetPathPrefix = "$(TARGET)/"
-    libraryDeps = [path_dist_relative(l.get_path(False)) for l in filter_projects(sortedDeps, mx.Library)]
+    libraryDeps = [path_dist_relative(l.get_path(False)) for l in [l for l in dist.archived_deps() if l.isLibrary()]]
 
-    annotationProcessorDeps = []
-    distDeps = dist.get_dist_deps(includeSelf=False, transitive=True)
-    distDepProjects = []
-    for d in distDeps:
-        update_list(distDepProjects, d.sorted_deps(includeLibs=False, transitive=True))
+    annotationProcessorDeps = set()
+    distDeps = [dep for dep in dist.deps if dep.isDistribution()]
 
     classPath = [targetPathPrefix + os.path.basename(d.path) for d in distDeps] + libraryDeps \
-        + [path_dist_relative(mx.dependency(name).path) for name in dist.excludedDependencies]
-    for p in projects:
-        if p.definedAnnotationProcessors != None and p.definedAnnotationProcessorsDist != dist:
-            update_list(annotationProcessorDeps, [p])
+        + [path_dist_relative(exclLib.path) for exclLib in dist.excludedLibs]
     for p in projects:
         projectDir = path_dist_relative(p.dir)
-        if p not in distDepProjects and p not in annotationProcessorDeps:
-            for src in [projectDir + '/' + d for d in p.srcDirs]:
-                sources.append("$(shell find {} -type f 2> /dev/null)".format(src))
-                metaInf = src + "/META-INF"
-                if os.path.exists(os.path.join(dist.suite.dir, metaInf)):
-                    resources.append(metaInf)
-
+        annotationProcessorDeps.update(p.declaredAnnotationProcessors)
+        for src in [projectDir + '/' + d for d in p.srcDirs]:
+            sources.append("$(shell find {} -type f 2> /dev/null)".format(src))
+            metaInf = src + "/META-INF"
+            if os.path.exists(os.path.join(dist.suite.dir, metaInf)):
+                resources.append(metaInf)
 
     sourceLines = sourcesVariableName + " = " + ("\n" + sourcesVariableName + " += ").join(sources)
     apPaths = []
     apDistNames = []
     apDistVariableNames = []
-    for p in annotationProcessorDeps:
-        apPaths.append(path_dist_relative(p.definedAnnotationProcessorsDist.path))
-        name = short_dist_name(p.definedAnnotationProcessorsDist.name)
-        apDistNames.append(name)
-        apDistVariableNames.append("$(" + name + "_JAR)")
+    for apd in sorted(annotationProcessorDeps):
+        apPaths.append(path_dist_relative(apd.path))
+        apDistNames.append(apd.name)
+        apDistVariableNames.append("$(" + apd.name + "_JAR)")
     shouldExport = dist.name in jdkDeployedDists
     props = {
-           "name": shortName,
+           "name": dist.name,
            "jarName": targetPathPrefix + jarName,
            "depJarsVariableAccess": "$(" + depJarVariableName + ")" if len(classPath) > 0 else "",
            "depJarsVariable": depJarVariableName,
@@ -280,30 +255,18 @@ clean:
 .PHONY: export clean
 
 """)
-    s = mx_jvmci._suite
+    assert selectedDists
+    selectedDists = [mx.dependency(s) for s in selectedDists]
     dists = []
-    ap = []
-    projects = []
-    for d in s.dists:
-        if d.name in selectedDists:
-            update_list(dists, d.get_dist_deps(True, True))
-            update_list(projects, d.sorted_deps(includeLibs=False, transitive=True))
 
-    for p in projects:
-        deps = p.all_deps([], False, includeSelf=True, includeJreLibs=False, includeAnnotationProcessors=True)
-        for d in deps:
-            if d.definedAnnotationProcessorsDist is not None:
-                apd = d.definedAnnotationProcessorsDist
-                update_list(ap, [apd])
+    def _visit(dep, edge):
+        if dep.isDistribution():
+            dists.append(dep)
 
-    if len(dists) > 0:
-        mf.add_definition(jdkBootClassPathVariableName + " = " + bootClassPath)
-        for d in ap: make_dist_rule(d, mf)
-        for d in dists: make_dist_rule(d, mf)
-        mf.add_definition("DISTRIBUTIONS = " + " ".join([short_dist_name(d.name) for d in dists+ap]))
-        mf.add_rule("default: $({}_JAR)\n.PHONY: default\n".format("_JAR) $(".join([short_dist_name(d.name) for d in dists])))
-        return True
-    else:
-        for d in dists:
-            selectedDists.remove(d.name)
-        print "Distribution(s) '" + "', '".join(selectedDists) + "' does not exist."
+    mx.walk_deps(roots=selectedDists, visit=_visit, ignoredEdges=[mx.DEP_EXCLUDED])
+
+    mf.add_definition(jdkBootClassPathVariableName + " = " + bootClassPath)
+    for dist in dists: make_dist_rule(dist, mf)
+    mf.add_definition("DISTRIBUTIONS = " + ' '.join([dist.name for dist in dists]))
+    mf.add_rule("default: $({}_JAR)\n.PHONY: default\n".format("_JAR) $(".join([d.name for d in selectedDists])))
+    return True
