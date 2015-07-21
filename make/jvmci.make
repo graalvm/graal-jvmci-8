@@ -139,6 +139,7 @@ JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.runtime/src -type f 2> /d
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.options/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.common/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.debug/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.compiler/src -type f 2> /dev/null)
 
 JVMCI_API_JAR = $(TARGET)/jvmci-api.jar
 
@@ -160,7 +161,6 @@ JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/jvmci-hotspotvmconfig-processor.
 JVMCI_HOTSPOT_SRC = $(shell find jvmci/jdk.internal.jvmci.amd64/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspotvmconfig/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.service/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.compiler/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.amd64/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.sparc/src -type f 2> /dev/null)
