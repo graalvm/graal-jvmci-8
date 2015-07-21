@@ -1058,31 +1058,36 @@ def vm(args, vm=None, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout
     (pfx_, exe_, vm_, args_, cwd) = parseVmArgs(args, vm, cwd, vmbuild)
     return mx.run(pfx_ + [exe_, '-' + vm_] + args_, nonZeroIsFatal=nonZeroIsFatal, out=out, err=err, cwd=cwd, timeout=timeout)
 
-def unittest(args):
-    def vmLauncher(vmArgs, mainClass, mainClassArgs):
-        if isJVMCIEnabled(get_vm()):
-            # Remove entries from class path that are in JVMCI loaded jars
-            cpIndex, cp = mx.find_classpath_arg(vmArgs)
-            if cp:
-                excluded = set()
-                for jdkDist in jdkDeployedDists:
-                    dist = mx.distribution(jdkDist.name)
-                    excluded.update([d.output_dir() for d in dist.archived_deps() if d.isJavaProject()])
-                cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
-                vmArgs[cpIndex] = cp
+def _unittest_config_participant(config):
+    vmArgs, mainClass, mainClassArgs = config
+    if isJVMCIEnabled(get_vm()):
+        # Remove entries from class path that are in JVMCI loaded jars
+        cpIndex, cp = mx.find_classpath_arg(vmArgs)
+        if cp:
+            excluded = set()
+            for jdkDist in jdkDeployedDists:
+                dist = mx.distribution(jdkDist.name)
+                excluded.update([d.output_dir() for d in dist.archived_deps() if d.isJavaProject()])
+            cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
+            vmArgs[cpIndex] = cp
 
-            # Run the VM in a mode where application/test classes can
-            # access JVMCI loaded classes.
-            vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
+        # Run the VM in a mode where application/test classes can
+        # access JVMCI loaded classes.
+        vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
+        return (vmArgs, mainClass, mainClassArgs)
+    return config
 
-        vm(vmArgs + [mainClass] + mainClassArgs)
-    mx_unittest.unittest(args, vmLauncher=vmLauncher)
+def _unittest_vm_launcher(vmArgs, mainClass, mainClassArgs):
+    vm(vmArgs + [mainClass] + mainClassArgs)
+
+mx_unittest.add_config_participant(_unittest_config_participant)
+mx_unittest.set_vm_launcher('JVMCI VM launcher', _unittest_vm_launcher)
 
 def shortunittest(args):
     """alias for 'unittest --whitelist test/whitelist_shortunittest.txt'"""
 
     args = ['--whitelist', 'test/whitelist_shortunittest.txt'] + args
-    unittest(args)
+    mx_unittest.unittest(args)
 
 def buildvms(args):
     """build one or more VMs in various configurations"""
@@ -1981,7 +1986,6 @@ mx.update_commands(_suite, {
     'jmh': [jmh, '[VM options] [filters|JMH-args-as-json...]'],
     'gate' : [gate, '[-options]'],
     'makejmhdeps' : [makejmhdeps, ''],
-    'unittest' : [unittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
     'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
     'jacocoreport' : [jacocoreport, '[output directory]'],
     'vm': [vm, '[-options] class [args...]'],
