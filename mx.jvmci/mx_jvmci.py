@@ -32,6 +32,7 @@ import json, textwrap
 
 import mx
 import mx_unittest
+from mx_unittest import unittest
 import mx_findbugs
 import mx_jvmci_makefile
 
