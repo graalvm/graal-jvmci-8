@@ -55,8 +55,7 @@ def build_makefile(args):
     if not opts.selectedDists:
         opts.selectedDists = [d.name for d in mx_jvmci.jdkDeployedDists if d.partOfHotSpot]
     mf = Makefile()
-    commandline = " ".join(["mx.sh", "makefile"] + args)
-    if do_build_makefile(mf, opts.selectedDists, commandline):
+    if do_build_makefile(mf, opts.selectedDists):
         contents = mf.generate()
         if opts.output == None:
             print contents
@@ -128,7 +127,7 @@ def make_dist_rule(dist, mf):
 
 
 
-def do_build_makefile(mf, selectedDists, commandline):
+def do_build_makefile(mf, selectedDists):
     java = mx.java()
     bootClassPath = java.bootclasspath()
     bootClassPath = bootClassPath.replace(os.path.realpath(java.jdk), "$(ABS_BOOTDIR)")

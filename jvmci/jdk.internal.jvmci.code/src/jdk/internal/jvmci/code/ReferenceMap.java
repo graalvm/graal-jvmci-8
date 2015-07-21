@@ -22,24 +22,5 @@
  */
 package jdk.internal.jvmci.code;
 
-import jdk.internal.jvmci.meta.*;
-
 public abstract class ReferenceMap {
-
-    /**
-     * Empty out the reference map.
-     */
-    public abstract void reset();
-
-    /**
-     * Add {@code value} to the current set of reference values.
-     *
-     * @param v
-     */
-    public abstract void addLiveValue(Value v);
-
-    /**
-     * Perform any final encoding needed before use.
-     */
-    public abstract void finish();
 }

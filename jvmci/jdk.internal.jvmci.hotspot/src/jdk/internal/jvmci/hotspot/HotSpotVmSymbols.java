@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,6 +24,8 @@ package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.common.UnsafeAccess.*;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
+
+import jdk.internal.jvmci.common.*;
 import sun.misc.*;
 
 /**
@@ -43,6 +45,17 @@ public final class HotSpotVmSymbols {
         HotSpotVMConfig config = runtime.getConfig();
         assert config.vmSymbolsFirstSID <= index && index < config.vmSymbolsSIDLimit : "index " + index + " is out of bounds";
         assert config.symbolPointerSize == Unsafe.ADDRESS_SIZE : "the following address read is broken";
-        return runtime.getCompilerToVM().getSymbol(unsafe.getAddress(config.vmSymbolsSymbols + index * config.symbolPointerSize));
+        final long metaspaceSymbol = unsafe.getAddress(config.vmSymbolsSymbols + index * config.symbolPointerSize);
+        if (HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue()) {
+            HotSpotSymbol symbol = new HotSpotSymbol(metaspaceSymbol);
+            String s = symbol.asString();
+            // It shouldn't but just in case something went wrong...
+            if (s == null) {
+                throw JVMCIError.shouldNotReachHere("malformed UTF-8 string in constant pool");
+            }
+            return s;
+        } else {
+            return runtime.getCompilerToVM().getSymbol(metaspaceSymbol);
+        }
     }
 }

@@ -286,8 +286,10 @@ public class SPARC extends Architecture {
     public PlatformKind getLargestStorableKind(RegisterCategory category) {
         if (category.equals(CPU)) {
             return Kind.Long;
-        } else if (category.equals(FPUs)) {
+        } else if (category.equals(FPUd)) {
             return Kind.Double;
+        } else if (category.equals(FPUs)) {
+            return Kind.Float;
         } else {
             return Kind.Illegal;
         }
@@ -314,6 +316,10 @@ public class SPARC extends Architecture {
             }
         }
         return true;
+    }
+
+    public static boolean isGlobalRegister(Register r) {
+        return isCPURegister(r) && g0.number <= r.number && r.number <= g7.number;
     }
 
     public static boolean isSingleFloatRegister(Register r) {

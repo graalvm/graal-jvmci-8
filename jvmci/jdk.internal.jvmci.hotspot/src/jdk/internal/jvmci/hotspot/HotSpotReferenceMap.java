@@ -22,107 +22,22 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.code.ValueUtil.*;
-
 import java.util.*;
 
 import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.meta.*;
 
 public final class HotSpotReferenceMap extends ReferenceMap {
 
-    private Location[] objects;
-    private Location[] derivedBase;
-    private int[] sizeInBytes;
-    private int maxRegisterSize;
+    final Location[] objects;
+    final Location[] derivedBase;
+    final int[] sizeInBytes;
+    final int maxRegisterSize;
 
-    private ArrayList<Value> objectValues;
-    private int objectCount;
-
-    private final TargetDescription target;
-    private final int totalFrameSize;
-
-    public HotSpotReferenceMap(TargetDescription target, int totalFrameSize) {
-        this.target = target;
-        this.objectCount = 0;
-        this.totalFrameSize = totalFrameSize;
-    }
-
-    @Override
-    public void reset() {
-        objects = null;
-        derivedBase = null;
-        sizeInBytes = null;
-        maxRegisterSize = 0;
-
-        objectValues = new ArrayList<>();
-        objectCount = 0;
-    }
-
-    @Override
-    public void addLiveValue(Value v) {
-        if (isConstant(v)) {
-            return;
-        }
-        LIRKind lirKind = v.getLIRKind();
-        if (!lirKind.isValue()) {
-            objectValues.add(v);
-            if (lirKind.isDerivedReference()) {
-                objectCount++;
-            } else {
-                objectCount += lirKind.getReferenceCount();
-            }
-        }
-        if (isRegister(v)) {
-            int size = target.getSizeInBytes(lirKind.getPlatformKind());
-            if (size > maxRegisterSize) {
-                maxRegisterSize = size;
-            }
-        }
-    }
-
-    @Override
-    public void finish() {
-        objects = new Location[objectCount];
-        derivedBase = new Location[objectCount];
-        sizeInBytes = new int[objectCount];
-
-        int idx = 0;
-        for (Value obj : objectValues) {
-            LIRKind kind = obj.getLIRKind();
-            int bytes = bytesPerElement(kind);
-            if (kind.isDerivedReference()) {
-                throw JVMCIError.unimplemented("derived references not yet implemented");
-            } else {
-                for (int i = 0; i < kind.getPlatformKind().getVectorLength(); i++) {
-                    if (kind.isReference(i)) {
-                        objects[idx] = toLocation(obj, i * bytes);
-                        derivedBase[idx] = null;
-                        sizeInBytes[idx] = bytes;
-                        idx++;
-                    }
-                }
-            }
-        }
-
-        assert idx == objectCount;
-        objectValues = null;
-        objectCount = 0;
-    }
-
-    private int bytesPerElement(LIRKind kind) {
-        PlatformKind platformKind = kind.getPlatformKind();
-        return target.getSizeInBytes(platformKind) / platformKind.getVectorLength();
-    }
-
-    private Location toLocation(Value v, int offset) {
-        if (isRegister(v)) {
-            return Location.subregister(asRegister(v), offset);
-        } else {
-            StackSlot s = asStackSlot(v);
-            return Location.stack(s.getOffset(totalFrameSize) + offset);
-        }
+    public HotSpotReferenceMap(Location[] objects, Location[] derivedBase, int[] sizeInBytes, int maxRegisterSize) {
+        this.objects = objects;
+        this.derivedBase = derivedBase;
+        this.sizeInBytes = sizeInBytes;
+        this.maxRegisterSize = maxRegisterSize;
     }
 
     @Override
@@ -137,7 +52,7 @@ public final class HotSpotReferenceMap extends ReferenceMap {
         }
         if (obj instanceof HotSpotReferenceMap) {
             HotSpotReferenceMap that = (HotSpotReferenceMap) obj;
-            if (Arrays.equals(objects, that.objects) && this.target.equals(that.target)) {
+            if (Arrays.equals(objects, that.objects)) {
                 return true;
             }
         }

@@ -694,24 +694,7 @@ public:
   // Deopt
   // Return true is the PC is one would expect if the frame is being deopted.
   bool is_deopt_pc      (address pc) { return is_deopt_entry(pc) || is_deopt_mh_entry(pc); }
-
-  // (thomaswue) When using jvmci, the address might be off by 5 (because this is the size of the call instruction.
-  // (thomaswue) TODO: Replace this by a more general mechanism.
-  // (sanzinger) SPARC has another offset, looked for some variable existing in HotSpot which describes this offset, but i have not
-  // found anything.
-  bool is_deopt_entry   (address pc) {
-    return pc == deopt_handler_begin()
-#ifdef JVMCI
-      || pc == deopt_handler_begin() +
-#ifdef TARGET_ARCH_sparc
-  8
-#endif // sparc
-#ifdef TARGET_ARCH_x86
-  5
-#endif // x86
-#endif // JVMCI
-      ;
-  }
+  bool is_deopt_entry(address pc);
   bool is_deopt_mh_entry(address pc) { return pc == deopt_mh_handler_begin(); }
   // Accessor/mutator for the original pc of a frame before a frame was deopted.
   address get_original_pc(const frame* fr) { return *orig_pc_addr(fr); }

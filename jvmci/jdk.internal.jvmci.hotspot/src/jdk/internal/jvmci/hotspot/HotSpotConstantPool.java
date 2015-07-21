@@ -26,14 +26,23 @@ import static jdk.internal.jvmci.common.UnsafeAccess.*;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 
 import java.lang.invoke.*;
+import java.util.*;
 
 import jdk.internal.jvmci.common.*;
 import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.options.*;
 
 /**
  * Implementation of {@link ConstantPool} for HotSpot.
  */
 public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
+
+    public static class Options {
+        // @formatter:off
+        @Option(help = "Use Java code to access the constant pool cache and resolved references array", type = OptionType.Expert)
+        public static final OptionValue<Boolean> UseConstantPoolCacheJavaCode = new OptionValue<>(false);
+        // @formatter:on
+    }
 
     /**
      * Subset of JVM bytecode opcodes used by {@link HotSpotConstantPool}.
@@ -179,8 +188,232 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
     private final long metaspaceConstantPool;
     private volatile LookupTypeCacheElement lastLookupType;
 
+    /**
+     * The constant pool cache of this constant pool.
+     */
+    private final Cache cache;
+
+    /**
+     * Represents a {@code ConstantPoolCache}. The cache needs to be lazy since the constant pool
+     * cache is created when the methods of this class are rewritten and rewriting happens when the
+     * class is linked.
+     */
+    private final class Cache {
+
+        private long address;
+
+        public Cache() {
+            // Maybe the constant pool cache already exists...
+            queryAddress();
+        }
+
+        /**
+         * Queries the current value of {@code ConstantPool::_cache} if the current address is null.
+         */
+        private void queryAddress() {
+            if (address == 0) {
+                address = unsafe.getAddress(metaspaceConstantPool + runtime().getConfig().constantPoolCacheOffset);
+            }
+        }
+
+        /**
+         * Returns whether a constant pool cache for this constant pool exists.
+         *
+         * @return true if it exists, false otherwise
+         */
+        public boolean exists() {
+            queryAddress();
+            return address != 0;
+        }
+
+        /**
+         * Represents a {@code ConstantPoolCacheEntry}.
+         */
+        private final class Entry {
+
+            private final long address;
+
+            public Entry(final long address) {
+                this.address = address;
+            }
+
+            /**
+             * {@code ConstantPoolCacheEntry::_indices} is volatile of type {@code intx}.
+             *
+             * @return value of field {@code _indices}
+             */
+            private long getIndices() {
+                assert runtime().getHostJVMCIBackend().getTarget().wordSize == 8 : "port to non-64-bit platform";
+                return unsafe.getLongVolatile(null, address + runtime().getConfig().constantPoolCacheEntryIndicesOffset);
+            }
+
+            /**
+             * {@code ConstantPoolCacheEntry::_f1} is volatile of type {@code Metadata*}.
+             *
+             * @return value of field {@code _f1}
+             */
+            private long getF1() {
+                assert runtime().getHostJVMCIBackend().getTarget().wordSize == 8 : "port to non-64-bit platform";
+                return unsafe.getLongVolatile(null, address + runtime().getConfig().constantPoolCacheEntryF1Offset);
+            }
+
+            /**
+             * {@code ConstantPoolCacheEntry::_f2} is volatile of type {@code intx}.
+             *
+             * @return value of field {@code _f2}
+             */
+            private long getF2() {
+                assert runtime().getHostJVMCIBackend().getTarget().wordSize == 8 : "port to non-64-bit platform";
+                return unsafe.getLongVolatile(null, address + runtime().getConfig().constantPoolCacheEntryF2Offset);
+            }
+
+            /**
+             * {@code ConstantPoolCacheEntry::_flags} is volatile of type {@code intx}.
+             *
+             * @return flag bits
+             */
+            private long flags() {
+                assert runtime().getHostJVMCIBackend().getTarget().wordSize == 8 : "port to non-64-bit platform";
+                return unsafe.getLongVolatile(null, address + runtime().getConfig().constantPoolCacheEntryFlagsOffset);
+            }
+
+            private boolean isF1Null() {
+                final long f1 = getF1();
+                return f1 == 0;
+            }
+
+            /**
+             * Returns the constant pool index for this entry. See
+             * {@code ConstantPoolCacheEntry::constant_pool_index()}
+             *
+             * @return the constant pool index for this entry
+             */
+            public int getConstantPoolIndex() {
+                return ((int) getIndices()) & runtime().getConfig().constantPoolCacheEntryCpIndexMask;
+            }
+
+            /**
+             * See {@code ConstantPoolCache::has_appendix()}.
+             *
+             * @return true if there is an appendix, false otherwise
+             */
+            private boolean hasAppendix() {
+                return (!isF1Null()) && (flags() & (1 << runtime().getConfig().constantPoolCacheEntryHasAppendixShift)) != 0;
+            }
+
+            /**
+             * See {@code ConstantPoolCache::appendix_if_resolved()}.
+             */
+            public Object getAppendixIfResolved() {
+                if (!hasAppendix()) {
+                    return null;
+                }
+                final int index = ((int) getF2()) + runtime().getConfig().constantPoolCacheEntryIndyResolvedReferencesAppendixOffset;
+                return resolvedReferences.getArray()[index];
+            }
+        }
+
+        /**
+         * Get the constant pool cache entry at index {@code index}.
+         *
+         * @param index index of entry to return
+         * @return constant pool cache entry at given index
+         */
+        public Entry getEntryAt(int index) {
+            queryAddress();
+            assert exists();
+            HotSpotVMConfig config = runtime().getConfig();
+            return new Entry(address + config.constantPoolCacheSize + config.constantPoolCacheEntrySize * index);
+        }
+
+        /**
+         * Maps the constant pool cache index back to a constant pool index. See
+         * {@code ConstantPool::remap_instruction_operand_from_cache}.
+         *
+         * @param index the constant pool cache index
+         * @return constant pool index
+         */
+        public int constantPoolCacheIndexToConstantPoolIndex(int index) {
+            final int cacheIndex = index - runtime().getConfig().constantPoolCpCacheIndexTag;
+            return getEntryAt(cacheIndex).getConstantPoolIndex();
+        }
+
+    }
+
+    /**
+     * Resolved references of this constant pool.
+     */
+    private final ResolvedReferences resolvedReferences = new ResolvedReferences();
+
+    /**
+     * Hide the resolved references array in a private class so it cannot be accessed directly. The
+     * reason is the resolved references array is created when the constant pool cache is created.
+     *
+     * @see Cache
+     */
+    private final class ResolvedReferences {
+
+        /**
+         * Pointer to the {@code ConstantPool::_resolved_references} array.
+         */
+        private Object[] resolvedReferences;
+
+        /**
+         * Map of constant pool indexes to {@code ConstantPool::_resolved_references} indexes.
+         */
+        private final HashMap<Integer, Integer> referenceMap = new HashMap<>();
+
+        /**
+         * Returns the {@code ConstantPool::_resolved_references} array for this constant pool.
+         *
+         * @return resolved references array if exists, null otherwise
+         */
+        public Object[] getArray() {
+            if (resolvedReferences == null) {
+                final long handle = unsafe.getAddress(metaspaceConstantPool + runtime().getConfig().constantPoolResolvedReferencesOffset);
+                if (handle != 0) {
+                    resolvedReferences = (Object[]) runtime().getCompilerToVM().readUncompressedOop(handle + runtime().getConfig().handleHandleOffset);
+                    fillReferenceMap();
+                }
+            }
+            return resolvedReferences;
+        }
+
+        /**
+         * Fills the {@link #referenceMap} with all the values from
+         * {@code ConstantPool::_reference_map} for faster lookup.
+         */
+        private void fillReferenceMap() {
+            // It is possible there is a resolved references array but no reference map.
+            final long address = unsafe.getAddress(metaspaceConstantPool + runtime().getConfig().constantPoolReferenceMapOffset);
+            if (address != 0) {
+                final int length = unsafe.getInt(null, address + runtime().getConfig().arrayU1LengthOffset);
+                for (int i = 0; i < length; i++) {
+                    final int value = unsafe.getShort(address + runtime().getConfig().arrayU2DataOffset + i * Short.BYTES);
+                    referenceMap.put(value, i);
+                }
+            }
+        }
+
+        /**
+         * See {@code ConstantPool::cp_to_object_index}.
+         *
+         * @param cpi constant pool index
+         * @return resolved references array index
+         */
+        public int constantPoolIndexToResolvedReferencesIndex(int cpi) {
+            final Integer index = referenceMap.get(cpi);
+            // We might not find the index for jsr292 call.
+            return (index == null) ? -1 : index;
+        }
+
+    }
+
     public HotSpotConstantPool(long metaspaceConstantPool) {
         this.metaspaceConstantPool = metaspaceConstantPool;
+
+        // Cache constructor needs metaspaceConstantPool.
+        cache = new Cache();
     }
 
     /**
@@ -201,7 +434,7 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
      * @param opcode bytecode to convert the index for
      * @return constant pool index
      */
-    private static int toConstantPoolIndex(int rawIndex, int opcode) {
+    private static int rawIndexToConstantPoolIndex(int rawIndex, int opcode) {
         int index;
         if (opcode == Bytecodes.INVOKEDYNAMIC) {
             index = rawIndex;
@@ -348,7 +581,12 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
      * @return name as {@link String}
      */
     private String getNameRefAt(int index) {
-        return runtime().getCompilerToVM().lookupNameRefInPool(metaspaceConstantPool, index);
+        if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+            final int nameRefIndex = getNameRefIndexAt(getNameAndTypeRefIndexAt(index));
+            return new HotSpotSymbol(getEntryAt(nameRefIndex)).asString();
+        } else {
+            return runtime().getCompilerToVM().lookupNameRefInPool(metaspaceConstantPool, index);
+        }
     }
 
     /**
@@ -372,7 +610,12 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
      * @return signature as {@link String}
      */
     private String getSignatureRefAt(int index) {
-        return runtime().getCompilerToVM().lookupSignatureRefInPool(metaspaceConstantPool, index);
+        if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+            final int signatureRefIndex = getSignatureRefIndexAt(getNameAndTypeRefIndexAt(index));
+            return new HotSpotSymbol(getEntryAt(signatureRefIndex)).asString();
+        } else {
+            return runtime().getCompilerToVM().lookupSignatureRefInPool(metaspaceConstantPool, index);
+        }
     }
 
     /**
@@ -389,13 +632,38 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
     }
 
     /**
-     * Gets the klass reference index constant pool entry at index {@code index}.
+     * Gets the klass reference index constant pool entry at index {@code index}. See
+     * {@code ConstantPool::klass_ref_index_at}.
+     *
+     * @param index constant pool index
+     * @param cached whether to go through the constant pool cache
+     * @return klass reference index
+     */
+    private int getKlassRefIndexAt(int index, boolean cached) {
+        int cpi = index;
+        if (cached && cache.exists()) {
+            // change byte-ordering and go via cache
+            cpi = cache.constantPoolCacheIndexToConstantPoolIndex(index);
+        }
+        assertTagIsFieldOrMethod(cpi);
+        final int refIndex = unsafe.getInt(metaspaceConstantPool + runtime().getConfig().constantPoolSize + cpi * runtime().getHostJVMCIBackend().getTarget().wordSize);
+        // klass ref index is in the low 16-bits.
+        return refIndex & 0xFFFF;
+    }
+
+    /**
+     * Gets the klass reference index constant pool entry at index {@code index}. See
+     * {@code ConstantPool::klass_ref_index_at}.
      *
      * @param index constant pool index
      * @return klass reference index
      */
     private int getKlassRefIndexAt(int index) {
-        return runtime().getCompilerToVM().lookupKlassRefIndexInPool(metaspaceConstantPool, index);
+        if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+            return getKlassRefIndexAt(index, true);
+        } else {
+            return runtime().getCompilerToVM().lookupKlassRefIndexInPool(metaspaceConstantPool, index);
+        }
     }
 
     /**
@@ -406,10 +674,14 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
      * @return klass reference index
      */
     private int getUncachedKlassRefIndexAt(int index) {
-        assert getTagAt(index) == JVM_CONSTANT.Fieldref || getTagAt(index) == JVM_CONSTANT.MethodRef || getTagAt(index) == JVM_CONSTANT.InterfaceMethodref;
-        final int refIndex = unsafe.getInt(metaspaceConstantPool + runtime().getConfig().constantPoolSize + index * runtime().getHostJVMCIBackend().getTarget().wordSize);
-        // klass ref index is in the low 16-bits.
-        return refIndex & 0xFFFF;
+        if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+            return getKlassRefIndexAt(index, false);
+        } else {
+            assertTagIsFieldOrMethod(index);
+            final int refIndex = unsafe.getInt(metaspaceConstantPool + runtime().getConfig().constantPoolSize + index * runtime().getHostJVMCIBackend().getTarget().wordSize);
+            // klass ref index is in the low 16-bits.
+            return refIndex & 0xFFFF;
+        }
     }
 
     /**
@@ -428,7 +700,19 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
      * @param tag expected tag
      */
     private void assertTag(int index, JVM_CONSTANT tag) {
-        assert getTagAt(index) == tag : "constant pool tag at index " + index + " is " + getTagAt(index) + " but expected " + tag;
+        final JVM_CONSTANT tagAt = getTagAt(index);
+        assert tagAt == tag : "constant pool tag at index " + index + " is " + tagAt + " but expected " + tag;
+    }
+
+    /**
+     * Asserts that the constant pool tag at index {@code index} is a {@link JVM_CONSTANT#Fieldref},
+     * or a {@link JVM_CONSTANT#MethodRef}, or a {@link JVM_CONSTANT#InterfaceMethodref}.
+     *
+     * @param index constant pool index
+     */
+    private void assertTagIsFieldOrMethod(int index) {
+        final JVM_CONSTANT tagAt = getTagAt(index);
+        assert tagAt == JVM_CONSTANT.Fieldref || tagAt == JVM_CONSTANT.MethodRef || tagAt == JVM_CONSTANT.InterfaceMethodref : tagAt;
     }
 
     @Override
@@ -455,7 +739,38 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                 final int opcode = -1;  // opcode is not used
                 return lookupType(cpi, opcode);
             case String:
-                Object string = runtime().getCompilerToVM().resolvePossiblyCachedConstantInPool(metaspaceConstantPool, cpi);
+                /*
+                 * Normally, we would expect a String here, but anonymous classes can have
+                 * "pseudo strings" (arbitrary live objects) patched into a String entry. Such
+                 * entries do not have a symbol in the constant pool slot.
+                 */
+                Object string;
+                if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+                    // See: ConstantPool::resolve_constant_at_impl
+                    /*
+                     * Note: Call getArray() before constantPoolIndexToResolvedReferencesIndex()
+                     * because it fills the map if the array exists.
+                     */
+                    Object[] localResolvedReferences = resolvedReferences.getArray();
+                    final int index = resolvedReferences.constantPoolIndexToResolvedReferencesIndex(cpi);
+                    assert index >= 0;
+                    // See: ConstantPool::string_at_impl
+                    string = localResolvedReferences[index];
+                    if (string != null) {
+                        assert string instanceof String || getEntryAt(index) == 0L;
+                        return HotSpotObjectConstantImpl.forObject(string);
+                    } else {
+                        final long metaspaceSymbol = getEntryAt(cpi);
+                        if (metaspaceSymbol != 0L) {
+                            HotSpotSymbol symbol = new HotSpotSymbol(metaspaceSymbol);
+                            string = symbol.asString().intern();
+                            // See: ConstantPool::string_at_put
+                            localResolvedReferences[index] = string;
+                        }
+                    }
+                } else {
+                    string = runtime().getCompilerToVM().resolvePossiblyCachedConstantInPool(metaspaceConstantPool, cpi);
+                }
                 return HotSpotObjectConstantImpl.forObject(string);
             case MethodHandle:
             case MethodHandleInError:
@@ -471,7 +786,18 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
     @Override
     public String lookupUtf8(int cpi) {
         assertTag(cpi, JVM_CONSTANT.Utf8);
-        return runtime().getCompilerToVM().getSymbol(getEntryAt(cpi));
+        String s;
+        if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+            HotSpotSymbol symbol = new HotSpotSymbol(getEntryAt(cpi));
+            s = symbol.asString();
+            // It shouldn't but just in case something went wrong...
+            if (s == null) {
+                throw JVMCIError.shouldNotReachHere("malformed UTF-8 string in constant pool");
+            }
+        } else {
+            s = runtime().getCompilerToVM().getSymbol(getEntryAt(cpi));
+        }
+        return s;
     }
 
     @Override
@@ -482,12 +808,26 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
     @Override
     public JavaConstant lookupAppendix(int cpi, int opcode) {
         assert Bytecodes.isInvoke(opcode);
-        final int index = toConstantPoolIndex(cpi, opcode);
-        Object result = runtime().getCompilerToVM().lookupAppendixInPool(metaspaceConstantPool, index);
-        if (result == null) {
+        final int index = rawIndexToConstantPoolIndex(cpi, opcode);
+
+        Object appendix = null;
+
+        if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+            if (!cache.exists()) {
+                // Nothing to load yet.
+                return null;
+            }
+            final int cacheIndex = decodeConstantPoolCacheIndex(index);
+            Cache.Entry entry = cache.getEntryAt(cacheIndex);
+            appendix = entry.getAppendixIfResolved();
+        } else {
+            appendix = runtime().getCompilerToVM().lookupAppendixInPool(metaspaceConstantPool, index);
+        }
+
+        if (appendix == null) {
             return null;
         } else {
-            return HotSpotObjectConstantImpl.forObject(result);
+            return HotSpotObjectConstantImpl.forObject(appendix);
         }
     }
 
@@ -502,7 +842,17 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
         HotSpotVMConfig config = runtime.getConfig();
         if ((metaspacePointer & config.compilerToVMSymbolTag) != 0) {
             final long metaspaceSymbol = metaspacePointer & ~config.compilerToVMSymbolTag;
-            String name = runtime.getCompilerToVM().getSymbol(metaspaceSymbol);
+            String name;
+            if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+                HotSpotSymbol symbol = new HotSpotSymbol(metaspaceSymbol);
+                name = symbol.asString();
+                // It shouldn't but just in case something went wrong...
+                if (name == null) {
+                    throw JVMCIError.shouldNotReachHere("malformed UTF-8 string in constant pool");
+                }
+            } else {
+                name = runtime.getCompilerToVM().getSymbol(metaspaceSymbol);
+            }
             return HotSpotUnresolvedJavaType.create(runtime(), "L" + name + ";");
         } else {
             assert (metaspacePointer & config.compilerToVMKlassTag) == 0;
@@ -512,7 +862,7 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
 
     @Override
     public JavaMethod lookupMethod(int cpi, int opcode) {
-        final int index = toConstantPoolIndex(cpi, opcode);
+        final int index = rawIndexToConstantPoolIndex(cpi, opcode);
         final long metaspaceMethod = runtime().getCompilerToVM().lookupMethodInPool(metaspaceConstantPool, index, (byte) opcode);
         if (metaspaceMethod != 0L) {
             HotSpotResolvedJavaMethod result = HotSpotResolvedJavaMethodImpl.fromMetaspace(metaspaceMethod);
@@ -550,7 +900,7 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
 
     @Override
     public JavaField lookupField(int cpi, int opcode) {
-        final int index = toConstantPoolIndex(cpi, opcode);
+        final int index = rawIndexToConstantPoolIndex(cpi, opcode);
         final int nameAndTypeIndex = getNameAndTypeRefIndexAt(index);
         final int nameIndex = getNameRefIndexAt(nameAndTypeIndex);
         String name = lookupUtf8(nameIndex);
@@ -597,14 +947,44 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
             case Bytecodes.LDC2_W:
                 index = cpi;
                 break;
-            case Bytecodes.INVOKEDYNAMIC:
+            case Bytecodes.INVOKEDYNAMIC: {
                 // invokedynamic instructions point to a constant pool cache entry.
-                index = decodeConstantPoolCacheIndex(cpi) + runtime().getConfig().constantPoolCpCacheIndexTag;
-                index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, index);
+                if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+                    // index = decodeConstantPoolCacheIndex(cpi) +
+                    // runtime().getConfig().constantPoolCpCacheIndexTag;
+                    // index = cache.constantPoolCacheIndexToConstantPoolIndex(index);
+                    final int cacheIndex = cpi;
+                    index = cache.getEntryAt(decodeInvokedynamicIndex(cacheIndex)).getConstantPoolIndex();
+                    // JVMCIError.guarantee(index == x, index + " != " + x);
+                } else {
+                    index = decodeConstantPoolCacheIndex(cpi) + runtime().getConfig().constantPoolCpCacheIndexTag;
+                    index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, index);
+                }
                 break;
+            }
+            case Bytecodes.GETSTATIC:
+            case Bytecodes.PUTSTATIC:
+            case Bytecodes.GETFIELD:
+            case Bytecodes.PUTFIELD:
+            case Bytecodes.INVOKEVIRTUAL:
+            case Bytecodes.INVOKESPECIAL:
+            case Bytecodes.INVOKESTATIC:
+            case Bytecodes.INVOKEINTERFACE: {
+                // invoke and field instructions point to a constant pool cache entry.
+                if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+                    // index = rawIndexToConstantPoolIndex(cpi, opcode);
+                    // index = cache.constantPoolCacheIndexToConstantPoolIndex(index);
+                    final int cacheIndex = cpi;
+                    index = cache.getEntryAt(cacheIndex).getConstantPoolIndex();
+                    // JVMCIError.guarantee(index == x, index + " != " + x);
+                } else {
+                    index = rawIndexToConstantPoolIndex(cpi, opcode);
+                    index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, index);
+                }
+                break;
+            }
             default:
-                index = toConstantPoolIndex(cpi, opcode);
-                index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, index);
+                throw JVMCIError.shouldNotReachHere("Unexpected opcode " + opcode);
         }
 
         final JVM_CONSTANT tag = getTagAt(index);
@@ -633,7 +1013,7 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                 switch (tag) {
                     case MethodRef:
                         if (Bytecodes.isInvokeHandleAlias(opcode)) {
-                            final int methodRefCacheIndex = toConstantPoolIndex(cpi, opcode);
+                            final int methodRefCacheIndex = rawIndexToConstantPoolIndex(cpi, opcode);
                             if (isInvokeHandle(methodRefCacheIndex, type)) {
                                 runtime().getCompilerToVM().resolveInvokeHandle(metaspaceConstantPool, methodRefCacheIndex);
                             }
@@ -652,7 +1032,13 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
     }
 
     private boolean isInvokeHandle(int methodRefCacheIndex, HotSpotResolvedObjectTypeImpl klass) {
-        assertTag(runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, methodRefCacheIndex), JVM_CONSTANT.MethodRef);
+        int index;
+        if (Options.UseConstantPoolCacheJavaCode.getValue()) {
+            index = cache.constantPoolCacheIndexToConstantPoolIndex(methodRefCacheIndex);
+        } else {
+            index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(metaspaceConstantPool, methodRefCacheIndex);
+        }
+        assertTag(index, JVM_CONSTANT.MethodRef);
         return ResolvedJavaMethod.isSignaturePolymorphic(klass, getNameRefAt(methodRefCacheIndex), runtime().getHostJVMCIBackend().getMetaAccess());
     }
 

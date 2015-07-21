@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -197,7 +197,7 @@ public class BytecodeFrame extends BytecodePosition {
                     assert values.length > i + 1 : String.format("missing second word %s", this);
                     assert values[i + 1] == null || values[i + 1].getKind() == Kind.Illegal : this;
                 }
-                assert derivedOk || ValueUtil.isIllegal(values[i]) || !values[i].getLIRKind().isDerivedReference() : "Unexpected derived value: " + values[i];
+                assert derivedOk || ValueUtil.isIllegal(values[i]) || !values[i].getLIRKind().isUnknownReference() : "Unexpected derived value: " + values[i];
             }
         }
         return true;

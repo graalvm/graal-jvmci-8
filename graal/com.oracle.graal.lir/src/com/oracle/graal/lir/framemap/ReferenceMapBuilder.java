@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,18 +20,16 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.hotspot;
+package com.oracle.graal.lir.framemap;
 
 import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.meta.*;
 
-public class HotSpotTargetDescription extends TargetDescription {
+import com.oracle.graal.lir.*;
 
-    public HotSpotTargetDescription(Architecture arch, boolean isMP, int stackAlignment, int implicitNullCheckLimit, boolean inlineObjects) {
-        super(arch, isMP, stackAlignment, implicitNullCheckLimit, inlineObjects);
-    }
+public abstract class ReferenceMapBuilder {
 
-    @Override
-    public ReferenceMap createReferenceMap(boolean hasRegisters, int stackSlotCount, int totalFrameSize) {
-        return new HotSpotReferenceMap(this, totalFrameSize);
-    }
+    public abstract void addLiveValue(Value value);
+
+    public abstract ReferenceMap finish(LIRFrameState state);
 }

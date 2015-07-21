@@ -43,6 +43,21 @@
 #include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #include "utilities/xmlstream.hpp"
+#ifdef TARGET_ARCH_x86
+# include "nativeInst_x86.hpp"
+#endif
+#ifdef TARGET_ARCH_sparc
+# include "nativeInst_sparc.hpp"
+#endif
+#ifdef TARGET_ARCH_zero
+# include "nativeInst_zero.hpp"
+#endif
+#ifdef TARGET_ARCH_arm
+# include "nativeInst_arm.hpp"
+#endif
+#ifdef TARGET_ARCH_ppc
+# include "nativeInst_ppc.hpp"
+#endif
 #ifdef SHARK
 #include "shark/sharkCompiler.hpp"
 #endif
@@ -2610,6 +2625,14 @@ void nmethod::copy_scopes_data(u_char* buffer, int size) {
   memcpy(scopes_data_begin(), buffer, size);
 }
 
+// When using JVMCI the address might be off by the size of a call instruction.
+bool nmethod::is_deopt_entry(address pc) {
+  return pc == deopt_handler_begin()
+#ifdef JVMCI
+    || pc == (deopt_handler_begin() + NativeCall::instruction_size)
+#endif // JVMCI
+    ;
+}
 
 #ifdef ASSERT
 static PcDesc* linear_search(nmethod* nm, int pc_offset, bool approximate) {
