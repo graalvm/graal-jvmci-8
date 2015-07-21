@@ -1145,18 +1145,26 @@ class Task:
     # a non-None value from __enter__. The body of a 'with Task(...) as t'
     # statement should check 't' and exit immediately if it is None.
     filters = None
+    startAtFilter = None
     filtersExclude = False
 
     def __init__(self, title, tasks=None, disableJacoco=False):
         self.tasks = tasks
         self.title = title
-        if tasks is not None and Task.filters is not None:
-            if Task.filtersExclude:
-                self.skipped = any([f in title for f in Task.filters])
-            else:
-                self.skipped = not any([f in title for f in Task.filters])
-        else:
-            self.skipped = False
+        self.skipped = False
+        if tasks is not None:
+            if Task.startAtFilter:
+                assert not Task.filters
+                if Task.startAtFilter in title:
+                    self.skipped = False
+                    Task.startAtFilter = None
+                else:
+                    self.skipped = True
+            elif Task.filters:
+                if Task.filtersExclude:
+                    self.skipped = any([f in title for f in Task.filters])
+                else:
+                    self.skipped = not any([f in title for f in Task.filters])
         if not self.skipped:
             self.start = time.time()
             self.end = None
@@ -1322,14 +1330,18 @@ def gate(args):
     parser.add_argument('-n', '--omit-native-clean', action='store_false', dest='cleanNative', help='omit cleaning and building native code')
     parser.add_argument('-i', '--omit-ide-clean', action='store_false', dest='cleanIde', help='omit cleaning the ide project files')
     parser.add_argument('-g', '--only-build-jvmci', action='store_false', dest='buildNonJVMCI', help='only build the JVMCI VM')
-    parser.add_argument('-t', '--task-filter', help='comma separated list of substrings to select subset of tasks to be run')
     parser.add_argument('-x', action='store_true', help='makes --task-filter an exclusion instead of inclusion filter')
     parser.add_argument('--jacocout', help='specify the output directory for jacoco report')
+    filtering = parser.add_mutually_exclusive_group()
+    filtering.add_argument('-t', '--task-filter', help='comma separated list of substrings to select subset of tasks to be run')
+    filtering.add_argument('-s', '--start-at', help='substring to select starting task')
 
     args = parser.parse_args(args)
 
     global _jacoco
-    if args.task_filter:
+    if args.start_at:
+        Task.startAtFilter = args.start_at
+    elif args.task_filter:
         Task.filters = args.task_filter.split(',')
         Task.filtersExclude = args.x
     elif args.x:
@@ -1927,7 +1939,7 @@ def checkheaders(args):
     """check Java source headers against any required pattern"""
     failures = {}
     for p in mx.projects():
-        if p.native:
+        if not p.isJavaProject():
             continue
 
         csConfig = join(mx.project(p.checkstyleProj).dir, '.checkstyle_checks.xml')
