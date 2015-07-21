@@ -1333,7 +1333,9 @@ bool G1CollectedHeap::do_collection(bool explicit_gc,
       check_bitmaps("Full GC Start");
       pre_full_gc_dump(gc_timer);
 
-      COMPILER2_PRESENT(DerivedPointerTable::clear());
+#if defined(COMPILER2) || defined(JVMCI)
+      DerivedPointerTable::clear();
+#endif
 
       // Disable discovery and empty the discovered lists
       // for the CM ref processor.
@@ -1393,7 +1395,9 @@ bool G1CollectedHeap::do_collection(bool explicit_gc,
       // not been removed from the discovered lists.
       ref_processor_stw()->enqueue_discovered_references();
 
-      COMPILER2_PRESENT(DerivedPointerTable::update_pointers());
+#if defined(COMPILER2) || defined(JVMCI)
+      DerivedPointerTable::update_pointers();
+#endif
 
       MemoryService::track_memory_usage();
 
@@ -3603,8 +3607,9 @@ void G1CollectedHeap::gc_epilogue(bool full) {
   // FIXME: what is this about?
   // I'm ignoring the "fill_newgen()" call if "alloc_event_enabled"
   // is set.
-  COMPILER2_PRESENT(assert(DerivedPointerTable::is_empty(),
-                        "derived pointer present"));
+#if defined(COMPILER2) || defined(JVMCI)
+  assert(DerivedPointerTable::is_empty(), "derived pointer present");
+#endif
   // always_do_update_barrier = true;
 
   resize_all_tlabs();
@@ -3938,7 +3943,9 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
       verify_before_gc();
       check_bitmaps("GC Start");
 
-      COMPILER2_PRESENT(DerivedPointerTable::clear());
+#if defined(COMPILER2) || defined(JVMCI)
+      DerivedPointerTable::clear();
+#endif
 
       // Please see comment in g1CollectedHeap.hpp and
       // G1CollectedHeap::ref_processing_init() to see how
@@ -5989,7 +5996,9 @@ void G1CollectedHeap::evacuate_collection_set(EvacuationInfo& evacuation_info) {
   enqueue_discovered_references(n_workers);
 
   redirty_logged_cards();
-  COMPILER2_PRESENT(DerivedPointerTable::update_pointers());
+#if defined(COMPILER2) || defined(JVMCI)
+  DerivedPointerTable::update_pointers();
+#endif
 }
 
 void G1CollectedHeap::free_region(HeapRegion* hr,

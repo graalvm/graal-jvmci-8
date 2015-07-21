@@ -360,7 +360,9 @@ bool PSScavenge::invoke_no_policy() {
     }
     save_to_space_top_before_gc();
 
-    COMPILER2_PRESENT(DerivedPointerTable::clear());
+#if defined(COMPILER2) || defined(JVMCI)
+    DerivedPointerTable::clear();
+#endif
 
     reference_processor()->enable_discovery(true /*verify_disabled*/, true /*verify_no_refs*/);
     reference_processor()->setup_policy(false);
@@ -633,7 +635,9 @@ bool PSScavenge::invoke_no_policy() {
       assert(young_gen->to_space()->is_empty(), "to space should be empty now");
     }
 
-    COMPILER2_PRESENT(DerivedPointerTable::update_pointers());
+#if defined(COMPILER2) || defined(JVMCI)
+    DerivedPointerTable::update_pointers();
+#endif
 
     NOT_PRODUCT(reference_processor()->verify_no_references_recorded());
 

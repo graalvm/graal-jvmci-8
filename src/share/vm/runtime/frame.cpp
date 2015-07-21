@@ -1313,7 +1313,9 @@ void frame::verify(const RegisterMap* map) {
       // make sure we have the right receiver type
     }
   }
-  COMPILER2_PRESENT(assert(DerivedPointerTable::is_empty(), "must be empty before verify");)
+#if defined(COMPILER2) || defined(JVMCI)
+  assert(DerivedPointerTable::is_empty(), "must be empty before verify");
+#endif
   oops_do_internal(&VerifyOopClosure::verify_oop, NULL, NULL, (RegisterMap*)map, false);
 }
 
