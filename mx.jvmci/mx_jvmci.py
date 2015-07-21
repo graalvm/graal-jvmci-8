@@ -1067,7 +1067,7 @@ def unittest(args):
                 excluded = set()
                 for jdkDist in jdkDeployedDists:
                     dist = mx.distribution(jdkDist.name)
-                    excluded.update([d.output_dir() for d in dist.sorted_deps()])
+                    excluded.update([d.output_dir() for d in dist.archived_deps() if d.isJavaProject()])
                 cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
                 vmArgs[cpIndex] = cp
 
@@ -1589,17 +1589,15 @@ def makejmhdeps(args):
         path = artifactId + '.jar'
         allDeps = []
         if args.permissive:
-            for name in deps:
-                dist = mx.distribution(name, fatalIfMissing=False)
-                if dist:
-                    allDeps = allDeps + [d.name for d in dist.sorted_deps(transitive=True)]
+            for name, dep in [(d, mx.dependency(d, fatalIfMissing=False)) for d in deps]:
+                if dep is None:
+                    mx.log('Skipping dependency ' + groupId + '.' + artifactId + ' as ' + name + ' cannot be resolved')
+                    return
+                if dep.isDistribution():
+                    allDeps = allDeps + [d.name for d in dep.archived_deps() if d.isJavaProject()]
                 else:
-                    if not mx.project(name, fatalIfMissing=False):
-                        if not mx.library(name, fatalIfMissing=False):
-                            mx.log('Skipping dependency ' + groupId + '.' + artifactId + ' as ' + name + ' cannot be resolved')
-                            return
                     allDeps.append(name)
-        d = mx.Distribution(_suite, name=artifactId, subDir=_suite.dir, path=path, sourcesPath=path, deps=allDeps, mainClass=None, excludedDependencies=[], distDependencies=[], javaCompliance=None)
+        d = mx.Distribution(_suite, name=artifactId, subDir=_suite.dir, path=path, sourcesPath=path, deps=allDeps, mainClass=None, excludedLibs=[], distDependencies=[], javaCompliance=None)
         d.make_archive()
         env = os.environ.copy()
         env['JAVA_HOME'] = get_jdk(vmToCheck='server')
