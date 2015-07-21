@@ -1118,7 +1118,7 @@ def buildvms(args):
                 mx.log('BEGIN: ' + v + '-' + vmbuild + '\t(see: ' + logFile + ')')
                 verbose = ['-v'] if mx._opts.verbose else []
                 # Run as subprocess so that output can be directed to a file
-                cmd = [sys.executable, '-u', join('mxtool', 'mx.py')] + verbose + ['--vm', v, '--vmbuild', vmbuild, 'build'] + check_dists_args
+                cmd = [sys.executable, '-u', mx.__file__] + verbose + ['--vm', v, '--vmbuild', vmbuild, 'build'] + check_dists_args
                 mx.logv("executing command: " + str(cmd))
                 subprocess.check_call(cmd, cwd=_suite.dir, stdout=log, stderr=subprocess.STDOUT)
                 duration = datetime.timedelta(seconds=time.time() - start)
