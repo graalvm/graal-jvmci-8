@@ -294,6 +294,7 @@ suite = {
         "jdk.internal.jvmci.runtime",
         "jdk.internal.jvmci.options",
         "jdk.internal.jvmci.common",
+        "jdk.internal.jvmci.compiler",
         "jdk.internal.jvmci.debug",
       ],
       "distDependencies" : [
