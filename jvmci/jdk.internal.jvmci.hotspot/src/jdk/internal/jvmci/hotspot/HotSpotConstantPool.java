@@ -739,7 +739,12 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                 final int opcode = -1;  // opcode is not used
                 return lookupType(cpi, opcode);
             case String:
-                String string;
+                /*
+                 * Normally, we would expect a String here, but anonymous classes can have
+                 * "pseudo strings" (arbitrary live objects) patched into a String entry. Such
+                 * entries do not have a symbol in the constant pool slot.
+                 */
+                Object string;
                 if (Options.UseConstantPoolCacheJavaCode.getValue()) {
                     // See: ConstantPool::resolve_constant_at_impl
                     /*
@@ -748,24 +753,23 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                      */
                     Object[] localResolvedReferences = resolvedReferences.getArray();
                     final int index = resolvedReferences.constantPoolIndexToResolvedReferencesIndex(cpi);
-                    if (index >= 0) {
-                        string = (String) localResolvedReferences[index];
-                        if (string != null) {
-                            return HotSpotObjectConstantImpl.forObject(string);
+                    assert index >= 0;
+                    // See: ConstantPool::string_at_impl
+                    string = localResolvedReferences[index];
+                    if (string != null) {
+                        assert string instanceof String || getEntryAt(index) == 0L;
+                        return HotSpotObjectConstantImpl.forObject(string);
+                    } else {
+                        final long metaspaceSymbol = getEntryAt(cpi);
+                        if (metaspaceSymbol != 0L) {
+                            HotSpotSymbol symbol = new HotSpotSymbol(metaspaceSymbol);
+                            string = symbol.asString().intern();
+                            // See: ConstantPool::string_at_put
+                            localResolvedReferences[index] = string;
                         }
                     }
-                    assert index != -1;
-                    // See: ConstantPool::string_at_impl
-                    string = (String) localResolvedReferences[index];
-                    if (string == null) {
-                        final long metaspaceSymbol = getEntryAt(cpi);
-                        HotSpotSymbol symbol = new HotSpotSymbol(metaspaceSymbol);
-                        string = symbol.asString().intern();
-                        // See: ConstantPool::string_at_put
-                        localResolvedReferences[index] = string;
-                    }
                 } else {
-                    string = (String) runtime().getCompilerToVM().resolvePossiblyCachedConstantInPool(metaspaceConstantPool, cpi);
+                    string = runtime().getCompilerToVM().resolvePossiblyCachedConstantInPool(metaspaceConstantPool, cpi);
                 }
                 return HotSpotObjectConstantImpl.forObject(string);
             case MethodHandle:
