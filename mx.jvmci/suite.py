@@ -316,6 +316,20 @@ suite = {
       ],
     },
 
+    "JVMCI_TEST" : {
+      "path" : "build/jvmci-test.jar",
+      "subDir" : "jvmci",
+      "sourcesPath" : "build/jvmci-test.src.zip",
+      "dependencies" : [
+        "jdk.internal.jvmci.debug.test",
+        "jdk.internal.jvmci.options.test",
+        "jdk.internal.jvmci.runtime.test",
+      ],
+      "distDependencies" : [
+        "JVMCI_API",
+      ],
+    },
+
     "JVMCI_OPTIONS_PROCESSOR" : {
       "path" : "build/jvmci-options-processor.jar",
       "subDir" : "jvmci",
