@@ -745,6 +745,11 @@ cached_graal_version = None
 
 def _hotspotReplaceResultsVar(m):
     var = m.group(1)
+    if var == 'os':
+        mx_os = mx.get_os()
+        if mx_os == 'darwin':
+            return 'bsd'
+        return mx_os
     if var == 'nojvmci':
         if get_vm().endswith('nojvmci'):
             return '-nojvmci'

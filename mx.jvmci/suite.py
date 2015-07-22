@@ -300,7 +300,12 @@ suite = {
           "amd64" : {
             "path" : "build/<vmbuild>/linux/amd64/<vm>/jvm.tar",
           }
-        }
+        },
+        "darwin" : {
+          "amd64" : {
+            "path" : "build/<vmbuild>/darwin/amd64/<vm>/jvm.tar",
+          }
+        },
       }
     },
 
