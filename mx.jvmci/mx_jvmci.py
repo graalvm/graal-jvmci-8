@@ -133,7 +133,7 @@ def _lib(l):
 
 class HotSpotVMJDKDeployedDist(JDKDeployedDist):
     def dist(self):
-        name = mx.instanciatedDistributionName(self._name, dict(vm=get_vm(), vmbuild=_vmbuild), context=self._name)
+        name = mx.instantiatedDistributionName(self._name, dict(vm=get_vm(), vmbuild=_vmbuild), context=self._name)
         return mx.distribution(name)
 
     def deploy(self, jdkDir):
@@ -237,13 +237,13 @@ class VM:
         global _vm, _vmbuild
         self.previousVm = _vm
         self.previousBuild = _vmbuild
-        mx.reInstanciateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.previousVm, vmbuild=self.previousBuild), dict(vm=self.vm, vmbuild=self.vmbuild))
+        mx.reInstantiateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.previousVm, vmbuild=self.previousBuild), dict(vm=self.vm, vmbuild=self.vmbuild))
         _vm = self.vm
         _vmbuild = self.build
 
     def __exit__(self, exc_type, exc_value, traceback):
         global _vm, _vmbuild
-        mx.reInstanciateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.vm, vmbuild=self.vmbuild), dict(vm=self.previousVm, vmbuild=self.previousBuild))
+        mx.reInstantiateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.vm, vmbuild=self.vmbuild), dict(vm=self.previousVm, vmbuild=self.previousBuild))
         _vm = self.previousVm
         _vmbuild = self.previousBuild
 
@@ -2094,7 +2094,7 @@ def mx_post_parse_cmd_line(opts):
     global _vm_prefix
     _vm_prefix = opts.vm_prefix
 
-    mx.instanciateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=_vmbuild, vm=get_vm()))
+    mx.instantiateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=_vmbuild, vm=get_vm()))
 
     for jdkDist in jdkDeployedDists:
         def _close(jdkDeployable):
