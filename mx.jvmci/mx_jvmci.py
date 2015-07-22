@@ -239,7 +239,7 @@ def export(args):
     infos['revision'] = hgcfg.tip('.') + ('+' if hgcfg.isDirty('.') else '')
     # TODO: infos['repository']
 
-    infos['jdkversion'] = str(mx.java().version)
+    infos['jdkversion'] = str(mx.get_jdk().version)
 
     infos['architecture'] = mx.get_arch()
     infos['platform'] = mx.get_os()
@@ -376,7 +376,7 @@ def getVmCfgInJdk(jdk, jvmCfgFile='jvm.cfg'):
     return join(vmLibDirInJdk(jdk), jvmCfgFile)
 
 def _jdksDir():
-    return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, 'jdk' + str(mx.java().version)))
+    return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, 'jdk' + str(mx.get_jdk().version)))
 
 def _handle_missing_VM(bld, vm=None):
     if not vm:
@@ -397,7 +397,7 @@ def get_jvmci_jdk(build=None, vmToCheck=None, create=False, installJars=True):
         build = _vmbuild
     jdk = join(_jdksDir(), build)
     if create:
-        srcJdk = mx.java().jdk
+        srcJdk = mx.get_jdk().jdk
         if not exists(jdk):
             mx.log('Creating ' + jdk + ' from ' + srcJdk)
             shutil.copytree(srcJdk, jdk)
@@ -719,7 +719,7 @@ def buildvars(args):
     """describe the variables that can be set by the -D option to the 'mx build' commmand"""
 
     buildVars = {
-        'ALT_BOOTDIR' : 'The location of the bootstrap JDK installation (default: ' + mx.java().jdk + ')',
+        'ALT_BOOTDIR' : 'The location of the bootstrap JDK installation (default: ' + mx.get_jdk().jdk + ')',
         'ALT_OUTPUTDIR' : 'Build directory',
         'HOTSPOT_BUILD_JOBS' : 'Number of CPUs used by make (default: ' + str(mx.cpu_count()) + ')',
         'INSTALL' : 'Install the built VM into the JDK? (default: y)',
@@ -888,7 +888,7 @@ def build(args, vm=None):
 
             setMakeVar('ARCH_DATA_MODEL', '64', env=env)
             setMakeVar('HOTSPOT_BUILD_JOBS', str(cpus), env=env)
-            setMakeVar('ALT_BOOTDIR', mx.java().jdk, env=env)
+            setMakeVar('ALT_BOOTDIR', mx.get_jdk().jdk, env=env)
             setMakeVar("EXPORT_PATH", jdk)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
@@ -1052,7 +1052,7 @@ def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
         if  len(ignoredArgs) > 0:
             mx.log("Warning: The following options will be ignored by the vm because they come after the '-version' argument: " + ' '.join(ignoredArgs))
 
-    args = mx.java().processArgs(args)
+    args = mx.get_jdk().processArgs(args)
     return (pfx, exe, vm, args, cwd)
 
 def vm(args, vm=None, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, vmbuild=None):
@@ -1477,7 +1477,7 @@ def _igvJdk():
     v8 = mx.VersionSpec("1.8")
     def _igvJdkVersionCheck(version):
         return version >= v8 and (version < v8u20 or version >= v8u40)
-    return mx.java(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").jdk
+    return mx.get_jdk(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").jdk
 
 def _igvBuildEnv():
         # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
@@ -2057,7 +2057,7 @@ def mx_post_parse_cmd_line(opts):
     versionDesc = ">=" + str(_minVersion)
     if _untilVersion:
         versionDesc += " and <=" + str(_untilVersion)
-    mx.java(_versionCheck, versionDescription=versionDesc, defaultJdk=True)
+    mx.get_jdk(_versionCheck, versionDescription=versionDesc, defaultJdk=True)
 
     if hasattr(opts, 'vm') and opts.vm is not None:
         global _vm
