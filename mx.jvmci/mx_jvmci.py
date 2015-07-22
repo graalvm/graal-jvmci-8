@@ -1085,7 +1085,7 @@ def _unittest_config_participant(config):
         if cp:
             excluded = set()
             for jdkDist in jdkDeployedDists:
-                dist = mx.distribution(jdkDist.name)
+                dist = jdkDist.dist()
                 excluded.update([d.output_dir() for d in dist.archived_deps() if d.isJavaProject()])
             cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
             vmArgs[cpIndex] = cp
