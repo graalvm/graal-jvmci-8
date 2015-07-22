@@ -128,9 +128,9 @@ def make_dist_rule(dist, mf):
 
 
 def do_build_makefile(mf, selectedDists):
-    java = mx.get_jdk()
-    bootClassPath = java.bootclasspath()
-    bootClassPath = bootClassPath.replace(os.path.realpath(java.jdk), "$(ABS_BOOTDIR)")
+    jdk = mx.get_jdk()
+    bootClassPath = jdk.bootclasspath()
+    bootClassPath = bootClassPath.replace(os.path.realpath(jdk.home), "$(ABS_BOOTDIR)")
     jdkBootClassPathVariableName = "JDK_BOOTCLASSPATH"
 
     mf.add_definition("""# This Makefile is generated automatically, do not edit
@@ -139,7 +139,7 @@ TARGET=.
 # Bootstrap JDK to be used (for javac and jar)
 ABS_BOOTDIR=
 
-JAVAC=$(ABS_BOOTDIR)/bin/javac -g -target """ + str(java.javaCompliance) + """
+JAVAC=$(ABS_BOOTDIR)/bin/javac -g -target """ + str(jdk.javaCompliance) + """
 JAR=$(ABS_BOOTDIR)/bin/jar
 
 HS_COMMON_SRC=.
