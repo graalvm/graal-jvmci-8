@@ -29,7 +29,7 @@
 #include "classfile/vmSymbols.hpp"
 #include "code/scopeDesc.hpp"
 #include "compiler/compileBroker.hpp"
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #endif
@@ -843,7 +843,7 @@ void Thread::oops_do(OopClosure* f, CLDClosure* cld_f, CodeBlobClosure* cf) {
   active_handles()->oops_do(f);
   // Do oop for ThreadShadow
   f->do_oop((oop*)&_pending_exception);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   f->do_oop((oop*)&_pending_failed_speculation);
 #endif
   handle_area()->oops_do(f);
@@ -1426,7 +1426,7 @@ void WatcherThread::print_on(outputStream* st) const {
 
 // ======= JavaThread ========
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 
 jlong* JavaThread::_jvmci_old_thread_counters;
 
@@ -1451,7 +1451,7 @@ void JavaThread::collect_counters(typeArrayOop array) {
   }
 }
 
-#endif // JVMCI
+#endif
 
 // A JavaThread is a normal Java thread
 
@@ -1486,7 +1486,7 @@ void JavaThread::initialize() {
   _in_deopt_handler = 0;
   _doing_unsafe_access = false;
   _stack_guard_state = stack_guard_unused;
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   _jvmci_alternate_call_target = NULL;
   _jvmci_implicit_exception_pc = NULL;
   if (JVMCICounterSize > 0) {
@@ -1495,7 +1495,7 @@ void JavaThread::initialize() {
   } else {
     _jvmci_counters = NULL;
   }
-#endif // JVMCI
+#endif
   (void)const_cast<oop&>(_exception_oop = NULL);
   _exception_pc  = 0;
   _exception_handler_pc = 0;
@@ -1676,7 +1676,7 @@ JavaThread::~JavaThread() {
   if (_thread_profiler != NULL) delete _thread_profiler;
   if (_thread_stat != NULL) delete _thread_stat;
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (JVMCICounterSize > 0) {
     if (jvmci_counters_include(this)) {
       for (int i = 0; i < JVMCICounterSize; i++) {
@@ -1685,7 +1685,7 @@ JavaThread::~JavaThread() {
     }
     FREE_C_HEAP_ARRAY(jlong, _jvmci_counters, mtInternal);
   }
-#endif // JVMCI
+#endif
 }
 
 
@@ -3395,7 +3395,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   jint parse_result = Arguments::parse(args);
   if (parse_result != JNI_OK) return parse_result;
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   OptionValuesTable* options = JVMCIRuntime::parse_arguments();
   if (options == NULL) {
     return JNI_ERR;
@@ -3456,14 +3456,14 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // Initialize global data structures and create system classes in heap
   vm_init_globals();
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (JVMCICounterSize > 0) {
     JavaThread::_jvmci_old_thread_counters = NEW_C_HEAP_ARRAY(jlong, JVMCICounterSize, mtInternal);
     memset(JavaThread::_jvmci_old_thread_counters, 0, sizeof(jlong) * JVMCICounterSize);
   } else {
     JavaThread::_jvmci_old_thread_counters = NULL;
   }
-#endif // JVMCI
+#endif
 
   // Attach the main thread to this os thread
   JavaThread* main_thread = new JavaThread();
@@ -3709,7 +3709,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
     Chunk::start_chunk_pool_cleaner_task();
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   JVMCIRuntime::set_options(options, main_thread);
   delete options;
 #endif
@@ -4133,11 +4133,11 @@ bool Threads::destroy_vm() {
 
   delete thread;
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (JVMCICounterSize > 0) {
     FREE_C_HEAP_ARRAY(jlong, JavaThread::_jvmci_old_thread_counters, mtInternal);
   }
-#endif // JVMCI
+#endif
 
   // exit_globals() will delete tty
   exit_globals();

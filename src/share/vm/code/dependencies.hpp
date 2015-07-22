@@ -200,7 +200,7 @@ class Dependencies: public ResourceObj {
 
   static void check_valid_dependency_type(DepType dept);
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // A Metadata* or object value recorded in an OopRecorder
   class DepValue VALUE_OBJ_CLASS_SPEC {
    private:
@@ -249,7 +249,7 @@ class Dependencies: public ResourceObj {
   // State for writing a new set of dependencies:
   GrowableArray<int>*       _dep_seen;  // (seen[h->ident] & (1<<dept))
   GrowableArray<ciBaseObject*>*  _deps[TYPE_LIMIT];
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   bool _using_dep_values;
   GrowableArray<DepValue>*  _dep_values[TYPE_LIMIT];
 #endif
@@ -271,7 +271,7 @@ class Dependencies: public ResourceObj {
     return (seen & (1<<dept)) != 0;
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   bool note_dep_seen(int dept, DepValue x) {
     assert(dept < BitsPerInt, "oops");
     // place metadata deps at even indexes, object deps at odd indexes
@@ -286,7 +286,7 @@ class Dependencies: public ResourceObj {
 
   bool maybe_merge_ctxk(GrowableArray<ciBaseObject*>* deps,
                         int ctxk_i, ciKlass* ctxk);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   bool maybe_merge_ctxk(GrowableArray<DepValue>* deps,
                         int ctxk_i, DepValue ctxk);
 #endif
@@ -311,9 +311,9 @@ class Dependencies: public ResourceObj {
   Dependencies(ciEnv* env) {
     initialize(env);
   }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   Dependencies(Arena* arena, OopRecorder* oop_recorder, CompileLog* log);
-#endif // JVMCI
+#endif
 
  private:
   // Check for a valid context type.
@@ -346,7 +346,7 @@ class Dependencies: public ResourceObj {
   void assert_has_no_finalizable_subclasses(ciKlass* ctxk);
   void assert_call_site_target_value(ciCallSite* call_site, ciMethodHandle* method_handle);
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
  private:
   static void check_ctxk(Klass* ctxk) {
     assert(ctxk->oop_is_instance(), "java types only");

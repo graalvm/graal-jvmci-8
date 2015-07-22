@@ -916,7 +916,7 @@ class JavaThread: public Thread {
 
  private:
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   address   _jvmci_alternate_call_target;
   address   _jvmci_implicit_exception_pc;    // pc at which the most recent implicit exception occurred
 
@@ -926,7 +926,7 @@ class JavaThread: public Thread {
   static jlong* _jvmci_old_thread_counters;
   static void collect_counters(typeArrayOop array);
  private:
-#endif // JVMCI
+#endif
 
   nmethod*      _scanned_nmethod;  // nmethod being scanned by the sweeper
 
@@ -1301,7 +1301,7 @@ class JavaThread: public Thread {
   MemRegion deferred_card_mark() const           { return _deferred_card_mark; }
   void set_deferred_card_mark(MemRegion mr)      { _deferred_card_mark = mr;   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   void set_jvmci_alternate_call_target(address a) { _jvmci_alternate_call_target = a; }
   void set_jvmci_implicit_exception_pc(address a) { _jvmci_implicit_exception_pc = a; }
 #endif
@@ -1399,11 +1399,11 @@ class JavaThread: public Thread {
   static ByteSize thread_state_offset()          { return byte_offset_of(JavaThread, _thread_state        ); }
   static ByteSize saved_exception_pc_offset()    { return byte_offset_of(JavaThread, _saved_exception_pc  ); }
   static ByteSize osthread_offset()              { return byte_offset_of(JavaThread, _osthread            ); }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   static ByteSize jvmci_alternate_call_target_offset() { return byte_offset_of(JavaThread, _jvmci_alternate_call_target); }
   static ByteSize jvmci_implicit_exception_pc_offset() { return byte_offset_of(JavaThread, _jvmci_implicit_exception_pc); }
   static ByteSize jvmci_counters_offset()        { return byte_offset_of(JavaThread, _jvmci_counters      ); }
-#endif // JVMCI
+#endif
   static ByteSize exception_oop_offset()         { return byte_offset_of(JavaThread, _exception_oop       ); }
   static ByteSize exception_pc_offset()          { return byte_offset_of(JavaThread, _exception_pc        ); }
   static ByteSize exception_handler_pc_offset()  { return byte_offset_of(JavaThread, _exception_handler_pc); }

@@ -164,6 +164,20 @@
 #define INCLUDE_TRACE 1
 #endif // INCLUDE_TRACE
 
+#ifndef INCLUDE_JVMCI
+#define INCLUDE_JVMCI 1
+#endif
+
+#if INCLUDE_JVMCI
+#define JVMCI_ONLY(code) code
+#define NOT_JVMCI(code)
+#define IS_JVMCI_DEFINED true
+#else
+#define JVMCI_ONLY(code)
+#define NOT_JVMCI(code) code
+#define IS_JVMCI_DEFINED false
+#endif // JVMCI
+
 // COMPILER1 variant
 #ifdef COMPILER1
 #if defined(COMPILER2) || defined(COMPILERJVMCI)
@@ -191,19 +205,9 @@
 #define NOT_COMPILERJVMCI(code) code
 #endif // COMPILERJVMCI
 
-#if defined(COMPILERJVMCI) && !defined(JVMCI)
-#error "COMPILERJVMCI needs JVMCI to be defined"
+#if defined(COMPILERJVMCI) && !INCLUDE_JVMCI
+#error "COMPILERJVMCI needs INCLUDE_JVMCI=1"
 #endif
-
-#ifdef JVMCI
-#define JVMCI_ONLY(code) code
-#define NOT_JVMCI(code)
-#define IS_JVMCI_DEFINED true
-#else // JVMCI
-#define JVMCI_ONLY(code)
-#define NOT_JVMCI(code) code
-#define IS_JVMCI_DEFINED false
-#endif // JVMCI
 
 #ifdef TIERED
 #define TIERED_ONLY(code) code

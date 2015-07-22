@@ -2253,7 +2253,7 @@ LONG Handle_IDiv_Exception(struct _EXCEPTION_POINTERS* exceptionInfo) {
 #elif _M_AMD64
   PCONTEXT ctx = exceptionInfo->ContextRecord;
   address pc = (address)ctx->Rip;
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   assert(pc[0] >= Assembler::REX && pc[0] <= Assembler::REX_WRXB && pc[1] == 0xF7 || pc[0] == 0xF7, "not an idiv opcode");
   if (pc[0] == 0xF7) {
     // set correct result values and continue after idiv instruction

@@ -56,7 +56,7 @@ class Deoptimization : AllStatic {
     Reason_intrinsic,             // saw unexpected operand to intrinsic (@bci)
     Reason_bimorphic,             // saw unexpected object class in bimorphic inlining (@bci)
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     Reason_unreached0             = Reason_null_assert,
     Reason_type_checked_inlining  = Reason_intrinsic,
     Reason_optimized_type_check   = Reason_bimorphic,
@@ -75,7 +75,7 @@ class Deoptimization : AllStatic {
     Reason_speculate_class_check, // saw unexpected object class from type speculation
     Reason_rtm_state_change,      // rtm state change detected
     Reason_unstable_if,           // a branch predicted always false was taken
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     Reason_aliasing,              // optimistic assumption about aliasing failed
     Reason_transfer_to_interpreter, // explicit transferToInterpreter()
     Reason_not_compiled_exception_handler,
@@ -138,7 +138,7 @@ class Deoptimization : AllStatic {
   // executing in a particular CodeBlob if UseBiasedLocking is enabled
   static void revoke_biases_of_monitors(CodeBlob* cb);
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
 JVMCI_ONLY(public:)
 
   // Support for restoring non-escaping objects
@@ -149,7 +149,7 @@ JVMCI_ONLY(public:)
   static void relock_objects(GrowableArray<MonitorInfo*>* monitors, JavaThread* thread, bool realloc_failures);
   static void pop_frames_failed_reallocs(JavaThread* thread, vframeArray* array);
   NOT_PRODUCT(static void print_objects(GrowableArray<ScopeValue*>* objects, bool realloc_failures);)
-#endif // COMPILER2 || JVMCI
+#endif // COMPILER2 || INCLUDE_JVMCI
 
   public:
   static vframeArray* create_vframeArray(JavaThread* thread, frame fr, RegisterMap *reg_map, GrowableArray<compiledVFrame*>* chunk, bool realloc_failures);
@@ -395,7 +395,7 @@ JVMCI_ONLY(public:)
                                                int trap_bci,
                                                DeoptReason reason,
                                                bool update_total_trap_count,
-#ifdef JVMCI
+#if INCLUDE_JVMCI
                                                bool is_osr,
 #endif
                                                Method* compiled_method,

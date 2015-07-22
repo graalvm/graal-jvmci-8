@@ -475,7 +475,7 @@ IRT_ENTRY(address, InterpreterRuntime::exception_handler_for_exception(JavaThrea
     }
   } while (should_repeat == true);
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (h_method->method_data() != NULL) {
     ResourceMark rm(thread);
     ProfileData* pdata = h_method->method_data()->allocate_bci_to_data(current_bci, NULL);

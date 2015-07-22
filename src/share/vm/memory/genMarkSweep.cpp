@@ -96,7 +96,7 @@ void GenMarkSweep::invoke_at_safepoint(int level, ReferenceProcessor* rp, bool c
   mark_sweep_phase2();
 
   // Don't add any more derived pointers during phase3
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   assert(DerivedPointerTable::is_active(), "Sanity");
   DerivedPointerTable::set_active(false);
 #endif

@@ -563,7 +563,7 @@ void java_lang_Class::initialize_mirror_fields(KlassHandle k,
   set_init_lock(mirror(), r);
 
   // Set protection domain also
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (k->class_loader() == SystemDictionary::jvmci_loader()) {
     // Same protection domain as for classes loaded by the boot loader
     protection_domain = Handle();

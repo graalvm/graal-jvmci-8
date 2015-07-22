@@ -104,7 +104,7 @@ class MallocTracker;
 class os: AllStatic {
   friend class VMStructs;
   friend class MallocTracker;
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   friend class Arguments; // need access to format_boot_path
 #endif
 

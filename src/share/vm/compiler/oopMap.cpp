@@ -319,7 +319,7 @@ static void add_derived_oop(oop* base, oop* derived) {
   COMPILER1_PRESENT(ShouldNotReachHere();)
   COMPILERJVMCI_PRESENT(ShouldNotReachHere();)
 #endif // TIERED
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   DerivedPointerTable::add(derived, base);
 #endif // COMPILER2 || JVMCI
 }
@@ -509,7 +509,7 @@ bool OopMap::has_derived_pointer() const {
   COMPILER1_PRESENT(return false);
   COMPILERJVMCI_PRESENT(return false);
 #endif // !TIERED
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   OopMapStream oms((OopMap*)this,OopMapValue::derived_oop_value);
   return oms.is_done();
 #else
@@ -581,7 +581,7 @@ void OopMapSet::print_on(outputStream* st) const {
 
 //------------------------------DerivedPointerTable---------------------------
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
 
 class DerivedPointerEntry : public CHeapObj<mtCompiler> {
  private:

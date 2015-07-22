@@ -2949,7 +2949,7 @@ void TemplateTable::generate_vtable_call(Register Rrecv, Register Rindex, Regist
   // get target Method* & entry point
   __ lookup_virtual_method(Rrecv, Rindex, G5_method);
   __ profile_arguments_type(G5_method, Rcall, Gargs, true);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   __ profile_called_method(G5_method, Rtemp);
 #endif
   __ call_from_interpreter(Rcall, Gargs, Rret);
@@ -3206,7 +3206,7 @@ void TemplateTable::invokeinterface(int byte_no) {
   assert_different_registers(Rcall, G5_method, Gargs, Rret);
 
   __ profile_arguments_type(G5_method, Rcall, Gargs, true);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   __ profile_called_method(G5_method, Rscratch);
 #endif
   __ call_from_interpreter(Rcall, Gargs, Rret);

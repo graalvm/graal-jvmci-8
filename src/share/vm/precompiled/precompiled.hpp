@@ -295,9 +295,9 @@
 # include "c1/c1_ValueType.hpp"
 # include "c1/c1_globals.hpp"
 #endif // COMPILER1
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 # include "jvmci/jvmciGlobals.hpp"
-#endif // JVMCI
+#endif // INCLUDE_JVMCI
 #if INCLUDE_ALL_GCS
 # include "gc_implementation/concurrentMarkSweep/cmsOopClosures.hpp"
 # include "gc_implementation/concurrentMarkSweep/compactibleFreeListSpace.hpp"

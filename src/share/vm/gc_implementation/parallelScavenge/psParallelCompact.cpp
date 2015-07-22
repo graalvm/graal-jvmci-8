@@ -1068,7 +1068,7 @@ void PSParallelCompact::post_compact()
   CodeCache::gc_epilogue();
   JvmtiExport::gc_epilogue();
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   DerivedPointerTable::update_pointers();
 #endif
 
@@ -2070,7 +2070,7 @@ bool PSParallelCompact::invoke_no_policy(bool maximum_heap_compaction) {
     CodeCache::gc_prologue();
     Threads::gc_prologue();
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
     DerivedPointerTable::clear();
 #endif
 
@@ -2086,7 +2086,7 @@ bool PSParallelCompact::invoke_no_policy(bool maximum_heap_compaction) {
       && gc_cause == GCCause::_java_lang_system_gc;
     summary_phase(vmthread_cm, maximum_heap_compaction || max_on_system_gc);
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
     assert(DerivedPointerTable::is_active(), "Sanity");
     DerivedPointerTable::set_active(false);
 #endif

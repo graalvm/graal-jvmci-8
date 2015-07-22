@@ -43,7 +43,7 @@
 #include "compiler/compileBroker.hpp"
 #include "shark/sharkCompiler.hpp"
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciJavaAccess.hpp"
 #endif
 
@@ -995,7 +995,7 @@ void AdapterGenerator::gen_i2c_adapter(int total_args_passed,
 
   // Jump to the compiled code just as if compiled code was doing it.
   __ ld_ptr(G5_method, in_bytes(Method::from_compiled_offset()), G3);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // check if this call should be routed towards a specific entry point
   __ ld(Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())), G1);
   __ cmp(G0, G1);
@@ -3473,7 +3473,7 @@ void SharedRuntime::generate_deopt_blob() {
     pad += StackShadowPages*16 + 32;
   }
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   pad += 1000; // Increase the buffer size when compiling for JVMCI
 #endif
 #ifdef _LP64
@@ -3543,7 +3543,7 @@ void SharedRuntime::generate_deopt_blob() {
   __ delayed()->mov(Deoptimization::Unpack_deopt, L0deopt_mode);
 
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   masm->block_comment("BEGIN JVMCI");
   int implicit_exception_uncommon_trap_offset = __ offset() - start;
   __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset()), O7);
@@ -3576,7 +3576,7 @@ void SharedRuntime::generate_deopt_blob() {
   __ ba(after_fetch_unroll_info_call);
   __ delayed()->nop(); // Delay slot
   masm->block_comment("END JVMCI");
-#endif // JVMCI
+#endif // INCLUDE_JVMCI
 
   int exception_offset = __ offset() - start;
 
@@ -3659,7 +3659,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   __ reset_last_Java_frame();
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   __ bind(after_fetch_unroll_info_call);
 #endif
   // NOTE: we know that only O0/O1 will be reloaded by restore_result_registers
@@ -3727,7 +3727,7 @@ void SharedRuntime::generate_deopt_blob() {
   masm->flush();
   _deopt_blob = DeoptimizationBlob::create(&buffer, oop_maps, 0, exception_offset, reexecute_offset, frame_size_words);
   _deopt_blob->set_unpack_with_exception_in_tls_offset(exception_in_tls_offset);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   _deopt_blob->set_uncommon_trap_offset(uncommon_trap_offset);
   _deopt_blob->set_implicit_exception_uncommon_trap_offset(implicit_exception_uncommon_trap_offset);
 #endif

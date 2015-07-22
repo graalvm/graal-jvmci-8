@@ -1189,7 +1189,7 @@ bool os::set_boot_path(char fileSep, char pathSep) {
         "%/lib/jce.jar:"
         "%/lib/charsets.jar:"
         "%/lib/jfr.jar:"
-#ifdef JVMCI
+#if INCLUDE_JVMCI
         "%/lib/jvmci-service.jar:"
 #endif
         "%/classes";

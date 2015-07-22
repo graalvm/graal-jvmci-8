@@ -127,6 +127,11 @@ ifeq ($(INCLUDE_NMT), false)
 	 memTracker.cpp nmtDCmd.cpp mallocSiteTable.cpp
 endif
 
+ifeq ($(INCLUDE_JVMCI), false)
+      CXXFLAGS += -DINCLUDE_JVMCI=0
+      CFLAGS += -DINCLUDE_JVMCI=0
+endif
+
 -include $(HS_ALT_MAKE)/excludeSrc.make
 
 .PHONY: $(HS_ALT_MAKE)/excludeSrc.make

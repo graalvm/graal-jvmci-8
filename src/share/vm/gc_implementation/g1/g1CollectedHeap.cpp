@@ -1333,7 +1333,7 @@ bool G1CollectedHeap::do_collection(bool explicit_gc,
       check_bitmaps("Full GC Start");
       pre_full_gc_dump(gc_timer);
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
       DerivedPointerTable::clear();
 #endif
 
@@ -1395,7 +1395,7 @@ bool G1CollectedHeap::do_collection(bool explicit_gc,
       // not been removed from the discovered lists.
       ref_processor_stw()->enqueue_discovered_references();
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
       DerivedPointerTable::update_pointers();
 #endif
 
@@ -3607,7 +3607,7 @@ void G1CollectedHeap::gc_epilogue(bool full) {
   // FIXME: what is this about?
   // I'm ignoring the "fill_newgen()" call if "alloc_event_enabled"
   // is set.
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   assert(DerivedPointerTable::is_empty(), "derived pointer present");
 #endif
   // always_do_update_barrier = true;
@@ -3943,7 +3943,7 @@ G1CollectedHeap::do_collection_pause_at_safepoint(double target_pause_time_ms) {
       verify_before_gc();
       check_bitmaps("GC Start");
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
       DerivedPointerTable::clear();
 #endif
 
@@ -5996,7 +5996,7 @@ void G1CollectedHeap::evacuate_collection_set(EvacuationInfo& evacuation_info) {
   enqueue_discovered_references(n_workers);
 
   redirty_logged_cards();
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   DerivedPointerTable::update_pointers();
 #endif
 }

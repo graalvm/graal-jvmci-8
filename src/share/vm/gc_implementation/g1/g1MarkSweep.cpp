@@ -89,7 +89,7 @@ void G1MarkSweep::invoke_at_safepoint(ReferenceProcessor* rp,
 
   mark_sweep_phase2();
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   // Don't add any more derived pointers during phase3
   DerivedPointerTable::set_active(false);
 #endif
@@ -172,7 +172,7 @@ void G1MarkSweep::mark_sweep_phase1(bool& marked_for_unloading,
 
   if (VerifyDuringGC) {
     HandleMark hm;  // handle scope
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
     DerivedPointerTableDeactivate dpt_deact;
 #endif
     Universe::heap()->prepare_for_verify();

@@ -734,7 +734,7 @@ void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose
                   nm->compile_id(), (nm->is_osr_method() ? "%" : ""),
                   ((nm->compiler() != NULL) ? nm->compiler()->name() : ""),
                   buf, m->code_size(), _pc, _cb->code_begin(), _pc - _cb->code_begin());
-#ifdef JVMCI
+#if INCLUDE_JVMCI
         char* jvmciName = nm->jvmci_installed_code_name(buf, buflen);
         if (jvmciName != NULL) {
           st->print(" (%s)", jvmciName);
@@ -1313,7 +1313,7 @@ void frame::verify(const RegisterMap* map) {
       // make sure we have the right receiver type
     }
   }
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   assert(DerivedPointerTable::is_empty(), "must be empty before verify");
 #endif
   oops_do_internal(&VerifyOopClosure::verify_oop, NULL, NULL, (RegisterMap*)map, false);

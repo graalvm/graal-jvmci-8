@@ -529,7 +529,7 @@ void Disassembler::decode(nmethod* nm, outputStream* st) {
   nm->method()->method_holder()->name()->print_symbol_on(env.output());
   env.output()->print(".");
   nm->method()->name()->print_symbol_on(env.output());
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   {
     char buffer[O_BUFLEN];
     char* jvmciName = nm->jvmci_installed_code_name(buffer, O_BUFLEN);

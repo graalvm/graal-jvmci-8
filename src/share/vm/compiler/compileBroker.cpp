@@ -49,7 +49,7 @@
 #ifdef COMPILER1
 #include "c1/c1_Compiler.hpp"
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciCompiler.hpp"
 #ifdef COMPILERJVMCI
 #include "jvmci/jvmciRuntime.hpp"
@@ -916,7 +916,7 @@ void CompileBroker::compilation_init() {
   // Set the interface to the current compiler(s).
   int c1_count = CompilationPolicy::policy()->compiler_count(CompLevel_simple);
   int c2_count = CompilationPolicy::policy()->compiler_count(CompLevel_full_optimization);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   JVMCICompiler* jvmci = new JVMCICompiler();
 #endif
 
@@ -2473,7 +2473,7 @@ const char* CompileBroker::compiler_name(int comp_level) {
   }
 }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 void CompileBroker::print_times(AbstractCompiler* comp) {
   CompilerStatistics* stats = comp->stats();
   tty->print_cr("  %s {speed: %d bytes/s; standard: %6.3f s, %d bytes, %d methods; osr: %6.3f s, %d bytes, %d methods; nmethods_size: %d bytes; nmethods_code_size: %d bytes}",
@@ -2486,7 +2486,7 @@ void CompileBroker::print_times(AbstractCompiler* comp) {
 #endif
 
 void CompileBroker::print_times(bool per_compiler, bool aggregate) {
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   elapsedTimer standard_compilation;
   elapsedTimer total_compilation;
   elapsedTimer osr_compilation;

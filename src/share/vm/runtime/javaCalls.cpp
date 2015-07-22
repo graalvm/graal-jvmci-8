@@ -40,7 +40,7 @@
 #include "runtime/signature.hpp"
 #include "runtime/stubRoutines.hpp"
 #include "runtime/thread.inline.hpp"
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciJavaAccess.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #endif
@@ -343,7 +343,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
 
   CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   nmethod* nm = args->alternative_target();
   if (nm == NULL) {
 #endif
@@ -353,7 +353,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
     args->verify(method, result->get_type(), thread);
   }
   else debug_only(args->verify(method, result->get_type(), thread));
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   }
 #else
 
@@ -418,7 +418,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
     os::bang_stack_shadow_pages();
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (nm != NULL) {
     if (nm->is_alive()) {
       ((JavaThread*) THREAD)->set_jvmci_alternate_call_target(nm->verified_entry_point());

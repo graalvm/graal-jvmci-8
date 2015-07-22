@@ -30,7 +30,7 @@
 #include "compiler/compileBroker.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "interpreter/bytecodeHistogram.hpp"
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #endif
@@ -490,7 +490,7 @@ void before_exit(JavaThread * thread) {
     }
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   JVMCIRuntime::shutdown();
 #endif
 

@@ -283,7 +283,7 @@ class OopMapStream : public StackObj {
 // oops, it is filled in with references to all locations that contains a
 // derived oop (assumed to be very few).  When the GC is complete, the derived
 // pointers are updated based on their base pointers new value and an offset.
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
 class DerivedPointerTable : public AllStatic {
   friend class VMStructs;
  private:

@@ -92,7 +92,7 @@
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciRuntime.hpp"
 #include "jvmci/jvmciJavaAccess.hpp"
 #endif
@@ -225,7 +225,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
 
   bool realloc_failures = false;
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   // Reallocate the non-escaping objects and restore their fields. Then
   // relock objects if synchronization on them was eliminated.
 #ifdef COMPILER2
@@ -313,7 +313,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
     }
   }
 #endif // COMPILER2
-#endif // COMPILER2 || JVMCI
+#endif // COMPILER2 || INCLUDE_JVMCI
 
   // Ensure that no safepoint is taken after pointers have been stored
   // in fields of rematerialized objects.  If a safepoint occurs from here on
@@ -321,7 +321,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
   No_Safepoint_Verifier no_safepoint;
 
   vframeArray* array = create_vframeArray(thread, deoptee, &map, chunk, realloc_failures);
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   if (realloc_failures) {
     pop_frames_failed_reallocs(thread, array);
   }
@@ -776,7 +776,7 @@ int Deoptimization::deoptimize_dependents() {
 }
 
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
 bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, GrowableArray<ScopeValue*>* objects, TRAPS) {
   Handle pending_exception(thread->pending_exception());
   const char* exception_file = thread->exception_file();
@@ -1111,7 +1111,7 @@ void Deoptimization::print_objects(GrowableArray<ScopeValue*>* objects, bool rea
   }
 }
 #endif
-#endif // COMPILER2 || JVMCI
+#endif // COMPILER2 || INCLUDE_JVMCI
 
 vframeArray* Deoptimization::create_vframeArray(JavaThread* thread, frame fr, RegisterMap *reg_map, GrowableArray<compiledVFrame*>* chunk, bool realloc_failures) {
   Events::log(thread, "DEOPT PACKING pc=" INTPTR_FORMAT " sp=" INTPTR_FORMAT, fr.pc(), fr.sp());
@@ -1171,7 +1171,7 @@ vframeArray* Deoptimization::create_vframeArray(JavaThread* thread, frame fr, Re
   return array;
 }
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
 void Deoptimization::pop_frames_failed_reallocs(JavaThread* thread, vframeArray* array) {
   // Reallocation of some scalar replaced objects failed. Record
   // that we need to pop all the interpreter frames for the
@@ -1361,7 +1361,7 @@ JRT_LEAF(void, Deoptimization::popframe_preserve_args(JavaThread* thread, int by
 JRT_END
 
 
-#if defined(COMPILER2) || defined(SHARK) || defined(JVMCI)
+#if defined(COMPILER2) || defined(SHARK) || INCLUDE_JVMCI
 void Deoptimization::load_class_by_index(constantPoolHandle constant_pool, int index, TRAPS) {
   // in case of an unresolved klass entry, load the class.
   if (constant_pool->tag_at(index).is_unresolved_klass()) {
@@ -1424,7 +1424,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
   thread->inc_in_deopt_handler();
 
   // We need to update the map if we have biased locking.
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // (lstadler) JVMCI might need to get an exception from the stack, which in turn requires the register map to be valid
   RegisterMap reg_map(thread, true);
 #else
@@ -1448,7 +1448,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
 
     DeoptReason reason = trap_request_reason(trap_request);
     DeoptAction action = trap_request_action(trap_request);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     int debug_id = trap_request_debug_id(trap_request);
 #endif
     jint unloaded_class_index = trap_request_index(trap_request); // CP idx or -1
@@ -1463,7 +1463,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     if (TraceDeoptimization) {
       ttyLocker ttyl;
       tty->print_cr("  bci=%d pc=" INTPTR_FORMAT ", relative_pc=%d, method=%s" JVMCI_ONLY(", debug_id=%d"), trap_scope->bci(), fr.pc(), fr.pc() - nm->code_begin(), trap_scope->method()->name_and_sig_as_C_string()
-#ifdef JVMCI
+#if INCLUDE_JVMCI
           , debug_id
 #endif
           );
@@ -1471,7 +1471,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
 
     methodHandle    trap_method = trap_scope->method();
     int             trap_bci    = trap_scope->bci();
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     oop speculation = thread->pending_failed_speculation();
     if (nm->is_compiled_by_jvmci()) {
     if (speculation != NULL) {
@@ -1534,7 +1534,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     bool create_if_missing = ProfileTraps RTM_OPT_ONLY( || UseRTMLocking );
 
     methodHandle profiled_method;
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     if (nm->is_compiled_by_jvmci()) {
       profiled_method = nm->method();
     } else {
@@ -1604,7 +1604,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
         tty->print("Uncommon trap occurred in");
         nm->method()->print_short_name(tty);
         tty->print(" compiler=%s compile_id=%d", nm->compiler() == NULL ? "" : nm->compiler()->name(), nm->compile_id());
-#ifdef JVMCI
+#if INCLUDE_JVMCI
         oop installedCode = nm->jvmci_installed_code();
         if (installedCode != NULL) {
           oop installedCodeName = NULL;
@@ -1619,14 +1619,14 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
         } else if (nm->is_compiled_by_jvmci()) {
           tty->print(" (JVMCI: no installed code) ");
         }
-#endif //JVMCI
+#endif
         tty->print(" (@" INTPTR_FORMAT ") thread=" UINTX_FORMAT " reason=%s action=%s unloaded_class_index=%d" JVMCI_ONLY(" debug_id=%d"),
                    fr.pc(),
                    os::current_thread_id(),
                    trap_reason_name(reason),
                    trap_action_name(action),
                    unloaded_class_index
-#ifdef JVMCI
+#if INCLUDE_JVMCI
                    , debug_id
 #endif
                    );
@@ -1764,7 +1764,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
       bool maybe_prior_trap = false;
       bool maybe_prior_recompile = false;
       pdata = query_update_method_data(trap_mdo, trap_bci, reason, true,
-#ifdef JVMCI
+#if INCLUDE_JVMCI
                                    nm->is_compiled_by_jvmci() && nm->is_osr_method(),
 #endif
                                    nm->method(),
@@ -1913,7 +1913,7 @@ Deoptimization::query_update_method_data(MethodData* trap_mdo,
                                          int trap_bci,
                                          Deoptimization::DeoptReason reason,
                                          bool update_total_trap_count,
-#ifdef JVMCI
+#if INCLUDE_JVMCI
                                          bool is_osr,
 #endif
                                          Method* compiled_method,
@@ -1926,7 +1926,7 @@ Deoptimization::query_update_method_data(MethodData* trap_mdo,
   uint this_trap_count = 0;
   if (update_total_trap_count) {
     uint idx = reason;
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     if (is_osr) {
       idx += Reason_LIMIT;
     }
@@ -2005,7 +2005,7 @@ Deoptimization::update_method_data_from_interpreter(MethodData* trap_mdo, int tr
   query_update_method_data(trap_mdo, trap_bci,
                            (DeoptReason)reason,
                            update_total_counts,
-#ifdef JVMCI
+#if INCLUDE_JVMCI
                            false,
 #endif
                            NULL,
@@ -2142,7 +2142,7 @@ const char* Deoptimization::_trap_reason_name[Reason_LIMIT] = {
   "speculate_class_check",
   "rtm_state_change",
   "unstable_if"
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   "aliasing",
   "transfer_to_interpreter",
   "not_compiled_exception_handler",
@@ -2181,21 +2181,21 @@ const char* Deoptimization::format_trap_request(char* buf, size_t buflen,
   jint unloaded_class_index = trap_request_index(trap_request);
   const char* reason = trap_reason_name(trap_request_reason(trap_request));
   const char* action = trap_action_name(trap_request_action(trap_request));
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   int debug_id = trap_request_debug_id(trap_request);
 #endif
   size_t len;
   if (unloaded_class_index < 0) {
     len = jio_snprintf(buf, buflen, "reason='%s' action='%s'" JVMCI_ONLY(" debug_id='%d'"),
                        reason, action
-#ifdef JVMCI
+#if INCLUDE_JVMCI
                        ,debug_id
 #endif
                        );
   } else {
     len = jio_snprintf(buf, buflen, "reason='%s' action='%s' index='%d'" JVMCI_ONLY(" debug_id='%d'"),
                        reason, action, unloaded_class_index
-#ifdef JVMCI
+#if INCLUDE_JVMCI
                        ,debug_id
 #endif
                        );
@@ -2295,7 +2295,7 @@ void Deoptimization::print_statistics() {
     if (xtty != NULL)  xtty->tail("statistics");
   }
 }
-#else // COMPILER2 || SHARK || JVMCI
+#else // COMPILER2 || SHARK || INCLUDE_JVMCI
 
 
 // Stubs for C1 only system.
@@ -2331,4 +2331,4 @@ const char* Deoptimization::format_trap_state(char* buf, size_t buflen,
   return buf;
 }
 
-#endif // COMPILER2 || SHARK || JVMCI
+#endif // COMPILER2 || SHARK || INCLUDE_JVMCI

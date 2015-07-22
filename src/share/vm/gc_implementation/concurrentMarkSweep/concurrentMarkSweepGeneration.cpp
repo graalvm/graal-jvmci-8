@@ -2547,7 +2547,7 @@ void CMSCollector::collect_in_foreground(bool clear_all_soft_refs, GCCause::Caus
   if (UseAdaptiveSizePolicy) {
     size_policy()->ms_collection_begin();
   }
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   DerivedPointerTableDeactivate dpt_deact;
 #endif
 
@@ -3023,7 +3023,7 @@ bool CMSCollector::verify_after_remark(bool silent) {
   // way with the marking information used by GC.
   NoRefDiscovery no_discovery(ref_processor());
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   DerivedPointerTableDeactivate dpt_deact;
 #endif
 
@@ -3733,7 +3733,7 @@ void CMSCollector::checkpointRootsInitialWork(bool asynch) {
   }
 
   {
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
     DerivedPointerTableDeactivate dpt_deact;
 #endif
     if (CMSParallelInitialMarkEnabled && CollectedHeap::use_parallel_gc_threads()) {
@@ -5125,7 +5125,7 @@ void CMSCollector::checkpointRootsFinalWork(bool asynch,
     }
 
     {
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
       DerivedPointerTableDeactivate dpt_deact;
 #endif
 

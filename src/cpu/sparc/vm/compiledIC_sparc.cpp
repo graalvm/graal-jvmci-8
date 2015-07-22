@@ -102,7 +102,7 @@ int CompiledStaticCall::reloc_to_interp_stub() {
 
 void CompiledStaticCall::set_to_interpreted(methodHandle callee, address entry) {
   address stub = find_stub();
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (stub == NULL) {
     set_destination_mt_safe(entry);
     return;
@@ -159,7 +159,7 @@ void CompiledStaticCall::verify() {
 
   // Verify stub.
   address stub = find_stub();
-#ifndef JVMCI
+#if !INCLUDE_JVMCI
   assert(stub != NULL, "no stub found for static call");
   // Creation also verifies the object.
   NativeMovConstReg* method_holder = nativeMovConstReg_at(stub);

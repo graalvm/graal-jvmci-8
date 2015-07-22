@@ -181,7 +181,7 @@ void poll_Relocation::fix_relocation_after_move(const CodeBuffer* src, CodeBuffe
 #ifdef _LP64
   typedef Assembler::WhichOperand WhichOperand;
   WhichOperand which = (WhichOperand) format();
-#ifndef JVMCI
+#if !INCLUDE_JVMCI
   assert((which == Assembler::disp32_operand) == !Assembler::is_polling_page_far(), "format not set correctly");
 #endif
   if (which == Assembler::disp32_operand) {
