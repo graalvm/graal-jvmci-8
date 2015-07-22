@@ -281,9 +281,9 @@ suite = {
       "results" : [
           '<os>/<os>_<arch>_<buildname>/generated/jvmtifiles/jvmti.h',
           '<os>/<os>_<arch>_<buildname>/generated/sa-jdi.jar',
-          '<os>/<os>_<arch>_<buildname>/product/<lib:jvm>',
-          '<os>/<os>_<arch>_<buildname>/product/<lib:saproc>',
-          '<os>/<os>_<arch>_<buildname>/product/<lib:jsig>',
+          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:jvm>',
+          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:saproc>',
+          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:jsig>',
       ]
     }
   },

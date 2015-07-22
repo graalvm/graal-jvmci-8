@@ -756,6 +756,8 @@ def _hotspotReplaceResultsVar(m):
         return ''
     if var == 'buildname':
         return _hotspotGetVariant()
+    if var == 'vmbuild':
+        return _vmbuild
     return mx._replaceResultsVar(m)
 
 class HotSpotProject(mx.NativeProject):
