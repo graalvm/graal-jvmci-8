@@ -83,30 +83,83 @@ _minVersion = mx.VersionSpec('1.8')
 # max version (first _unsupported_ version)
 _untilVersion = None
 
-class JDKDeployedDist:
-    def __init__(self, name, isExtension=False, usesJVMCIClassLoader=False, partOfHotSpot=False):
-        self.name = name
-        self.isExtension = isExtension
-        self.usesJVMCIClassLoader = usesJVMCIClassLoader
-        self.partOfHotSpot = partOfHotSpot # true when this distribution is delivered with HotSpot
-
-    def onPostJdkInstall(self, jdkDir, targetDir):
-        '''
-        Called after the jar(s) for this dist have been deployed to 'targetDir' which
-        is in the JDK at 'jdkDir'.
-        '''
-        pass
+class JDKDeployedDist(object):
+    def __init__(self, name):
+        self._name = name
 
     def dist(self):
-        return mx.distribution(self.name)
+        return mx.distribution(self._name)
 
+    def deploy(self, jdkDir):
+        mx.nyi('deploy', self)
+
+class JarJDKDeployedDist(JDKDeployedDist):
+    def targetDir(self):
+        mx.nyi('targetDir', self)
+
+    def _copyToJdk(self, jdkDir, target):
+        targetDir = join(jdkDir, target)
+        dist = self.dist()
+        mx.logv('Deploying {} to {}'.format(dist.name, targetDir))
+        copyToJdk(dist.path, targetDir)
+        if dist.sourcesPath:
+            copyToJdk(dist.sourcesPath, jdkDir)
+
+    def deploy(self, jdkDir):
+        self._copyToJdk(jdkDir, self.targetDir())
+
+class ExtJDKDeployedDist(JarJDKDeployedDist):
+    def targetDir(self):
+        return join('jre', 'lib', 'ext')
+
+class LibJDKDeployedDist(JarJDKDeployedDist):
+    def targetDir(self):
+        return join('jre', 'lib')
+
+class JvmciJDKDeployedDist(JarJDKDeployedDist):
+    def targetDir(self):
+        return join('jre', 'lib', 'jvmci')
+
+    def deploy(self, jdkDir):
+        JarJDKDeployedDist.deploy(self, jdkDir)
+        _updateJVMCIFiles(jdkDir)
+
+def _exe(l):
+    return mx.exe_suffix(l)
+
+
+def _lib(l):
+    return mx.add_lib_suffix(mx.add_lib_prefix(l))
+
+class HotSpotVMJDKDeployedDist(JDKDeployedDist):
+    def dist(self):
+        name = mx.instanciatedDistributionName(self._name, dict(vm=get_vm(), vmbuild=_vmbuild), context=self._name)
+        return mx.distribution(name)
+
+    def deploy(self, jdkDir):
+        _hs_deploy_map = {
+            'jvmti.h' : 'include',
+            'sa-jdi.jar' : 'lib',
+            _lib('jvm') : join(relativeVmLibDirInJdk(), get_vm()),
+            _lib('saproc') : relativeVmLibDirInJdk(),
+            _lib('jsig') : relativeVmLibDirInJdk(),
+        }
+        dist = self.dist()
+        with tarfile.open(dist.path, 'r') as tar:
+            for m in tar.getmembers():
+                if m.name in _hs_deploy_map:
+                    targetDir = join(jdkDir, _hs_deploy_map[m.name])
+                    mx.logv('Deploying {} from {} to {}'.format(m.name, dist.name, targetDir))
+                    tar.extract(m, targetDir)
+        updateJvmCfg(jdkDir, get_vm())
 """
 List of distributions that are deployed into a JDK by mx.
 """
 jdkDeployedDists = [
-    JDKDeployedDist('JVMCI_SERVICE', partOfHotSpot=True),
-    JDKDeployedDist('JVMCI_API', usesJVMCIClassLoader=True, partOfHotSpot=True),
-    JDKDeployedDist('JVMCI_HOTSPOT', usesJVMCIClassLoader=True, partOfHotSpot=True),
+    LibJDKDeployedDist('JVMCI_SERVICE'),
+    JvmciJDKDeployedDist('JVMCI_API'),
+    JvmciJDKDeployedDist('JVMCI_HOTSPOT'),
+    HotSpotVMJDKDeployedDist('JVM_<vmbuild>_<vm>'),
 ]
 
 JDK_UNIX_PERMISSIONS_DIR = 0755
@@ -179,16 +232,18 @@ class VM:
         assert build is None or build in _vmbuildChoices
         self.vm = vm if vm else _vm
         self.build = build if build else _vmbuild
-        self.previousVm = _vm
-        self.previousBuild = _vmbuild
 
     def __enter__(self):
         global _vm, _vmbuild
+        self.previousVm = _vm
+        self.previousBuild = _vmbuild
+        mx.reInstanciateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.previousVm, vmbuild=self.previousBuild), dict(vm=self.vm, vmbuild=self.vmbuild))
         _vm = self.vm
         _vmbuild = self.build
 
     def __exit__(self, exc_type, exc_value, traceback):
         global _vm, _vmbuild
+        mx.reInstanciateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.vm, vmbuild=self.vmbuild), dict(vm=self.previousVm, vmbuild=self.previousBuild))
         _vm = self.previousVm
         _vmbuild = self.previousBuild
 
@@ -200,29 +255,6 @@ def chmodRecursive(dirname, chmodFlagsDir):
         os.chmod(dirname, chmodFlagsDir)
 
     os.path.walk(dirname, _chmodDir, chmodFlagsDir)
-
-def clean(args):
-    """clean the source tree"""
-    opts = mx.clean(args, parser=ArgumentParser(prog='mx clean'))
-
-    if opts.native:
-        def handleRemoveReadonly(func, path, exc):
-            excvalue = exc[1]
-            if mx.get_os() == 'windows' and func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
-                os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)  # 0777
-                func(path)
-            else:
-                raise
-
-        def rmIfExists(name):
-            if os.path.isdir(name):
-                shutil.rmtree(name, ignore_errors=False, onerror=handleRemoveReadonly)
-            elif os.path.isfile(name):
-                os.unlink(name)
-
-        rmIfExists(join(_suite.dir, 'build'))
-        rmIfExists(join(_suite.dir, 'build-nojvmci'))
-        rmIfExists(_jdksDir())
 
 def export(args):
     """create archives of builds split by vmbuild and vm"""
@@ -343,17 +375,20 @@ def export(args):
         n = _writeJson("jvmci", {'javacompiler' : 'javac'})
         tar.add(n, n)
 
+def relativeVmLibDirInJdk():
+    mxos = mx.get_os()
+    if mxos == 'darwin':
+        return join('jre', 'lib')
+    if mxos == 'windows' or mxos == 'cygwin':
+        return join('jre', 'bin')
+    return join('jre', 'lib', mx.get_arch())
+
 def vmLibDirInJdk(jdk):
     """
     Gets the directory within a JDK where the server and client
     sub-directories are located.
     """
-    mxos = mx.get_os()
-    if mxos == 'darwin':
-        return join(jdk, 'jre', 'lib')
-    if mxos == 'windows' or mxos == 'cygwin':
-        return join(jdk, 'jre', 'bin')
-    return join(jdk, 'jre', 'lib', mx.get_arch())
+    return join(jdk, relativeVmLibDirInJdk())
 
 def getVmJliLibDirs(jdk):
     """
@@ -472,8 +507,8 @@ def get_jvmci_jdk(build=None, vmToCheck=None, create=False, installJars=True):
 
     if installJars:
         for jdkDist in jdkDeployedDists:
-            dist = mx.distribution(jdkDist.name)
-            if exists(dist.path) and jdkDist.partOfHotSpot:
+            dist = jdkDist.dist()
+            if exists(dist.path):
                 _installDistInJdks(jdkDist)
 
     if vmToCheck is not None:
@@ -499,18 +534,10 @@ def _updateInstalledJVMCIOptionsFile(jdk):
         if exists(toDelete):
             os.unlink(toDelete)
 
-def _makeHotspotGeneratedSourcesDir():
-    """
-    Gets the directory containing all the HotSpot sources generated from
-    JVMCI Java sources. This directory will be created if it doesn't yet exist.
-    """
-    hsSrcGenDir = join(mx.project('jdk.internal.jvmci.hotspot').source_gen_dir(), 'hotspot')
-    if not exists(hsSrcGenDir):
-        os.makedirs(hsSrcGenDir)
-    return hsSrcGenDir
-
 def copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
     name = os.path.basename(src)
+    if not exists(dst):
+        os.makedirs(dst)
     dstLib = join(dst, name)
     if mx.get_env('SYMLINK_GRAAL_JAR', None) == 'true':
         # Using symlinks is much faster than copying but may
@@ -594,28 +621,11 @@ def _installDistInJdks(deployableDist):
     """
     Installs the jar(s) for a given Distribution into all existing JVMCI JDKs
     """
-    dist = mx.distribution(deployableDist.name)
     jdks = _jdksDir()
     if exists(jdks):
         for e in os.listdir(jdks):
             jdkDir = join(jdks, e)
-            jreLibDir = join(jdkDir, 'jre', 'lib')
-            if exists(jreLibDir):
-                if deployableDist.isExtension:
-                    targetDir = join(jreLibDir, 'ext')
-                elif deployableDist.usesJVMCIClassLoader:
-                    targetDir = join(jreLibDir, 'jvmci')
-                else:
-                    targetDir = jreLibDir
-                if not exists(targetDir):
-                    os.makedirs(targetDir)
-                copyToJdk(dist.path, targetDir)
-                if dist.sourcesPath:
-                    copyToJdk(dist.sourcesPath, jdkDir)
-                if deployableDist.usesJVMCIClassLoader:
-                    # deploy service files
-                    _updateJVMCIFiles(jdkDir)
-                deployableDist.onPostJdkInstall(jdkDir, targetDir)
+            deployableDist.deploy(jdkDir)
 
 def _check_for_obsolete_jvmci_files():
     jdks = _jdksDir()
@@ -629,16 +639,12 @@ def _getJdkDeployedJars(jdkDir):
     Gets jar paths for all deployed distributions in the context of
     a given JDK directory.
     """
-    jreLibDir = join(jdkDir, 'jre', 'lib')
     jars = []
     for dist in jdkDeployedDists:
-        jar = basename(mx.distribution(dist.name).path)
-        if dist.isExtension:
-            jars.append(join(jreLibDir, 'ext', jar))
-        elif dist.usesJVMCIClassLoader:
-            jars.append(join(jreLibDir, 'jvmci', jar))
-        else:
-            jars.append(join(jreLibDir, jar))
+        if not isinstance(dist, JarJDKDeployedDist):
+            continue
+        jar = basename(dist.dist().path)
+        jars.append(join(dist.targetDir(), jar))
     return jars
 
 
@@ -737,6 +743,198 @@ def buildvars(args):
 
 cached_graal_version = None
 
+def _hotspotReplaceResultsVar(m):
+    var = m.group(1)
+    if var == 'nojvmci':
+        if get_vm().endswith('nojvmci'):
+            return '-nojvmci'
+        return ''
+    if var == 'buildname':
+        return _hotspotGetVariant()
+    return mx._replaceResultsVar(m)
+
+class HotSpotProject(mx.NativeProject):
+    def __init__(self, suite, name, deps, workingSets, results, output, **args):
+        mx.NativeProject.__init__(self, suite, name, "", "src", deps, workingSets, results, output, join(suite.dir, "src")) # TODO...
+
+    def getOutput(self, replaceVar=_hotspotReplaceResultsVar):
+        return mx.NativeProject.getOutput(self, replaceVar=replaceVar)
+
+    def getResults(self, replaceVar=_hotspotReplaceResultsVar):
+        return mx.NativeProject.getResults(self, replaceVar=replaceVar)
+
+    def getBuildTask(self, args):
+        return HotSpotBuildTask(self, args, _vmbuild, get_vm())
+
+def _hotspotGetVariant(vm=None):
+    if not vm:
+        vm = get_vm()
+    variant = {'client': 'compiler1', 'server': 'compiler2'}.get(vm, vm)
+    return variant
+
+class HotSpotBuildTask(mx.NativeBuildTask):
+    def __init__(self, project, args, vmbuild, vm):
+        mx.NativeBuildTask.__init__(self, args, project)
+        self.vm = vm
+        self.vmbuild = vmbuild
+
+    def __str__(self):
+        return 'Building HotSpot[{}, {}]'.format(self.vmbuild, self.vm)
+
+    def build(self):
+        isWindows = platform.system() == 'Windows' or "CYGWIN" in platform.system()
+
+        if self.vm.startswith('server'):
+            buildSuffix = ''
+        elif self.vm.startswith('client'):
+            buildSuffix = '1'
+        else:
+            assert self.vm == 'jvmci', self.vm
+            buildSuffix = 'jvmci'
+
+        if isWindows:
+            mx.abort('nyi')  # TODO
+            # t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "graalCompile.log"))
+            # mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
+
+            # variant = _hotspotGetVariant(self.vm)
+            # project_config = variant + '_' + build
+            # jvmciHome = mx._cygpathU2W(_suite.dir)
+            # _runInDebugShell('msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcproj /p:Configuration=' + project_config + ' /target:clean', jvmciHome)
+            # winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set OUT_DIR=' + mx._cygpathU2W(jdk) + r'& set JAVA_HOME=' + mx._cygpathU2W(jdk) + r'& set path=%JAVA_HOME%\bin;%path%;%HotSpotMksHome%& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
+            # print winCompileCmd
+            # winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
+            # if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
+            #     mx.abort('Error executing create command')
+            # winBuildCmd = 'msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcxproj /p:Configuration=' + project_config + ' /p:Platform=x64'
+            # if not _runInDebugShell(winBuildCmd, jvmciHome, t_compilelogfile):
+            #     mx.abort('Error building project')
+        else:
+            def filterXusage(line):
+                if not 'Xusage.txt' in line:
+                    sys.stderr.write(line + os.linesep)
+            cpus = self.parallelism
+            makeDir = join(_suite.dir, 'make')
+            runCmd = [mx.gmake_cmd(), '-C', makeDir]
+
+            env = os.environ.copy()
+
+            # These must be passed as environment variables
+            env.setdefault('LANG', 'C')
+            #env['JAVA_HOME'] = jdk
+
+            def setMakeVar(name, default, env=None):
+                """Sets a make variable on the command line to the value
+                   of the variable in 'env' with the same name if defined
+                   and 'env' is not None otherwise to 'default'
+                """
+                runCmd.append(name + '=' + (env.get(name, default) if env else default))
+
+            if self.args.D:
+                for nv in self.args.D:
+                    name, value = nv.split('=', 1)
+                    setMakeVar(name.strip(), value)
+
+            setMakeVar('ARCH_DATA_MODEL', '64', env=env)
+            setMakeVar('HOTSPOT_BUILD_JOBS', str(cpus), env=env)
+            setMakeVar('ALT_BOOTDIR', mx.get_jdk().home, env=env)
+            # setMakeVar("EXPORT_PATH", jdk)
+
+            setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
+            if self.vm.endswith('nojvmci'):
+                setMakeVar('INCLUDE_JVMCI', 'false')
+                setMakeVar('ALT_OUTPUTDIR', join(_suite.dir, 'build-nojvmci', mx.get_os()), env=env)
+            else:
+                version = _suite.release_version()
+                setMakeVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
+                setMakeVar('INCLUDE_JVMCI', 'true')
+            # setMakeVar('INSTALL', 'y', env=env)
+            if mx.get_os() == 'darwin' and platform.mac_ver()[0] != '':
+                # Force use of clang on MacOS
+                setMakeVar('USE_CLANG', 'true')
+            if mx.get_os() == 'solaris':
+                # If using sparcWorks, setup flags to avoid make complaining about CC version
+                cCompilerVersion = subprocess.Popen('CC -V', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).stderr.readlines()[0]
+                if cCompilerVersion.startswith('CC: Sun C++'):
+                    compilerRev = cCompilerVersion.split(' ')[3]
+                    setMakeVar('ENFORCE_COMPILER_REV', compilerRev, env=env)
+                    setMakeVar('ENFORCE_CC_COMPILER_REV', compilerRev, env=env)
+                    if self.vmbuild == 'jvmg':
+                        # We want ALL the symbols when debugging on Solaris
+                        setMakeVar('STRIP_POLICY', 'no_strip')
+            # This removes the need to unzip the *.diz files before debugging in gdb
+            setMakeVar('ZIP_DEBUGINFO_FILES', '0', env=env)
+
+            if buildSuffix == "1":
+                setMakeVar("BUILD_CLIENT_ONLY", "true")
+
+            # Clear this variable as having it set can cause very confusing build problems
+            env.pop('CLASSPATH', None)
+
+            # Issue an env prefix that can be used to run the make on the command line
+            if not mx._opts.verbose:
+                mx.log('--------------- make command line ----------------------')
+
+            envPrefix = ' '.join([key + '=' + env[key] for key in env.iterkeys() if not os.environ.has_key(key) or env[key] != os.environ[key]])
+            if len(envPrefix):
+                mx.log('env ' + envPrefix + ' \\')
+
+            runCmd.append(self.vmbuild + buildSuffix)
+            runCmd.append("docs")
+            # runCmd.append("export_" + build)
+
+            if not mx._opts.verbose:
+                mx.log(' '.join(runCmd))
+                mx.log('--------------------------------------------------------')
+            mx.run(runCmd, err=filterXusage, env=env)
+        self._newestOutput = None
+
+    def needsBuild(self, newestInput):
+        newestOutput = self.newestOutput()
+        for d in ['src', 'make', join('jvmci', 'jdk.internal.jvmci.hotspot', 'src_gen', 'hotspot')]:  # TODO should this be replaced by a dependency to the project?
+            for root, dirnames, files in os.walk(join(_suite.dir, d)):
+                # ignore <graal>/src/share/tools
+                if root == join(_suite.dir, 'src', 'share'):
+                    dirnames.remove('tools')
+                for f in (join(root, name) for name in files):
+                    if len(f) != 0 and os.path.getmtime(f) > newestOutput:
+                        return (True, 'out of date (witness: {})'.format(f))
+        return (False, None)
+
+    def buildForbidden(self):
+        if mx.NativeBuildTask.buildForbidden(self):
+            return True
+        if self.vm == 'original':
+            if self.vmbuild != 'product':
+                mx.log('only product build of original VM exists')
+            return True
+        if not isVMSupported(self.vm):
+            mx.log('The ' + self.vm + ' VM is not supported on this platform - skipping')
+            return True
+        return False
+
+    def clean(self, forBuild=False):
+        if forBuild:  # Let make handle incremental builds
+            return
+        def handleRemoveReadonly(func, path, exc):
+            excvalue = exc[1]
+            if mx.get_os() == 'windows' and func in (os.rmdir, os.remove) and excvalue.errno == errno.EACCES:
+                os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)  # 0777
+                func(path)
+            else:
+                raise
+
+        def rmIfExists(name):
+            if os.path.isdir(name):
+                shutil.rmtree(name, ignore_errors=False, onerror=handleRemoveReadonly)
+            elif os.path.isfile(name):
+                os.unlink(name)
+
+        rmIfExists(join(_suite.dir, 'build'))
+        rmIfExists(join(_suite.dir, 'build-nojvmci'))
+        rmIfExists(_jdksDir())
+        self._newestOutput = None
+
 def build(args, vm=None):
     """build the VM binary
 
@@ -760,228 +958,48 @@ def build(args, vm=None):
     parser = AP()
     parser.add_argument('-D', action='append', help='set a HotSpot build variable (run \'mx buildvars\' to list variables)', metavar='name=value')
 
-    opts2 = mx.build(['--source', '1.7'] + args, parser=parser)
-    assert len(opts2.remainder) == 0
+    # initialize jdk
+    get_jvmci_jdk(create=True)
 
-    if not opts2.native:
-        return
+    mx.build(['--source', '1.7'] + args, parser=parser)
 
-    if opts2.java and not opts2.dependencies and not opts2.only:
-        # Only check deployed JVMCI files on a full build
-        _check_for_obsolete_jvmci_files()
 
-    builds = [_vmbuild]
+def updateJvmCfg(jdk, vm):
+    jvmCfg = getVmCfgInJdk(jdk)
+    if not exists(jvmCfg):
+        mx.abort(jvmCfg + ' does not exist')
 
-    if os.environ.get('BUILDING_FROM_IDE', None) == 'true':
-        build = os.environ.get('IDE_BUILD_TARGET', None)
-        if build is None or len(build) == 0:
-            return
-        if build not in _vmbuildChoices:
-            mx.abort('VM build "' + build + '" specified by IDE_BUILD_TARGET environment variable is unknown (must be one of ' +
-                     str(_vmbuildChoices) + ')')
-        builds = [build]
+    prefix = '-' + vm + ' '
+    vmKnown = prefix + 'KNOWN\n'
+    lines = []
+    found = False
+    with open(jvmCfg) as f:
+        for line in f:
+            if line.strip() == vmKnown.strip():
+                found = True
+            lines.append(line)
 
-    if vm is None:
-        vm = get_vm()
-
-    if vm == 'original':
-        pass
-    elif vm.startswith('server'):
-        buildSuffix = ''
-    elif vm.startswith('client'):
-        buildSuffix = '1'
-    else:
-        assert vm == 'jvmci', vm
-        buildSuffix = 'jvmci'
-
-    if _installed_jdks and _installed_jdks != _suite.dir:
-        if not mx.ask_yes_no("Warning: building while --installed-jdks is set (" + _installed_jdks + ") is not recommanded - are you sure you want to continue", 'n'):
-            mx.abort(1)
-
-    isWindows = platform.system() == 'Windows' or "CYGWIN" in platform.system()
-    for build in builds:
-        installJars = vm != 'original' and (isWindows or not opts2.java)
-        jdk = get_jvmci_jdk(build, create=True, installJars=installJars)
-
-        if vm == 'original':
-            if build != 'product':
-                mx.log('only product build of original VM exists')
-            continue
-
-        if not isVMSupported(vm):
-            mx.log('The ' + vm + ' VM is not supported on this platform - skipping')
-            continue
-
-        vmDir = join(vmLibDirInJdk(jdk), vm)
-        if not exists(vmDir):
-            chmodRecursive(jdk, JDK_UNIX_PERMISSIONS_DIR)
-            mx.log('Creating VM directory in JDK: ' + vmDir)
-            os.makedirs(vmDir)
-
-        def filterXusage(line):
-            if not 'Xusage.txt' in line:
-                sys.stderr.write(line + os.linesep)
-
-        # Check if a build really needs to be done
-        timestampFile = join(vmDir, '.build-timestamp')
-        if opts2.force or not exists(timestampFile):
-            mustBuild = True
-        else:
-            mustBuild = False
-            timestamp = os.path.getmtime(timestampFile)
-            sources = []
-            for d in ['src', 'make', join('jvmci', 'jdk.internal.jvmci.hotspot', 'src_gen', 'hotspot')]:
-                for root, dirnames, files in os.walk(join(_suite.dir, d)):
-                    # ignore <graal>/src/share/tools
-                    if root == join(_suite.dir, 'src', 'share'):
-                        dirnames.remove('tools')
-                    sources += [join(root, name) for name in files]
-            for f in sources:
-                if len(f) != 0 and os.path.getmtime(f) > timestamp:
-                    mustBuild = True
-                    break
-
-        if not mustBuild:
-            mx.logv('[all files in src and make directories are older than ' + timestampFile[len(_suite.dir) + 1:] + ' - skipping native build]')
-            continue
-
-        if isWindows:
-            t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "graalCompile.log"))
-            mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
-
-            variant = {'client': 'compiler1', 'server': 'compiler2'}.get(vm, vm)
-            project_config = variant + '_' + build
-            jvmciHome = mx._cygpathU2W(_suite.dir)
-            _runInDebugShell('msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcproj /p:Configuration=' + project_config + ' /target:clean', jvmciHome)
-            winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set OUT_DIR=' + mx._cygpathU2W(jdk) + r'& set JAVA_HOME=' + mx._cygpathU2W(jdk) + r'& set path=%JAVA_HOME%\bin;%path%;%HotSpotMksHome%& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
-            print winCompileCmd
-            winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
-            if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
-                mx.log('Error executing create command')
-                return
-            winBuildCmd = 'msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcxproj /p:Configuration=' + project_config + ' /p:Platform=x64'
-            if not _runInDebugShell(winBuildCmd, jvmciHome, t_compilelogfile):
-                mx.log('Error building project')
-                return
-        else:
-            cpus = mx.cpu_count()
-            makeDir = join(_suite.dir, 'make')
-            runCmd = [mx.gmake_cmd(), '-C', makeDir]
-
-            env = os.environ.copy()
-
-            # These must be passed as environment variables
-            env.setdefault('LANG', 'C')
-            env['JAVA_HOME'] = jdk
-
-            def setMakeVar(name, default, env=None):
-                """Sets a make variable on the command line to the value
-                   of the variable in 'env' with the same name if defined
-                   and 'env' is not None otherwise to 'default'
-                """
-                runCmd.append(name + '=' + (env.get(name, default) if env else default))
-
-            if opts2.D:
-                for nv in opts2.D:
-                    name, value = nv.split('=', 1)
-                    setMakeVar(name.strip(), value)
-
-            setMakeVar('ARCH_DATA_MODEL', '64', env=env)
-            setMakeVar('HOTSPOT_BUILD_JOBS', str(cpus), env=env)
-            setMakeVar('ALT_BOOTDIR', mx.get_jdk().home, env=env)
-            setMakeVar("EXPORT_PATH", jdk)
-
-            setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
-            if vm.endswith('nojvmci'):
-                setMakeVar('INCLUDE_JVMCI', 'false')
-                setMakeVar('ALT_OUTPUTDIR', join(_suite.dir, 'build-nojvmci', mx.get_os()), env=env)
-            else:
-                version = _suite.release_version()
-                setMakeVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
-                setMakeVar('INCLUDE_JVMCI', 'true')
-            setMakeVar('INSTALL', 'y', env=env)
-            if mx.get_os() == 'darwin' and platform.mac_ver()[0] != '':
-                # Force use of clang on MacOS
-                setMakeVar('USE_CLANG', 'true')
-            if mx.get_os() == 'solaris':
-                # If using sparcWorks, setup flags to avoid make complaining about CC version
-                cCompilerVersion = subprocess.Popen('CC -V', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).stderr.readlines()[0]
-                if cCompilerVersion.startswith('CC: Sun C++'):
-                    compilerRev = cCompilerVersion.split(' ')[3]
-                    setMakeVar('ENFORCE_COMPILER_REV', compilerRev, env=env)
-                    setMakeVar('ENFORCE_CC_COMPILER_REV', compilerRev, env=env)
-                    if build == 'jvmg':
-                        # We want ALL the symbols when debugging on Solaris
-                        setMakeVar('STRIP_POLICY', 'no_strip')
-            # This removes the need to unzip the *.diz files before debugging in gdb
-            setMakeVar('ZIP_DEBUGINFO_FILES', '0', env=env)
-
-            if buildSuffix == "1":
-                setMakeVar("BUILD_CLIENT_ONLY", "true")
-
-            # Clear this variable as having it set can cause very confusing build problems
-            env.pop('CLASSPATH', None)
-
-            # Issue an env prefix that can be used to run the make on the command line
-            if not mx._opts.verbose:
-                mx.log('--------------- make command line ----------------------')
-
-            envPrefix = ' '.join([key + '=' + env[key] for key in env.iterkeys() if not os.environ.has_key(key) or env[key] != os.environ[key]])
-            if len(envPrefix):
-                mx.log('env ' + envPrefix + ' \\')
-
-            runCmd.append(build + buildSuffix)
-            runCmd.append("docs")
-            runCmd.append("export_" + build)
-
-            if not mx._opts.verbose:
-                mx.log(' '.join(runCmd))
-                mx.log('--------------------------------------------------------')
-            mx.run(runCmd, err=filterXusage, env=env)
-
-        jvmCfg = getVmCfgInJdk(jdk)
-        if not exists(jvmCfg):
-            mx.abort(jvmCfg + ' does not exist')
-
-        prefix = '-' + vm + ' '
-        vmKnown = prefix + 'KNOWN\n'
-        lines = []
-        found = False
-        with open(jvmCfg) as f:
-            for line in f:
-                if line.strip() == vmKnown.strip():
-                    found = True
-                lines.append(line)
-
-        if not found:
-            mx.log('Prepending "' + prefix + 'KNOWN" to ' + jvmCfg)
-            if mx.get_os() != 'windows':
-                os.chmod(jvmCfg, JDK_UNIX_PERMISSIONS_FILE)
-            with open(jvmCfg, 'w') as f:
-                written = False
-                for line in lines:
-                    if line.startswith('#'):
-                        f.write(line)
-                        continue
-                    if not written:
-                        f.write(vmKnown)
-                        if vm == 'jvmci':
-                            # Legacy support
-                            f.write('-graal ALIASED_TO -jvmci\n')
-                        written = True
-                    if line.startswith(prefix):
-                        line = vmKnown
-                        if written:
-                            continue
+    if not found:
+        mx.log('Prepending "' + prefix + 'KNOWN" to ' + jvmCfg)
+        if mx.get_os() != 'windows':
+            os.chmod(jvmCfg, JDK_UNIX_PERMISSIONS_FILE)
+        with open(jvmCfg, 'w') as f:
+            written = False
+            for line in lines:
+                if line.startswith('#'):
                     f.write(line)
-
-        for jdkDist in jdkDeployedDists: # Install non HotSpot distribution
-            if not jdkDist.partOfHotSpot:
-                _installDistInJdks(jdkDist)
-        if exists(timestampFile):
-            os.utime(timestampFile, None)
-        else:
-            file(timestampFile, 'a')
+                    continue
+                if not written:
+                    f.write(vmKnown)
+                    if vm == 'jvmci':
+                        # Legacy support
+                        f.write('-graal ALIASED_TO -jvmci\n')
+                    written = True
+                if line.startswith(prefix):
+                    line = vmKnown
+                    if written:
+                        continue
+                f.write(line)
 
 """
 The base list of JaCoCo includes.
@@ -1378,7 +1396,7 @@ def gate(args):
                         cleanArgs.append('--no-native')
                     if not args.cleanJava:
                         cleanArgs.append('--no-java')
-                    clean(cleanArgs)
+                    mx.clean(cleanArgs)
         _clean()
 
         with Task('IDEConfigCheck', tasks) as t:
@@ -1477,7 +1495,7 @@ def _igvJdk():
     v8 = mx.VersionSpec("1.8")
     def _igvJdkVersionCheck(version):
         return version >= v8 and (version < v8u20 or version >= v8u40)
-    return mx.get_jdk(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").home
+    return mx.java(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").jdk
 
 def _igvBuildEnv():
         # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
@@ -1977,7 +1995,6 @@ mx.update_commands(_suite, {
     'buildvms': [buildvms, '[-options]'],
     'c1visualizer' : [c1visualizer, ''],
     'checkheaders': [checkheaders, ''],
-    'clean': [clean, ''],
     'ctw': [ctw, '[-vmoptions|noinline|nocomplex|full]'],
     'export': [export, '[-options] [zipfile]'],
     'hsdis': [hsdis, '[att]'],
@@ -2077,15 +2094,14 @@ def mx_post_parse_cmd_line(opts):
     global _vm_prefix
     _vm_prefix = opts.vm_prefix
 
+    mx.instanciateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=_vmbuild, vm=get_vm()))
+
     for jdkDist in jdkDeployedDists:
         def _close(jdkDeployable):
             def _install(dist):
-                assert dist.name == jdkDeployable.name, dist.name + "!=" + jdkDeployable.name
-                if not jdkDist.partOfHotSpot:
-                    _installDistInJdks(jdkDeployable)
+                _installDistInJdks(jdkDeployable)
             return _install
-        dist = mx.distribution(jdkDist.name)
+        dist = jdkDist.dist()
         dist.add_update_listener(_close(jdkDist))
-        if jdkDist.usesJVMCIClassLoader:
+        if isinstance(jdkDist, JvmciJDKDeployedDist):
             dist.set_archiveparticipant(JVMCIArchiveParticipant(dist))
-

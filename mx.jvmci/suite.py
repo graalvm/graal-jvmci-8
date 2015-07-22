@@ -273,11 +273,36 @@ suite = {
       "profile" : "",
       "workingSets" : "JVMCI,HotSpot",
     },
+
+    "hotspot" : {
+      "native" : True,
+      "class" : "HotSpotProject",
+      "output" : "build<nojvmci>",
+      "results" : [
+          '<os>/<os>_<arch>_<buildname>/generated/jvmtifiles/jvmti.h',
+          '<os>/<os>_<arch>_<buildname>/generated/sa-jdi.jar',
+          '<os>/<os>_<arch>_<buildname>/product/<lib:jvm>',
+          '<os>/<os>_<arch>_<buildname>/product/<lib:saproc>',
+          '<os>/<os>_<arch>_<buildname>/product/<lib:jsig>',
+      ]
+    }
   },
 
   "distributions" : {
 
     # ------------- Distributions -------------
+
+    "JVM_<vmbuild>_<vm>" : {
+      "dependencies" : ["hotspot"],
+      "native" : True,
+      "os_arch" : {
+        "linux" : {
+          "amd64" : {
+            "path" : "build/<vmbuild>/linux/amd64/<vm>/jvm.tar",
+          }
+        }
+      }
+    },
 
     "JVMCI_SERVICE" : {
       "path" : "build/jvmci-service.jar",
