@@ -389,9 +389,9 @@ def _handle_missing_VM(bld, vm=None):
             return
     mx.abort('You need to run "mx --vm ' + vm + ' --vmbuild ' + bld + ' build" to build the selected VM')
 
-def get_jdk(build=None, vmToCheck=None, create=False, installJars=True):
+def get_jvmci_jdk(build=None, vmToCheck=None, create=False, installJars=True):
     """
-    Get the JDK into which JVMCI is installed, creating it first if necessary.
+    Gets the JDK into which JVMCI is installed, creating it first if necessary.
     """
     if not build:
         build = _vmbuild
@@ -709,7 +709,7 @@ def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo
 
 def jdkhome(vm=None):
     """return the JDK directory selected for the 'vm' command"""
-    return get_jdk(installJars=False)
+    return get_jvmci_jdk(installJars=False)
 
 def print_jdkhome(args, vm=None):
     """print the JDK directory selected for the 'vm' command"""
@@ -801,7 +801,7 @@ def build(args, vm=None):
     isWindows = platform.system() == 'Windows' or "CYGWIN" in platform.system()
     for build in builds:
         installJars = vm != 'original' and (isWindows or not opts2.java)
-        jdk = get_jdk(build, create=True, installJars=installJars)
+        jdk = get_jvmci_jdk(build, create=True, installJars=installJars)
 
         if vm == 'original':
             if build != 'product':
@@ -1009,7 +1009,7 @@ def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
         mx.abort("conflicting working directories: do not set --vmcwd for this command")
 
     build = vmbuild if vmbuild else _vmbuild
-    jdk = get_jdk(build, vmToCheck=vm, installJars=False)
+    jdk = get_jvmci_jdk(build, vmToCheck=vm, installJars=False)
     _updateInstalledJVMCIOptionsFile(jdk)
     mx.expand_project_in_args(args)
     if _make_eclipse_launch:
@@ -1220,7 +1220,7 @@ def ctw(args):
     if args.jar:
         jar = os.path.abspath(args.jar)
     else:
-        jar = join(get_jdk(installJars=False), 'jre', 'lib', 'rt.jar')
+        jar = join(get_jvmci_jdk(installJars=False), 'jre', 'lib', 'rt.jar')
         vmargs.append('-G:CompileTheWorldExcludeMethodFilter=sun.awt.X11.*.*')
 
     vmargs += ['-XX:+CompileTheWorld']
@@ -1606,7 +1606,7 @@ def makejmhdeps(args):
         d = mx.Distribution(_suite, name=artifactId, subDir=_suite.dir, path=path, sourcesPath=path, deps=allDeps, mainClass=None, excludedLibs=[], distDependencies=[], javaCompliance=None)
         d.make_archive()
         env = os.environ.copy()
-        env['JAVA_HOME'] = get_jdk(vmToCheck='server')
+        env['JAVA_HOME'] = get_jvmci_jdk(vmToCheck='server')
         env['MAVEN_OPTS'] = '-server -XX:-UseJVMCIClassLoader'
         cmd = ['mvn', 'install:install-file', '-DgroupId=' + groupId, '-DartifactId=' + artifactId,
                '-Dversion=1.0-SNAPSHOT', '-Dpackaging=jar', '-Dfile=' + d.path]
@@ -1663,7 +1663,7 @@ def buildjmh(args):
             else:
                 buildOutput.append(x)
         env = os.environ.copy()
-        env['JAVA_HOME'] = get_jdk(vmToCheck='server')
+        env['JAVA_HOME'] = get_jvmci_jdk(vmToCheck='server')
         env['MAVEN_OPTS'] = '-server -XX:-UseJVMCIClassLoader'
         mx.log("Building benchmarks...")
         cmd = ['mvn']
