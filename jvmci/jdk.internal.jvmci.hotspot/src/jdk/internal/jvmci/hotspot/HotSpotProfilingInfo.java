@@ -22,12 +22,12 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.debug.*;
 import jdk.internal.jvmci.meta.*;
 
 public final class HotSpotProfilingInfo implements ProfilingInfo, HotSpotProxified {
 
-    private static final DebugMetric metricInsufficentSpace = Debug.metric("InsufficientSpaceForProfilingData");
+    // private static final DebugMetric metricInsufficentSpace =
+    // Debug.metric("InsufficientSpaceForProfilingData");
 
     private final HotSpotMethodData methodData;
     private final HotSpotResolvedJavaMethod method;
@@ -158,7 +158,7 @@ public final class HotSpotProfilingInfo implements ProfilingInfo, HotSpotProxifi
 
             if (!methodData.isWithin(currentPosition)) {
                 exceptionPossiblyNotRecorded = true;
-                metricInsufficentSpace.increment();
+                // metricInsufficentSpace.increment();
             }
         }
 

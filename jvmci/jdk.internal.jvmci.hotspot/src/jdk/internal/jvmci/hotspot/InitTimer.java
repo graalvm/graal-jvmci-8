@@ -22,12 +22,9 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.debug.*;
-
 /**
- * A facility for timing a step in the runtime initialization sequence. This exists separate from
- * {@link DebugTimer} as it must be independent from all other JVMCI code so as to not perturb the
- * initialization sequence.
+ * A facility for timing a step in the runtime initialization sequence. This must be independent
+ * from all other JVMCI code so as to not perturb the initialization sequence.
  */
 public final class InitTimer implements AutoCloseable {
     final String name;

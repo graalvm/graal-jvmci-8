@@ -30,7 +30,6 @@ import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.code.CompilationResult.*;
 import jdk.internal.jvmci.code.DataSection.*;
 import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.debug.*;
 import jdk.internal.jvmci.meta.*;
 
 /**
@@ -100,12 +99,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
     }
 
     public InstalledCode logOrDump(InstalledCode installedCode, CompilationResult compResult) {
-        if (Debug.isDumpEnabled()) {
-            Debug.dump(new Object[]{compResult, installedCode}, "After code installation");
-        }
-        if (Debug.isLogEnabled()) {
-            Debug.log("%s", disassemble(installedCode));
-        }
+        HotSpotJVMCIRuntime.runtime().notifyInstall(this, installedCode, compResult);
         return installedCode;
     }
 

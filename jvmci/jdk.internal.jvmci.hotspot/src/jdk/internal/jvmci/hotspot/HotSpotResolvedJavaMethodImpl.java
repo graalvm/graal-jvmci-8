@@ -40,7 +40,7 @@ import jdk.internal.jvmci.options.*;
  */
 public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSpotResolvedJavaMethod, HotSpotProxified, MethodIdHolder {
 
-    static class Options {
+    public static class Options {
         // @formatter:off
         @Option(help = "", type = OptionType.Debug)
         public static final OptionValue<Boolean> UseProfilingInformation = new OptionValue<>(true);

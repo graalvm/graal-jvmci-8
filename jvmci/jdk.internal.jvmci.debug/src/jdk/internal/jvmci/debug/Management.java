@@ -22,18 +22,36 @@
  */
 package jdk.internal.jvmci.debug;
 
+import static java.lang.Thread.*;
+
 import java.lang.management.*;
 
 import javax.management.*;
 
 public class Management {
 
-    public static ThreadMXBean getThreadMXBean() {
+    private static final com.sun.management.ThreadMXBean threadMXBean = Management.initThreadMXBean();
+
+    /**
+     * The amount of memory allocated by
+     * {@link com.sun.management.ThreadMXBean#getThreadAllocatedBytes(long)} itself.
+     */
+    private static final long threadMXBeanOverhead = -getCurrentThreadAllocatedBytes() + getCurrentThreadAllocatedBytes();
+
+    public static long getCurrentThreadAllocatedBytes() {
+        return threadMXBean.getThreadAllocatedBytes(currentThread().getId()) - threadMXBeanOverhead;
+    }
+
+    private static com.sun.management.ThreadMXBean initThreadMXBean() {
         try {
-            return ManagementFactory.getThreadMXBean();
+            return (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
         } catch (Error err) {
             return new UnimplementedBean();
         }
+    }
+
+    public static ThreadMXBean getThreadMXBean() {
+        return threadMXBean;
     }
 
     private static class UnimplementedBean implements ThreadMXBean, com.sun.management.ThreadMXBean {

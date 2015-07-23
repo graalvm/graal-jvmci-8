@@ -23,14 +23,36 @@
 package jdk.internal.jvmci.hotspot;
 
 import static java.util.FormattableFlags.*;
-import static jdk.internal.jvmci.debug.Debug.*;
-
 import java.util.*;
 
-import jdk.internal.jvmci.debug.*;
 import jdk.internal.jvmci.meta.*;
 
-public abstract class HotSpotMethod implements JavaMethod, Formattable, JavaMethodContex {
+public abstract class HotSpotMethod implements JavaMethod, Formattable /* , JavaMethodContex */{
+
+    public static String applyFormattingFlagsAndWidth(String s, int flags, int width) {
+        if (flags == 0 && width < 0) {
+            return s;
+        }
+        StringBuilder sb = new StringBuilder(s);
+
+        // apply width and justification
+        int len = sb.length();
+        if (len < width) {
+            for (int i = 0; i < width - len; i++) {
+                if ((flags & LEFT_JUSTIFY) == LEFT_JUSTIFY) {
+                    sb.append(' ');
+                } else {
+                    sb.insert(0, ' ');
+                }
+            }
+        }
+
+        String res = sb.toString();
+        if ((flags & UPPERCASE) == UPPERCASE) {
+            res = res.toUpperCase();
+        }
+        return res;
+    }
 
     protected String name;
 

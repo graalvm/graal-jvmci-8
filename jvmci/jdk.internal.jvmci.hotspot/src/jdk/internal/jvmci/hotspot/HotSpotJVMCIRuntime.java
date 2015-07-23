@@ -323,4 +323,17 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             vmEventListener.notifyShutdown();
         }
     }
+
+    /**
+     * Shuts down the runtime.
+     *
+     * Called from the VM.
+     *
+     * @param hotSpotCodeCacheProvider
+     */
+    void notifyInstall(HotSpotCodeCacheProvider hotSpotCodeCacheProvider, InstalledCode installedCode, CompilationResult compResult) {
+        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
+            vmEventListener.notifyInstall(hotSpotCodeCacheProvider, installedCode, compResult);
+        }
+    }
 }

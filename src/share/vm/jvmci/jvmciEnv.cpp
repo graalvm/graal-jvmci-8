@@ -24,6 +24,7 @@
 
 #include "precompiled.hpp"
 #include "jvmci/jvmciEnv.hpp"
+#include "classfile/javaAssertions.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
 #include "code/scopeDesc.hpp"
@@ -435,7 +436,7 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::check_for_system_dictionary_modification(D
   // or if we don't know whether it has changed (i.e., env == NULL).
   // In debug mode, always check dependencies.
   bool counter_changed = env != NULL && env->_system_dictionary_modification_counter != SystemDictionary::number_of_modifications();
-  bool verify_deps = env == NULL || trueInDebug || Debug::ENABLED();
+  bool verify_deps = env == NULL || trueInDebug || JavaAssertions::enabled(SystemDictionary::HotSpotInstalledCode_klass()->name()->as_C_string(), true);
   if (!counter_changed && !verify_deps) {
     return JVMCIEnv::ok;
   }

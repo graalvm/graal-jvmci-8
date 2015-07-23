@@ -256,10 +256,8 @@ void jvmci_compute_offsets();
     long_field(HotSpotStackFrameReference, metaspaceMethod)                                                                                                    \
     objArrayOop_field(HotSpotStackFrameReference, locals, "[Ljava/lang/Object;")                                                                               \
     typeArrayOop_field(HotSpotStackFrameReference, localIsVirtual, "[Z")                                                                                       \
-  end_class                                                                                                                                                    \
-  start_class(Debug)                                                                                                                                           \
-    static_boolean_field(Debug, ENABLED)                                                                                                                       \
-  end_class                                                                                                                                                    \
+  end_class                                                                                                                                      
+              \
   /* end*/
 
 #define START_CLASS(name)                                                                                                                                      \
