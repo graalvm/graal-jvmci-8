@@ -276,8 +276,11 @@ suite = {
           '<os>/<os>_<arch>_<buildname>/generated/jvmtifiles/jvmti.h',
           '<os>/<os>_<arch>_<buildname>/generated/sa-jdi.jar',
           '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:jvm>',
+          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<libdebug:jvm>',
           '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:saproc>',
+          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<libdebug:saproc>',
           '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:jsig>',
+          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<libdebug:jsig>',
       ]
     }
   },

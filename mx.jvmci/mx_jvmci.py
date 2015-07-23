@@ -139,9 +139,11 @@ class JvmciJDKDeployedDist(JarJDKDeployedDist):
 def _exe(l):
     return mx.exe_suffix(l)
 
-
 def _lib(l):
     return mx.add_lib_suffix(mx.add_lib_prefix(l))
+
+def _lib_dbg(l):
+    return mx.add_debug_lib_suffix(mx.add_lib_prefix(l))
 
 class HotSpotVMJDKDeployedDist(JDKDeployedDist):
     def dist(self):
@@ -153,8 +155,11 @@ class HotSpotVMJDKDeployedDist(JDKDeployedDist):
             'jvmti.h' : 'include',
             'sa-jdi.jar' : 'lib',
             _lib('jvm') : join(relativeVmLibDirInJdk(), get_vm()),
+            _lib_dbg('jvm') : join(relativeVmLibDirInJdk(), get_vm()),
             _lib('saproc') : relativeVmLibDirInJdk(),
+            _lib_dbg('saproc') : relativeVmLibDirInJdk(),
             _lib('jsig') : relativeVmLibDirInJdk(),
+            _lib_dbg('jsig') : relativeVmLibDirInJdk(),
         }
         dist = self.dist()
         with tarfile.open(dist.path, 'r') as tar:
