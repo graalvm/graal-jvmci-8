@@ -168,7 +168,7 @@ JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.jfr/src -type
 
 JVMCI_HOTSPOT_JAR = $(TARGET)/jvmci-hotspot.jar
 
-JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/jvmci-api.jar
+JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/jvmci-service.jar $(TARGET)/jvmci-api.jar
 
 EXPORTED_FILES += $(JVMCI_HOTSPOT_JAR)
 

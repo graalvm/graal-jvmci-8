@@ -80,13 +80,9 @@ def make_dist_rule(dist, mf):
     resources = []
     projects = [p for p in dist.archived_deps() if p.isJavaProject()]
     targetPathPrefix = "$(TARGET)/"
-    libraryDeps = [path_dist_relative(l.get_path(False)) for l in [l for l in dist.archived_deps() if l.isLibrary()]]
-
     annotationProcessorDeps = set()
-    distDeps = [dep for dep in dist.deps if dep.isDistribution()]
 
-    classPath = [targetPathPrefix + os.path.basename(d.path) for d in distDeps] + libraryDeps \
-        + [path_dist_relative(exclLib.path) for exclLib in dist.excludedLibs]
+    classPath = [targetPathPrefix + os.path.basename(e.path) for e in mx.classpath_entries(dist, includeSelf=False, preferProjects=False)]
     for p in projects:
         projectDir = path_dist_relative(p.dir)
         annotationProcessorDeps.update(p.declaredAnnotationProcessors)
@@ -97,11 +93,9 @@ def make_dist_rule(dist, mf):
                 resources.append(metaInf)
 
     sourceLines = sourcesVariableName + " = " + ("\n" + sourcesVariableName + " += ").join(sources)
-    apPaths = []
     apDistNames = []
     apDistVariableNames = []
     for apd in sorted(annotationProcessorDeps):
-        apPaths.append(path_dist_relative(apd.path))
         apDistNames.append(apd.name)
         apDistVariableNames.append("$(" + apd.name + "_JAR)")
     shouldExport = dist in jdkDeployedDists

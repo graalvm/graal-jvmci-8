@@ -342,6 +342,7 @@ suite = {
         "jdk.internal.jvmci.hotspot.jfr",
       ],
       "distDependencies" : [
+        "JVMCI_SERVICE",
         "JVMCI_API",
       ],
     },
