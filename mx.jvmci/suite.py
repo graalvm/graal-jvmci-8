@@ -96,7 +96,7 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "JUNIT",
+        "mx:JUNIT",
         "jdk.internal.jvmci.common",
         "jdk.internal.jvmci.runtime",
       ],
@@ -123,7 +123,7 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "JUNIT",
+        "mx:JUNIT",
         "jdk.internal.jvmci.debug",
       ],
       "checkstyle" : "com.oracle.graal.graph",
@@ -167,7 +167,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "jdk.internal.jvmci.options",
-        "JUNIT",
+        "mx:JUNIT",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "javaCompliance" : "1.8",
