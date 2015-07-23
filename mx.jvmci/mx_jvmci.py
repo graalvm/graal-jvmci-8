@@ -1130,7 +1130,7 @@ def buildvms(args):
                 mx.log('END:   ' + v + '-' + vmbuild + '\t[' + str(duration) + ']')
             else:
                 with VM(v, vmbuild):
-                    build()
+                    build([])
             if not args.no_check:
                 vmargs = ['-version']
                 if v == 'jvmci':
