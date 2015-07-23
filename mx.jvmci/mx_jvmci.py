@@ -33,7 +33,8 @@ import json, textwrap
 import mx
 import mx_unittest
 from mx_unittest import unittest
-import mx_findbugs
+from mx_gate import Task
+import mx_gate
 import mx_jvmci_makefile
 
 _suite = mx.suite('jvmci')
@@ -64,8 +65,6 @@ _vmbuildChoices = ['product', 'fastdebug', 'debug', 'optimized']
     This can be set via the global '--vmbuild' option.
     It can also be temporarily set by using of a VM context manager object in a 'with' statement. """
 _vmbuild = _vmbuildChoices[0]
-
-_jacoco = 'off'
 
 """ The current working directory to switch to before running the VM. """
 _vm_cwd = None
@@ -237,13 +236,13 @@ class VM:
         global _vm, _vmbuild
         self.previousVm = _vm
         self.previousBuild = _vmbuild
-        mx.reInstantiateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.previousVm, vmbuild=self.previousBuild), dict(vm=self.vm, vmbuild=self.vmbuild))
+        mx.reInstantiateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.previousVm, vmbuild=self.previousBuild), dict(vm=self.vm, vmbuild=self.build))
         _vm = self.vm
         _vmbuild = self.build
 
     def __exit__(self, exc_type, exc_value, traceback):
         global _vm, _vmbuild
-        mx.reInstantiateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.vm, vmbuild=self.vmbuild), dict(vm=self.previousVm, vmbuild=self.previousBuild))
+        mx.reInstantiateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.vm, vmbuild=self.build), dict(vm=self.previousVm, vmbuild=self.previousBuild))
         _vm = self.previousVm
         _vmbuild = self.previousBuild
 
@@ -1008,16 +1007,7 @@ def updateJvmCfg(jdk, vm):
                         continue
                 f.write(line)
 
-"""
-The base list of JaCoCo includes.
-"""
-jacocoIncludes = ['@Test']
-
-"""
-The list of annotations which if present denote a class that should
-be excluded from JaCoCo analysis.
-"""
-jacocoExcludedAnnotations = ['@Test']
+mx_gate.add_jacoco_includes(['jdk.internal.jvmci.*'])
 
 def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
     """run the VM selected by the '--vm' option"""
@@ -1039,36 +1029,9 @@ def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
     mx.expand_project_in_args(args)
     if _make_eclipse_launch:
         mx.make_eclipse_launch(_suite, args, _suite.name + '-' + build, name=None, deps=mx.dependencies())
-    if _jacoco == 'on' or _jacoco == 'append':
-        jacocoagent = mx.library("JACOCOAGENT", True)
-        # Exclude all compiler tests and snippets
-
-        includes = list(jacocoIncludes)
-        baseExcludes = []
-        for p in mx.projects():
-            projsetting = getattr(p, 'jacoco', '')
-            if projsetting == 'exclude':
-                baseExcludes.append(p.name)
-            if projsetting == 'include':
-                includes.append(p.name + '.*')
-
-        def _filter(l):
-            # filter out specific classes which are already covered by a baseExclude package
-            return [clazz for clazz in l if not any([clazz.startswith(package) for package in baseExcludes])]
-        excludes = []
-        for p in mx.projects():
-            excludes += _filter(p.find_classes_with_annotations(None, jacocoExcludedAnnotations, includeInnerClasses=True).keys())
-            excludes += _filter(p.find_classes_with_matching_source_line(None, lambda line: 'JaCoCo Exclude' in line, includeInnerClasses=True).keys())
-
-        excludes += [package + '.*' for package in baseExcludes]
-        agentOptions = {
-                        'append' : 'true' if _jacoco == 'append' else 'false',
-                        'bootclasspath' : 'true',
-                        'includes' : ':'.join(includes),
-                        'excludes' : ':'.join(excludes),
-                        'destfile' : 'jacoco.exec'
-        }
-        args = ['-javaagent:' + jacocoagent.get_path(True) + '=' + ','.join([k + '=' + v for k, v in agentOptions.items()])] + args
+    jacocoArgs = mx_gate.get_jacoco_agent_args()
+    if jacocoArgs:
+        args = jacocoArgs + args
     exe = join(jdk, 'bin', mx.exe_suffix('java'))
     pfx = _vm_prefix.split() if _vm_prefix is not None else []
 
@@ -1166,68 +1129,6 @@ def buildvms(args):
     mx.log('TOTAL TIME:   ' + '[' + str(allDuration) + ']')
 
 
-"""
-Context manager for a single gate task that can prevent the
-task from executing or time and log its execution.
-"""
-class Task:
-    # None or a list of strings. If not None, only tasks whose title
-    # matches at least one of the substrings in this list will return
-    # a non-None value from __enter__. The body of a 'with Task(...) as t'
-    # statement should check 't' and exit immediately if it is None.
-    filters = None
-    startAtFilter = None
-    filtersExclude = False
-
-    def __init__(self, title, tasks=None, disableJacoco=False):
-        self.tasks = tasks
-        self.title = title
-        self.skipped = False
-        if tasks is not None:
-            if Task.startAtFilter:
-                assert not Task.filters
-                if Task.startAtFilter in title:
-                    self.skipped = False
-                    Task.startAtFilter = None
-                else:
-                    self.skipped = True
-            elif Task.filters:
-                if Task.filtersExclude:
-                    self.skipped = any([f in title for f in Task.filters])
-                else:
-                    self.skipped = not any([f in title for f in Task.filters])
-        if not self.skipped:
-            self.start = time.time()
-            self.end = None
-            self.duration = None
-            self.disableJacoco = disableJacoco
-            mx.log(time.strftime('gate: %d %b %Y %H:%M:%S: BEGIN: ') + title)
-    def __enter__(self):
-        assert self.tasks is not None, "using Task with 'with' statement requires to pass the tasks list in the constructor"
-        if self.skipped:
-            return None
-        if self.disableJacoco:
-            self.jacacoSave = _jacoco
-        return self
-    def __exit__(self, exc_type, exc_value, traceback):
-        if not self.skipped:
-            self.tasks.append(self.stop())
-            if self.disableJacoco:
-                global _jacoco
-                _jacoco = self.jacacoSave
-
-    def stop(self):
-        self.end = time.time()
-        self.duration = datetime.timedelta(seconds=self.end - self.start)
-        mx.log(time.strftime('gate: %d %b %Y %H:%M:%S: END:   ') + self.title + ' [' + str(self.duration) + ']')
-        return self
-    def abort(self, codeOrMessage):
-        self.end = time.time()
-        self.duration = datetime.timedelta(seconds=self.end - self.start)
-        mx.log(time.strftime('gate: %d %b %Y %H:%M:%S: ABORT: ') + self.title + ' [' + str(self.duration) + ']')
-        mx.abort(codeOrMessage)
-        return self
-
 def ctw(args):
     """run CompileTheWorld"""
 
@@ -1263,6 +1164,12 @@ def ctw(args):
     vm(vmargs)
 
 def _jvmci_gate_runner(args, tasks):
+    with Task('Check jvmci.make in sync with suite.py', tasks) as t:
+        if t:
+            jvmciMake = join(_suite.dir, 'make', 'jvmci.make')
+            if mx_jvmci_makefile.build_makefile(['-o', jvmciMake]) != 0:
+                t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
+
     # Build server-hosted-jvmci now so we can run the unit tests
     with Task('BuildHotSpotJVMCIHosted: product', tasks) as t:
         if t: buildvms(['--vms', 'server', '--builds', 'product', '--check-distributions'])
@@ -1271,15 +1178,6 @@ def _jvmci_gate_runner(args, tasks):
     with VM('server', 'product'):
         with Task('UnitTests:hosted-product', tasks) as t:
             if t: unittest(['--enable-timing', '--verbose', '--fail-fast'])
-
-    # Run unit tests on server-hosted-jvmci with -G:-SSA_LIR
-    with VM('server', 'product'):
-        with Task('UnitTestsNonSSA:hosted-product', tasks) as t:
-            if t: unittest(['--enable-timing', '--verbose', '--fail-fast', '-G:-SSA_LIR'])
-    # Run ctw against rt.jar on server-hosted-jvmci
-    with VM('server', 'product'):
-        with Task('CTW:hosted-product', tasks) as t:
-            if t: ctw(['--ctwopts', '-Inline +ExitVMOnException', '-esa', '-G:+CompileTheWorldMultiThreaded', '-G:-InlineDuringParsing', '-G:-CompileTheWorldVerbose'])
 
     # Build the other VM flavors
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks) as t:
@@ -1290,16 +1188,8 @@ def _jvmci_gate_runner(args, tasks):
             if t: vm(['-esa', '-XX:-TieredCompilation', '-version'])
 
     with VM('jvmci', 'fastdebug'):
-        with Task('BootstrapEconomyWithSystemAssertions:fastdebug', tasks) as t:
-            if t: vm(['-esa', '-XX:-TieredCompilation', '-G:CompilerConfiguration=economy', '-version'])
-
-    with VM('jvmci', 'fastdebug'):
         with Task('BootstrapWithSystemAssertionsNoCoop:fastdebug', tasks) as t:
             if t: vm(['-esa', '-XX:-TieredCompilation', '-XX:-UseCompressedOops', '-version'])
-
-    with VM('jvmci', 'fastdebug'):
-        with Task('BootstrapWithExceptionEdges:fastdebug', tasks) as t:
-            if t: vm(['-esa', '-XX:-TieredCompilation', '-G:+StressInvokeWithExceptionNode', '-version'])
 
     with VM('jvmci', 'product'):
         with Task('BootstrapWithGCVerification:product', tasks) as t:
@@ -1312,22 +1202,6 @@ def _jvmci_gate_runner(args, tasks):
             if t:
                 out = mx.DuplicateSuppressingStream(['VerifyAfterGC:', 'VerifyBeforeGC:']).write
                 vm(['-XX:-TieredCompilation', '-XX:+UnlockDiagnosticVMOptions', '-XX:-UseSerialGC', '-XX:+UseG1GC', '-XX:+VerifyBeforeGC', '-XX:+VerifyAfterGC', '-version'], out=out)
-
-    with VM('jvmci', 'product'):
-        with Task('BootstrapWithRegisterPressure:product', tasks) as t:
-            if t:
-                registers = 'o0,o1,o2,o3,f8,f9,d32,d34' if platform.processor() == 'sparc' else 'rbx,r11,r10,r14,xmm3,xmm11,xmm14'
-                vm(['-XX:-TieredCompilation', '-G:RegisterPressure=' + registers, '-esa', '-version'])
-
-    with VM('jvmci', 'product'):
-        with Task('BootstrapNonSSAWithRegisterPressure:product', tasks) as t:
-            if t:
-                registers = 'o0,o1,o2,o3,f8,f9,d32,d34' if platform.processor() == 'sparc' else 'rbx,r11,r10,r14,xmm3,xmm11,xmm14'
-                vm(['-XX:-TieredCompilation', '-G:-SSA_LIR', '-G:RegisterPressure=' + registers, '-esa', '-version'])
-
-    with VM('jvmci', 'product'):
-        with Task('BootstrapWithImmutableCode:product', tasks) as t:
-            if t: vm(['-XX:-TieredCompilation', '-G:+ImmutableCode', '-G:+VerifyPhases', '-esa', '-version'])
 
     with Task('CleanAndBuildIdealGraphVisualizer', tasks, disableJacoco=True) as t:
         if t and platform.processor() != 'sparc':
@@ -1342,141 +1216,8 @@ def _jvmci_gate_runner(args, tasks):
                 if mx.get_os() not in ['windows', 'cygwin']:
                     buildvms(['--vms', 'server-nojvmci', '--builds', 'product,optimized'])
 
-"""
-List of functions called by the gate once common gate tasks have been executed.
-Each function is called with these arguments:
-  args: the argparse.Namespace object containing result of parsing gate command line
-  tasks: list of Task to which extra Tasks should be added
-"""
-gateRunners = [_jvmci_gate_runner]
-
-def gate(args):
-    """run the tests used to validate a push
-
-    If this command exits with a 0 exit code, then the source code is in
-    a state that would be accepted for integration into the main repository."""
-
-    parser = ArgumentParser(prog='mx gate')
-    parser.add_argument('-j', '--omit-java-clean', action='store_false', dest='cleanJava', help='omit cleaning Java native code')
-    parser.add_argument('-n', '--omit-native-clean', action='store_false', dest='cleanNative', help='omit cleaning and building native code')
-    parser.add_argument('-i', '--omit-ide-clean', action='store_false', dest='cleanIde', help='omit cleaning the ide project files')
-    parser.add_argument('-g', '--only-build-jvmci', action='store_false', dest='buildNonJVMCI', help='only build the JVMCI VM')
-    parser.add_argument('-x', action='store_true', help='makes --task-filter an exclusion instead of inclusion filter')
-    parser.add_argument('--jacocout', help='specify the output directory for jacoco report')
-    filtering = parser.add_mutually_exclusive_group()
-    filtering.add_argument('-t', '--task-filter', help='comma separated list of substrings to select subset of tasks to be run')
-    filtering.add_argument('-s', '--start-at', help='substring to select starting task')
-
-    args = parser.parse_args(args)
-
-    global _jacoco
-    if args.start_at:
-        Task.startAtFilter = args.start_at
-    elif args.task_filter:
-        Task.filters = args.task_filter.split(',')
-        Task.filtersExclude = args.x
-    elif args.x:
-        mx.abort('-x option cannot be used without --task-filter option')
-
-    # Force
-    if not mx._opts.strict_compliance:
-        mx.log("[gate] forcing strict compliance")
-        mx._opts.strict_compliance = True
-
-    tasks = []
-    total = Task('Gate')
-    try:
-        with Task('Check jvmci.make in sync with suite.py', tasks) as t:
-            if t:
-                jvmciMake = join(_suite.dir, 'make', 'jvmci.make')
-                if mx_jvmci_makefile.build_makefile(['-o', jvmciMake]) != 0:
-                    t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
-
-        with Task('Pylint', tasks) as t:
-            if t: mx.pylint([])
-
-        def _clean(name='Clean'):
-            with Task(name, tasks) as t:
-                if t:
-                    cleanArgs = []
-                    if not args.cleanNative:
-                        cleanArgs.append('--no-native')
-                    if not args.cleanJava:
-                        cleanArgs.append('--no-java')
-                    mx.clean(cleanArgs)
-        _clean()
-
-        with Task('IDEConfigCheck', tasks) as t:
-            if t:
-                if args.cleanIde:
-                    mx.ideclean([])
-                    mx.ideinit([])
-
-        eclipse_exe = mx.get_env('ECLIPSE_EXE')
-        if eclipse_exe is not None:
-            with Task('CodeFormatCheck', tasks) as t:
-                if t and mx.eclipseformat(['-e', eclipse_exe]) != 0:
-                    t.abort('Formatter modified files - run "mx eclipseformat", check in changes and repush')
-
-        with Task('Canonicalization Check', tasks) as t:
-            if t:
-                mx.log(time.strftime('%d %b %Y %H:%M:%S - Ensuring mx/projects files are canonicalized...'))
-                if mx.canonicalizeprojects([]) != 0:
-                    t.abort('Rerun "mx canonicalizeprojects" and check-in the modified mx/suite*.py files.')
-
-        if mx.get_env('JDT'):
-            with Task('BuildJavaWithEcj', tasks):
-                if t: build(['-p', '--no-native', '--jdt-warning-as-error'])
-            _clean('CleanAfterEcjBuild')
-
-        with Task('BuildJavaWithJavac', tasks):
-            if t: build(['-p', '--no-native', '--force-javac'])
-
-        with Task('Checkstyle', tasks) as t:
-            if t and mx.checkstyle([]) != 0:
-                t.abort('Checkstyle warnings were found')
-
-        with Task('Checkheaders', tasks) as t:
-            if t and checkheaders([]) != 0:
-                t.abort('Checkheaders warnings were found')
-
-        with Task('FindBugs', tasks) as t:
-            if t and mx_findbugs.findbugs([]) != 0:
-                t.abort('FindBugs warnings were found')
-
-        if exists('jacoco.exec'):
-            os.unlink('jacoco.exec')
-
-        if args.jacocout is not None:
-            _jacoco = 'append'
-        else:
-            _jacoco = 'off'
-
-        for runner in gateRunners:
-            runner(args, tasks)
-
-        if args.jacocout is not None:
-            jacocoreport([args.jacocout])
-            _jacoco = 'off'
-
-    except KeyboardInterrupt:
-        total.abort(1)
-
-    except BaseException as e:
-        import traceback
-        traceback.print_exc()
-        total.abort(str(e))
-
-    total.stop()
-
-    mx.log('Gate task times:')
-    for t in tasks:
-        mx.log('  ' + str(t.duration) + '\t' + t.title)
-    mx.log('  =======')
-    mx.log('  ' + str(total.duration))
-
-    if args.task_filter:
-        Task.filters = None
+mx_gate.add_gate_runner(_jvmci_gate_runner)
+mx_gate.add_gate_argument('-g', '--only-build-jvmci', action='store_false', dest='buildNonJVMCI', help='only build the JVMCI VM')
 
 def deoptalot(args):
     """bootstrap a VM with DeoptimizeALot and VerifyOops on
@@ -1502,7 +1243,7 @@ def _igvJdk():
     v8 = mx.VersionSpec("1.8")
     def _igvJdkVersionCheck(version):
         return version >= v8 and (version < v8u20 or version >= v8u40)
-    return mx.java(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").jdk
+    return mx.get_jdk(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").jdk
 
 def _igvBuildEnv():
         # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
@@ -1914,40 +1655,6 @@ def hcfdis(args):
                     for l in lines:
                         print >> fp, l
 
-def jacocoreport(args):
-    """create a JaCoCo coverage report
-
-    Creates the report from the 'jacoco.exec' file in the current directory.
-    Default output directory is 'coverage', but an alternative can be provided as an argument."""
-    jacocoreport = mx.library("JACOCOREPORT", True)
-    out = 'coverage'
-    if len(args) == 1:
-        out = args[0]
-    elif len(args) > 1:
-        mx.abort('jacocoreport takes only one argument : an output directory')
-
-    includes = ['com.oracle.graal', 'jdk.internal.jvmci']
-    for p in mx.projects():
-        projsetting = getattr(p, 'jacoco', '')
-        if projsetting == 'include':
-            includes.append(p.name)
-
-    includedirs = set()
-    for p in mx.projects():
-        projsetting = getattr(p, 'jacoco', '')
-        if projsetting == 'exclude':
-            continue
-        for include in includes:
-            if include in p.dir:
-                includedirs.add(p.dir)
-
-    for i in includedirs:
-        bindir = i + '/bin'
-        if not os.path.exists(bindir):
-            os.makedirs(bindir)
-
-    mx.run_java(['-jar', jacocoreport.get_path(True), '--in', 'jacoco.exec', '--out', out] + sorted(includedirs))
-
 def isJVMCIEnabled(vm):
     return vm != 'original' and not vm.endswith('nojvmci')
 
@@ -1964,44 +1671,12 @@ def jol(args):
 
     vm(['-javaagent:' + joljar, '-cp', os.pathsep.join([mx.classpath(), joljar]), "org.openjdk.jol.MainObjectInternals"] + candidates)
 
-def checkheaders(args):
-    """check Java source headers against any required pattern"""
-    failures = {}
-    for p in mx.projects():
-        if not p.isJavaProject():
-            continue
-
-        csConfig = join(mx.project(p.checkstyleProj).dir, '.checkstyle_checks.xml')
-        if not exists(csConfig):
-            mx.log('Cannot check headers for ' + p.name + ' - ' + csConfig + ' does not exist')
-            continue
-        dom = xml.dom.minidom.parse(csConfig)
-        for module in dom.getElementsByTagName('module'):
-            if module.getAttribute('name') == 'RegexpHeader':
-                for prop in module.getElementsByTagName('property'):
-                    if prop.getAttribute('name') == 'header':
-                        value = prop.getAttribute('value')
-                        matcher = re.compile(value, re.MULTILINE)
-                        for sourceDir in p.source_dirs():
-                            for root, _, files in os.walk(sourceDir):
-                                for name in files:
-                                    if name.endswith('.java') and name != 'package-info.java':
-                                        f = join(root, name)
-                                        with open(f) as fp:
-                                            content = fp.read()
-                                        if not matcher.match(content):
-                                            failures[f] = csConfig
-    for n, v in failures.iteritems():
-        mx.log('{0}: header does not match RegexpHeader defined in {1}'.format(n, v))
-    return len(failures)
-
 mx.update_commands(_suite, {
     'build': [build, ''],
     'buildjmh': [buildjmh, '[-options]'],
     'buildvars': [buildvars, ''],
     'buildvms': [buildvms, '[-options]'],
     'c1visualizer' : [c1visualizer, ''],
-    'checkheaders': [checkheaders, ''],
     'ctw': [ctw, '[-vmoptions|noinline|nocomplex|full]'],
     'export': [export, '[-options] [zipfile]'],
     'hsdis': [hsdis, '[att]'],
@@ -2009,10 +1684,8 @@ mx.update_commands(_suite, {
     'igv' : [igv, ''],
     'jdkhome': [print_jdkhome, ''],
     'jmh': [jmh, '[VM options] [filters|JMH-args-as-json...]'],
-    'gate' : [gate, '[-options]'],
     'makejmhdeps' : [makejmhdeps, ''],
     'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
-    'jacocoreport' : [jacocoreport, '[output directory]'],
     'vm': [vm, '[-options] class [args...]'],
     'deoptalot' : [deoptalot, '[n]'],
     'longtests' : [longtests, ''],
@@ -2020,7 +1693,6 @@ mx.update_commands(_suite, {
     'makefile' : [mx_jvmci_makefile.build_makefile, 'build makefiles for JDK build'],
 })
 
-mx.add_argument('--jacoco', help='instruments com.oracle.* classes using JaCoCo', default='off', choices=['off', 'on', 'append'])
 mx.add_argument('--vmcwd', dest='vm_cwd', help='current directory will be changed to <path> before the VM is executed', default=None, metavar='<path>')
 mx.add_argument('--installed-jdks', help='the base directory in which the JDKs cloned from $JAVA_HOME exist. ' +
                 'The VM selected by --vm and --vmbuild options is under this directory (i.e., ' +
@@ -2092,8 +1764,6 @@ def mx_post_parse_cmd_line(opts):
         _vmbuild = opts.vmbuild
     global _make_eclipse_launch
     _make_eclipse_launch = getattr(opts, 'make_eclipse_launch', False)
-    global _jacoco
-    _jacoco = opts.jacoco
     global _vm_cwd
     _vm_cwd = opts.vm_cwd
     global _installed_jdks
