@@ -1227,7 +1227,7 @@ def _jvmci_gate_runner(args, tasks):
                 if mx.get_os() not in ['windows', 'cygwin']:
                     buildvms(['--vms', 'server-nojvmci', '--builds', 'product,optimized'])
 
-mx_gate.add_gate_runner(_jvmci_gate_runner)
+mx_gate.add_gate_runner(_suite, _jvmci_gate_runner)
 mx_gate.add_gate_argument('-g', '--only-build-jvmci', action='store_false', dest='buildNonJVMCI', help='only build the JVMCI VM')
 
 def deoptalot(args):
