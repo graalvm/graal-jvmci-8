@@ -93,6 +93,10 @@ class JDKDeployedDist(object):
         mx.nyi('deploy', self)
 
 class JarJDKDeployedDist(JDKDeployedDist):
+    def __init__(self, name, partOfHotSpot=False):
+        JDKDeployedDist.__init__(self, name)
+        self.partOfHotSpot = partOfHotSpot
+
     def targetDir(self):
         mx.nyi('targetDir', self)
 
@@ -108,14 +112,23 @@ class JarJDKDeployedDist(JDKDeployedDist):
         self._copyToJdk(jdkDir, self.targetDir())
 
 class ExtJDKDeployedDist(JarJDKDeployedDist):
+    def __init__(self, name, partOfHotSpot=False):
+        JarJDKDeployedDist.__init__(self, name, partOfHotSpot)
+
     def targetDir(self):
         return join('jre', 'lib', 'ext')
 
 class LibJDKDeployedDist(JarJDKDeployedDist):
+    def __init__(self, name, partOfHotSpot=False):
+        JarJDKDeployedDist.__init__(self, name, partOfHotSpot)
+
     def targetDir(self):
         return join('jre', 'lib')
 
 class JvmciJDKDeployedDist(JarJDKDeployedDist):
+    def __init__(self, name, partOfHotSpot=False):
+        JarJDKDeployedDist.__init__(self, name, partOfHotSpot)
+
     def targetDir(self):
         return join('jre', 'lib', 'jvmci')
 
@@ -155,9 +168,9 @@ class HotSpotVMJDKDeployedDist(JDKDeployedDist):
 List of distributions that are deployed into a JDK by mx.
 """
 jdkDeployedDists = [
-    LibJDKDeployedDist('JVMCI_SERVICE'),
-    JvmciJDKDeployedDist('JVMCI_API'),
-    JvmciJDKDeployedDist('JVMCI_HOTSPOT'),
+    LibJDKDeployedDist('JVMCI_SERVICE', partOfHotSpot=True),
+    JvmciJDKDeployedDist('JVMCI_API', partOfHotSpot=True),
+    JvmciJDKDeployedDist('JVMCI_HOTSPOT', partOfHotSpot=True),
     HotSpotVMJDKDeployedDist('JVM_<vmbuild>_<vm>'),
 ]
 

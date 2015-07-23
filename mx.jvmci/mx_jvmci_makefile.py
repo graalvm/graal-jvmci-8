@@ -53,7 +53,9 @@ def build_makefile(args):
     opts = parser.parse_args(args)
 
     if not opts.selectedDists:
-        opts.selectedDists = [d.name for d in mx_jvmci.jdkDeployedDists if d.partOfHotSpot]
+        opts.selectedDists = [d.dist() for d in mx_jvmci.jdkDeployedDists if isinstance(d, mx_jvmci.JarJDKDeployedDist) and d.partOfHotSpot]
+    else:
+        opts.selectedDists = [mx.distribution(name) for name in opts.selectedDists]
     mf = Makefile()
     if do_build_makefile(mf, opts.selectedDists):
         contents = mf.generate()
@@ -65,7 +67,7 @@ def build_makefile(args):
     return 0
 
 def get_jdk_deployed_dists():
-    return [d.name for d in mx_jvmci.jdkDeployedDists]
+    return [d.dist() for d in mx_jvmci.jdkDeployedDists]
 
 def make_dist_rule(dist, mf):
     def path_dist_relative(p):
@@ -102,7 +104,7 @@ def make_dist_rule(dist, mf):
         apPaths.append(path_dist_relative(apd.path))
         apDistNames.append(apd.name)
         apDistVariableNames.append("$(" + apd.name + "_JAR)")
-    shouldExport = dist.name in jdkDeployedDists
+    shouldExport = dist in jdkDeployedDists
     props = {
            "name": dist.name,
            "jarName": targetPathPrefix + jarName,
