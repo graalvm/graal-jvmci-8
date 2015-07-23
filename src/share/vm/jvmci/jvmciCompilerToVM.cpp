@@ -1039,9 +1039,6 @@ C2V_END
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
 
-#define TYPE                  "Ljdk/internal/jvmci/meta/JavaType;"
-#define METHOD                "Ljdk/internal/jvmci/meta/JavaMethod;"
-#define FIELD                 "Ljdk/internal/jvmci/meta/JavaField;"
 #define SPECULATION_LOG       "Ljdk/internal/jvmci/meta/SpeculationLog;"
 #define STRING                "Ljava/lang/String;"
 #define OBJECT                "Ljava/lang/Object;"
