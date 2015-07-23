@@ -300,6 +300,16 @@ suite = {
             "path" : "build/<vmbuild>/darwin/amd64/<vm>/jvm.tar",
           }
         },
+        "windows" : {
+          "amd64" : {
+            "path" : "build/<vmbuild>/windows/amd64/<vm>/jvm.tar",
+          }
+        },
+        "solaris" : {
+          "sparcv9" : {
+            "path" : "build/<vmbuild>/solaris/sparcv9/<vm>/jvm.tar",
+          }
+        },
       }
     },
 
