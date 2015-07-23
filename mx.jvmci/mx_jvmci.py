@@ -1100,7 +1100,6 @@ def buildvms(args):
     parser = ArgumentParser(prog='mx buildvms')
     parser.add_argument('--vms', help='a comma separated list of VMs to build (default: ' + vmsDefault + ')', metavar='<args>', default=vmsDefault)
     parser.add_argument('--builds', help='a comma separated list of build types (default: ' + vmbuildsDefault + ')', metavar='<args>', default=vmbuildsDefault)
-    parser.add_argument('--check-distributions', action='store_true', dest='check_distributions', help='check built distributions for overlap')
     parser.add_argument('-n', '--no-check', action='store_true', help='omit running "java -version" after each build')
     parser.add_argument('-c', '--console', action='store_true', help='send build output to console instead of log file')
 
@@ -1109,7 +1108,6 @@ def buildvms(args):
     builds = args.builds.split(',')
 
     allStart = time.time()
-    check_dists_args = ['--check-distributions'] if args.check_distributions else []
     for v in vms:
         if not isVMSupported(v):
             mx.log('The ' + v + ' VM is not supported on this platform - skipping')
@@ -1125,14 +1123,14 @@ def buildvms(args):
                 mx.log('BEGIN: ' + v + '-' + vmbuild + '\t(see: ' + logFile + ')')
                 verbose = ['-v'] if mx._opts.verbose else []
                 # Run as subprocess so that output can be directed to a file
-                cmd = [sys.executable, '-u', mx.__file__] + verbose + ['--vm', v, '--vmbuild', vmbuild, 'build'] + check_dists_args
+                cmd = [sys.executable, '-u', mx.__file__] + verbose + ['--vm', v, '--vmbuild', vmbuild, 'build']
                 mx.logv("executing command: " + str(cmd))
                 subprocess.check_call(cmd, cwd=_suite.dir, stdout=log, stderr=subprocess.STDOUT)
                 duration = datetime.timedelta(seconds=time.time() - start)
                 mx.log('END:   ' + v + '-' + vmbuild + '\t[' + str(duration) + ']')
             else:
                 with VM(v, vmbuild):
-                    build(check_dists_args)
+                    build()
             if not args.no_check:
                 vmargs = ['-version']
                 if v == 'jvmci':
