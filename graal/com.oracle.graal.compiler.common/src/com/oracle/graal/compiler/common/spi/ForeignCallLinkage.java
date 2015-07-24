@@ -20,8 +20,9 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.code;
+package com.oracle.graal.compiler.common.spi;
 
+import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.meta.*;
 
 /**
