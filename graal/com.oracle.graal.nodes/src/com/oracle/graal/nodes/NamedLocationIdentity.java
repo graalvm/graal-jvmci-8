@@ -20,11 +20,12 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.meta;
+package com.oracle.graal.nodes;
 
 import java.util.*;
 
-import jdk.internal.jvmci.meta.Kind.*;
+import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.Kind.FormatWithToString;
 
 /**
  * A {@link LocationIdentity} with a name.
@@ -43,6 +44,20 @@ public class NamedLocationIdentity extends LocationIdentity implements FormatWit
             }
             return true;
         }
+    }
+
+    /**
+     * Denotes the location of a value that is guaranteed to be unchanging.
+     */
+    public static final LocationIdentity FINAL_LOCATION = NamedLocationIdentity.immutable("FINAL_LOCATION");
+
+    /**
+     * Denotes the location of the length field of a Java array.
+     */
+    public static final LocationIdentity ARRAY_LENGTH_LOCATION = NamedLocationIdentity.immutable("[].length");
+
+    public static LocationIdentity any() {
+        return ANY_LOCATION;
     }
 
     private final String name;

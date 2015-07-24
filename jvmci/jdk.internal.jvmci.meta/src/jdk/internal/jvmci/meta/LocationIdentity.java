@@ -27,9 +27,8 @@ import java.util.*;
 // JaCoCo Exclude
 
 /**
- * Marker interface for location identities. Apart from the special values {@link #ANY_LOCATION} and
- * {@link #FINAL_LOCATION}, a different location identity of two memory accesses guarantees that the
- * two accesses do not interfere.
+ * Marker interface for location identities. A different location identity of two memory accesses
+ * guarantees that the two accesses do not interfere.
  *
  * Clients of {@link LocationIdentity} must use {@link #equals(Object)}, not {@code ==}, when
  * comparing two {@link LocationIdentity} values for equality. Likewise, they must not use
@@ -37,22 +36,19 @@ import java.util.*;
  */
 public abstract class LocationIdentity {
 
-    /**
-     * Denotes any location. A write to such a location kills all values in a memory map during an
-     * analysis of memory accesses. A read from this location cannot be moved or coalesced with
-     * other reads because its interaction with other reads is not known.
-     */
-    private static final LocationIdentity ANY_LOCATION = NamedLocationIdentity.mutable("ANY_LOCATION");
+    private static final class AnyLocationIdentity extends LocationIdentity {
+        @Override
+        public boolean isImmutable() {
+            return false;
+        }
 
-    /**
-     * Denotes the location of a value that is guaranteed to be unchanging.
-     */
-    public static final LocationIdentity FINAL_LOCATION = NamedLocationIdentity.immutable("FINAL_LOCATION");
+        @Override
+        public String toString() {
+            return "ANY_LOCATION";
+        }
+    }
 
-    /**
-     * Denotes the location of the length field of a Java array.
-     */
-    public static final LocationIdentity ARRAY_LENGTH_LOCATION = NamedLocationIdentity.immutable("[].length");
+    public static final LocationIdentity ANY_LOCATION = new AnyLocationIdentity();
 
     public static LocationIdentity any() {
         return ANY_LOCATION;

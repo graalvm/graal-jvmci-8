@@ -319,8 +319,6 @@
   JVMCI_ONLY(template(jdk_internal_jvmci_meta_RawConstant,                        "jdk/internal/jvmci/meta/RawConstant"))                             \
   JVMCI_ONLY(template(jdk_internal_jvmci_meta_NullConstant,                       "jdk/internal/jvmci/meta/NullConstant"))                            \
   JVMCI_ONLY(template(jdk_internal_jvmci_meta_ExceptionHandler,                   "jdk/internal/jvmci/meta/ExceptionHandler"))                        \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_JavaMethod,                         "jdk/internal/jvmci/meta/JavaMethod"))                              \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_JavaType,                           "jdk/internal/jvmci/meta/JavaType"))                                \
   JVMCI_ONLY(template(jdk_internal_jvmci_meta_Kind,                               "jdk/internal/jvmci/meta/Kind"))                                    \
   JVMCI_ONLY(template(jdk_internal_jvmci_meta_LIRKind,                            "jdk/internal/jvmci/meta/LIRKind"))                                 \
   JVMCI_ONLY(template(jdk_internal_jvmci_meta_AbstractValue,                      "jdk/internal/jvmci/meta/AbstractValue"))                           \
@@ -346,7 +344,6 @@
   JVMCI_ONLY(template(jdk_internal_jvmci_code_Location,                           "jdk/internal/jvmci/code/Location"))                                \
   JVMCI_ONLY(template(jdk_internal_jvmci_code_Register,                           "jdk/internal/jvmci/code/Register"))                                \
   JVMCI_ONLY(template(jdk_internal_jvmci_code_RegisterValue,                      "jdk/internal/jvmci/code/RegisterValue"))                           \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_Register_RegisterCategory,          "jdk/internal/jvmci/code/Register$RegisterCategory"))               \
   JVMCI_ONLY(template(jdk_internal_jvmci_code_StackSlot,                          "jdk/internal/jvmci/code/StackSlot"))                               \
   JVMCI_ONLY(template(jdk_internal_jvmci_code_StackLockValue,                     "jdk/internal/jvmci/code/StackLockValue"))                          \
   JVMCI_ONLY(template(jdk_internal_jvmci_code_VirtualObject,                      "jdk/internal/jvmci/code/VirtualObject"))                           \

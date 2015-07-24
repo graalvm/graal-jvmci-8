@@ -234,7 +234,6 @@ class Ticks;
   JVMCI_ONLY(do_klass(code_Location_klass,                   jdk_internal_jvmci_code_Location,                               Jvmci)) \
   JVMCI_ONLY(do_klass(code_Register_klass,                   jdk_internal_jvmci_code_Register,                               Jvmci)) \
   JVMCI_ONLY(do_klass(RegisterValue_klass,                   jdk_internal_jvmci_code_RegisterValue,                          Jvmci)) \
-  JVMCI_ONLY(do_klass(RegisterCategory_klass,                jdk_internal_jvmci_code_Register_RegisterCategory,              Jvmci)) \
   JVMCI_ONLY(do_klass(StackSlot_klass,                       jdk_internal_jvmci_code_StackSlot,                              Jvmci)) \
   JVMCI_ONLY(do_klass(StackLockValue_klass,                  jdk_internal_jvmci_code_StackLockValue,                         Jvmci)) \
   JVMCI_ONLY(do_klass(VirtualObject_klass,                   jdk_internal_jvmci_code_VirtualObject,                          Jvmci)) \
@@ -246,8 +245,6 @@ class Ticks;
   JVMCI_ONLY(do_klass(ExceptionHandler_klass,                jdk_internal_jvmci_meta_ExceptionHandler,                       Jvmci)) \
   JVMCI_ONLY(do_klass(Kind_klass,                            jdk_internal_jvmci_meta_Kind,                                   Jvmci)) \
   JVMCI_ONLY(do_klass(LIRKind_klass,                         jdk_internal_jvmci_meta_LIRKind,                                Jvmci)) \
-  JVMCI_ONLY(do_klass(JavaMethod_klass,                      jdk_internal_jvmci_meta_JavaMethod,                             Jvmci)) \
-  JVMCI_ONLY(do_klass(JavaType_klass,                        jdk_internal_jvmci_meta_JavaType,                               Jvmci)) \
   JVMCI_ONLY(do_klass(AbstractValue_klass,                   jdk_internal_jvmci_meta_AbstractValue,                          Jvmci)) \
 
   /*end*/

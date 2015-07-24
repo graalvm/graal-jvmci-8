@@ -22,21 +22,14 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
-
 public class HotSpotForeignCallTarget {
-    /**
-     * The descriptor of the call.
-     */
-    protected final ForeignCallDescriptor descriptor;
 
     /**
      * The entry point address of this call's target.
      */
     protected long address;
 
-    public HotSpotForeignCallTarget(ForeignCallDescriptor descriptor, long address) {
-        this.descriptor = descriptor;
+    public HotSpotForeignCallTarget(long address) {
         this.address = address;
     }
 }
