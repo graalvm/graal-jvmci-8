@@ -61,7 +61,7 @@
 #include "services/threadService.hpp"
 #include "utilities/dtrace.hpp"
 #include "utilities/macros.hpp"
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "classfile/javaAssertions.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #endif

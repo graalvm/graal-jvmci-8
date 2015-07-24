@@ -33,7 +33,7 @@
 #include "classfile/vmSymbols.hpp"
 #include "interpreter/linkResolver.hpp"
 #include "utilities/macros.hpp"
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #endif
@@ -5209,7 +5209,7 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
     *vm = (JavaVM *)(&main_vm);
     *(JNIEnv**)penv = thread->jni_environment();
 
-#if defined(JVMCI)
+#if INCLUDE_JVMCI
     // We turn off CompileTheWorld so that compilation requests are not ignored during bootstrap or that JVMCI can be compiled by C1/C2.
     bool doCTW = CompileTheWorld;
     CompileTheWorld = false;
@@ -5220,14 +5220,14 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
     if (FLAG_IS_DEFAULT(BootstrapJVMCI) ? !TieredCompilation : BootstrapJVMCI) {
       JVMCICompiler::instance()->bootstrap();
     }
-#elif defined(JVMCI)
+#elif INCLUDE_JVMCI
     if (doCTW) {
       // required for hosted CTW.
       CompilationPolicy::completed_vm_startup();
     }
 #endif
 
-#if defined(JVMCI)
+#if INCLUDE_JVMCI
     if (doCTW) {
       JVMCICompiler::instance()->compile_the_world();
     }

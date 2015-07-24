@@ -29,7 +29,7 @@
 
 typedef void (*initializer)(void);
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 // Per-compiler statistics
 class CompilerStatistics VALUE_OBJ_CLASS_SPEC {
   friend class VMStructs;
@@ -89,7 +89,7 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
  private:
   Type _type;
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   CompilerStatistics _stats;
 #endif
 
@@ -136,7 +136,7 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
     ShouldNotReachHere();
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   CompilerStatistics* stats() { return &_stats; }
 #endif
 };

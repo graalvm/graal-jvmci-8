@@ -420,7 +420,7 @@ void ReceiverTypeData::clean_weak_klass_links(BoolObjectClosure* is_alive_cl) {
   }
 }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 void VirtualCallData::clean_weak_klass_links(BoolObjectClosure* is_alive_cl) {
   ReceiverTypeData::clean_weak_klass_links(is_alive_cl);
   for (uint row = 0; row < method_row_limit(); row++) {
@@ -440,7 +440,7 @@ void VirtualCallData::clean_weak_method_links() {
     }
   }
 }
-#endif // JVMCI
+#endif // INCLUDE_JVMCI
 
 #ifndef PRODUCT
 void ReceiverTypeData::print_receiver_data_on(outputStream* st) const {
@@ -449,7 +449,7 @@ void ReceiverTypeData::print_receiver_data_on(outputStream* st) const {
   for (row = 0; row < row_limit(); row++) {
     if (receiver(row) != NULL)  entries++;
   }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   st->print_cr("count(%u) nonprofiled_count(%u) entries(%u)", count(), nonprofiled_count(), entries);
 #else
   st->print_cr("count(%u) entries(%u)", count(), entries);
@@ -473,7 +473,7 @@ void ReceiverTypeData::print_data_on(outputStream* st, const char* extra) const 
   print_receiver_data_on(st);
 }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 void VirtualCallData::print_method_data_on(outputStream* st) const {
   uint row;
   int entries = 0;
@@ -501,7 +501,7 @@ void VirtualCallData::print_method_data_on(outputStream* st) const {
 void VirtualCallData::print_data_on(outputStream* st, const char* extra) const {
   print_shared(st, "VirtualCallData", extra);
   print_receiver_data_on(st);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   print_method_data_on(st);
 #endif
 }
@@ -740,7 +740,7 @@ MethodData* MethodData::allocate(ClassLoaderData* loader_data, methodHandle meth
 }
 
 int MethodData::bytecode_cell_count(Bytecodes::Code code) {
-#if defined(COMPILER1) && !(defined(COMPILER2) || defined(JVMCI))
+#if defined(COMPILER1) && !(defined(COMPILER2) || INCLUDE_JVMCI)
   return no_profile_data;
 #else
   switch (code) {
@@ -869,7 +869,7 @@ bool MethodData::is_speculative_trap_bytecode(Bytecodes::Code code) {
   return false;
 }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 int MethodData::compute_extra_data_count(int data_size, int empty_bc_count, bool needs_speculative_traps) {
   if (!ProfileTraps) return 0;
 
@@ -963,7 +963,7 @@ int MethodData::compute_allocation_size_in_words(methodHandle method) {
 // the segment in bytes.
 int MethodData::initialize_data(BytecodeStream* stream,
                                        int data_index) {
-#if defined(COMPILER1) && !(defined(COMPILER2) || defined(JVMCI))
+#if defined(COMPILER1) && !(defined(COMPILER2) || INCLUDE_JVMCI)
   return 0;
 #else
   int cell_count = -1;
@@ -1236,7 +1236,7 @@ void MethodData::init() {
   _num_blocks = 0;
   _would_profile = unknown;
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   _jvmci_ir_size = 0;
 #endif
 

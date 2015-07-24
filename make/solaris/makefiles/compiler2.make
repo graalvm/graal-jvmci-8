@@ -30,8 +30,6 @@ VM_SUBDIR = server
 
 CFLAGS += -DCOMPILER2
 
-ifeq ($(INCLUDE_JVMCI), true)
-  CFLAGS += -DJVMCI
-else
+ifeq ($(INCLUDE_JVMCI), false)
   VM_SUBDIR = server-nojvmci
 endif

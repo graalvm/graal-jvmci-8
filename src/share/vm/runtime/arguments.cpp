@@ -44,7 +44,7 @@
 #include "utilities/macros.hpp"
 #include "utilities/stringUtils.hpp"
 #include "utilities/taskqueue.hpp"
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciRuntime.hpp"
 #endif
 #ifdef TARGET_OS_FAMILY_linux
@@ -98,7 +98,7 @@ char**  Arguments::_jvm_flags_array             = NULL;
 int     Arguments::_num_jvm_flags               = 0;
 char**  Arguments::_jvm_args_array              = NULL;
 int     Arguments::_num_jvm_args                = 0;
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 char**  Arguments::_jvmci_args_array              = NULL;
 int     Arguments::_num_jvmci_args                = 0;
 #endif
@@ -217,7 +217,7 @@ void Arguments::init_system_properties() {
   // Set OS specific system properties values
   os::init_system_properties_values();
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   JVMCIRuntime::parse_properties(&_system_properties);
 #endif
 }
@@ -817,7 +817,7 @@ void Arguments::build_jvm_args(const char* arg) {
 void Arguments::build_jvm_flags(const char* arg) {
   add_string(&_jvm_flags_array, &_num_jvm_flags, arg);
 }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 void Arguments::add_jvmci_arg(const char* arg) {
   add_string(&_jvmci_args_array, &_num_jvmci_args, arg);
 }
@@ -1127,7 +1127,7 @@ void Arguments::set_mode_flags(Mode mode) {
   }
 }
 
-#if defined(COMPILER2) || defined(JVMCI) || defined(_LP64) || !INCLUDE_CDS
+#if defined(COMPILER2) || INCLUDE_JVMCI || defined(_LP64) || !INCLUDE_CDS
 // Conflict: required to use shared spaces (-Xshare:on), but
 // incompatible command line options were chosen.
 
@@ -1595,7 +1595,7 @@ void Arguments::select_gc() {
 void Arguments::set_ergonomics_flags() {
   select_gc();
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   // Shared spaces work fine with other GCs but causes bytecode rewriting
   // to be disabled, which hurts interpreter performance and decreases
   // server performance.  When -server is specified, keep the default off
@@ -1679,7 +1679,7 @@ void Arguments::set_parallel_gc_flags() {
 
 void Arguments::set_g1_gc_flags() {
   assert(UseG1GC, "Error");
-#if defined(COMPILER1) || defined(JVMCI)
+#if defined(COMPILER1) || INCLUDE_JVMCI
   FastTLABRefill = false;
 #endif
   FLAG_SET_DEFAULT(ParallelGCThreads,
@@ -2446,7 +2446,7 @@ bool Arguments::check_vm_args_consistency() {
     }
 #endif
   }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (UseG1GC) {
       if (IgnoreUnrecognizedVMOptions) {
         FLAG_SET_CMDLINE(bool, UseG1GC, true);
@@ -2783,7 +2783,7 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
           return JNI_ERR;
         }
 #endif // !INCLUDE_JVMTI
-#if defined(JVMCI)
+#if INCLUDE_JVMCI
         if (strcmp(name, "hprof") == 0) {
           FLAG_SET_CMDLINE(bool, JVMCIHProfEnabled, true);
         }
@@ -2810,7 +2810,7 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
           return JNI_ERR;
         }
 #endif // !INCLUDE_JVMTI
-#if defined(JVMCI)
+#if INCLUDE_JVMCI
         if (valid_hprof_or_jdwp_agent(name, is_absolute_path)) {
           FLAG_SET_CMDLINE(bool, JVMCIHProfEnabled, true);
         }
@@ -3389,7 +3389,7 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
         }
       }
     }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     else if (match_option(option, "-G:", &tail)) { // -G:XXX
       // Option for the JVMCI compiler.
       if (PrintVMOptions) {
@@ -3615,7 +3615,7 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
   // This must be done after all -D arguments have been processed.
   scp_p->expand_endorsed();
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (!UseJVMCIClassLoader) {
     // Append lib/jvmci/*.jar to boot class path
     char jvmciDir[JVM_MAXPATHLEN];
@@ -4136,9 +4136,9 @@ jint Arguments::apply_ergo() {
 #ifdef COMPILER1
       || !UseFastLocking
 #endif // COMPILER1
-#ifdef JVMCI
+#if INCLUDE_JVMCI
       || !JVMCIUseFastLocking
-#endif // JVMCI
+#endif
     ) {
     if (!FLAG_IS_DEFAULT(UseBiasedLocking) && UseBiasedLocking) {
       // flag set to true on command line; warn the user that they

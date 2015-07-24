@@ -375,13 +375,7 @@ CompLevel AdvancedThresholdPolicy::common(Predicate p, Method* method, CompLevel
       } else if ((this->*p)(i, b, cur_level)) {
 #ifdef COMPILERJVMCI
         // Since JVMCI takes a while to warm up, its queue inevitably backs up during
-        // early VM execution. As of 2014-06-13, JVMCI's inliner assumes that the root
-        // compilation method and all potential inlinees have mature profiles (which
-        // includes type profiling). If it sees immature profiles, JVMCI's inliner
-        // can perform pathologically bad (e.g., causing OutOfMemoryErrors due to
-        // exploring/inlining too many graphs). Since a rewrite of the inliner is
-        // in progress, we simply disable the dialing back heuristic for now and will
-        // revisit this decision once the new inliner is completed.
+        // early VM execution.
         next_level = CompLevel_full_profile;
 #else
         // C1-generated fully profiled code is about 30% slower than the limited profile

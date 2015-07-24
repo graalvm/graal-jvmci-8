@@ -40,7 +40,7 @@
 #ifdef COMPILER2
 #include "opto/runtime.hpp"
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciJavaAccess.hpp"
 #endif
 
@@ -141,7 +141,7 @@ class RegisterSaver {
 OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_frame_words, int* total_frame_words, bool save_vectors) {
   int vect_words = 0;
   int ymmhi_offset = -1;
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   if (save_vectors) {
     assert(UseAVX > 0, "256bit vectors are supported only with AVX");
     assert(MaxVectorSize == 32, "only 256bit vectors are supported now");
@@ -244,7 +244,7 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
   map->set_callee_saved(STACK_OFFSET(xmm15_off), xmm15->as_VMReg());
 
 
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   if (save_vectors) {
     assert(ymmhi_offset != -1, "save area must exist");
     map->set_callee_saved(YMMHI_STACK_OFFSET(  0), xmm0->as_VMReg()->next()->next()->next()->next());
@@ -309,7 +309,7 @@ void RegisterSaver::restore_live_registers(MacroAssembler* masm, bool restore_ve
     // Pop arg register save area
     __ addptr(rsp, frame::arg_reg_save_area_bytes);
   }
-#if defined(COMPILER2) || defined(JVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   if (restore_vectors) {
     // Restore upper half of YMM registes.
     assert(UseAVX > 0, "256bit vectors are supported only with AVX");
@@ -731,7 +731,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
     __ block_comment("} verify_i2ce ");
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (frame_extension_argument != -1) {
     // The frame_extension_argument is an int that describes the
     // expected amount of argument space in the caller frame.  If that
@@ -802,7 +802,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
   // Pre-load the register-jump target early, to schedule it better.
   __ movptr(r11, Address(rbx, in_bytes(Method::from_compiled_offset())));
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // check if this call should be routed towards a specific entry point
   __ cmpptr(Address(r15_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())), 0);
   Label no_alternative_target;
@@ -3430,7 +3430,7 @@ void SharedRuntime::generate_deopt_blob() {
   __ movl(r14, Deoptimization::Unpack_reexecute); // callee-saved
   __ jmp(cont);
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   int implicit_exception_uncommon_trap_offset = __ pc() - start;
 
   __ pushptr(Address(r15_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset())));
@@ -3454,7 +3454,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   Label after_fetch_unroll_info_call;
   __ jmp(after_fetch_unroll_info_call);
-#endif // JVMCI
+#endif // INCLUDE_JVMCI
 
   int exception_offset = __ pc() - start;
 
@@ -3541,7 +3541,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   __ reset_last_Java_frame(false, false);
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   __ bind(after_fetch_unroll_info_call);
 #endif
 
@@ -3719,7 +3719,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   _deopt_blob = DeoptimizationBlob::create(&buffer, oop_maps, 0, exception_offset, reexecute_offset, frame_size_in_words);
   _deopt_blob->set_unpack_with_exception_in_tls_offset(exception_in_tls_offset);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   _deopt_blob->set_uncommon_trap_offset(uncommon_trap_offset);
   _deopt_blob->set_implicit_exception_uncommon_trap_offset(implicit_exception_uncommon_trap_offset);
 #endif

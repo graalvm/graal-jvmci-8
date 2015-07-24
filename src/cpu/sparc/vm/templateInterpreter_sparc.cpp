@@ -203,7 +203,7 @@ address TemplateInterpreterGenerator::generate_return_entry_for(TosState state, 
 address InterpreterGenerator::generate_deopt_entry_for(TosState state, int step) {
   address entry = __ pc();
   __ get_constant_pool_cache(LcpoolCache); // load LcpoolCache
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // Check if we need to take lock at entry of synchronized method.
   {
     Label L;

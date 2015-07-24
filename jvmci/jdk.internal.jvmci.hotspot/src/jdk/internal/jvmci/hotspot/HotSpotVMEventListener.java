@@ -22,6 +22,8 @@
  */
 package jdk.internal.jvmci.hotspot;
 
+import jdk.internal.jvmci.code.*;
+
 public interface HotSpotVMEventListener {
 
     /**
@@ -47,5 +49,15 @@ public interface HotSpotVMEventListener {
      * Notifies this client that the VM is shutting down.
      */
     default void notifyShutdown() {
+    }
+
+    /**
+     * Notify on successful install into the CodeCache.
+     *
+     * @param hotSpotCodeCacheProvider
+     * @param installedCode
+     * @param compResult
+     */
+    default void notifyInstall(HotSpotCodeCacheProvider hotSpotCodeCacheProvider, InstalledCode installedCode, CompilationResult compResult) {
     }
 }

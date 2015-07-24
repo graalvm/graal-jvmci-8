@@ -61,7 +61,7 @@ class ThreadShadow: public CHeapObj<mtThread> {
   friend class VMStructs;
 
  protected:
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   int _pending_deoptimization;
   oop _pending_failed_speculation;
   bool _pending_monitorenter;
@@ -85,7 +85,7 @@ class ThreadShadow: public CHeapObj<mtThread> {
   bool has_pending_exception() const             { return _pending_exception != NULL; }
   const char* exception_file() const             { return _exception_file; }
   int  exception_line() const                    { return _exception_line; }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   int  pending_deoptimization() const            { return _pending_deoptimization; }
   oop  pending_failed_speculation() const        { return _pending_failed_speculation; }
   bool has_pending_monitorenter() const          { return _pending_monitorenter; }
@@ -93,7 +93,7 @@ class ThreadShadow: public CHeapObj<mtThread> {
 
   // Code generation support
   static ByteSize pending_exception_offset()     { return byte_offset_of(ThreadShadow, _pending_exception); }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   static ByteSize pending_deoptimization_offset() { return byte_offset_of(ThreadShadow, _pending_deoptimization); }
   static ByteSize pending_monitorenter_offset()  { return byte_offset_of(ThreadShadow, _pending_monitorenter); }
   static ByteSize pending_failed_speculation_offset() { return byte_offset_of(ThreadShadow, _pending_failed_speculation); }
@@ -112,7 +112,7 @@ class ThreadShadow: public CHeapObj<mtThread> {
 
   ThreadShadow() : _pending_exception(NULL),
                    _exception_file(NULL), _exception_line(0)
-#ifdef JVMCI
+#if INCLUDE_JVMCI
                    , _pending_monitorenter(false), _pending_deoptimization(-1), _pending_failed_speculation(NULL), _pending_transfer_to_interpreter(false)
 #endif
   {}

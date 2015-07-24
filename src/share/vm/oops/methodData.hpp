@@ -543,7 +543,7 @@ protected:
     //  saw a null operand (cast/aastore/instanceof)
       null_seen_flag              = DataLayout::first_flag + 0
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     // bytecode threw any exception
     , exception_seen_flag         = null_seen_flag + 1
 #endif
@@ -570,7 +570,7 @@ public:
   bool null_seen()     { return flag_at(null_seen_flag); }
   void set_null_seen()    { set_flag_at(null_seen_flag); }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // true if an exception was thrown at the specific BCI
   bool exception_seen() { return flag_at(exception_seen_flag); }
   void set_exception_seen() { set_flag_at(exception_seen_flag); }
@@ -1179,7 +1179,7 @@ public:
 class ReceiverTypeData : public CounterData {
 protected:
   enum {
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     // Description of the different counters
     // ReceiverTypeData for instanceof/checkcast/aastore:
     //   C1/C2: count is incremented on type overflow and decremented for failed type checks
@@ -1271,7 +1271,7 @@ public:
     set_count(0);
     set_receiver(row, NULL);
     set_receiver_count(row, 0);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     if (!this->is_VirtualCallData()) {
       // if this is a ReceiverTypeData for JVMCI, the nonprofiled_count
       // must also be reset (see "Description of the different counters" above)
@@ -1287,7 +1287,7 @@ public:
   static ByteSize receiver_count_offset(uint row) {
     return cell_offset(receiver_count_cell_index(row));
   }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   static ByteSize nonprofiled_receiver_count_offset() {
     return cell_offset(nonprofiled_count_off_set);
   }
@@ -1386,7 +1386,7 @@ public:
   }
 #endif // CC_INTERP
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   static ByteSize method_offset(uint row) {
     return cell_offset(method_cell_index(row));
   }
@@ -1442,7 +1442,7 @@ public:
 #endif
 
 #ifndef PRODUCT
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   void print_method_data_on(outputStream* st) const;
 #endif
   void print_data_on(outputStream* st, const char* extra = NULL) const;
@@ -2210,7 +2210,7 @@ private:
   enum WouldProfile {unknown, no_profile, profile};
   WouldProfile      _would_profile;
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // Support for HotSpotMethodData.setCompiledIRSize(int)
   int               _jvmci_ir_size;
 #endif

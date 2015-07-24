@@ -199,7 +199,6 @@ class Ticks;
   /* Support for JVMCI */                                                                                                \
   do_klass(BitSet_klass,                                java_util_BitSet,                          Opt                 ) \
   /* JVMCI classes. These are loaded on-demand. */                                                                                   \
-  JVMCI_ONLY(do_klass(Debug_klass,                           jdk_internal_jvmci_debug_Debug,                                 Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotCompiledCode_klass,             jdk_internal_jvmci_hotspot_HotSpotCompiledCode,                 Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotCompiledCode_Comment_klass,     jdk_internal_jvmci_hotspot_HotSpotCompiledCode_Comment,         Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotCompiledNmethod_klass,          jdk_internal_jvmci_hotspot_HotSpotCompiledNmethod,              Jvmci)) \
@@ -268,8 +267,8 @@ class SystemDictionary : AllStatic {
 
     WKID_LIMIT,
 
-#ifdef JVMCI
-    FIRST_JVMCI_WKID = WK_KLASS_ENUM_NAME(Debug_klass),
+#if INCLUDE_JVMCI
+    FIRST_JVMCI_WKID = WK_KLASS_ENUM_NAME(HotSpotCompiledCode_klass),
     LAST_JVMCI_WKID  = WK_KLASS_ENUM_NAME(AbstractValue_klass),
 #endif
 
@@ -286,7 +285,7 @@ class SystemDictionary : AllStatic {
     Opt,                        // preload tried; NULL if not present
     Opt_Only_JDK14NewRef,       // preload tried; use only with NewReflection
     Opt_Only_JDK15,             // preload tried; use only with JDK1.5+
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     Jvmci,                      // preload tried; error if not present, use only with JVMCI
 #endif
     OPTION_LIMIT,
@@ -478,7 +477,7 @@ public:
     // despite the optional loading, if you use this it must be present:
     return check_klass(k);
   }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   static Klass* check_klass_Jvmci(Klass* k)      { return k; }
 #endif
 
@@ -546,7 +545,7 @@ public:
   // Returns default system loader
   static oop java_system_loader();
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // Returns the JVMCI loader. This will be NULL if !UseJVMCIClassLoader
   // in which case it's equivalent to the boot loader
   static oop jvmci_loader();
@@ -784,7 +783,7 @@ protected:
   static Klass* _box_klasses[T_VOID+1];
 
   static oop  _java_system_loader;
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   static oop  _jvmci_loader;
 #endif
 

@@ -126,7 +126,7 @@ extern "C" {
   void JNICALL JVM_RegisterMethodHandleMethods(JNIEnv *env, jclass unsafecls);
   void JNICALL JVM_RegisterPerfMethods(JNIEnv *env, jclass perfclass);
   void JNICALL JVM_RegisterWhiteBoxMethods(JNIEnv *env, jclass wbclass);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   void     JNICALL JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader);
   void     JNICALL JVM_InitializeJVMCINatives(JNIEnv *env, jclass compilerToVMClass);
   jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
@@ -143,7 +143,7 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_java_lang_invoke_MethodHandleNatives_registerNatives", NULL, FN_PTR(JVM_RegisterMethodHandleMethods) },
   { CC"Java_sun_misc_Perf_registerNatives",                        NULL, FN_PTR(JVM_RegisterPerfMethods)         },
   { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 NULL, FN_PTR(JVM_RegisterWhiteBoxMethods)     },
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   { CC"Java_jdk_internal_jvmci_service_JVMCIClassLoaderFactory_init", NULL, FN_PTR(JVM_InitJVMCIClassLoader)     },
   { CC"Java_jdk_internal_jvmci_runtime_JVMCI_initializeRuntime",      NULL, FN_PTR(JVM_GetJVMCIRuntime)          },
   { CC"Java_jdk_internal_jvmci_service_Services_getServiceImpls",     NULL, FN_PTR(JVM_GetJVMCIServiceImpls)     },

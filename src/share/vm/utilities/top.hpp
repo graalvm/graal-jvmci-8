@@ -42,7 +42,7 @@
 #ifdef COMPILER2
 #include "opto/c2_globals.hpp"
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciGlobals.hpp"
 #endif
 

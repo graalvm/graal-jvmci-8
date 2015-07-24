@@ -64,7 +64,7 @@
 #include "services/threadService.hpp"
 #include "utilities/macros.hpp"
 #include "utilities/ticks.hpp"
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciRuntime.hpp"
 #endif
 #if INCLUDE_TRACE
@@ -96,7 +96,7 @@ oop         SystemDictionary::_java_system_loader         =  NULL;
 bool        SystemDictionary::_has_loadClassInternal      =  false;
 bool        SystemDictionary::_has_checkPackageAccess     =  false;
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 oop         SystemDictionary::_jvmci_loader               = NULL;
 
 oop SystemDictionary::jvmci_loader() {
@@ -1865,7 +1865,7 @@ bool SystemDictionary::initialize_wk_klass(WKID id, int init_opt, TRAPS) {
   Klass**    klassp = &_well_known_klasses[id];
   bool must_load = (init_opt < SystemDictionary::Opt);
   if ((*klassp) == NULL) {
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     bool is_jvmci = init_opt == SystemDictionary::Jvmci;
     assert(is_jvmci == (id >= (int)FIRST_JVMCI_WKID && id <= (int)LAST_JVMCI_WKID),
         "JVMCI WKIDs must be contiguous and separate from non-JVMCI WKIDs");

@@ -125,11 +125,11 @@ class LinkResolver: AllStatic {
 
  private:
   static void lookup_method_in_klasses          (methodHandle& result, KlassHandle klass, Symbol* name, Symbol* signature, bool checkpolymorphism, bool in_imethod_resolve, TRAPS);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
  public:
 #endif
   static void lookup_instance_method_in_klasses (methodHandle& result, KlassHandle klass, Symbol* name, Symbol* signature, TRAPS);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
  private:
 #endif
   static void lookup_method_in_interfaces       (methodHandle& result, KlassHandle klass, Symbol* name, Symbol* signature, TRAPS);
@@ -145,12 +145,12 @@ class LinkResolver: AllStatic {
 
   static void linktime_resolve_static_method    (methodHandle& resolved_method, KlassHandle resolved_klass, Symbol* method_name, Symbol* method_signature, KlassHandle current_klass, bool check_access, TRAPS);
   static void linktime_resolve_special_method   (methodHandle& resolved_method, KlassHandle resolved_klass, Symbol* method_name, Symbol* method_signature, KlassHandle current_klass, bool check_access, TRAPS);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
  public:
 #endif
   static void linktime_resolve_virtual_method   (methodHandle &resolved_method, KlassHandle resolved_klass, Symbol* method_name, Symbol* method_signature,KlassHandle current_klass, bool check_access, TRAPS);
   static void linktime_resolve_interface_method (methodHandle& resolved_method, KlassHandle resolved_klass, Symbol* method_name, Symbol* method_signature, KlassHandle current_klass, bool check_access, TRAPS);
-#ifdef JVMCI
+#if INCLUDE_JVMCI
  private:
 #endif
 

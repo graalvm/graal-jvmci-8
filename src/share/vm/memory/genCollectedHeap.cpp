@@ -452,7 +452,9 @@ void GenCollectedHeap::do_collection(bool  full,
           }
           Universe::verify(" VerifyBeforeGC:");
         }
-        COMPILER2_PRESENT(DerivedPointerTable::clear());
+#if defined(COMPILER2) || INCLUDE_JVMCI
+        DerivedPointerTable::clear();
+#endif
 
         if (!must_restore_marks_for_biased_locking &&
             _gens[i]->performs_in_place_marking()) {
@@ -512,7 +514,9 @@ void GenCollectedHeap::do_collection(bool  full,
           }
         }
 
-        COMPILER2_PRESENT(DerivedPointerTable::update_pointers());
+#if defined(COMPILER2) || INCLUDE_JVMCI
+        DerivedPointerTable::update_pointers();
+#endif
 
         _gens[i]->stat_record()->accumulated_time.stop();
 
@@ -1220,7 +1224,7 @@ class GenGCEpilogueClosure: public GenCollectedHeap::GenClosure {
 };
 
 void GenCollectedHeap::gc_epilogue(bool full) {
-#ifdef COMPILER2
+#if defined(COMPILER2) || INCLUDE_JVMCI
   assert(DerivedPointerTable::is_empty(), "derived pointer present");
   size_t actual_gap = pointer_delta((HeapWord*) (max_uintx-3), *(end_addr()));
   guarantee(actual_gap > (size_t)FastAllocateSizeLimit, "inline allocation wraps");

@@ -100,7 +100,7 @@ class JavaCallArguments : public StackObj {
   int         _size;
   int         _max_size;
   bool        _start_at_zero;      // Support late setting of receiver
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   nmethod*    _alternative_target; // Nmethod that should be called instead of normal target
 #endif
 
@@ -140,7 +140,7 @@ class JavaCallArguments : public StackObj {
     }
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   void set_alternative_target(nmethod* target) {
     _alternative_target = target;
   }

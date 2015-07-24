@@ -1644,7 +1644,7 @@ void InterpreterMacroAssembler::profile_virtual_call(Register receiver,
     bind(skip_receiver_profile);
 
     // The method data pointer needs to be updated to reflect the new target.
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     if (MethodProfileWidth == 0) {
       update_mdp_by_constant(in_bytes(VirtualCallData::virtual_call_data_size()));
     }
@@ -1655,7 +1655,7 @@ void InterpreterMacroAssembler::profile_virtual_call(Register receiver,
   }
 }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 void InterpreterMacroAssembler::profile_called_method(Register method, Register scratch) {
   assert_different_registers(method, scratch);
   if (ProfileInterpreter && MethodProfileWidth > 0) {
@@ -1681,7 +1681,7 @@ void InterpreterMacroAssembler::record_klass_in_profile_helper(Register receiver
     if (is_virtual_call) {
       increment_mdp_data_at(in_bytes(CounterData::count_offset()), scratch);
     }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     else {
       increment_mdp_data_at(in_bytes(ReceiverTypeData::nonprofiled_receiver_count_offset()), scratch);
     }
@@ -1691,11 +1691,11 @@ void InterpreterMacroAssembler::record_klass_in_profile_helper(Register receiver
     int non_profiled_offset = -1;
     if (use_non_profiled_counter) {
        non_profiled_offset = in_bytes(CounterData::count_offset());
-    #ifdef JVMCI
+#if INCLUDE_JVMCI
       if (!is_virtual_call) {
         non_profiled_offset = in_bytes(ReceiverTypeData::nonprofiled_receiver_count_offset());
       }
-    #endif
+#endif
       assert(non_profiled_offset >= 0, "must be");
     }
 

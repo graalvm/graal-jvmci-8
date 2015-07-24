@@ -61,7 +61,7 @@
 #ifdef SHARK
 #include "shark/sharkCompiler.hpp"
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciJavaAccess.hpp"
 #endif
 
@@ -253,7 +253,7 @@ static java_nmethod_stats_struct c1_java_nmethod_stats;
 #ifdef COMPILER2
 static java_nmethod_stats_struct c2_java_nmethod_stats;
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 static java_nmethod_stats_struct jvmci_java_nmethod_stats;
 #endif
 #ifdef SHARK
@@ -279,7 +279,7 @@ static void note_java_nmethod(nmethod* nm) {
     c2_java_nmethod_stats.note_nmethod(nm);
   } else
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (nm->is_compiled_by_jvmci()) {
     jvmci_java_nmethod_stats.note_nmethod(nm);
   } else
@@ -574,7 +574,7 @@ void nmethod::init_defaults() {
 #if INCLUDE_RTM_OPT
   _rtm_state               = NoRTM;
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   _jvmci_installed_code   = NULL;
   _speculation_log        = NULL;
 #endif
@@ -672,7 +672,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
   ImplicitExceptionTable* nul_chk_table,
   AbstractCompiler* compiler,
   int comp_level
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   , Handle installed_code,
   Handle speculationLog
 #endif
@@ -699,7 +699,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
             nul_chk_table,
             compiler,
             comp_level
-#ifdef JVMCI
+#if INCLUDE_JVMCI
             , installed_code,
             speculationLog
 #endif
@@ -935,7 +935,7 @@ nmethod::nmethod(
   ImplicitExceptionTable* nul_chk_table,
   AbstractCompiler* compiler,
   int comp_level
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   , Handle installed_code,
   Handle speculation_log
 #endif
@@ -963,7 +963,7 @@ nmethod::nmethod(
     _consts_offset           = content_offset()      + code_buffer->total_offset_of(code_buffer->consts());
     _stub_offset             = content_offset()      + code_buffer->total_offset_of(code_buffer->stubs());
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     _jvmci_installed_code = installed_code();
     _speculation_log = (instanceOop)speculation_log();
 
@@ -996,7 +996,7 @@ nmethod::nmethod(
       _deoptimize_mh_offset  = _stub_offset          + offsets->value(CodeOffsets::DeoptMH);
     } else {
       _deoptimize_mh_offset  = -1;
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     }
 #endif
     }
@@ -1490,7 +1490,7 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
   // Unregister must be done before the state change
   Universe::heap()->unregister_nmethod(this);
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // The method can only be unloaded after the pointer to the installed code
   // Java wrapper is no longer alive. Here we need to clear out this weak
   // reference to the dead object. Nulling out the reference has to happen
@@ -1667,7 +1667,7 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
   } else {
     assert(state == not_entrant, "other cases may need to be handled differently");
   }
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (_jvmci_installed_code != NULL) {
     // Break the link between nmethod and InstalledCode such that the nmethod can subsequently be flushed safely.
     InstalledCode::set_address(_jvmci_installed_code, 0);
@@ -1979,7 +1979,7 @@ void nmethod::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred)
     }
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // Follow JVMCI method
   BarrierSet* bs = Universe::heap()->barrier_set();
   if (_jvmci_installed_code != NULL) {
@@ -2116,7 +2116,7 @@ bool nmethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_
     unloading_occurred = true;
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // Follow JVMCI method
   if (_jvmci_installed_code != NULL) {
     if (_jvmci_installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(_jvmci_installed_code)) {
@@ -2205,7 +2205,7 @@ bool nmethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_
     return postponed;
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // Follow JVMCI method
   BarrierSet* bs = Universe::heap()->barrier_set();
   if (_jvmci_installed_code != NULL) {
@@ -2415,7 +2415,7 @@ void nmethod::oops_do(OopClosure* f, bool allow_zombie) {
     // (See comment above.)
   }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   if (_jvmci_installed_code != NULL) {
     f->do_oop((oop*) &_jvmci_installed_code);
   }
@@ -2628,9 +2628,9 @@ void nmethod::copy_scopes_data(u_char* buffer, int size) {
 // When using JVMCI the address might be off by the size of a call instruction.
 bool nmethod::is_deopt_entry(address pc) {
   return pc == deopt_handler_begin()
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     || pc == (deopt_handler_begin() + NativeCall::instruction_size)
-#endif // JVMCI
+#endif
     ;
 }
 
@@ -3533,7 +3533,7 @@ void nmethod::print_statistics() {
 #ifdef COMPILER2
   c2_java_nmethod_stats.print_nmethod_stats("C2");
 #endif
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   jvmci_java_nmethod_stats.print_nmethod_stats("JVMCI");
 #endif
 #ifdef SHARK
@@ -3548,7 +3548,7 @@ void nmethod::print_statistics() {
   if (xtty != NULL)  xtty->tail("statistics");
 }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
 char* nmethod::jvmci_installed_code_name(char* buf, size_t buflen) {
   if (!this->is_compiled_by_jvmci()) {
     return NULL;

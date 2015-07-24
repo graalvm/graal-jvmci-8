@@ -15,9 +15,9 @@ suite = {
     },
 
     "C1VISUALIZER_DIST" : {
-      "path" : "lib/c1visualizer_2014-04-22.zip",
-      "urls" : ["https://java.net/downloads/c1visualizer/c1visualizer_2014-04-22.zip"],
-      "sha1" : "220488d87affb569b893c7201f8ce5d2b0e03141",
+      "path" : "lib/c1visualizer_2015-07-22.zip",
+      "urls" : ["https://java.net/downloads/c1visualizer/c1visualizer_2015-07-22.zip"],
+      "sha1" : "7ead6b2f7ed4643ef4d3343a5562e3d3f39564ac",
     },
 
     "JOL_INTERNALS" : {
@@ -110,17 +110,29 @@ suite = {
       "sourceDirs" : ["src"],
       "checkstyle" : "com.oracle.graal.graph",
       "dependencies" : [
+        "jdk.internal.jvmci.service",
+      ],
+      "annotationProcessors" : ["jdk.internal.jvmci.options.processor"],
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,Debug",
+    },
+
+    "com.oracle.graal.debug" : {
+      "subDir" : "graal",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "com.oracle.graal.graph",
+      "dependencies" : [
+        "jdk.internal.jvmci.debug",
         "jdk.internal.jvmci.options",
         "jdk.internal.jvmci.code",
-        "jdk.internal.jvmci.service",
       ],
       "annotationProcessors" : ["JVMCI_OPTIONS_PROCESSOR"],
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,Debug",
     },
 
-    "jdk.internal.jvmci.debug.test" : {
-      "subDir" : "jvmci",
+    "com.oracle.graal.debug.test" : {
+      "subDir" : "graal",
       "sourceDirs" : ["src"],
       "dependencies" : [
         "mx:JUNIT",
@@ -143,7 +155,8 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "jdk.internal.jvmci.debug",
+        "jdk.internal.jvmci.options",
+        "jdk.internal.jvmci.code",
       ],
       "checkstyle" : "com.oracle.graal.graph",
       "annotationProcessors" : ["JVMCI_OPTIONS_PROCESSOR"],
@@ -201,7 +214,9 @@ suite = {
         "jdk.internal.jvmci.hotspotvmconfig",
         "jdk.internal.jvmci.runtime",
         "jdk.internal.jvmci.common",
-        "jdk.internal.jvmci.compiler",
+        "jdk.internal.jvmci.options",
+        "jdk.internal.jvmci.runtime",
+        "jdk.internal.jvmci.debug",
       ],
       "annotationProcessors" : [
         "JVMCI_HOTSPOTVMCONFIG_PROCESSOR",

@@ -381,9 +381,6 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.Ho
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotResolvedJavaFieldImpl
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotResolvedJavaMethodImpl
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.CompileTheWorld
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.compiler.Compiler
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.debug.JVMCIDebugConfig
 
 # The use of CONDITIONAL_EXPORT_LIST is for the checking
 # done by verify_defs_make in jvmci.make

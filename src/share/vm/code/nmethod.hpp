@@ -126,7 +126,7 @@ class nmethod : public CodeBlob {
   int       _entry_bci;        // != InvocationEntryBci if this nmethod is an on-stack replacement method
   jmethodID _jmethod_id;       // Cache of method()->jmethod_id()
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   // Needed to keep nmethods alive that are not the default nmethod for the associated Method.
   oop       _jvmci_installed_code;
   oop       _speculation_log;
@@ -299,7 +299,7 @@ class nmethod : public CodeBlob {
           ImplicitExceptionTable* nul_chk_table,
           AbstractCompiler* compiler,
           int comp_level
-#ifdef JVMCI
+#if INCLUDE_JVMCI
           , Handle installed_code,
           Handle speculation_log
 #endif
@@ -340,7 +340,7 @@ class nmethod : public CodeBlob {
                               ImplicitExceptionTable* nul_chk_table,
                               AbstractCompiler* compiler,
                               int comp_level
-#ifdef JVMCI
+#if INCLUDE_JVMCI
                               , Handle installed_code = Handle(),
                               Handle speculation_log = Handle()
 #endif
@@ -626,7 +626,7 @@ public:
   // Evolution support. We make old (discarded) compiled methods point to new Method*s.
   void set_method(Method* method) { _method = method; }
 
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   oop jvmci_installed_code() { return _jvmci_installed_code ; }
   char* jvmci_installed_code_name(char* buf, size_t buflen);
   void set_jvmci_installed_code(oop installed_code) { _jvmci_installed_code = installed_code;  }

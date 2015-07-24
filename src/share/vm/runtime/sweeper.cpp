@@ -458,14 +458,14 @@ void NMethodSweeper::possibly_enable_sweeper() {
 
 class NMethodMarker: public StackObj {
  private:
-#ifdef JVMCI
+#if INCLUDE_JVMCI
   JavaThread* _thread;
 #else
   CompilerThread* _thread;
 #endif
  public:
   NMethodMarker(nmethod* nm) {
-#ifdef JVMCI
+#if INCLUDE_JVMCI
     _thread = JavaThread::current();
 #else
     _thread = CompilerThread::current();
