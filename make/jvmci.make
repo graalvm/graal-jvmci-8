@@ -138,8 +138,8 @@ JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.code/src -type f 2> /dev/
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.runtime/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.options/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.common/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.debug/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.compiler/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.debug/src -type f 2> /dev/null)
 
 JVMCI_API_JAR = $(TARGET)/jvmci-api.jar
 

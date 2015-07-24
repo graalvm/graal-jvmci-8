@@ -376,6 +376,7 @@ ifneq ("$(wildcard $(SHARED_DIR)/services/jdk.internal.jvmci.hotspot.events.Even
 CONDITIONAL_EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.events.EventProvider
 endif
 
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.compiler.Compiler
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotConstantPool
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime
