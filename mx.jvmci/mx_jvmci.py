@@ -1140,40 +1140,6 @@ def buildvms(args):
     mx.log('TOTAL TIME:   ' + '[' + str(allDuration) + ']')
 
 
-def ctw(args):
-    """run CompileTheWorld"""
-
-    defaultCtwopts = '-Inline'
-
-    parser = ArgumentParser(prog='mx ctw')
-    parser.add_argument('--ctwopts', action='store', help='space separated JVMCI options used for CTW compilations (default: --ctwopts="' + defaultCtwopts + '")', default=defaultCtwopts, metavar='<options>')
-    parser.add_argument('--jar', action='store', help='jar of classes to compiled instead of rt.jar', metavar='<path>')
-
-    args, vmargs = parser.parse_known_args(args)
-
-    if args.ctwopts:
-        vmargs.append('-G:CompileTheWorldConfig=' + args.ctwopts)
-
-    if args.jar:
-        jar = os.path.abspath(args.jar)
-    else:
-        jar = join(get_jvmci_jdk(installJars=False), 'jre', 'lib', 'rt.jar')
-        vmargs.append('-G:CompileTheWorldExcludeMethodFilter=sun.awt.X11.*.*')
-
-    vmargs += ['-XX:+CompileTheWorld']
-    vm_ = get_vm()
-    if isJVMCIEnabled(vm_):
-        if vm_ == 'jvmci':
-            vmargs += ['-XX:+BootstrapJVMCI']
-        vmargs += ['-G:CompileTheWorldClasspath=' + jar]
-    else:
-        vmargs += ['-Xbootclasspath/p:' + jar]
-
-    # suppress menubar and dock when running on Mac; exclude x11 classes as they may cause vm crashes (on Solaris)
-    vmargs = ['-Djava.awt.headless=true'] + vmargs
-
-    vm(vmargs)
-
 def _jvmci_gate_runner(args, tasks):
     with Task('Check jvmci.make in sync with suite.py', tasks) as t:
         if t:
@@ -1688,7 +1654,6 @@ mx.update_commands(_suite, {
     'buildvars': [buildvars, ''],
     'buildvms': [buildvms, '[-options]'],
     'c1visualizer' : [c1visualizer, ''],
-    'ctw': [ctw, '[-vmoptions|noinline|nocomplex|full]'],
     'export': [export, '[-options] [zipfile]'],
     'hsdis': [hsdis, '[att]'],
     'hcfdis': [hcfdis, ''],
