@@ -95,9 +95,11 @@ def make_dist_rule(dist, mf):
     sourceLines = sourcesVariableName + " = " + ("\n" + sourcesVariableName + " += ").join(sources)
     apDistNames = []
     apDistVariableNames = []
+    apDependencies = []
     for apd in sorted(annotationProcessorDeps):
         apDistNames.append(apd.name)
         apDistVariableNames.append("$(" + apd.name + "_JAR)")
+        apDependencies.append("$(subst  $(space),:,$(" + apd.name + "_DEP_JARS))")
     shouldExport = dist in jdkDeployedDists
     props = {
            "name": dist.name,
@@ -107,7 +109,7 @@ def make_dist_rule(dist, mf):
            "sourceLines": sourceLines,
            "sourcesVariableName": sourcesVariableName,
            "annotationProcessors": " ".join(apDistVariableNames),
-           "cpAnnotationProcessors": ":".join(apDistVariableNames),
+           "cpAnnotationProcessors": ":".join(apDistVariableNames + apDependencies),
            "jarDeps": " ".join(classPath),
            "copyResources": " ".join(resources)
            }
