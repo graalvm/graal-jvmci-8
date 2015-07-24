@@ -171,6 +171,8 @@ jdkDeployedDists = [
     LibJDKDeployedDist('JVMCI_SERVICE', partOfHotSpot=True),
     JvmciJDKDeployedDist('JVMCI_API', partOfHotSpot=True),
     JvmciJDKDeployedDist('JVMCI_HOTSPOT', partOfHotSpot=True),
+    JvmciJDKDeployedDist('JVMCI_HOTSPOTVMCONFIG', partOfHotSpot=True),
+    JvmciJDKDeployedDist('JVMCI_OPTIONS', partOfHotSpot=True),
     HotSpotVMJDKDeployedDist('JVM_<vmbuild>_<vm>'),
 ]
 

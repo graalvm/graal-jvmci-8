@@ -304,19 +304,35 @@ suite = {
       "dependencies" : ["jdk.internal.jvmci.service"],
     },
 
+    "JVMCI_OPTIONS" : {
+      "path" : "build/jvmci-options.jar",
+      "subDir" : "jvmci",
+      "sourcesPath" : "build/jvmci-options.src.zip",
+      "dependencies" : ["jdk.internal.jvmci.options"],
+    },
+
     "JVMCI_API" : {
       "path" : "build/jvmci-api.jar",
       "subDir" : "jvmci",
       "sourcesPath" : "build/jvmci-api.src.zip",
       "dependencies" : [
         "jdk.internal.jvmci.runtime",
-        "jdk.internal.jvmci.options",
         "jdk.internal.jvmci.common",
         "jdk.internal.jvmci.compiler",
         "jdk.internal.jvmci.debug",
       ],
       "distDependencies" : [
+        "JVMCI_OPTIONS",
         "JVMCI_SERVICE",
+      ],
+    },
+
+    "JVMCI_HOTSPOTVMCONFIG" : {
+      "path" : "build/jvmci-hotspotvmconfig.jar",
+      "subDir" : "jvmci",
+      "sourcesPath" : "build/jvmci-hotspotvmconfig.src.zip",
+      "dependencies" : [
+        "jdk.internal.jvmci.hotspotvmconfig",
       ],
     },
 
@@ -330,6 +346,7 @@ suite = {
         "jdk.internal.jvmci.hotspot.jfr",
       ],
       "distDependencies" : [
+        "JVMCI_HOTSPOTVMCONFIG",
         "JVMCI_SERVICE",
         "JVMCI_API",
       ],
@@ -353,6 +370,9 @@ suite = {
       "subDir" : "jvmci",
       "sourcesPath" : "build/jvmci-options-processor.src.zip",
       "dependencies" : ["jdk.internal.jvmci.options.processor"],
+      "distDependencies" : [
+        "JVMCI_OPTIONS",
+      ],
     },
 
     "JVMCI_HOTSPOTVMCONFIG_PROCESSOR" : {
@@ -360,6 +380,10 @@ suite = {
       "subDir" : "jvmci",
       "sourcesPath" : "build/jvmci-hotspotvmconfig-processor.src.zip",
       "dependencies" : ["jdk.internal.jvmci.hotspotvmconfig.processor"],
+      "distDependencies" : [
+        "JVMCI_API",
+        "JVMCI_HOTSPOTVMCONFIG",
+      ],
     },
 
     "JVMCI_SERVICE_PROCESSOR" : {
@@ -367,6 +391,9 @@ suite = {
       "subDir" : "jvmci",
       "sourcesPath" : "build/jvmci-service-processor.src.zip",
       "dependencies" : ["jdk.internal.jvmci.service.processor"],
+      "distDependencies" : [
+        "JVMCI_SERVICE",
+      ],
     },
   },
 }
