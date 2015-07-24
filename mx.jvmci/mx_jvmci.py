@@ -1151,7 +1151,7 @@ def _jvmci_gate_runner(args, tasks):
 
     # Build server-hosted-jvmci now so we can run the unit tests
     with Task('BuildHotSpotJVMCIHosted: product', tasks) as t:
-        if t: buildvms(['--vms', 'server', '--builds', 'product', '--check-distributions'])
+        if t: buildvms(['--vms', 'server', '--builds', 'product'])
 
     # Run unit tests on server-hosted-jvmci
     with VM('server', 'product'):
@@ -1160,7 +1160,7 @@ def _jvmci_gate_runner(args, tasks):
 
     # Build the other VM flavors
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks) as t:
-        if t: buildvms(['--vms', 'jvmci,server', '--builds', 'fastdebug,product', '--check-distributions'])
+        if t: buildvms(['--vms', 'jvmci,server', '--builds', 'fastdebug,product'])
 
     with VM('jvmci', 'fastdebug'):
         with Task('BootstrapWithSystemAssertions:fastdebug', tasks) as t:
