@@ -1162,8 +1162,8 @@ def _jvmci_gate_runner(args, tasks):
 
     # Run unit tests on server-hosted-jvmci
     with VM('server', 'product'):
-        with Task('UnitTests:hosted-product', tasks) as t:
-            if t: unittest(['--enable-timing', '--verbose', '--fail-fast'])
+        with Task('JVMCI UnitTests: hosted-product', tasks) as t:
+            if t: unittest(['--suite', 'jvmci', '--enable-timing', '--verbose', '--fail-fast'])
 
     # Build the other VM flavors
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks) as t:
