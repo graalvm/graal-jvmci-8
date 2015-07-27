@@ -20,11 +20,19 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.hotspot;
+package com.oracle.graal.hotspot.logging;
 
+import java.io.*;
+
+import com.oracle.graal.debug.*;
+
+import jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 import jdk.internal.jvmci.service.*;
 
-@ServiceProvider(HotSpotVMEventListener.class)
-public class HotSpotJVMCIVMEventListener implements HotSpotVMEventListener {
+@ServiceProvider(TTYStreamProvider.class)
+class HotSpotTTYStreamProvider implements TTYStreamProvider {
 
+    public PrintStream getStream() {
+        return Options.LogFile.getStream();
+    }
 }

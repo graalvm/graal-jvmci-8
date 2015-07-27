@@ -20,18 +20,13 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.hotspot;
+package com.oracle.graal.debug;
 
 import java.io.*;
 
-import jdk.internal.jvmci.debug.*;
-import jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import jdk.internal.jvmci.service.*;
-
-@ServiceProvider(TTYStreamProvider.class)
-class HotSpotTTYStreamProvider implements TTYStreamProvider {
-
-    public PrintStream getStream() {
-        return Options.LogFile.getStream();
-    }
+/**
+ * Provides a {@link PrintStream} that writes to the underlying log stream of the VM.
+ */
+public interface TTYStreamProvider {
+    PrintStream getStream();
 }

@@ -25,12 +25,10 @@ package jdk.internal.jvmci.hotspot;
 import static jdk.internal.jvmci.common.UnsafeAccess.*;
 import static jdk.internal.jvmci.hotspot.InitTimer.*;
 
-import java.lang.reflect.*;
 import java.util.*;
 
 import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.hotspot.logging.*;
 import jdk.internal.jvmci.meta.*;
 import jdk.internal.jvmci.options.*;
 import jdk.internal.jvmci.runtime.*;
@@ -76,11 +74,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         // to retrieve configuration details.
         CompilerToVM toVM = this.compilerToVm;
 
-        if (CountingProxy.ENABLED) {
-            toVM = CountingProxy.getProxy(CompilerToVM.class, toVM);
-        }
-        if (Logger.ENABLED) {
-            toVM = LoggingProxy.getProxy(CompilerToVM.class, toVM);
+        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
+            toVM = vmEventListener.completeInitialization(this, toVM);
         }
 
         this.compilerToVm = toVM;
@@ -204,10 +199,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             config = new HotSpotVMConfig(compilerToVm);
         }
 
-        if (Boolean.valueOf(System.getProperty("jvmci.printconfig"))) {
-            printConfig(config);
-        }
-
         String hostArchitecture = config.getHostArchitectureName();
 
         HotSpotJVMCIBackendFactory factory;
@@ -235,21 +226,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     public ResolvedJavaType fromClass(Class<?> javaClass) {
         return jvmciMirrors.get(javaClass);
-    }
-
-    private static void printConfig(HotSpotVMConfig config) {
-        Field[] fields = config.getClass().getDeclaredFields();
-        Map<String, Field> sortedFields = new TreeMap<>();
-        for (Field f : fields) {
-            f.setAccessible(true);
-            sortedFields.put(f.getName(), f);
-        }
-        for (Field f : sortedFields.values()) {
-            try {
-                Logger.info(String.format("%9s %-40s = %s", f.getType().getSimpleName(), f.getName(), Logger.pretty(f.get(config))));
-            } catch (Exception e) {
-            }
-        }
     }
 
     public HotSpotVMConfig getConfig() {

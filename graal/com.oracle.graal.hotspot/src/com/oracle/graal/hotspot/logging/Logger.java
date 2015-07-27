@@ -20,13 +20,14 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.hotspot.logging;
+package com.oracle.graal.hotspot.logging;
 
 import java.io.*;
 import java.lang.reflect.*;
 import java.util.*;
 
-import jdk.internal.jvmci.debug.*;
+import com.oracle.graal.debug.*;
+
 import jdk.internal.jvmci.hotspot.*;
 
 /**

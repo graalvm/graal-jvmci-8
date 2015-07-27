@@ -60,4 +60,11 @@ public interface HotSpotVMEventListener {
      */
     default void notifyInstall(HotSpotCodeCacheProvider hotSpotCodeCacheProvider, InstalledCode installedCode, CompilationResult compResult) {
     }
+
+    /**
+     * @param hotSpotJVMCIRuntime
+     */
+    default CompilerToVM completeInitialization(HotSpotJVMCIRuntime hotSpotJVMCIRuntime, CompilerToVM compilerToVM) {
+        return compilerToVM;
+    }
 }

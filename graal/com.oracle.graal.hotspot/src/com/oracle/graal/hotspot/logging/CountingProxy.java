@@ -20,20 +20,32 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.hotspot.logging;
+package com.oracle.graal.hotspot.logging;
 
 import java.lang.reflect.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.*;
+
+import com.oracle.graal.debug.*;
 
 /**
  * A java.lang.reflect proxy that hierarchically logs all method invocations along with their
  * parameters and return values.
  */
-public class LoggingProxy<T> implements InvocationHandler {
+public class CountingProxy<T> implements InvocationHandler {
+
+    public static final boolean ENABLED = Boolean.valueOf(System.getProperty("jvmci.countcalls"));
 
     private T delegate;
 
-    public LoggingProxy(T delegate) {
+    private ConcurrentHashMap<Method, AtomicLong> calls = new ConcurrentHashMap<>();
+
+    public CountingProxy(T delegate) {
+        assert ENABLED;
+        TTY.println("Counting proxy for " + delegate.getClass().getSimpleName() + " created");
         this.delegate = delegate;
+        proxies.add(this);
     }
 
     @Override
@@ -42,15 +54,12 @@ public class LoggingProxy<T> implements InvocationHandler {
         if (method.getParameterTypes().length != argCount) {
             throw new RuntimeException("wrong parameter count");
         }
-        StringBuilder str = new StringBuilder();
-        str.append(method.getReturnType().getSimpleName() + " " + method.getDeclaringClass().getSimpleName() + "." + method.getName() + "(");
-        for (int i = 0; i < argCount; i++) {
-            str.append(i == 0 ? "" : ", ");
-            str.append(Logger.pretty(args[i]));
-        }
-        str.append(")");
-        Logger.startScope(str.toString());
         final Object result;
+        if (!calls.containsKey(method)) {
+            calls.putIfAbsent(method, new AtomicLong(0));
+        }
+        AtomicLong count = calls.get(method);
+        count.incrementAndGet();
         try {
             if (args == null) {
                 result = method.invoke(delegate);
@@ -58,20 +67,41 @@ public class LoggingProxy<T> implements InvocationHandler {
                 result = method.invoke(delegate, args);
             }
         } catch (InvocationTargetException e) {
-            Logger.endScope(" = Exception " + e.getMessage());
             throw e.getCause();
         }
-        Logger.endScope(" = " + Logger.pretty(result));
         return result;
     }
 
-    /**
-     * The object returned by this method will implement all interfaces that are implemented by
-     * delegate.
-     */
     public static <T> T getProxy(Class<T> interf, T delegate) {
         Class<?>[] interfaces = ProxyUtil.getAllInterfaces(delegate.getClass());
-        Object obj = Proxy.newProxyInstance(interf.getClassLoader(), interfaces, new LoggingProxy<>(delegate));
+        Object obj = Proxy.newProxyInstance(interf.getClassLoader(), interfaces, new CountingProxy<>(delegate));
         return interf.cast(obj);
+    }
+
+    private static ArrayList<CountingProxy<?>> proxies = new ArrayList<>();
+
+    static {
+        if (ENABLED) {
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+
+                @Override
+                public void run() {
+                    for (CountingProxy<?> proxy : proxies) {
+                        proxy.print();
+                    }
+                }
+            });
+        }
+    }
+
+    protected void print() {
+        long sum = 0;
+        for (Map.Entry<Method, AtomicLong> entry : calls.entrySet()) {
+            Method method = entry.getKey();
+            long count = entry.getValue().get();
+            sum += count;
+            TTY.println(delegate.getClass().getSimpleName() + "." + method.getName() + ": " + count);
+        }
+        TTY.println(delegate.getClass().getSimpleName() + " calls: " + sum);
     }
 }
