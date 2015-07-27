@@ -25,6 +25,12 @@ suite = {
       "urls" : ["http://lafo.ssw.uni-linz.ac.at/truffle/jol/jol-internals.jar"],
       "sha1" : "508bcd26a4d7c4c44048990c6ea789a3b11a62dc",
     },
+
+    "BATIK" : {
+      "path" : "lib/batik-all-1.7.jar",
+      "sha1" : "122b87ca88e41a415cf8b523fd3d03b4325134a3",
+      "urls" : ["http://lafo.ssw.uni-linz.ac.at/graal-external-deps/batik-all-1.7.jar"],
+    },
   },
 
   "jrelibraries" : {

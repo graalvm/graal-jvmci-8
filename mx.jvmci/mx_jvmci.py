@@ -1222,7 +1222,7 @@ def _igvJdk():
     v8 = mx.VersionSpec("1.8")
     def _igvJdkVersionCheck(version):
         return version >= v8 and (version < v8u20 or version >= v8u40)
-    return mx.get_jdk(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").jdk
+    return mx.get_jdk(_igvJdkVersionCheck, versionDescription='>= 1.8 and < 1.8.0u20 or >= 1.8.0u40', purpose="building & running IGV").home
 
 def _igvBuildEnv():
         # When the http_proxy environment variable is set, convert it to the proxy settings that ant needs
