@@ -790,7 +790,7 @@ class HotSpotProject(mx.NativeProject):
 def _hotspotGetVariant(vm=None):
     if not vm:
         vm = get_vm()
-    variant = {'client': 'compiler1', 'server': 'compiler2'}.get(vm, vm)
+    variant = {'client': 'compiler1', 'server': 'compiler2', 'client-nojvmci': 'compiler1', 'server-nojvmci': 'compiler2'}.get(vm, vm)
     return variant
 
 class HotSpotBuildTask(mx.NativeBuildTask):
