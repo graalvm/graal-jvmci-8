@@ -1167,26 +1167,6 @@ def _jvmci_gate_runner(args, tasks):
     with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks) as t:
         if t: buildvms(['--vms', 'jvmci,server', '--builds', 'fastdebug,product'])
 
-    with VM('jvmci', 'fastdebug'):
-        with Task('BootstrapWithSystemAssertions:fastdebug', tasks) as t:
-            if t: vm(['-esa', '-XX:-TieredCompilation', '-version'])
-
-    with VM('jvmci', 'fastdebug'):
-        with Task('BootstrapWithSystemAssertionsNoCoop:fastdebug', tasks) as t:
-            if t: vm(['-esa', '-XX:-TieredCompilation', '-XX:-UseCompressedOops', '-version'])
-
-    with VM('jvmci', 'product'):
-        with Task('BootstrapWithGCVerification:product', tasks) as t:
-            if t:
-                out = mx.DuplicateSuppressingStream(['VerifyAfterGC:', 'VerifyBeforeGC:']).write
-                vm(['-XX:-TieredCompilation', '-XX:+UnlockDiagnosticVMOptions', '-XX:+VerifyBeforeGC', '-XX:+VerifyAfterGC', '-version'], out=out)
-
-    with VM('jvmci', 'product'):
-        with Task('BootstrapWithG1GCVerification:product', tasks) as t:
-            if t:
-                out = mx.DuplicateSuppressingStream(['VerifyAfterGC:', 'VerifyBeforeGC:']).write
-                vm(['-XX:-TieredCompilation', '-XX:+UnlockDiagnosticVMOptions', '-XX:-UseSerialGC', '-XX:+UseG1GC', '-XX:+VerifyBeforeGC', '-XX:+VerifyAfterGC', '-version'], out=out)
-
     with Task('CleanAndBuildIdealGraphVisualizer', tasks, disableJacoco=True) as t:
         if t and platform.processor() != 'sparc':
             buildxml = mx._cygpathU2W(join(_suite.dir, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml'))
