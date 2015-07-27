@@ -765,10 +765,7 @@ cached_graal_version = None
 def _hotspotReplaceResultsVar(m):
     var = m.group(1)
     if var == 'os':
-        mx_os = mx.get_os()
-        if mx_os == 'darwin':
-            return 'bsd'
-        return mx_os
+        return _hotspotOs(mx.get_os())
     if var == 'nojvmci':
         if get_vm().endswith('nojvmci'):
             return '-nojvmci'
@@ -791,6 +788,11 @@ class HotSpotProject(mx.NativeProject):
 
     def getBuildTask(self, args):
         return HotSpotBuildTask(self, args, _vmbuild, get_vm())
+
+def _hotspotOs(mx_os):
+    if mx_os == 'darwin':
+        return 'bsd'
+    return mx_os
 
 def _hotspotGetVariant(vm=None):
     if not vm:
@@ -869,7 +871,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
             if self.vm.endswith('nojvmci'):
                 setMakeVar('INCLUDE_JVMCI', 'false')
-                setMakeVar('ALT_OUTPUTDIR', join(_suite.dir, 'build-nojvmci', mx.get_os()), env=env)
+                setMakeVar('ALT_OUTPUTDIR', join(_suite.dir, 'build-nojvmci', _hotspotOs(mx.get_os())), env=env)
             else:
                 version = _suite.release_version()
                 setMakeVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
