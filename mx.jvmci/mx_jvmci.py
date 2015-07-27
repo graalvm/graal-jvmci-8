@@ -1166,7 +1166,7 @@ def _jvmci_gate_runner(args, tasks):
             if t: unittest(['--suite', 'jvmci', '--enable-timing', '--verbose', '--fail-fast'])
 
     # Build the other VM flavors
-    with Task('BuildHotSpotGraalOthers: fastdebug,product', tasks) as t:
+    with Task('BuildHotSpotJVMCIOthers: fastdebug,product', tasks) as t:
         if t: buildvms(['--vms', 'jvmci,server', '--builds', 'fastdebug,product'])
 
     with Task('CleanAndBuildIdealGraphVisualizer', tasks, disableJacoco=True) as t:
