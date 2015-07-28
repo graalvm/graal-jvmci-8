@@ -821,22 +821,21 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             buildSuffix = 'jvmci'
 
         if isWindows:
-            mx.abort('nyi')  # TODO
-            # t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "graalCompile.log"))
-            # mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
+            t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "graalCompile.log"))
+            mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
 
-            # variant = _hotspotGetVariant(self.vm)
-            # project_config = variant + '_' + build
-            # jvmciHome = mx._cygpathU2W(_suite.dir)
-            # _runInDebugShell('msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcproj /p:Configuration=' + project_config + ' /target:clean', jvmciHome)
-            # winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set OUT_DIR=' + mx._cygpathU2W(jdk) + r'& set JAVA_HOME=' + mx._cygpathU2W(jdk) + r'& set path=%JAVA_HOME%\bin;%path%;%HotSpotMksHome%& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
-            # print winCompileCmd
-            # winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
-            # if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
-            #     mx.abort('Error executing create command')
-            # winBuildCmd = 'msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcxproj /p:Configuration=' + project_config + ' /p:Platform=x64'
-            # if not _runInDebugShell(winBuildCmd, jvmciHome, t_compilelogfile):
-            #     mx.abort('Error building project')
+            variant = _hotspotGetVariant(self.vm)
+            project_config = variant + '_' + self.vmbuild
+            jvmciHome = mx._cygpathU2W(_suite.dir)
+            _runInDebugShell('msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcproj /p:Configuration=' + project_config + ' /target:clean', jvmciHome)
+            winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set JAVA_HOME=' + mx._cygpathU2W(mx.get_jdk().home) + r'& set path=%JAVA_HOME%\bin;%path%;%HotSpotMksHome%& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
+            print winCompileCmd
+            winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
+            if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
+                mx.abort('Error executing create command')
+            winBuildCmd = 'msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcxproj /p:Configuration=' + project_config + ' /p:Platform=x64'
+            if not _runInDebugShell(winBuildCmd, jvmciHome, t_compilelogfile):
+                mx.abort('Error building project')
         else:
             def filterXusage(line):
                 if not 'Xusage.txt' in line:

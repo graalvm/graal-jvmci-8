@@ -1,5 +1,5 @@
 suite = {
-  "mxversion" : "5.0",
+  "mxversion" : "5.1",
   "name" : "jvmci",
 
     # ------------- Libraries -------------
@@ -272,16 +272,34 @@ suite = {
       "native" : True,
       "class" : "HotSpotProject",
       "output" : "build<nojvmci>",
-      "results" : [
-          '<os>/<os>_<arch>_<buildname>/generated/jvmtifiles/jvmti.h',
-          '<os>/<os>_<arch>_<buildname>/generated/sa-jdi.jar',
-          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:jvm>',
-          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<libdebug:jvm>',
-          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:saproc>',
-          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<libdebug:saproc>',
-          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:jsig>',
-          '<os>/<os>_<arch>_<buildname>/<vmbuild>/<libdebug:jsig>',
-      ]
+      # vs-<arch>/<buildname>/generated/jvmtifiles/jvmti.h
+      # vs-<arch>/<buildname>/<vmbuild>/<lib:jvm>
+      # vs-<arch>/<buildname>/<vmbuild>/<libdebug:jvm>
+      "os_arch" : {
+        "windows" : {
+          "<others>" : {
+            "results" : [
+              'vs-<arch>/<buildname>/generated/jvmtifiles/jvmti.h',
+              'vs-<arch>/<buildname>/<vmbuild>/<lib:jvm>',
+              'vs-<arch>/<buildname>/<vmbuild>/<libdebug:jvm>',
+            ]
+          }
+        },
+        "<others>": {
+          "<others>" : {
+            "results" : [
+              '<os>/<os>_<arch>_<buildname>/generated/jvmtifiles/jvmti.h',
+              '<os>/<os>_<arch>_<buildname>/generated/sa-jdi.jar',
+              '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:jvm>',
+              '<os>/<os>_<arch>_<buildname>/<vmbuild>/<libdebug:jvm>',
+              '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:saproc>',
+              '<os>/<os>_<arch>_<buildname>/<vmbuild>/<libdebug:saproc>',
+              '<os>/<os>_<arch>_<buildname>/<vmbuild>/<lib:jsig>',
+              '<os>/<os>_<arch>_<buildname>/<vmbuild>/<libdebug:jsig>',
+            ]
+          }
+        },
+      },
     }
   },
 
