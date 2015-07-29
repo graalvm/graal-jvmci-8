@@ -31,7 +31,6 @@ import java.lang.reflect.*;
 import java.util.*;
 
 import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.debug.*;
 import jdk.internal.jvmci.meta.*;
 import jdk.internal.jvmci.options.*;
 
@@ -418,8 +417,8 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
             if (metaspaceMethodData != 0) {
                 methodData = new HotSpotMethodData(metaspaceMethodData);
                 if (TraceMethodDataFilter != null && this.format("%H.%n").contains(TraceMethodDataFilter)) {
-                    TTY.println("Raw method data for " + this.format("%H.%n(%p)") + ":");
-                    TTY.println(methodData.toString());
+                    System.out.println("Raw method data for " + this.format("%H.%n(%p)") + ":");
+                    System.out.println(methodData.toString());
                 }
             }
         }

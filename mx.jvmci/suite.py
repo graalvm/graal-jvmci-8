@@ -110,18 +110,6 @@ suite = {
       "workingSets" : "API,JVMCI",
     },
 
-    "jdk.internal.jvmci.debug" : {
-      "subDir" : "jvmci",
-      "sourceDirs" : ["src"],
-      "checkstyle" : "jdk.internal.jvmci.service",
-      "dependencies" : [
-        "jdk.internal.jvmci.service",
-      ],
-      "annotationProcessors" : ["JVMCI_OPTIONS_PROCESSOR"],
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,Debug",
-    },
-
     "jdk.internal.jvmci.options" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
@@ -194,8 +182,8 @@ suite = {
         "jdk.internal.jvmci.runtime",
         "jdk.internal.jvmci.common",
         "jdk.internal.jvmci.options",
+        "jdk.internal.jvmci.service",
         "jdk.internal.jvmci.runtime",
-        "jdk.internal.jvmci.debug",
       ],
       "annotationProcessors" : [
         "JVMCI_HOTSPOTVMCONFIG_PROCESSOR",
@@ -356,7 +344,6 @@ suite = {
         "jdk.internal.jvmci.runtime",
         "jdk.internal.jvmci.common",
         "jdk.internal.jvmci.compiler",
-        "jdk.internal.jvmci.debug",
       ],
       "distDependencies" : [
         "JVMCI_OPTIONS",

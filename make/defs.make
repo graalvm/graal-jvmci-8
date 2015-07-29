@@ -369,8 +369,6 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-api.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-hotspot.jar
 
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.HotSpotJVMCIBackendFactory
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.HotSpotVMEventListener
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.debug.TTYStreamProvider
 
 ifneq ("$(wildcard $(SHARED_DIR)/services/jdk.internal.jvmci.hotspot.events.EventProvider)","")
 CONDITIONAL_EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.events.EventProvider
