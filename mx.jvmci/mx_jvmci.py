@@ -879,6 +879,8 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             if mx.get_os() == 'darwin' and platform.mac_ver()[0] != '':
                 # Force use of clang on MacOS
                 setMakeVar('USE_CLANG', 'true')
+                setMakeVar('COMPILER_WARNINGS_FATAL', 'false')
+
             if mx.get_os() == 'solaris':
                 # If using sparcWorks, setup flags to avoid make complaining about CC version
                 cCompilerVersion = subprocess.Popen('CC -V', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).stderr.readlines()[0]
