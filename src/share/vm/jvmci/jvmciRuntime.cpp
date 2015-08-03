@@ -44,6 +44,7 @@
 
 jobject JVMCIRuntime::_HotSpotJVMCIRuntime_instance = NULL;
 bool JVMCIRuntime::_HotSpotJVMCIRuntime_initialized = false;
+const char* JVMCIRuntime::_options = NULL;
 bool JVMCIRuntime::_shutdown_called = false;
 
 void JVMCIRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
@@ -622,7 +623,7 @@ JRT_ENTRY(jint, JVMCIRuntime::test_deoptimize_call_int(JavaThread* thread, int v
   return value;
 JRT_END
 
-// private static void JVMCIClassLoaderFactory.init()
+// private static void JVMCIClassLoaderFactory.init(ClassLoader loader)
 JVM_ENTRY(void, JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader_handle))
   SystemDictionary::init_jvmci_loader(JNIHandles::resolve(loader_handle));
   SystemDictionary::WKID scan = SystemDictionary::FIRST_JVMCI_WKID;
@@ -643,29 +644,42 @@ JVM_ENTRY(jobject, JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass servic
   return JNIHandles::make_local(THREAD, JVMCIRuntime::get_service_impls(serviceKlass, THREAD)());
 JVM_END
 
-Handle JVMCIRuntime::callInitializer(const char* className, const char* methodName, const char* returnType) {
+Handle JVMCIRuntime::callInitializer(const char* className, const char* methodName, const char* signature, JavaCallArguments* args) {
   guarantee(!_HotSpotJVMCIRuntime_initialized, "cannot reinitialize HotSpotJVMCIRuntime");
   Thread* THREAD = Thread::current();
 
   TempNewSymbol name = SymbolTable::new_symbol(className, CHECK_ABORT_(Handle()));
   KlassHandle klass = load_required_class(name);
   TempNewSymbol runtime = SymbolTable::new_symbol(methodName, CHECK_ABORT_(Handle()));
-  TempNewSymbol sig = SymbolTable::new_symbol(returnType, CHECK_ABORT_(Handle()));
+  TempNewSymbol sig = SymbolTable::new_symbol(signature, CHECK_ABORT_(Handle()));
   JavaValue result(T_OBJECT);
-  JavaCalls::call_static(&result, klass, runtime, sig, CHECK_ABORT_(Handle()));
+  if (args == NULL) {
+    JavaCalls::call_static(&result, klass, runtime, sig, CHECK_ABORT_(Handle()));
+  } else {
+    JavaCalls::call_static(&result, klass, runtime, sig, args, CHECK_ABORT_(Handle()));
+  }
   return Handle((oop)result.get_jobject());
 }
 
 void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
+    Thread* THREAD = Thread::current();
 #ifdef ASSERT
     // This should only be called in the context of the JVMCI class being initialized
-    Thread* THREAD = Thread::current();
     TempNewSymbol name = SymbolTable::new_symbol("jdk/internal/jvmci/runtime/JVMCI", CHECK_ABORT);
     instanceKlassHandle klass = InstanceKlass::cast(load_required_class(name));
     assert(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
            "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
 #endif
+
+    if (_options != NULL) {
+      JavaCallArguments args;
+      oop options = java_lang_String::create_oop_from_str(_options, CHECK_ABORT);
+      args.push_oop(options);
+      callInitializer("jdk/internal/jvmci/options/OptionsParser",
+                      "parseOptionsFromVM",
+                      "(Ljava/lang/String;)Ljava/lang/Boolean;", &args);
+    }
 
     Handle result = callInitializer("jdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime", "runtime",
                                     "()Ljdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime;");
@@ -782,159 +796,6 @@ void JVMCIRuntime::parse_properties(SystemProperty** plist) {
   }
 }
 
-OptionValuesTable* JVMCIRuntime::parse_arguments() {
-  OptionDescsTable* table = OptionDescsTable::load_options();
-  if (table == NULL) {
-    return NULL;
-  }
-
-  OptionValuesTable* options = new OptionValuesTable(table);
-
-  // Process option overrides from jvmci.options first
-  parse_jvmci_options_file(options);
-
-  // Now process options on the command line
-  int numOptions = Arguments::num_jvmci_args();
-  for (int i = 0; i < numOptions; i++) {
-    char* arg = Arguments::jvmci_args_array()[i];
-    if (!parse_argument(options, arg)) {
-      delete options;
-      return NULL;
-    }
-  }
-  return options;
-}
-
-void not_found(OptionDescsTable* table, const char* argname, size_t namelen) {
-  jio_fprintf(defaultStream::error_stream(),"Unrecognized VM option '%.*s'\n", namelen, argname);
-  OptionDesc* fuzzy_matched = table->fuzzy_match(argname, strlen(argname));
-  if (fuzzy_matched != NULL) {
-    jio_fprintf(defaultStream::error_stream(),
-                "Did you mean '%s%s%s'?\n",
-                (fuzzy_matched->type == _boolean) ? "(+/-)" : "",
-                fuzzy_matched->name,
-                (fuzzy_matched->type == _boolean) ? "" : "=<value>");
-  }
-}
-
-bool JVMCIRuntime::parse_argument(OptionValuesTable* options, const char* arg) {
-  OptionDescsTable* table = options->options_table();
-  char first = arg[0];
-  const char* name;
-  size_t name_len;
-  if (first == '+' || first == '-') {
-    name = arg + 1;
-    OptionDesc* optionDesc = table->get(name);
-    if (optionDesc == NULL) {
-      not_found(table, name, strlen(name));
-      return false;
-    }
-    if (optionDesc->type != _boolean) {
-      jio_fprintf(defaultStream::error_stream(), "Unexpected +/- setting in VM option '%s'\n", name);
-      return false;
-    }
-    OptionValue value;
-    value.desc = *optionDesc;
-    value.boolean_value = first == '+';
-    options->put(value);
-    return true;
-  } else {
-    const char* sep = strchr(arg, '=');
-    name = arg;
-    const char* value = NULL;
-    if (sep != NULL) {
-      name_len = sep - name;
-      value = sep + 1;
-    } else {
-      name_len = strlen(name);
-    }
-    OptionDesc* optionDesc = table->get(name, name_len);
-    if (optionDesc == NULL) {
-      not_found(table, name, name_len);
-      return false;
-    }
-    if (optionDesc->type == _boolean) {
-      jio_fprintf(defaultStream::error_stream(), "Missing +/- setting for VM option '%s'\n", name);
-      return false;
-    }
-    if (value == NULL) {
-      jio_fprintf(defaultStream::error_stream(), "Must use '-G:%.*s=<value>' format for %.*s option", name_len, name, name_len, name);
-      return false;
-    }
-    OptionValue optionValue;
-    optionValue.desc = *optionDesc;
-    char* check;
-    errno = 0;
-    switch(optionDesc->type) {
-      case _int: {
-        long int int_value = ::strtol(value, &check, 10);
-        if (*check != '\0' || errno == ERANGE || int_value > max_jint || int_value < min_jint) {
-          jio_fprintf(defaultStream::error_stream(), "Expected int value for VM option '%s'\n", name);
-          return false;
-        }
-        optionValue.int_value = int_value;
-        break;
-      }
-      case _long: {
-        long long int long_value = ::strtoll(value, &check, 10);
-        if (*check != '\0' || errno == ERANGE || long_value > max_jlong || long_value < min_jlong) {
-          jio_fprintf(defaultStream::error_stream(), "Expected long value for VM option '%s'\n", name);
-          return false;
-        }
-        optionValue.long_value = long_value;
-        break;
-      }
-      case _float: {
-        optionValue.float_value = (float)::strtod(value, &check); //strtof not available in Windows SDK yet
-        if (*check != '\0' || errno == ERANGE) {
-          jio_fprintf(defaultStream::error_stream(), "Expected float value for VM option '%s'\n", name);
-          return false;
-        }
-        break;
-      }
-      case _double: {
-        optionValue.double_value = ::strtod(value, &check);
-        if (*check != '\0' || errno == ERANGE) {
-          jio_fprintf(defaultStream::error_stream(), "Expected double value for VM option '%s'\n", name);
-          return false;
-        }
-        break;
-      }
-      case _string: {
-        char* copy = NEW_C_HEAP_ARRAY(char, strlen(value) + 1, mtCompiler);
-        strcpy(copy, value);
-        optionValue.string_value = copy;
-        break;
-      }
-      default:
-        ShouldNotReachHere();
-    }
-    options->put(optionValue);
-    return true;
-  }
-}
-
-class JVMCIOptionParseClosure : public ParseClosure {
-  OptionValuesTable* _options;
-public:
-  JVMCIOptionParseClosure(OptionValuesTable* options) : _options(options) {}
-  void do_line(char* line) {
-    if (!JVMCIRuntime::parse_argument(_options, line)) {
-      warn("There was an error parsing an argument. Skipping it.");
-    }
-  }
-};
-
-void JVMCIRuntime::parse_jvmci_options_file(OptionValuesTable* options) {
-  const char* home = Arguments::get_java_home();
-  size_t path_len = strlen(home) + strlen("/lib/jvmci.options") + 1;
-  char path[JVM_MAXPATHLEN];
-  char sep = os::file_separator()[0];
-  jio_snprintf(path, JVM_MAXPATHLEN, "%s%clib%cjvmci.options", home, sep, sep);
-  JVMCIOptionParseClosure closure(options);
-  parse_lines(path, &closure, false);
-}
-
 #define CHECK_WARN_ABORT_(message) THREAD); \
   if (HAS_PENDING_EXCEPTION) { \
     warning(message); \
@@ -945,149 +806,10 @@ void JVMCIRuntime::parse_jvmci_options_file(OptionValuesTable* options) {
   } \
   (void)(0
 
-class SetOptionClosure : public ValueClosure<OptionValue> {
-  Thread* _thread;
-public:
-  SetOptionClosure(TRAPS) : _thread(THREAD) {}
-  void do_value(OptionValue* optionValue) {
-    TRAPS = _thread;
-    const char* declaringClass = optionValue->desc.declaringClass;
-    if (declaringClass == NULL) {
-      // skip PrintFlags pseudo-option
-      return;
-    }
-    const char* fieldName = optionValue->desc.name;
-    const char* fieldClass = optionValue->desc.fieldClass;
-
-    size_t fieldSigLen = 2 + strlen(fieldClass);
-    char* fieldSig = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, fieldSigLen + 1);
-    jio_snprintf(fieldSig, fieldSigLen + 1, "L%s;", fieldClass);
-    for (size_t i = 0; i < fieldSigLen; ++i) {
-      if (fieldSig[i] == '.') {
-        fieldSig[i] = '/';
-      }
-    }
-    fieldSig[fieldSigLen] = '\0';
-    size_t declaringClassLen = strlen(declaringClass);
-    char* declaringClassBinary = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, declaringClassLen + 1);
-    for (size_t i = 0; i < declaringClassLen; ++i) {
-      if (declaringClass[i] == '.') {
-        declaringClassBinary[i] = '/';
-      } else {
-        declaringClassBinary[i] = declaringClass[i];
-      }
-    }
-    declaringClassBinary[declaringClassLen] = '\0';
-
-    TempNewSymbol name = SymbolTable::new_symbol(declaringClassBinary, CHECK_WARN_ABORT_("Declaring class could not be found"));
-    Klass* klass = JVMCIRuntime::resolve_or_null(name, CHECK_WARN_ABORT_("Declaring class could not be resolved"));
-
-    if (klass == NULL) {
-      warning("Declaring class for option %s could not be resolved", declaringClass);
-      abort();
-      return;
-    }
-
-    // The class has been loaded so the field and signature should already be in the symbol
-    // table.  If they're not there, the field doesn't exist.
-    TempNewSymbol fieldname = SymbolTable::probe(fieldName, (int)strlen(fieldName));
-    TempNewSymbol signame = SymbolTable::probe(fieldSig, (int)fieldSigLen);
-    if (fieldname == NULL || signame == NULL) {
-      warning("Symbols for field for option %s not found (in %s)", fieldName, declaringClass);
-      abort();
-      return;
-    }
-    // Make sure class is initialized before handing id's out to fields
-    klass->initialize(CHECK_WARN_ABORT_("Error while initializing declaring class for option"));
-
-    fieldDescriptor fd;
-    if (!InstanceKlass::cast(klass)->find_field(fieldname, signame, true, &fd)) {
-      warning("Field for option %s not found (in %s)", fieldName, declaringClass);
-      abort();
-      return;
-    }
-    oop value;
-    switch(optionValue->desc.type) {
-    case _boolean: {
-      jvalue jv;
-      jv.z = optionValue->boolean_value;
-      value = java_lang_boxing_object::create(T_BOOLEAN, &jv, THREAD);
-      break;
-    }
-    case _int: {
-      jvalue jv;
-      jv.i = optionValue->int_value;
-      value = java_lang_boxing_object::create(T_INT, &jv, THREAD);
-      break;
-    }
-    case _long: {
-      jvalue jv;
-      jv.j = optionValue->long_value;
-      value = java_lang_boxing_object::create(T_LONG, &jv, THREAD);
-      break;
-    }
-    case _float: {
-      jvalue jv;
-      jv.f = optionValue->float_value;
-      value = java_lang_boxing_object::create(T_FLOAT, &jv, THREAD);
-      break;
-    }
-    case _double: {
-      jvalue jv;
-      jv.d = optionValue->double_value;
-      value = java_lang_boxing_object::create(T_DOUBLE, &jv, THREAD);
-      break;
-    }
-    case _string:
-      value = java_lang_String::create_from_str(optionValue->string_value, THREAD)();
-      break;
-    default:
-      ShouldNotReachHere();
-    }
-
-    oop optionValueOop = klass->java_mirror()->obj_field(fd.offset());
-
-    if (optionValueOop == NULL) {
-      warning("Option field was null, can not set %s", fieldName);
-      abort();
-      return;
-    }
-
-    if (!InstanceKlass::cast(optionValueOop->klass())->find_field(vmSymbols::value_name(), vmSymbols::object_signature(), false, &fd)) {
-      warning("'Object value' field not found in option class %s, can not set option %s", fieldClass, fieldName);
-      abort();
-      return;
-    }
-
-    optionValueOop->obj_field_put(fd.offset(), value);
-  }
-};
-
-void JVMCIRuntime::set_options(OptionValuesTable* options, TRAPS) {
-  ensure_jvmci_class_loader_is_initialized();
-  {
-    ResourceMark rm;
-    SetOptionClosure closure(THREAD);
-    options->for_each(&closure);
-    if (closure.is_aborted()) {
-      vm_abort(false);
-    }
-  }
-  OptionValue* printFlags = options->get(PRINT_FLAGS_ARG);
-  if (printFlags != NULL && printFlags->boolean_value) {
-    print_flags_helper(CHECK_ABORT);
-  }
-}
-
-void JVMCIRuntime::print_flags_helper(TRAPS) {
-  // TODO(gd) write this in C++?
-  HandleMark hm(THREAD);
-  TempNewSymbol name = SymbolTable::new_symbol("jdk/internal/jvmci/hotspot/HotSpotOptions", CHECK_ABORT);
-  KlassHandle hotSpotOptionsClass = load_required_class(name);
-  TempNewSymbol setOption = SymbolTable::new_symbol("printFlags", CHECK);
-  JavaValue result(T_VOID);
-  JavaCallArguments args;
-  JavaCalls::call_static(&result, hotSpotOptionsClass, setOption, vmSymbols::void_method_signature(), &args, CHECK);
+void JVMCIRuntime::save_options(const char* options) {
+  assert(options != NULL, "npe");
+  assert(_options == NULL, "cannot reassign JVMCI options");
+  _options = options;
 }
 
 Handle JVMCIRuntime::create_Service(const char* name, TRAPS) {

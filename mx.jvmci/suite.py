@@ -110,10 +110,19 @@ suite = {
       "workingSets" : "API,JVMCI",
     },
 
+    "jdk.internal.jvmci.inittimer" : {
+      "subDir" : "jvmci",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "jdk.internal.jvmci.service",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI",
+    },
+
     "jdk.internal.jvmci.options" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "checkstyle" : "jdk.internal.jvmci.service",
+      "dependencies" : ["jdk.internal.jvmci.inittimer"],
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",
     },
@@ -341,6 +350,7 @@ suite = {
       "subDir" : "jvmci",
       "sourcesPath" : "build/jvmci-api.src.zip",
       "dependencies" : [
+        "jdk.internal.jvmci.inittimer",
         "jdk.internal.jvmci.runtime",
         "jdk.internal.jvmci.common",
         "jdk.internal.jvmci.compiler",

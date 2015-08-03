@@ -28,7 +28,6 @@
 #include "memory/allocation.hpp"
 #include "runtime/arguments.hpp"
 #include "runtime/deoptimization.hpp"
-#include "jvmci/jvmciOptions.hpp"
 
 class ParseClosure : public StackObj {
   int _lineNo;
@@ -59,18 +58,9 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
  private:
   static jobject _HotSpotJVMCIRuntime_instance;
   static bool _HotSpotJVMCIRuntime_initialized;
+  static const char* _options;
 
   static bool _shutdown_called;
-
-  /**
-   * Loads default option value overrides from a <jre_home>/lib/jvmci.options if it exists. Each
-   * line in this file must have the format of a JVMCI command line option without the
-   * leading "-G:" prefix. These option values are set prior to processing of any JVMCI
-   * options present on the command line.
-   */
-  static void parse_jvmci_options_file(OptionValuesTable* options);
-
-  static void print_flags_helper(TRAPS);
 
   /**
    * Instantiates a service object, calls its default constructor and returns it.
@@ -87,14 +77,10 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
   static void parse_properties(SystemProperty** plist);
 
   /**
-   * Parses the JVMCI specific VM options that were presented by the launcher and sets
-   * the relevants Java fields.
+   * Saves the value of the "jvmci.options" system property for processing
+   * when JVMCI is initialized.
    */
-  static OptionValuesTable* parse_arguments();
-
-  static bool parse_argument(OptionValuesTable* options, const char* arg);
-
-  static void set_options(OptionValuesTable* options, TRAPS);
+  static void save_options(const char* options);
 
   /**
    * Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
@@ -119,7 +105,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
     return _HotSpotJVMCIRuntime_instance;
   }
 
-  static Handle callInitializer(const char* className, const char* methodName, const char* returnType);
+  static Handle callInitializer(const char* className, const char* methodName, const char* returnType, JavaCallArguments* args = NULL);
 
   /**
    * Trigger initialization of HotSpotJVMCIRuntime through JVMCI.getRuntime()

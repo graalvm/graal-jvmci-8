@@ -24,6 +24,7 @@ package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.common.UnsafeAccess.*;
 import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.inittimer.*;
 import sun.misc.*;
 
 /**

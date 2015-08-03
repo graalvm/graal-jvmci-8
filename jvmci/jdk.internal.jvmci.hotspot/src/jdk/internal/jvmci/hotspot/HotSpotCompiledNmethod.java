@@ -23,6 +23,7 @@
 package jdk.internal.jvmci.hotspot;
 
 import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.inittimer.*;
 
 /**
  * {@link HotSpotCompiledCode} destined for installation as an nmethod.

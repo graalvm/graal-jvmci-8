@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,12 +20,21 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.options;
-
-import java.util.*;
+package jdk.internal.jvmci.inittimer;
 
 /**
- * A {@linkplain ServiceLoader service} for accessing a set of {@link OptionDescriptor}s.
+ * Used to suppress <a href="http://findbugs.sourceforge.net">FindBugs</a> warnings.
  */
-public interface Options extends Iterable<OptionDescriptor> {
+public @interface SuppressFBWarnings {
+    /**
+     * The set of FindBugs <a
+     * href="http://findbugs.sourceforge.net/bugDescriptions.html">warnings</a> that are to be
+     * suppressed in annotated element. The value can be a bug category, kind or pattern.
+     */
+    String[] value();
+
+    /**
+     * Reason why the warning is suppressed.
+     */
+    String justification();
 }

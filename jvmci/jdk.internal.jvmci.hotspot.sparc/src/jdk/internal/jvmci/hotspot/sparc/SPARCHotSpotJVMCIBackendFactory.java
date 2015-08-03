@@ -22,16 +22,17 @@
  */
 package jdk.internal.jvmci.hotspot.sparc;
 
-import static jdk.internal.jvmci.hotspot.InitTimer.*;
+import static jdk.internal.jvmci.inittimer.InitTimer.*;
 
 import java.util.*;
 
 import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.hotspot.*;
+import jdk.internal.jvmci.inittimer.*;
 import jdk.internal.jvmci.runtime.*;
 import jdk.internal.jvmci.service.*;
 import jdk.internal.jvmci.sparc.*;
-import jdk.internal.jvmci.sparc.SPARC.*;
+import jdk.internal.jvmci.sparc.SPARC.CPUFeature;
 
 @ServiceProvider(HotSpotJVMCIBackendFactory.class)
 public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFactory {

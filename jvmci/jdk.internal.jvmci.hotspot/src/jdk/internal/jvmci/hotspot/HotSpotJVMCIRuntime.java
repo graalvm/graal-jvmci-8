@@ -23,12 +23,13 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.common.UnsafeAccess.*;
-import static jdk.internal.jvmci.hotspot.InitTimer.*;
+import static jdk.internal.jvmci.inittimer.InitTimer.*;
 
 import java.util.*;
 
 import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.common.*;
+import jdk.internal.jvmci.inittimer.*;
 import jdk.internal.jvmci.meta.*;
 import jdk.internal.jvmci.options.*;
 import jdk.internal.jvmci.runtime.*;

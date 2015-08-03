@@ -3395,13 +3395,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   jint parse_result = Arguments::parse(args);
   if (parse_result != JNI_OK) return parse_result;
 
-#if INCLUDE_JVMCI
-  OptionValuesTable* options = JVMCIRuntime::parse_arguments();
-  if (options == NULL) {
-    return JNI_ERR;
-  }
-#endif
-
   os::init_before_ergo();
 
   jint ergo_result = Arguments::apply_ergo();
@@ -3710,8 +3703,10 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
 #if INCLUDE_JVMCI
-  JVMCIRuntime::set_options(options, main_thread);
-  delete options;
+  const char* jvmciOptions = Arguments::PropertyList_get_value(Arguments::system_properties(), "jvmci.options");
+  if (jvmciOptions != NULL) {
+    JVMCIRuntime::save_options(jvmciOptions);
+  }
 #endif
 
   // initialize compiler(s)

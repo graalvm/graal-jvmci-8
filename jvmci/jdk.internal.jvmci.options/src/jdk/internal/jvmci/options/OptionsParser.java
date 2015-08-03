@@ -22,23 +22,78 @@
  */
 package jdk.internal.jvmci.options;
 
+import static jdk.internal.jvmci.inittimer.InitTimer.*;
+
 import java.util.*;
 
-public class OptionUtils {
+import jdk.internal.jvmci.inittimer.*;
+
+/**
+ *
+ * @author dsimon
+ *
+ */
+public class OptionsParser {
+
+    /**
+     * A service for looking up {@link OptionDescriptor}s.
+     */
+    public interface OptionDescriptorsProvider {
+        /**
+         * Gets the {@link OptionDescriptor} matching a given option {@linkplain Option#name() name}
+         * or null if no option of that name is provided by this object.
+         */
+        OptionDescriptor get(String name);
+    }
 
     public interface OptionConsumer {
         void set(OptionDescriptor desc, Object value);
     }
 
     /**
+     * Finds the index of the next character in {@code s} starting at {@code from} that is a space
+     * iff {@code spaces == true}.
+     */
+    private static int skip(String s, int from, boolean spaces) {
+        for (int i = from; i < s.length(); i++) {
+            if ((s.charAt(i) != ' ') == spaces) {
+                return i;
+            }
+        }
+        return s.length();
+    }
+
+    /**
+     * Parses the set of space separated JVMCI options in {@code options}.
+     *
+     * Called from VM. This method has an object return type to allow it to be called with a VM
+     * utility function used to call other static initialization methods.
+     *
+     * @param options space separated set of JVMCI options to parse
+     */
+    public static Boolean parseOptionsFromVM(String options) {
+        try (InitTimer t = timer("ParseOptions")) {
+            JVMCIJarsOptionDescriptorsProvider odp = new JVMCIJarsOptionDescriptorsProvider();
+            assert options != null;
+            int index = skip(options, 0, true);
+            while (index < options.length()) {
+                int end = skip(options, index, false);
+                String option = options.substring(index, end);
+                parseOption(option, null, odp);
+                index = skip(options, end, true);
+            }
+        }
+        return Boolean.TRUE;
+    }
+
+    /**
      * Parses a given option value specification.
      *
      * @param option the specification of an option and its value
-     * @param setter the object to notify of the parsed option and value.
+     * @param setter the object to notify of the parsed option and value
+     * @throws IllegalArgumentException if there's a problem parsing {@code option}
      */
-    public static void parseOption(String option, OptionConsumer setter) {
-        SortedMap<String, OptionDescriptor> options = OptionsLoader.options;
-        Objects.requireNonNull(setter);
+    public static void parseOption(String option, OptionConsumer setter, OptionDescriptorsProvider odp) {
         if (option.length() == 0) {
             return;
         }
@@ -62,9 +117,26 @@ public class OptionUtils {
             }
         }
 
-        OptionDescriptor desc = options.get(optionName);
+        OptionDescriptor desc = odp == null ? OptionsLoader.options.get(optionName) : odp.get(optionName);
+        if (desc == null && value != null) {
+            int index = option.indexOf('=');
+            if (index != -1) {
+                optionName = option.substring(1, index);
+                desc = odp == null ? OptionsLoader.options.get(optionName) : odp.get(optionName);
+            }
+        }
         if (desc == null) {
-            throw new IllegalArgumentException("Option '" + optionName + "' not found");
+            List<OptionDescriptor> matches = fuzzyMatch(optionName);
+            Formatter msg = new Formatter();
+            msg.format("Could not find option %s", optionName);
+            if (!matches.isEmpty()) {
+                msg.format("%nDid you mean one of the following?");
+                for (OptionDescriptor match : matches) {
+                    boolean isBoolean = match.getType() == Boolean.class;
+                    msg.format("%n    %s%s%s", isBoolean ? "(+/-)" : "", match.getName(), isBoolean ? "" : "=<value>");
+                }
+            }
+            throw new IllegalArgumentException(msg.toString());
         }
 
         Class<?> optionType = desc.getType();
@@ -96,8 +168,11 @@ public class OptionUtils {
                 throw new IllegalArgumentException("Non-boolean option '" + optionName + "' can not use +/- prefix. Use " + optionName + "=<value> format");
             }
         }
-
-        setter.set(desc, value);
+        if (setter == null) {
+            desc.getOptionValue().setValue(value);
+        } else {
+            setter.set(desc, value);
+        }
     }
 
     private static long parseLong(String v) {
@@ -178,5 +253,39 @@ public class OptionUtils {
         }
 
         System.exit(0);
+    }
+
+    /**
+     * Compute string similarity based on Dice's coefficient.
+     *
+     * Ported from str_similar() in globals.cpp.
+     */
+    static float stringSimiliarity(String str1, String str2) {
+        int hit = 0;
+        for (int i = 0; i < str1.length() - 1; ++i) {
+            for (int j = 0; j < str2.length() - 1; ++j) {
+                if ((str1.charAt(i) == str2.charAt(j)) && (str1.charAt(i + 1) == str2.charAt(j + 1))) {
+                    ++hit;
+                    break;
+                }
+            }
+        }
+        return 2.0f * hit / (str1.length() + str2.length());
+    }
+
+    private static final float FUZZY_MATCH_THRESHOLD = 0.7F;
+
+    /**
+     * Returns the set of options that fuzzy match a given option name.
+     */
+    private static List<OptionDescriptor> fuzzyMatch(String optionName) {
+        List<OptionDescriptor> matches = new ArrayList<>();
+        for (Map.Entry<String, OptionDescriptor> e : OptionsLoader.options.entrySet()) {
+            float score = stringSimiliarity(e.getKey(), optionName);
+            if (score >= FUZZY_MATCH_THRESHOLD) {
+                matches.add(e.getValue());
+            }
+        }
+        return matches;
     }
 }

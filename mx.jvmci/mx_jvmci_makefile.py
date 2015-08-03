@@ -186,18 +186,17 @@ define process_options
     $(eval options := $(1)/$(OPTIONS_INF))
     $(eval services := $(1)/META-INF/services)
     $(QUIETLY) test -d $(services) || mkdir -p $(services)
-    $(QUIETLY) test ! -d $(options) || (cd $(options) && for i in $$(ls); do echo $${i}_Options >> $(abspath $(services))/jdk.internal.jvmci.options.Options; done)
+    $(QUIETLY) test ! -d $(options) || (cd $(options) && for i in $$(ls); do echo $${i}_OptionDescriptors >> $(abspath $(services))/jdk.internal.jvmci.options.Options; done)
 endef
 
-# Extracts META-INF/jvmci.services and META-INF/jvmci.options of a JAR file into a given directory
+# Extracts META-INF/jvmci.services from a JAR file into a given directory
 # Arguments:
 #  1: JAR file to extract
 #  2: target directory (which already exists)
 define extract
     $(eval TMP := $(shell mktemp -d $(TARGET)/tmp_XXXXX))
     $(QUIETLY) cd $(TMP) && $(JAR) xf $(abspath $(1)) && \\
-        ((test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2))) && \\
-         (test ! -d .$(OPTIONS_INF) || cp -r .$(OPTIONS_INF) $(abspath $(2))));
+         (test ! -d .$(SERVICES_INF) || cp -r .$(SERVICES_INF) $(abspath $(2)));
     $(QUIETLY) rm -r $(TMP);
     $(QUIETLY) cp $(1) $(2)
 endef
@@ -220,11 +219,11 @@ define build_and_jar
     $(QUIETLY) rm -r $(TMP)
 endef
 
-# Verifies that make/defs.make contains an appropriate line for each JVMCI service or option
-# and that only existing JVMCI services and options are exported.
+# Verifies that make/defs.make contains an appropriate line for each JVMCI service
+# and that only existing JVMCI services are exported.
 # Arguments:
-#  1: list of service or option files
-#  2: variable name for directory of service or option files
+#  1: list of service files
+#  2: variable name for directory of service files
 define verify_defs_make
     $(eval defs := make/defs.make)
     $(eval uncondPattern := EXPORT_LIST += $$$$($(2))/)
@@ -243,7 +242,6 @@ all: default
 
 export: all
 \t$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.services/*)),EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)
-\t$(call verify_defs_make,$(notdir $(wildcard $(SHARED_DIR)/jvmci.options/*)),EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)
 .PHONY: export
 
 clean:

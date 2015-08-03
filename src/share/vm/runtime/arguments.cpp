@@ -98,10 +98,6 @@ char**  Arguments::_jvm_flags_array             = NULL;
 int     Arguments::_num_jvm_flags               = 0;
 char**  Arguments::_jvm_args_array              = NULL;
 int     Arguments::_num_jvm_args                = 0;
-#if INCLUDE_JVMCI
-char**  Arguments::_jvmci_args_array              = NULL;
-int     Arguments::_num_jvmci_args                = 0;
-#endif
 char*  Arguments::_java_command                 = NULL;
 SystemProperty* Arguments::_system_properties   = NULL;
 const char*  Arguments::_gc_log_filename        = NULL;
@@ -817,11 +813,6 @@ void Arguments::build_jvm_args(const char* arg) {
 void Arguments::build_jvm_flags(const char* arg) {
   add_string(&_jvm_flags_array, &_num_jvm_flags, arg);
 }
-#if INCLUDE_JVMCI
-void Arguments::add_jvmci_arg(const char* arg) {
-  add_string(&_jvmci_args_array, &_num_jvmci_args, arg);
-}
-#endif
 
 // utility function to return a string that concatenates all
 // strings in a given char** array
@@ -3389,17 +3380,6 @@ jint Arguments::parse_each_vm_init_arg(const JavaVMInitArgs* args,
         }
       }
     }
-#if INCLUDE_JVMCI
-    else if (match_option(option, "-G:", &tail)) { // -G:XXX
-      // Option for the JVMCI compiler.
-      if (PrintVMOptions) {
-        tty->print_cr("JVMCI option %s", tail);
-      }
-      Arguments::add_jvmci_arg(tail);
-
-    // Unknown option
-    }
-#endif
     else if (is_bad_option(option, args->ignoreUnrecognized)) {
       return JNI_ERR;
     }

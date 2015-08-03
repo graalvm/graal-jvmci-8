@@ -1058,6 +1058,24 @@ def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
     exe = join(jdk, 'bin', mx.exe_suffix('java'))
     pfx = _vm_prefix.split() if _vm_prefix is not None else []
 
+    # Support for legacy -G: options
+    jvmciArgs = []
+    nonJvmciArgs = []
+    existingJvmciOptionsProperty = None
+    for a in args:
+        if a.startswith('-G:'):
+            jvmciArg = a[len('-G:'):]
+            assert ' ' not in jvmciArg, 'space not supported in JVMCI arg: ' + a
+            jvmciArgs.append(a[len('-G:'):])
+        else:
+            if a.startswith('-Djvmci.options=') or a == '-Djvmci.options':
+                existingJvmciOptionsProperty = a
+            nonJvmciArgs.append(a)
+    if jvmciArgs:
+        if existingJvmciOptionsProperty:
+            mx.abort('defining jvmci.option property is incompatible with defining one or more -G: options: ' + existingJvmciOptionsProperty)
+        args = ['-Djvmci.options=' + ' '.join(jvmciArgs)] + nonJvmciArgs
+
     if '-version' in args:
         ignoredArgs = args[args.index('-version') + 1:]
         if  len(ignoredArgs) > 0:
@@ -1696,9 +1714,9 @@ class JVMCIArchiveParticipant:
             # jdk.internal.jvmci.options.Options service created by
             # jdk.internal.jvmci.options.processor.OptionProcessor.
             optionsOwner = arcname[len('META-INF/jvmci.options/'):]
-            provider = optionsOwner + '_Options'
+            provider = optionsOwner + '_OptionDescriptors'
             self.expectedOptionsProviders.add(provider.replace('.', '/') + '.class')
-            self.services.setdefault('jdk.internal.jvmci.options.Options', []).append(provider)
+            self.services.setdefault('jdk.internal.jvmci.options.OptionDescriptors', []).append(provider)
         return False
 
     def __addsrc__(self, arcname, contents):

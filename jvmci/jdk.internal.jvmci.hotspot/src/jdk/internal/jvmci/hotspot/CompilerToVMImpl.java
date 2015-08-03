@@ -23,9 +23,10 @@
 
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.InitTimer.*;
+import static jdk.internal.jvmci.inittimer.InitTimer.*;
 import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.common.*;
+import jdk.internal.jvmci.inittimer.*;
 import jdk.internal.jvmci.meta.*;
 
 /**

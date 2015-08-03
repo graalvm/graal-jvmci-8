@@ -26,6 +26,7 @@ import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
 
 import java.lang.invoke.*;
 
+import jdk.internal.jvmci.inittimer.*;
 import jdk.internal.jvmci.meta.*;
 
 /**

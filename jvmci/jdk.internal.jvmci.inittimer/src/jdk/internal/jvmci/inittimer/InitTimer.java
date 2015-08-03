@@ -20,11 +20,12 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.hotspot;
+package jdk.internal.jvmci.inittimer;
 
 /**
- * A facility for timing a step in the runtime initialization sequence. This must be independent
- * from all other JVMCI code so as to not perturb the initialization sequence.
+ * A facility for timing a step in the runtime initialization sequence. This is independent from all
+ * other JVMCI code so as to not perturb the initialization sequence. It is enabled by setting the
+ * {@code "jvmci.inittimer"} system property to {@code "true"}.
  */
 public final class InitTimer implements AutoCloseable {
     final String name;
@@ -54,10 +55,9 @@ public final class InitTimer implements AutoCloseable {
     }
 
     /**
-     * Specifies if initialization timing is enabled. This can only be set via a system property as
-     * the timing facility is used to time initialization of {@link HotSpotOptions}.
+     * Specifies if initialization timing is enabled.
      */
-    private static final boolean ENABLED = Boolean.getBoolean("jvmci.runtime.TimeInit");
+    private static final boolean ENABLED = Boolean.getBoolean("jvmci.inittimer") || Boolean.getBoolean("jvmci.runtime.TimeInit");
 
     public static int timerDepth = 0;
     public static final String SPACES = "                                            ";

@@ -348,7 +348,6 @@ EXPORT_JRE_LIB_DIR = $(EXPORT_JRE_DIR)/lib
 EXPORT_JRE_LIB_EXT_DIR = $(EXPORT_JRE_LIB_DIR)/ext
 EXPORT_JRE_LIB_JVMCI_DIR = $(EXPORT_JRE_LIB_DIR)/jvmci
 EXPORT_JRE_LIB_JVMCI_SERVICES_DIR = $(EXPORT_JRE_LIB_JVMCI_DIR)/services
-EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR = $(EXPORT_JRE_LIB_JVMCI_DIR)/options
 EXPORT_JRE_LIB_ARCH_DIR = $(EXPORT_JRE_LIB_DIR)/$(LIBARCH)
 
 # non-universal macosx builds need to appear universal
@@ -373,13 +372,6 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.H
 ifneq ("$(wildcard $(SHARED_DIR)/services/jdk.internal.jvmci.hotspot.events.EventProvider)","")
 CONDITIONAL_EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.events.EventProvider
 endif
-
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.compiler.Compiler
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotConstantPool
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotResolvedJavaFieldImpl
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_OPTIONS_DIR)/jdk.internal.jvmci.hotspot.HotSpotResolvedJavaMethodImpl
 
 # The use of CONDITIONAL_EXPORT_LIST is for the checking
 # done by verify_defs_make in jvmci.make
