@@ -159,6 +159,8 @@ void JVMCICompiler::print_compilation_timers() {
 
 void JVMCICompiler::compile_the_world() {
   HandleMark hm;
+  ResourceMark rm;
+  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
   JavaThread* THREAD = JavaThread::current();
   Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime();
   TempNewSymbol compileTheWorld = SymbolTable::new_symbol("compileTheWorld", CHECK_ABORT);
