@@ -29,11 +29,13 @@ import java.util.*;
 import jdk.internal.jvmci.inittimer.*;
 
 /**
- *
- * @author dsimon
- *
+ * This class contains methods for parsing JVMCI options and matching them against a set of
+ * {@link OptionDescriptors}. The {@link OptionDescriptors} are loaded from JVMCI jars, either
+ * {@linkplain JVMCIJarsOptionDescriptorsProvider directly} or via a {@link ServiceLoader}.
  */
 public class OptionsParser {
+
+    private static final OptionValue<Boolean> PrintFlags = new OptionValue<>(false);
 
     /**
      * A service for looking up {@link OptionDescriptor}s.
@@ -124,6 +126,9 @@ public class OptionsParser {
                 optionName = option.substring(1, index);
                 desc = odp == null ? OptionsLoader.options.get(optionName) : odp.get(optionName);
             }
+            if (desc == null && optionName.equals("PrintFlags")) {
+                desc = new OptionDescriptor("PrintFlags", Boolean.class, "Prints all JVMCI flags and exits", OptionsParser.class, "PrintFlags", PrintFlags);
+            }
         }
         if (desc == null) {
             List<OptionDescriptor> matches = fuzzyMatch(optionName);
@@ -172,6 +177,10 @@ public class OptionsParser {
             desc.getOptionValue().setValue(value);
         } else {
             setter.set(desc, value);
+        }
+
+        if (PrintFlags.getValue()) {
+            printFlags();
         }
     }
 
@@ -238,9 +247,9 @@ public class OptionsParser {
         return lines;
     }
 
-    public static void printFlags(SortedMap<String, OptionDescriptor> options, String prefix) {
-        System.out.println("[List of " + prefix + " options]");
-        SortedMap<String, OptionDescriptor> sortedOptions = options;
+    public static void printFlags() {
+        System.out.println("[List of JVMCI options]");
+        SortedMap<String, OptionDescriptor> sortedOptions = OptionsLoader.options;
         for (Map.Entry<String, OptionDescriptor> e : sortedOptions.entrySet()) {
             e.getKey();
             OptionDescriptor desc = e.getValue();
