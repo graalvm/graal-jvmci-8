@@ -574,13 +574,11 @@ def copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, obsoleteCheck):
+def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, obsoleteCheck):
 
     oldServices = os.listdir(servicesDir) if exists(servicesDir) else os.makedirs(servicesDir)
-    oldOptions = os.listdir(optionsDir) if exists(optionsDir) else os.makedirs(optionsDir)
 
     jvmciServices = {}
-    optionsFiles = []
     for jar in jvmciJars:
         if os.path.isfile(jar):
             with zipfile.ZipFile(jar) as zf:
@@ -594,17 +592,6 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, obsoleteChec
                                 line = line.strip()
                                 if line and line not in providers:
                                     providers.append(line)
-                    elif member.startswith('META-INF/jvmci.options/') and member != 'META-INF/jvmci.options/':
-                        filename = basename(member)
-                        assert filename != "", member
-                        targetpath = join(optionsDir, filename)
-                        optionsFiles.append(filename)
-                        with zf.open(member) as optionsFile, \
-                             file(targetpath, "wb") as target:
-                            if not obsoleteCheck:
-                                shutil.copyfileobj(optionsFile, target)
-                            if oldOptions and filename in oldOptions:
-                                oldOptions.remove(filename)
     for service, providers in jvmciServices.iteritems():
         if not obsoleteCheck:
             fd, tmp = tempfile.mkstemp(prefix=service)
@@ -619,22 +606,18 @@ def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, optionsDir, obsoleteChec
         if oldServices and service in oldServices:
             oldServices.remove(service)
 
-    if obsoleteCheck:
-        for d, files in [(servicesDir, oldServices), (optionsDir, oldOptions)]:
-            if files:
-                print 'These files in ' + d + ' look obsolete:\n  ' + '\n  '.join(files)
-                if  mx.is_interactive() and mx.ask_yes_no('Delete them', 'n'):
-                    for f in files:
-                        path = join(d, f)
-                        os.remove(path)
-                        mx.log('Deleted ' + path)
+    if obsoleteCheck and mx.is_interactive() and oldServices:
+        if mx.ask_yes_no('These files in ' + servicesDir + ' look obsolete:\n  ' + '\n  '.join(oldServices) + '\nDelete them', 'n'):
+            for f in oldServices:
+                path = join(servicesDir, f)
+                os.remove(path)
+                mx.log('Deleted ' + path)
 
 def _updateJVMCIFiles(jdkDir, obsoleteCheck=False):
     jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')
     jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.endswith('.jar')]
     jreJVMCIServicesDir = join(jreJVMCIDir, 'services')
-    jreJVMCIOptionsDir = join(jreJVMCIDir, 'options')
-    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreJVMCIServicesDir, jreJVMCIOptionsDir, obsoleteCheck)
+    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreJVMCIServicesDir, obsoleteCheck)
 
 def _installDistInJdks(deployableDist):
     """
