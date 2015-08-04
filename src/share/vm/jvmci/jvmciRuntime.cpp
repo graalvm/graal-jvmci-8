@@ -975,10 +975,17 @@ public:
 objArrayHandle JVMCIRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
   const char* home = Arguments::get_java_home();
   const char* serviceName = serviceKlass->external_name();
-  size_t path_len = strlen(home) + strlen("/lib/jvmci/services/") + strlen(serviceName) + 1;
-  char* path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
+  char* path;
   char sep = os::file_separator()[0];
-  sprintf(path, "%s%clib%cjvmci%cservices%c%s", home, sep, sep, sep, sep, serviceName);
+  if (JVMCIServicesDir == NULL) {
+    size_t path_len = strlen(home) + strlen("/lib/jvmci/services/") + strlen(serviceName) + 1;
+    path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
+    sprintf(path, "%s%clib%cjvmci%cservices%c%s", home, sep, sep, sep, sep, serviceName);
+  } else {
+    size_t path_len = strlen(JVMCIServicesDir) + strlen(serviceName) + 1;
+    path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
+    sprintf(path, "%s%c%s", JVMCIServicesDir, sep, serviceName);
+  }
   ServiceParseClosure closure;
   parse_lines(path, &closure, false);
 

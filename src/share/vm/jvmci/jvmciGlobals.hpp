@@ -52,6 +52,9 @@
   product(bool, UseJVMCIClassLoader, true,                                  \
           "Load JVMCI classes with separate class loader")                  \
                                                                             \
+  product(ccstr, JVMCIServicesDir, NULL,                                    \
+          "Alternate directory to use for JVMCI services")                  \
+                                                                            \
   COMPILERJVMCI_PRESENT(product(bool, BootstrapJVMCI, true,                 \
           "Bootstrap JVMCI before running Java main method"))               \
                                                                             \
@@ -67,7 +70,7 @@
   JVMCI_ONLY(product(bool, CodeInstallSafepointChecks, true,                \
           "Perform explicit safepoint checks while installing code"))       \
                                                                             \
-  NOT_COMPILER2(product_pd(intx, MaxVectorSize,                                \
+  NOT_COMPILER2(product_pd(intx, MaxVectorSize,                             \
           "Max vector size in bytes, "                                      \
           "actual size could be less depending on elements type"))          \
                                                                             \
