@@ -25,7 +25,7 @@ package jdk.internal.jvmci.meta;
 /**
  * Abstract base class for values.
  */
-public abstract class AbstractValue implements Value, KindProvider {
+public abstract class AbstractValue implements Value {
 
     public static final AllocatableValue ILLEGAL = Value.ILLEGAL;
 

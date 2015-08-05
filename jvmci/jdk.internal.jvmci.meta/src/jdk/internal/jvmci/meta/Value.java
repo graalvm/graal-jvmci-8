@@ -26,7 +26,7 @@ package jdk.internal.jvmci.meta;
  * Interface for values manipulated by the compiler. All values have a {@linkplain Kind kind} and
  * are immutable.
  */
-public interface Value extends KindProvider, TrustedInterface {
+public interface Value extends TrustedInterface {
 
     Value[] NO_VALUES = new Value[0];
 
@@ -49,6 +49,8 @@ public interface Value extends KindProvider, TrustedInterface {
             return other instanceof IllegalValue;
         }
     }
+
+    Kind getKind();
 
     LIRKind getLIRKind();
 
