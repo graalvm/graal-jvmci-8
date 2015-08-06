@@ -36,6 +36,9 @@
 #ifdef COMPILER1
 #include "c1/c1_Defs.hpp"
 #endif
+#ifdef SPARC
+#include "vmreg_sparc.inline.hpp"
+#endif
 
 // OopMapStream
 
@@ -445,7 +448,9 @@ void OopMapSet::all_do(const frame *fr, const RegisterMap *reg_map,
       } else if ( omv.type() == OopMapValue::narrowoop_value ) {
         narrowOop *nl = (narrowOop*)loc;
 #ifndef VM_LITTLE_ENDIAN
-        if (!omv.reg()->is_stack()) {
+        VMReg vmReg = omv.reg();
+        // Don't do this on SPARC float registers as they can be individually addressed
+        if (!vmReg->is_stack() SPARC_ONLY(&& !vmReg->is_FloatRegister())) {
           // compressed oops in registers only take up 4 bytes of an
           // 8 byte register but they are in the wrong part of the
           // word so adjust loc to point at the right place.
