@@ -53,11 +53,11 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
                 // Special treatment for double precision
                 // TODO: This is wasteful it uses only half of the registers as float.
                 if (kind == Kind.Double) {
-                    if (reg.name.startsWith("d")) {
+                    if (reg.getRegisterCategory().equals(FPUd)) {
                         list.add(reg);
                     }
                 } else if (kind == Kind.Float) {
-                    if (reg.name.startsWith("f")) {
+                    if (reg.getRegisterCategory().equals(FPUs)) {
                         list.add(reg);
                     }
                 } else {
