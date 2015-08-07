@@ -44,7 +44,7 @@ void ThreadLocalAllocBuffer::clear_before_allocation() {
   _slow_refill_waste += (unsigned)remaining();
   // In debug mode we expect the storage above top to be uninitialized
   // or filled with a padding object.
-  assert(!ZapUnusedHeapArea || top() == NULL || *(intptr_t*)top() != 0, "overzeroing detected");
+  assert(!ZapUnusedHeapArea || VM_Version::reserve_for_allocation_prefetch() > 0 || top() == NULL || *(intptr_t*)top() != 0, "overzeroing detected");
   make_parsable(true);   // also retire the TLAB
 }
 
