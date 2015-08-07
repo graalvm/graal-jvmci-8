@@ -1,6 +1,20 @@
 suite = {
-  "mxversion" : "5.1",
+  "mxversion" : "5.2.2",
   "name" : "jvmci",
+  "url" : "http://openjdk.java.net/projects/graal",
+  "developer" : {
+    "name" : "Truffle and Graal developers",
+    "email" : "graal-dev@openjdk.java.net",
+    "organization" : "Graal",
+    "organizationUrl" : "http://openjdk.java.net/projects/graal",
+  },
+  "repositories" : {
+    "lafo-snapshots" : {
+      "url" : "http://lafo.ssw.uni-linz.ac.at/nexus/content/repositories/snapshots",
+      "licenses" : ["GPLv2-CPE"]
+    },
+  },
+  "defaultLicense" : "GPLv2-CPE",
 
     # ------------- Libraries -------------
 
@@ -397,6 +411,7 @@ suite = {
       "distDependencies" : [
         "JVMCI_API",
       ],
+      "exclude" : ["mx:JUNIT"],
     },
 
     "JVMCI_OPTIONS_PROCESSOR" : {
