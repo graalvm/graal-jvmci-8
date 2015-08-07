@@ -11,9 +11,17 @@ suite = {
   "repositories" : {
     "lafo-snapshots" : {
       "url" : "http://lafo.ssw.uni-linz.ac.at/nexus/content/repositories/snapshots",
-      "licenses" : ["GPLv2-CPE"]
+      "licenses" : ["GPLv2-CPE", "UPL"]
     },
   },
+
+  "licenses" : {
+    "UPL" : {
+      "name" : "Universal Permissive License, Version 1.0",
+      "url" : "http://opensource.org/licenses/UPL",
+    }
+  },
+
   "defaultLicense" : "GPLv2-CPE",
 
     # ------------- Libraries -------------
