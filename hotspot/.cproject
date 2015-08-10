@@ -18,7 +18,7 @@
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.305678577" name="/" resourcePath="">
 						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1866612258" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.base.2075405295" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-							<builder arguments="${workspace_loc:/hotspot}/../mxtool/mx build --no-java" autoBuildTarget="" buildPath="${workspace_loc:/hotspot}/.." cleanBuildTarget="clean" command="bash" enableAutoBuild="true" enableCleanBuild="false" enabledIncrementalBuild="false" id="cdt.managedbuild.target.gnu.builder.base.81453037" incrementalBuildTarget="jvmg1" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base">
+							<builder arguments="Run this in shell: mx build --no-java" autoBuildTarget="" buildPath="${workspace_loc:/hotspot}/.." cleanBuildTarget="clean" command="echo" enableAutoBuild="true" enableCleanBuild="false" enabledIncrementalBuild="false" id="cdt.managedbuild.target.gnu.builder.base.81453037" incrementalBuildTarget="jvmg1" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base">
 								<outputEntries>
 									<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>
 								</outputEntries>
@@ -589,9 +589,6 @@
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004;cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004.;cdt.managedbuild.tool.gnu.cpp.compiler.base.501581878;cdt.managedbuild.tool.gnu.cpp.compiler.input.1552002453">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004.562670952;cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004.562670952.;cdt.managedbuild.tool.gnu.c.compiler.base.360408773;cdt.managedbuild.tool.gnu.c.compiler.input.1496179991">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.solaris.base.945602881;cdt.managedbuild.toolchain.gnu.solaris.base.945602881.388217325;cdt.managedbuild.tool.gnu.solaris.cpp.compiler.base.377383651;cdt.managedbuild.tool.gnu.cpp.compiler.input.103897085">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileCPP"/>
 		</scannerConfigBuildInfo>
@@ -623,9 +620,6 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.1958236162;cdt.managedbuild.toolchain.gnu.solaris.base.945602881.1958236162.;cdt.managedbuild.tool.gnu.cpp.compiler.base.677873708;cdt.managedbuild.tool.gnu.cpp.compiler.input.429177901">
-			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
-		</scannerConfigBuildInfo>
-		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004.562670952;cdt.managedbuild.toolchain.gnu.solaris.base.945602881.2116626004.562670952.;cdt.managedbuild.tool.gnu.cpp.compiler.base.1356687693;cdt.managedbuild.tool.gnu.cpp.compiler.input.1780717993">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="cdt.managedbuild.toolchain.gnu.solaris.base.945602881.500153051;cdt.managedbuild.toolchain.gnu.solaris.base.945602881.500153051.;cdt.managedbuild.tool.gnu.cpp.compiler.base.1920567990;cdt.managedbuild.tool.gnu.cpp.compiler.input.1463421641">
