@@ -1,5 +1,5 @@
 suite = {
-  "mxversion" : "5.2.2",
+  "mxversion" : "5.3.3",
   "name" : "jvmci",
   "url" : "http://openjdk.java.net/projects/graal",
   "developer" : {

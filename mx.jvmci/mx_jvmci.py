@@ -909,8 +909,12 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 if root == join(_suite.dir, 'src', 'share'):
                     dirnames.remove('tools')
                 for f in (join(root, name) for name in files):
-                    if len(f) != 0 and os.path.getmtime(f) > newestOutput:
-                        return (True, 'out of date (witness: {})'.format(f))
+                    ts = mx.TimeStampFile(f)
+                    if newestOutput:
+                        if not newestOutput.exists():
+                            return (True, '{} does not exist'.format(newestOutput))
+                        if ts.isNewerThan(newestOutput):
+                            return (True, '{} is newer than {}'.format(ts, newestOutput))
         return (False, None)
 
     def buildForbidden(self):
