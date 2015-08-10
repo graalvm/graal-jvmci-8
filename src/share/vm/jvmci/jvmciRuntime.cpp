@@ -640,6 +640,7 @@ JVM_END
 JVM_ENTRY(jobject, JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass serviceClass))
   HandleMark hm;
   ResourceMark rm;
+  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
   KlassHandle serviceKlass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(serviceClass)));
   return JNIHandles::make_local(THREAD, JVMCIRuntime::get_service_impls(serviceKlass, THREAD)());
 JVM_END
