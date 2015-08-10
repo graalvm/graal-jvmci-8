@@ -55,10 +55,10 @@ public class CompilerToVMImpl implements CompilerToVM {
     public native byte[] getBytecode(long metaspaceMethod);
 
     @Override
-    public native int exceptionTableLength(long metaspaceMethod);
+    public native int getExceptionTableLength(long metaspaceMethod);
 
     @Override
-    public native long exceptionTableStart(long metaspaceMethod);
+    public native long getExceptionTableStart(long metaspaceMethod);
 
     @Override
     public native boolean hasBalancedMonitors(long metaspaceMethod);

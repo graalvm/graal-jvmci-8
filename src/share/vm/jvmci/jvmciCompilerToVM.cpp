@@ -157,13 +157,13 @@ C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jlong metaspace_method)
   return (jbyteArray) JNIHandles::make_local(THREAD, reconstituted_code);
 C2V_END
 
-C2V_VMENTRY(jint, exceptionTableLength, (JNIEnv *, jobject, jlong metaspace_method))
+C2V_VMENTRY(jint, getExceptionTableLength, (JNIEnv *, jobject, jlong metaspace_method))
   ResourceMark rm;
   methodHandle method = asMethod(metaspace_method);
   return method->exception_table_length();
 C2V_END
 
-C2V_VMENTRY(jlong, exceptionTableStart, (JNIEnv *, jobject, jlong metaspace_method))
+C2V_VMENTRY(jlong, getExceptionTableStart, (JNIEnv *, jobject, jlong metaspace_method))
   ResourceMark rm;
   methodHandle method = asMethod(metaspace_method);
   assert(method->exception_table_length() != 0, "should be handled in Java code");
@@ -1057,8 +1057,8 @@ C2V_END
 
 JNINativeMethod CompilerToVM_methods[] = {
   {CC"getBytecode",                                  CC"("METASPACE_METHOD")[B",                                               FN_PTR(getBytecode)},
-  {CC"exceptionTableStart",                          CC"("METASPACE_METHOD")J",                                                FN_PTR(exceptionTableStart)},
-  {CC"exceptionTableLength",                         CC"("METASPACE_METHOD")I",                                                FN_PTR(exceptionTableLength)},
+  {CC"getExceptionTableStart",                       CC"("METASPACE_METHOD")J",                                                FN_PTR(getExceptionTableStart)},
+  {CC"getExceptionTableLength",                      CC"("METASPACE_METHOD")I",                                                FN_PTR(getExceptionTableLength)},
   {CC"hasBalancedMonitors",                          CC"("METASPACE_METHOD")Z",                                                FN_PTR(hasBalancedMonitors)},
   {CC"findUniqueConcreteMethod",                     CC"("METASPACE_KLASS METASPACE_METHOD")"METASPACE_METHOD,                 FN_PTR(findUniqueConcreteMethod)},
   {CC"getKlassImplementor",                          CC"("METASPACE_KLASS")"METASPACE_KLASS,                                   FN_PTR(getKlassImplementor)},

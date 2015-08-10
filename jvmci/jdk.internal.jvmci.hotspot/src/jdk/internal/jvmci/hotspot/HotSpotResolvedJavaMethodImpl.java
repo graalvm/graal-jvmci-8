@@ -215,9 +215,9 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
         }
 
         HotSpotVMConfig config = runtime().getConfig();
-        final int exceptionTableLength = runtime().getCompilerToVM().exceptionTableLength(metaspaceMethod);
+        final int exceptionTableLength = runtime().getCompilerToVM().getExceptionTableLength(metaspaceMethod);
         ExceptionHandler[] handlers = new ExceptionHandler[exceptionTableLength];
-        long exceptionTableElement = runtime().getCompilerToVM().exceptionTableStart(metaspaceMethod);
+        long exceptionTableElement = runtime().getCompilerToVM().getExceptionTableStart(metaspaceMethod);
 
         for (int i = 0; i < exceptionTableLength; i++) {
             final int startPc = unsafe.getChar(exceptionTableElement + config.exceptionTableElementStartPcOffset);

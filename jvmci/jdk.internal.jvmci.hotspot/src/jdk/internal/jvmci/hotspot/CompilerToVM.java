@@ -41,9 +41,33 @@ public interface CompilerToVM {
      */
     byte[] getBytecode(long metaspaceMethod);
 
-    int exceptionTableLength(long metaspaceMethod);
+    /**
+     * Gets the number of entries in the data structure describing the exception handlers for a
+     * given method.
+     *
+     * @param metaspaceMethod the metaspace Method object
+     * @return the number of entries in the exception handler table for {@code metaspaceMethod}
+     */
+    int getExceptionTableLength(long metaspaceMethod);
 
-    long exceptionTableStart(long metaspaceMethod);
+    /**
+     * Gets the address of the first entry in the exception handler table for a given method. Each
+     * entry is a {@code ExceptionTableElement} native object and is described by these fields:
+     *
+     * <ul>
+     * <li>{@link HotSpotVMConfig#exceptionTableElementSize}</li>
+     * <li>{@link HotSpotVMConfig#exceptionTableElementStartPcOffset}</li>
+     * <li>{@link HotSpotVMConfig#exceptionTableElementEndPcOffset}</li>
+     * <li>{@link HotSpotVMConfig#exceptionTableElementHandlerPcOffset}</li>
+     * <li>{@link HotSpotVMConfig#exceptionTableElementCatchTypeIndexOffset}
+     * </ul>
+     *
+     * The behavior of this method is undefined if {@link #getExceptionTableLength(long)} returns 0 for
+     * {@code metaspaceMethod}.
+     *
+     * @param metaspaceMethod the metaspace Method object
+     */
+    long getExceptionTableStart(long metaspaceMethod);
 
     /**
      * Determines if a given metaspace Method object has balanced monitors.
