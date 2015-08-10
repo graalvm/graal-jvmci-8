@@ -62,8 +62,8 @@ public interface CompilerToVM {
      * <li>{@link HotSpotVMConfig#exceptionTableElementCatchTypeIndexOffset}
      * </ul>
      *
-     * The behavior of this method is undefined if {@link #getExceptionTableLength(long)} returns 0 for
-     * {@code metaspaceMethod}.
+     * The behavior of this method is undefined if {@link #getExceptionTableLength(long)} returns 0
+     * for {@code metaspaceMethod}.
      *
      * @param metaspaceMethod the metaspace Method object
      */
@@ -116,9 +116,9 @@ public interface CompilerToVM {
     /**
      * Returns the implementor for the given interface class, if there is a single implementor.
      *
-     * @param metaspaceKlass the metaspace klass to get the implementor for
-     * @return the implementor as metaspace klass pointer if there is a single implementor, null if
-     *         there is no implementor, or the input metaspace klass pointer ({@code metaspaceKlass}
+     * @param metaspaceKlass the metaspace Klass to get the implementor for
+     * @return the implementor as metaspace Klass pointer if there is a single implementor, null if
+     *         there is no implementor, or the input metaspace Klass pointer ({@code metaspaceKlass}
      *         ) itself if there is more than one implementor.
      */
     long getKlassImplementor(long metaspaceKlass);
@@ -132,29 +132,66 @@ public interface CompilerToVM {
     boolean methodIsIgnoredBySecurityStackWalk(long metaspaceMethod);
 
     /**
-     * Converts a name to a metaspace klass.
+     * Converts a name to a metaspace Klass.
      *
      * @param name a well formed Java type in {@linkplain JavaType#getName() internal} format
      * @param accessingClass the context of resolution (must not be null)
      * @param resolve force resolution to a {@link ResolvedJavaType}. If true, this method will
      *            either return a {@link ResolvedJavaType} or throw an exception
-     * @return a metaspace klass for {@code name}
+     * @return a metaspace Klass for {@code name}
      * @throws LinkageError if {@code resolve == true} and the resolution failed
      */
     long lookupType(String name, Class<?> accessingClass, boolean resolve);
 
+    /**
+     * Resolves a constant pool entry at index {@code cpi} from the metaspace ConstantPool at
+     * {@code metaspaceConstantPool} to an object by calling
+     * {@code ConstantPool::resolve_constant_at}.
+     *
+     * @param metaspaceConstantPool address of a metaspace ConstantPool object
+     * @param cpi a constant pool index
+     */
     Object resolveConstantInPool(long metaspaceConstantPool, int cpi);
 
+    /**
+     * Resolves a constant pool entry at index {@code cpi} from the metaspace ConstantPool at
+     * {@code metaspaceConstantPool} to an object by calling
+     * {@code ConstantPool::resolve_possibly_cached_constant_at}.
+     */
     Object resolvePossiblyCachedConstantInPool(long metaspaceConstantPool, int cpi);
 
+    /**
+     * Gets the {@code JVM_CONSTANT_NameAndType} reference index constant pool entry at index
+     * {@code cpi} from the metaspace ConstantPool at {@code metaspaceConstantPool} by calling
+     * {@code ConstantPool::name_and_type_ref_index_at}.
+     */
     int lookupNameAndTypeRefIndexInPool(long metaspaceConstantPool, int cpi);
 
+    /**
+     * Gets the name of a {@code JVM_CONSTANT_NameAndType} constant pool entry at index {@code cpi}
+     * from the metaspace ConstantPool at {@code metaspaceConstantPool} by calling
+     * {@code ConstantPool::name_ref_at}.
+     */
     String lookupNameRefInPool(long metaspaceConstantPool, int cpi);
 
+    /**
+     * Gets the signature of a {@code JVM_CONSTANT_NameAndType} constant pool entry at index
+     * {@code cpi} from the metaspace ConstantPool at {@code metaspaceConstantPool} by calling
+     * {@code ConstantPool::signature_ref_at}.
+     */
     String lookupSignatureRefInPool(long metaspaceConstantPool, int cpi);
 
+    /**
+     * Gets the klass reference index constant pool entry at index {@code cpi} from the metaspace
+     * ConstantPool at {@code metaspaceConstantPool} by calling
+     * {@code ConstantPool::klass_ref_index_at}.
+     */
     int lookupKlassRefIndexInPool(long metaspaceConstantPool, int cpi);
 
+    /**
+     * Resolves a constant pool entry at index {@code cpi} from the metaspace ConstantPool at
+     * {@code metaspaceConstantPool} to a metaspace Klass by calling {@code ConstantPool::klass_at}.
+     */
     long constantPoolKlassAt(long metaspaceConstantPool, int cpi);
 
     /**
