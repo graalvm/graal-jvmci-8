@@ -166,7 +166,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         return constant instanceof HotSpotMetaspaceConstant;
     }
 
-    public Data createDataItem(Constant constant) {
+    private Data createSingleDataItem(Constant constant) {
         int size;
         DataBuilder builder;
         if (constant instanceof VMConstant) {
@@ -211,6 +211,29 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         }
 
         return new Data(size, size, builder);
+    }
+
+    public Data createDataItem(Constant... constants) {
+        assert constants.length > 0;
+        if (constants.length == 1) {
+            return createSingleDataItem(constants[0]);
+        } else {
+            DataBuilder[] builders = new DataBuilder[constants.length];
+            int size = 0;
+            int alignment = 1;
+            for (int i = 0; i < constants.length; i++) {
+                Data data = createSingleDataItem(constants[i]);
+                size += data.getSize();
+                builders[i] = data.getBuilder();
+                alignment = DataSection.lcm(alignment, data.getAlignment());
+            }
+            DataBuilder ret = (buffer, patches) -> {
+                for (DataBuilder b : builders) {
+                    b.emit(buffer, patches);
+                }
+            };
+            return new Data(alignment, size, ret);
+        }
     }
 
     @Override

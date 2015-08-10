@@ -87,9 +87,11 @@ public interface CodeCacheProvider {
     boolean needsDataPatch(JavaConstant constant);
 
     /**
-     * Create a {@link Data} item for a {@link Constant}, that can be used in a {@link DataPatch}.
+     * Create a {@link Data} item for one or more {@link Constant Constants}, that can be used in a
+     * {@link DataPatch}. If more than one {@link Constant} is given, then they are tightly packed
+     * into a single {@link Data} item.
      */
-    Data createDataItem(Constant constant);
+    Data createDataItem(Constant... constants);
 
     /**
      * Gets a description of the target architecture.

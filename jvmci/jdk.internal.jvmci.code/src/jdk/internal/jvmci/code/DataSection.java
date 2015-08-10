@@ -252,7 +252,7 @@ public final class DataSection implements Iterable<Data> {
         return dataItems.iterator();
     }
 
-    private static int lcm(int x, int y) {
+    public static int lcm(int x, int y) {
         if (x == 0) {
             return y;
         } else if (y == 0) {
