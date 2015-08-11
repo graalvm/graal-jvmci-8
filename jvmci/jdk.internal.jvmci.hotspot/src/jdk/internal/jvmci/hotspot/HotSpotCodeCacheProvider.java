@@ -223,9 +223,12 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
             int alignment = 1;
             for (int i = 0; i < constants.length; i++) {
                 Data data = createSingleDataItem(constants[i]);
-                size += data.getSize();
-                builders[i] = data.getBuilder();
+
+                assert size % data.getAlignment() == 0 : "invalid alignment in packed constants";
                 alignment = DataSection.lcm(alignment, data.getAlignment());
+
+                builders[i] = data.getBuilder();
+                size += data.getSize();
             }
             DataBuilder ret = (buffer, patches) -> {
                 for (DataBuilder b : builders) {
