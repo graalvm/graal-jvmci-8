@@ -23,36 +23,37 @@
 
 package jdk.internal.jvmci.hotspot;
 
+import java.lang.reflect.*;
+
 import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.hotspotvmconfig.*;
 import jdk.internal.jvmci.meta.*;
 import sun.misc.*;
 
 /**
- * Calls from Java into HotSpot.
+ * Calls from Java into HotSpot. The behavior of all the methods in this class that take a metaspace
+ * pointer as an argument (e.g., {@link #getExceptionTableStart(long)}) is undefined if the argument
+ * does not denote a valid metaspace object.
  */
 public interface CompilerToVM {
 
     /**
-     * Copies the original bytecode of a given method into a new byte array and returns it.
+     * Copies the original bytecode of {@code metaspaceMethod} into a new byte array and returns it.
      *
-     * @param metaspaceMethod the metaspace Method object
-     * @return a new byte array containing the original bytecode
+     * @return a new byte array containing the original bytecode of {@code metaspaceMethod}
      */
     byte[] getBytecode(long metaspaceMethod);
 
     /**
-     * Gets the number of entries in the data structure describing the exception handlers for a
-     * given method.
-     *
-     * @param metaspaceMethod the metaspace Method object
-     * @return the number of entries in the exception handler table for {@code metaspaceMethod}
+     * Gets the number of entries in {@code metaspaceMethod}'s exception handler table or 0 if it
+     * has not exception handler table.
      */
     int getExceptionTableLength(long metaspaceMethod);
 
     /**
-     * Gets the address of the first entry in the exception handler table for a given method. Each
-     * entry is a {@code ExceptionTableElement} native object and is described by these fields:
+     * Gets the address of the first entry in {@code metaspaceMethod}'s exception handler table.
+     *
+     * Each entry is a native object described by these fields:
      *
      * <ul>
      * <li>{@link HotSpotVMConfig#exceptionTableElementSize}</li>
@@ -62,51 +63,40 @@ public interface CompilerToVM {
      * <li>{@link HotSpotVMConfig#exceptionTableElementCatchTypeIndexOffset}
      * </ul>
      *
-     * The behavior of this method is undefined if {@link #getExceptionTableLength(long)} returns 0
-     * for {@code metaspaceMethod}.
-     *
-     * @param metaspaceMethod the metaspace Method object
+     * @return 0 if {@code metaspaceMethod} has no exception handlers (i.e.
+     *         {@code getExceptionTableLength(metaspaceMethod) == 0})
      */
     long getExceptionTableStart(long metaspaceMethod);
 
     /**
-     * Determines if a given metaspace Method object has balanced monitors.
-     *
-     * @param metaspaceMethod the metaspace Method object to query
-     * @return true if the method has balanced monitors
+     * Determines if {@code metaspaceMethod} has balanced monitors.
      */
     boolean hasBalancedMonitors(long metaspaceMethod);
 
     /**
-     * Determines if a given metaspace Method can be inlined. A method may not be inlinable for a
+     * Determines if {@code metaspaceMethod} can be inlined. A method may not be inlinable for a
      * number of reasons such as:
      * <ul>
      * <li>a CompileOracle directive may prevent inlining or compilation of methods</li>
      * <li>the method may have a bytecode breakpoint set</li>
      * <li>the method may have other bytecode features that require special handling by the VM</li>
      * </ul>
-     *
-     * @param metaspaceMethod the metaspace Method object to query
-     * @return true if the method can be inlined
      */
     boolean canInlineMethod(long metaspaceMethod);
 
     /**
-     * Determines if a given metaspace Method should be inlined at any cost. This could be because:
+     * Determines if {@code metaspaceMethod} should be inlined at any cost. This could be because:
      * <ul>
      * <li>a CompileOracle directive may forces inlining of this methods</li>
      * <li>an annotation forces inlining of this method</li>
      * </ul>
-     *
-     * @param metaspaceMethod the metaspace Method object to query
-     * @return true if the method should be inlined
      */
     boolean shouldInlineMethod(long metaspaceMethod);
 
     /**
      * Used to implement {@link ResolvedJavaType#findUniqueConcreteMethod(ResolvedJavaMethod)}.
      *
-     * @param metaspaceMethod the metaspace Method on which to based the search
+     * @param metaspaceMethod the metaspace Method on which to base the search
      * @param actualHolderMetaspaceKlass the best known type of receiver
      * @return the metaspace Method result or 0 is there is no unique concrete method for
      *         {@code metaspaceMethod}
@@ -114,20 +104,15 @@ public interface CompilerToVM {
     long findUniqueConcreteMethod(long actualHolderMetaspaceKlass, long metaspaceMethod);
 
     /**
-     * Returns the implementor for the given interface class, if there is a single implementor.
+     * Gets the implementor for the interface class {@code metaspaceKlass}.
      *
-     * @param metaspaceKlass the metaspace Klass to get the implementor for
-     * @return the implementor as metaspace Klass pointer if there is a single implementor, null if
-     *         there is no implementor, or the input metaspace Klass pointer ({@code metaspaceKlass}
-     *         ) itself if there is more than one implementor.
+     * @return the implementor if there is a single implementor, 0 if there is no implementor, or
+     *         {@code metaspaceKlass} itself if there is more than one implementor
      */
     long getKlassImplementor(long metaspaceKlass);
 
     /**
-     * Determines if a given metaspace method is ignored by security stack walks.
-     *
-     * @param metaspaceMethod the metaspace Method object
-     * @return true if the method is ignored
+     * Determines if {@code metaspaceMethod} is ignored by security stack walks.
      */
     boolean methodIsIgnoredBySecurityStackWalk(long metaspaceMethod);
 
@@ -138,99 +123,154 @@ public interface CompilerToVM {
      * @param accessingClass the context of resolution (must not be null)
      * @param resolve force resolution to a {@link ResolvedJavaType}. If true, this method will
      *            either return a {@link ResolvedJavaType} or throw an exception
-     * @return a metaspace Klass for {@code name}
+     * @return the metaspace Klass for {@code name} or 0 if resolution failed and
+     *         {@code resolve == false}
      * @throws LinkageError if {@code resolve == true} and the resolution failed
      */
     long lookupType(String name, Class<?> accessingClass, boolean resolve);
 
     /**
-     * Resolves a constant pool entry at index {@code cpi} from the metaspace ConstantPool at
-     * {@code metaspaceConstantPool} to an object by calling
-     * {@code ConstantPool::resolve_constant_at}.
+     * Resolves the entry at index {@code cpi} in {@code metaspaceConstantPool} to an object.
      *
-     * @param metaspaceConstantPool address of a metaspace ConstantPool object
-     * @param cpi a constant pool index
+     * The behavior of this method is undefined if {@code cpi} does not denote an entry that can be
+     * resolved to an object.
      */
     Object resolveConstantInPool(long metaspaceConstantPool, int cpi);
 
     /**
-     * Resolves a constant pool entry at index {@code cpi} from the metaspace ConstantPool at
-     * {@code metaspaceConstantPool} to an object by calling
-     * {@code ConstantPool::resolve_possibly_cached_constant_at}.
+     * Resolves the entry at index {@code cpi} in {@code metaspaceConstantPool} to an object,
+     * looking in the constant pool cache first.
+     *
+     * The behavior of this method is undefined if {@code cpi} does not denote an entry that can be
+     * resolved to an object.
      */
     Object resolvePossiblyCachedConstantInPool(long metaspaceConstantPool, int cpi);
 
     /**
-     * Gets the {@code JVM_CONSTANT_NameAndType} reference index constant pool entry at index
-     * {@code cpi} from the metaspace ConstantPool at {@code metaspaceConstantPool} by calling
-     * {@code ConstantPool::name_and_type_ref_index_at}.
+     * Gets the {@code JVM_CONSTANT_NameAndType} index from the entry at index {@code cpi} in
+     * {@code metaspaceConstantPool}.
+     *
+     * The behavior of this method is undefined if {@code cpi} does not denote an entry containing a
+     * {@code JVM_CONSTANT_NameAndType} index.
      */
     int lookupNameAndTypeRefIndexInPool(long metaspaceConstantPool, int cpi);
 
     /**
-     * Gets the name of a {@code JVM_CONSTANT_NameAndType} constant pool entry at index {@code cpi}
-     * from the metaspace ConstantPool at {@code metaspaceConstantPool} by calling
-     * {@code ConstantPool::name_ref_at}.
+     * Gets the name of the {@code JVM_CONSTANT_NameAndType} entry at index {@code cpi} in
+     * {@code metaspaceConstantPool}.
+     *
+     * The behavior of this method is undefined if {@code cpi} does not denote a
+     * {@code JVM_CONSTANT_NameAndType} entry.
      */
     String lookupNameRefInPool(long metaspaceConstantPool, int cpi);
 
     /**
-     * Gets the signature of a {@code JVM_CONSTANT_NameAndType} constant pool entry at index
-     * {@code cpi} from the metaspace ConstantPool at {@code metaspaceConstantPool} by calling
-     * {@code ConstantPool::signature_ref_at}.
+     * Gets the signature of the {@code JVM_CONSTANT_NameAndType} entry at index {@code cpi} in
+     * {@code metaspaceConstantPool}.
+     *
+     * The behavior of this method is undefined if {@code cpi} does not denote a
+     * {@code JVM_CONSTANT_NameAndType} entry.
      */
     String lookupSignatureRefInPool(long metaspaceConstantPool, int cpi);
 
     /**
-     * Gets the klass reference index constant pool entry at index {@code cpi} from the metaspace
-     * ConstantPool at {@code metaspaceConstantPool} by calling
-     * {@code ConstantPool::klass_ref_index_at}.
+     * Gets the {@code JVM_CONSTANT_Class} index from the entry at index {@code cpi} in
+     * {@code metaspaceConstantPool}.
+     *
+     * The behavior of this method is undefined if {@code cpi} does not denote an entry containing a
+     * {@code JVM_CONSTANT_Class} index.
      */
     int lookupKlassRefIndexInPool(long metaspaceConstantPool, int cpi);
 
     /**
-     * Resolves a constant pool entry at index {@code cpi} from the metaspace ConstantPool at
-     * {@code metaspaceConstantPool} to a metaspace Klass by calling {@code ConstantPool::klass_at}.
-     */
-    long constantPoolKlassAt(long metaspaceConstantPool, int cpi);
-
-    /**
-     * Looks up a class entry in a constant pool.
+     * Looks up a class denoted by the {@code JVM_CONSTANT_Class} entry at index {@code cpi} in
+     * {@code metaspaceConstantPool}. This method does not perform any resolution.
      *
-     * @param metaspaceConstantPool metaspace constant pool pointer
-     * @param cpi constant pool index
-     * @return a metaspace Klass for a resolved method entry, a metaspace Symbol otherwise (with
-     *         tagging)
+     * The behavior of this method is undefined if {@code cpi} does not denote a
+     * {@code JVM_CONSTANT_Class} entry.
+     *
+     * @return a metaspace Klass for a resolved class entry (tagged by
+     *         {@link HotSpotVMConfig#compilerToVMKlassTag}) or a metaspace Symbol otherwise (tagged
+     *         by {@link HotSpotVMConfig#compilerToVMSymbolTag})
      */
     long lookupKlassInPool(long metaspaceConstantPool, int cpi);
 
     /**
-     * Looks up a method entry in a constant pool.
+     * Looks up a method denoted by the entry at index {@code cpi} in {@code metaspaceConstantPool}.
+     * This method does not perform any resolution.
      *
-     * @param metaspaceConstantPool metaspace constant pool pointer
-     * @param cpi constant pool index
+     * The behavior of this method is undefined if {@code cpi} does not denote an entry representing
+     * a method.
+     *
+     * @param opcode the opcode of the instruction for which the lookup is being performed or
+     *            {@code -1}. If non-negative, then resolution checks specific to the bytecode it
+     *            denotes are performed if the method is already resolved. Should any of these
+     *            checks fail, 0 is returned.
      * @return a metaspace Method for a resolved method entry, 0 otherwise
      */
     long lookupMethodInPool(long metaspaceConstantPool, int cpi, byte opcode);
 
     /**
-     * Looks up a field entry in a constant pool and attempts to resolve it. The values returned in
-     * {@code info} are:
+     * Ensures that the type referenced by the specified {@code JVM_CONSTANT_InvokeDynamic} entry at
+     * index {@code cpi} in {@code metaspaceConstantPool} is loaded and initialized.
+     *
+     * The behavior of this method is undefined if {@code cpi} does not denote a
+     * {@code JVM_CONSTANT_InvokeDynamic} entry.
+     */
+    void resolveInvokeDynamicInPool(long metaspaceConstantPool, int cpi);
+
+    /**
+     * Ensures that the type referenced by the entry for a <a
+     * href="https://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.9">signature
+     * polymorphic</a> method at index {@code cpi} in {@code metaspaceConstantPool} is loaded and
+     * initialized.
+     *
+     * The behavior of this method is undefined if {@code cpi} does not denote an entry representing
+     * a signature polymorphic method.
+     */
+    void resolveInvokeHandleInPool(long metaspaceConstantPool, int cpi);
+
+    /**
+     * Gets the resolved metaspace Klass denoted by the entry at index {@code cpi} in
+     * {@code metaspaceConstantPool}.
+     *
+     * The behavior of this method is undefined if {@code cpi} does not denote an entry representing
+     * a class.
+     *
+     * @throws LinkageError if resolution failed
+     */
+    long resolveKlassInPool(long metaspaceConstantPool, int cpi) throws LinkageError;
+
+    /**
+     * Looks up and attempts to resolve the {@code JVM_CONSTANT_Field} entry at index {@code cpi} in
+     * {@code metaspaceConstantPool}. The values returned in {@code info} are:
      *
      * <pre>
      *     [(int) flags,   // only valid if field is resolved
      *      (int) offset]  // only valid if field is resolved
      * </pre>
      *
-     * @param metaspaceConstantPool metaspace constant pool pointer
-     * @param cpi constant pool index
+     * The behavior of this method is undefined if {@code cpi} does not denote a
+     * {@code JVM_CONSTANT_Field} entry.
+     *
      * @param info an array in which the details of the field are returned
-     * @return true if the field is resolved
+     * @return the metaspace Klass defining the field if resolution is successful, 0 otherwise
      */
-    long resolveField(long metaspaceConstantPool, int cpi, byte opcode, long[] info);
+    long resolveFieldInPool(long metaspaceConstantPool, int cpi, byte opcode, long[] info);
 
-    int constantPoolRemapInstructionOperandFromCache(long metaspaceConstantPool, int cpi);
+    /**
+     * Converts {@code cpci} from an index into the cache for {@code metaspaceConstantPool} to an
+     * index directly into {@code metaspaceConstantPool}.
+     *
+     * The behavior of this method is undefined if {@code ccpi} is an invalid constant pool cache
+     * index.
+     */
+    int constantPoolRemapInstructionOperandFromCache(long metaspaceConstantPool, int cpci);
 
+    /**
+     * Gets the appendix object (if any) associated with the entry at index {@code cpi} in
+     * {@code metaspaceConstantPool}.
+     */
     Object lookupAppendixInPool(long metaspaceConstantPool, int cpi);
 
     /**
@@ -261,47 +301,115 @@ public interface CompilerToVM {
      */
     void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethod method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond, InstalledCode installedCode);
 
+    /**
+     * Resets all compilation statistics.
+     */
     void resetCompilationStatistics();
 
+    /**
+     * Initializes the fields of {@code config}.
+     */
     void initializeConfiguration(HotSpotVMConfig config);
 
+    /**
+     * Resolves the implementation of {@code metaspaceMethod} for virtual dispatches on objects of
+     * dynamic type {@code metaspaceKlassExactReceiver}. This resolution process only searches "up"
+     * the class hierarchy of {@code metaspaceKlassExactReceiver}.
+     *
+     * @param metaspaceKlassCaller the caller or context type used to perform access checks
+     * @return the link-time resolved method (might be abstract) or {@code 0} if it can not be
+     *         linked
+     */
     long resolveMethod(long metaspaceKlassExactReceiver, long metaspaceMethod, long metaspaceKlassCaller);
 
+    /**
+     * Gets the static initializer of {@code metaspaceKlass}.
+     *
+     * @return 0 if {@code metaspaceKlass} has no static initialize
+     */
     long getClassInitializer(long metaspaceKlass);
 
+    /**
+     * Determines if {@code metaspaceKlass} or any of its currently loaded subclasses overrides
+     * {@code Object.finalize()}.
+     */
     boolean hasFinalizableSubclass(long metaspaceKlass);
 
     /**
-     * Gets the metaspace Method object corresponding to a given {@link Class} object and slot
-     * number.
-     *
-     * @param holder method holder
-     * @param slot slot number of the method
-     * @return the metaspace Method
+     * Gets the metaspace Method corresponding to {@code holder} and slot number {@code slot} (i.e.
+     * {@link Method#slot} or {@link Constructor#slot}).
      */
+    @SuppressWarnings("javadoc")
     long getMetaspaceMethod(Class<?> holder, int slot);
 
+    /**
+     * Gets the maximum absolute offset of a PC relative call to {@code address} from any position
+     * in the code cache.
+     *
+     * @param address an address that may be called from any code in the code cache
+     * @return -1 if {@code address == 0}
+     */
     long getMaxCallTargetOffset(long address);
 
+    /**
+     * Gets a textual disassembly of {@code codeBlob}.
+     *
+     * @return a non-zero length string containing a disassembly of {@code codeBlob} or null if
+     *         {@code codeBlob} could not be disassembled for some reason
+     */
     String disassembleCodeBlob(long codeBlob);
 
+    /**
+     * Gets a stack trace element for {@code metaspaceMethod} at bytecode index {@code bci}.
+     */
     StackTraceElement getStackTraceElement(long metaspaceMethod, int bci);
 
-    Object executeCompiledMethod(Object arg1, Object arg2, Object arg3, InstalledCode hotspotInstalledCode) throws InvalidInstalledCodeException;
+    /**
+     * Executes some {@code installedCode} with arguments {@code args}.
+     *
+     * @return the result of executing {@code installedCode}
+     * @throws InvalidInstalledCodeException if {@code installedCode} has been invalidated
+     */
+    Object executeInstalledCode(Object[] args, InstalledCode installedCode) throws InvalidInstalledCodeException;
 
-    Object executeCompiledMethodVarargs(Object[] args, InstalledCode hotspotInstalledCode) throws InvalidInstalledCodeException;
-
+    /**
+     * Gets the line number table for {@code metaspaceMethod}. The line number table is encoded as
+     * (bci, source line number) pairs.
+     *
+     * @return the line number table for {@code metaspaceMethod} or null if it doesn't have one
+     */
     long[] getLineNumberTable(long metaspaceMethod);
 
-    long getLocalVariableTableStart(long metaspaceMethod);
-
+    /**
+     * Gets the number of entries in the local variable table for {@code metaspaceMethod}.
+     *
+     * @return the number of entries in the local variable table for {@code metaspaceMethod}
+     */
     int getLocalVariableTableLength(long metaspaceMethod);
 
-    String getFileName(HotSpotResolvedJavaType method);
+    /**
+     * Gets the address of the first entry in the local variable table for {@code metaspaceMethod}.
+     *
+     * Each entry is a native object described by these fields:
+     *
+     * <ul>
+     * <li>{@link HotSpotVMConfig#localVariableTableElementSize}</li>
+     * <li>{@link HotSpotVMConfig#localVariableTableElementLengthOffset}</li>
+     * <li>{@link HotSpotVMConfig#localVariableTableElementNameCpIndexOffset}</li>
+     * <li>{@link HotSpotVMConfig#localVariableTableElementDescriptorCpIndexOffset}</li>
+     * <li>{@link HotSpotVMConfig#localVariableTableElementSignatureCpIndexOffset}
+     * <li>{@link HotSpotVMConfig#localVariableTableElementSlotOffset}
+     * <li>{@link HotSpotVMConfig#localVariableTableElementStartBciOffset}
+     * </ul>
+     *
+     * @return 0 if {@code metaspaceMethod} does not have a local variable table
+     */
+    long getLocalVariableTableStart(long metaspaceMethod);
 
+    /**
+     * Gets the {@link Class} mirror associated with {@code metaspaceKlass}.
+     */
     Class<?> getJavaMirror(long metaspaceKlass);
-
-    long readUnsafeKlassPointer(Object o);
 
     /**
      * Reads an object pointer within a VM data structure. That is, any {@link HotSpotVMField} whose
@@ -317,22 +425,31 @@ public interface CompilerToVM {
      */
     Object readUncompressedOop(long address);
 
+    /**
+     * Determines if {@code metaspaceMethod} should not be inlined or compiled.
+     */
     void doNotInlineOrCompile(long metaspaceMethod);
 
     /**
-     * Invalidates the profiling information and restarts profiling upon the next invocation.
-     *
-     * @param metaspaceMethod the metaspace Method object
+     * Invalidates the profiling information for {@code metaspaceMethod} and (re)initializes it such
+     * that profiling restarts upon its next invocation.
      */
     void reprofile(long metaspaceMethod);
 
-    void invalidateInstalledCode(InstalledCode hotspotInstalledCode);
+    /**
+     * Invalidates {@code installedCode} such that {@link InvalidInstalledCodeException} will be
+     * raised the next time {@code installedCode} is executed.
+     */
+    void invalidateInstalledCode(InstalledCode installedCode);
 
     /**
      * Collects the current values of all JVMCI benchmark counters, summed up over all threads.
      */
     long[] collectCounters();
 
+    /**
+     * Determines if {@code metaspaceMethodData} is mature.
+     */
     boolean isMature(long metaspaceMethodData);
 
     /**
@@ -348,16 +465,13 @@ public interface CompilerToVM {
     String getGPUs();
 
     /**
-     *
-     * @param metaspaceMethod the method to check
-     * @param entryBCI
-     * @param level the compilation level
-     * @return true if the {@code metaspaceMethod} has code for {@code level}
+     * Determines if {@code metaspaceMethod} has OSR compiled code identified by {@code entryBCI}
+     * for compilation level {@code level}.
      */
     boolean hasCompiledCodeForOSR(long metaspaceMethod, int entryBCI, int level);
 
     /**
-     * Fetch the time stamp used for printing inside hotspot. It's relative to VM start to that all
+     * Fetch the time stamp used for printing inside hotspot. It's relative to VM start so that all
      * events can be ordered.
      *
      * @return milliseconds since VM start
@@ -365,14 +479,12 @@ public interface CompilerToVM {
     long getTimeStamp();
 
     /**
-     * Gets the value of a metaspace {@code Symbol} as a String.
-     *
-     * @param metaspaceSymbol
+     * Gets the value of {@code metaspaceSymbol} as a String.
      */
     String getSymbol(long metaspaceSymbol);
 
     /**
-     * Looks for the next Java stack frame with the given method.
+     * Looks for the next Java stack frame matching an entry in {@code methods}.
      *
      * @param frame the starting point of the search, where {@code null} refers to the topmost frame
      * @param methods the metaspace methods to look for, where {@code null} means that any frame is
@@ -382,23 +494,33 @@ public interface CompilerToVM {
     HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, long[] methods, int initialSkip);
 
     /**
-     * Materialized all virtual objects within the given stack frame and update the locals within
-     * the given stackFrame object.
+     * Materializes all virtual objects within {@code stackFrame} updates its locals.
      *
      * @param invalidate if {@code true}, the compiled method for the stack frame will be
      *            invalidated.
      */
     void materializeVirtualObjects(HotSpotStackFrameReference stackFrame, boolean invalidate);
 
-    void resolveInvokeDynamic(long metaspaceConstantPool, int index);
-
-    void resolveInvokeHandle(long metaspaceConstantPool, int index);
-
+    /**
+     * Gets the v-table index for interface method {@code metaspaceMethod} in the receiver type
+     * {@code metaspaceKlass} or {@link HotSpotVMConfig#invalidVtableIndex} if
+     * {@code metaspaceMethod} is not in {@code metaspaceKlass}'s v-table.
+     */
     int getVtableIndexForInterface(long metaspaceKlass, long metaspaceMethod);
 
+    /**
+     * Determines if debug info should also be emitted at non-safepoint locations.
+     */
     boolean shouldDebugNonSafepoints();
 
+    /**
+     * Writes {@code length} bytes from {@code buf} starting at offset {@code offset} to the
+     * HotSpot's log stream. No range checking is performed.
+     */
     void writeDebugOutput(byte[] bytes, int offset, int length);
 
+    /**
+     * Flush HotSpot's log stream.
+     */
     void flushDebugOutput();
 }

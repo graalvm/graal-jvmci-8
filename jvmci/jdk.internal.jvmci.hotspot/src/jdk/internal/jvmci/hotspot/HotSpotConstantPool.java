@@ -915,7 +915,7 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
             long[] info = new long[2];
             long metaspaceKlass;
             try {
-                metaspaceKlass = runtime().getCompilerToVM().resolveField(metaspaceConstantPool, index, (byte) opcode, info);
+                metaspaceKlass = runtime().getCompilerToVM().resolveFieldInPool(metaspaceConstantPool, index, (byte) opcode, info);
             } catch (Throwable t) {
                 /*
                  * If there was an exception resolving the field we give up and return an unresolved
@@ -1004,7 +1004,7 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
             case Class:
             case UnresolvedClass:
             case UnresolvedClassInError:
-                final long metaspaceKlass = runtime().getCompilerToVM().constantPoolKlassAt(metaspaceConstantPool, index);
+                final long metaspaceKlass = runtime().getCompilerToVM().resolveKlassInPool(metaspaceConstantPool, index);
                 HotSpotResolvedObjectTypeImpl type = HotSpotResolvedObjectTypeImpl.fromMetaspaceKlass(metaspaceKlass);
                 Class<?> klass = type.mirror();
                 if (!klass.isPrimitive() && !klass.isArray()) {
@@ -1015,14 +1015,14 @@ public class HotSpotConstantPool implements ConstantPool, HotSpotProxified {
                         if (Bytecodes.isInvokeHandleAlias(opcode)) {
                             final int methodRefCacheIndex = rawIndexToConstantPoolIndex(cpi, opcode);
                             if (isInvokeHandle(methodRefCacheIndex, type)) {
-                                runtime().getCompilerToVM().resolveInvokeHandle(metaspaceConstantPool, methodRefCacheIndex);
+                                runtime().getCompilerToVM().resolveInvokeHandleInPool(metaspaceConstantPool, methodRefCacheIndex);
                             }
                         }
                 }
                 break;
             case InvokeDynamic:
                 if (isInvokedynamicIndex(cpi)) {
-                    runtime().getCompilerToVM().resolveInvokeDynamic(metaspaceConstantPool, cpi);
+                    runtime().getCompilerToVM().resolveInvokeDynamicInPool(metaspaceConstantPool, cpi);
                 }
                 break;
             default:

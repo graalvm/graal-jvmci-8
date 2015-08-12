@@ -101,7 +101,8 @@ public class InstalledCode {
     }
 
     /**
-     * Invalidates this installed code such that any subsequent invocation will throw an
+     * Invalidates this installed code such that any subsequent
+     * {@linkplain #executeVarargs(Object...) invocation} will throw an
      * {@link InvalidInstalledCodeException}.
      */
     public void invalidate() {

@@ -105,7 +105,7 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
     public Object executeVarargs(Object... args) throws InvalidInstalledCodeException {
         assert checkArgs(args);
         assert !isExternal();
-        return runtime().getCompilerToVM().executeCompiledMethodVarargs(args, this);
+        return runtime().getCompilerToVM().executeInstalledCode(args, this);
     }
 
     @Override

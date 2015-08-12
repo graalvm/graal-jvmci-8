@@ -22,7 +22,6 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.common.UnsafeAccess.*;
 import static jdk.internal.jvmci.inittimer.InitTimer.*;
 
 import java.util.*;
@@ -148,23 +147,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     public static Kind getHostWordKind() {
         return instance.getHostJVMCIBackend().getCodeCache().getTarget().wordKind;
-    }
-
-    /**
-     * Reads a klass pointer from a constant object.
-     */
-    public static long unsafeReadKlassPointer(Object object) {
-        return instance.getCompilerToVM().readUnsafeKlassPointer(object);
-    }
-
-    /**
-     * Reads a word value from a given object.
-     */
-    public static long unsafeReadWord(Object object, long offset) {
-        if (getHostWordKind() == Kind.Long) {
-            return unsafe.getLong(object, offset);
-        }
-        return unsafe.getInt(object, offset) & 0xFFFFFFFFL;
     }
 
     protected/* final */CompilerToVM compilerToVm;

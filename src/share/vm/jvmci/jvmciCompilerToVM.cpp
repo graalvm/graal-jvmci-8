@@ -166,7 +166,9 @@ C2V_END
 C2V_VMENTRY(jlong, getExceptionTableStart, (JNIEnv *, jobject, jlong metaspace_method))
   ResourceMark rm;
   methodHandle method = asMethod(metaspace_method);
-  assert(method->exception_table_length() != 0, "should be handled in Java code");
+  if (method->exception_table_length() == 0) {
+    return 0L;
+  }
   return (jlong) (address) method->exception_table_start();
 C2V_END
 
@@ -311,7 +313,7 @@ C2V_VMENTRY(jint, lookupKlassRefIndexInPool, (JNIEnv*, jobject, jlong metaspace_
   return cp->klass_ref_index_at(index);
 C2V_END
 
-C2V_VMENTRY(jlong, constantPoolKlassAt, (JNIEnv*, jobject, jlong metaspace_constant_pool, jint index))
+C2V_VMENTRY(jlong, resolveKlassInPool, (JNIEnv*, jobject, jlong metaspace_constant_pool, jint index))
   ConstantPool* cp = (ConstantPool*) metaspace_constant_pool;
   return (jlong) (address) cp->klass_at(index, THREAD);
 C2V_END
@@ -359,7 +361,7 @@ C2V_VMENTRY(jint, constantPoolRemapInstructionOperandFromCache, (JNIEnv*, jobjec
   return cp->remap_instruction_operand_from_cache(index);
 C2V_END
 
-C2V_VMENTRY(jlong, resolveField, (JNIEnv*, jobject, jlong metaspace_constant_pool, jint index, jbyte opcode, jlongArray info_handle))
+C2V_VMENTRY(jlong, resolveFieldInPool, (JNIEnv*, jobject, jlong metaspace_constant_pool, jint index, jbyte opcode, jlongArray info_handle))
   ResourceMark rm;
   constantPoolHandle cp = (ConstantPool*) metaspace_constant_pool;
   Bytecodes::Code code = (Bytecodes::Code)(((int) opcode) & 0xFF);
@@ -592,7 +594,7 @@ C2V_VMENTRY(jobject, getStackTraceElement, (JNIEnv*, jobject, jlong metaspace_me
   return JNIHandles::make_local(THREAD, element);
 C2V_END
 
-C2V_VMENTRY(jobject, executeCompiledMethodVarargs, (JNIEnv*, jobject, jobject args, jobject hotspotInstalledCode))
+C2V_VMENTRY(jobject, executeInstalledCode, (JNIEnv*, jobject, jobject args, jobject hotspotInstalledCode))
   ResourceMark rm;
   HandleMark hm;
 
@@ -716,12 +718,6 @@ C2V_END
 C2V_VMENTRY(jobject, getJavaMirror, (JNIEnv* env, jobject, jlong metaspace_klass))
   Klass* klass = asKlass(metaspace_klass);
   return JNIHandles::make_local(THREAD, klass->java_mirror());
-C2V_END
-
-C2V_VMENTRY(jlong, readUnsafeKlassPointer, (JNIEnv*, jobject, jobject o))
-  oop resolved_o = JNIHandles::resolve(o);
-  jlong klass = (jlong)(address)resolved_o->klass();
-  return klass;
 C2V_END
 
 C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv*, jobject, jlong addr))
@@ -908,7 +904,7 @@ C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject 
   return NULL;
 C2V_END
 
-C2V_VMENTRY(void, resolveInvokeDynamic, (JNIEnv*, jobject, jlong metaspace_constant_pool, jint index))
+C2V_VMENTRY(void, resolveInvokeDynamicInPool, (JNIEnv*, jobject, jlong metaspace_constant_pool, jint index))
   ConstantPool* cp = (ConstantPool*)metaspace_constant_pool;
   CallInfo callInfo;
   LinkResolver::resolve_invokedynamic(callInfo, cp, index, CHECK);
@@ -916,7 +912,7 @@ C2V_VMENTRY(void, resolveInvokeDynamic, (JNIEnv*, jobject, jlong metaspace_const
   cp_cache_entry->set_dynamic_call(cp, callInfo);
 C2V_END
 
-C2V_VMENTRY(void, resolveInvokeHandle, (JNIEnv*, jobject, jlong metaspace_constant_pool, jint index))
+C2V_VMENTRY(void, resolveInvokeHandleInPool, (JNIEnv*, jobject, jlong metaspace_constant_pool, jint index))
   ConstantPool* cp = (ConstantPool*)metaspace_constant_pool;
   CallInfo callInfo;
   LinkResolver::resolve_invokehandle(callInfo, cp, index, CHECK);
@@ -1068,20 +1064,20 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"canInlineMethod",                              CC"("METASPACE_METHOD")Z",                                                FN_PTR(canInlineMethod)},
   {CC"shouldInlineMethod",                           CC"("METASPACE_METHOD")Z",                                                FN_PTR(shouldInlineMethod)},
   {CC"lookupType",                                   CC"("STRING CLASS"Z)"METASPACE_KLASS,                                     FN_PTR(lookupType)},
-  {CC"resolveConstantInPool",                        CC"("METASPACE_CONSTANT_POOL"I)"OBJECT,                                   FN_PTR(resolveConstantInPool)},
-  {CC"resolvePossiblyCachedConstantInPool0",         CC"("METASPACE_CONSTANT_POOL"I)"OBJECT,                                   FN_PTR(resolvePossiblyCachedConstantInPool)},
   {CC"lookupNameRefInPool0",                         CC"("METASPACE_CONSTANT_POOL"I)"STRING,                                   FN_PTR(lookupNameRefInPool)},
   {CC"lookupNameAndTypeRefIndexInPool",              CC"("METASPACE_CONSTANT_POOL"I)I",                                        FN_PTR(lookupNameAndTypeRefIndexInPool)},
   {CC"lookupSignatureRefInPool0",                    CC"("METASPACE_CONSTANT_POOL"I)"STRING,                                   FN_PTR(lookupSignatureRefInPool)},
   {CC"lookupKlassRefIndexInPool0",                   CC"("METASPACE_CONSTANT_POOL"I)I",                                        FN_PTR(lookupKlassRefIndexInPool)},
-  {CC"constantPoolKlassAt",                          CC"("METASPACE_CONSTANT_POOL"I)"METASPACE_KLASS,                          FN_PTR(constantPoolKlassAt)},
   {CC"lookupKlassInPool",                            CC"("METASPACE_CONSTANT_POOL"I)"METASPACE_KLASS,                          FN_PTR(lookupKlassInPool)},
   {CC"lookupAppendixInPool0",                        CC"("METASPACE_CONSTANT_POOL"I)"OBJECT,                                   FN_PTR(lookupAppendixInPool)},
   {CC"lookupMethodInPool",                           CC"("METASPACE_CONSTANT_POOL"IB)"METASPACE_METHOD,                        FN_PTR(lookupMethodInPool)},
   {CC"constantPoolRemapInstructionOperandFromCache0",CC"("METASPACE_CONSTANT_POOL"I)I",                                        FN_PTR(constantPoolRemapInstructionOperandFromCache)},
-  {CC"resolveField",                                 CC"("METASPACE_CONSTANT_POOL"IB[J)"METASPACE_KLASS,                       FN_PTR(resolveField)},
-  {CC"resolveInvokeDynamic",                         CC"("METASPACE_CONSTANT_POOL"I)V",                                        FN_PTR(resolveInvokeDynamic)},
-  {CC"resolveInvokeHandle",                          CC"("METASPACE_CONSTANT_POOL"I)V",                                        FN_PTR(resolveInvokeHandle)},
+  {CC"resolveConstantInPool",                        CC"("METASPACE_CONSTANT_POOL"I)"OBJECT,                                   FN_PTR(resolveConstantInPool)},
+  {CC"resolvePossiblyCachedConstantInPool0",         CC"("METASPACE_CONSTANT_POOL"I)"OBJECT,                                   FN_PTR(resolvePossiblyCachedConstantInPool)},
+  {CC"resolveKlassInPool",                           CC"("METASPACE_CONSTANT_POOL"I)"METASPACE_KLASS,                          FN_PTR(resolveKlassInPool)},
+  {CC"resolveFieldInPool",                           CC"("METASPACE_CONSTANT_POOL"IB[J)"METASPACE_KLASS,                       FN_PTR(resolveFieldInPool)},
+  {CC"resolveInvokeDynamicInPool",                   CC"("METASPACE_CONSTANT_POOL"I)V",                                        FN_PTR(resolveInvokeDynamicInPool)},
+  {CC"resolveInvokeHandleInPool",                    CC"("METASPACE_CONSTANT_POOL"I)V",                                        FN_PTR(resolveInvokeHandleInPool)},
   {CC"resolveMethod",                                CC"("METASPACE_KLASS METASPACE_METHOD METASPACE_KLASS")"METASPACE_METHOD, FN_PTR(resolveMethod)},
   {CC"getVtableIndexForInterface",                   CC"("METASPACE_KLASS METASPACE_METHOD")I",                                FN_PTR(getVtableIndexForInterface)},
   {CC"getClassInitializer",                          CC"("METASPACE_KLASS")"METASPACE_METHOD,                                  FN_PTR(getClassInitializer)},
@@ -1093,14 +1089,13 @@ JNINativeMethod CompilerToVM_methods[] = {
   {CC"notifyCompilationStatistics",                  CC"(I"HS_RESOLVED_METHOD"ZIJJ"INSTALLED_CODE")V",                         FN_PTR(notifyCompilationStatistics)},
   {CC"resetCompilationStatistics",                   CC"()V",                                                                  FN_PTR(resetCompilationStatistics)},
   {CC"disassembleCodeBlob",                          CC"(J)"STRING,                                                            FN_PTR(disassembleCodeBlob)},
-  {CC"executeCompiledMethodVarargs",                 CC"(["OBJECT INSTALLED_CODE")"OBJECT,                                     FN_PTR(executeCompiledMethodVarargs)},
+  {CC"executeInstalledCode",                         CC"(["OBJECT INSTALLED_CODE")"OBJECT,                                     FN_PTR(executeInstalledCode)},
   {CC"getLineNumberTable",                           CC"("METASPACE_METHOD")[J",                                               FN_PTR(getLineNumberTable)},
   {CC"getLocalVariableTableStart",                   CC"("METASPACE_METHOD")J",                                                FN_PTR(getLocalVariableTableStart)},
   {CC"getLocalVariableTableLength",                  CC"("METASPACE_METHOD")I",                                                FN_PTR(getLocalVariableTableLength)},
   {CC"reprofile",                                    CC"("METASPACE_METHOD")V",                                                FN_PTR(reprofile)},
   {CC"invalidateInstalledCode",                      CC"("INSTALLED_CODE")V",                                                  FN_PTR(invalidateInstalledCode)},
   {CC"getJavaMirror",                                CC"("METASPACE_KLASS")"CLASS,                                             FN_PTR(getJavaMirror)},
-  {CC"readUnsafeKlassPointer",                       CC"("OBJECT")J",                                                          FN_PTR(readUnsafeKlassPointer)},
   {CC"readUncompressedOop",                          CC"(J)"OBJECT,                                                            FN_PTR(readUncompressedOop)},
   {CC"collectCounters",                              CC"()[J",                                                                 FN_PTR(collectCounters)},
   {CC"allocateCompileId",                            CC"("METASPACE_METHOD"I)I",                                               FN_PTR(allocateCompileId)},

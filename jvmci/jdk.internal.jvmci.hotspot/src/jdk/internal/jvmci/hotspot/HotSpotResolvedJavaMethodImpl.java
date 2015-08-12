@@ -554,7 +554,7 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
         }
 
         long[] values = runtime().getCompilerToVM().getLineNumberTable(metaspaceMethod);
-        if (values.length == 0) {
+        if (values == null || values.length == 0) {
             // Empty table so treat is as non-existent
             return null;
         }

@@ -108,7 +108,7 @@ public class CompilerToVMImpl implements CompilerToVM {
 
     private native int lookupKlassRefIndexInPool0(long metaspaceConstantPool, int cpi);
 
-    public native long constantPoolKlassAt(long metaspaceConstantPool, int cpi);
+    public native long resolveKlassInPool(long metaspaceConstantPool, int cpi);
 
     @Override
     public native long lookupKlassInPool(long metaspaceConstantPool, int cpi);
@@ -117,7 +117,7 @@ public class CompilerToVMImpl implements CompilerToVM {
     public native long lookupMethodInPool(long metaspaceConstantPool, int cpi, byte opcode);
 
     @Override
-    public native long resolveField(long metaspaceConstantPool, int cpi, byte opcode, long[] info);
+    public native long resolveFieldInPool(long metaspaceConstantPool, int cpi, byte opcode, long[] info);
 
     public int constantPoolRemapInstructionOperandFromCache(long metaspaceConstantPool, int cpi) {
         JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
@@ -159,7 +159,7 @@ public class CompilerToVMImpl implements CompilerToVM {
     public native StackTraceElement getStackTraceElement(long metaspaceMethod, int bci);
 
     @Override
-    public native Object executeCompiledMethodVarargs(Object[] args, InstalledCode hotspotInstalledCode);
+    public native Object executeInstalledCode(Object[] args, InstalledCode hotspotInstalledCode);
 
     @Override
     public native long[] getLineNumberTable(long metaspaceMethod);
@@ -171,9 +171,6 @@ public class CompilerToVMImpl implements CompilerToVM {
     public native int getLocalVariableTableLength(long metaspaceMethod);
 
     @Override
-    public native String getFileName(HotSpotResolvedJavaType method);
-
-    @Override
     public native void reprofile(long metaspaceMethod);
 
     @Override
@@ -183,18 +180,10 @@ public class CompilerToVMImpl implements CompilerToVM {
     public native Class<?> getJavaMirror(long metaspaceKlass);
 
     @Override
-    public native long readUnsafeKlassPointer(Object o);
-
-    @Override
     public native Object readUncompressedOop(long address);
 
     @Override
     public native void doNotInlineOrCompile(long metaspaceMethod);
-
-    @Override
-    public Object executeCompiledMethod(Object arg1, Object arg2, Object arg3, InstalledCode hotspotInstalledCode) throws InvalidInstalledCodeException {
-        return executeCompiledMethodVarargs(new Object[]{arg1, arg2, arg3}, hotspotInstalledCode);
-    }
 
     public synchronized native void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethod method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond,
                     InstalledCode installedCode);
@@ -230,9 +219,9 @@ public class CompilerToVMImpl implements CompilerToVM {
 
     private native String getSymbol0(long metaspaceSymbol);
 
-    public native void resolveInvokeDynamic(long metaspaceConstantPool, int index);
+    public native void resolveInvokeDynamicInPool(long metaspaceConstantPool, int index);
 
-    public native void resolveInvokeHandle(long metaspaceConstantPool, int index);
+    public native void resolveInvokeHandleInPool(long metaspaceConstantPool, int index);
 
     public native int getVtableIndexForInterface(long metaspaceKlass, long metaspaceMethod);
 
