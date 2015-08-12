@@ -1045,7 +1045,7 @@ def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
     exe = join(jdk, 'bin', mx.exe_suffix('java'))
     pfx = _vm_prefix.split() if _vm_prefix is not None else []
 
-    # Support for legacy -G: options
+    # Support for -G: options
     jvmciArgs = []
     nonJvmciArgs = []
     existingJvmciOptionsProperty = None
