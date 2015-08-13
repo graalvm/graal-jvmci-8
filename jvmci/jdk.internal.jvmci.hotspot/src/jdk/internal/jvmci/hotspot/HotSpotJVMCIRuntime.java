@@ -154,22 +154,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     protected final HotSpotVMConfig config;
     private final JVMCIBackend hostBackend;
 
-    /**
-     * JVMCI mirrors are stored as a {@link ClassValue} associated with the {@link Class} of the
-     * type. This data structure stores both {@link HotSpotResolvedObjectType} and
-     * {@link HotSpotResolvedPrimitiveType} types.
-     */
-    private final ClassValue<ResolvedJavaType> jvmciMirrors = new ClassValue<ResolvedJavaType>() {
-        @Override
-        protected ResolvedJavaType computeValue(Class<?> javaClass) {
-            if (javaClass.isPrimitive()) {
-                Kind kind = Kind.fromJavaClass(javaClass);
-                return new HotSpotResolvedPrimitiveType(kind);
-            } else {
-                return new HotSpotResolvedObjectTypeImpl(javaClass);
-            }
-        }
-    };
+    protected final JVMCIMetaAccessContext metaAccessContext;
 
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
 
@@ -198,6 +183,27 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             });
         }
         vmEventListeners = listeners;
+
+        JVMCIMetaAccessContext context = null;
+        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
+            context = vmEventListener.createMetaAccessContext(this, HotSpotJVMCIRuntime::createClass);
+            if (context != null) {
+                break;
+            }
+        }
+        if (context == null) {
+            context = new JVMCIGlobalMetaAccessContext(HotSpotJVMCIRuntime::createClass);
+        }
+        metaAccessContext = context;
+    }
+
+    private static ResolvedJavaType createClass(Class<?> javaClass) {
+        if (javaClass.isPrimitive()) {
+            Kind kind = Kind.fromJavaClass(javaClass);
+            return new HotSpotResolvedPrimitiveType(kind);
+        } else {
+            return new HotSpotResolvedObjectTypeImpl(javaClass);
+        }
     }
 
     private JVMCIBackend registerBackend(JVMCIBackend backend) {
@@ -208,7 +214,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     }
 
     public ResolvedJavaType fromClass(Class<?> javaClass) {
-        return jvmciMirrors.get(javaClass);
+        return metaAccessContext.fromClass(javaClass);
     }
 
     public HotSpotVMConfig getConfig() {
@@ -217,6 +223,10 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     public CompilerToVM getCompilerToVM() {
         return compilerToVm;
+    }
+
+    public JVMCIMetaAccessContext getMetaAccessContext() {
+        return metaAccessContext;
     }
 
     public JavaType lookupType(String name, HotSpotResolvedObjectType accessingType, boolean resolve) {

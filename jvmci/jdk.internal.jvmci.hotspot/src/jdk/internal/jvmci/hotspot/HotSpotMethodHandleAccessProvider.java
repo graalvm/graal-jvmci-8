@@ -23,7 +23,6 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaType.*;
 import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
 import jdk.internal.jvmci.common.*;
 import jdk.internal.jvmci.meta.*;
@@ -56,7 +55,7 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
          */
         private static ResolvedJavaField findFieldInClass(String className, String fieldName) throws ClassNotFoundException {
             Class<?> clazz = Class.forName(className);
-            ResolvedJavaType type = fromClass(clazz);
+            ResolvedJavaType type = runtime().fromClass(clazz);
             ResolvedJavaField[] fields = type.getInstanceFields(false);
             for (ResolvedJavaField field : fields) {
                 if (field.getName().equals(fieldName)) {

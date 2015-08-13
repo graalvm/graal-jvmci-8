@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,30 +20,26 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.hotspot;
+package jdk.internal.jvmci.meta;
 
-import jdk.internal.jvmci.meta.*;
+/**
+ * A context in which the results looking up the {@link ResolvedJavaType} for a {@link Class} are
+ * cached.
+ */
+public interface JVMCIMetaAccessContext {
 
-public abstract class HotSpotResolvedJavaType extends HotSpotJavaType implements ResolvedJavaType {
+    /**
+     * Gets the JVMCI mirror for a {@link Class} object.
+     *
+     * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
+     */
 
-    public HotSpotResolvedJavaType(String name) {
-        super(name);
-    }
+    ResolvedJavaType fromClass(Class<?> clazz);
 
-    public abstract Class<?> mirror();
-
-    @Override
-    public final boolean equals(Object obj) {
-        if (!(obj instanceof HotSpotResolvedJavaType)) {
-            return false;
-        }
-        HotSpotResolvedJavaType that = (HotSpotResolvedJavaType) obj;
-        return this.mirror().equals(that.mirror());
-    }
-
-    @Override
-    public final int hashCode() {
-        return getName().hashCode();
-    }
-
+    /**
+     * An optional operation which drops all currently cached information.
+     *
+     * @return true if any work was performed
+     */
+    boolean flush();
 }

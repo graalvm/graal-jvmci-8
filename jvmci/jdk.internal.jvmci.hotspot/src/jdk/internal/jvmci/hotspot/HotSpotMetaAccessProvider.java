@@ -23,7 +23,6 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.common.UnsafeAccess.*;
-import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaType.*;
 import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
 
 import java.lang.reflect.*;
@@ -105,7 +104,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
         final long offset = Modifier.isStatic(modifiers) ? unsafe.staticFieldOffset(reflectionField) : unsafe.objectFieldOffset(reflectionField);
 
         HotSpotResolvedObjectType holder = fromObjectClass(fieldHolder);
-        JavaType type = fromClass(fieldType);
+        JavaType type = runtime.fromClass(fieldType);
 
         if (offset != -1) {
             HotSpotResolvedObjectType resolved = holder;

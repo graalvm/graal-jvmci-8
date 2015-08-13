@@ -137,7 +137,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     @Override
     public ResolvedJavaType getComponentType() {
         Class<?> javaComponentType = mirror().getComponentType();
-        return javaComponentType == null ? null : fromClass(javaComponentType);
+        return javaComponentType == null ? null : runtime().fromClass(javaComponentType);
     }
 
     @Override

@@ -22,7 +22,10 @@
  */
 package jdk.internal.jvmci.hotspot;
 
+import java.util.function.*;
+
 import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.meta.*;
 
 public interface HotSpotVMEventListener {
 
@@ -63,9 +66,26 @@ public interface HotSpotVMEventListener {
     }
 
     /**
+     * Perform any extra initialization required.
+     *
      * @param hotSpotJVMCIRuntime
+     * @param compilerToVM the current {@link CompilerToVM instance}
+     * @return the original compilerToVM instance or a proxied version.
      */
     default CompilerToVM completeInitialization(HotSpotJVMCIRuntime hotSpotJVMCIRuntime, CompilerToVM compilerToVM) {
         return compilerToVM;
+    }
+
+    /**
+     * Create a custom {@link JVMCIMetaAccessContext} to be used for managing the lifetime of loaded
+     * metadata. It a custom one isn't created then the default implementation will be a single
+     * context with globally shared instances of {@link ResolvedJavaType} that are never released.
+     *
+     * @param hotSpotJVMCIRuntime
+     * @param factory the factory function to create new ResolvedJavaTypes
+     * @return a custom context or null
+     */
+    default JVMCIMetaAccessContext createMetaAccessContext(HotSpotJVMCIRuntime hotSpotJVMCIRuntime, Function<Class<?>, ResolvedJavaType> factory) {
+        return null;
     }
 }

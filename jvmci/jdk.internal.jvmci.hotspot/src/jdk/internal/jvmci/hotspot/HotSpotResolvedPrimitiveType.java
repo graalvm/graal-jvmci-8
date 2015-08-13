@@ -29,8 +29,8 @@ import java.lang.reflect.*;
 import java.net.*;
 
 import jdk.internal.jvmci.common.*;
+import jdk.internal.jvmci.meta.Assumptions.AssumptionResult;
 import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.meta.Assumptions.*;
 
 /**
  * Implementation of {@link JavaType} for primitive HotSpot types.
@@ -44,7 +44,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
      *
      * <p>
      * <b>NOTE</b>: Creating an instance of this class does not install the mirror for the
-     * {@link Class} type. Use {@link #fromClass(Class)} instead.
+     * {@link Class} type. Use {@link HotSpotJVMCIRuntimeProvider#fromClass(Class)} instead.
      * </p>
      *
      * @param kind the Kind to create the mirror for

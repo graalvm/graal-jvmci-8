@@ -60,6 +60,8 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
      */
     ResolvedJavaType fromClass(Class<?> clazz);
 
+    JVMCIMetaAccessContext getMetaAccessContext();
+
     /**
      * The offset from the origin of an array to the first element.
      *
