@@ -37,7 +37,7 @@ import jdk.internal.jvmci.options.*;
 /**
  * Implementation of {@link JavaMethod} for resolved HotSpot methods.
  */
-public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSpotResolvedJavaMethod, HotSpotProxified, MethodIdHolder {
+public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSpotResolvedJavaMethod, HotSpotProxified {
 
     public static class Options {
         // @formatter:off
@@ -728,16 +728,5 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
             return hasCompiledCodeAtLevel(level);
         }
         return runtime().getCompilerToVM().hasCompiledCodeForOSR(metaspaceMethod, entryBCI, level);
-    }
-
-    private int methodId;
-
-    public void setMethodId(int id) {
-        assert methodId == 0;
-        methodId = id;
-    }
-
-    public int getMethodId() {
-        return methodId;
     }
 }
