@@ -22,13 +22,13 @@
  */
 package jdk.internal.jvmci.sparc;
 
+import static java.nio.ByteOrder.*;
 import static jdk.internal.jvmci.code.MemoryBarriers.*;
 
-import java.nio.*;
 import java.util.*;
 
 import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.code.Register.*;
+import jdk.internal.jvmci.code.Register.RegisterCategory;
 import jdk.internal.jvmci.meta.*;
 
 /**
@@ -252,7 +252,7 @@ public class SPARC extends Architecture {
     public final Set<CPUFeature> features;
 
     public SPARC(Set<CPUFeature> features) {
-        super("SPARC", 8, ByteOrder.BIG_ENDIAN, false, allRegisters, LOAD_STORE | STORE_STORE, 1, r31.encoding + FLOAT_REGISTER_COUNT + 1, 8);
+        super("SPARC", 8, BIG_ENDIAN, false, allRegisters, LOAD_LOAD | LOAD_STORE | STORE_STORE, 1, r31.encoding + FLOAT_REGISTER_COUNT + 1, 8);
         this.features = features;
     }
 
