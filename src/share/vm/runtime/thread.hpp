@@ -324,7 +324,7 @@ class Thread: public ThreadShadow {
   virtual bool is_Worker_thread() const              { return false; }
 
   // Can this thread make Java upcalls
-  virtual bool can_call_java() const                 { return true;  }
+  virtual bool can_call_java() const                 { return false; }
 
   // Casts
   virtual WorkerThread* as_Worker_thread() const     { return NULL; }
@@ -1032,13 +1032,14 @@ class JavaThread: public Thread {
   void cleanup_failed_attach_current_thread();
 
   // Track the nmethod currently being scanned by the sweeper
-  void          set_scanned_nmethod(nmethod* nm) {
+  void set_scanned_nmethod(nmethod* nm) {
     assert(_scanned_nmethod == NULL || nm == NULL, "should reset to NULL before writing a new value");
     _scanned_nmethod = nm;
   }
 
   // Testers
   virtual bool is_Java_thread() const            { return true;  }
+  virtual bool can_call_java() const             { return true; }
 
   // Thread chain operations
   JavaThread* next() const                       { return _next; }
@@ -1881,7 +1882,7 @@ class CompilerThread : public JavaThread {
   virtual bool can_call_java() const             { return false; }
 #endif
 
-  // Hide this compiler thread from external view.
+  // Hide native compiler threads from external view.
   bool is_hidden_from_external_view() const      { return !can_call_java(); }
 
   void set_compiler(AbstractCompiler* c)         { _compiler = c; }

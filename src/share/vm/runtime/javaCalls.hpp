@@ -210,12 +210,6 @@ class JavaCalls: AllStatic {
   static void call_special(JavaValue* result, Handle receiver, KlassHandle klass, Symbol* name, Symbol* signature, Handle arg1, TRAPS);
   static void call_special(JavaValue* result, Handle receiver, KlassHandle klass, Symbol* name, Symbol* signature, Handle arg1, Handle arg2, TRAPS);
 
-  // interface call
-  // ------------
-
-  // The receiver must be first oop in argument list
-  static void call_interface(JavaValue* result, KlassHandle spec_klass, Symbol* name, Symbol* signature, JavaCallArguments* args, TRAPS);
-
   // virtual call
   // ------------
 

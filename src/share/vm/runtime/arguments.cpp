@@ -1492,7 +1492,7 @@ void Arguments::set_use_compressed_oops() {
   // the only value that can override MaxHeapSize if we are
   // to use UseCompressedOops is InitialHeapSize.
   size_t max_heap_size = MAX2(MaxHeapSize, InitialHeapSize);
-  // Set default on jvmci with sparc to not use compressed oops as long they are not implemented
+
   if (max_heap_size <= max_heap_for_compressed_oops()) {
 #if !defined(COMPILER1) || defined(TIERED)
     if (FLAG_IS_DEFAULT(UseCompressedOops)) {
@@ -3615,6 +3615,8 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
           scp_assembly_required = true;
         }
       }
+      FREE_C_HEAP_ARRAY(char, dbuf, mtInternal);
+      os::closedir(dir);
     }
 
   }

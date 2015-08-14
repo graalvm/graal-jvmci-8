@@ -54,7 +54,7 @@ JavaCallWrapper::JavaCallWrapper(methodHandle callee_method, Handle receiver, Ja
 
   guarantee(thread->is_Java_thread(), "crucial check - the VM thread cannot and must not escape to Java code");
   assert(!thread->owns_locks(), "must release all locks when leaving VM");
-  guarantee(thread->can_call_java(), "cannot make java calls from the compiler");
+  guarantee(thread->can_call_java(), "cannot make java calls from the native compiler");
   _result   = result;
 
   // Allocate handle block for Java code. This must be done before we change thread_state to _thread_in_Java_or_stub,
@@ -191,23 +191,6 @@ void JavaCalls::call_default_constructor(JavaThread* thread, methodHandle method
     call(&result, method, &args, CHECK);
   }
 }
-
-// ============ Interface calls ============
-
-void JavaCalls::call_interface(JavaValue* result, KlassHandle spec_klass, Symbol* name, Symbol* signature, JavaCallArguments* args, TRAPS) {
-  CallInfo callinfo;
-  Handle receiver = args->receiver();
-  KlassHandle recvrKlass(THREAD, receiver.is_null() ? (Klass*)NULL : receiver->klass());
-  LinkResolver::resolve_interface_call(
-          callinfo, receiver, recvrKlass, spec_klass, name, signature,
-          KlassHandle(), false, true, CHECK);
-  methodHandle method = callinfo.selected_method();
-  assert(method.not_null(), "should have thrown exception");
-
-  // Invoke the method
-  JavaCalls::call(result, method, args, CHECK);
-}
-
 
 // ============ Virtual calls ============
 
@@ -374,7 +357,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
 #endif
 
 
-  assert(thread->can_call_java(), "cannot compile from the compiler");
+  assert(thread->can_call_java(), "cannot compile from the native compiler");
   if (CompilationPolicy::must_be_compiled(method)) {
     CompileBroker::compile_method(method, InvocationEntryBci,
                                   CompilationPolicy::policy()->initial_compile_level(),
@@ -421,7 +404,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
 #if INCLUDE_JVMCI
   if (nm != NULL) {
     if (nm->is_alive()) {
-      ((JavaThread*) THREAD)->set_jvmci_alternate_call_target(nm->verified_entry_point());
+      thread->set_jvmci_alternate_call_target(nm->verified_entry_point());
       entry_point = method->adapter()->get_i2c_entry();
     } else {
       THROW(vmSymbols::jdk_internal_jvmci_code_InvalidInstalledCodeException());

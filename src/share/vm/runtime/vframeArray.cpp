@@ -347,7 +347,8 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
           if (o == NULL) {
             tty->print_cr("NULL");
           } else {
-            tty->print_raw_cr(err_msg("%s", o->klass()->name()->as_C_string()));
+            ResourceMark rm;
+            tty->print_raw_cr(o->klass()->name()->as_C_string());
           }
         }
 #endif
@@ -384,7 +385,8 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
           if (o == NULL) {
             tty->print_cr("NULL");
           } else {
-            tty->print_raw_cr(err_msg("%s", o->klass()->name()->as_C_string()));
+            ResourceMark rm;
+            tty->print_raw_cr(o->klass()->name()->as_C_string());
           }
         }
 #endif

@@ -3648,10 +3648,7 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   // Note that we do not use CHECK_0 here since we are inside an EXCEPTION_MARK and
   // set_init_completed has just been called, causing exceptions not to be shortcut
   // anymore. We call vm_exit_during_initialization directly instead.
-  SystemDictionary::compute_java_system_loader(THREAD);
-  if (HAS_PENDING_EXCEPTION) {
-    vm_exit_during_initialization(Handle(THREAD, PENDING_EXCEPTION));
-  }
+  SystemDictionary::compute_java_system_loader(CHECK_(JNI_ERR));
 
 #if INCLUDE_ALL_GCS
   // Support for ConcurrentMarkSweep. This should be cleaned up
