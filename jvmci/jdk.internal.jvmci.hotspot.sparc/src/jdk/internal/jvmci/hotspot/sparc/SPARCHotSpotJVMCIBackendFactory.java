@@ -66,6 +66,9 @@ public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         if ((config.sparcFeatures & config.cbcondInstructions) != 0) {
             features.add(CPUFeature.CBCOND);
         }
+        if (config.useBlockZeroing) {
+            features.add(CPUFeature.BLOCK_ZEROING);
+        }
         return features;
     }
 

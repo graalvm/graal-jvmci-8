@@ -799,6 +799,8 @@ public class HotSpotVMConfig {
     @HotSpotVMConstant(name = "VM_Version::vis2_instructions_m", archs = {"sparc"}) @Stable public int vis2Instructions;
     @HotSpotVMConstant(name = "VM_Version::vis1_instructions_m", archs = {"sparc"}) @Stable public int vis1Instructions;
     @HotSpotVMConstant(name = "VM_Version::cbcond_instructions_m", archs = {"sparc"}) @Stable public int cbcondInstructions;
+    @HotSpotVMFlag(name = "UseBlockZeroing", archs = {"sparc"}) @Stable public boolean useBlockZeroing;
+    @HotSpotVMFlag(name = "BlockZeroingLowLimit", archs = {"sparc"}) @Stable public int blockZeroingLowLimit;
 
     // offsets, ...
     @HotSpotVMFlag(name = "StackShadowPages") @Stable public int stackShadowPages;

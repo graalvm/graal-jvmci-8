@@ -342,6 +342,7 @@ public class SPARC extends Architecture {
         VIS1,
         VIS2,
         VIS3,
-        CBCOND
+        CBCOND,
+        BLOCK_ZEROING
     }
 }
