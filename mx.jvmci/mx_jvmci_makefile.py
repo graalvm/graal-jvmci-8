@@ -72,8 +72,12 @@ def get_jdk_deployed_dists():
 def _get_dependency_check(p):
     jarFinders = []
     for dep in p.deps:
-        if (dep.isJreLibrary() or dep.isJdkLibrary()) and dep.optional:
-            jar = dep.classpath_repr(False)
+        jar = None
+        if dep.isJreLibrary() and dep.optional:
+            jar = dep.jar
+        if dep.isJdkLibrary() and dep.optional:
+            jar = dep.path
+        if jar:
             jarFinders.append("$(shell find $(ABS_BOOTDIR)/ -name '%s'; echo $$?)" % jar)
     return "ifeq ({},'{}')".format("".join(jarFinders), "0" * len(jarFinders)) if len(jarFinders) > 0 else None
 
@@ -94,7 +98,7 @@ def make_dist_rule(dist, mf):
     for p in projects:
         projectDir = path_dist_relative(p.dir)
         annotationProcessorDeps.update(p.declaredAnnotationProcessors)
-        depCheck =  _get_dependency_check(p)
+        depCheck = _get_dependency_check(p)
         if depCheck:
             sources.append(depCheck)
         for src in [projectDir + '/' + d for d in p.srcDirs]:
@@ -139,7 +143,7 @@ def make_dist_rule(dist, mf):
 
 def do_build_makefile(mf, selectedDists):
     jdk = mx.get_jdk()
-    bootClassPath = jdk.bootclasspath()
+    bootClassPath = jdk.bootclasspath(filtered=False)
     bootClassPath = bootClassPath.replace(os.path.realpath(jdk.home), "$(ABS_BOOTDIR)")
     jdkBootClassPathVariableName = "JDK_BOOTCLASSPATH"
 

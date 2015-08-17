@@ -1661,7 +1661,7 @@ mx.update_commands(_suite, {
     'deoptalot' : [deoptalot, '[n]'],
     'longtests' : [longtests, ''],
     'jol' : [jol, ''],
-    'makefile' : [mx_jvmci_makefile.build_makefile, 'build makefiles for JDK build'],
+    'makefile' : [mx_jvmci_makefile.build_makefile, 'build makefiles for JDK build', None, {'keepUnsatisfiedDependencies': True}],
 })
 
 mx.add_argument('--vmcwd', dest='vm_cwd', help='current directory will be changed to <path> before the VM is executed', default=None, metavar='<path>')
