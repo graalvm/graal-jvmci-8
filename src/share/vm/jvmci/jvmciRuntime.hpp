@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -58,6 +58,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
  private:
   static jobject _HotSpotJVMCIRuntime_instance;
   static bool _HotSpotJVMCIRuntime_initialized;
+  static const char* _compiler;
   static const char* _options;
 
   static bool _shutdown_called;
@@ -75,6 +76,12 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
    * Parses *.properties files in jre/lib/jvmci/ and adds the properties to plist.
    */
   static void parse_properties(SystemProperty** plist);
+
+  /**
+   * Saves the value of the "jvmci.compiler" system property for processing
+   * when JVMCI is initialized.
+   */
+  static void save_compiler(const char* compiler);
 
   /**
    * Saves the value of the "jvmci.options" system property for processing

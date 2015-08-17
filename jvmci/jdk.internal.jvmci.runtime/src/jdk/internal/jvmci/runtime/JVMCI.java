@@ -30,6 +30,10 @@ public class JVMCI {
 
     private static native JVMCIRuntime initializeRuntime();
 
+    public static void initialize() {
+        // force static initializer
+    }
+
     /**
      * Gets the singleton {@link JVMCIRuntime} instance available to the application.
      *

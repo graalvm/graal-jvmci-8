@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,17 +20,12 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.hotspot;
+package jdk.internal.jvmci.compiler;
 
-import jdk.internal.jvmci.compiler.*;
-import jdk.internal.jvmci.runtime.*;
-
-public interface HotSpotJVMCIBackendFactory {
-
-    JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, CompilerFactory compilerFactory, JVMCIBackend host);
+public interface StartupEventListener {
 
     /**
-     * Gets the CPU architecture of this backend.
+     * This method is called before any of the {@link CompilerFactory} methods.
      */
-    String getArchitecture();
+    void beforeJVMCIStartup();
 }

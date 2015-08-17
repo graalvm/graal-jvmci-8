@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -3700,6 +3700,10 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
 #if INCLUDE_JVMCI
+  const char* jvmciCompiler = Arguments::PropertyList_get_value(Arguments::system_properties(), "jvmci.compiler");
+  if (jvmciCompiler != NULL) {
+    JVMCIRuntime::save_compiler(jvmciCompiler);
+  }
   const char* jvmciOptions = Arguments::PropertyList_get_value(Arguments::system_properties(), "jvmci.options");
   if (jvmciOptions != NULL) {
     JVMCIRuntime::save_options(jvmciOptions);

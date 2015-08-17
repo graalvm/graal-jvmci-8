@@ -28,6 +28,8 @@ import java.util.*;
 
 import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.common.*;
+import jdk.internal.jvmci.compiler.*;
+import jdk.internal.jvmci.compiler.Compiler;
 import jdk.internal.jvmci.inittimer.*;
 import jdk.internal.jvmci.meta.*;
 import jdk.internal.jvmci.options.*;
@@ -42,6 +44,12 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     static {
         try (InitTimer t0 = timer("HotSpotJVMCIRuntime.<clinit>")) {
+            try (InitTimer t = timer("StartupEventListener.beforeJVMCIStartup")) {
+                for (StartupEventListener l : Services.load(StartupEventListener.class)) {
+                    l.beforeJVMCIStartup();
+                }
+            }
+
             try (InitTimer t = timer("HotSpotJVMCIRuntime.<init>")) {
                 instance = new HotSpotJVMCIRuntime();
             }
@@ -72,6 +80,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         // proxied methods. Some of these static initializers (e.g. in
         // HotSpotMethodData) rely on the static 'instance' field being set
         // to retrieve configuration details.
+        compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
+
         CompilerToVM toVM = this.compilerToVm;
 
         for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
@@ -84,62 +94,19 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     public static class Options {
 
         // @formatter:off
-        @Option(help = "The JVMCI runtime configuration to use", type = OptionType.Expert)
-        public static final OptionValue<String> JVMCIRuntime = new OptionValue<>("");
-
         @Option(help = "File to which logging is sent.  A %p in the name will be replaced with a string identifying the process, usually the process id.", type = OptionType.Expert)
         public static final PrintStreamOption LogFile = new PrintStreamOption();
         // @formatter:on
     }
 
     public static HotSpotJVMCIBackendFactory findFactory(String architecture) {
-        HotSpotJVMCIBackendFactory basic = null;
-        HotSpotJVMCIBackendFactory selected = null;
-        HotSpotJVMCIBackendFactory nonBasic = null;
-        int nonBasicCount = 0;
-
         for (HotSpotJVMCIBackendFactory factory : Services.load(HotSpotJVMCIBackendFactory.class)) {
             if (factory.getArchitecture().equalsIgnoreCase(architecture)) {
-                if (factory.getJVMCIRuntimeName().equals(Options.JVMCIRuntime.getValue())) {
-                    assert selected == null || checkFactoryOverriding(selected, factory);
-                    selected = factory;
-                }
-                if (factory.getJVMCIRuntimeName().equals("basic")) {
-                    assert basic == null || checkFactoryOverriding(basic, factory);
-                    basic = factory;
-                } else {
-                    nonBasic = factory;
-                    nonBasicCount++;
-                }
+                return factory;
             }
         }
 
-        if (selected != null) {
-            return selected;
-        } else {
-            if (!Options.JVMCIRuntime.getValue().equals("")) {
-                // Fail fast if a non-default value for JVMCIRuntime was specified
-                // and the corresponding factory is not available
-                throw new JVMCIError("Specified runtime \"%s\" not available for the %s architecture", Options.JVMCIRuntime.getValue(), architecture);
-            } else if (nonBasicCount == 1) {
-                // If there is exactly one non-basic runtime, select this one.
-                return nonBasic;
-            } else {
-                return basic;
-            }
-        }
-    }
-
-    /**
-     * Checks that a factory overriding is valid. A factory B can only override/replace a factory A
-     * if the B.getClass() is a subclass of A.getClass(). This models the assumption that B is
-     * extends the behavior of A and has therefore understood the behavior expected of A.
-     *
-     * @param baseFactory
-     * @param overridingFactory
-     */
-    private static boolean checkFactoryOverriding(HotSpotJVMCIBackendFactory baseFactory, HotSpotJVMCIBackendFactory overridingFactory) {
-        return baseFactory.getClass().isAssignableFrom(overridingFactory.getClass());
+        throw new JVMCIError("No JVMCI runtime available for the %s architecture", architecture);
     }
 
     /**
@@ -154,6 +121,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     protected final HotSpotVMConfig config;
     private final JVMCIBackend hostBackend;
 
+    private Compiler compiler;
     protected final JVMCIMetaAccessContext metaAccessContext;
 
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
@@ -161,8 +129,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     private final Iterable<HotSpotVMEventListener> vmEventListeners;
 
     private HotSpotJVMCIRuntime() {
-        CompilerToVM toVM = new CompilerToVMImpl();
-        compilerToVm = toVM;
+        compilerToVm = new CompilerToVMImpl();
         try (InitTimer t = timer("HotSpotVMConfig<init>")) {
             config = new HotSpotVMConfig(compilerToVm);
         }
@@ -173,16 +140,14 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         try (InitTimer t = timer("find factory:", hostArchitecture)) {
             factory = findFactory(hostArchitecture);
         }
+
+        CompilerFactory compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory();
+
         try (InitTimer t = timer("create JVMCI backend:", hostArchitecture)) {
-            hostBackend = registerBackend(factory.createJVMCIBackend(this, null));
+            hostBackend = registerBackend(factory.createJVMCIBackend(this, compilerFactory, null));
         }
 
-        Iterable<HotSpotVMEventListener> listeners = Services.load(HotSpotVMEventListener.class);
-        if (!listeners.iterator().hasNext()) {
-            listeners = Arrays.asList(new HotSpotVMEventListener() {
-            });
-        }
-        vmEventListeners = listeners;
+        vmEventListeners = Services.load(HotSpotVMEventListener.class);
 
         JVMCIMetaAccessContext context = null;
         for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
@@ -229,6 +194,10 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         return metaAccessContext;
     }
 
+    public Compiler getCompiler() {
+        return compiler;
+    }
+
     public JavaType lookupType(String name, HotSpotResolvedObjectType accessingType, boolean resolve) {
         Objects.requireNonNull(accessingType, "cannot resolve type without an accessing class");
         // If the name represents a primitive type we can short-circuit the lookup.
@@ -266,9 +235,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     @SuppressWarnings({"unused"})
     private void compileMetaspaceMethod(long metaspaceMethod, int entryBCI, long jvmciEnv, int id) {
-        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
-            vmEventListener.compileMetaspaceMethod(metaspaceMethod, entryBCI, jvmciEnv, id);
-        }
+        HotSpotResolvedJavaMethod method = HotSpotResolvedJavaMethodImpl.fromMetaspace(metaspaceMethod);
+        compiler.compileMethod(method, entryBCI, jvmciEnv, id);
     }
 
     /**
@@ -276,9 +244,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     @SuppressWarnings({"unused"})
     private void compileTheWorld() throws Throwable {
-        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
-            vmEventListener.notifyCompileTheWorld();
-        }
+        compiler.compileTheWorld();
     }
 
     /**

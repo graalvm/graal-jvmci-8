@@ -154,7 +154,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "jdk.internal.jvmci.options",
-        "jdk.internal.jvmci.code",
+        "jdk.internal.jvmci.runtime",
       ],
       "checkstyle" : "jdk.internal.jvmci.service",
       "annotationProcessors" : ["JVMCI_OPTIONS_PROCESSOR"],
@@ -210,16 +210,13 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "jdk.internal.jvmci.hotspotvmconfig",
-        "jdk.internal.jvmci.runtime",
+        "jdk.internal.jvmci.compiler",
         "jdk.internal.jvmci.common",
-        "jdk.internal.jvmci.options",
         "jdk.internal.jvmci.service",
-        "jdk.internal.jvmci.runtime",
       ],
       "annotationProcessors" : [
         "JVMCI_HOTSPOTVMCONFIG_PROCESSOR",
         "JVMCI_OPTIONS_PROCESSOR",
-        "JVMCI_SERVICE_PROCESSOR",
       ],
       "checkstyle" : "jdk.internal.jvmci.service",
       "javaCompliance" : "1.8",

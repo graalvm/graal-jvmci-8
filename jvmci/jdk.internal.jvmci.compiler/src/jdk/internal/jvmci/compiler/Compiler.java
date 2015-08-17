@@ -22,7 +22,6 @@
  */
 package jdk.internal.jvmci.compiler;
 
-import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.meta.*;
 import jdk.internal.jvmci.options.*;
 
@@ -37,5 +36,21 @@ public interface Compiler {
     @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> ExitVMOnException = new OptionValue<>(true);
     @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> PrintStackTraceOnException = new OptionValue<>(false);
 
-    CompilationResult compile(ResolvedJavaMethod method, int entryBCI, boolean mustRecordMethodInlining);
+    /**
+     * Request the compilation of a method by this JVMCI compiler. The compiler should compile the
+     * method to machine code and install it in the code cache if the compilation is successful.
+     *
+     * @param method the method that should be compiled
+     * @param entryBCI the BCI at which to start compiling where -1 denotes a non-OSR compilation
+     *            request and all other values denote an OSR compilation request
+     * @param jvmciEnv pointer to native {@code JVMCIEnv} object
+     * @param id a unique identifier for this compilation
+     */
+    void compileMethod(ResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id);
+
+    /**
+     * Notifies this JVMCI compiler that the VM is running in CompileTheWorld mode and it should now
+     * perform its version of CompileTheWorld.
+     */
+    void compileTheWorld() throws Throwable;
 }

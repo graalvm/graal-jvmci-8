@@ -27,6 +27,7 @@ import static jdk.internal.jvmci.inittimer.InitTimer.*;
 import java.util.*;
 
 import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.compiler.*;
 import jdk.internal.jvmci.hotspot.*;
 import jdk.internal.jvmci.inittimer.*;
 import jdk.internal.jvmci.runtime.*;
@@ -37,15 +38,12 @@ import jdk.internal.jvmci.sparc.SPARC.CPUFeature;
 @ServiceProvider(HotSpotJVMCIBackendFactory.class)
 public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFactory {
 
-    protected Architecture createArchitecture(HotSpotVMConfig config) {
-        return new SPARC(computeFeatures(config));
-    }
-
-    protected TargetDescription createTarget(HotSpotVMConfig config) {
+    protected TargetDescription createTarget(HotSpotVMConfig config, CompilerFactory compilerFactory) {
         final int stackFrameAlignment = 16;
         final int implicitNullCheckLimit = 4096;
         final boolean inlineObjects = false;
-        return new TargetDescription(createArchitecture(config), true, stackFrameAlignment, implicitNullCheckLimit, inlineObjects);
+        Architecture arch = new SPARC(computeFeatures(config));
+        return new TargetDescription(compilerFactory.initializeArchitecture(arch), true, stackFrameAlignment, implicitNullCheckLimit, inlineObjects);
     }
 
     protected HotSpotCodeCacheProvider createCodeCache(HotSpotJVMCIRuntimeProvider runtime, TargetDescription target, RegisterConfig regConfig) {
@@ -72,18 +70,19 @@ public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         return features;
     }
 
+    @Override
     public String getArchitecture() {
         return "SPARC";
     }
 
     @Override
     public String toString() {
-        return getJVMCIRuntimeName() + ":" + getArchitecture();
+        return "JVMCIBackend:" + getArchitecture();
     }
 
-    public JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, JVMCIBackend host) {
+    public JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, CompilerFactory compilerFactory, JVMCIBackend host) {
         assert host == null;
-        TargetDescription target = createTarget(runtime.getConfig());
+        TargetDescription target = createTarget(runtime.getConfig(), compilerFactory);
 
         HotSpotMetaAccessProvider metaAccess = new HotSpotMetaAccessProvider(runtime);
         RegisterConfig regConfig = new SPARCHotSpotRegisterConfig(target, runtime.getConfig());
@@ -96,9 +95,5 @@ public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
 
     protected JVMCIBackend createBackend(HotSpotMetaAccessProvider metaAccess, HotSpotCodeCacheProvider codeCache, HotSpotConstantReflectionProvider constantReflection) {
         return new JVMCIBackend(metaAccess, codeCache, constantReflection);
-    }
-
-    public String getJVMCIRuntimeName() {
-        return "basic";
     }
 }

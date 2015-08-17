@@ -28,6 +28,7 @@ import java.util.*;
 
 import jdk.internal.jvmci.amd64.*;
 import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.compiler.*;
 import jdk.internal.jvmci.hotspot.*;
 import jdk.internal.jvmci.inittimer.*;
 import jdk.internal.jvmci.meta.*;
@@ -36,10 +37,6 @@ import jdk.internal.jvmci.service.*;
 
 @ServiceProvider(HotSpotJVMCIBackendFactory.class)
 public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFactory {
-
-    protected Architecture createArchitecture(HotSpotVMConfig config) {
-        return new AMD64(computeFeatures(config), computeFlags(config));
-    }
 
     protected EnumSet<AMD64.CPUFeature> computeFeatures(HotSpotVMConfig config) {
         // Configure the feature set using the HotSpot flag settings.
@@ -100,11 +97,12 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         return flags;
     }
 
-    protected TargetDescription createTarget(HotSpotVMConfig config) {
+    protected TargetDescription createTarget(HotSpotVMConfig config, CompilerFactory compilerFactory) {
         final int stackFrameAlignment = 16;
         final int implicitNullCheckLimit = 4096;
         final boolean inlineObjects = true;
-        return new TargetDescription(createArchitecture(config), true, stackFrameAlignment, implicitNullCheckLimit, inlineObjects);
+        Architecture arch = new AMD64(computeFeatures(config), computeFlags(config));
+        return new TargetDescription(compilerFactory.initializeArchitecture(arch), true, stackFrameAlignment, implicitNullCheckLimit, inlineObjects);
     }
 
     protected HotSpotConstantReflectionProvider createConstantReflection(HotSpotJVMCIRuntimeProvider runtime) {
@@ -123,19 +121,20 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         return new HotSpotMetaAccessProvider(runtime);
     }
 
+    @Override
     public String getArchitecture() {
         return "AMD64";
     }
 
     @Override
     public String toString() {
-        return getJVMCIRuntimeName() + ":" + getArchitecture();
+        return "JVMCIBackend:" + getArchitecture();
     }
 
-    public JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, JVMCIBackend host) {
+    public JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, CompilerFactory compilerFactory, JVMCIBackend host) {
 
         assert host == null;
-        TargetDescription target = createTarget(runtime.getConfig());
+        TargetDescription target = createTarget(runtime.getConfig(), compilerFactory);
 
         RegisterConfig regConfig;
         HotSpotCodeCacheProvider codeCache;
@@ -162,9 +161,5 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
 
     protected JVMCIBackend createBackend(HotSpotMetaAccessProvider metaAccess, HotSpotCodeCacheProvider codeCache, ConstantReflectionProvider constantReflection) {
         return new JVMCIBackend(metaAccess, codeCache, constantReflection);
-    }
-
-    public String getJVMCIRuntimeName() {
-        return "basic";
     }
 }

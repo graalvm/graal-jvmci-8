@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,17 +20,30 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.hotspot;
+package jdk.internal.jvmci.compiler;
 
-import jdk.internal.jvmci.compiler.*;
+import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.runtime.*;
 
-public interface HotSpotJVMCIBackendFactory {
-
-    JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, CompilerFactory compilerFactory, JVMCIBackend host);
+/**
+ * Factory for a JVMCI compiler.
+ */
+public interface CompilerFactory {
 
     /**
-     * Gets the CPU architecture of this backend.
+     * Get the name of this compiler. The compiler will be selected when the jvmci.compiler system
+     * property is equal to this name.
      */
-    String getArchitecture();
+    String getCompilerName();
+
+    /**
+     * Initialize an {@link Architecture}. The compiler has the opportunity to extend the
+     * {@link Architecture} description with a custom subclass.
+     */
+    Architecture initializeArchitecture(Architecture arch);
+
+    /**
+     * Create a new instance of the {@link Compiler}.
+     */
+    Compiler createCompiler(JVMCIRuntime runtime);
 }

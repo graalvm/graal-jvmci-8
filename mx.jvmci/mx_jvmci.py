@@ -126,8 +126,9 @@ class LibJDKDeployedDist(JarJDKDeployedDist):
         return join('jre', 'lib')
 
 class JvmciJDKDeployedDist(JarJDKDeployedDist):
-    def __init__(self, name, partOfHotSpot=False):
+    def __init__(self, name, partOfHotSpot=False, compilers=False):
         JarJDKDeployedDist.__init__(self, name, partOfHotSpot)
+        self._compilers = compilers
 
     def targetDir(self):
         return join('jre', 'lib', 'jvmci')
@@ -135,6 +136,8 @@ class JvmciJDKDeployedDist(JarJDKDeployedDist):
     def deploy(self, jdkDir):
         JarJDKDeployedDist.deploy(self, jdkDir)
         _updateJVMCIFiles(jdkDir)
+        if self._compilers:
+            _updateJVMCIProperties(jdkDir, self._compilers)
 
 def _exe(l):
     return mx.exe_suffix(l)
@@ -618,6 +621,32 @@ def _updateJVMCIFiles(jdkDir, obsoleteCheck=False):
     jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.endswith('.jar')]
     jreJVMCIServicesDir = join(jreJVMCIDir, 'services')
     _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreJVMCIServicesDir, obsoleteCheck)
+
+def _updateJVMCIProperties(jdkDir, compilers):
+    jvmciProperties = join(jdkDir, 'jre', 'lib', 'jvmci', 'jvmci.properties')
+    if not exists(jvmciProperties):
+        with open(jvmciProperties, 'w') as fp:
+            for compiler in compilers:
+                print >> fp, "jvmci.compiler=" + compiler
+    else:
+        oldCompilers = []
+        with open(jvmciProperties) as fp:
+            for line in fp:
+                if line.startswith('jvmci.compiler='):
+                    oldCompilers += [line.strip().split('=')[1]]
+        changed = False
+        newCompilers = []
+        for c in compilers:
+            if not c in oldCompilers:
+                changed = True
+                newCompilers += [c]
+        if changed:
+            with open(jvmciProperties, 'w') as fp:
+                # prepend new compilers, since the first property wins
+                for c in newCompilers:
+                    print >> fp, "jvmci.compiler=" + c
+                for c in oldCompilers:
+                    print >> fp, "jvmci.compiler=" + c
 
 def _installDistInJdks(deployableDist):
     """

@@ -30,26 +30,6 @@ import jdk.internal.jvmci.meta.*;
 public interface HotSpotVMEventListener {
 
     /**
-     * Compiles a method to machine code and installs it in the code cache if the compilation is
-     * successful.
-     *
-     * @param metaspaceMethod the address of a Method metaspace object
-     * @param entryBCI the BCI at which to start compiling where -1 denotes a non-OSR compilation
-     *            request and all other values denote an OSR compilation request
-     * @param jvmciEnv pointer to native {@code JVMCIEnv} object
-     * @param id a unique identifier for this compilation
-     */
-    default void compileMetaspaceMethod(long metaspaceMethod, int entryBCI, long jvmciEnv, int id) {
-    }
-
-    /**
-     * Notifies this client that HotSpot is running in CompileTheWorld mode and the JVMCI compiler
-     * should now perform its version of CompileTheWorld.
-     */
-    default void notifyCompileTheWorld() throws Throwable {
-    }
-
-    /**
      * Notifies this client that the VM is shutting down.
      */
     default void notifyShutdown() {

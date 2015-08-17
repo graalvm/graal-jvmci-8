@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -44,6 +44,7 @@
 
 jobject JVMCIRuntime::_HotSpotJVMCIRuntime_instance = NULL;
 bool JVMCIRuntime::_HotSpotJVMCIRuntime_initialized = false;
+const char* JVMCIRuntime::_compiler = NULL;
 const char* JVMCIRuntime::_options = NULL;
 bool JVMCIRuntime::_shutdown_called = false;
 
@@ -682,6 +683,15 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
                       "(Ljava/lang/String;)Ljava/lang/Boolean;", &args);
     }
 
+    if (_compiler != NULL) {
+      JavaCallArguments args;
+      oop compiler = java_lang_String::create_oop_from_str(_compiler, CHECK_ABORT);
+      args.push_oop(compiler);
+      callInitializer("jdk/internal/jvmci/hotspot/HotSpotJVMCICompilerConfig",
+                      "selectCompiler",
+                      "(Ljava/lang/String;)Ljava/lang/Boolean;", &args);
+    }
+
     Handle result = callInitializer("jdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime", "runtime",
                                     "()Ljdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime;");
     _HotSpotJVMCIRuntime_initialized = true;
@@ -806,6 +816,12 @@ void JVMCIRuntime::parse_properties(SystemProperty** plist) {
     return; \
   } \
   (void)(0
+
+void JVMCIRuntime::save_compiler(const char* compiler) {
+  assert(compiler != NULL, "npe");
+  assert(_compiler == NULL, "cannot reassign JVMCI compiler");
+  _compiler = compiler;
+}
 
 void JVMCIRuntime::save_options(const char* options) {
   assert(options != NULL, "npe");

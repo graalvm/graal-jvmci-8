@@ -23,6 +23,7 @@
 package jdk.internal.jvmci.hotspot;
 
 import jdk.internal.jvmci.common.*;
+import jdk.internal.jvmci.compiler.Compiler;
 import jdk.internal.jvmci.meta.*;
 import jdk.internal.jvmci.runtime.*;
 import sun.misc.*;
@@ -37,6 +38,8 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
     HotSpotVMConfig getConfig();
 
     CompilerToVM getCompilerToVM();
+
+    Compiler getCompiler();
 
     /**
      * Converts a name to a Java type. This method attempts to resolve {@code name} to a
