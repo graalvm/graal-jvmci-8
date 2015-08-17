@@ -69,6 +69,14 @@ def build_makefile(args):
 def get_jdk_deployed_dists():
     return [d.dist() for d in mx_jvmci.jdkDeployedDists]
 
+def _get_dependency_check(p):
+    jarFinders = []
+    for dep in p.deps:
+        if (dep.isJreLibrary() or dep.isJdkLibrary()) and dep.optional:
+            jar = dep.classpath_repr(False)
+            jarFinders.append("$(shell find $(ABS_BOOTDIR)/ -name '%s'; echo $$?)" % jar)
+    return "ifeq ({},'{}')".format("".join(jarFinders), "0" * len(jarFinders)) if len(jarFinders) > 0 else None
+
 def make_dist_rule(dist, mf):
     def path_dist_relative(p):
         return os.path.relpath(p, dist.suite.dir)
@@ -86,13 +94,19 @@ def make_dist_rule(dist, mf):
     for p in projects:
         projectDir = path_dist_relative(p.dir)
         annotationProcessorDeps.update(p.declaredAnnotationProcessors)
+        depCheck =  _get_dependency_check(p)
+        if depCheck:
+            sources.append(depCheck)
         for src in [projectDir + '/' + d for d in p.srcDirs]:
-            sources.append("$(shell find {} -type f 2> /dev/null)".format(src))
+            sources.append(sourcesVariableName + " += $(shell find {} -type f 2> /dev/null)".format(src))
             metaInf = src + "/META-INF"
             if os.path.exists(os.path.join(dist.suite.dir, metaInf)):
                 resources.append(metaInf)
+        if depCheck:
+            sources.append("endif")
 
-    sourceLines = sourcesVariableName + " = " + ("\n" + sourcesVariableName + " += ").join(sources)
+    mf.add_definition("\n".join(sources))
+
     apDistNames = []
     apDistVariableNames = []
     apDependencies = []
@@ -106,7 +120,6 @@ def make_dist_rule(dist, mf):
            "jarName": targetPathPrefix + jarName,
            "depJarsVariableAccess": "$(" + depJarVariableName + ")" if len(classPath) > 0 else "",
            "depJarsVariable": depJarVariableName,
-           "sourceLines": sourceLines,
            "sourcesVariableName": sourcesVariableName,
            "annotationProcessors": " ".join(apDistVariableNames),
            "cpAnnotationProcessors": ":".join(apDistVariableNames + apDependencies),
@@ -114,7 +127,6 @@ def make_dist_rule(dist, mf):
            "copyResources": " ".join(resources)
            }
 
-    mf.add_definition(sourceLines)
     mf.add_definition("{name}_JAR = {jarName}".format(**props))
     if len(classPath) > 0: mf.add_definition("{depJarsVariable} = {jarDeps}".format(**props))
     if shouldExport: mf.add_definition("EXPORTED_FILES += $({name}_JAR)".format(**props))

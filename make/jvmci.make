@@ -120,26 +120,26 @@ clean:
 
 JDK_BOOTCLASSPATH = $(ABS_BOOTDIR)/jre/lib/resources.jar:$(ABS_BOOTDIR)/jre/lib/rt.jar:$(ABS_BOOTDIR)/jre/lib/jsse.jar:$(ABS_BOOTDIR)/jre/lib/jce.jar:$(ABS_BOOTDIR)/jre/lib/charsets.jar:$(ABS_BOOTDIR)/jre/lib/jfr.jar
 
-JVMCI_SERVICE_SRC = $(shell find jvmci/jdk.internal.jvmci.service/src -type f 2> /dev/null)
+JVMCI_SERVICE_SRC += $(shell find jvmci/jdk.internal.jvmci.service/src -type f 2> /dev/null)
 
 JVMCI_SERVICE_JAR = $(TARGET)/jvmci-service.jar
 
 EXPORTED_FILES += $(JVMCI_SERVICE_JAR)
 
-JVMCI_OPTIONS_SRC = $(shell find jvmci/jdk.internal.jvmci.inittimer/src -type f 2> /dev/null)
+JVMCI_OPTIONS_SRC += $(shell find jvmci/jdk.internal.jvmci.inittimer/src -type f 2> /dev/null)
 JVMCI_OPTIONS_SRC += $(shell find jvmci/jdk.internal.jvmci.options/src -type f 2> /dev/null)
 
 JVMCI_OPTIONS_JAR = $(TARGET)/jvmci-options.jar
 
 EXPORTED_FILES += $(JVMCI_OPTIONS_JAR)
 
-JVMCI_OPTIONS_PROCESSOR_SRC = $(shell find jvmci/jdk.internal.jvmci.options.processor/src -type f 2> /dev/null)
+JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.options.processor/src -type f 2> /dev/null)
 
 JVMCI_OPTIONS_PROCESSOR_JAR = $(TARGET)/jvmci-options-processor.jar
 
 JVMCI_OPTIONS_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-options.jar
 
-JVMCI_API_SRC = $(shell find jvmci/jdk.internal.jvmci.meta/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.meta/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.code/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.runtime/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.common/src -type f 2> /dev/null)
@@ -151,30 +151,32 @@ JVMCI_API_DEP_JARS = $(TARGET)/jvmci-options.jar $(TARGET)/jvmci-service.jar
 
 EXPORTED_FILES += $(JVMCI_API_JAR)
 
-JVMCI_SERVICE_PROCESSOR_SRC = $(shell find jvmci/jdk.internal.jvmci.service.processor/src -type f 2> /dev/null)
+JVMCI_SERVICE_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.service.processor/src -type f 2> /dev/null)
 
 JVMCI_SERVICE_PROCESSOR_JAR = $(TARGET)/jvmci-service-processor.jar
 
 JVMCI_SERVICE_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-service.jar
 
-JVMCI_HOTSPOTVMCONFIG_SRC = $(shell find jvmci/jdk.internal.jvmci.hotspotvmconfig/src -type f 2> /dev/null)
+JVMCI_HOTSPOTVMCONFIG_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspotvmconfig/src -type f 2> /dev/null)
 
 JVMCI_HOTSPOTVMCONFIG_JAR = $(TARGET)/jvmci-hotspotvmconfig.jar
 
 EXPORTED_FILES += $(JVMCI_HOTSPOTVMCONFIG_JAR)
 
-JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC = $(shell find jvmci/jdk.internal.jvmci.hotspotvmconfig.processor/src -type f 2> /dev/null)
+JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspotvmconfig.processor/src -type f 2> /dev/null)
 
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/jvmci-hotspotvmconfig-processor.jar
 
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-options.jar $(TARGET)/jvmci-service.jar $(TARGET)/jvmci-api.jar $(TARGET)/jvmci-hotspotvmconfig.jar
 
-JVMCI_HOTSPOT_SRC = $(shell find jvmci/jdk.internal.jvmci.amd64/src -type f 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.amd64/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.amd64/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.sparc/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.sparc/src -type f 2> /dev/null)
+ifeq ($(shell find $(ABS_BOOTDIR)/ -name 'jfr.jar'; echo $$?),'0')
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.jfr/src -type f 2> /dev/null)
+endif
 
 JVMCI_HOTSPOT_JAR = $(TARGET)/jvmci-hotspot.jar
 
