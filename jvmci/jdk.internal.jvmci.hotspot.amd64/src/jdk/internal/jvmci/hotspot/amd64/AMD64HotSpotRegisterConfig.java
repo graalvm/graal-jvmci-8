@@ -86,8 +86,6 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
      */
     private final boolean needsNativeStackHomeSpace;
 
-    private final CalleeSaveLayout csl;
-
     private static Register[] initAllocatable(boolean reserveForHeapBase) {
         Register[] registers = null;
         // @formatter:off
@@ -127,7 +125,6 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
             this.needsNativeStackHomeSpace = false;
         }
 
-        csl = null;
         this.allocatable = allocatable.clone();
         Set<Register> callerSaveSet = new HashSet<>();
         Collections.addAll(callerSaveSet, allocatable);
@@ -143,6 +140,10 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
     @Override
     public Register[] getCallerSaveRegisters() {
         return callerSaved;
+    }
+
+    public Register[] getCalleeSaveRegisters() {
+        return null;
     }
 
     @Override
@@ -243,10 +244,6 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
     @Override
     public Register getFrameRegister() {
         return rsp;
-    }
-
-    public CalleeSaveLayout getCalleeSaveLayout() {
-        return csl;
     }
 
     @Override

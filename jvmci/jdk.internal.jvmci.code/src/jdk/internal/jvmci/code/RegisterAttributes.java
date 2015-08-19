@@ -57,9 +57,9 @@ public class RegisterAttributes {
         RegisterAttributes[] map = new RegisterAttributes[registers.length];
         for (Register reg : registers) {
             if (reg != null) {
-                CalleeSaveLayout csl = registerConfig.getCalleeSaveLayout();
-                RegisterAttributes attr = new RegisterAttributes(Arrays.asList(registerConfig.getCallerSaveRegisters()).contains(reg),
-                                csl == null ? false : Arrays.asList(csl.registers).contains(reg), Arrays.asList(registerConfig.getAllocatableRegisters()).contains(reg));
+                Register[] csr = registerConfig.getCalleeSaveRegisters();
+                RegisterAttributes attr = new RegisterAttributes(Arrays.asList(registerConfig.getCallerSaveRegisters()).contains(reg), csr == null ? false : Arrays.asList(csr).contains(reg),
+                                Arrays.asList(registerConfig.getAllocatableRegisters()).contains(reg));
                 if (map.length <= reg.number) {
                     map = Arrays.copyOf(map, reg.number + 1);
                 }

@@ -98,8 +98,6 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
      */
     private final Register[] calleeSaveRegisters = {l0, l1, l2, l3, l4, l5, l6, l7, i0, i1, i2, i3, i4, i5, i6, i7};
 
-    private final CalleeSaveLayout csl;
-
     private static Register[] initAllocatable(boolean reserveForHeapBase) {
         Register[] registers = null;
         if (reserveForHeapBase) {
@@ -149,8 +147,6 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
     public SPARCHotSpotRegisterConfig(TargetDescription target, Register[] allocatable) {
         this.architecture = target.arch;
-
-        csl = new CalleeSaveLayout(target, -1, -1, target.arch.getWordSize(), calleeSaveRegisters);
         this.allocatable = allocatable.clone();
         attributesMap = RegisterAttributes.createMap(this, SPARC.allRegisters);
     }
@@ -158,6 +154,10 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     @Override
     public Register[] getCallerSaveRegisters() {
         return callerSaveRegisters;
+    }
+
+    public Register[] getCalleeSaveRegisters() {
+        return calleeSaveRegisters;
     }
 
     @Override
@@ -282,10 +282,6 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     @Override
     public Register getFrameRegister() {
         return sp;
-    }
-
-    public CalleeSaveLayout getCalleeSaveLayout() {
-        return csl;
     }
 
     @Override

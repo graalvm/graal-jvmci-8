@@ -91,11 +91,9 @@ public interface RegisterConfig {
     Register[] getCallerSaveRegisters();
 
     /**
-     * Gets the layout of the callee save area of this register configuration.
-     *
-     * @return {@code null} if there is no callee save area
+     * Gets the registers whose values must be preserved by the callee.
      */
-    CalleeSaveLayout getCalleeSaveLayout();
+    Register[] getCalleeSaveRegisters();
 
     /**
      * Gets a map from register {@linkplain Register#number numbers} to register
