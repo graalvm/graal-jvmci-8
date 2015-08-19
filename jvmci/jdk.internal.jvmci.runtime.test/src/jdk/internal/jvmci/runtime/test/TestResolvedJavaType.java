@@ -786,6 +786,14 @@ public class TestResolvedJavaType extends TypeUniverse {
     }
 
     @Test
+    public void getAnnotationsTest() {
+        for (Class<?> c : classes) {
+            ResolvedJavaType type = metaAccess.lookupJavaType(c);
+            assertArrayEquals(c.getAnnotations(), type.getAnnotations());
+        }
+    }
+
+    @Test
     public void getAnnotationTest() {
         for (Class<?> c : classes) {
             ResolvedJavaType type = metaAccess.lookupJavaType(c);

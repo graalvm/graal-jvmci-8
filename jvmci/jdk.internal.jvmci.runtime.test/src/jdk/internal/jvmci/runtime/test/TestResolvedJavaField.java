@@ -59,6 +59,15 @@ public class TestResolvedJavaField extends FieldUniverse {
     }
 
     @Test
+    public void getAnnotationsTest() {
+        for (Map.Entry<Field, ResolvedJavaField> e : fields.entrySet()) {
+            Annotation[] expected = e.getKey().getAnnotations();
+            Annotation[] actual = e.getValue().getAnnotations();
+            assertArrayEquals(expected, actual);
+        }
+    }
+
+    @Test
     public void getAnnotationTest() {
         for (Map.Entry<Field, ResolvedJavaField> e : fields.entrySet()) {
             for (Annotation expected : e.getKey().getAnnotations()) {
