@@ -70,7 +70,6 @@ public final class Services {
      *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings("unchecked")
-    @CallerSensitive
     public static <S> Iterable<S> load(Class<S> service) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
@@ -93,7 +92,6 @@ public final class Services {
      *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings({"unchecked"})
-    @CallerSensitive
     public static <S> S loadSingle(Class<S> service, boolean required) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
