@@ -373,6 +373,8 @@ suite = {
         "jdk.internal.jvmci.runtime",
         "jdk.internal.jvmci.common",
         "jdk.internal.jvmci.compiler",
+        "jdk.internal.jvmci.amd64",
+        "jdk.internal.jvmci.sparc",
       ],
       "distDependencies" : [
         "JVMCI_OPTIONS",
