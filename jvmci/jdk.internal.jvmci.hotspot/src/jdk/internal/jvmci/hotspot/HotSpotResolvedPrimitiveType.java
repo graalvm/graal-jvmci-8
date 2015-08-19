@@ -209,6 +209,11 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     }
 
     @Override
+    public Annotation[] getAnnotations() {
+        return new Annotation[0];
+    }
+
+    @Override
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
         return null;
     }

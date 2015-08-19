@@ -290,6 +290,12 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider {
     ResolvedJavaField[] getStaticFields();
 
     /**
+     * Returns all annotations of this class. If no annotations are present, an array of length 0 is
+     * returned.
+     */
+    Annotation[] getAnnotations();
+
+    /**
      * Returns the annotation for the specified type of this class, if such an annotation is
      * present.
      *

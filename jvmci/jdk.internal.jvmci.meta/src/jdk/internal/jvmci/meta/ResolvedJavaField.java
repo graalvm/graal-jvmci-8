@@ -61,6 +61,12 @@ public interface ResolvedJavaField extends JavaField, ModifiersProvider {
     ResolvedJavaType getDeclaringClass();
 
     /**
+     * Returns all annotations of this field. If no annotations are present, an array of length 0 is
+     * returned.
+     */
+    Annotation[] getAnnotations();
+
+    /**
      * Returns the annotation for the specified type of this field, if such an annotation is
      * present.
      *
