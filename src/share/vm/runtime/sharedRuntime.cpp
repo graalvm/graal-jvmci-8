@@ -1014,6 +1014,11 @@ JRT_END
 
 JRT_ENTRY_NO_ASYNC(void, SharedRuntime::register_finalizer(JavaThread* thread, oopDesc* obj))
 #if INCLUDE_JVMCI
+  // This removes the requirement for JVMCI compilers to emit code
+  // performing a dynamic check that obj has a finalizer before
+  // calling this routine. There should be no performance impact
+  // for C1 since it emits a dynamic check. C2 and the interpreter
+  // uses other runtime routines for registering finalizers.
   if (!obj->klass()->has_finalizer()) {
     return;
   }
