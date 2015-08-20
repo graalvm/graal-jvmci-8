@@ -58,7 +58,10 @@ final class HotSpotJVMCICompilerConfig {
     private static CompilerFactory compilerFactory;
 
     /**
-     * Called from the VM.
+     * Selects the system compiler.
+     *
+     * Called from VM. This method has an object return type to allow it to be called with a VM
+     * utility function used to call other static initialization methods.
      */
     static Boolean selectCompiler(String compilerName) {
         for (CompilerFactory factory : Services.load(CompilerFactory.class)) {
