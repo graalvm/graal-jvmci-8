@@ -228,10 +228,10 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
 #if defined(COMPILER2) || INCLUDE_JVMCI
   // Reallocate the non-escaping objects and restore their fields. Then
   // relock objects if synchronization on them was eliminated.
-#ifdef COMPILER2
+#ifndef INCLUDE_JVMCI
   if (DoEscapeAnalysis || EliminateNestedLocks) {
     if (EliminateAllocations) {
-#endif // COMPILER2
+#endif // INCLUDE_JVMCI
       assert (chunk->at(0)->scope() != NULL,"expect only compiled java frames");
       GrowableArray<ScopeValue*>* objects = chunk->at(0)->scope()->objects();
 
@@ -274,10 +274,10 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
         // Restore result.
         deoptee.set_saved_oop_result(&map, return_value());
       }
-#ifdef COMPILER2
+#ifndef INCLUDE_JVMCI
     }
     if (EliminateLocks) {
-#endif // COMPILER2
+#endif // INCLUDE_JVMCI
 #ifndef PRODUCT
       bool first = true;
 #endif
@@ -309,10 +309,10 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
 #endif
         }
       }
-#ifdef COMPILER2
+#ifndef INCLUDE_JVMCI
     }
   }
-#endif // COMPILER2
+#endif // INCLUDE_JVMCI
 #endif // COMPILER2 || INCLUDE_JVMCI
 
   // Ensure that no safepoint is taken after pointers have been stored
