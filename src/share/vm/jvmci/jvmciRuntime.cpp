@@ -758,6 +758,7 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
  * The line must match the regular expression "[^=]+=.*". That is one or more
  * characters other than '=' followed by '=' followed by zero or more characters.
  * Everything before the '=' is the property name and everything after '=' is the value.
+ * Lines that start with '#' are treated as comments and ignored.
  * No special processing of whitespace or any escape characters is performed.
  * Also, no check is made whether an existing property is overridden.
  */
@@ -766,6 +767,10 @@ class JVMCIPropertiesFileClosure : public ParseClosure {
 public:
   JVMCIPropertiesFileClosure(SystemProperty** plist) : _plist(plist) {}
   void do_line(char* line) {
+    if (line[0] == '#') {
+      // skip comment
+      return;
+    }
     size_t len = strlen(line);
     char* sep = strchr(line, '=');
     if (sep == NULL) {

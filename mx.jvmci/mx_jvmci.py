@@ -624,10 +624,14 @@ def _updateJVMCIFiles(jdkDir, obsoleteCheck=False):
 
 def _updateJVMCIProperties(jdkDir, compilers):
     jvmciProperties = join(jdkDir, 'jre', 'lib', 'jvmci', 'jvmci.properties')
-    if not exists(jvmciProperties):
+    def createFile(compilers):
         with open(jvmciProperties, 'w') as fp:
+            print >> fp, "# the first entry wins, reorder entries to change the default compiler"
             for compiler in compilers:
                 print >> fp, "jvmci.compiler=" + compiler
+
+    if not exists(jvmciProperties):
+        createFile(compilers)
     else:
         oldCompilers = []
         with open(jvmciProperties) as fp:
@@ -641,12 +645,8 @@ def _updateJVMCIProperties(jdkDir, compilers):
                 changed = True
                 newCompilers += [c]
         if changed:
-            with open(jvmciProperties, 'w') as fp:
-                # prepend new compilers, since the first property wins
-                for c in newCompilers:
-                    print >> fp, "jvmci.compiler=" + c
-                for c in oldCompilers:
-                    print >> fp, "jvmci.compiler=" + c
+            # prepend new compilers, since the first property wins
+            createFile(newCompilers + oldCompilers)
 
 def _installDistInJdks(deployableDist):
     """
