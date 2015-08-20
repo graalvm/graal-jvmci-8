@@ -176,7 +176,7 @@
 #define JVMCI_ONLY(code)
 #define NOT_JVMCI(code) code
 #define IS_JVMCI_DEFINED false
-#endif // JVMCI
+#endif // INCLUDE_JVMCI
 
 // COMPILER1 variant
 #ifdef COMPILER1
