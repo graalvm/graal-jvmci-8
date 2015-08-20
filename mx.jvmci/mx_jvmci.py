@@ -790,7 +790,7 @@ def _hotspotReplaceResultsVar(m):
 
 class HotSpotProject(mx.NativeProject):
     def __init__(self, suite, name, deps, workingSets, results, output, **args):
-        mx.NativeProject.__init__(self, suite, name, "", "src", deps, workingSets, results, output, join(suite.dir, "src")) # TODO...
+        mx.NativeProject.__init__(self, suite, name, "", [], deps, workingSets, results, output, join(suite.dir, "src")) # TODO...
 
     def getOutput(self, replaceVar=_hotspotReplaceResultsVar):
         return mx.NativeProject.getOutput(self, replaceVar=replaceVar)
