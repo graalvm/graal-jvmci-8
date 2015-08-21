@@ -923,7 +923,7 @@ void CompileBroker::compilation_init() {
 #if defined(COMPILERJVMCI)
   _compilers[1] = jvmci;
   if (FLAG_IS_DEFAULT(JVMCIThreads)) {
-    if (!TieredCompilation && FLAG_IS_DEFAULT(BootstrapJVMCI) || BootstrapJVMCI) {
+    if (BootstrapJVMCI) {
       // JVMCI will bootstrap so give it more threads
       c2_count = MIN2(32, os::active_processor_count());
     }
