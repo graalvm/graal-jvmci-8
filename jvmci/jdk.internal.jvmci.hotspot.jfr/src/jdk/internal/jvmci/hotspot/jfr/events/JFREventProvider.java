@@ -40,9 +40,15 @@ public final class JFREventProvider implements EventProvider {
 
     private final boolean enabled;
 
+    /**
+     * Need to store the producer in a field so that it doesn't disappear.
+     */
+    @SuppressWarnings({"deprecation", "unused"}) private final Producer producer;
+
     @SuppressWarnings("deprecation")
     public JFREventProvider() {
         enabled = HotSpotJVMCIRuntime.runtime().getConfig().flightRecorder;
+        Producer p = null;
         if (enabled) {
             try {
                 /*
@@ -51,19 +57,20 @@ public final class JFREventProvider implements EventProvider {
                  * doesn't show JVMCI events in the "Code" tab. There are plans to revise the JFR
                  * code for JDK 9.
                  */
-                Producer producer = new Producer("HotSpot JVM", "Oracle Hotspot JVM", "http://www.oracle.com/hotspot/jvm/");
-                producer.register();
+                p = new Producer("HotSpot JVM", "Oracle Hotspot JVM", "http://www.oracle.com/hotspot/jvm/");
+                p.register();
                 // Register event classes with Producer.
                 for (Class<?> c : JFREventProvider.class.getDeclaredClasses()) {
                     if (c.isAnnotationPresent(EventDefinition.class)) {
                         assert com.oracle.jrockit.jfr.InstantEvent.class.isAssignableFrom(c) : c;
-                        registerEvent(producer, c);
+                        registerEvent(p, c);
                     }
                 }
             } catch (URISyntaxException e) {
                 throw new InternalError(e);
             }
         }
+        this.producer = p;
     }
 
     /**
