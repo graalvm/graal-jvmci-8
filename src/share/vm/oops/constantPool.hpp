@@ -676,6 +676,8 @@ class ConstantPool : public Metadata {
   int klass_ref_index_at(int which)               { return impl_klass_ref_index_at(which, false); }
   int name_and_type_ref_index_at(int which)       { return impl_name_and_type_ref_index_at(which, false); }
 
+  int remap_instruction_operand_from_cache(int operand);  // operand must be biased by CPCACHE_INDEX_TAG
+
   // Lookup for entries consisting of (name_index, signature_index)
   int name_ref_index_at(int which_nt);            // ==  low-order jshort of name_and_type_at(which_nt)
   int signature_ref_index_at(int which_nt);       // == high-order jshort of name_and_type_at(which_nt)
@@ -797,10 +799,6 @@ class ConstantPool : public Metadata {
   int       impl_klass_ref_index_at(int which, bool uncached);
   int       impl_name_and_type_ref_index_at(int which, bool uncached);
 
-  public:
-  int remap_instruction_operand_from_cache(int operand);  // operand must be biased by CPCACHE_INDEX_TAG
-
-  private:
   // Used while constructing constant pool (only by ClassFileParser)
   jint klass_index_at(int which) {
     assert(tag_at(which).is_klass_index(), "Corrupted constant pool");
