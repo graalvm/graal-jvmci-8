@@ -314,6 +314,8 @@
   JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotObjectConstantImpl,       "jdk/internal/jvmci/hotspot/HotSpotObjectConstantImpl"))            \
   JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotMetaspaceConstantImpl,    "jdk/internal/jvmci/hotspot/HotSpotMetaspaceConstantImpl"))         \
   JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotStackFrameReference,      "jdk/internal/jvmci/hotspot/HotSpotStackFrameReference"))           \
+  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotConstantPool,             "jdk/internal/jvmci/hotspot/HotSpotConstantPool"))                  \
+  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext,   "jdk/internal/jvmci/hotspot/HotSpotJVMCIMetaAccessContext"))        \
   JVMCI_ONLY(template(jdk_internal_jvmci_meta_JavaConstant,                       "jdk/internal/jvmci/meta/JavaConstant"))                            \
   JVMCI_ONLY(template(jdk_internal_jvmci_meta_PrimitiveConstant,                  "jdk/internal/jvmci/meta/PrimitiveConstant"))                       \
   JVMCI_ONLY(template(jdk_internal_jvmci_meta_RawConstant,                        "jdk/internal/jvmci/meta/RawConstant"))                             \
@@ -349,8 +351,12 @@
   JVMCI_ONLY(template(jdk_internal_jvmci_code_VirtualObject,                      "jdk/internal/jvmci/code/VirtualObject"))                           \
   JVMCI_ONLY(template(jdk_internal_jvmci_code_RegisterSaveLayout,                 "jdk/internal/jvmci/code/RegisterSaveLayout"))                      \
   JVMCI_ONLY(template(jdk_internal_jvmci_code_InvalidInstalledCodeException,      "jdk/internal/jvmci/code/InvalidInstalledCodeException"))           \
-  JVMCI_ONLY(template(compileMetaspaceMethod_name,                     "compileMetaspaceMethod"))                                                 \
-  JVMCI_ONLY(template(compileMetaspaceMethod_signature,                "(JIJI)V"))                                                                \
+  JVMCI_ONLY(template(compileMethod_name,                                         "compileMethod"))                                                   \
+  JVMCI_ONLY(template(compileMethod_signature,                                    "(Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethod;IJI)V"))    \
+  JVMCI_ONLY(template(fromMetaspace_name,                                         "fromMetaspace"))                                                   \
+  JVMCI_ONLY(template(method_fromMetaspace_signature,                             "(J)Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethod;"))       \
+  JVMCI_ONLY(template(constantPool_fromMetaspace_signature,                       "(J)Ljdk/internal/jvmci/hotspot/HotSpotConstantPool;"))             \
+  JVMCI_ONLY(template(klass_fromMetaspace_signature,                              "(Ljava/lang/Class;)Ljdk/internal/jvmci/hotspot/HotSpotResolvedObjectTypeImpl;"))   \
   JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_Stable_signature, "Ljdk/internal/jvmci/hotspot/Stable;"))                                            \
                                                                                                   \
   /* common method and field names */                                                             \

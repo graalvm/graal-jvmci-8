@@ -54,7 +54,7 @@ public interface HotSpotResolvedObjectType extends ResolvedJavaType {
         return Kind.Object;
     }
 
-    ConstantPool constantPool();
+    ConstantPool getConstantPool();
 
     /**
      * Gets the instance size of this type. If an instance of this type cannot be fast path

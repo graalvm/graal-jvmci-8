@@ -67,9 +67,11 @@ public final class HotSpotMethodData {
      * Reference to the C++ MethodData object.
      */
     private final long metaspaceMethodData;
+    @SuppressWarnings("unused") private final HotSpotResolvedJavaMethodImpl method;
 
-    public HotSpotMethodData(long metaspaceMethodData) {
+    public HotSpotMethodData(long metaspaceMethodData, HotSpotResolvedJavaMethodImpl method) {
         this.metaspaceMethodData = metaspaceMethodData;
+        this.method = method;
     }
 
     /**
@@ -189,9 +191,14 @@ public final class HotSpotMethodData {
         return (int) unsafe.getAddress(metaspaceMethodData + fullOffsetInBytes);
     }
 
-    private long readWord(int position, int offsetInBytes) {
+    private HotSpotResolvedJavaMethod readMethod(int position, int offsetInBytes) {
         long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
-        return unsafe.getAddress(metaspaceMethodData + fullOffsetInBytes);
+        return runtime().compilerToVm.getResolvedJavaMethod(null, metaspaceMethodData + fullOffsetInBytes);
+    }
+
+    private HotSpotResolvedObjectTypeImpl readKlass(int position, int offsetInBytes) {
+        long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
+        return runtime().compilerToVm.getResolvedJavaType(null, metaspaceMethodData + fullOffsetInBytes, false);
     }
 
     private static int truncateLongToInt(long value) {
@@ -491,9 +498,9 @@ public final class HotSpotMethodData {
             int entries = 0;
 
             outer: for (int i = 0; i < typeProfileWidth; i++) {
-                long receiverKlass = data.readWord(position, getTypeOffset(i));
-                if (receiverKlass != 0) {
-                    HotSpotResolvedObjectTypeImpl klass = HotSpotResolvedObjectTypeImpl.fromMetaspaceKlass(receiverKlass);
+                HotSpotResolvedObjectTypeImpl receiverKlass = data.readKlass(position, getTypeOffset(i));
+                if (receiverKlass != null) {
+                    HotSpotResolvedObjectTypeImpl klass = receiverKlass;
                     long count = data.readUnsignedInt(position, getTypeCountOffset(i));
                     /*
                      * Because of races in the profile collection machinery it's possible for a
@@ -629,9 +636,9 @@ public final class HotSpotMethodData {
             int entries = 0;
 
             for (int i = 0; i < profileWidth; i++) {
-                long method = data.readWord(position, getMethodOffset(i));
-                if (method != 0) {
-                    methods[entries] = HotSpotResolvedJavaMethodImpl.fromMetaspace(method);
+                HotSpotResolvedJavaMethod method = data.readMethod(position, getMethodOffset(i));
+                if (method != null) {
+                    methods[entries] = method;
                     long count = data.readUnsignedInt(position, getMethodCountOffset(i));
                     totalCount += count;
                     counts[entries] = count;

@@ -87,8 +87,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
             Class<?> holder = reflectionMethod.getDeclaringClass();
             Field slotField = reflectionMethod instanceof Constructor ? reflectionConstructorSlot : reflectionMethodSlot;
             final int slot = slotField.getInt(reflectionMethod);
-            final long metaspaceMethod = runtime.getCompilerToVM().getMetaspaceMethod(holder, slot);
-            return HotSpotResolvedJavaMethodImpl.fromMetaspace(metaspaceMethod);
+            return runtime.getCompilerToVM().getResolvedJavaMethodAtSlot(holder, slot);
         } catch (IllegalArgumentException | IllegalAccessException e) {
             throw new JVMCIError(e);
         }

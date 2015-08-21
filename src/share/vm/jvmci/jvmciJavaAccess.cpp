@@ -46,6 +46,7 @@ void compute_offset(int &dest_offset, Klass* klass, const char* name, const char
   }
   guarantee(fd.is_static() == static_field, "static/instance mismatch");
   dest_offset = fd.offset();
+  assert(dest_offset != 0, "must be valid offset");
 }
 
 // This piece of macro magic creates the contents of the jvmci_compute_offsets method that initializes the field indices of all the access classes.
@@ -67,7 +68,7 @@ void compute_offset(int &dest_offset, Klass* klass, const char* name, const char
 
 
 void jvmci_compute_offsets() {
-  COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, OOP_FIELD, OOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
+  COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, OOP_FIELD, OOP_FIELD, STATIC_OOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
   guarantee(InstalledCode::_address_offset == sizeof(oopDesc), "codeBlob must be first field!");
 }
 
@@ -77,7 +78,7 @@ void jvmci_compute_offsets() {
 #define FIELD2(klass, name) int klass::_##name##_offset = 0;
 #define FIELD3(klass, name, sig) FIELD2(klass, name)
 
-COMPILER_CLASSES_DO(EMPTY1, EMPTY0, FIELD2, FIELD2, FIELD2, FIELD2, FIELD2, FIELD3, FIELD3, FIELD3, FIELD3, FIELD2, FIELD2)
+COMPILER_CLASSES_DO(EMPTY1, EMPTY0, FIELD2, FIELD2, FIELD2, FIELD2, FIELD2, FIELD3, FIELD3, FIELD3, FIELD3, FIELD3, FIELD2, FIELD2)
 
 
 

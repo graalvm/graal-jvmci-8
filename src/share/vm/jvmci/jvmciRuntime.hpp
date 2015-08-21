@@ -54,7 +54,7 @@ protected:
   void set_filename(char* path) {_filename = path; _lineNo = 0;}
 };
 
-class JVMCIRuntime: public CHeapObj<mtCompiler> {
+class JVMCIRuntime: public AllStatic {
  private:
   static jobject _HotSpotJVMCIRuntime_instance;
   static bool _HotSpotJVMCIRuntime_initialized;
@@ -123,6 +123,8 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
    * Explicitly initialize HotSpotJVMCIRuntime itself
    */
   static void initialize_HotSpotJVMCIRuntime();
+
+  static void metadata_do(void f(Metadata*));
 
   static void shutdown();
 

@@ -43,7 +43,7 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
         static final ResolvedJavaField methodHandleFormField;
         static final ResolvedJavaField lambdaFormVmentryField;
         static final ResolvedJavaMethod lambdaFormCompileToBytecodeMethod;
-        static final ResolvedJavaField memberNameVmtargetField;
+        static final HotSpotResolvedJavaField memberNameVmtargetField;
 
         /**
          * Search for an instance field with the given name in a class.
@@ -84,7 +84,7 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
                 methodHandleFormField = findFieldInClass("java.lang.invoke.MethodHandle", "form");
                 lambdaFormVmentryField = findFieldInClass("java.lang.invoke.LambdaForm", "vmentry");
                 lambdaFormCompileToBytecodeMethod = findMethodInClass("java.lang.invoke.LambdaForm", "compileToBytecode");
-                memberNameVmtargetField = findFieldInClass("java.lang.invoke.MemberName", "vmtarget");
+                memberNameVmtargetField = (HotSpotResolvedJavaField) findFieldInClass("java.lang.invoke.MemberName", "vmtarget");
             } catch (Throwable ex) {
                 throw new JVMCIError(ex);
             }
@@ -147,14 +147,13 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
     /**
      * Returns the {@link ResolvedJavaMethod} for the vmtarget of a java.lang.invoke.MemberName.
      */
-    private ResolvedJavaMethod getTargetMethod(JavaConstant memberName) {
+    private static ResolvedJavaMethod getTargetMethod(JavaConstant memberName) {
         if (memberName.isNull()) {
             return null;
         }
 
-        /* Load injected field: JVM_Method* MemberName.vmtarget */
-        JavaConstant vmtarget = constantReflection.readFieldValue(LazyInitialization.memberNameVmtargetField, memberName);
-        /* Create a method from the vmtarget method pointer. */
-        return HotSpotResolvedJavaMethodImpl.fromMetaspace(vmtarget.asLong());
+        Object object = ((HotSpotObjectConstantImpl) memberName).object();
+        /* Read the ResolvedJavaMethod from the injected field MemberName.vmtarget */
+        return runtime().compilerToVm.getResolvedJavaMethod(object, LazyInitialization.memberNameVmtargetField.offset());
     }
 }

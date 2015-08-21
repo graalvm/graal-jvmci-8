@@ -210,8 +210,10 @@ class Ticks;
   JVMCI_ONLY(do_klass(HotSpotObjectConstantImpl_klass,       jdk_internal_jvmci_hotspot_HotSpotObjectConstantImpl,           Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotMetaspaceConstantImpl_klass,    jdk_internal_jvmci_hotspot_HotSpotMetaspaceConstantImpl,        Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotStackFrameReference_klass,      jdk_internal_jvmci_hotspot_HotSpotStackFrameReference,          Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotConstantPool_klass,             jdk_internal_jvmci_hotspot_HotSpotConstantPool,                 Jvmci)) \
+  JVMCI_ONLY(do_klass(HotSpotJVMCIMetaAccessContext_klass,   jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext,       Jvmci)) \
   JVMCI_ONLY(do_klass(Assumptions_ConcreteMethod_klass,      jdk_internal_jvmci_meta_Assumptions_ConcreteMethod,             Jvmci)) \
-  JVMCI_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, jdk_internal_jvmci_meta_Assumptions_NoFinalizableSubclass,    Jvmci))\
+  JVMCI_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, jdk_internal_jvmci_meta_Assumptions_NoFinalizableSubclass,    Jvmci)) \
   JVMCI_ONLY(do_klass(Assumptions_ConcreteSubtype_klass,     jdk_internal_jvmci_meta_Assumptions_ConcreteSubtype,            Jvmci)) \
   JVMCI_ONLY(do_klass(Assumptions_LeafType_klass,            jdk_internal_jvmci_meta_Assumptions_LeafType,                   Jvmci)) \
   JVMCI_ONLY(do_klass(Assumptions_CallSiteTargetValue_klass, jdk_internal_jvmci_meta_Assumptions_CallSiteTargetValue,        Jvmci)) \

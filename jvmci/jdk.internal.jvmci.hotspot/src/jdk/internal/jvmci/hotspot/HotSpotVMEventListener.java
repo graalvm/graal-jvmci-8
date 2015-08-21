@@ -22,8 +22,6 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import java.util.function.*;
-
 import jdk.internal.jvmci.code.*;
 import jdk.internal.jvmci.meta.*;
 
@@ -62,10 +60,9 @@ public interface HotSpotVMEventListener {
      * context with globally shared instances of {@link ResolvedJavaType} that are never released.
      *
      * @param hotSpotJVMCIRuntime
-     * @param factory the factory function to create new ResolvedJavaTypes
      * @return a custom context or null
      */
-    default JVMCIMetaAccessContext createMetaAccessContext(HotSpotJVMCIRuntime hotSpotJVMCIRuntime, Function<Class<?>, ResolvedJavaType> factory) {
+    default JVMCIMetaAccessContext createMetaAccessContext(HotSpotJVMCIRuntime hotSpotJVMCIRuntime) {
         return null;
     }
 }

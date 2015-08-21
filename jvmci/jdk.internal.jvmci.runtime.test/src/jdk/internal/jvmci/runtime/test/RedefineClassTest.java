@@ -51,7 +51,6 @@ public class RedefineClassTest extends TypeUniverse {
         }
     }
 
-    @Ignore("JVMCI is not yet class redefinition safe")
     @Test
     public void test() throws Throwable {
 

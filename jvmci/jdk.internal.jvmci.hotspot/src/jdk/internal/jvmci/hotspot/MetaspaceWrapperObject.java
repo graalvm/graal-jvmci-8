@@ -20,19 +20,14 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.meta;
+package jdk.internal.jvmci.hotspot;
 
 /**
- * A context in which the results looking up the {@link ResolvedJavaType} for a {@link Class} are
- * cached.
+ * A tag interface indicating that this type is a wrapper around a HotSpot metaspace object. It
+ * would preferable if this were the base class containing the pointer but that would require mixins
+ * since most of the wrapper types have complex supertype hierarchies.
  */
-public interface JVMCIMetaAccessContext {
+public interface MetaspaceWrapperObject {
 
-    /**
-     * Gets the JVMCI mirror for a {@link Class} object.
-     *
-     * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
-     */
-
-    ResolvedJavaType fromClass(Class<?> clazz);
+    long getMetaspacePointer();
 }

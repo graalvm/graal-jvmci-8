@@ -68,7 +68,7 @@ void JVMCIRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
     // Ensure _non_oop_bits is initialized
     Universe::non_oop_word();
 
-    env->RegisterNatives(c2vmClass, CompilerToVM_methods, CompilerToVM_methods_count());
+    env->RegisterNatives(c2vmClass, CompilerToVM::methods, CompilerToVM::methods_count());
   }
   if (HAS_PENDING_EXCEPTION) {
     abort_on_pending_exception(PENDING_EXCEPTION, "Could not register natives");
@@ -704,6 +704,51 @@ void JVMCIRuntime::initialize_JVMCI() {
     callInitializer("jdk/internal/jvmci/runtime/JVMCI",     "getRuntime",      "()Ljdk/internal/jvmci/runtime/JVMCIRuntime;");
   }
   assert(_HotSpotJVMCIRuntime_initialized == true, "what?");
+}
+
+void JVMCIRuntime::metadata_do(void f(Metadata*)) {
+  // WeakReference<HotSpotJVMCIMetaAccessContext>[]
+  objArrayOop allContexts = HotSpotJVMCIMetaAccessContext::allContexts();
+  if (allContexts == NULL) {
+    return;
+  }
+  for (int i = 0; i < allContexts->length(); i++) {
+    oop ref = allContexts->obj_at(i);
+    if (ref != NULL) {
+      oop referent = java_lang_ref_Reference::referent(ref);
+      if (referent != NULL) {
+        // Chunked Object[] with last element pointing to next chunk
+        objArrayOop metadataRoots = HotSpotJVMCIMetaAccessContext::metadataRoots(referent);
+        while (metadataRoots != NULL) {
+          for (int typeIndex = 0; typeIndex < metadataRoots->length() - 1; typeIndex++) {
+            oop reference = metadataRoots->obj_at(typeIndex);
+            if (reference == NULL) {
+              continue;
+            }
+            oop metadataRoot = java_lang_ref_Reference::referent(reference);
+            if (metadataRoot == NULL) {
+              continue;
+            }
+            if (metadataRoot->is_a(SystemDictionary::HotSpotResolvedJavaMethodImpl_klass())) {
+              Method* method = CompilerToVM::asMethod(metadataRoot);
+              f(method);
+            } else if (metadataRoot->is_a(SystemDictionary::HotSpotConstantPool_klass())) {
+              ConstantPool* constantPool = CompilerToVM::asConstantPool(metadataRoot);
+              f(constantPool);
+            } else if (metadataRoot->is_a(SystemDictionary::HotSpotResolvedObjectTypeImpl_klass())) {
+              Klass* klass = CompilerToVM::asKlass(metadataRoot);
+              f(klass);
+            } else {
+              metadataRoot->print();
+              ShouldNotReachHere();
+            }
+          }
+          metadataRoots = (objArrayOop)metadataRoots->obj_at(metadataRoots->length() - 1);
+          assert(metadataRoots == NULL || metadataRoots->is_objArray(), "wrong type");
+        }
+      }
+    }
+  }
 }
 
 // private static void CompilerToVMImpl.init()

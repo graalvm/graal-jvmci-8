@@ -47,7 +47,7 @@ void jvmci_compute_offsets();
  *
  */
 
-#define COMPILER_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, oop_field, typeArrayOop_field, objArrayOop_field, static_oop_field, static_int_field, static_boolean_field) \
+#define COMPILER_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, oop_field, typeArrayOop_field, objArrayOop_field, static_oop_field, static_objArrayOop_field, static_int_field, static_boolean_field) \
   start_class(HotSpotResolvedObjectTypeImpl)                                                                                                                   \
     oop_field(HotSpotResolvedObjectTypeImpl, javaClass, "Ljava/lang/Class;")                                                                                   \
   end_class                                                                                                                                                    \
@@ -93,6 +93,10 @@ void jvmci_compute_offsets();
     int_field(HotSpotCompiledNmethod, id)                                                                                                                      \
     long_field(HotSpotCompiledNmethod, jvmciEnv)                                                                                                               \
     boolean_field(HotSpotCompiledNmethod, hasUnsafeAccess)                                                                                                     \
+  end_class                                                                                                                                                    \
+  start_class(HotSpotJVMCIMetaAccessContext)                                                                                                                      \
+    static_objArrayOop_field(HotSpotJVMCIMetaAccessContext, allContexts, "[Ljava/lang/ref/WeakReference;")                                                        \
+    objArrayOop_field(HotSpotJVMCIMetaAccessContext, metadataRoots, "[Ljava/lang/Object;")                                                                        \
   end_class                                                                                                                                                    \
   start_class(HotSpotForeignCallTarget)                                                                                                                        \
     long_field(HotSpotForeignCallTarget, address)                                                                                                              \
@@ -253,20 +257,23 @@ void jvmci_compute_offsets();
     long_field(HotSpotStackFrameReference, stackPointer)                                                                                                       \
     int_field(HotSpotStackFrameReference, frameNumber)                                                                                                         \
     int_field(HotSpotStackFrameReference, bci)                                                                                                                 \
-    long_field(HotSpotStackFrameReference, metaspaceMethod)                                                                                                    \
+    oop_field(HotSpotStackFrameReference, method, "Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethod;")                                                    \
     objArrayOop_field(HotSpotStackFrameReference, locals, "[Ljava/lang/Object;")                                                                               \
     typeArrayOop_field(HotSpotStackFrameReference, localIsVirtual, "[Z")                                                                                       \
-  end_class                                                                                                                                      
-              \
+  end_class                                                                                                                                                    \
+  start_class(HotSpotConstantPool)                                                                                                                             \
+    long_field(HotSpotConstantPool, metaspaceConstantPool)                                                                                                     \
+  end_class                                                                                                                                                    \
   /* end*/
 
 #define START_CLASS(name)                                                                                                                                      \
 class name : AllStatic {                                                                                                                                       \
   private:                                                                                                                                                     \
     friend class JVMCICompiler;                                                                                                                                \
-    static void check(oop obj, const char* field_name) {                                                                                                       \
+    static void check(oop obj, const char* field_name, int offset) {                                                                                           \
         assert(obj != NULL, err_msg("NULL field access of %s.%s", #name, field_name));                                                                         \
-        assert(obj->is_a(SystemDictionary::name##_klass()), "wrong class, " #name " expected");                                                                \
+        assert(obj->is_a(SystemDictionary::name##_klass()), err_msg("wrong class, " #name " expected, found %s", obj->klass()->external_name())); \
+        assert(offset != 0, "must be valid offset");                                                                                                           \
     }                                                                                                                                                          \
     static void compute_offsets();                                                                                                                             \
   public:                                                                                                                                                      \
@@ -276,12 +283,12 @@ class name : AllStatic {                                                        
 
 #define FIELD(name, type, accessor, cast)                                                                                                                         \
     static int _##name##_offset;                                                                                                                                  \
-    static type name(oop obj)                   { check(obj, #name); return cast obj->accessor(_##name##_offset); }                                               \
-    static type name(Handle& obj)                { check(obj(), #name); return cast obj->accessor(_##name##_offset); }                                            \
-    static type name(jobject obj)               { check(JNIHandles::resolve(obj), #name); return cast JNIHandles::resolve(obj)->accessor(_##name##_offset); }     \
-    static void set_##name(oop obj, type x)     { check(obj, #name); obj->accessor##_put(_##name##_offset, x); }                                                  \
-    static void set_##name(Handle& obj, type x)  { check(obj(), #name); obj->accessor##_put(_##name##_offset, x); }                                               \
-    static void set_##name(jobject obj, type x) { check(JNIHandles::resolve(obj), #name); JNIHandles::resolve(obj)->accessor##_put(_##name##_offset, x); }
+    static type name(oop obj)                   { check(obj, #name, _##name##_offset); return cast obj->accessor(_##name##_offset); }                                               \
+    static type name(Handle& obj)                { check(obj(), #name, _##name##_offset); return cast obj->accessor(_##name##_offset); }                                            \
+    static type name(jobject obj)               { check(JNIHandles::resolve(obj), #name, _##name##_offset); return cast JNIHandles::resolve(obj)->accessor(_##name##_offset); }     \
+    static void set_##name(oop obj, type x)     { check(obj, #name, _##name##_offset); obj->accessor##_put(_##name##_offset, x); }                                                  \
+    static void set_##name(Handle& obj, type x)  { check(obj(), #name, _##name##_offset); obj->accessor##_put(_##name##_offset, x); }                                               \
+    static void set_##name(jobject obj, type x) { check(JNIHandles::resolve(obj), #name, _##name##_offset); JNIHandles::resolve(obj)->accessor##_put(_##name##_offset, x); }
 
 #define EMPTY_CAST 
 #define CHAR_FIELD(klass, name) FIELD(name, jchar, char_field, EMPTY_CAST)
@@ -292,18 +299,20 @@ class name : AllStatic {                                                        
 #define OOP_FIELD(klass, name, signature) FIELD(name, oop, obj_field, EMPTY_CAST)
 #define OBJARRAYOOP_FIELD(klass, name, signature) FIELD(name, objArrayOop, obj_field, (objArrayOop))
 #define TYPEARRAYOOP_FIELD(klass, name, signature) FIELD(name, typeArrayOop, obj_field, (typeArrayOop))
-#define STATIC_OOP_FIELD(klassName, name, signature)                                                           \
+#define STATIC_OOP_FIELD(klassName, name, signature) STATIC_OOPISH_FIELD(klassName, name, oop, signature)
+#define STATIC_OBJARRAYOOP_FIELD(klassName, name, signature) STATIC_OOPISH_FIELD(klassName, name, objArrayOop, signature)
+#define STATIC_OOPISH_FIELD(klassName, name, type, signature)                                                  \
     static int _##name##_offset;                                                                               \
-    static oop name() {                                                                                        \
+    static type name() {                                                                                       \
       InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       if (UseCompressedOops) {                                                                                 \
-        return oopDesc::load_decode_heap_oop((narrowOop *)addr);                                               \
+        return (type) oopDesc::load_decode_heap_oop((narrowOop *)addr);  \
       } else {                                                                                                 \
-        return oopDesc::load_decode_heap_oop((oop*)addr);                                                      \
+        return (type) oopDesc::load_decode_heap_oop((oop*)addr);         \
       }                                                                                                        \
     }                                                                                                          \
-    static void set_##name(oop x) {                                                                            \
+    static void set_##name(type x) {                                                                           \
       InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       if (UseCompressedOops) {                                                                                 \
@@ -328,7 +337,7 @@ class name : AllStatic {                                                        
 #define STATIC_INT_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, jint)
 #define STATIC_BOOLEAN_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, jboolean)
 
-COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, TYPEARRAYOOP_FIELD, OBJARRAYOOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
+COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, TYPEARRAYOOP_FIELD, OBJARRAYOOP_FIELD, STATIC_OOP_FIELD, STATIC_OBJARRAYOOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
 #undef START_CLASS
 #undef END_CLASS
 #undef FIELD
@@ -340,7 +349,9 @@ COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD
 #undef OOP_FIELD
 #undef TYPEARRAYOOP_FIELD
 #undef OBJARRAYOOP_FIELD
+#undef STATIC_OOPISH_FIELD
 #undef STATIC_OOP_FIELD
+#undef STATIC_OBJARRAYOOP_FIELD
 #undef STATIC_INT_FIELD
 #undef STATIC_BOOLEAN_FIELD
 #undef EMPTY_CAST

@@ -66,7 +66,7 @@ LocationValue*         CodeInstaller::_illegal_value = new (ResourceObj::C_HEAP,
 
 Method* getMethodFromHotSpotMethod(oop hotspot_method) {
   assert(hotspot_method != NULL && hotspot_method->is_a(HotSpotResolvedJavaMethodImpl::klass()), "sanity");
-  return asMethod(HotSpotResolvedJavaMethodImpl::metaspaceMethod(hotspot_method));
+  return CompilerToVM::asMethod(hotspot_method);
 }
 
 VMReg getVMRegFromLocation(oop location, int total_frame_size) {

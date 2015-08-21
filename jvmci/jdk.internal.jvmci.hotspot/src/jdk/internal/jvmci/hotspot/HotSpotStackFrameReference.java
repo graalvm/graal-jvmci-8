@@ -37,7 +37,7 @@ public class HotSpotStackFrameReference implements InspectedFrame {
 
     // information about the stack frame's contents
     private int bci;
-    private long metaspaceMethod;
+    private HotSpotResolvedJavaMethod method;
     private Object[] locals;
     private boolean[] localIsVirtual;
 
@@ -71,12 +71,12 @@ public class HotSpotStackFrameReference implements InspectedFrame {
 
     @Override
     public ResolvedJavaMethod getMethod() {
-        return HotSpotResolvedJavaMethodImpl.fromMetaspace(metaspaceMethod);
+        return method;
     }
 
     @Override
-    public boolean isMethod(ResolvedJavaMethod method) {
-        return metaspaceMethod == ((HotSpotResolvedJavaMethodImpl) method).getMetaspaceMethod();
+    public boolean isMethod(ResolvedJavaMethod otherMethod) {
+        return method.equals(otherMethod);
     }
 
     @Override

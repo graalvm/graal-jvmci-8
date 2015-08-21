@@ -24,6 +24,7 @@
 #include "precompiled.hpp"
 #include "memory/oopFactory.hpp"
 #include "runtime/javaCalls.hpp"
+#include "jvmci/jvmciJavaAccess.hpp"
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciEnv.hpp"
 #include "jvmci/jvmciRuntime.hpp"
@@ -123,17 +124,26 @@ void JVMCICompiler::compile_method(methodHandle method, int entry_bci, JVMCIEnv*
   }
 
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
+  jvmci_compute_offsets();
   HandleMark hm;
   ResourceMark rm;
+  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime();
+
+  JavaValue method_result(T_OBJECT);
+  {
+    JavaCallArguments args;
+    args.push_long((jlong) (address) method());
+    JavaCalls::call_static(&method_result, SystemDictionary::HotSpotResolvedJavaMethodImpl_klass(), vmSymbols::fromMetaspace_name(), vmSymbols::method_fromMetaspace_signature(), &args, CHECK_ABORT);
+  }
+
   JavaValue result(T_VOID);
   JavaCallArguments args;
-  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime();
   args.push_oop(receiver);
-  args.push_long((jlong) (address) method());
+  args.push_oop((oop)method_result.get_jobject());
   args.push_int(entry_bci);
   args.push_long((jlong) (address) env);
   args.push_int(env->task()->compile_id());
-  JavaCalls::call_special(&result, receiver->klass(), vmSymbols::compileMetaspaceMethod_name(), vmSymbols::compileMetaspaceMethod_signature(), &args, CHECK_ABORT);
+  JavaCalls::call_special(&result, receiver->klass(), vmSymbols::compileMethod_name(), vmSymbols::compileMethod_signature(), &args, CHECK_ABORT);
 
   _methodsCompiled++;
 }

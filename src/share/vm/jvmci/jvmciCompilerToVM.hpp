@@ -26,6 +26,7 @@
 
 #include "prims/jni.h"
 #include "runtime/javaCalls.hpp"
+#include "jvmci/jvmciJavaAccess.hpp"
 
 class CompilerToVM {
 public:
@@ -45,23 +46,53 @@ public:
     return ((intptr_t) symbol) | SYMBOL_TAG;
   }
 
-  // nothing here - no need to define the jni method implementations in a header file
+  static JNINativeMethod methods[];
+  static int methods_count();
+  
+  static inline Method* asMethod(jobject jvmci_method) {
+    return (Method*) (address) HotSpotResolvedJavaMethodImpl::metaspaceMethod(jvmci_method);
+  }
+  
+  static inline Method* asMethod(Handle jvmci_method) {
+    return (Method*) (address) HotSpotResolvedJavaMethodImpl::metaspaceMethod(jvmci_method);
+  }
+  
+  static inline Method* asMethod(oop jvmci_method) {
+    return (Method*) (address) HotSpotResolvedJavaMethodImpl::metaspaceMethod(jvmci_method);
+  }
+  
+  static inline ConstantPool* asConstantPool(jobject jvmci_constant_pool) {
+    return (ConstantPool*) (address) HotSpotConstantPool::metaspaceConstantPool(jvmci_constant_pool);
+  }
+  
+  static inline ConstantPool* asConstantPool(Handle jvmci_constant_pool) {
+    return (ConstantPool*) (address) HotSpotConstantPool::metaspaceConstantPool(jvmci_constant_pool);
+  }
+  
+  static inline ConstantPool* asConstantPool(oop jvmci_constant_pool) {
+    return (ConstantPool*) (address) HotSpotConstantPool::metaspaceConstantPool(jvmci_constant_pool);
+  }
+  
+  static inline Klass* asKlass(jobject jvmci_type) {
+    return java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(jvmci_type));
+  }
+
+  static inline Klass* asKlass(Handle jvmci_type) {
+    return java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(jvmci_type));
+  }
+  
+  static inline Klass* asKlass(oop jvmci_type) {
+    return java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(jvmci_type));
+  }
+  
+  static inline MethodData* asMethodData(jlong metaspaceMethodData) {
+    return (MethodData*) (address) metaspaceMethodData;
+  }
+  
+  static oop get_jvmci_method(methodHandle method, TRAPS);
+
+  static oop get_jvmci_type(KlassHandle klass, TRAPS);
 };
-
-extern JNINativeMethod CompilerToVM_methods[];
-int CompilerToVM_methods_count();
-
-inline Method* asMethod(jlong metaspaceMethod) {
-  return (Method*) (address) metaspaceMethod;
-}
-
-inline MethodData* asMethodData(jlong metaspaceMethodData) {
-  return (MethodData*) (address) metaspaceMethodData;
-}
-
-inline Klass* asKlass(jlong metaspaceKlass) {
-  return (Klass*) (address) metaspaceKlass;
-}
 
 class JavaArgumentUnboxer : public SignatureIterator {
  protected:

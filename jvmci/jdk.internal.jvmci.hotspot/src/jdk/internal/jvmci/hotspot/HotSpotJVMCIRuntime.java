@@ -151,24 +151,15 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
         JVMCIMetaAccessContext context = null;
         for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
-            context = vmEventListener.createMetaAccessContext(this, HotSpotJVMCIRuntime::createClass);
+            context = vmEventListener.createMetaAccessContext(this);
             if (context != null) {
                 break;
             }
         }
         if (context == null) {
-            context = new JVMCIGlobalMetaAccessContext(HotSpotJVMCIRuntime::createClass);
+            context = new HotSpotJVMCIMetaAccessContext();
         }
         metaAccessContext = context;
-    }
-
-    private static ResolvedJavaType createClass(Class<?> javaClass) {
-        if (javaClass.isPrimitive()) {
-            Kind kind = Kind.fromJavaClass(javaClass);
-            return new HotSpotResolvedPrimitiveType(kind);
-        } else {
-            return new HotSpotResolvedObjectTypeImpl(javaClass);
-        }
     }
 
     private JVMCIBackend registerBackend(JVMCIBackend backend) {
@@ -208,13 +199,13 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
         // Resolve non-primitive types in the VM.
         HotSpotResolvedObjectTypeImpl hsAccessingType = (HotSpotResolvedObjectTypeImpl) accessingType;
-        final long metaspaceKlass = compilerToVm.lookupType(name, hsAccessingType.mirror(), resolve);
+        final HotSpotResolvedObjectTypeImpl klass = compilerToVm.lookupType(name, hsAccessingType.mirror(), resolve);
 
-        if (metaspaceKlass == 0L) {
+        if (klass == null) {
             assert resolve == false;
             return HotSpotUnresolvedJavaType.create(this, name);
         }
-        return HotSpotResolvedObjectTypeImpl.fromMetaspaceKlass(metaspaceKlass);
+        return klass;
     }
 
     public JVMCIBackend getHostJVMCIBackend() {
@@ -234,8 +225,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * Called from the VM.
      */
     @SuppressWarnings({"unused"})
-    private void compileMetaspaceMethod(long metaspaceMethod, int entryBCI, long jvmciEnv, int id) {
-        HotSpotResolvedJavaMethod method = HotSpotResolvedJavaMethodImpl.fromMetaspace(metaspaceMethod);
+    private void compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
         compiler.compileMethod(method, entryBCI, jvmciEnv, id);
     }
 

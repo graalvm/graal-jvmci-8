@@ -49,104 +49,104 @@ public class CompilerToVMImpl implements CompilerToVM {
     public native int installCode(HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog);
 
     @Override
-    public native long getMetaspaceMethod(Class<?> holder, int slot);
+    public native HotSpotResolvedJavaMethodImpl getResolvedJavaMethodAtSlot(Class<?> holder, int slot);
 
     @Override
-    public native byte[] getBytecode(long metaspaceMethod);
+    public native byte[] getBytecode(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native int getExceptionTableLength(long metaspaceMethod);
+    public native int getExceptionTableLength(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native long getExceptionTableStart(long metaspaceMethod);
+    public native long getExceptionTableStart(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native boolean hasBalancedMonitors(long metaspaceMethod);
+    public native boolean hasBalancedMonitors(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native long findUniqueConcreteMethod(long actualHolderMetaspaceKlass, long metaspaceMethod);
+    public native HotSpotResolvedJavaMethodImpl findUniqueConcreteMethod(HotSpotResolvedObjectTypeImpl actualHolderKlass, HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native long getKlassImplementor(long metaspaceKlass);
+    public native HotSpotResolvedObjectTypeImpl getKlassImplementor(HotSpotResolvedObjectTypeImpl klass);
 
     @Override
-    public native long lookupType(String name, Class<?> accessingClass, boolean eagerResolve);
+    public native HotSpotResolvedObjectTypeImpl lookupType(String name, Class<?> accessingClass, boolean eagerResolve);
 
-    public native Object resolveConstantInPool(long metaspaceConstantPool, int cpi);
+    public native Object resolveConstantInPool(HotSpotConstantPool constantPool, int cpi);
 
-    public Object resolvePossiblyCachedConstantInPool(long metaspaceConstantPool, int cpi) {
+    public Object resolvePossiblyCachedConstantInPool(HotSpotConstantPool constantPool, int cpi) {
         JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return resolvePossiblyCachedConstantInPool0(metaspaceConstantPool, cpi);
+        return resolvePossiblyCachedConstantInPool0(constantPool, cpi);
     }
 
-    private native Object resolvePossiblyCachedConstantInPool0(long metaspaceConstantPool, int cpi);
+    private native Object resolvePossiblyCachedConstantInPool0(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public native int lookupNameAndTypeRefIndexInPool(long metaspaceConstantPool, int cpi);
+    public native int lookupNameAndTypeRefIndexInPool(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public String lookupNameRefInPool(long metaspaceConstantPool, int cpi) {
+    public String lookupNameRefInPool(HotSpotConstantPool constantPool, int cpi) {
         JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return lookupNameRefInPool0(metaspaceConstantPool, cpi);
+        return lookupNameRefInPool0(constantPool, cpi);
     }
 
-    private native String lookupNameRefInPool0(long metaspaceConstantPool, int cpi);
+    private native String lookupNameRefInPool0(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public String lookupSignatureRefInPool(long metaspaceConstantPool, int cpi) {
+    public String lookupSignatureRefInPool(HotSpotConstantPool constantPool, int cpi) {
         JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return lookupSignatureRefInPool0(metaspaceConstantPool, cpi);
+        return lookupSignatureRefInPool0(constantPool, cpi);
     }
 
-    private native String lookupSignatureRefInPool0(long metaspaceConstantPool, int cpi);
+    private native String lookupSignatureRefInPool0(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public int lookupKlassRefIndexInPool(long metaspaceConstantPool, int cpi) {
+    public int lookupKlassRefIndexInPool(HotSpotConstantPool constantPool, int cpi) {
         JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return lookupKlassRefIndexInPool0(metaspaceConstantPool, cpi);
+        return lookupKlassRefIndexInPool0(constantPool, cpi);
     }
 
-    private native int lookupKlassRefIndexInPool0(long metaspaceConstantPool, int cpi);
+    private native int lookupKlassRefIndexInPool0(HotSpotConstantPool constantPool, int cpi);
 
-    public native long resolveKlassInPool(long metaspaceConstantPool, int cpi);
-
-    @Override
-    public native long lookupKlassInPool(long metaspaceConstantPool, int cpi);
+    public native HotSpotResolvedObjectTypeImpl resolveKlassInPool(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public native long lookupMethodInPool(long metaspaceConstantPool, int cpi, byte opcode);
+    public native Object lookupKlassInPool(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public native long resolveFieldInPool(long metaspaceConstantPool, int cpi, byte opcode, long[] info);
+    public native HotSpotResolvedJavaMethodImpl lookupMethodInPool(HotSpotConstantPool constantPool, int cpi, byte opcode);
 
-    public int constantPoolRemapInstructionOperandFromCache(long metaspaceConstantPool, int cpi) {
+    @Override
+    public native HotSpotResolvedObjectTypeImpl resolveFieldInPool(HotSpotConstantPool constantPool, int cpi, byte opcode, long[] info);
+
+    public int constantPoolRemapInstructionOperandFromCache(HotSpotConstantPool constantPool, int cpi) {
         JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return constantPoolRemapInstructionOperandFromCache0(metaspaceConstantPool, cpi);
+        return constantPoolRemapInstructionOperandFromCache0(constantPool, cpi);
     }
 
-    private native int constantPoolRemapInstructionOperandFromCache0(long metaspaceConstantPool, int cpi);
+    private native int constantPoolRemapInstructionOperandFromCache0(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public Object lookupAppendixInPool(long metaspaceConstantPool, int cpi) {
+    public Object lookupAppendixInPool(HotSpotConstantPool constantPool, int cpi) {
         JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return lookupAppendixInPool0(metaspaceConstantPool, cpi);
+        return lookupAppendixInPool0(constantPool, cpi);
     }
 
-    private native Object lookupAppendixInPool0(long metaspaceConstantPool, int cpi);
+    private native Object lookupAppendixInPool0(HotSpotConstantPool constantPool, int cpi);
 
     @Override
     public native void initializeConfiguration(HotSpotVMConfig config);
 
     @Override
-    public native long resolveMethod(long metaspaceKlassExactReceiver, long metaspaceMethod, long metaspaceKlassCaller);
+    public native HotSpotResolvedJavaMethodImpl resolveMethod(HotSpotResolvedObjectTypeImpl klassExactReceiver, HotSpotResolvedJavaMethodImpl method, HotSpotResolvedObjectTypeImpl klassCaller);
 
     @Override
-    public native boolean hasFinalizableSubclass(long metaspaceKlass);
+    public native boolean hasFinalizableSubclass(HotSpotResolvedObjectTypeImpl klass);
 
-    public native boolean methodIsIgnoredBySecurityStackWalk(long metaspaceMethod);
+    public native boolean methodIsIgnoredBySecurityStackWalk(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native long getClassInitializer(long metaspaceKlass);
+    public native HotSpotResolvedJavaMethodImpl getClassInitializer(HotSpotResolvedObjectTypeImpl klass);
 
     @Override
     public native long getMaxCallTargetOffset(long address);
@@ -156,57 +156,57 @@ public class CompilerToVMImpl implements CompilerToVM {
     public synchronized native String disassembleCodeBlob(long codeBlob);
 
     @Override
-    public native StackTraceElement getStackTraceElement(long metaspaceMethod, int bci);
+    public native StackTraceElement getStackTraceElement(HotSpotResolvedJavaMethodImpl method, int bci);
 
     @Override
     public native Object executeInstalledCode(Object[] args, InstalledCode hotspotInstalledCode);
 
     @Override
-    public native long[] getLineNumberTable(long metaspaceMethod);
+    public native long[] getLineNumberTable(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native long getLocalVariableTableStart(long metaspaceMethod);
+    public native long getLocalVariableTableStart(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native int getLocalVariableTableLength(long metaspaceMethod);
+    public native int getLocalVariableTableLength(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native void reprofile(long metaspaceMethod);
+    public native void reprofile(HotSpotResolvedJavaMethodImpl method);
 
     @Override
     public native void invalidateInstalledCode(InstalledCode hotspotInstalledCode);
 
     @Override
-    public native Class<?> getJavaMirror(long metaspaceKlass);
+    public native Class<?> getJavaMirror(HotSpotResolvedObjectTypeImpl klass);
 
     @Override
     public native Object readUncompressedOop(long address);
 
     @Override
-    public native void doNotInlineOrCompile(long metaspaceMethod);
+    public native void doNotInlineOrCompile(HotSpotResolvedJavaMethodImpl method);
 
-    public synchronized native void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethod method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond,
+    public synchronized native void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethodImpl method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond,
                     InstalledCode installedCode);
 
     public native void resetCompilationStatistics();
 
     public native long[] collectCounters();
 
-    public native boolean isMature(long method);
+    public native boolean isMature(long metaspaceMethodData);
 
-    public native int allocateCompileId(long metaspaceMethod, int entryBCI);
+    public native int allocateCompileId(HotSpotResolvedJavaMethodImpl method, int entryBCI);
 
     public String getGPUs() {
         return "";
     }
 
-    public native boolean canInlineMethod(long metaspaceMethod);
+    public native boolean canInlineMethod(HotSpotResolvedJavaMethodImpl method);
 
-    public native boolean shouldInlineMethod(long metaspaceMethod);
+    public native boolean shouldInlineMethod(HotSpotResolvedJavaMethodImpl method);
 
-    public native boolean hasCompiledCodeForOSR(long metaspaceMethod, int entryBCI, int level);
+    public native boolean hasCompiledCodeForOSR(HotSpotResolvedJavaMethodImpl method, int entryBCI, int level);
 
-    public native HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, long[] methods, int initialSkip);
+    public native HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, HotSpotResolvedJavaMethodImpl[] methods, int initialSkip);
 
     public native void materializeVirtualObjects(HotSpotStackFrameReference stackFrame, boolean invalidate);
 
@@ -219,15 +219,21 @@ public class CompilerToVMImpl implements CompilerToVM {
 
     private native String getSymbol0(long metaspaceSymbol);
 
-    public native void resolveInvokeDynamicInPool(long metaspaceConstantPool, int index);
+    public native void resolveInvokeDynamicInPool(HotSpotConstantPool constantPool, int index);
 
-    public native void resolveInvokeHandleInPool(long metaspaceConstantPool, int index);
+    public native void resolveInvokeHandleInPool(HotSpotConstantPool constantPool, int index);
 
-    public native int getVtableIndexForInterface(long metaspaceKlass, long metaspaceMethod);
+    public native int getVtableIndexForInterface(HotSpotResolvedObjectTypeImpl klass, HotSpotResolvedJavaMethodImpl method);
 
     public native boolean shouldDebugNonSafepoints();
 
     public native void writeDebugOutput(byte[] bytes, int offset, int length);
 
     public native void flushDebugOutput();
+
+    public native HotSpotResolvedJavaMethodImpl getResolvedJavaMethod(Object base, long displacement);
+
+    public native HotSpotConstantPool getConstantPool(Object base, long displacement);
+
+    public native HotSpotResolvedObjectTypeImpl getResolvedJavaType(Object base, long displacement, boolean compressed);
 }

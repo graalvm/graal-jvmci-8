@@ -199,33 +199,37 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
         return HotSpotObjectConstantImpl.forObject(readRawObject(base, displacement, true), true);
     }
 
+    private HotSpotResolvedObjectTypeImpl readKlass(Constant base, long displacement, boolean compressed) {
+        assert (base instanceof HotSpotMetaspaceConstantImpl) || (base instanceof HotSpotObjectConstantImpl) : base.getClass();
+        Object baseObject = (base instanceof HotSpotMetaspaceConstantImpl) ? ((HotSpotMetaspaceConstantImpl) base).asResolvedJavaType() : ((HotSpotObjectConstantImpl) base).object();
+        return runtime.getCompilerToVM().getResolvedJavaType(baseObject, displacement, compressed);
+    }
+
     @Override
     public Constant readKlassPointerConstant(Constant base, long displacement) {
-        TargetDescription target = runtime.getHostJVMCIBackend().getCodeCache().getTarget();
-        long klass = readRawValue(base, displacement, target.wordSize * 8);
-        if (klass == 0) {
+        HotSpotResolvedObjectTypeImpl klass = readKlass(base, displacement, false);
+        if (klass == null) {
             return JavaConstant.NULL_POINTER;
         }
-        HotSpotResolvedObjectType metaKlass = HotSpotResolvedObjectTypeImpl.fromMetaspaceKlass(klass);
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(target.wordKind, klass, metaKlass, false);
+        TargetDescription target = runtime.getHostJVMCIBackend().getCodeCache().getTarget();
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(target.wordKind, klass.getMetaspaceKlass(), klass, false);
     }
 
     @Override
     public Constant readNarrowKlassPointerConstant(Constant base, long displacement, CompressEncoding encoding) {
-        int compressed = (int) readRawValue(base, displacement, 32);
-        long klass = encoding.uncompress(compressed);
-        if (klass == 0) {
+        HotSpotResolvedObjectTypeImpl klass = readKlass(base, displacement, true);
+        if (klass == null) {
             return HotSpotCompressedNullConstant.COMPRESSED_NULL;
         }
-        HotSpotResolvedObjectType metaKlass = HotSpotResolvedObjectTypeImpl.fromMetaspaceKlass(klass);
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(Kind.Int, compressed, metaKlass, true);
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(Kind.Int, encoding.compress(klass.getMetaspaceKlass()), klass, true);
     }
 
     @Override
     public Constant readMethodPointerConstant(Constant base, long displacement) {
         TargetDescription target = runtime.getHostJVMCIBackend().getCodeCache().getTarget();
-        long method = readRawValue(base, displacement, target.wordSize * 8);
-        HotSpotResolvedJavaMethod metaMethod = HotSpotResolvedJavaMethodImpl.fromMetaspace(method);
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(target.wordKind, method, metaMethod, false);
+        assert (base instanceof HotSpotObjectConstantImpl);
+        Object baseObject = ((HotSpotObjectConstantImpl) base).object();
+        HotSpotResolvedJavaMethodImpl method = runtime.getCompilerToVM().getResolvedJavaMethod(baseObject, displacement);
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(target.wordKind, method.getMetaspaceMethod(), method, false);
     }
 }
