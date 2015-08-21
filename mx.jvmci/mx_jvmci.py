@@ -100,16 +100,22 @@ class JarJDKDeployedDist(JDKDeployedDist):
     def targetDir(self):
         mx.nyi('targetDir', self)
 
-    def _copyToJdk(self, jdkDir, target):
+    def sourceTargetDir(self):
+        return 'src'
+
+    def _copyToJdk(self, jdkDir, target, sourceTarget):
         targetDir = join(jdkDir, target)
         dist = self.dist()
         mx.logv('Deploying {} to {}'.format(dist.name, targetDir))
         copyToJdk(dist.path, targetDir)
-        if dist.sourcesPath:
-            copyToJdk(dist.sourcesPath, jdkDir)
+
+        if dist.sourcesPath and sourceTarget is not None:
+            sourceTargetDir = join(jdkDir, sourceTarget)
+            copyToJdk(dist.sourcesPath, sourceTargetDir)
+            mx.logv('Deploying source {} to {}'.format(dist.name, sourceTargetDir))
 
     def deploy(self, jdkDir):
-        self._copyToJdk(jdkDir, self.targetDir())
+        self._copyToJdk(jdkDir, self.targetDir(), self.sourceTargetDir())
 
 class ExtJDKDeployedDist(JarJDKDeployedDist):
     def __init__(self, name, partOfHotSpot=False):
