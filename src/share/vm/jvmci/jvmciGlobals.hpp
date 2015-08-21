@@ -74,6 +74,9 @@
           "Max vector size in bytes, "                                      \
           "actual size could be less depending on elements type"))          \
                                                                             \
+  NOT_COMPILER2(product(bool, ReduceInitialCardMarks, true,                 \
+          "Defer write barriers of young objects"))                         \
+                                                                            \
   product(intx, TraceJVMCI, 0,                                              \
           "Trace level for JVMCI")                                          \
                                                                             \
@@ -82,9 +85,6 @@
                                                                             \
   product(bool, JVMCICountersExcludeCompiler, true,                         \
           "Exclude JVMCI compiler threads from benchmark counters")         \
-                                                                            \
-  product(bool, JVMCIDeferredInitBarriers, true,                            \
-          "Defer write barriers of young objects")                          \
                                                                             \
   product(bool, JVMCIHProfEnabled, false,                                   \
           "Is Heap  Profiler enabled")                                      \

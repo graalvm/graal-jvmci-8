@@ -744,7 +744,7 @@ public class HotSpotVMConfig {
         return universeCollectedHeap + collectedHeapTotalCollectionsOffset;
     }
 
-    @HotSpotVMFlag(name = "JVMCIDeferredInitBarriers") @Stable public boolean useDeferredInitBarriers;
+    @HotSpotVMFlag(name = "ReduceInitialCardMarks") @Stable public boolean useDeferredInitBarriers;
     @HotSpotVMFlag(name = "JVMCIHProfEnabled") @Stable public boolean useHeapProfiler;
 
     // Compressed Oops related values.

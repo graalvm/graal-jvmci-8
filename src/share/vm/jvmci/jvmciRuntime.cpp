@@ -142,7 +142,7 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance(JavaThread* thread, Klass* klas
   thread->set_vm_result(obj);
   JRT_BLOCK_END;
 
-  if (JVMCIDeferredInitBarriers) {
+  if (ReduceInitialCardMarks) {
     new_store_pre_barrier(thread);
   }
 JRT_END
@@ -176,7 +176,7 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array(JavaThread* thread, Klass* array_k
   }
   JRT_BLOCK_END;
 
-  if (JVMCIDeferredInitBarriers) {
+  if (ReduceInitialCardMarks) {
     new_store_pre_barrier(thread);
   }
 JRT_END
