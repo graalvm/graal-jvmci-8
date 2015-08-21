@@ -209,6 +209,10 @@
 #error "COMPILERJVMCI needs INCLUDE_JVMCI=1"
 #endif
 
+#if defined(COMPILERJVMCI) && defined(COMPILER2)
+#error "COMPILERJVMCI is mutually exclusive with COMPILER2"
+#endif
+
 #ifdef TIERED
 #define TIERED_ONLY(code) code
 #define NOT_TIERED(code)
