@@ -196,8 +196,6 @@ class Ticks;
   do_klass(Integer_klass,                               java_lang_Integer,                         Pre                 ) \
   do_klass(Long_klass,                                  java_lang_Long,                            Pre                 ) \
                                                                                                                          \
-  /* Support for JVMCI */                                                                                                \
-  do_klass(BitSet_klass,                                java_util_BitSet,                          Opt                 ) \
   /* JVMCI classes. These are loaded on-demand. */                                                                                   \
   JVMCI_ONLY(do_klass(HotSpotCompiledCode_klass,             jdk_internal_jvmci_hotspot_HotSpotCompiledCode,                 Jvmci)) \
   JVMCI_ONLY(do_klass(HotSpotCompiledCode_Comment_klass,     jdk_internal_jvmci_hotspot_HotSpotCompiledCode_Comment,         Jvmci)) \
