@@ -2438,17 +2438,6 @@ bool Arguments::check_vm_args_consistency() {
 #endif
   }
 #if INCLUDE_JVMCI
-  if (UseG1GC) {
-      if (IgnoreUnrecognizedVMOptions) {
-        FLAG_SET_CMDLINE(bool, UseG1GC, true);
-      } else {
-        status = true;
-      }
-  } else {
-      // This prevents the flag being set to true by set_ergonomics_flags()
-      FLAG_SET_CMDLINE(bool, UseG1GC, false);
-  }
-
   if (!ScavengeRootsInCode) {
       warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
       ScavengeRootsInCode = 1;
