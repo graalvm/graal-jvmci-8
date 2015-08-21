@@ -543,9 +543,13 @@ public:
 #if INCLUDE_JVMCI
   // Returns the JVMCI loader. This will be NULL if !UseJVMCIClassLoader
   // in which case it's equivalent to the boot loader
-  static oop jvmci_loader();
+  static oop jvmci_loader()                 { return _jvmci_loader; }
+
   // Sets the JVMCI loader. This is called at most once.
-  static void init_jvmci_loader(oop loader);
+  static void init_jvmci_loader(oop loader) {
+    assert(UseJVMCIClassLoader == (loader != NULL), "must be");
+    _jvmci_loader = loader;
+  }
 #endif
 
   // Compute the default system loader

@@ -98,14 +98,6 @@ bool        SystemDictionary::_has_checkPackageAccess     =  false;
 
 #if INCLUDE_JVMCI
 oop         SystemDictionary::_jvmci_loader               = NULL;
-
-oop SystemDictionary::jvmci_loader() {
-  return _jvmci_loader;
-}
-void SystemDictionary::init_jvmci_loader(oop loader) {
-  assert(UseJVMCIClassLoader == (loader != NULL), "must be");
-  _jvmci_loader = loader;
-}
 #endif
 
 // lazily initialized klass variables
