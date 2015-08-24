@@ -31,9 +31,9 @@ import jdk.internal.jvmci.meta.*;
 import sun.misc.*;
 
 /**
- * Calls from Java into HotSpot. The behavior of all the methods in this class that take a metaspace
- * pointer as an argument (e.g., {@link #getExceptionTableStart(HotSpotResolvedJavaMethodImpl)}) is
- * undefined if the argument does not denote a valid metaspace object.
+ * Calls from Java into HotSpot. The behavior of all the methods in this class that take a native
+ * pointer as an argument (e.g., {@link #getSymbol(long)}) is undefined if the argument does not
+ * denote a valid native object.
  */
 public interface CompilerToVM {
 
@@ -97,18 +97,18 @@ public interface CompilerToVM {
      * Used to implement {@link ResolvedJavaType#findUniqueConcreteMethod(ResolvedJavaMethod)}.
      *
      * @param method the method on which to base the search
-     * @param actualHolderKlass the best known type of receiver
+     * @param actualHolderType the best known type of receiver
      * @return the method result or 0 is there is no unique concrete method for {@code method}
      */
-    HotSpotResolvedJavaMethodImpl findUniqueConcreteMethod(HotSpotResolvedObjectTypeImpl actualHolderKlass, HotSpotResolvedJavaMethodImpl method);
+    HotSpotResolvedJavaMethodImpl findUniqueConcreteMethod(HotSpotResolvedObjectTypeImpl actualHolderType, HotSpotResolvedJavaMethodImpl method);
 
     /**
-     * Gets the implementor for the interface class {@code metaspaceKlass}.
+     * Gets the implementor for the interface class {@code type}.
      *
      * @return the implementor if there is a single implementor, 0 if there is no implementor, or
-     *         {@code metaspaceKlass} itself if there is more than one implementor
+     *         {@code type} itself if there is more than one implementor
      */
-    HotSpotResolvedObjectTypeImpl getKlassImplementor(HotSpotResolvedObjectTypeImpl klass);
+    HotSpotResolvedObjectTypeImpl getImplementor(HotSpotResolvedObjectTypeImpl type);
 
     /**
      * Determines if {@code method} is ignored by security stack walks.
@@ -116,14 +116,13 @@ public interface CompilerToVM {
     boolean methodIsIgnoredBySecurityStackWalk(HotSpotResolvedJavaMethodImpl method);
 
     /**
-     * Converts a name to a metaspace Klass.
+     * Converts a name to a type.
      *
      * @param name a well formed Java type in {@linkplain JavaType#getName() internal} format
      * @param accessingClass the context of resolution (must not be null)
      * @param resolve force resolution to a {@link ResolvedJavaType}. If true, this method will
      *            either return a {@link ResolvedJavaType} or throw an exception
-     * @return the metaspace Klass for {@code name} or 0 if resolution failed and
-     *         {@code resolve == false}
+     * @return the type for {@code name} or 0 if resolution failed and {@code resolve == false}
      * @throws LinkageError if {@code resolve == true} and the resolution failed
      */
     HotSpotResolvedObjectTypeImpl lookupType(String name, Class<?> accessingClass, boolean resolve);
@@ -188,7 +187,7 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code cpi} does not denote a
      * {@code JVM_CONSTANT_Class} entry.
      *
-     * @return a HotSpotResolvedObjectTypeImpl for a resolved class entry or a String otherwise
+     * @return the resolved class entry or a String otherwise
      */
     Object lookupKlassInPool(HotSpotConstantPool constantPool, int cpi);
 
@@ -203,7 +202,7 @@ public interface CompilerToVM {
      *            {@code -1}. If non-negative, then resolution checks specific to the bytecode it
      *            denotes are performed if the method is already resolved. Should any of these
      *            checks fail, 0 is returned.
-     * @return a metaspace Method for a resolved method entry, 0 otherwise
+     * @return the resolved method entry, 0 otherwise
      */
     HotSpotResolvedJavaMethodImpl lookupMethodInPool(HotSpotConstantPool constantPool, int cpi, byte opcode);
 
@@ -228,15 +227,14 @@ public interface CompilerToVM {
     void resolveInvokeHandleInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
-     * Gets the resolved metaspace Klass denoted by the entry at index {@code cpi} in
-     * {@code constantPool}.
+     * Gets the resolved type denoted by the entry at index {@code cpi} in {@code constantPool}.
      *
      * The behavior of this method is undefined if {@code cpi} does not denote an entry representing
      * a class.
      *
      * @throws LinkageError if resolution failed
      */
-    HotSpotResolvedObjectTypeImpl resolveKlassInPool(HotSpotConstantPool constantPool, int cpi) throws LinkageError;
+    HotSpotResolvedObjectTypeImpl resolveTypeInPool(HotSpotConstantPool constantPool, int cpi) throws LinkageError;
 
     /**
      * Looks up and attempts to resolve the {@code JVM_CONSTANT_Field} entry at index {@code cpi} in
@@ -251,7 +249,7 @@ public interface CompilerToVM {
      * {@code JVM_CONSTANT_Field} entry.
      *
      * @param info an array in which the details of the field are returned
-     * @return the metaspace Klass defining the field if resolution is successful, 0 otherwise
+     * @return the type defining the field if resolution is successful, 0 otherwise
      */
     HotSpotResolvedObjectTypeImpl resolveFieldInPool(HotSpotConstantPool constantPool, int cpi, byte opcode, long[] info);
 
@@ -310,27 +308,27 @@ public interface CompilerToVM {
 
     /**
      * Resolves the implementation of {@code method} for virtual dispatches on objects of dynamic
-     * type {@code metaspaceKlassExactReceiver}. This resolution process only searches "up" the
-     * class hierarchy of {@code metaspaceKlassExactReceiver}.
+     * type {@code exactReceiver}. This resolution process only searches "up" the class hierarchy of
+     * {@code exactReceiver}.
      *
-     * @param klassCaller the caller or context type used to perform access checks
+     * @param caller the caller or context type used to perform access checks
      * @return the link-time resolved method (might be abstract) or {@code 0} if it can not be
      *         linked
      */
-    HotSpotResolvedJavaMethodImpl resolveMethod(HotSpotResolvedObjectTypeImpl klassExactReceiver, HotSpotResolvedJavaMethodImpl method, HotSpotResolvedObjectTypeImpl klassCaller);
+    HotSpotResolvedJavaMethodImpl resolveMethod(HotSpotResolvedObjectTypeImpl exactReceiver, HotSpotResolvedJavaMethodImpl method, HotSpotResolvedObjectTypeImpl caller);
 
     /**
-     * Gets the static initializer of {@code metaspaceKlass}.
+     * Gets the static initializer of {@code type}.
      *
-     * @return 0 if {@code metaspaceKlass} has no static initialize
+     * @return 0 if {@code type} has no static initializer
      */
-    HotSpotResolvedJavaMethodImpl getClassInitializer(HotSpotResolvedObjectTypeImpl klass);
+    HotSpotResolvedJavaMethodImpl getClassInitializer(HotSpotResolvedObjectTypeImpl type);
 
     /**
-     * Determines if {@code metaspaceKlass} or any of its currently loaded subclasses overrides
+     * Determines if {@code type} or any of its currently loaded subclasses overrides
      * {@code Object.finalize()}.
      */
-    boolean hasFinalizableSubclass(HotSpotResolvedObjectTypeImpl klass);
+    boolean hasFinalizableSubclass(HotSpotResolvedObjectTypeImpl type);
 
     /**
      * Gets the method corresponding to {@code holder} and slot number {@code slot} (i.e.
@@ -402,11 +400,6 @@ public interface CompilerToVM {
      * @return 0 if {@code method} does not have a local variable table
      */
     long getLocalVariableTableStart(HotSpotResolvedJavaMethodImpl method);
-
-    /**
-     * Gets the {@link Class} mirror associated with {@code metaspaceKlass}.
-     */
-    Class<?> getJavaMirror(HotSpotResolvedObjectTypeImpl klass);
 
     /**
      * Reads an object pointer within a VM data structure. That is, any {@link HotSpotVMField} whose
@@ -484,8 +477,7 @@ public interface CompilerToVM {
      * Looks for the next Java stack frame matching an entry in {@code methods}.
      *
      * @param frame the starting point of the search, where {@code null} refers to the topmost frame
-     * @param methods the metaspace methods to look for, where {@code null} means that any frame is
-     *            returned
+     * @param methods the methods to look for, where {@code null} means that any frame is returned
      * @return the frame, or {@code null} if the end of the stack was reached during the search
      */
     HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, HotSpotResolvedJavaMethodImpl[] methods, int initialSkip);
@@ -499,11 +491,11 @@ public interface CompilerToVM {
     void materializeVirtualObjects(HotSpotStackFrameReference stackFrame, boolean invalidate);
 
     /**
-     * Gets the v-table index for interface method {@code method} in the receiver type
-     * {@code metaspaceKlass} or {@link HotSpotVMConfig#invalidVtableIndex} if {@code method} is not
-     * in {@code metaspaceKlass}'s v-table.
+     * Gets the v-table index for interface method {@code method} in the receiver {@code type} or
+     * {@link HotSpotVMConfig#invalidVtableIndex} if {@code method} is not in {@code type}'s
+     * v-table.
      */
-    int getVtableIndexForInterface(HotSpotResolvedObjectTypeImpl klass, HotSpotResolvedJavaMethodImpl method);
+    int getVtableIndexForInterface(HotSpotResolvedObjectTypeImpl type, HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Determines if debug info should also be emitted at non-safepoint locations.

@@ -280,7 +280,7 @@ C2V_VMENTRY(jobject, findUniqueConcreteMethod, (JNIEnv *, jobject, jobject jvmci
   return JNIHandles::make_local(THREAD, result);
 C2V_END
 
-C2V_VMENTRY(jobject, getKlassImplementor, (JNIEnv *, jobject, jobject jvmci_type))
+C2V_VMENTRY(jobject, getImplementor, (JNIEnv *, jobject, jobject jvmci_type))
   InstanceKlass* klass = (InstanceKlass*) CompilerToVM::asKlass(jvmci_type);
   oop implementor = CompilerToVM::get_jvmci_type(klass->implementor(), CHECK_NULL);
   return JNIHandles::make_local(THREAD, implementor); 
@@ -390,7 +390,7 @@ C2V_VMENTRY(jint, lookupKlassRefIndexInPool, (JNIEnv*, jobject, jobject jvmci_co
   return cp->klass_ref_index_at(index);
 C2V_END
 
-C2V_VMENTRY(jobject, resolveKlassInPool, (JNIEnv*, jobject, jobject jvmci_constant_pool, jint index))
+C2V_VMENTRY(jobject, resolveTypeInPool, (JNIEnv*, jobject, jobject jvmci_constant_pool, jint index))
   constantPoolHandle cp = CompilerToVM::asConstantPool(jvmci_constant_pool);
   Klass* resolved_klass = cp->klass_at(index, CHECK_NULL);
   Handle klass = CompilerToVM::get_jvmci_type(resolved_klass, CHECK_NULL);
@@ -806,11 +806,6 @@ C2V_VMENTRY(void, invalidateInstalledCode, (JNIEnv*, jobject, jobject hotspotIns
   InstalledCode::set_address(hotspotInstalledCode, 0);
 C2V_END
 
-C2V_VMENTRY(jobject, getJavaMirror, (JNIEnv* env, jobject, jobject jvmci_type))
-  Klass* klass = CompilerToVM::asKlass(jvmci_type);
-  return JNIHandles::make_local(THREAD, klass->java_mirror());
-C2V_END
-
 C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv*, jobject, jlong addr))
   oop ret = oopDesc::load_decode_heap_oop((oop*)(address)addr);
   return JNIHandles::make_local(THREAD, ret);
@@ -846,8 +841,8 @@ C2V_VMENTRY(jlong, getTimeStamp, (JNIEnv*, jobject))
   return tty->time_stamp().milliseconds();
 C2V_END
 
-C2V_VMENTRY(jobject, getSymbol, (JNIEnv*, jobject, jlong metaspaceSymbol))
-  Handle sym = java_lang_String::create_from_symbol((Symbol*)(address)metaspaceSymbol, CHECK_NULL);
+C2V_VMENTRY(jobject, getSymbol, (JNIEnv*, jobject, jlong symbol))
+  Handle sym = java_lang_String::create_from_symbol((Symbol*)(address)symbol, CHECK_NULL);
   return JNIHandles::make_local(THREAD, sym());
 C2V_END
 
@@ -1149,7 +1144,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getExceptionTableLength",                      CC"("HS_RESOLVED_METHOD")I",                                                      FN_PTR(getExceptionTableLength)},
   {CC"hasBalancedMonitors",                          CC"("HS_RESOLVED_METHOD")Z",                                                      FN_PTR(hasBalancedMonitors)},
   {CC"findUniqueConcreteMethod",                     CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD")"HS_RESOLVED_METHOD,                   FN_PTR(findUniqueConcreteMethod)},
-  {CC"getKlassImplementor",                          CC"("HS_RESOLVED_KLASS")"HS_RESOLVED_KLASS,                                       FN_PTR(getKlassImplementor)},
+  {CC"getImplementor",                               CC"("HS_RESOLVED_KLASS")"HS_RESOLVED_KLASS,                                       FN_PTR(getImplementor)},
   {CC"getStackTraceElement",                         CC"("HS_RESOLVED_METHOD"I)"STACK_TRACE_ELEMENT,                                   FN_PTR(getStackTraceElement)},
   {CC"methodIsIgnoredBySecurityStackWalk",           CC"("HS_RESOLVED_METHOD")Z",                                                      FN_PTR(methodIsIgnoredBySecurityStackWalk)},
   {CC"doNotInlineOrCompile",                         CC"("HS_RESOLVED_METHOD")V",                                                      FN_PTR(doNotInlineOrCompile)},
@@ -1166,7 +1161,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"constantPoolRemapInstructionOperandFromCache0",CC"("HS_CONSTANT_POOL"I)I",                                                       FN_PTR(constantPoolRemapInstructionOperandFromCache)},
   {CC"resolveConstantInPool",                        CC"("HS_CONSTANT_POOL"I)"OBJECT,                                                  FN_PTR(resolveConstantInPool)},
   {CC"resolvePossiblyCachedConstantInPool0",         CC"("HS_CONSTANT_POOL"I)"OBJECT,                                                  FN_PTR(resolvePossiblyCachedConstantInPool)},
-  {CC"resolveKlassInPool",                           CC"("HS_CONSTANT_POOL"I)"HS_RESOLVED_KLASS,                                       FN_PTR(resolveKlassInPool)},
+  {CC"resolveTypeInPool",                            CC"("HS_CONSTANT_POOL"I)"HS_RESOLVED_KLASS,                                       FN_PTR(resolveTypeInPool)},
   {CC"resolveFieldInPool",                           CC"("HS_CONSTANT_POOL"IB[J)"HS_RESOLVED_KLASS,                                    FN_PTR(resolveFieldInPool)},
   {CC"resolveInvokeDynamicInPool",                   CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeDynamicInPool)},
   {CC"resolveInvokeHandleInPool",                    CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeHandleInPool)},
@@ -1190,7 +1185,6 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getLocalVariableTableLength",                  CC"("HS_RESOLVED_METHOD")I",                                                      FN_PTR(getLocalVariableTableLength)},
   {CC"reprofile",                                    CC"("HS_RESOLVED_METHOD")V",                                                      FN_PTR(reprofile)},
   {CC"invalidateInstalledCode",                      CC"("INSTALLED_CODE")V",                                                          FN_PTR(invalidateInstalledCode)},
-  {CC"getJavaMirror",                                CC"("HS_RESOLVED_KLASS")"CLASS,                                                   FN_PTR(getJavaMirror)},
   {CC"readUncompressedOop",                          CC"(J)"OBJECT,                                                                    FN_PTR(readUncompressedOop)},
   {CC"collectCounters",                              CC"()[J",                                                                         FN_PTR(collectCounters)},
   {CC"allocateCompileId",                            CC"("HS_RESOLVED_METHOD"I)I",                                                     FN_PTR(allocateCompileId)},

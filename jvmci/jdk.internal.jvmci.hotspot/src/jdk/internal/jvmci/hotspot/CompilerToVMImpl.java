@@ -64,10 +64,10 @@ public class CompilerToVMImpl implements CompilerToVM {
     public native boolean hasBalancedMonitors(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native HotSpotResolvedJavaMethodImpl findUniqueConcreteMethod(HotSpotResolvedObjectTypeImpl actualHolderKlass, HotSpotResolvedJavaMethodImpl method);
+    public native HotSpotResolvedJavaMethodImpl findUniqueConcreteMethod(HotSpotResolvedObjectTypeImpl actualHolderType, HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native HotSpotResolvedObjectTypeImpl getKlassImplementor(HotSpotResolvedObjectTypeImpl klass);
+    public native HotSpotResolvedObjectTypeImpl getImplementor(HotSpotResolvedObjectTypeImpl type);
 
     @Override
     public native HotSpotResolvedObjectTypeImpl lookupType(String name, Class<?> accessingClass, boolean eagerResolve);
@@ -108,7 +108,7 @@ public class CompilerToVMImpl implements CompilerToVM {
 
     private native int lookupKlassRefIndexInPool0(HotSpotConstantPool constantPool, int cpi);
 
-    public native HotSpotResolvedObjectTypeImpl resolveKlassInPool(HotSpotConstantPool constantPool, int cpi);
+    public native HotSpotResolvedObjectTypeImpl resolveTypeInPool(HotSpotConstantPool constantPool, int cpi);
 
     @Override
     public native Object lookupKlassInPool(HotSpotConstantPool constantPool, int cpi);
@@ -141,12 +141,12 @@ public class CompilerToVMImpl implements CompilerToVM {
     public native HotSpotResolvedJavaMethodImpl resolveMethod(HotSpotResolvedObjectTypeImpl klassExactReceiver, HotSpotResolvedJavaMethodImpl method, HotSpotResolvedObjectTypeImpl klassCaller);
 
     @Override
-    public native boolean hasFinalizableSubclass(HotSpotResolvedObjectTypeImpl klass);
+    public native boolean hasFinalizableSubclass(HotSpotResolvedObjectTypeImpl type);
 
     public native boolean methodIsIgnoredBySecurityStackWalk(HotSpotResolvedJavaMethodImpl method);
 
     @Override
-    public native HotSpotResolvedJavaMethodImpl getClassInitializer(HotSpotResolvedObjectTypeImpl klass);
+    public native HotSpotResolvedJavaMethodImpl getClassInitializer(HotSpotResolvedObjectTypeImpl type);
 
     @Override
     public native long getMaxCallTargetOffset(long address);
@@ -175,9 +175,6 @@ public class CompilerToVMImpl implements CompilerToVM {
 
     @Override
     public native void invalidateInstalledCode(InstalledCode hotspotInstalledCode);
-
-    @Override
-    public native Class<?> getJavaMirror(HotSpotResolvedObjectTypeImpl klass);
 
     @Override
     public native Object readUncompressedOop(long address);
@@ -223,7 +220,7 @@ public class CompilerToVMImpl implements CompilerToVM {
 
     public native void resolveInvokeHandleInPool(HotSpotConstantPool constantPool, int index);
 
-    public native int getVtableIndexForInterface(HotSpotResolvedObjectTypeImpl klass, HotSpotResolvedJavaMethodImpl method);
+    public native int getVtableIndexForInterface(HotSpotResolvedObjectTypeImpl type, HotSpotResolvedJavaMethodImpl method);
 
     public native boolean shouldDebugNonSafepoints();
 

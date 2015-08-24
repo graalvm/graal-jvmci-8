@@ -69,8 +69,8 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
      *
      * Called from the VM.
      *
-     * @param javaClass a metaspace Klass object
-     * @return the {@link ResolvedJavaType} corresponding to {@code metaspaceKlass}
+     * @param javaClass a {@link Class} object
+     * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
      */
     @SuppressWarnings("unused")
     private static HotSpotResolvedObjectTypeImpl fromMetaspace(Class<?> javaClass) {
@@ -242,7 +242,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
         if (!isInterface()) {
             throw new JVMCIError("Cannot call getSingleImplementor() on a non-interface type: %s", this);
         }
-        return runtime().getCompilerToVM().getKlassImplementor(this);
+        return runtime().getCompilerToVM().getImplementor(this);
     }
 
     public HotSpotResolvedObjectTypeImpl getSupertype() {

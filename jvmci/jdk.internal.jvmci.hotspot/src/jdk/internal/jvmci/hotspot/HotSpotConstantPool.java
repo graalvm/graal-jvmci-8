@@ -882,8 +882,8 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
                 return new HotSpotMethodUnresolved(name, signature, holder);
             } else {
                 final int klassIndex = getKlassRefIndexAt(index);
-                final Object metaspacePointer = runtime().getCompilerToVM().lookupKlassInPool(this, klassIndex);
-                JavaType holder = getJavaType(metaspacePointer);
+                final Object type = runtime().getCompilerToVM().lookupKlassInPool(this, klassIndex);
+                JavaType holder = getJavaType(type);
                 return new HotSpotMethodUnresolved(name, signature, holder);
             }
         }
@@ -919,9 +919,9 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
 
         if (holder instanceof HotSpotResolvedObjectTypeImpl) {
             long[] info = new long[2];
-            HotSpotResolvedObjectTypeImpl metaspaceKlass;
+            HotSpotResolvedObjectTypeImpl resolvedHolder;
             try {
-                metaspaceKlass = runtime().getCompilerToVM().resolveFieldInPool(this, index, (byte) opcode, info);
+                resolvedHolder = runtime().getCompilerToVM().resolveFieldInPool(this, index, (byte) opcode, info);
             } catch (Throwable t) {
                 /*
                  * If there was an exception resolving the field we give up and return an unresolved
@@ -929,7 +929,6 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
                  */
                 return new HotSpotUnresolvedField(holder, name, type);
             }
-            HotSpotResolvedObjectTypeImpl resolvedHolder = metaspaceKlass;
             final int flags = (int) info[0];
             final long offset = info[1];
             HotSpotResolvedJavaField result = resolvedHolder.createField(name, type, offset, flags);
@@ -1010,8 +1009,7 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
             case Class:
             case UnresolvedClass:
             case UnresolvedClassInError:
-                final HotSpotResolvedObjectTypeImpl metaspaceKlass = runtime().getCompilerToVM().resolveKlassInPool(this, index);
-                HotSpotResolvedObjectTypeImpl type = metaspaceKlass;
+                final HotSpotResolvedObjectTypeImpl type = runtime().getCompilerToVM().resolveTypeInPool(this, index);
                 Class<?> klass = type.mirror();
                 if (!klass.isPrimitive() && !klass.isArray()) {
                     unsafe.ensureClassInitialized(klass);

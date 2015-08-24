@@ -23,9 +23,10 @@
 package jdk.internal.jvmci.hotspot;
 
 /**
- * A tag interface indicating that this type is a wrapper around a HotSpot metaspace object. It
- * would preferable if this were the base class containing the pointer but that would require mixins
- * since most of the wrapper types have complex supertype hierarchies.
+ * A tag interface indicating that this type is a wrapper around a HotSpot metaspace object.
+ *
+ * It would preferable if this were the base class containing the pointer but that would require
+ * mixins since most of the wrapper types have complex supertype hierarchies.
  */
 public interface MetaspaceWrapperObject {
 
