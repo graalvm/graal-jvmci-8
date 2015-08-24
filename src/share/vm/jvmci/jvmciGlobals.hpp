@@ -55,7 +55,7 @@
   product(ccstr, JVMCIServicesDir, NULL,                                    \
           "Alternate directory to use for JVMCI services")                  \
                                                                             \
-  COMPILERJVMCI_PRESENT(product(bool, BootstrapJVMCI, true,                 \
+  COMPILERJVMCI_PRESENT(product(bool, BootstrapJVMCI, false,                \
           "Bootstrap JVMCI before running Java main method"))               \
                                                                             \
   COMPILERJVMCI_PRESENT(product(bool, PrintBootstrap, true,                 \
