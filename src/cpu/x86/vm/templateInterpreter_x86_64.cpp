@@ -208,10 +208,10 @@ address InterpreterGenerator::generate_deopt_entry_for(TosState state,
   // Check if we need to take lock at entry of synchronized method.
   {
     Label L;
-    __ cmpb(Address(r15_thread, Thread::pending_monitorenter_offset()), 0);
+    __ cmpb(Address(r15_thread, JavaThread::pending_monitorenter_offset()), 0);
     __ jcc(Assembler::zero, L);
     // Clear flag.
-    __ movb(Address(r15_thread, Thread::pending_monitorenter_offset()), 0);
+    __ movb(Address(r15_thread, JavaThread::pending_monitorenter_offset()), 0);
     // Satisfy calling convention for lock_method().
     __ get_method(rbx);
     // Take lock.

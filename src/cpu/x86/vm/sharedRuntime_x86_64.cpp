@@ -3405,8 +3405,8 @@ void SharedRuntime::generate_deopt_blob() {
   // fetch_unroll_info needs to call last_java_frame()
   __ set_last_Java_frame(noreg, noreg, NULL);
 
-  __ movl(c_rarg1, Address(r15_thread, in_bytes(ThreadShadow::pending_deoptimization_offset())));
-  __ movl(Address(r15_thread, in_bytes(ThreadShadow::pending_deoptimization_offset())), -1);
+  __ movl(c_rarg1, Address(r15_thread, in_bytes(JavaThread::pending_deoptimization_offset())));
+  __ movl(Address(r15_thread, in_bytes(JavaThread::pending_deoptimization_offset())), -1);
 
   __ movl(r14, (int32_t)Deoptimization::Unpack_reexecute);
   __ mov(c_rarg0, r15_thread);

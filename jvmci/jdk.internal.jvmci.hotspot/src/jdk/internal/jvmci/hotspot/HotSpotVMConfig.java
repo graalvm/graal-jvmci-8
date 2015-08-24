@@ -942,11 +942,14 @@ public class HotSpotVMConfig {
     /**
      * This field is used to pass exception objects into and out of the runtime system during
      * exception handling for compiled code.
-     * <p>
-     * <b>NOTE: This is not the same as {@link #pendingExceptionOffset}.</b>
      */
     @HotSpotVMField(name = "JavaThread::_exception_oop", type = "oop", get = HotSpotVMField.Type.OFFSET) @Stable public int threadExceptionOopOffset;
     @HotSpotVMField(name = "JavaThread::_exception_pc", type = "address", get = HotSpotVMField.Type.OFFSET) @Stable public int threadExceptionPcOffset;
+    @HotSpotVMField(name = "ThreadShadow::_pending_exception", type = "oop", get = HotSpotVMField.Type.OFFSET) @Stable public int pendingExceptionOffset;
+
+    @HotSpotVMField(name = "JavaThread::_pending_deoptimization", type = "int", get = HotSpotVMField.Type.OFFSET) @Stable public int pendingDeoptimizationOffset;
+    @HotSpotVMField(name = "JavaThread::_pending_failed_speculation", type = "oop", get = HotSpotVMField.Type.OFFSET) @Stable public int pendingFailedSpeculationOffset;
+    @HotSpotVMField(name = "JavaThread::_pending_transfer_to_interpreter", type = "bool", get = HotSpotVMField.Type.OFFSET) @Stable public int pendingTransferToInterpreterOffset;
 
     @HotSpotVMField(name = "JavaFrameAnchor::_last_Java_sp", type = "intptr_t*", get = HotSpotVMField.Type.OFFSET) @Stable private int javaFrameAnchorLastJavaSpOffset;
     @HotSpotVMField(name = "JavaFrameAnchor::_last_Java_pc", type = "address", get = HotSpotVMField.Type.OFFSET) @Stable private int javaFrameAnchorLastJavaPcOffset;
@@ -1016,17 +1019,6 @@ public class HotSpotVMConfig {
         tmp |= ((0x2 & markOopDescHashMask) << markOopDescHashShift);
         return tmp;
     }
-
-    /**
-     * Offset of the _pending_exception field in ThreadShadow (defined in exceptions.hpp). This
-     * field is used to propagate exceptions through C/C++ calls.
-     * <p>
-     * <b>NOTE: This is not the same as {@link #threadExceptionOopOffset}.</b>
-     */
-    @HotSpotVMField(name = "ThreadShadow::_pending_exception", type = "oop", get = HotSpotVMField.Type.OFFSET) @Stable public int pendingExceptionOffset;
-    @HotSpotVMField(name = "ThreadShadow::_pending_deoptimization", type = "int", get = HotSpotVMField.Type.OFFSET) @Stable public int pendingDeoptimizationOffset;
-    @HotSpotVMField(name = "ThreadShadow::_pending_failed_speculation", type = "oop", get = HotSpotVMField.Type.OFFSET) @Stable public int pendingFailedSpeculationOffset;
-    @HotSpotVMField(name = "ThreadShadow::_pending_transfer_to_interpreter", type = "bool", get = HotSpotVMField.Type.OFFSET) @Stable public int pendingTransferToInterpreterOffset;
 
     /**
      * Mark word right shift to get identity hash code.

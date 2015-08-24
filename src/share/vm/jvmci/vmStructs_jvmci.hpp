@@ -31,9 +31,9 @@
 #include "jvmci/jvmciEnv.hpp"
 
 #define VM_STRUCTS_JVMCI(nonstatic_field, static_field)                       \
-  nonstatic_field(ThreadShadow,  _pending_deoptimization, int)                \
-  nonstatic_field(ThreadShadow,  _pending_failed_speculation, oop)            \
-  nonstatic_field(ThreadShadow,  _pending_transfer_to_interpreter, bool)      \
+  nonstatic_field(JavaThread,    _pending_deoptimization, int)                \
+  nonstatic_field(JavaThread,    _pending_failed_speculation, oop)            \
+  nonstatic_field(JavaThread,    _pending_transfer_to_interpreter, bool)      \
   nonstatic_field(MethodData,    _jvmci_ir_size, int)                         \
   nonstatic_field(JVMCIEnv,      _task, CompileTask*)                         \
   nonstatic_field(JVMCIEnv,      _jvmti_can_hotswap_or_post_breakpoint, bool) \

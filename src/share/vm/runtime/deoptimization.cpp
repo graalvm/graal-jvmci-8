@@ -1505,7 +1505,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
 
     if (trap_bci == SynchronizationEntryBCI) {
       trap_bci = 0;
-      Thread::current()->set_pending_monitorenter(true);
+      thread->set_pending_monitorenter(true);
     }
 
     if (reason == Deoptimization::Reason_transfer_to_interpreter) {

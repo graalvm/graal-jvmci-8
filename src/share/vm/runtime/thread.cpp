@@ -843,9 +843,6 @@ void Thread::oops_do(OopClosure* f, CLDClosure* cld_f, CodeBlobClosure* cf) {
   active_handles()->oops_do(f);
   // Do oop for ThreadShadow
   f->do_oop((oop*)&_pending_exception);
-#if INCLUDE_JVMCI
-  f->do_oop((oop*)&_pending_failed_speculation);
-#endif
   handle_area()->oops_do(f);
 }
 
@@ -1487,6 +1484,10 @@ void JavaThread::initialize() {
   _doing_unsafe_access = false;
   _stack_guard_state = stack_guard_unused;
 #if INCLUDE_JVMCI
+  _pending_monitorenter = false;
+  _pending_deoptimization = -1;
+  _pending_failed_speculation = NULL;
+  _pending_transfer_to_interpreter = false;
   _jvmci_alternate_call_target = NULL;
   _jvmci_implicit_exception_pc = NULL;
   if (JVMCICounterSize > 0) {
@@ -2781,6 +2782,8 @@ void JavaThread::oops_do(OopClosure* f, CLDClosure* cld_f, CodeBlobClosure* cf) 
 
   // Traverse the GCHandles
   Thread::oops_do(f, cld_f, cf);
+
+  JVMCI_ONLY(f->do_oop((oop*)&_pending_failed_speculation);)
 
   assert( (!has_last_Java_frame() && java_call_counter() == 0) ||
           (has_last_Java_frame() && java_call_counter() > 0), "wrong java_sp info!");

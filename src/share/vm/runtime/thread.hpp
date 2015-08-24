@@ -917,6 +917,10 @@ class JavaThread: public Thread {
  private:
 
 #if INCLUDE_JVMCI
+  int       _pending_deoptimization;
+  oop       _pending_failed_speculation;
+  bool      _pending_monitorenter;
+  bool      _pending_transfer_to_interpreter;
   address   _jvmci_alternate_call_target;
   address   _jvmci_implicit_exception_pc;    // pc at which the most recent implicit exception occurred
 
@@ -1303,6 +1307,13 @@ class JavaThread: public Thread {
   void set_deferred_card_mark(MemRegion mr)      { _deferred_card_mark = mr;   }
 
 #if INCLUDE_JVMCI
+  int  pending_deoptimization() const             { return _pending_deoptimization; }
+  oop  pending_failed_speculation() const         { return _pending_failed_speculation; }
+  bool has_pending_monitorenter() const           { return _pending_monitorenter; }
+  void set_pending_monitorenter(bool b)           { _pending_monitorenter = b; }
+  void set_pending_deoptimization(int reason)     { _pending_deoptimization = reason; }
+  void set_pending_failed_speculation(oop failed_speculation) { _pending_failed_speculation = failed_speculation; }
+  void set_pending_transfer_to_interpreter(bool b) { _pending_transfer_to_interpreter = b; }
   void set_jvmci_alternate_call_target(address a) { _jvmci_alternate_call_target = a; }
   void set_jvmci_implicit_exception_pc(address a) { _jvmci_implicit_exception_pc = a; }
 #endif
@@ -1401,6 +1412,9 @@ class JavaThread: public Thread {
   static ByteSize saved_exception_pc_offset()    { return byte_offset_of(JavaThread, _saved_exception_pc  ); }
   static ByteSize osthread_offset()              { return byte_offset_of(JavaThread, _osthread            ); }
 #if INCLUDE_JVMCI
+  static ByteSize pending_deoptimization_offset() { return byte_offset_of(JavaThread, _pending_deoptimization); }
+  static ByteSize pending_monitorenter_offset()  { return byte_offset_of(JavaThread, _pending_monitorenter); }
+  static ByteSize pending_failed_speculation_offset() { return byte_offset_of(JavaThread, _pending_failed_speculation); }
   static ByteSize jvmci_alternate_call_target_offset() { return byte_offset_of(JavaThread, _jvmci_alternate_call_target); }
   static ByteSize jvmci_implicit_exception_pc_offset() { return byte_offset_of(JavaThread, _jvmci_implicit_exception_pc); }
   static ByteSize jvmci_counters_offset()        { return byte_offset_of(JavaThread, _jvmci_counters      ); }

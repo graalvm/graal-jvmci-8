@@ -3497,7 +3497,7 @@ void VMStructs::test() {
 
 
 #if INCLUDE_JVMCI
-// Emit intialization code for HotSpotVMConfig.  It's placed here so
+// Emit initialization code for HotSpotVMConfig.  It's placed here so
 // it can take advantage of the relaxed access checking enjoyed by
 // VMStructs.
 #include "HotSpotVMConfig.inline.hpp"
