@@ -715,10 +715,7 @@ void SharedRuntime::gen_i2c_adapter(MacroAssembler *masm,
                                     int total_args_passed,
                                     int comp_args_on_stack,
                                     const BasicType *sig_bt,
-                                    const VMRegPair *regs,
-                                    int frame_extension_argument) {
-  assert(frame_extension_argument == -1, "unsupported");
-
+                                    const VMRegPair *regs) {
   // Note: rsi contains the senderSP on entry. We must preserve it since
   // we may do a i2c -> c2i transition if we lose a race where compiled
   // code goes non-entrant while we get args ready.
