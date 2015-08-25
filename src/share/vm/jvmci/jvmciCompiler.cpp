@@ -64,6 +64,12 @@ void JVMCICompiler::initialize() {
 
 #ifdef COMPILERJVMCI
 void JVMCICompiler::bootstrap() {
+#ifndef PRODUCT
+  // We turn off CompileTheWorld so that compilation requests are not
+  // ignored during bootstrap or that JVMCI can be compiled by C1/C2.
+  FlagSetting ctwOff(CompileTheWorld, false);
+#endif
+
   JavaThread* THREAD = JavaThread::current();
   _bootstrapping = true;
   // Allow bootstrap to perform JVMCI compilations of itself
