@@ -5209,27 +5209,10 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
     *vm = (JavaVM *)(&main_vm);
     *(JNIEnv**)penv = thread->jni_environment();
 
-#if INCLUDE_JVMCI
-    // We turn off CompileTheWorld so that compilation requests are not ignored during bootstrap or that JVMCI can be compiled by C1/C2.
-    bool doCTW = CompileTheWorld;
-    CompileTheWorld = false;
-#endif
-
 #ifdef COMPILERJVMCI
     // JVMCI is initialized on a CompilerThread
     if (BootstrapJVMCI) {
       JVMCICompiler::instance()->bootstrap();
-    }
-#elif INCLUDE_JVMCI
-    if (doCTW) {
-      // required for hosted CTW.
-      CompilationPolicy::completed_vm_startup();
-    }
-#endif
-
-#if INCLUDE_JVMCI
-    if (doCTW) {
-      JVMCICompiler::instance()->compile_the_world();
     }
 #endif
 

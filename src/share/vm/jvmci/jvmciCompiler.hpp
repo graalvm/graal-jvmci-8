@@ -86,8 +86,6 @@ public:
   static void print_compilation_timers();
 
   static elapsedTimer* codeInstallTimer() { return &_codeInstallTimer; }
-
-  void compile_the_world();
 };
 
 #endif // SHARE_VM_JVMCI_JVMCI_COMPILER_HPP

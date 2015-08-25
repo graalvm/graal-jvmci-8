@@ -166,16 +166,3 @@ void JVMCICompiler::print_compilation_timers() {
   TRACE_jvmci_1("JVMCICompiler::print_timers");
   tty->print_cr("       JVMCI code install time:        %6.3f s",    _codeInstallTimer.seconds());
 }
-
-void JVMCICompiler::compile_the_world() {
-  HandleMark hm;
-  ResourceMark rm;
-  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-  JavaThread* THREAD = JavaThread::current();
-  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime();
-  TempNewSymbol compileTheWorld = SymbolTable::new_symbol("compileTheWorld", CHECK_ABORT);
-  JavaValue result(T_VOID);
-  JavaCallArguments args;
-  args.push_oop(receiver);
-  JavaCalls::call_special(&result, receiver->klass(), compileTheWorld, vmSymbols::void_method_signature(), &args, CHECK_ABORT);
-}

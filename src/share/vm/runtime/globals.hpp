@@ -2713,13 +2713,9 @@ class CommandLineFlags {
           "Delay invoking the compiler until main application class is "    \
           "loaded")                                                         \
                                                                             \
-  NOT_JVMCI(develop(bool, CompileTheWorld, false,                           \
+  develop(bool, CompileTheWorld, false,                                     \
           "Compile all methods in all classes in bootstrap class path "     \
-            "(stress test)"))                                               \
-                                                                            \
-  JVMCI_ONLY(product(bool, CompileTheWorld, false,                          \
-          "Compile all methods in all classes in bootstrap class path "     \
-                     "(stress test)"))                                      \
+            "(stress test)")                                                \
                                                                             \
   develop(bool, CompileTheWorldPreloadClasses, true,                        \
           "Preload all classes used by a class before start loading")       \
