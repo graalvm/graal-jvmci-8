@@ -112,7 +112,7 @@ class JVMCIRuntime: public AllStatic {
     return _HotSpotJVMCIRuntime_instance;
   }
 
-  static Handle callInitializer(const char* className, const char* methodName, const char* returnType, JavaCallArguments* args = NULL);
+  static Handle callStatic(const char* className, const char* methodName, const char* returnType, JavaCallArguments* args = NULL);
 
   /**
    * Trigger initialization of HotSpotJVMCIRuntime through JVMCI.getRuntime()

@@ -646,7 +646,7 @@ JVM_ENTRY(jobject, JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass servic
   return JNIHandles::make_local(THREAD, JVMCIRuntime::get_service_impls(serviceKlass, THREAD)());
 JVM_END
 
-Handle JVMCIRuntime::callInitializer(const char* className, const char* methodName, const char* signature, JavaCallArguments* args) {
+Handle JVMCIRuntime::callStatic(const char* className, const char* methodName, const char* signature, JavaCallArguments* args) {
   guarantee(!_HotSpotJVMCIRuntime_initialized, "cannot reinitialize HotSpotJVMCIRuntime");
   Thread* THREAD = Thread::current();
 
@@ -678,22 +678,23 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
       JavaCallArguments args;
       oop options = java_lang_String::create_oop_from_str(_options, CHECK_ABORT);
       args.push_oop(options);
-      callInitializer("jdk/internal/jvmci/options/OptionsParser",
-                      "parseOptionsFromVM",
-                      "(Ljava/lang/String;)Ljava/lang/Boolean;", &args);
+      callStatic("jdk/internal/jvmci/options/OptionsParser",
+                 "parseOptionsFromVM",
+                 "(Ljava/lang/String;)Ljava/lang/Boolean;", &args);
     }
 
     if (_compiler != NULL) {
       JavaCallArguments args;
       oop compiler = java_lang_String::create_oop_from_str(_compiler, CHECK_ABORT);
       args.push_oop(compiler);
-      callInitializer("jdk/internal/jvmci/hotspot/HotSpotJVMCICompilerConfig",
-                      "selectCompiler",
-                      "(Ljava/lang/String;)Ljava/lang/Boolean;", &args);
+      callStatic("jdk/internal/jvmci/hotspot/HotSpotJVMCICompilerConfig",
+                 "selectCompiler",
+                 "(Ljava/lang/String;)Ljava/lang/Boolean;", &args);
     }
 
-    Handle result = callInitializer("jdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime", "runtime",
-                                    "()Ljdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime;");
+    Handle result = callStatic("jdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime",
+                               "runtime",
+                               "()Ljdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime;");
     _HotSpotJVMCIRuntime_initialized = true;
     _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result());
   }
@@ -701,7 +702,9 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
 
 void JVMCIRuntime::initialize_JVMCI() {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
-    callInitializer("jdk/internal/jvmci/runtime/JVMCI",     "getRuntime",      "()Ljdk/internal/jvmci/runtime/JVMCIRuntime;");
+    callStatic("jdk/internal/jvmci/runtime/JVMCI",
+               "getRuntime",
+               "()Ljdk/internal/jvmci/runtime/JVMCIRuntime;");
   }
   assert(_HotSpotJVMCIRuntime_initialized == true, "what?");
 }
