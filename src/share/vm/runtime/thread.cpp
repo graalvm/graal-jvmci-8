@@ -1489,9 +1489,7 @@ void JavaThread::initialize() {
   _pending_failed_speculation = NULL;
   _pending_transfer_to_interpreter = false;
   _jvmci._alternate_call_target = NULL;
-  // TODO: If _jvmci becomes a union, then this assignment
-  // should be converted to an assertion or guarantee
-  _jvmci._implicit_exception_pc = NULL;
+  assert(_jvmci._implicit_exception_pc == NULL, "must be");
   if (JVMCICounterSize > 0) {
     _jvmci_counters = NEW_C_HEAP_ARRAY(jlong, JVMCICounterSize, mtInternal);
     memset(_jvmci_counters, 0, sizeof(jlong) * JVMCICounterSize);

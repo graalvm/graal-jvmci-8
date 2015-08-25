@@ -934,15 +934,14 @@ class JavaThread: public Thread {
   // Specifies if the DeoptReason for the last uncommon trap was Reason_transfer_to_interpreter
   bool      _pending_transfer_to_interpreter;
 
-  // These fields are mutually exclusive in terms of live ranges
-  // so this could be a union instead of a struct.
-  struct {
+  // These fields are mutually exclusive in terms of live ranges.
+  union {
     // Communicates the pc at which the most recent implicit exception occurred
     // from the signal handler to a deoptimization stub.
     address   _implicit_exception_pc;
 
-    // Communicates an alternative call target to an i2c stub from a JavaCall.
-    address   _alternate_call_target;    //
+    // Communicates an alternative call target to an i2c stub from a JavaCall .
+    address   _alternate_call_target;
   } _jvmci;
 
   // Support for high precision, thread sensitive counters in JVMCI compiled code.

@@ -3542,7 +3542,7 @@ void SharedRuntime::generate_deopt_blob() {
   masm->block_comment("BEGIN JVMCI");
   int implicit_exception_uncommon_trap_offset = __ offset() - start;
   __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset()), O7);
-  DEBUG_ONLY(__ st(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset())));)
+  __ st(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset())));
   __ add(O7, -8, O7);
 
   int uncommon_trap_offset = __ offset() - start;
