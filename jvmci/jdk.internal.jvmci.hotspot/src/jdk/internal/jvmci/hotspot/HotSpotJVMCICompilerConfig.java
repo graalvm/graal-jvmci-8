@@ -64,6 +64,7 @@ final class HotSpotJVMCICompilerConfig {
      * utility function used to call other static initialization methods.
      */
     static Boolean selectCompiler(String compilerName) {
+        assert compilerFactory == null;
         for (CompilerFactory factory : Services.load(CompilerFactory.class)) {
             if (factory.getCompilerName().equals(compilerName)) {
                 compilerFactory = factory;

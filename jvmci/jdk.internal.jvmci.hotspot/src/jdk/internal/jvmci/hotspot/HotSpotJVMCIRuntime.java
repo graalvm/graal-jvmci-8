@@ -40,23 +40,37 @@ import jdk.internal.jvmci.service.*;
 
 public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, HotSpotProxified {
 
-    private static final HotSpotJVMCIRuntime instance;
-
+    /**
+     * The proper initialization of this class is complex because it's tangled up with the
+     * initialization of the JVMCI and really should only ever be triggered through
+     * {@link JVMCI#getRuntime}. However since {@link #runtime} can also be called directly it
+     * should also trigger proper initialization. To ensure proper ordering, the static initializer
+     * of this class initializes {@link JVMCI} and then access to {@link Once#instance} triggers the
+     * final initialization of the {@link HotSpotJVMCIRuntime}.
+     */
     static {
-        try (InitTimer t0 = timer("HotSpotJVMCIRuntime.<clinit>")) {
-            try (InitTimer t = timer("StartupEventListener.beforeJVMCIStartup")) {
-                for (StartupEventListener l : Services.load(StartupEventListener.class)) {
-                    l.beforeJVMCIStartup();
+        JVMCI.initialize();
+    }
+
+    static class DelayedInit {
+        private static final HotSpotJVMCIRuntime instance;
+
+        static {
+            try (InitTimer t0 = timer("HotSpotJVMCIRuntime.<clinit>")) {
+                try (InitTimer t = timer("StartupEventListener.beforeJVMCIStartup")) {
+                    for (StartupEventListener l : Services.load(StartupEventListener.class)) {
+                        l.beforeJVMCIStartup();
+                    }
                 }
-            }
 
-            try (InitTimer t = timer("HotSpotJVMCIRuntime.<init>")) {
-                instance = new HotSpotJVMCIRuntime();
-            }
+                try (InitTimer t = timer("HotSpotJVMCIRuntime.<init>")) {
+                    instance = new HotSpotJVMCIRuntime();
+                }
 
-            try (InitTimer t = timer("HotSpotJVMCIRuntime.completeInitialization")) {
-                // Why deferred initialization? See comment in completeInitialization().
-                instance.completeInitialization();
+                try (InitTimer t = timer("HotSpotJVMCIRuntime.completeInitialization")) {
+                    // Why deferred initialization? See comment in completeInitialization().
+                    instance.completeInitialization();
+                }
             }
         }
     }
@@ -65,14 +79,15 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * Gets the singleton {@link HotSpotJVMCIRuntime} object.
      */
     public static HotSpotJVMCIRuntime runtime() {
-        assert instance != null;
-        return instance;
+        assert DelayedInit.instance != null;
+        return DelayedInit.instance;
     }
 
     /**
      * Do deferred initialization.
      */
     public void completeInitialization() {
+        compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
 
         // Proxies for the VM/Compiler interfaces cannot be initialized
         // in the constructor as proxy creation causes static
@@ -80,7 +95,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         // proxied methods. Some of these static initializers (e.g. in
         // HotSpotMethodData) rely on the static 'instance' field being set
         // to retrieve configuration details.
-        compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
 
         CompilerToVM toVM = this.compilerToVm;
 
@@ -113,7 +127,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * Gets the kind of a word value on the {@linkplain #getHostJVMCIBackend() host} backend.
      */
     public static Kind getHostWordKind() {
-        return instance.getHostJVMCIBackend().getCodeCache().getTarget().wordKind;
+        return runtime().getHostJVMCIBackend().getCodeCache().getTarget().wordKind;
     }
 
     protected/* final */CompilerToVM compilerToVm;
