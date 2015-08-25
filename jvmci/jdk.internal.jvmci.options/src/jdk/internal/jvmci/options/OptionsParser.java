@@ -24,6 +24,7 @@ package jdk.internal.jvmci.options;
 
 import static jdk.internal.jvmci.inittimer.InitTimer.*;
 
+import java.io.*;
 import java.util.*;
 
 import jdk.internal.jvmci.inittimer.*;
@@ -88,6 +89,10 @@ public class OptionsParser {
         return Boolean.TRUE;
     }
 
+    public static void parseOption(String option, OptionConsumer setter, OptionDescriptorsProvider odp) {
+        parseOption(OptionsLoader.options, option, setter, odp);
+    }
+
     /**
      * Parses a given option value specification.
      *
@@ -95,7 +100,7 @@ public class OptionsParser {
      * @param setter the object to notify of the parsed option and value
      * @throws IllegalArgumentException if there's a problem parsing {@code option}
      */
-    public static void parseOption(String option, OptionConsumer setter, OptionDescriptorsProvider odp) {
+    public static void parseOption(SortedMap<String, OptionDescriptor> options, String option, OptionConsumer setter, OptionDescriptorsProvider odp) {
         if (option.length() == 0) {
             return;
         }
@@ -119,19 +124,19 @@ public class OptionsParser {
             }
         }
 
-        OptionDescriptor desc = odp == null ? OptionsLoader.options.get(optionName) : odp.get(optionName);
+        OptionDescriptor desc = odp == null ? options.get(optionName) : odp.get(optionName);
         if (desc == null && value != null) {
             int index = option.indexOf('=');
             if (index != -1) {
                 optionName = option.substring(1, index);
-                desc = odp == null ? OptionsLoader.options.get(optionName) : odp.get(optionName);
+                desc = odp == null ? options.get(optionName) : odp.get(optionName);
             }
             if (desc == null && optionName.equals("PrintFlags")) {
-                desc = new OptionDescriptor("PrintFlags", Boolean.class, "Prints all JVMCI flags and exits", OptionsParser.class, "PrintFlags", PrintFlags);
+                desc = OptionDescriptor.create("PrintFlags", Boolean.class, "Prints all JVMCI flags and exits", OptionsParser.class, "PrintFlags", PrintFlags);
             }
         }
         if (desc == null) {
-            List<OptionDescriptor> matches = fuzzyMatch(optionName);
+            List<OptionDescriptor> matches = fuzzyMatch(options, optionName);
             Formatter msg = new Formatter();
             msg.format("Could not find option %s", optionName);
             if (!matches.isEmpty()) {
@@ -180,7 +185,8 @@ public class OptionsParser {
         }
 
         if (PrintFlags.getValue()) {
-            printFlags();
+            printFlags(options, "JVMCI", System.out);
+            System.exit(0);
         }
     }
 
@@ -247,21 +253,18 @@ public class OptionsParser {
         return lines;
     }
 
-    public static void printFlags() {
-        System.out.println("[List of JVMCI options]");
-        SortedMap<String, OptionDescriptor> sortedOptions = OptionsLoader.options;
+    public static void printFlags(SortedMap<String, OptionDescriptor> sortedOptions, String prefix, PrintStream out) {
+        out.println("[List of " + prefix + " options]");
         for (Map.Entry<String, OptionDescriptor> e : sortedOptions.entrySet()) {
             e.getKey();
             OptionDescriptor desc = e.getValue();
             Object value = desc.getOptionValue().getValue();
             List<String> helpLines = wrap(desc.getHelp(), 70);
-            System.out.println(String.format("%9s %-40s = %-14s %s", desc.getType().getSimpleName(), e.getKey(), value, helpLines.get(0)));
+            out.println(String.format("%9s %-40s = %-14s %s", desc.getType().getSimpleName(), e.getKey(), value, helpLines.get(0)));
             for (int i = 1; i < helpLines.size(); i++) {
-                System.out.println(String.format("%67s %s", " ", helpLines.get(i)));
+                out.println(String.format("%67s %s", " ", helpLines.get(i)));
             }
         }
-
-        System.exit(0);
     }
 
     /**
@@ -287,9 +290,9 @@ public class OptionsParser {
     /**
      * Returns the set of options that fuzzy match a given option name.
      */
-    private static List<OptionDescriptor> fuzzyMatch(String optionName) {
+    private static List<OptionDescriptor> fuzzyMatch(SortedMap<String, OptionDescriptor> options, String optionName) {
         List<OptionDescriptor> matches = new ArrayList<>();
-        for (Map.Entry<String, OptionDescriptor> e : OptionsLoader.options.entrySet()) {
+        for (Map.Entry<String, OptionDescriptor> e : options.entrySet()) {
             float score = stringSimiliarity(e.getKey(), optionName);
             if (score >= FUZZY_MATCH_THRESHOLD) {
                 matches.add(e.getValue());

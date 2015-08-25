@@ -40,9 +40,9 @@ public class TestOptionValue {
         public static final OptionValue<String> SecondMutable = new OptionValue<>("second");
     }
 
-    static final OptionDescriptor stable = new OptionDescriptor("Stable", Boolean.class, "", Options.class, "Stable", Stable);
-    static final OptionDescriptor mutable = new OptionDescriptor("Mutable", String.class, "", Options.class, "Mutable", Mutable);
-    static final OptionDescriptor secondMutable = new OptionDescriptor("SecondMutable", String.class, "", Options.class, "SecondMutable", SecondMutable);
+    static final OptionDescriptor stable = OptionDescriptor.create("Stable", Boolean.class, "", Options.class, "Stable", Stable);
+    static final OptionDescriptor mutable = OptionDescriptor.create("Mutable", String.class, "", Options.class, "Mutable", Mutable);
+    static final OptionDescriptor secondMutable = OptionDescriptor.create("SecondMutable", String.class, "", Options.class, "SecondMutable", SecondMutable);
 
     @Test
     public void testMutable() {
