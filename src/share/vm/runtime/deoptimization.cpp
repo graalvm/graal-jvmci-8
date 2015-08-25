@@ -1474,33 +1474,31 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
 #if INCLUDE_JVMCI
     oop speculation = thread->pending_failed_speculation();
     if (nm->is_compiled_by_jvmci()) {
-    if (speculation != NULL) {
-      oop speculation_log = nm->speculation_log();
-      if (speculation_log != NULL) {
-        if (TraceDeoptimization || TraceUncollectedSpeculations) {
-          if (SpeculationLog::lastFailed(speculation_log) != NULL) {
-            tty->print_cr("A speculation that was not collected by the compiler is being overwritten");
+      if (speculation != NULL) {
+        oop speculation_log = nm->speculation_log();
+        if (speculation_log != NULL) {
+          if (TraceDeoptimization || TraceUncollectedSpeculations) {
+            if (SpeculationLog::lastFailed(speculation_log) != NULL) {
+              tty->print_cr("A speculation that was not collected by the compiler is being overwritten");
+            }
+          }
+          if (TraceDeoptimization) {
+            tty->print_cr("Saving speculation to speculation log");
+          }
+          SpeculationLog::set_lastFailed(speculation_log, speculation);
+        } else {
+          if (TraceDeoptimization) {
+            tty->print_cr("Speculation present but no speculation log");
           }
         }
-        if (TraceDeoptimization) {
-          tty->print_cr("Saving speculation to speculation log");
-        }
-        SpeculationLog::set_lastFailed(speculation_log, speculation);
+        thread->set_pending_failed_speculation(NULL);
       } else {
         if (TraceDeoptimization) {
-          tty->print_cr("Speculation present but no speculation log");
+          tty->print_cr("No speculation");
         }
       }
-      thread->set_pending_failed_speculation(NULL);
     } else {
-      if (TraceDeoptimization) {
-        tty->print_cr("No speculation");
-      }
-    }
-    } else {
-#ifdef ASSERT
-      assert(speculation == NULL, "There should not be a speculation for method compiled by other compilers");
-#endif
+      assert(speculation == NULL, "There should not be a speculation for method compiled by non-JVMCI compilers");
     }
 
     if (trap_bci == SynchronizationEntryBCI) {

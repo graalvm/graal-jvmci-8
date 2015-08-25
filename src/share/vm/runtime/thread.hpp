@@ -917,10 +917,23 @@ class JavaThread: public Thread {
  private:
 
 #if INCLUDE_JVMCI
+  // The _pending_* fields below are used to communicate extra information
+  // from an uncommon trap in JVMCI compiled code to the uncommon trap handler.
+
+  // Communicates the DeoptReason and DeoptAction of the uncommon trap
   int       _pending_deoptimization;
+
+  // An object that JVMCI compiled code can use to further describe and
+  // uniquely identify the  speculative optimization guarded by the uncommon trap
   oop       _pending_failed_speculation;
+
+  // Specifies whether the uncommon trap is to bci 0 of a synchronized method
+  // before the monitor has been acquired.
   bool      _pending_monitorenter;
+
+  // Specifies if the DeoptReason for the last uncommon trap was Reason_transfer_to_interpreter
   bool      _pending_transfer_to_interpreter;
+
   // These fields are mutually exclusive in terms of live ranges
   // so this could be a union instead of a struct.
   struct {
