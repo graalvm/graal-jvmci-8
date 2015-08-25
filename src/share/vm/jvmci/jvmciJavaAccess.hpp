@@ -304,15 +304,17 @@ class name : AllStatic {                                                        
 #define STATIC_OOPISH_FIELD(klassName, name, type, signature)                                                  \
     static int _##name##_offset;                                                                               \
     static type name() {                                                                                       \
+      assert(klassName::klass() != NULL, "Class not yet loaded: " #klassName);                                 \
       InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       if (UseCompressedOops) {                                                                                 \
-        return (type) oopDesc::load_decode_heap_oop((narrowOop *)addr);  \
+        return (type) oopDesc::load_decode_heap_oop((narrowOop *)addr);                                        \
       } else {                                                                                                 \
-        return (type) oopDesc::load_decode_heap_oop((oop*)addr);         \
+        return (type) oopDesc::load_decode_heap_oop((oop*)addr);                                               \
       }                                                                                                        \
     }                                                                                                          \
     static void set_##name(type x) {                                                                           \
+      assert(klassName::klass() != NULL, "Class not yet loaded: " #klassName);                                 \
       InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       if (UseCompressedOops) {                                                                                 \

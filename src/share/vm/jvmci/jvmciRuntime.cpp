@@ -710,6 +710,9 @@ void JVMCIRuntime::initialize_JVMCI() {
 }
 
 void JVMCIRuntime::metadata_do(void f(Metadata*)) {
+  if (HotSpotJVMCIMetaAccessContext::klass() == NULL) {
+    return;
+  }
   // WeakReference<HotSpotJVMCIMetaAccessContext>[]
   objArrayOop allContexts = HotSpotJVMCIMetaAccessContext::allContexts();
   if (allContexts == NULL) {
