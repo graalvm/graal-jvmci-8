@@ -921,9 +921,18 @@ class JavaThread: public Thread {
   oop       _pending_failed_speculation;
   bool      _pending_monitorenter;
   bool      _pending_transfer_to_interpreter;
-  address   _jvmci_alternate_call_target;
-  address   _jvmci_implicit_exception_pc;    // pc at which the most recent implicit exception occurred
+  // These fields are mutually exclusive in terms of live ranges
+  // so this could be a union instead of a struct.
+  struct {
+    // Communicates the pc at which the most recent implicit exception occurred
+    // from the signal handler to a deoptimization stub.
+    address   _implicit_exception_pc;
 
+    // Communicates an alternative call target to an i2c stub from a JavaCall.
+    address   _alternate_call_target;    //
+  } _jvmci;
+
+  // Support for high precision, thread sensitive counters in JVMCI compiled code.
   jlong*    _jvmci_counters;
 
  public:
@@ -1314,8 +1323,8 @@ class JavaThread: public Thread {
   void set_pending_deoptimization(int reason)     { _pending_deoptimization = reason; }
   void set_pending_failed_speculation(oop failed_speculation) { _pending_failed_speculation = failed_speculation; }
   void set_pending_transfer_to_interpreter(bool b) { _pending_transfer_to_interpreter = b; }
-  void set_jvmci_alternate_call_target(address a) { _jvmci_alternate_call_target = a; }
-  void set_jvmci_implicit_exception_pc(address a) { _jvmci_implicit_exception_pc = a; }
+  void set_jvmci_alternate_call_target(address a) { assert(_jvmci._alternate_call_target == NULL, "must be"); _jvmci._alternate_call_target = a; }
+  void set_jvmci_implicit_exception_pc(address a) { assert(_jvmci._implicit_exception_pc == NULL, "must be"); _jvmci._implicit_exception_pc = a; }
 #endif
 
   // Exception handling for compiled methods
@@ -1415,8 +1424,8 @@ class JavaThread: public Thread {
   static ByteSize pending_deoptimization_offset() { return byte_offset_of(JavaThread, _pending_deoptimization); }
   static ByteSize pending_monitorenter_offset()  { return byte_offset_of(JavaThread, _pending_monitorenter); }
   static ByteSize pending_failed_speculation_offset() { return byte_offset_of(JavaThread, _pending_failed_speculation); }
-  static ByteSize jvmci_alternate_call_target_offset() { return byte_offset_of(JavaThread, _jvmci_alternate_call_target); }
-  static ByteSize jvmci_implicit_exception_pc_offset() { return byte_offset_of(JavaThread, _jvmci_implicit_exception_pc); }
+  static ByteSize jvmci_alternate_call_target_offset() { return byte_offset_of(JavaThread, _jvmci._alternate_call_target); }
+  static ByteSize jvmci_implicit_exception_pc_offset() { return byte_offset_of(JavaThread, _jvmci._implicit_exception_pc); }
   static ByteSize jvmci_counters_offset()        { return byte_offset_of(JavaThread, _jvmci_counters      ); }
 #endif
   static ByteSize exception_oop_offset()         { return byte_offset_of(JavaThread, _exception_oop       ); }

@@ -327,8 +327,9 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
   CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
 
 #if INCLUDE_JVMCI
-  nmethod* nm = args->alternative_target();
-  if (nm == NULL) {
+  // Gets the nmethod (if any) that should be called instead of normal target
+  nmethod* alternative_target = args->alternative_target();
+  if (alternative_target == NULL) {
 #endif
 // Verify the arguments
 
@@ -402,9 +403,9 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
   }
 
 #if INCLUDE_JVMCI
-  if (nm != NULL) {
-    if (nm->is_alive()) {
-      thread->set_jvmci_alternate_call_target(nm->verified_entry_point());
+  if (alternative_target != NULL) {
+    if (alternative_target->is_alive()) {
+      thread->set_jvmci_alternate_call_target(alternative_target->verified_entry_point());
       entry_point = method->adapter()->get_i2c_entry();
     } else {
       THROW(vmSymbols::jdk_internal_jvmci_code_InvalidInstalledCodeException());
