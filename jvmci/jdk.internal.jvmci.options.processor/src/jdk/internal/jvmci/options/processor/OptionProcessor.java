@@ -191,9 +191,9 @@ public class OptionProcessor extends AbstractProcessor {
                 String declaringClass = option.declaringClass;
                 Name fieldName = option.field.getSimpleName();
                 if (info.options.size() == 1) {
-                    out.printf("            return new %s(\"%s\", %s.class, \"%s\", %s.class, \"%s\", %s);\n", desc, name, type, help, declaringClass, fieldName, optionValue);
+                    out.printf("            return %s.create(\"%s\", %s.class, \"%s\", %s.class, \"%s\", %s);\n", desc, name, type, help, declaringClass, fieldName, optionValue);
                 } else {
-                    out.printf("            case \"" + name + "\": return new %s(\"%s\", %s.class, \"%s\", %s.class, \"%s\", %s);\n", desc, name, type, help, declaringClass, fieldName, optionValue);
+                    out.printf("            case \"" + name + "\": return %s.create(\"%s\", %s.class, \"%s\", %s.class, \"%s\", %s);\n", desc, name, type, help, declaringClass, fieldName, optionValue);
                 }
             }
             out.println("        }");
@@ -219,7 +219,7 @@ public class OptionProcessor extends AbstractProcessor {
                 String declaringClass = option.declaringClass;
                 Name fieldName = option.field.getSimpleName();
                 String comma = i == info.options.size() - 1 ? "" : ",";
-                out.printf("            new %s(\"%s\", %s.class, \"%s\", %s.class, \"%s\", %s)%s\n", desc, name, type, help, declaringClass, fieldName, optionValue, comma);
+                out.printf("            %s.create(\"%s\", %s.class, \"%s\", %s.class, \"%s\", %s)%s\n", desc, name, type, help, declaringClass, fieldName, optionValue, comma);
                 i++;
             }
             out.println("        );");

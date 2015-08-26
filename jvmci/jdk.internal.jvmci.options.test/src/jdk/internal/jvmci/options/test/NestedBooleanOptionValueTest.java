@@ -40,12 +40,12 @@ public class NestedBooleanOptionValueTest {
         public static final OptionValue<Boolean> NestedOption2 = new NestedBooleanOptionValue(Master2, false);
     }
 
-    static final OptionDescriptor master0 = new OptionDescriptor("Master0", Boolean.class, "", Options.class, "Master0", Master0);
-    static final OptionDescriptor nestedOption0 = new OptionDescriptor("NestedOption0", Boolean.class, "", Options.class, "NestedOption0", NestedOption0);
-    static final OptionDescriptor master1 = new OptionDescriptor("Master1", Boolean.class, "", Options.class, "Master1", Master1);
-    static final OptionDescriptor nestedOption1 = new OptionDescriptor("NestedOption1", Boolean.class, "", Options.class, "NestedOption1", NestedOption1);
-    static final OptionDescriptor master2 = new OptionDescriptor("Master2", Boolean.class, "", Options.class, "Master2", Master2);
-    static final OptionDescriptor nestedOption2 = new OptionDescriptor("NestedOption2", Boolean.class, "", Options.class, "NestedOption2", NestedOption2);
+    static final OptionDescriptor master0 = OptionDescriptor.create("Master0", Boolean.class, "", Options.class, "Master0", Master0);
+    static final OptionDescriptor nestedOption0 = OptionDescriptor.create("NestedOption0", Boolean.class, "", Options.class, "NestedOption0", NestedOption0);
+    static final OptionDescriptor master1 = OptionDescriptor.create("Master1", Boolean.class, "", Options.class, "Master1", Master1);
+    static final OptionDescriptor nestedOption1 = OptionDescriptor.create("NestedOption1", Boolean.class, "", Options.class, "NestedOption1", NestedOption1);
+    static final OptionDescriptor master2 = OptionDescriptor.create("Master2", Boolean.class, "", Options.class, "Master2", Master2);
+    static final OptionDescriptor nestedOption2 = OptionDescriptor.create("NestedOption2", Boolean.class, "", Options.class, "NestedOption2", NestedOption2);
 
     @Test
     public void runOverrides() {

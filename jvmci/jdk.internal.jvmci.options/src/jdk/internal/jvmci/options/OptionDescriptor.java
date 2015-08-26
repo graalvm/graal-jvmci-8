@@ -26,7 +26,7 @@ package jdk.internal.jvmci.options;
  * Describes the attributes of a static field {@linkplain Option option} and provides access to its
  * {@linkplain OptionValue value}.
  */
-public class OptionDescriptor {
+public final class OptionDescriptor {
 
     protected final String name;
     protected final Class<?> type;
@@ -35,7 +35,17 @@ public class OptionDescriptor {
     protected final Class<?> declaringClass;
     protected final String fieldName;
 
-    public OptionDescriptor(String name, Class<?> type, String help, Class<?> declaringClass, String fieldName, OptionValue<?> option) {
+    public static OptionDescriptor create(String name, Class<?> type, String help, Class<?> declaringClass, String fieldName, OptionValue<?> option) {
+        OptionDescriptor result = option.getDescriptor();
+        if (result == null) {
+            result = new OptionDescriptor(name, type, help, declaringClass, fieldName, option);
+            option.setDescriptor(result);
+        }
+        assert result.name.equals(name) && result.type == type && result.declaringClass == declaringClass && result.fieldName.equals(fieldName) && result.option == option;
+        return result;
+    }
+
+    private OptionDescriptor(String name, Class<?> type, String help, Class<?> declaringClass, String fieldName, OptionValue<?> option) {
         this.name = name;
         this.type = type;
         this.help = help;
@@ -43,7 +53,6 @@ public class OptionDescriptor {
         this.declaringClass = declaringClass;
         this.fieldName = fieldName;
         assert !type.isPrimitive() : "must used boxed type instead of " + type;
-        option.setDescriptor(this);
     }
 
     /**

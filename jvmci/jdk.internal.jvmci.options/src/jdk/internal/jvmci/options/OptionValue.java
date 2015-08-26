@@ -193,6 +193,7 @@ public class OptionValue<T> {
      * Sets the descriptor for this option.
      */
     public void setDescriptor(OptionDescriptor descriptor) {
+        assert this.descriptor == null : "Overwriting existing descriptor";
         this.descriptor = descriptor;
     }
 
@@ -234,7 +235,9 @@ public class OptionValue<T> {
      * Returns true if the option has the same value that was set in the source code.
      */
     public boolean hasDefaultValue() {
-        getValue(); // ensure initialized
+        if (!(this instanceof StableOptionValue)) {
+            getValue(); // ensure initialized
+        }
         return value == DEFAULT || Objects.equals(value, getDefaultValue());
     }
 
