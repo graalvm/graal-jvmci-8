@@ -299,7 +299,6 @@
   template(selectAlternative_signature, "(ZLjava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodHandle;)Ljava/lang/invoke/MethodHandle;") \
                                                                                                                                       \
   /* Support for JVMCI */                                                                                                             \
-  template(java_util_BitSet,                                         "java/util/BitSet")                                              \
   JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotCompiledCode,             "jdk/internal/jvmci/hotspot/HotSpotCompiledCode"))                  \
   JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotCompiledCode_Comment,     "jdk/internal/jvmci/hotspot/HotSpotCompiledCode$Comment"))          \
   JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotCompiledNmethod,          "jdk/internal/jvmci/hotspot/HotSpotCompiledNmethod"))               \
