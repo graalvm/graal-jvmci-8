@@ -3557,7 +3557,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   __ ld(G2_thread, in_bytes(JavaThread::pending_deoptimization_offset()), O1);
   __ sub(G0, 1, L1);
-  __ st_ptr(L1, G2_thread, in_bytes(JavaThread::pending_deoptimization_offset()));
+  __ st(L1, G2_thread, in_bytes(JavaThread::pending_deoptimization_offset()));
 
   __ mov((int32_t)Deoptimization::Unpack_reexecute, L0deopt_mode);
   __ mov(G2_thread, O0);
