@@ -130,7 +130,6 @@ extern "C" {
   void     JNICALL JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader);
   void     JNICALL JVM_InitializeJVMCINatives(JNIEnv *env, jclass compilerToVMClass);
   jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
-  jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
   jobject  JNICALL JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass serviceClass);
 #endif
 }
