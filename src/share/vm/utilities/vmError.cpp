@@ -539,18 +539,17 @@ void VMError::report(outputStream* st) {
   STEP(102, "(printing code blob if possible)")
 
      if (_verbose && _context) {
-       address pc = os::get_pc(_context);
-       CodeBlob* cb = CodeCache::find_blob(pc);
+       CodeBlob* cb = CodeCache::find_blob(_pc);
        if (cb != NULL) {
-         if (Interpreter::contains(pc)) {
+         if (Interpreter::contains(_pc)) {
            // The interpreter CodeBlob is very large so try to print the codelet instead.
-           InterpreterCodelet* codelet = Interpreter::codelet_containing(pc);
+           InterpreterCodelet* codelet = Interpreter::codelet_containing(_pc);
            if (codelet != NULL) {
              codelet->print_on(st);
              Disassembler::decode(codelet->code_begin(), codelet->code_end(), st);
            }
          } else {
-           StubCodeDesc* desc = StubCodeDesc::desc_for(pc);
+           StubCodeDesc* desc = StubCodeDesc::desc_for(_pc);
            if (desc != NULL) {
              desc->print_on(st);
              Disassembler::decode(desc->begin(), desc->end(), st);
