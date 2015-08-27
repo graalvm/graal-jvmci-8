@@ -1373,10 +1373,11 @@ def makejmhdeps(args):
                     mx.log('Skipping dependency ' + groupId + '.' + artifactId + ' as ' + name + ' cannot be resolved')
                     return
                 if dep.isDistribution():
-                    allDeps = allDeps + [d.name for d in dep.archived_deps() if d.isJavaProject()]
+                    allDeps = allDeps + [d for d in dep.archived_deps() if d.isJavaProject()]
                 else:
-                    allDeps.append(name)
-        d = mx.Distribution(_suite, name=artifactId, subDir=_suite.dir, path=path, sourcesPath=path, deps=allDeps, mainClass=None, excludedLibs=[], distDependencies=[], javaCompliance=None)
+                    allDeps.append(dep)
+        d = mx.JARDistribution(_suite, name=artifactId, subDir=_suite.dir, path=path, sourcesPath=path, deps=allDeps, \
+                               mainClass=None, excludedLibs=[], distDependencies=[], javaCompliance=None, platformDependent=False, theLicense=None)
         d.make_archive()
         env = os.environ.copy()
         env['JAVA_HOME'] = get_jvmci_jdk(vmToCheck='server')
@@ -1540,46 +1541,6 @@ def jmh(args):
             if len(str(v)):
                 javaArgs.append(str(v))
         mx.run_java(javaArgs + regex, addDefaultArgs=False, cwd=jmhPath)
-
-def microbench(args):
-    """run JMH microbenchmark projects"""
-    vmArgs, jmhArgs = mx.extract_VM_args(args, useDoubleDash=True)
-
-    # look for -f in JMH arguments
-    containsF = False
-    forking = True
-    for i in range(len(jmhArgs)):
-        arg = jmhArgs[i]
-        if arg.startswith('-f'):
-            containsF = True
-            if arg == '-f' and (i+1) < len(jmhArgs):
-                arg += jmhArgs[i+1]
-            try:
-                if int(arg[2:]) == 0:
-                    forking = False
-            except ValueError:
-                pass
-
-    # default to -f1 if not specified otherwise
-    if not containsF:
-        jmhArgs += ['-f1']
-
-    # find all projects with a direct JMH dependency
-    jmhProjects = []
-    for p in mx.projects():
-        if 'JMH' in p.deps:
-            jmhProjects.append(p.name)
-    cp = mx.classpath(jmhProjects)
-
-    # execute JMH runner
-    args = ['-cp', cp]
-    if not forking:
-        args += vmArgs
-    args += ['org.openjdk.jmh.Main']
-    if forking:
-        (_, _, jvm, _, _) = parseVmArgs(vmArgs)
-        args += ['--jvmArgsPrepend', ' '.join(['-' + jvm] + vmArgs)]
-    vm(args + jmhArgs)
 
 def hsdis(args, copyToDir=None):
     """download the hsdis library
