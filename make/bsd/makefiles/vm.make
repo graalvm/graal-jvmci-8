@@ -134,10 +134,6 @@ ifeq ($(USE_CLANG),)
   LIBS += -pthread
 endif
 
-ifeq ($(OS_VENDOR),Darwin)
-  LIBS         += -framework ApplicationServices -framework IOKit
-endif
-
 # By default, link the *.o into the library, not the executable.
 LINK_INTO$(LINK_INTO) = LIBJVM
 
