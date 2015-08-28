@@ -28,24 +28,23 @@ import static jdk.internal.jvmci.code.ValueUtil.*;
 /**
  * Represents lock information in the debug information.
  */
-public final class StackLockValue extends AbstractValue implements JavaValue {
+public final class StackLockValue implements JavaValue {
 
-    private Value owner;
+    private JavaValue owner;
     private StackSlotValue slot;
     private final boolean eliminated;
 
-    public StackLockValue(Value object, StackSlotValue slot, boolean eliminated) {
-        super(LIRKind.Illegal);
+    public StackLockValue(JavaValue object, StackSlotValue slot, boolean eliminated) {
         this.owner = object;
         this.slot = slot;
         this.eliminated = eliminated;
     }
 
-    public Value getOwner() {
+    public JavaValue getOwner() {
         return owner;
     }
 
-    public void setOwner(Value newOwner) {
+    public void setOwner(JavaValue newOwner) {
         this.owner = newOwner;
     }
 

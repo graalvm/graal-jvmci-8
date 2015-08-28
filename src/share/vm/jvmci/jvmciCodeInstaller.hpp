@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -117,7 +117,7 @@ public:
   static bool is_general_purpose_reg(VMReg hotspotRegister);
 
 private:
-  ScopeValue* get_scope_value(oop value, GrowableArray<ScopeValue*>* objects, ScopeValue* &second);
+  ScopeValue* get_scope_value(oop value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second);
   MonitorValue* get_monitor_value(oop value, GrowableArray<ScopeValue*>* objects);
 
   // extract the fields of the CompilationResult

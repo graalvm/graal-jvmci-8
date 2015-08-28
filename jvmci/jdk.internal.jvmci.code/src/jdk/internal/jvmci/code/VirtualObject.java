@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -31,10 +31,11 @@ import jdk.internal.jvmci.meta.*;
  * The information stored in the {@link VirtualObject} is used during deoptimization to recreate the
  * object.
  */
-public final class VirtualObject extends AbstractValue implements JavaValue {
+public final class VirtualObject implements JavaValue {
 
     private final ResolvedJavaType type;
-    private Value[] values;
+    private JavaValue[] values;
+    private Kind[] slotKinds;
     private final int id;
 
     /**
@@ -46,24 +47,20 @@ public final class VirtualObject extends AbstractValue implements JavaValue {
      *
      * @param type the type of the object whose allocation was removed during compilation. This can
      *            be either an instance of an array type.
-     * @param values an array containing all the values to be stored into the object when it is
-     *            recreated
      * @param id a unique id that identifies the object within the debug information for one
      *            position in the compiled code.
      * @return a new {@link VirtualObject} instance.
      */
-    public static VirtualObject get(ResolvedJavaType type, Value[] values, int id) {
-        return new VirtualObject(type, values, id);
+    public static VirtualObject get(ResolvedJavaType type, int id) {
+        return new VirtualObject(type, id);
     }
 
-    private VirtualObject(ResolvedJavaType type, Value[] values, int id) {
-        super(LIRKind.reference(Kind.Object));
+    private VirtualObject(ResolvedJavaType type, int id) {
         this.type = type;
-        this.values = values;
         this.id = id;
     }
 
-    private static StringBuilder appendValue(StringBuilder buf, Value value, Set<VirtualObject> visited) {
+    private static StringBuilder appendValue(StringBuilder buf, JavaValue value, Set<VirtualObject> visited) {
         if (value instanceof VirtualObject) {
             VirtualObject vo = (VirtualObject) value;
             buf.append("vobject:").append(vo.type.toJavaName(false)).append(':').append(vo.id);
@@ -118,8 +115,15 @@ public final class VirtualObject extends AbstractValue implements JavaValue {
     /**
      * Returns an array containing all the values to be stored into the object when it is recreated.
      */
-    public Value[] getValues() {
+    public JavaValue[] getValues() {
         return values;
+    }
+
+    /**
+     * Returns an array containing the Java kind of all values in the object.
+     */
+    public Kind[] getSlotKinds() {
+        return slotKinds;
     }
 
     /**
@@ -130,16 +134,18 @@ public final class VirtualObject extends AbstractValue implements JavaValue {
         return id;
     }
 
-    private static boolean checkValues(ResolvedJavaType type, Value[] values) {
+    private boolean checkValues() {
+        assert (values == null) == (slotKinds == null);
         if (values != null) {
+            assert values.length == slotKinds.length;
             if (!type.isArray()) {
                 ResolvedJavaField[] fields = type.getInstanceFields(true);
                 int fieldIndex = 0;
                 for (int i = 0; i < values.length; i++) {
                     ResolvedJavaField field = fields[fieldIndex++];
-                    Kind valKind = values[i].getKind().getStackKind();
+                    Kind valKind = slotKinds[i].getStackKind();
                     if (field.getKind() == Kind.Object) {
-                        assert values[i].getLIRKind().isReference(0) : field + ": " + valKind + " != " + field.getKind();
+                        assert valKind.isObject() : field + ": " + valKind + " != " + field.getKind();
                     } else {
                         if ((valKind == Kind.Double || valKind == Kind.Long) && field.getKind() == Kind.Int) {
                             assert fields[fieldIndex].getKind() == Kind.Int;
@@ -154,12 +160,12 @@ public final class VirtualObject extends AbstractValue implements JavaValue {
                 Kind componentKind = type.getComponentType().getKind().getStackKind();
                 if (componentKind == Kind.Object) {
                     for (int i = 0; i < values.length; i++) {
-                        assert values[i].getLIRKind().isReference(0) : values[i].getKind() + " != " + componentKind;
+                        assert slotKinds[i].isObject() : slotKinds[i] + " != " + componentKind;
                     }
                 } else {
                     for (int i = 0; i < values.length; i++) {
-                        assert values[i].getKind() == componentKind || componentKind.getBitCount() >= values[i].getKind().getBitCount() ||
-                                        (componentKind == Kind.Int && values[i].getKind().getBitCount() >= Kind.Int.getBitCount()) : values[i].getKind() + " != " + componentKind;
+                        assert slotKinds[i] == componentKind || componentKind.getBitCount() >= slotKinds[i].getBitCount() ||
+                                        (componentKind == Kind.Int && slotKinds[i].getBitCount() >= Kind.Int.getBitCount()) : slotKinds[i] + " != " + componentKind;
                     }
                 }
             }
@@ -172,15 +178,17 @@ public final class VirtualObject extends AbstractValue implements JavaValue {
      *
      * @param values an array containing all the values to be stored into the object when it is
      *            recreated.
+     * @param slotKinds an array containing the Java kinds of the values.
      */
-    public void setValues(Value[] values) {
-        assert checkValues(type, values);
+    public void setValues(JavaValue[] values, Kind[] slotKinds) {
         this.values = values;
+        this.slotKinds = slotKinds;
+        assert checkValues();
     }
 
     @Override
     public int hashCode() {
-        return getLIRKind().hashCode() + type.hashCode();
+        return 42 + type.hashCode();
     }
 
     @Override

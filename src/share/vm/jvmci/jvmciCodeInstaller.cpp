@@ -178,41 +178,39 @@ static void record_metadata_in_patch(Handle& constant, OopRecorder* oop_recorder
   record_metadata_reference(HotSpotMetaspaceConstantImpl::metaspaceObject(constant), HotSpotMetaspaceConstantImpl::primitive(constant), HotSpotMetaspaceConstantImpl::compressed(constant), oop_recorder);
 }
 
-ScopeValue* CodeInstaller::get_scope_value(oop value, GrowableArray<ScopeValue*>* objects, ScopeValue* &second) {
-  second = NULL;
-  if (value == AbstractValue::ILLEGAL()) {
-    return _illegal_value;
-  }
-
+static Location::Type get_oop_type(oop value) {
   oop lirKind = AbstractValue::lirKind(value);
   oop platformKind = LIRKind::platformKind(lirKind);
-  jint referenceMask = LIRKind::referenceMask(lirKind);
-  assert(referenceMask != -1, "derived pointers are not allowed");
-  assert(referenceMask == 0 || referenceMask == 1, "unexpected referenceMask");
-  bool reference = referenceMask == 1;
+  assert(LIRKind::referenceMask(lirKind) == 1, "unexpected referenceMask");
+  
+  if (JVMCIRuntime::kindToBasicType(Kind::typeChar(platformKind)) == T_INT) {
+    return Location::narrowoop;
+  } else {
+    return Location::oop;
+  }
+}
 
-  BasicType type = JVMCIRuntime::kindToBasicType(Kind::typeChar(platformKind));
-
-  if (value->is_a(RegisterValue::klass())) {
+ScopeValue* CodeInstaller::get_scope_value(oop value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second) {
+  second = NULL;
+  if (value == AbstractValue::ILLEGAL()) {
+    assert(type == T_ILLEGAL, "expected legal value");
+    return _illegal_value;
+  } else if (value->is_a(RegisterValue::klass())) {
     oop reg = RegisterValue::reg(value);
     jint number = code_Register::number(reg);
     VMReg hotspotRegister = get_hotspot_reg(number);
     if (is_general_purpose_reg(hotspotRegister)) {
       Location::Type locationType;
-      if (type == T_INT) {
-        locationType = reference ? Location::narrowoop : Location::int_in_long;
-      } else if(type == T_SHORT || type == T_CHAR || type == T_BYTE || type == T_BOOLEAN) {
-        locationType = Location::int_in_long;
-      } else if (type == T_FLOAT) {
-        locationType = Location::int_in_long;
+      if (type == T_OBJECT) {
+        locationType = get_oop_type(value);
       } else if (type == T_LONG) {
-        locationType = reference ? Location::oop : Location::lng;
+        locationType = Location::lng;
       } else {
-        assert(type == T_OBJECT && reference, "unexpected type in cpu register");
-        locationType = Location::oop;
+        assert(type == T_INT || type == T_FLOAT || type == T_SHORT || type == T_CHAR || type == T_BYTE || type == T_BOOLEAN, "unexpected type in cpu register");
+        locationType = Location::int_in_long;
       }
       ScopeValue* value = new LocationValue(Location::new_reg_loc(locationType, hotspotRegister));
-      if (type == T_LONG && !reference) {
+      if (type == T_LONG) {
         second = value;
       }
       return value;
@@ -225,7 +223,6 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, GrowableArray<ScopeValue*>
       } else {
         locationType = Location::dbl;
       }
-      assert(!reference, "unexpected type in floating point register");
       ScopeValue* value = new LocationValue(Location::new_reg_loc(locationType, hotspotRegister));
       if (type == T_DOUBLE) {
         second = value;
@@ -239,51 +236,47 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, GrowableArray<ScopeValue*>
     }
 
     Location::Type locationType;
-    if (type == T_LONG) {
-      locationType = reference ? Location::oop : Location::lng;
-    } else if (type == T_INT) {
-      locationType = reference ? Location::narrowoop : Location::normal;
-    } else if(type == T_SHORT || type == T_CHAR || type == T_BYTE || type == T_BOOLEAN) {
-      locationType = Location::normal;
-    } else if (type == T_FLOAT) {
-      assert(!reference, "unexpected type in stack slot");
-      locationType = Location::normal;
+    if (type == T_OBJECT) {
+      locationType = get_oop_type(value);
+    } else if (type == T_LONG) {
+      locationType = Location::lng;
     } else if (type == T_DOUBLE) {
-      assert(!reference, "unexpected type in stack slot");
       locationType = Location::dbl;
     } else {
-      assert(type == T_OBJECT && reference, "unexpected type in stack slot");
-      locationType = Location::oop;
+      assert(type == T_INT || type == T_FLOAT || type == T_SHORT || type == T_CHAR || type == T_BYTE || type == T_BOOLEAN, "unexpected type in stack slot");
+      locationType = Location::normal;
     }
     ScopeValue* value = new LocationValue(Location::new_stk_loc(locationType, offset));
-    if (type == T_DOUBLE || (type == T_LONG && !reference)) {
+    if (type == T_DOUBLE || type == T_LONG) {
       second = value;
     }
     return value;
-  } else if (value->is_a(JavaConstant::klass())){
+  } else if (value->is_a(JavaConstant::klass())) {
     record_metadata_in_constant(value, _oop_recorder);
     if (value->is_a(PrimitiveConstant::klass())) {
-      assert(!reference, "unexpected primitive constant type");
-      if(value->is_a(RawConstant::klass())) {
+      if (value->is_a(RawConstant::klass())) {
         jlong prim = PrimitiveConstant::primitive(value);
         return new ConstantLongValue(prim);
-      } else if (type == T_INT || type == T_FLOAT) {
-        jint prim = (jint)PrimitiveConstant::primitive(value);
-        switch (prim) {
-          case -1: return _int_m1_scope_value;
-          case  0: return _int_0_scope_value;
-          case  1: return _int_1_scope_value;
-          case  2: return _int_2_scope_value;
-          default: return new ConstantIntValue(prim);
-        }
       } else {
-        assert(type == T_LONG || type == T_DOUBLE, "unexpected primitive constant type");
-        jlong prim = PrimitiveConstant::primitive(value);
-        second = _int_1_scope_value;
-        return new ConstantLongValue(prim);
+        assert(type == JVMCIRuntime::kindToBasicType(Kind::typeChar(PrimitiveConstant::kind(value))), "primitive constant type doesn't match");
+        if (type == T_INT || type == T_FLOAT) {
+          jint prim = (jint)PrimitiveConstant::primitive(value);
+          switch (prim) {
+            case -1: return _int_m1_scope_value;
+            case  0: return _int_0_scope_value;
+            case  1: return _int_1_scope_value;
+            case  2: return _int_2_scope_value;
+            default: return new ConstantIntValue(prim);
+          }
+        } else {
+          assert(type == T_LONG || type == T_DOUBLE, "unexpected primitive constant type");
+          jlong prim = PrimitiveConstant::primitive(value);
+          second = _int_1_scope_value;
+          return new ConstantLongValue(prim);
+        }
       }
     } else {
-        assert(reference, "unexpected object constant type");
+      assert(type == T_OBJECT, "unexpected object constant");
       if (value->is_a(NullConstant::klass()) || value->is_a(HotSpotCompressedNullConstant::klass())) {
         return _oop_null_scope_value;
       } else {
@@ -294,6 +287,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, GrowableArray<ScopeValue*>
       }
     }
   } else if (value->is_a(VirtualObject::klass())) {
+    assert(type == T_OBJECT, "unexpected virtual object");
     int id = VirtualObject::id(value);
     ScopeValue* object = objects->at(id);
     assert(object != NULL, "missing value");
@@ -314,10 +308,13 @@ void CodeInstaller::record_object_value(ObjectValue* sv, oop value, GrowableArra
   bool isLongArray = klass == Universe::longArrayKlassObj();
 
   objArrayOop values = VirtualObject::values(value);
+  objArrayOop slotKinds = VirtualObject::slotKinds(value);
   for (jint i = 0; i < values->length(); i++) {
     ScopeValue* cur_second = NULL;
     oop object = values->obj_at(i);
-    ScopeValue* value = get_scope_value(object, objects, cur_second);
+    oop kind = slotKinds->obj_at(i);
+    BasicType type = JVMCIRuntime::kindToBasicType(Kind::typeChar(kind));
+    ScopeValue* value = get_scope_value(object, type, objects, cur_second);
 
     if (isLongArray && cur_second == NULL) {
       // we're trying to put ints into a long array... this isn't really valid, but it's used for some optimizations.
@@ -334,13 +331,13 @@ void CodeInstaller::record_object_value(ObjectValue* sv, oop value, GrowableArra
 }
 
 MonitorValue* CodeInstaller::get_monitor_value(oop value, GrowableArray<ScopeValue*>* objects) {
-  guarantee(value->is_a(StackLockValue::klass()), "Monitors must be of type MonitorValue");
+  guarantee(value->is_a(StackLockValue::klass()), "Monitors must be of type StackLockValue");
 
   ScopeValue* second = NULL;
-  ScopeValue* owner_value = get_scope_value(StackLockValue::owner(value), objects, second);
+  ScopeValue* owner_value = get_scope_value(StackLockValue::owner(value), T_OBJECT, objects, second);
   assert(second == NULL, "monitor cannot occupy two stack slots");
 
-  ScopeValue* lock_data_value = get_scope_value(StackLockValue::slot(value), objects, second);
+  ScopeValue* lock_data_value = get_scope_value(StackLockValue::slot(value), T_LONG, objects, second);
   assert(second == lock_data_value, "monitor is LONG value that occupies two stack slots");
   assert(lock_data_value->is_location(), "invalid monitor location");
   Location lock_data_loc = ((LocationValue*)lock_data_value)->location();
@@ -726,7 +723,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop debug_info) {
     // Stubs do not record scope info, just oop maps
     return;
   }
-  
+
   GrowableArray<ScopeValue*>* objectMapping = record_virtual_objects(debug_info);
   record_scope(pc_offset, position, objectMapping);
 }
@@ -775,8 +772,10 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
     jint expression_count = BytecodeFrame::numStack(frame);
     jint monitor_count = BytecodeFrame::numLocks(frame);
     objArrayOop values = BytecodeFrame::values(frame);
+    objArrayOop slotKinds = BytecodeFrame::slotKinds(frame);
 
     assert(local_count + expression_count + monitor_count == values->length(), "unexpected values length");
+    assert(local_count + expression_count == slotKinds->length(), "unexpected slotKinds length");
 
     GrowableArray<ScopeValue*>* locals = local_count > 0 ? new GrowableArray<ScopeValue*> (local_count) : NULL;
     GrowableArray<ScopeValue*>* expressions = expression_count > 0 ? new GrowableArray<ScopeValue*> (expression_count) : NULL;
@@ -791,13 +790,17 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
       ScopeValue* second = NULL;
       oop value = values->obj_at(i);
       if (i < local_count) {
-        ScopeValue* first = get_scope_value(value, objects, second);
+        oop kind = slotKinds->obj_at(i);
+        BasicType type = JVMCIRuntime::kindToBasicType(Kind::typeChar(kind));
+        ScopeValue* first = get_scope_value(value, type, objects, second);
         if (second != NULL) {
           locals->append(second);
         }
         locals->append(first);
       } else if (i < local_count + expression_count) {
-        ScopeValue* first = get_scope_value(value, objects, second);
+        oop kind = slotKinds->obj_at(i);
+        BasicType type = JVMCIRuntime::kindToBasicType(Kind::typeChar(kind));
+        ScopeValue* first = get_scope_value(value, type, objects, second);
         if (second != NULL) {
           expressions->append(second);
         }

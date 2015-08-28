@@ -172,7 +172,8 @@ void jvmci_compute_offsets();
     typeArrayOop_field(RegisterSaveLayout, slots, "[I")                                                                                                        \
   end_class                                                                                                                                                    \
   start_class(BytecodeFrame)                                                                                                                                   \
-    objArrayOop_field(BytecodeFrame, values, "[Ljdk/internal/jvmci/meta/Value;")                                                                                 \
+    objArrayOop_field(BytecodeFrame, values, "[Ljdk/internal/jvmci/meta/JavaValue;")                                                                           \
+    objArrayOop_field(BytecodeFrame, slotKinds, "[Ljdk/internal/jvmci/meta/Kind;")                                                                             \
     int_field(BytecodeFrame, numLocals)                                                                                                                        \
     int_field(BytecodeFrame, numStack)                                                                                                                         \
     int_field(BytecodeFrame, numLocks)                                                                                                                         \
@@ -188,6 +189,7 @@ void jvmci_compute_offsets();
   start_class(JavaConstant)                                                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(PrimitiveConstant)                                                                                                                               \
+    oop_field(PrimitiveConstant, kind, "Ljdk/internal/jvmci/meta/Kind;")                                                                                       \
     long_field(PrimitiveConstant, primitive)                                                                                                                   \
   end_class                                                                                                                                                    \
   start_class(RawConstant)                                                                                                                                     \
@@ -241,12 +243,13 @@ void jvmci_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(VirtualObject)                                                                                                                                   \
     int_field(VirtualObject, id)                                                                                                                               \
-    oop_field(VirtualObject, type, "Ljdk/internal/jvmci/meta/ResolvedJavaType;")                                                                                 \
-    objArrayOop_field(VirtualObject, values, "[Ljdk/internal/jvmci/meta/Value;")                                                                                 \
+    oop_field(VirtualObject, type, "Ljdk/internal/jvmci/meta/ResolvedJavaType;")                                                                               \
+    objArrayOop_field(VirtualObject, values, "[Ljdk/internal/jvmci/meta/JavaValue;")                                                                           \
+    objArrayOop_field(VirtualObject, slotKinds, "[Ljdk/internal/jvmci/meta/Kind;")                                                                             \
   end_class                                                                                                                                                    \
   start_class(StackLockValue)                                                                                                                                  \
-    oop_field(StackLockValue, owner, "Ljdk/internal/jvmci/meta/Value;")                                                                                          \
-    oop_field(StackLockValue, slot, "Ljdk/internal/jvmci/code/StackSlotValue;")                                                                                  \
+    oop_field(StackLockValue, owner, "Ljdk/internal/jvmci/meta/JavaValue;")                                                                                    \
+    oop_field(StackLockValue, slot, "Ljdk/internal/jvmci/code/StackSlotValue;")                                                                                \
     boolean_field(StackLockValue, eliminated)                                                                                                                  \
   end_class                                                                                                                                                    \
   start_class(SpeculationLog)                                                                                                                                  \
