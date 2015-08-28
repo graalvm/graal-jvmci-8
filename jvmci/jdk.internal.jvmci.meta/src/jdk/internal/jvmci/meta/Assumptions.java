@@ -72,6 +72,24 @@ public final class Assumptions implements Iterable<Assumptions.Assumption> {
             System.arraycopy(other.assumptions, 0, newAssumptions, this.assumptions.length, other.assumptions.length);
             this.assumptions = newAssumptions;
         }
+
+        public boolean canRecordTo(Assumptions target) {
+            /*
+             * We can use the result if it is either assumption free, or if we have a valid
+             * Assumptions object where we can record assumptions.
+             */
+            return assumptions.length == 0 || target != null;
+        }
+
+        public void recordTo(Assumptions target) {
+            assert canRecordTo(target);
+
+            if (assumptions.length > 0) {
+                for (Assumption assumption : assumptions) {
+                    target.record(assumption);
+                }
+            }
+        }
     }
 
     /**
@@ -346,12 +364,6 @@ public final class Assumptions implements Iterable<Assumptions.Assumption> {
      */
     public void recordConcreteMethod(ResolvedJavaMethod method, ResolvedJavaType context, ResolvedJavaMethod impl) {
         record(new ConcreteMethod(method, context, impl));
-    }
-
-    public void record(AssumptionResult<?> result) {
-        for (Assumption assumption : result.assumptions) {
-            record(assumption);
-        }
     }
 
     public void record(Assumption assumption) {
