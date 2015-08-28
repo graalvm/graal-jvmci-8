@@ -1010,9 +1010,6 @@ typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > MetablockTreeDicti
   /*********************************/                                                                                                \
   /* JNIHandles and JNIHandleBlock */                                                                                                \
   /*********************************/                                                                                                \
-                                                                                                                                     \
-  nonstatic_field(Handle,                      _handle,                                       oop*)                                  \
-                                                                                                                                     \
      static_field(JNIHandles,                  _global_handles,                               JNIHandleBlock*)                       \
      static_field(JNIHandles,                  _weak_global_handles,                          JNIHandleBlock*)                       \
      static_field(JNIHandles,                  _deleted_handle,                               oop)                                   \
@@ -1744,8 +1741,6 @@ typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > MetablockTreeDicti
   /*********************************/                                     \
   /* JNIHandles and JNIHandleBlock */                                     \
   /*********************************/                                     \
-                                                                          \
-  declare_toplevel_type(Handle)                                           \
                                                                           \
   declare_toplevel_type(JNIHandles)                                       \
   declare_toplevel_type(JNIHandleBlock)                                   \
@@ -2543,21 +2538,8 @@ typedef BinaryTreeDictionary<Metablock, FreeList<Metablock> > MetablockTreeDicti
   declare_constant(ConstantPoolCacheEntry::is_final_shift)                \
   declare_constant(ConstantPoolCacheEntry::is_forced_virtual_shift)       \
   declare_constant(ConstantPoolCacheEntry::is_vfinal_shift)               \
-  declare_constant(ConstantPoolCacheEntry::has_appendix_shift)            \
-  declare_constant(ConstantPoolCacheEntry::has_method_type_shift)         \
   declare_constant(ConstantPoolCacheEntry::is_field_entry_shift)          \
   declare_constant(ConstantPoolCacheEntry::tos_state_shift)               \
-                                                                          \
-  declare_constant(ConstantPoolCacheEntry::cp_index_bits)                 \
-  declare_constant(ConstantPoolCacheEntry::cp_index_mask)                 \
-  declare_constant(ConstantPoolCacheEntry::bytecode_1_shift)              \
-  declare_constant(ConstantPoolCacheEntry::bytecode_1_mask)               \
-  declare_constant(ConstantPoolCacheEntry::bytecode_2_shift)              \
-  declare_constant(ConstantPoolCacheEntry::bytecode_2_mask)               \
-                                                                          \
-  declare_constant(ConstantPoolCacheEntry::_indy_resolved_references_appendix_offset) \
-  declare_constant(ConstantPoolCacheEntry::_indy_resolved_references_method_type_offset) \
-  declare_constant(ConstantPoolCacheEntry::_indy_resolved_references_entries) \
                                                                           \
   /***************************************/                               \
   /* java_lang_Thread::ThreadStatus enum */                               \

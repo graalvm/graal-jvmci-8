@@ -62,7 +62,6 @@
 // used operators for ease of use.
 
 class Handle VALUE_OBJ_CLASS_SPEC {
-  friend class VMStructs;
  private:
   oop* _handle;
 

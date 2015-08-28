@@ -25,7 +25,6 @@ package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.inittimer.InitTimer.*;
 import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.common.*;
 import jdk.internal.jvmci.inittimer.*;
 import jdk.internal.jvmci.meta.*;
 
@@ -74,39 +73,19 @@ public class CompilerToVMImpl implements CompilerToVM {
 
     public native Object resolveConstantInPool(HotSpotConstantPool constantPool, int cpi);
 
-    public Object resolvePossiblyCachedConstantInPool(HotSpotConstantPool constantPool, int cpi) {
-        JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return resolvePossiblyCachedConstantInPool0(constantPool, cpi);
-    }
-
-    private native Object resolvePossiblyCachedConstantInPool0(HotSpotConstantPool constantPool, int cpi);
+    public native Object resolvePossiblyCachedConstantInPool(HotSpotConstantPool constantPool, int cpi);
 
     @Override
     public native int lookupNameAndTypeRefIndexInPool(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public String lookupNameRefInPool(HotSpotConstantPool constantPool, int cpi) {
-        JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return lookupNameRefInPool0(constantPool, cpi);
-    }
-
-    private native String lookupNameRefInPool0(HotSpotConstantPool constantPool, int cpi);
+    public native String lookupNameRefInPool(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public String lookupSignatureRefInPool(HotSpotConstantPool constantPool, int cpi) {
-        JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return lookupSignatureRefInPool0(constantPool, cpi);
-    }
-
-    private native String lookupSignatureRefInPool0(HotSpotConstantPool constantPool, int cpi);
+    public native String lookupSignatureRefInPool(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public int lookupKlassRefIndexInPool(HotSpotConstantPool constantPool, int cpi) {
-        JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return lookupKlassRefIndexInPool0(constantPool, cpi);
-    }
-
-    private native int lookupKlassRefIndexInPool0(HotSpotConstantPool constantPool, int cpi);
+    public native int lookupKlassRefIndexInPool(HotSpotConstantPool constantPool, int cpi);
 
     public native HotSpotResolvedObjectTypeImpl resolveTypeInPool(HotSpotConstantPool constantPool, int cpi);
 
@@ -119,20 +98,10 @@ public class CompilerToVMImpl implements CompilerToVM {
     @Override
     public native HotSpotResolvedObjectTypeImpl resolveFieldInPool(HotSpotConstantPool constantPool, int cpi, byte opcode, long[] info);
 
-    public int constantPoolRemapInstructionOperandFromCache(HotSpotConstantPool constantPool, int cpi) {
-        JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return constantPoolRemapInstructionOperandFromCache0(constantPool, cpi);
-    }
-
-    private native int constantPoolRemapInstructionOperandFromCache0(HotSpotConstantPool constantPool, int cpi);
+    public native int constantPoolRemapInstructionOperandFromCache(HotSpotConstantPool constantPool, int cpi);
 
     @Override
-    public Object lookupAppendixInPool(HotSpotConstantPool constantPool, int cpi) {
-        JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return lookupAppendixInPool0(constantPool, cpi);
-    }
-
-    private native Object lookupAppendixInPool0(HotSpotConstantPool constantPool, int cpi);
+    public native Object lookupAppendixInPool(HotSpotConstantPool constantPool, int cpi);
 
     @Override
     public native void initializeConfiguration(HotSpotVMConfig config);
@@ -209,12 +178,7 @@ public class CompilerToVMImpl implements CompilerToVM {
 
     public native long getTimeStamp();
 
-    public String getSymbol(long metaspaceSymbol) {
-        JVMCIError.guarantee(!HotSpotConstantPool.Options.UseConstantPoolCacheJavaCode.getValue(), "");
-        return getSymbol0(metaspaceSymbol);
-    }
-
-    private native String getSymbol0(long metaspaceSymbol);
+    public native String getSymbol(long metaspaceSymbol);
 
     public native void resolveInvokeDynamicInPool(HotSpotConstantPool constantPool, int index);
 
