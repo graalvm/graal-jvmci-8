@@ -1531,6 +1531,12 @@ def jmh(args):
     for suite in matchedSuites:
         absoluteMicro = os.path.join(jmhPath, suite)
         (pfx, exe, vm, forkedVmArgs, _) = parseVmArgs(vmArgs)
+        def quoteSpace(s):
+            if " " in s:
+                return '"' + s + '"'
+            return s
+
+        forkedVmArgs = map(quoteSpace, forkedVmArgs)
         if pfx:
             mx.log("JMH ignores prefix: \"" + ' '.join(pfx) + "\"")
         javaArgs = ['-jar', os.path.join(absoluteMicro, "target", "microbenchmarks.jar"),
