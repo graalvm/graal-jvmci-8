@@ -455,7 +455,7 @@ void CodeInstaller::initialize_fields(oop compiled_code) {
     Handle hotspotJavaMethod = HotSpotCompiledNmethod::method(compiled_code);
     methodHandle method = getMethodFromHotSpotMethod(hotspotJavaMethod());
     _parameter_count = method->size_of_parameters();
-    TRACE_jvmci_1("installing code for %s", method->name_and_sig_as_C_string());
+    TRACE_jvmci_2("installing code for %s", method->name_and_sig_as_C_string());
   } else {
     // Must be a HotSpotCompiledRuntimeStub
     // TODO (ds) not sure if this is correct - only used in OopMap constructor for non-product builds

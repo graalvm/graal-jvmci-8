@@ -78,7 +78,9 @@
           "Defer write barriers of young objects"))                         \
                                                                             \
   product(intx, TraceJVMCI, 0,                                              \
-          "Trace level for JVMCI")                                          \
+          "Trace level for JVMCI: "                                         \
+          "1 means emit messages for each CompilerToVM call,"               \
+          "levels greater than one provide progressively greater detail")   \
                                                                             \
   product(intx, JVMCICounterSize, 0,                                        \
           "Reserved size for benchmark counters")                           \
