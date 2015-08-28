@@ -90,8 +90,7 @@ class ThreadShadow: public CHeapObj<mtThread> {
   void clear_pending_exception();
 
   ThreadShadow() : _pending_exception(NULL),
-                   _exception_file(NULL), _exception_line(0)
-  {}
+                   _exception_file(NULL), _exception_line(0) {}
 };
 
 
