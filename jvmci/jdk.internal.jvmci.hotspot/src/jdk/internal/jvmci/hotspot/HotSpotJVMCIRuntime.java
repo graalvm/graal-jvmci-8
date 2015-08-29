@@ -32,7 +32,6 @@ import jdk.internal.jvmci.compiler.*;
 import jdk.internal.jvmci.compiler.Compiler;
 import jdk.internal.jvmci.inittimer.*;
 import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.options.*;
 import jdk.internal.jvmci.runtime.*;
 import jdk.internal.jvmci.service.*;
 
@@ -103,14 +102,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         }
 
         this.compilerToVm = toVM;
-    }
-
-    public static class Options {
-
-        // @formatter:off
-        @Option(help = "File to which logging is sent.  A %p in the name will be replaced with a string identifying the process, usually the process id.", type = OptionType.Expert)
-        public static final PrintStreamOption LogFile = new PrintStreamOption();
-        // @formatter:on
     }
 
     public static HotSpotJVMCIBackendFactory findFactory(String architecture) {
