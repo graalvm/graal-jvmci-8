@@ -452,9 +452,12 @@ def _handle_missing_VM(bld, vm=None):
             return
     mx.abort('You need to run "mx --vm ' + vm + ' --vmbuild ' + bld + ' build" to build the selected VM')
 
-def get_jvmci_jdk(build=None, vmToCheck=None, create=False, installJars=True):
+def get_jvmci_jdk(build=None, vmToCheck=None, create=False, deployDists=True):
     """
-    Gets the JDK into which JVMCI is installed, creating it first if necessary.
+    Gets the path of the JVMCI JDK corresponding to 'build' (or '_vmbuild'), creating it
+    first if it does not exist and 'create' is True. If the JDK was created or
+    'deployDists' is True, then the JDK deployable distributions are deployed into
+    the JDK.
     """
     if not build:
         build = _vmbuild
@@ -533,7 +536,7 @@ def get_jvmci_jdk(build=None, vmToCheck=None, create=False, installJars=True):
                 mx.log("The selected JDK directory does not (yet) exist: " + jdk)
             _handle_missing_VM(build, vmToCheck)
 
-    if installJars:
+    if deployDists:
         for jdkDist in jdkDeployedDists:
             dist = jdkDist.dist()
             if exists(dist.path):
@@ -752,7 +755,7 @@ def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo
 
 def jdkhome(vm=None):
     """return the JDK directory selected for the 'vm' command"""
-    return get_jvmci_jdk(installJars=False)
+    return get_jvmci_jdk(deployDists=False)
 
 def print_jdkhome(args, vm=None):
     """print the JDK directory selected for the 'vm' command"""
@@ -1069,7 +1072,7 @@ def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
         mx.abort("conflicting working directories: do not set --vmcwd for this command")
 
     build = vmbuild if vmbuild else _vmbuild
-    jdk = get_jvmci_jdk(build, vmToCheck=vm, installJars=False)
+    jdk = get_jvmci_jdk(build, vmToCheck=vm, deployDists=False)
     _updateInstalledJVMCIOptionsFile(jdk)
     mx.expand_project_in_args(args)
     if _make_eclipse_launch:
