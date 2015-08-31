@@ -27,12 +27,15 @@ import jdk.internal.jvmci.meta.*;
 /**
  * The compressed representation of the {@link JavaConstant#NULL_POINTER null constant}.
  */
-public final class HotSpotCompressedNullConstant extends AbstractValue implements JavaConstant, HotSpotConstant {
+public final class HotSpotCompressedNullConstant implements JavaConstant, HotSpotConstant {
 
     public static final JavaConstant COMPRESSED_NULL = new HotSpotCompressedNullConstant();
 
     private HotSpotCompressedNullConstant() {
-        super(LIRKind.reference(Kind.Int));
+    }
+
+    public Kind getKind() {
+        return Kind.Object;
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,7 +33,7 @@ import jdk.internal.jvmci.meta.*;
  * Represents a constant non-{@code null} object reference, within the compiler and across the
  * compiler/runtime interface.
  */
-public final class HotSpotObjectConstantImpl extends AbstractValue implements HotSpotObjectConstant, HotSpotProxified {
+public final class HotSpotObjectConstantImpl implements HotSpotObjectConstant, HotSpotProxified {
 
     public static JavaConstant forObject(Object object) {
         return forObject(object, false);
@@ -80,7 +80,6 @@ public final class HotSpotObjectConstantImpl extends AbstractValue implements Ho
     private final boolean isDefaultStable;
 
     private HotSpotObjectConstantImpl(Object object, boolean compressed, int stableDimension, boolean isDefaultStable) {
-        super(LIRKind.reference(compressed ? Kind.Int : Kind.Object));
         this.object = object;
         this.compressed = compressed;
         this.stableDimension = (byte) stableDimension;
@@ -93,6 +92,11 @@ public final class HotSpotObjectConstantImpl extends AbstractValue implements Ho
 
     private HotSpotObjectConstantImpl(Object object, boolean compressed) {
         this(object, compressed, 0, false);
+    }
+
+    @Override
+    public Kind getKind() {
+        return Kind.Object;
     }
 
     /**
@@ -253,7 +257,7 @@ public final class HotSpotObjectConstantImpl extends AbstractValue implements Ho
             return true;
         } else if (o instanceof HotSpotObjectConstantImpl) {
             HotSpotObjectConstantImpl other = (HotSpotObjectConstantImpl) o;
-            return super.equals(o) && object == other.object && compressed == other.compressed && stableDimension == other.stableDimension && isDefaultStable == other.isDefaultStable;
+            return object == other.object && compressed == other.compressed && stableDimension == other.stableDimension && isDefaultStable == other.isDefaultStable;
         }
         return false;
     }

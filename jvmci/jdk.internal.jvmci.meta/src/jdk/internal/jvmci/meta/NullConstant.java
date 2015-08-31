@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,10 +25,14 @@ package jdk.internal.jvmci.meta;
 /**
  * The implementation type of the {@link JavaConstant#NULL_POINTER null constant}.
  */
-final class NullConstant extends AbstractValue implements JavaConstant {
+final class NullConstant implements JavaConstant {
 
     protected NullConstant() {
-        super(LIRKind.reference(Kind.Object));
+    }
+
+    @Override
+    public Kind getKind() {
+        return Kind.Object;
     }
 
     @Override

@@ -28,7 +28,9 @@ import java.nio.*;
  * Represents a primitive constant value, such as an integer or floating point number, within the
  * compiler and across the compiler/runtime interface.
  */
-public class PrimitiveConstant extends AbstractValue implements JavaConstant, SerializableConstant {
+public class PrimitiveConstant implements JavaConstant, SerializableConstant {
+
+    private final Kind kind;
 
     /**
      * The boxed primitive value as a {@code long}. For {@code float} and {@code double} values,
@@ -38,10 +40,15 @@ public class PrimitiveConstant extends AbstractValue implements JavaConstant, Se
     private final long primitive;
 
     protected PrimitiveConstant(Kind kind, long primitive) {
-        super(LIRKind.value(kind));
         this.primitive = primitive;
+        this.kind = kind;
 
         assert kind.isPrimitive() || kind == Kind.Illegal;
+    }
+
+    @Override
+    public Kind getKind() {
+        return kind;
     }
 
     @Override
@@ -150,7 +157,14 @@ public class PrimitiveConstant extends AbstractValue implements JavaConstant, Se
 
     @Override
     public boolean equals(Object o) {
-        return o == this || (o instanceof PrimitiveConstant && super.equals(o) && primitive == ((PrimitiveConstant) o).primitive);
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof PrimitiveConstant)) {
+            return false;
+        }
+        PrimitiveConstant other = (PrimitiveConstant) o;
+        return this.kind.equals(other.kind) && this.primitive == other.primitive;
     }
 
     @Override

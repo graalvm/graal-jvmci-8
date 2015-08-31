@@ -55,19 +55,9 @@ public final class ValueUtil {
         return (VirtualObject) value;
     }
 
-    public static boolean isConstant(Value value) {
-        assert value != null;
-        return value instanceof JavaConstant;
-    }
-
     public static boolean isConstantJavaValue(JavaValue value) {
         assert value != null;
         return value instanceof JavaConstant;
-    }
-
-    public static JavaConstant asConstant(Value value) {
-        assert value != null;
-        return (JavaConstant) value;
     }
 
     public static boolean isAllocatableValue(Value value) {

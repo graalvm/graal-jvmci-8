@@ -28,7 +28,7 @@ package jdk.internal.jvmci.meta;
  * {@code JavaConstant} instances that represent frequently used constant values, such as
  * {@link #NULL_POINTER}.
  */
-public interface JavaConstant extends Constant, JavaValue, Value {
+public interface JavaConstant extends Constant, JavaValue {
 
     /*
      * Using a larger cache for integers leads to only a slight increase in cache hit ratio which is
