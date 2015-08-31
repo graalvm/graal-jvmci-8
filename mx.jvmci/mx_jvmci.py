@@ -48,10 +48,16 @@ _vmChoices = {
     'server-nojvmci' : None,  # all compilation with tiered system (i.e., client + server), JVMCI omitted
     'client-nojvmci' : None,  # all compilation with client compiler, JVMCI omitted
     'original' : None,  # default VM copied from bootstrap JDK
-    'graal' : None, # alias for jvmci
-    'server-nograal' : None,  # alias for server-nojvmci
-    'client-nograal' : None,  # alias for client-nojvmci
 }
+
+# Aliases for legacy VM names
+_vmAliases = {
+    'graal' : 'jvmci',
+    'server-nograal' : 'server-nojvmci',
+    'client-nograal' : 'client-nograal',
+}
+
+_JVMCI_JDK_TAG = 'jvmci'
 
 """ The VM that will be run by the 'vm' command and built by default by the 'build' command.
     This can be set via the global '--vm' option or the DEFAULT_VM environment variable.
@@ -160,6 +166,9 @@ class HotSpotVMJDKDeployedDist(JDKDeployedDist):
         return mx.distribution(name)
 
     def deploy(self, jdkDir):
+        vmbuild = _vmbuildFromJdkDir(jdkDir)
+        if vmbuild != _vmbuild:
+            return
         _hs_deploy_map = {
             'jvmti.h' : 'include',
             'sa-jdi.jar' : 'lib',
@@ -178,6 +187,7 @@ class HotSpotVMJDKDeployedDist(JDKDeployedDist):
                     mx.logv('Deploying {} from {} to {}'.format(m.name, dist.name, targetDir))
                     tar.extract(m, targetDir)
         updateJvmCfg(jdkDir, get_vm())
+
 """
 List of distributions that are deployed into a JDK by mx.
 """
@@ -212,14 +222,27 @@ def get_installed_jdks():
     """
     return _installed_jdks
 
-def get_vm_prefix():
+def get_vm_prefix(asList=True):
     """
     Get the prefix for running the VM ("/usr/bin/gdb --args").
     """
+    if asList:
+        return _vm_prefix.split() if _vm_prefix is not None else []
     return _vm_prefix
 
 def get_vm_choices():
-    return _vmChoices
+    """
+    Get the names of available VMs.
+    """
+    return _vmChoices.viewkeys()
+
+def dealiased_vm(vm):
+    """
+    If 'vm' is an alias, returns the aliased name otherwise returns 'vm'.
+    """
+    if vm and vm in _vmAliases:
+        return _vmAliases[vm]
+    return vm
 
 def get_vm():
     """
@@ -230,12 +253,12 @@ def get_vm():
         return _vm
     vm = mx.get_env('DEFAULT_VM')
     envPath = join(_suite.mxDir, 'env')
-    if vm and 'graal' in vm:
+    if vm and vm in _vmAliases:
         if exists(envPath):
             with open(envPath) as fp:
                 if 'DEFAULT_VM=' + vm in fp.read():
-                    mx.log('Please update the DEFAULT_VM value in ' + envPath + ' to replace "graal" with "jvmci"')
-        vm = vm.replace('graal', 'jvmci')
+                    mx.log('Please update the DEFAULT_VM value in ' + envPath + ' to replace "' + vm + '" with "' + _vmAliases[vm] + '"')
+        vm = _vmAliases[vm]
     if vm is None:
         if not mx.is_interactive():
             mx.abort('Need to specify VM with --vm option or DEFAULT_VM environment variable')
@@ -299,7 +322,7 @@ def export(args):
     infos['revision'] = hgcfg.tip('.') + ('+' if hgcfg.isDirty('.') else '')
     # TODO: infos['repository']
 
-    infos['jdkversion'] = str(mx.get_jdk().version)
+    infos['jdkversion'] = str(get_jvmci_bootstrap_jdk().version)
 
     infos['architecture'] = mx.get_arch()
     infos['platform'] = mx.get_os()
@@ -323,13 +346,13 @@ def export(args):
         return jsonFileName
 
 
-    def _genFileName(archivtype, middle):
+    def _genFileName(archivetype, middle):
         idPrefix = infos['revision'] + '_'
         idSuffix = '.tar.gz'
-        return join(_suite.dir, "graalvm_" + archivtype + "_" + idPrefix + middle + idSuffix)
+        return join(_suite.dir, "graalvm_" + archivetype + "_" + idPrefix + middle + idSuffix)
 
-    def _genFileArchPlatformName(archivtype, middle):
-        return _genFileName(archivtype, infos['platform'] + '_' + infos['architecture'] + '_' + middle)
+    def _genFileArchPlatformName(archivetype, middle):
+        return _genFileName(archivetype, infos['platform'] + '_' + infos['architecture'] + '_' + middle)
 
 
     # archive different build types of hotspot
@@ -439,7 +462,7 @@ def getVmCfgInJdk(jdkDir, jvmCfgFile='jvm.cfg'):
     return join(vmLibDirInJdk(jdkDir), jvmCfgFile)
 
 def _jdksDir():
-    return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, 'jdk' + str(mx.get_jdk().version)))
+    return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, 'jdk' + str(get_jvmci_bootstrap_jdk().version)))
 
 def _handle_missing_VM(bld, vm=None):
     if not vm:
@@ -452,6 +475,19 @@ def _handle_missing_VM(bld, vm=None):
             return
     mx.abort('You need to run "mx --vm ' + vm + ' --vmbuild ' + bld + ' build" to build the selected VM')
 
+def check_VM_exists(vm, jdkDir, build=None):
+    if not build:
+        build = _vmbuild
+    jvmCfg = getVmCfgInJdk(jdkDir)
+    found = False
+    with open(jvmCfg) as f:
+        for line in f:
+            if line.strip() == '-' + vm + ' KNOWN':
+                found = True
+                break
+    if not found:
+        _handle_missing_VM(build, vm)
+
 def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True):
     """
     Gets the path of the JVMCI JDK corresponding to 'build' (or '_vmbuild'), creating it
@@ -463,7 +499,7 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
         build = _vmbuild
     jdkDir = join(_jdksDir(), build)
     if create:
-        srcJdk = mx.get_jdk().home
+        srcJdk = get_jvmci_bootstrap_jdk().home
         if not exists(jdkDir):
             mx.log('Creating ' + jdkDir + ' from ' + srcJdk)
             shutil.copytree(srcJdk, jdkDir)
@@ -667,6 +703,16 @@ def _installDistInJdks(deployableDist):
             jdkDir = join(jdks, e)
             deployableDist.deploy(jdkDir)
 
+def _vmbuildFromJdkDir(jdkDir):
+    """
+    Determines the VM build corresponding to 'jdkDir'.
+    """
+    jdksDir = _jdksDir()
+    assert jdkDir.startswith(jdksDir)
+    vmbuild = os.path.relpath(jdkDir, jdksDir)
+    assert vmbuild in _vmbuildChoices, 'The vmbuild derived from ' + jdkDir + ' is unknown: ' + vmbuild
+    return vmbuild
+
 def _check_for_obsolete_jvmci_files():
     jdks = _jdksDir()
     if exists(jdks):
@@ -765,7 +811,7 @@ def buildvars(args):
     """describe the variables that can be set by the -D option to the 'mx build' commmand"""
 
     buildVars = {
-        'ALT_BOOTDIR' : 'The location of the bootstrap JDK installation (default: ' + mx.get_jdk().home + ')',
+        'ALT_BOOTDIR' : 'The location of the bootstrap JDK installation (default: ' + get_jvmci_bootstrap_jdk().home + ')',
         'ALT_OUTPUTDIR' : 'Build directory',
         'HOTSPOT_BUILD_JOBS' : 'Number of CPUs used by make (default: ' + str(mx.cpu_count()) + ')',
         'INSTALL' : 'Install the built VM into the JDK? (default: y)',
@@ -780,8 +826,6 @@ def buildvars(args):
 
     mx.log('')
     mx.log('Note that these variables can be given persistent values in the file ' + join(_suite.mxDir, 'env') + ' (see \'mx about\').')
-
-cached_graal_version = None
 
 def _hotspotReplaceResultsVar(m):
     var = m.group(1)
@@ -842,14 +886,14 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             buildSuffix = 'jvmci'
 
         if isWindows:
-            t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "graalCompile.log"))
+            t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "jvmciCompile.log"))
             mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
 
             variant = _hotspotGetVariant(self.vm)
             project_config = variant + '_' + self.vmbuild
             jvmciHome = mx._cygpathU2W(_suite.dir)
             _runInDebugShell('msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcproj /p:Configuration=' + project_config + ' /target:clean', jvmciHome)
-            winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set JAVA_HOME=' + mx._cygpathU2W(mx.get_jdk().home) + r'& set path=%JAVA_HOME%\bin;%path%;%HotSpotMksHome%& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
+            winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + r'& set path=%JAVA_HOME%\bin;%path%;%HotSpotMksHome%& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
             print winCompileCmd
             winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
             if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
@@ -885,7 +929,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
 
             setMakeVar('ARCH_DATA_MODEL', '64', env=env)
             setMakeVar('HOTSPOT_BUILD_JOBS', str(cpus), env=env)
-            setMakeVar('ALT_BOOTDIR', mx.get_jdk().home, env=env)
+            setMakeVar('ALT_BOOTDIR', get_jvmci_bootstrap_jdk().home, env=env)
             # setMakeVar("EXPORT_PATH", jdk)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
@@ -943,7 +987,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
         newestOutput = self.newestOutput()
         for d in ['src', 'make', join('jvmci', 'jdk.internal.jvmci.hotspot', 'src_gen', 'hotspot')]:  # TODO should this be replaced by a dependency to the project?
             for root, dirnames, files in os.walk(join(_suite.dir, d)):
-                # ignore <graal>/src/share/tools
+                # ignore src/share/tools
                 if root == join(_suite.dir, 'src', 'share'):
                     dirnames.remove('tools')
                 for f in (join(root, name) for name in files):
@@ -1045,9 +1089,9 @@ def updateJvmCfg(jdkDir, vm):
                     continue
                 if not written:
                     f.write(vmKnown)
-                    if vm == 'jvmci':
-                        # Legacy support
-                        f.write('-graal ALIASED_TO -jvmci\n')
+                    for alias, aliased in _vmAliases.iteritems():
+                        if vm == aliased:
+                            f.write('-' + alias + ' ALIASED_TO -' + aliased + '\n')
                     written = True
                 if line.startswith(prefix):
                     line = vmKnown
@@ -1057,61 +1101,15 @@ def updateJvmCfg(jdkDir, vm):
 
 mx_gate.add_jacoco_includes(['jdk.internal.jvmci.*'])
 
-def parseVmArgs(args, vm=None, cwd=None, vmbuild=None):
-    """run the VM selected by the '--vm' option"""
-
-    if vm is None:
-        vm = get_vm()
-
-    if not isVMSupported(vm):
-        mx.abort('The ' + vm + ' is not supported on this platform')
-
-    if cwd is None:
-        cwd = _vm_cwd
-    elif _vm_cwd is not None and _vm_cwd != cwd:
-        mx.abort("conflicting working directories: do not set --vmcwd for this command")
-
-    build = vmbuild if vmbuild else _vmbuild
-    jdkDir = get_jvmci_jdk_dir(build, vmToCheck=vm, deployDists=False)
-    _updateInstalledJVMCIOptionsFile(jdkDir)
-    mx.expand_project_in_args(args)
-    if _make_eclipse_launch:
-        mx.make_eclipse_launch(_suite, args, _suite.name + '-' + build, name=None, deps=mx.dependencies())
-    jacocoArgs = mx_gate.get_jacoco_agent_args()
-    if jacocoArgs:
-        args = jacocoArgs + args
-    exe = join(jdkDir, 'bin', mx.exe_suffix('java'))
-    pfx = _vm_prefix.split() if _vm_prefix is not None else []
-
-    # Support for -G: options
-    jvmciArgs = []
-    nonJvmciArgs = []
-    existingJvmciOptionsProperty = None
-    for a in args:
-        if a.startswith('-G:'):
-            jvmciArg = a[len('-G:'):]
-            assert ' ' not in jvmciArg, 'space not supported in JVMCI arg: ' + a
-            jvmciArgs.append(a[len('-G:'):])
-        else:
-            if a.startswith('-Djvmci.options=') or a == '-Djvmci.options':
-                existingJvmciOptionsProperty = a
-            nonJvmciArgs.append(a)
-    if jvmciArgs:
-        if existingJvmciOptionsProperty:
-            mx.abort('defining jvmci.option property is incompatible with defining one or more -G: options: ' + existingJvmciOptionsProperty)
-        args = ['-Djvmci.options=' + ' '.join(jvmciArgs)] + nonJvmciArgs
-
-    if '-version' in args:
-        ignoredArgs = args[args.index('-version') + 1:]
-        if  len(ignoredArgs) > 0:
-            mx.log("Warning: The following options will be ignored by the vm because they come after the '-version' argument: " + ' '.join(ignoredArgs))
-
-    args = mx.get_jdk().processArgs(args)
-    return (pfx, exe, vm, args, cwd)
-
-def vm(args, vm=None, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, vmbuild=None):
-    (pfx_, exe_, vm_, args_, cwd) = parseVmArgs(args, vm, cwd, vmbuild)
-    return mx.run(pfx_ + [exe_, '-' + vm_] + args_, nonZeroIsFatal=nonZeroIsFatal, out=out, err=err, cwd=cwd, timeout=timeout)
+def run_vm(args, vm=None, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, vmbuild=None):
+    """
+    Runs a Java program by executing the java executable in a JVMCI JDK.
+    """
+    jdkTag = mx.get_jdk_option().tag
+    if jdkTag and jdkTag != _JVMCI_JDK_TAG:
+        mx.abort('The "--jdk" option must have the tag "' + _JVMCI_JDK_TAG + '" when running a command requiring a JVMCI VM')
+    jdk = get_jvmci_jdk(vmbuild=vmbuild)
+    return jdk.run_java(args, vm=vm, nonZeroIsFatal=nonZeroIsFatal, out=out, err=err, cwd=cwd, timeout=timeout)
 
 def _unittest_config_participant(config):
     vmArgs, mainClass, mainClassArgs = config
@@ -1133,7 +1131,7 @@ def _unittest_config_participant(config):
     return config
 
 def _unittest_vm_launcher(vmArgs, mainClass, mainClassArgs):
-    vm(vmArgs + [mainClass] + mainClassArgs)
+    run_vm(vmArgs + [mainClass] + mainClassArgs)
 
 mx_unittest.add_config_participant(_unittest_config_participant)
 mx_unittest.set_vm_launcher('JVMCI VM launcher', _unittest_vm_launcher)
@@ -1161,34 +1159,34 @@ def buildvms(args):
     builds = args.builds.split(',')
 
     allStart = time.time()
-    for v in vms:
-        if not isVMSupported(v):
-            mx.log('The ' + v + ' VM is not supported on this platform - skipping')
+    for vm in vms:
+        if not isVMSupported(vm):
+            mx.log('The ' + vm + ' VM is not supported on this platform - skipping')
             continue
 
         for vmbuild in builds:
-            if v == 'original' and vmbuild != 'product':
+            if vm == 'original' and vmbuild != 'product':
                 continue
             if not args.console:
-                logFile = join(v + '-' + vmbuild + '.log')
+                logFile = join(vm + '-' + vmbuild + '.log')
                 log = open(join(_suite.dir, logFile), 'wb')
                 start = time.time()
-                mx.log('BEGIN: ' + v + '-' + vmbuild + '\t(see: ' + logFile + ')')
+                mx.log('BEGIN: ' + vm + '-' + vmbuild + '\t(see: ' + logFile + ')')
                 verbose = ['-v'] if mx._opts.verbose else []
                 # Run as subprocess so that output can be directed to a file
-                cmd = [sys.executable, '-u', mx.__file__] + verbose + ['--vm', v, '--vmbuild', vmbuild, 'build']
+                cmd = [sys.executable, '-u', mx.__file__] + verbose + ['--vm', vm, '--vmbuild', vmbuild, 'build']
                 mx.logv("executing command: " + str(cmd))
                 subprocess.check_call(cmd, cwd=_suite.dir, stdout=log, stderr=subprocess.STDOUT)
                 duration = datetime.timedelta(seconds=time.time() - start)
-                mx.log('END:   ' + v + '-' + vmbuild + '\t[' + str(duration) + ']')
+                mx.log('END:   ' + vm + '-' + vmbuild + '\t[' + str(duration) + ']')
             else:
-                with VM(v, vmbuild):
+                with VM(vm, vmbuild):
                     build([])
             if not args.no_check:
                 vmargs = ['-version']
-                if v == 'jvmci':
+                if vm == 'jvmci':
                     vmargs.insert(0, '-XX:-BootstrapJVMCI')
-                vm(vmargs, vm=v, vmbuild=vmbuild)
+                run_vm(vmargs, vm=vm, vmbuild=vmbuild)
     allDuration = datetime.timedelta(seconds=time.time() - allStart)
     mx.log('TOTAL TIME:   ' + '[' + str(allDuration) + ']')
 
@@ -1240,7 +1238,7 @@ def deoptalot(args):
         del args[0]
 
     for _ in range(count):
-        if not vm(['-XX:-TieredCompilation', '-XX:+DeoptimizeALot', '-XX:+VerifyOops'] + args + ['-version']) == 0:
+        if not run_vm(['-XX:-TieredCompilation', '-XX:+DeoptimizeALot', '-XX:+VerifyOops'] + args + ['-version']) == 0:
             mx.abort("Failed")
 
 def longtests(args):
@@ -1383,7 +1381,9 @@ def makejmhdeps(args):
                                mainClass=None, excludedLibs=[], distDependencies=[], javaCompliance=None, platformDependent=False, theLicense=None)
         d.make_archive()
         env = os.environ.copy()
-        env['JAVA_HOME'] = get_jvmci_jdk_dir(vmToCheck='server')
+        jdkDir = get_jvmci_jdk_dir()
+        check_VM_exists('server', jdkDir)
+        env['JAVA_HOME'] = jdkDir
         env['MAVEN_OPTS'] = '-server -XX:-UseJVMCIClassLoader'
         cmd = ['mvn', 'install:install-file', '-DgroupId=' + groupId, '-DartifactId=' + artifactId,
                '-Dversion=1.0-SNAPSHOT', '-Dpackaging=jar', '-Dfile=' + d.path]
@@ -1440,7 +1440,9 @@ def buildjmh(args):
             else:
                 buildOutput.append(x)
         env = os.environ.copy()
-        env['JAVA_HOME'] = get_jvmci_jdk_dir(vmToCheck='server')
+        jdkDir = get_jvmci_jdk_dir()
+        check_VM_exists('server', jdkDir)
+        env['JAVA_HOME'] = jdkDir
         env['MAVEN_OPTS'] = '-server -XX:-UseJVMCIClassLoader'
         mx.log("Building benchmarks...")
         cmd = ['mvn']
@@ -1533,7 +1535,10 @@ def jmh(args):
 
     for suite in matchedSuites:
         absoluteMicro = os.path.join(jmhPath, suite)
-        (pfx, exe, vm, forkedVmArgs, _) = parseVmArgs(vmArgs)
+        jdk = get_jvmci_jdk()
+        vm = get_vm()
+        pfx = get_vm_prefix()
+        forkedVmArgs = jdk.parseVmArgs(vmArgs)
         def quoteSpace(s):
             if " " in s:
                 return '"' + s + '"'
@@ -1543,7 +1548,7 @@ def jmh(args):
         if pfx:
             mx.log("JMH ignores prefix: \"" + ' '.join(pfx) + "\"")
         javaArgs = ['-jar', os.path.join(absoluteMicro, "target", "microbenchmarks.jar"),
-                    '--jvm', exe,
+                    '--jvm', jdk.java,
                     '--jvmArgs', ' '.join(["-" + vm] + forkedVmArgs)]
         for k, v in jmhArgs.iteritems():
             javaArgs.append(k)
@@ -1646,7 +1651,7 @@ def jol(args):
         # mx.findclass can be mistaken, don't give up yet
         candidates = args
 
-    vm(['-javaagent:' + joljar, '-cp', os.pathsep.join([mx.classpath(), joljar]), "org.openjdk.jol.MainObjectInternals"] + candidates)
+    run_vm(['-javaagent:' + joljar, '-cp', os.pathsep.join([mx.classpath(), joljar]), "org.openjdk.jol.MainObjectInternals"] + candidates)
 
 mx.update_commands(_suite, {
     'build': [build, ''],
@@ -1662,7 +1667,7 @@ mx.update_commands(_suite, {
     'jmh': [jmh, '[VM options] [filters|JMH-args-as-json...]'],
     'makejmhdeps' : [makejmhdeps, ''],
     'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
-    'vm': [vm, '[-options] class [args...]'],
+    'vm': [run_vm, '[-options] class [args...]'],
     'deoptalot' : [deoptalot, '[n]'],
     'longtests' : [longtests, ''],
     'jol' : [jol, ''],
@@ -1674,7 +1679,7 @@ mx.add_argument('--installed-jdks', help='the base directory in which the JDKs c
                 'The VM selected by --vm and --vmbuild options is under this directory (i.e., ' +
                 join('<path>', '<jdk-version>', '<vmbuild>', 'jre', 'lib', '<vm>', mx.add_lib_prefix(mx.add_lib_suffix('jvm'))) + ')', default=None, metavar='<path>')
 
-mx.add_argument('--vm', action='store', dest='vm', choices=_vmChoices.keys(), help='the VM type to build/run')
+mx.add_argument('--vm', action='store', dest='vm', choices=_vmChoices.keys() + _vmAliases.keys(), help='the VM type to build/run')
 mx.add_argument('--vmbuild', action='store', dest='vmbuild', choices=_vmbuildChoices, help='the VM build to build/run (default: ' + _vmbuildChoices[0] + ')')
 mx.add_argument('--ecl', action='store_true', dest='make_eclipse_launch', help='create launch configuration for running VM execution(s) in Eclipse')
 mx.add_argument('--vmprefix', action='store', dest='vm_prefix', help='prefix for running the VM (e.g. "/usr/bin/gdb --args")', metavar='<prefix>')
@@ -1722,22 +1727,129 @@ class JVMCIArchiveParticipant:
             # Convert providers to a set before printing to remove duplicates
             self.arc.zf.writestr(arcname, '\n'.join(frozenset(providers))+ '\n')
 
-def mx_post_parse_cmd_line(opts):
-    # TODO _minVersion check could probably be part of a Suite in mx?
-    def _versionCheck(version):
-        return version >= _minVersion and (not _untilVersion or version >= _untilVersion)
-    versionDesc = ">=" + str(_minVersion)
-    if _untilVersion:
-        versionDesc += " and <=" + str(_untilVersion)
-    mx.get_jdk(_versionCheck, versionDescription=versionDesc, defaultJdk=True)
+_jvmci_bootstrap_jdk = None
 
+def get_jvmci_bootstrap_jdk():
+    """
+    Gets the JDK from which a JVMCI JDK is created.
+    """
+    global _jvmci_bootstrap_jdk
+    if not _jvmci_bootstrap_jdk:
+        def _versionCheck(version):
+            return version >= _minVersion and (not _untilVersion or version >= _untilVersion)
+        versionDesc = ">=" + str(_minVersion)
+        if _untilVersion:
+            versionDesc += " and <=" + str(_untilVersion)
+        _jvmci_bootstrap_jdk = mx.get_jdk(_versionCheck, versionDescription=versionDesc, tag='default')
+    return _jvmci_bootstrap_jdk
+
+class JVMCIJDKConfig(mx.JDKConfig):
+    def __init__(self, vmbuild):
+        # Ignore the deployable distributions here - they are only deployed during building.
+        # This significantly reduces the latency of the "mx java" command.
+        self.vmbuild = vmbuild
+        jdkDir = get_jvmci_jdk_dir(build=self.vmbuild, create=True, deployDists=False)
+        mx.JDKConfig.__init__(self, jdkDir, tag=_JVMCI_JDK_TAG)
+
+    def parseVmArgs(self, args, addDefaultArgs=True):
+        args = mx.expand_project_in_args(args, insitu=False)
+        jacocoArgs = mx_gate.get_jacoco_agent_args()
+        if jacocoArgs:
+            args = jacocoArgs + args
+
+        # Support for -G: options
+        jvmciArgs = []
+        nonJvmciArgs = []
+        existingJvmciOptionsProperty = None
+        for a in args:
+            if a.startswith('-G:'):
+                jvmciArg = a[len('-G:'):]
+                assert ' ' not in jvmciArg, 'space not supported in JVMCI arg: ' + a
+                jvmciArgs.append(a[len('-G:'):])
+            else:
+                if a.startswith('-Djvmci.options=') or a == '-Djvmci.options':
+                    existingJvmciOptionsProperty = a
+                nonJvmciArgs.append(a)
+        if jvmciArgs:
+            if existingJvmciOptionsProperty:
+                mx.abort('defining jvmci.option property is incompatible with defining one or more -G: options: ' + existingJvmciOptionsProperty)
+            args = ['-Djvmci.options=' + ' '.join(jvmciArgs)] + nonJvmciArgs
+
+        if '-version' in args:
+            ignoredArgs = args[args.index('-version') + 1:]
+            if  len(ignoredArgs) > 0:
+                mx.log("Warning: The following options will be ignored by the vm because they come after the '-version' argument: " + ' '.join(ignoredArgs))
+        return self.processArgs(args, addDefaultArgs=addDefaultArgs)
+
+    # Overrides JDKConfig
+    def run_java(self, args, vm=None, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, env=None, addDefaultArgs=True):
+        if vm is None:
+            vm = get_vm()
+
+        if not isVMSupported(vm):
+            mx.abort('The ' + vm + ' is not supported on this platform')
+
+        if cwd is None:
+            cwd = _vm_cwd
+        elif _vm_cwd is not None and _vm_cwd != cwd:
+            mx.abort("conflicting working directories: do not set --vmcwd for this command")
+
+        _updateInstalledJVMCIOptionsFile(self.home)
+
+        args = self.parseVmArgs(args, addDefaultArgs=addDefaultArgs)
+        if _make_eclipse_launch:
+            mx.make_eclipse_launch(_suite, args, _suite.name + '-' + build, name=None, deps=mx.dependencies())
+
+        pfx = _vm_prefix.split() if _vm_prefix is not None else []
+        cmd = pfx + [self.java] + ['-' + vm] + args
+        return mx.run(cmd, nonZeroIsFatal=nonZeroIsFatal, out=out, err=err, cwd=cwd)
+
+"""
+The dict of JVMCI JDKs indexed by vmbuild names.
+"""
+_jvmci_jdks = {}
+
+def get_jvmci_jdk(vmbuild=None):
+    """
+    Gets the JVMCI JDK corresponding to 'vmbuild'.
+    """
+    if not vmbuild:
+        vmbuild = _vmbuild
+    jdk = _jvmci_jdks.get(vmbuild)
+    if jdk is None:
+        jdk = JVMCIJDKConfig(vmbuild)
+        _jvmci_jdks[vmbuild] = jdk
+    return jdk
+
+class JVMCIJDKFactory(mx.JDKFactory):
+    def getJDKConfig(self):
+        jdk = get_jvmci_jdk(_vmbuild)
+        check_VM_exists(get_vm(), jdk.home)
+        return jdk
+
+    def description(self):
+        return "JVMCI JDK"
+
+def mx_post_parse_cmd_line(opts):
+    mx.addJDKFactory(_JVMCI_JDK_TAG, mx.JavaCompliance('8'), JVMCIJDKFactory())
+    mx.set_java_command_default_jdk_tag(_JVMCI_JDK_TAG)
+
+    # Execute for the side-effect of checking that the
+    # boot strap JDK has a compatible version
+    get_jvmci_bootstrap_jdk()
+
+    jdkTag = mx.get_jdk_option().tag
     if hasattr(opts, 'vm') and opts.vm is not None:
         global _vm
-        _vm = opts.vm
-        _vm = _vm.replace('graal', 'jvmci')
+        _vm = dealiased_vm(opts.vm)
+        if jdkTag and jdkTag != _JVMCI_JDK_TAG:
+            mx.warn('Ignoring "--vm" option as "--jdk" tag is not "' + _JVMCI_JDK_TAG + '"')
     if hasattr(opts, 'vmbuild') and opts.vmbuild is not None:
         global _vmbuild
         _vmbuild = opts.vmbuild
+        if jdkTag and jdkTag != _JVMCI_JDK_TAG:
+            mx.warn('Ignoring "--vmbuild" option as "--jdk" tag is not "' + _JVMCI_JDK_TAG + '"')
+
     global _make_eclipse_launch
     _make_eclipse_launch = getattr(opts, 'make_eclipse_launch', False)
     global _vm_cwd
