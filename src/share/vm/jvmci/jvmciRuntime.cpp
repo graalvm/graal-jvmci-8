@@ -835,7 +835,9 @@ public:
     *sep = '\0';
     const char* name = line;
     char* value = sep + 1;
-    Arguments::PropertyList_add(_plist, name, value);
+    if(Arguments::PropertyList_get_value(*_plist, name) == NULL) {
+      Arguments::PropertyList_add(_plist, name, value);
+    }
   }
 };
 
@@ -960,11 +962,7 @@ void JVMCIRuntime::parse_lines(char* path, ParseClosure* closure, bool warnStatF
     if (file_handle != -1) {
       char* buffer = NEW_C_HEAP_ARRAY(char, st.st_size + 1, mtInternal);
       int num_read;
-      if(ThreadLocalStorage::thread() == NULL) { // Solaris needs a JavaThread for os::read, if no thread started yet, fallback.
-        num_read = (int) ::read(file_handle, (char*) buffer, st.st_size);
-      } else {
-        num_read = (int) os::read(file_handle, (char*) buffer, st.st_size);
-      }
+      num_read = (int) os::read(file_handle, (char*) buffer, st.st_size);
       if (num_read == -1) {
         warning("Error reading file %s due to %s", path, strerror(errno));
       } else if (num_read != st.st_size) {
