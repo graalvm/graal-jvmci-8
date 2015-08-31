@@ -370,7 +370,7 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
      * @return name as {@link String}
      */
     private String getNameRefAt(int index) {
-    	return runtime().getCompilerToVM().lookupNameRefInPool(this, index);
+        return runtime().getCompilerToVM().lookupNameRefInPool(this, index);
     }
 
     /**
@@ -394,7 +394,7 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
      * @return signature as {@link String}
      */
     private String getSignatureRefAt(int index) {
-    	return runtime().getCompilerToVM().lookupSignatureRefInPool(this, index);
+        return runtime().getCompilerToVM().lookupSignatureRefInPool(this, index);
     }
 
     /**
@@ -417,7 +417,7 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
      * @return klass reference index
      */
     private int getKlassRefIndexAt(int index) {
-    	return runtime().getCompilerToVM().lookupKlassRefIndexInPool(this, index);
+        return runtime().getCompilerToVM().lookupKlassRefIndexInPool(this, index);
     }
 
     /**
@@ -428,10 +428,10 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
      * @return klass reference index
      */
     private int getUncachedKlassRefIndexAt(int index) {
-    	assertTagIsFieldOrMethod(index);
-    	final int refIndex = unsafe.getInt(getMetaspaceConstantPool() + runtime().getConfig().constantPoolSize + index * runtime().getHostJVMCIBackend().getTarget().wordSize);
-    	// klass ref index is in the low 16-bits.
-    	return refIndex & 0xFFFF;
+        assertTagIsFieldOrMethod(index);
+        final int refIndex = unsafe.getInt(getMetaspaceConstantPool() + runtime().getConfig().constantPoolSize + index * runtime().getHostJVMCIBackend().getTarget().wordSize);
+        // klass ref index is in the low 16-bits.
+        return refIndex & 0xFFFF;
     }
 
     /**
@@ -631,8 +631,8 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
                 break;
             case Bytecodes.INVOKEDYNAMIC: {
                 // invokedynamic instructions point to a constant pool cache entry.
-            	index = decodeConstantPoolCacheIndex(cpi) + runtime().getConfig().constantPoolCpCacheIndexTag;
-            	index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(this, index);
+                index = decodeConstantPoolCacheIndex(cpi) + runtime().getConfig().constantPoolCpCacheIndexTag;
+                index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(this, index);
                 break;
             }
             case Bytecodes.GETSTATIC:
@@ -644,8 +644,8 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
             case Bytecodes.INVOKESTATIC:
             case Bytecodes.INVOKEINTERFACE: {
                 // invoke and field instructions point to a constant pool cache entry.
-            	index = rawIndexToConstantPoolIndex(cpi, opcode);
-            	index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(this, index);
+                index = rawIndexToConstantPoolIndex(cpi, opcode);
+                index = runtime().getCompilerToVM().constantPoolRemapInstructionOperandFromCache(this, index);
                 break;
             }
             default:
