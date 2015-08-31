@@ -28,6 +28,7 @@
 #include "oops/symbol.hpp"
 #include "memory/iterator.hpp"
 #include "trace/traceMacros.hpp"
+#include "jvmci/vmSymbols_jvmci.hpp"
 
 // The class vmSymbols is a name space for fast lookup of
 // symbols commonly used in the VM.
@@ -43,7 +44,6 @@
 #define VM_INTRINSIC_IGNORE(id, class, name, sig, flags) /*ignored*/
 #define VM_SYMBOL_IGNORE(id, name)                       /*ignored*/
 #define VM_ALIAS_IGNORE(id, id2)                         /*ignored*/
-
 
 // Mapping function names to values. New entries should be added below.
 
@@ -299,64 +299,7 @@
   template(selectAlternative_signature, "(ZLjava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodHandle;)Ljava/lang/invoke/MethodHandle;") \
                                                                                                                                       \
   /* Support for JVMCI */                                                                                                             \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotCompiledCode,             "jdk/internal/jvmci/hotspot/HotSpotCompiledCode"))                  \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotCompiledCode_Comment,     "jdk/internal/jvmci/hotspot/HotSpotCompiledCode$Comment"))          \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotCompiledNmethod,          "jdk/internal/jvmci/hotspot/HotSpotCompiledNmethod"))               \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotForeignCallTarget,        "jdk/internal/jvmci/hotspot/HotSpotForeignCallTarget"))             \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotReferenceMap,             "jdk/internal/jvmci/hotspot/HotSpotReferenceMap"))                  \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_CompilerToVMImpl,                "jdk/internal/jvmci/hotspot/CompilerToVMImpl"))                     \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotInstalledCode,            "jdk/internal/jvmci/hotspot/HotSpotInstalledCode"))                 \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotNmethod,                  "jdk/internal/jvmci/hotspot/HotSpotNmethod"))                       \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotResolvedJavaMethodImpl,   "jdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethodImpl"))        \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotResolvedObjectTypeImpl,   "jdk/internal/jvmci/hotspot/HotSpotResolvedObjectTypeImpl"))        \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotCompressedNullConstant,   "jdk/internal/jvmci/hotspot/HotSpotCompressedNullConstant"))        \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotObjectConstantImpl,       "jdk/internal/jvmci/hotspot/HotSpotObjectConstantImpl"))            \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotMetaspaceConstantImpl,    "jdk/internal/jvmci/hotspot/HotSpotMetaspaceConstantImpl"))         \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotStackFrameReference,      "jdk/internal/jvmci/hotspot/HotSpotStackFrameReference"))           \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotConstantPool,             "jdk/internal/jvmci/hotspot/HotSpotConstantPool"))                  \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext,   "jdk/internal/jvmci/hotspot/HotSpotJVMCIMetaAccessContext"))        \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_JavaConstant,                       "jdk/internal/jvmci/meta/JavaConstant"))                            \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_PrimitiveConstant,                  "jdk/internal/jvmci/meta/PrimitiveConstant"))                       \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_RawConstant,                        "jdk/internal/jvmci/meta/RawConstant"))                             \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_NullConstant,                       "jdk/internal/jvmci/meta/NullConstant"))                            \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_ExceptionHandler,                   "jdk/internal/jvmci/meta/ExceptionHandler"))                        \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_Kind,                               "jdk/internal/jvmci/meta/Kind"))                                    \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_LIRKind,                            "jdk/internal/jvmci/meta/LIRKind"))                                 \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_AbstractValue,                      "jdk/internal/jvmci/meta/AbstractValue"))                           \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_Assumptions_ConcreteSubtype,        "jdk/internal/jvmci/meta/Assumptions$ConcreteSubtype"))             \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_Assumptions_LeafType,               "jdk/internal/jvmci/meta/Assumptions$LeafType"))                    \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_Assumptions_NoFinalizableSubclass,  "jdk/internal/jvmci/meta/Assumptions$NoFinalizableSubclass"))       \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_Assumptions_ConcreteMethod,         "jdk/internal/jvmci/meta/Assumptions$ConcreteMethod"))              \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_Assumptions_CallSiteTargetValue,    "jdk/internal/jvmci/meta/Assumptions$CallSiteTargetValue"))         \
-  JVMCI_ONLY(template(jdk_internal_jvmci_meta_SpeculationLog,                     "jdk/internal/jvmci/meta/SpeculationLog"))                          \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_CompilationResult_Call,             "jdk/internal/jvmci/code/CompilationResult$Call"))                  \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_CompilationResult_ConstantReference, "jdk/internal/jvmci/code/CompilationResult$ConstantReference"))    \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_CompilationResult_DataPatch,        "jdk/internal/jvmci/code/CompilationResult$DataPatch"))             \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_CompilationResult_DataSectionReference, "jdk/internal/jvmci/code/CompilationResult$DataSectionReference")) \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_CompilationResult_ExceptionHandler, "jdk/internal/jvmci/code/CompilationResult$ExceptionHandler"))      \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_CompilationResult_Mark,             "jdk/internal/jvmci/code/CompilationResult$Mark"))                  \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_CompilationResult_Infopoint,        "jdk/internal/jvmci/code/CompilationResult$Infopoint"))             \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_CompilationResult_Site,             "jdk/internal/jvmci/code/CompilationResult$Site"))                  \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_InfopointReason,                    "jdk/internal/jvmci/code/InfopointReason"))                         \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_InstalledCode,                      "jdk/internal/jvmci/code/InstalledCode"))                           \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_BytecodeFrame,                      "jdk/internal/jvmci/code/BytecodeFrame"))                           \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_BytecodePosition,                   "jdk/internal/jvmci/code/BytecodePosition"))                        \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_DebugInfo,                          "jdk/internal/jvmci/code/DebugInfo"))                               \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_Location,                           "jdk/internal/jvmci/code/Location"))                                \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_Register,                           "jdk/internal/jvmci/code/Register"))                                \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_RegisterValue,                      "jdk/internal/jvmci/code/RegisterValue"))                           \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_StackSlot,                          "jdk/internal/jvmci/code/StackSlot"))                               \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_StackLockValue,                     "jdk/internal/jvmci/code/StackLockValue"))                          \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_VirtualObject,                      "jdk/internal/jvmci/code/VirtualObject"))                           \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_RegisterSaveLayout,                 "jdk/internal/jvmci/code/RegisterSaveLayout"))                      \
-  JVMCI_ONLY(template(jdk_internal_jvmci_code_InvalidInstalledCodeException,      "jdk/internal/jvmci/code/InvalidInstalledCodeException"))           \
-  JVMCI_ONLY(template(compileMethod_name,                                         "compileMethod"))                                                   \
-  JVMCI_ONLY(template(compileMethod_signature,                                    "(Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethod;IJI)V"))    \
-  JVMCI_ONLY(template(fromMetaspace_name,                                         "fromMetaspace"))                                                   \
-  JVMCI_ONLY(template(method_fromMetaspace_signature,                             "(J)Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethod;"))       \
-  JVMCI_ONLY(template(constantPool_fromMetaspace_signature,                       "(J)Ljdk/internal/jvmci/hotspot/HotSpotConstantPool;"))             \
-  JVMCI_ONLY(template(klass_fromMetaspace_signature,                              "(Ljava/lang/Class;)Ljdk/internal/jvmci/hotspot/HotSpotResolvedObjectTypeImpl;"))   \
-  JVMCI_ONLY(template(jdk_internal_jvmci_hotspot_Stable_signature, "Ljdk/internal/jvmci/hotspot/Stable;"))                                            \
+  JVMCI_VM_SYMBOLS_DO(template, do_alias)                                                         \
                                                                                                   \
   /* common method and field names */                                                             \
   template(object_initializer_name,                   "<init>")                                   \

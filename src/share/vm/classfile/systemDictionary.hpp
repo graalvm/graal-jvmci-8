@@ -33,6 +33,7 @@
 #include "runtime/reflectionUtils.hpp"
 #include "utilities/hashtable.hpp"
 #include "utilities/hashtable.inline.hpp"
+#include "jvmci/systemDictionary_jvmci.hpp"
 
 
 // The system dictionary stores all loaded classes and maps:
@@ -196,56 +197,8 @@ class Ticks;
   do_klass(Integer_klass,                               java_lang_Integer,                         Pre                 ) \
   do_klass(Long_klass,                                  java_lang_Long,                            Pre                 ) \
                                                                                                                          \
-  /* JVMCI classes. These are loaded on-demand. */                                                                                   \
-  JVMCI_ONLY(do_klass(HotSpotCompiledCode_klass,             jdk_internal_jvmci_hotspot_HotSpotCompiledCode,                 Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotCompiledCode_Comment_klass,     jdk_internal_jvmci_hotspot_HotSpotCompiledCode_Comment,         Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotCompiledNmethod_klass,          jdk_internal_jvmci_hotspot_HotSpotCompiledNmethod,              Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotForeignCallTarget_klass,        jdk_internal_jvmci_hotspot_HotSpotForeignCallTarget,            Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotReferenceMap_klass,             jdk_internal_jvmci_hotspot_HotSpotReferenceMap,                 Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotInstalledCode_klass,            jdk_internal_jvmci_hotspot_HotSpotInstalledCode,                Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotNmethod_klass,                  jdk_internal_jvmci_hotspot_HotSpotNmethod,                      Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotResolvedJavaMethodImpl_klass,   jdk_internal_jvmci_hotspot_HotSpotResolvedJavaMethodImpl,       Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotResolvedObjectTypeImpl_klass,   jdk_internal_jvmci_hotspot_HotSpotResolvedObjectTypeImpl,       Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotCompressedNullConstant_klass,   jdk_internal_jvmci_hotspot_HotSpotCompressedNullConstant,       Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotObjectConstantImpl_klass,       jdk_internal_jvmci_hotspot_HotSpotObjectConstantImpl,           Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotMetaspaceConstantImpl_klass,    jdk_internal_jvmci_hotspot_HotSpotMetaspaceConstantImpl,        Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotStackFrameReference_klass,      jdk_internal_jvmci_hotspot_HotSpotStackFrameReference,          Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotConstantPool_klass,             jdk_internal_jvmci_hotspot_HotSpotConstantPool,                 Jvmci)) \
-  JVMCI_ONLY(do_klass(HotSpotJVMCIMetaAccessContext_klass,   jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext,       Jvmci)) \
-  JVMCI_ONLY(do_klass(Assumptions_ConcreteMethod_klass,      jdk_internal_jvmci_meta_Assumptions_ConcreteMethod,             Jvmci)) \
-  JVMCI_ONLY(do_klass(Assumptions_NoFinalizableSubclass_klass, jdk_internal_jvmci_meta_Assumptions_NoFinalizableSubclass,    Jvmci)) \
-  JVMCI_ONLY(do_klass(Assumptions_ConcreteSubtype_klass,     jdk_internal_jvmci_meta_Assumptions_ConcreteSubtype,            Jvmci)) \
-  JVMCI_ONLY(do_klass(Assumptions_LeafType_klass,            jdk_internal_jvmci_meta_Assumptions_LeafType,                   Jvmci)) \
-  JVMCI_ONLY(do_klass(Assumptions_CallSiteTargetValue_klass, jdk_internal_jvmci_meta_Assumptions_CallSiteTargetValue,        Jvmci)) \
-  JVMCI_ONLY(do_klass(BytecodePosition_klass,                jdk_internal_jvmci_code_BytecodePosition,                       Jvmci)) \
-  JVMCI_ONLY(do_klass(DebugInfo_klass,                       jdk_internal_jvmci_code_DebugInfo,                              Jvmci)) \
-  JVMCI_ONLY(do_klass(RegisterSaveLayout_klass,              jdk_internal_jvmci_code_RegisterSaveLayout,                     Jvmci)) \
-  JVMCI_ONLY(do_klass(BytecodeFrame_klass,                   jdk_internal_jvmci_code_BytecodeFrame,                          Jvmci)) \
-  JVMCI_ONLY(do_klass(CompilationResult_Call_klass,          jdk_internal_jvmci_code_CompilationResult_Call,                 Jvmci)) \
-  JVMCI_ONLY(do_klass(CompilationResult_ConstantReference_klass, jdk_internal_jvmci_code_CompilationResult_ConstantReference, Jvmci)) \
-  JVMCI_ONLY(do_klass(CompilationResult_DataPatch_klass,     jdk_internal_jvmci_code_CompilationResult_DataPatch,            Jvmci)) \
-  JVMCI_ONLY(do_klass(CompilationResult_DataSectionReference_klass, jdk_internal_jvmci_code_CompilationResult_DataSectionReference, Jvmci)) \
-  JVMCI_ONLY(do_klass(CompilationResult_ExceptionHandler_klass, jdk_internal_jvmci_code_CompilationResult_ExceptionHandler,  Jvmci))\
-  JVMCI_ONLY(do_klass(CompilationResult_Mark_klass,          jdk_internal_jvmci_code_CompilationResult_Mark,                 Jvmci)) \
-  JVMCI_ONLY(do_klass(CompilationResult_Infopoint_klass,     jdk_internal_jvmci_code_CompilationResult_Infopoint,            Jvmci)) \
-  JVMCI_ONLY(do_klass(CompilationResult_Site_klass,          jdk_internal_jvmci_code_CompilationResult_Site,                 Jvmci)) \
-  JVMCI_ONLY(do_klass(InfopointReason_klass,                 jdk_internal_jvmci_code_InfopointReason,                        Jvmci)) \
-  JVMCI_ONLY(do_klass(InstalledCode_klass,                   jdk_internal_jvmci_code_InstalledCode,                          Jvmci)) \
-  JVMCI_ONLY(do_klass(code_Location_klass,                   jdk_internal_jvmci_code_Location,                               Jvmci)) \
-  JVMCI_ONLY(do_klass(code_Register_klass,                   jdk_internal_jvmci_code_Register,                               Jvmci)) \
-  JVMCI_ONLY(do_klass(RegisterValue_klass,                   jdk_internal_jvmci_code_RegisterValue,                          Jvmci)) \
-  JVMCI_ONLY(do_klass(StackSlot_klass,                       jdk_internal_jvmci_code_StackSlot,                              Jvmci)) \
-  JVMCI_ONLY(do_klass(StackLockValue_klass,                  jdk_internal_jvmci_code_StackLockValue,                         Jvmci)) \
-  JVMCI_ONLY(do_klass(VirtualObject_klass,                   jdk_internal_jvmci_code_VirtualObject,                          Jvmci)) \
-  JVMCI_ONLY(do_klass(SpeculationLog_klass,                  jdk_internal_jvmci_meta_SpeculationLog,                         Jvmci)) \
-  JVMCI_ONLY(do_klass(JavaConstant_klass,                    jdk_internal_jvmci_meta_JavaConstant,                           Jvmci)) \
-  JVMCI_ONLY(do_klass(PrimitiveConstant_klass,               jdk_internal_jvmci_meta_PrimitiveConstant,                      Jvmci)) \
-  JVMCI_ONLY(do_klass(RawConstant_klass,                     jdk_internal_jvmci_meta_RawConstant,                            Jvmci)) \
-  JVMCI_ONLY(do_klass(NullConstant_klass,                    jdk_internal_jvmci_meta_NullConstant,                           Jvmci)) \
-  JVMCI_ONLY(do_klass(ExceptionHandler_klass,                jdk_internal_jvmci_meta_ExceptionHandler,                       Jvmci)) \
-  JVMCI_ONLY(do_klass(Kind_klass,                            jdk_internal_jvmci_meta_Kind,                                   Jvmci)) \
-  JVMCI_ONLY(do_klass(LIRKind_klass,                         jdk_internal_jvmci_meta_LIRKind,                                Jvmci)) \
-  JVMCI_ONLY(do_klass(AbstractValue_klass,                   jdk_internal_jvmci_meta_AbstractValue,                          Jvmci)) \
+  /* JVMCI classes. These are loaded on-demand. */                                                                       \
+  JVMCI_WK_KLASSES_DO(do_klass) \
 
   /*end*/
 
