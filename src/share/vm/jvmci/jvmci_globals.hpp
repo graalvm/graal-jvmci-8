@@ -22,21 +22,21 @@
  *
  */
 
-#ifndef SHARE_VM_JVMCI_JVMCIGLOBALS_HPP
-#define SHARE_VM_JVMCI_JVMCIGLOBALS_HPP
+#ifndef SHARE_VM_JVMCI_JVMCI_GLOBALS_HPP
+#define SHARE_VM_JVMCI_JVMCI_GLOBALS_HPP
 
 #include "runtime/globals.hpp"
 #ifdef TARGET_ARCH_x86
-# include "jvmciGlobals_x86.hpp"
+# include "jvmci_globals_x86.hpp"
 #endif
 #ifdef TARGET_ARCH_sparc
-# include "jvmciGlobals_sparc.hpp"
+# include "jvmci_globals_sparc.hpp"
 #endif
 #ifdef TARGET_ARCH_arm
-# include "jvmciGlobals_arm.hpp"
+# include "jvmci_globals_arm.hpp"
 #endif
 #ifdef TARGET_ARCH_ppc
-# include "jvmciGlobals_ppc.hpp"
+# include "jvmci_globals_ppc.hpp"
 #endif
 
 //
@@ -120,4 +120,4 @@
 
 JVMCI_FLAGS(DECLARE_DEVELOPER_FLAG, DECLARE_PD_DEVELOPER_FLAG, DECLARE_PRODUCT_FLAG, DECLARE_PD_PRODUCT_FLAG, DECLARE_NOTPRODUCT_FLAG)
 
-#endif // SHARE_VM_JVMCI_JVMCIGLOBALS_HPP
+#endif // SHARE_VM_JVMCI_JVMCI_GLOBALS_HPP

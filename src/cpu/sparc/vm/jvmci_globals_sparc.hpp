@@ -22,14 +22,14 @@
  *
  */
 
-#ifndef CPU_SPARC_VM_JVMCIGLOBALS_SPARC_HPP
-#define CPU_SPARC_VM_JVMCIGLOBALS_SPARC_HPP
+#ifndef CPU_SPARC_VM_JVMCI_GLOBALS_SPARC_HPP
+#define CPU_SPARC_VM_JVMCI_GLOBALS_SPARC_HPP
 
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/macros.hpp"
 
 // Sets the default values for platform dependent flags used by the JVMCI compiler.
-// (see jvmciGlobals.hpp)
+// (see jvmci_globals.hpp)
 
 #ifdef COMPILERJVMCI
 define_pd_global(bool, BackgroundCompilation,        true );
@@ -62,4 +62,4 @@ define_pd_global(intx, MethodProfileWidth,           0);
 
 define_pd_global(intx, MaxVectorSize,                8);
 
-#endif // CPU_SPARC_VM_JVMCIGLOBALS_SPARC_HPP
+#endif // CPU_SPARC_VM_JVMCI_GLOBALS_SPARC_HPP

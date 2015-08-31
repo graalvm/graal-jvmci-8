@@ -22,14 +22,14 @@
  *
  */
 
-#ifndef CPU_X86_VM_JVMCIGLOBALS_X86_HPP
-#define CPU_X86_VM_JVMCIGLOBALS_X86_HPP
+#ifndef CPU_X86_VM_JVMCI_GLOBALS_X86_HPP
+#define CPU_X86_VM_JVMCI_GLOBALS_X86_HPP
 
 #include "utilities/globalDefinitions.hpp"
 #include "utilities/macros.hpp"
 
 // Sets the default values for platform dependent flags used by the JVMCI compiler.
-// (see jvmciGlobals.hpp)
+// (see jvmci_globals.hpp)
 
 #ifdef COMPILERJVMCI
 define_pd_global(bool, BackgroundCompilation,        true );
@@ -62,4 +62,4 @@ define_pd_global(intx, MethodProfileWidth,           0);
 
 define_pd_global(intx, MaxVectorSize,                32);
 
-#endif // CPU_X86_VM_JVMCIGLOBALS_X86_HPP
+#endif // CPU_X86_VM_JVMCI_GLOBALS_X86_HPP

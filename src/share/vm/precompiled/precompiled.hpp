@@ -296,7 +296,7 @@
 # include "c1/c1_globals.hpp"
 #endif // COMPILER1
 #if INCLUDE_JVMCI
-# include "jvmci/jvmciGlobals.hpp"
+# include "jvmci/jvmci_globals.hpp"
 #endif // INCLUDE_JVMCI
 #if INCLUDE_ALL_GCS
 # include "gc_implementation/concurrentMarkSweep/cmsOopClosures.hpp"

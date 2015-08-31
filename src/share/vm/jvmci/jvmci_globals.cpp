@@ -23,6 +23,6 @@
  */
 
 #include "precompiled.hpp"
-#include "jvmci/jvmciGlobals.hpp"
+#include "jvmci/jvmci_globals.hpp"
 
 JVMCI_FLAGS(MATERIALIZE_DEVELOPER_FLAG, MATERIALIZE_PD_DEVELOPER_FLAG, MATERIALIZE_PRODUCT_FLAG, MATERIALIZE_PD_PRODUCT_FLAG, MATERIALIZE_NOTPRODUCT_FLAG)

@@ -131,16 +131,16 @@
 #endif
 #ifdef COMPILERJVMCI 
 #ifdef TARGET_ARCH_x86
-# include "jvmciGlobals_x86.hpp"
+# include "jvmci_globals_x86.hpp"
 #endif
 #ifdef TARGET_ARCH_sparc
-# include "jvmciGlobals_sparc.hpp"
+# include "jvmci_globals_sparc.hpp"
 #endif
 #ifdef TARGET_ARCH_arm
-# include "jvmciGlobals_arm.hpp"
+# include "jvmci_globals_arm.hpp"
 #endif
 #ifdef TARGET_ARCH_ppc
-# include "jvmciGlobals_ppc.hpp"
+# include "jvmci_globals_ppc.hpp"
 #endif
 #endif // COMPILERJVMCI
 #ifdef COMPILER2
