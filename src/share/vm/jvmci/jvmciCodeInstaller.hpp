@@ -110,7 +110,7 @@ private:
 public:
 
   CodeInstaller() : _arena(mtCompiler) {}
-  JVMCIEnv::CodeInstallResult install(Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log);
+  JVMCIEnv::CodeInstallResult install(Handle target, Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log);
 
   static address runtime_call_target_address(oop runtime_call);
   static VMReg get_hotspot_reg(jint jvmciRegisterNumber);

@@ -45,7 +45,7 @@ public class CompilerToVMImpl implements CompilerToVM {
     }
 
     @Override
-    public native int installCode(HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog);
+    public native int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog);
 
     @Override
     public native HotSpotResolvedJavaMethodImpl getResolvedJavaMethodAtSlot(Class<?> holder, int slot);

@@ -390,7 +390,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code) {
 }
 
 // constructor used to create a method
-JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log) {
+JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle target, Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log) {
   BufferBlob* buffer_blob = JVMCIRuntime::initialize_buffer_blob();
   if (buffer_blob == NULL) {
     return JVMCIEnv::cache_full;

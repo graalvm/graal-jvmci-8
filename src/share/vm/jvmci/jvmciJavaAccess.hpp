@@ -48,6 +48,12 @@ void jvmci_compute_offsets();
  */
 
 #define COMPILER_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, oop_field, typeArrayOop_field, objArrayOop_field, static_oop_field, static_objArrayOop_field, static_int_field, static_boolean_field) \
+  start_class(Architecture)                                                                                                                                    \
+    oop_field(Architecture, name, "Ljava/lang/String;")                                                                                                        \
+  end_class                                                                                                                                                    \
+  start_class(TargetDescription)                                                                                                                               \
+    oop_field(TargetDescription, arch, "Ljdk/internal/jvmci/code/Architecture;")                                                                               \
+  end_class                                                                                                                                                    \
   start_class(HotSpotResolvedObjectTypeImpl)                                                                                                                   \
     oop_field(HotSpotResolvedObjectTypeImpl, javaClass, "Ljava/lang/Class;")                                                                                   \
   end_class                                                                                                                                                    \

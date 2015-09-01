@@ -59,6 +59,8 @@
   template(jdk_internal_jvmci_meta_Assumptions_ConcreteMethod,         "jdk/internal/jvmci/meta/Assumptions$ConcreteMethod")              \
   template(jdk_internal_jvmci_meta_Assumptions_CallSiteTargetValue,    "jdk/internal/jvmci/meta/Assumptions$CallSiteTargetValue")         \
   template(jdk_internal_jvmci_meta_SpeculationLog,                     "jdk/internal/jvmci/meta/SpeculationLog")                          \
+  template(jdk_internal_jvmci_code_Architecture,                       "jdk/internal/jvmci/code/Architecture")                            \
+  template(jdk_internal_jvmci_code_TargetDescription,                  "jdk/internal/jvmci/code/TargetDescription")                       \
   template(jdk_internal_jvmci_code_CompilationResult_Call,             "jdk/internal/jvmci/code/CompilationResult$Call")                  \
   template(jdk_internal_jvmci_code_CompilationResult_ConstantReference, "jdk/internal/jvmci/code/CompilationResult$ConstantReference")    \
   template(jdk_internal_jvmci_code_CompilationResult_DataPatch,        "jdk/internal/jvmci/code/CompilationResult$DataPatch")             \

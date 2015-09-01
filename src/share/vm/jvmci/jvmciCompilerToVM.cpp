@@ -565,9 +565,10 @@ C2V_VMENTRY(void, doNotInlineOrCompile,(JNIEnv *, jobject,  jobject jvmci_method
   method->set_dont_inline(true);
 C2V_END
 
-C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject compiled_code, jobject installed_code, jobject speculation_log))
+C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject compiled_code, jobject installed_code, jobject speculation_log))
   ResourceMark rm;
   HandleMark hm;
+  Handle target_handle = JNIHandles::resolve(target);
   Handle compiled_code_handle = JNIHandles::resolve(compiled_code);
   CodeBlob* cb = NULL;
   Handle installed_code_handle = JNIHandles::resolve(installed_code);
@@ -575,7 +576,7 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject compiled_code, 
 
   TraceTime install_time("installCode", JVMCICompiler::codeInstallTimer());
   CodeInstaller installer;
-  JVMCIEnv::CodeInstallResult result = installer.install(compiled_code_handle, cb, installed_code_handle, speculation_log_handle);
+  JVMCIEnv::CodeInstallResult result = installer.install(target_handle, compiled_code_handle, cb, installed_code_handle, speculation_log_handle);
 
   if (PrintCodeCacheOnCompilation) {
     stringStream s;
@@ -1129,6 +1130,7 @@ C2V_END
 #define CLASS                 "Ljava/lang/Class;"
 #define STACK_TRACE_ELEMENT   "Ljava/lang/StackTraceElement;"
 #define INSTALLED_CODE        "Ljdk/internal/jvmci/code/InstalledCode;"
+#define TARGET_DESCRIPTION    "Ljdk/internal/jvmci/code/TargetDescription;"
 #define RESOLVED_METHOD       "Ljdk/internal/jvmci/meta/ResolvedJavaMethod;"
 #define HS_RESOLVED_METHOD    "Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethodImpl;"
 #define HS_RESOLVED_KLASS     "Ljdk/internal/jvmci/hotspot/HotSpotResolvedObjectTypeImpl;"
@@ -1175,7 +1177,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getConstantPool",                              CC"(Ljava/lang/Object;J)"HS_CONSTANT_POOL,                                        FN_PTR(getConstantPool)},
   {CC"getResolvedJavaType",                          CC"(Ljava/lang/Object;JZ)"HS_RESOLVED_KLASS,                                      FN_PTR(getResolvedJavaType)},
   {CC"initializeConfiguration",                      CC"("HS_CONFIG")V",                                                               FN_PTR(initializeConfiguration)},
-  {CC"installCode",                                  CC"("HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",                         FN_PTR(installCode)},
+  {CC"installCode",                                  CC"("TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",      FN_PTR(installCode)},
   {CC"notifyCompilationStatistics",                  CC"(I"HS_RESOLVED_METHOD"ZIJJ"INSTALLED_CODE")V",                                 FN_PTR(notifyCompilationStatistics)},
   {CC"resetCompilationStatistics",                   CC"()V",                                                                          FN_PTR(resetCompilationStatistics)},
   {CC"disassembleCodeBlob",                          CC"(J)"STRING,                                                                    FN_PTR(disassembleCodeBlob)},

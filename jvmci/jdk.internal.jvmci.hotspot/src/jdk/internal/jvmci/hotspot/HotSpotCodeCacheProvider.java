@@ -108,7 +108,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
             compResult.setId(method.allocateCompileId(compResult.getEntryBCI()));
         }
         HotSpotInstalledCode installedCode = new HotSpotNmethod(method, compResult.getName(), isDefault);
-        runtime.getCompilerToVM().installCode(new HotSpotCompiledNmethod(method, compResult, jvmciEnv), installedCode, method.getSpeculationLog());
+        runtime.getCompilerToVM().installCode(target, new HotSpotCompiledNmethod(method, compResult, jvmciEnv), installedCode, method.getSpeculationLog());
         return logOrDump(installedCode, compResult);
     }
 
@@ -124,7 +124,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
             installedCode = code;
         }
         HotSpotCompiledNmethod compiledCode = new HotSpotCompiledNmethod(hotspotMethod, compResult);
-        int result = runtime.getCompilerToVM().installCode(compiledCode, installedCode, log);
+        int result = runtime.getCompilerToVM().installCode(target, compiledCode, installedCode, log);
         if (result != config.codeInstallResultOk) {
             String msg = compiledCode.getInstallationFailureMessage();
             String resultDesc = config.getCodeInstallResultDescription(result);
@@ -155,7 +155,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         HotSpotNmethod code = new HotSpotNmethod(javaMethod, compResult.getName(), false, true);
         HotSpotCompiledNmethod compiled = new HotSpotCompiledNmethod(javaMethod, compResult);
         CompilerToVM vm = runtime.getCompilerToVM();
-        int result = vm.installCode(compiled, code, null);
+        int result = vm.installCode(target, compiled, code, null);
         if (result != runtime.getConfig().codeInstallResultOk) {
             return null;
         }

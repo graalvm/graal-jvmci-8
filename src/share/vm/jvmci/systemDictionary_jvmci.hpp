@@ -49,6 +49,8 @@
   do_klass(Assumptions_ConcreteSubtype_klass,            jdk_internal_jvmci_meta_Assumptions_ConcreteSubtype,            Jvmci) \
   do_klass(Assumptions_LeafType_klass,                   jdk_internal_jvmci_meta_Assumptions_LeafType,                   Jvmci) \
   do_klass(Assumptions_CallSiteTargetValue_klass,        jdk_internal_jvmci_meta_Assumptions_CallSiteTargetValue,        Jvmci) \
+  do_klass(Architecture_klass,                           jdk_internal_jvmci_code_Architecture,                           Jvmci) \
+  do_klass(TargetDescription_klass,                      jdk_internal_jvmci_code_TargetDescription,                      Jvmci) \
   do_klass(BytecodePosition_klass,                       jdk_internal_jvmci_code_BytecodePosition,                       Jvmci) \
   do_klass(DebugInfo_klass,                              jdk_internal_jvmci_code_DebugInfo,                              Jvmci) \
   do_klass(RegisterSaveLayout_klass,                     jdk_internal_jvmci_code_RegisterSaveLayout,                     Jvmci) \
