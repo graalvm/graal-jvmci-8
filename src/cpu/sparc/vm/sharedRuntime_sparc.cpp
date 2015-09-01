@@ -3468,11 +3468,8 @@ void SharedRuntime::generate_deopt_blob() {
     pad += StackShadowPages*16 + 32;
   }
 #endif
-#if INCLUDE_JVMCI
-  pad += 1000; // Increase the buffer size when compiling for JVMCI
-#endif
 #ifdef _LP64
-  CodeBuffer buffer("deopt_blob", 2100+pad+1000, 512);
+  CodeBuffer buffer("deopt_blob", 2100+pad, 512);
 #else
   // Measured 8/7/03 at 1212 in 32bit debug build (no VerifyThread)
   // Measured 8/7/03 at 1396 in 32bit debug build (VerifyThread)
@@ -3539,7 +3536,7 @@ void SharedRuntime::generate_deopt_blob() {
 
 
 #if INCLUDE_JVMCI
-  masm->block_comment("BEGIN JVMCI");
+  masm->block_comment("BEGIN implicit_exception_uncommon_trap");
   int implicit_exception_uncommon_trap_offset = __ offset() - start;
   __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset()), O7);
   __ st(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset())));
@@ -3548,12 +3545,8 @@ void SharedRuntime::generate_deopt_blob() {
   int uncommon_trap_offset = __ offset() - start;
 
   // Save everything in sight.
-  masm->block_comment("save_live_regs");
   (void) RegisterSaver::save_live_registers(masm, 0, &frame_size_words);
-  masm->block_comment("/save_live_regs");
-  masm->block_comment("set_last_java_frame");
   __ set_last_Java_frame(SP, NULL);
-  masm->block_comment("/set_last_java_frame");
 
   __ ld(G2_thread, in_bytes(JavaThread::pending_deoptimization_offset()), O1);
   __ sub(G0, 1, L1);
@@ -3571,7 +3564,7 @@ void SharedRuntime::generate_deopt_blob() {
   Label after_fetch_unroll_info_call;
   __ ba(after_fetch_unroll_info_call);
   __ delayed()->nop(); // Delay slot
-  masm->block_comment("END JVMCI");
+  masm->block_comment("END implicit_exception_uncommon_trap");
 #endif // INCLUDE_JVMCI
 
   int exception_offset = __ offset() - start;
