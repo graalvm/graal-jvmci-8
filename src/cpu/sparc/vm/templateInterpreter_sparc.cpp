@@ -1721,12 +1721,8 @@ void AbstractInterpreter::layout_activation(Method* method,
       // make sure I5_savedSP and the entry frames notion of saved SP
       // agree.  This assertion duplicate a check in entry frame code
       // but catches the failure earlier.
-      /*
-       * Sanzinger: This does not make sense to me, since when we call stub_call -> i2c, the i2c may change the
-       * sp, which then is not in sync with Lscratch anymore.
-       */
-      /*assert(*caller->register_addr(Lscratch) == *interpreter_frame->register_addr(I5_savedSP),
-             "would change callers SP");*/
+      assert(*caller->register_addr(Lscratch) == *interpreter_frame->register_addr(I5_savedSP),
+             "would change callers SP");
     }
     if (caller->is_entry_frame()) {
       tty->print("entry ");
