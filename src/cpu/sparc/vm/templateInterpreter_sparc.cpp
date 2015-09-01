@@ -207,8 +207,6 @@ address InterpreterGenerator::generate_deopt_entry_for(TosState state, int step)
   // Check if we need to take lock at entry of synchronized method.
   {
     Label L;
-
-    //__ cmp(, 0);
     Address pending_monitor_enter_addr(G2_thread, JavaThread::pending_monitorenter_offset());
     __ ldbool(pending_monitor_enter_addr, Gtemp);  // Load if pending monitor enter
     __ cmp_and_br_short(Gtemp, G0, Assembler::equal, Assembler::pn, L);
