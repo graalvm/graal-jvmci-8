@@ -106,8 +106,12 @@ public final class ValueUtil {
     }
 
     public static Register asRegister(Value value) {
+        return asRegisterValue(value).getRegister();
+    }
+
+    public static RegisterValue asRegisterValue(Value value) {
         assert value != null;
-        return ((RegisterValue) value).getRegister();
+        return (RegisterValue) value;
     }
 
     public static Register asIntReg(Value value) {
