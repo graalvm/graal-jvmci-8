@@ -114,7 +114,7 @@ public class TestResolvedJavaType extends TypeUniverse {
 
     @Test
     public void isAssignableFromTest() {
-        Class<?>[] all = classes.toArray(new Class[classes.size()]);
+        Class<?>[] all = classes.toArray(new Class<?>[classes.size()]);
         for (int i = 0; i < all.length; i++) {
             Class<?> c1 = all[i];
             for (int j = i; j < all.length; j++) {
@@ -240,7 +240,7 @@ public class TestResolvedJavaType extends TypeUniverse {
 
     @Test
     public void findLeastCommonAncestorTest() {
-        Class<?>[] all = classes.toArray(new Class[classes.size()]);
+        Class<?>[] all = classes.toArray(new Class<?>[classes.size()]);
         for (int i = 0; i < all.length; i++) {
             Class<?> c1 = all[i];
             for (int j = i; j < all.length; j++) {

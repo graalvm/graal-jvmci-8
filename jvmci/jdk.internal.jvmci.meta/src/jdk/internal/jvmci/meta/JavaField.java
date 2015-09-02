@@ -88,20 +88,15 @@ public interface JavaField extends TrustedInterface {
                     throw new UnknownFormatConversionException("An unquoted '%' character cannot terminate a field format specification");
                 }
                 char specifier = format.charAt(index++);
-                boolean qualified = false;
                 switch (specifier) {
                     case 'T':
-                        qualified = true;
-                        // fall through
                     case 't': {
-                        sb.append(type.toJavaName(qualified));
+                        sb.append(type.toJavaName(specifier == 'T'));
                         break;
                     }
                     case 'H':
-                        qualified = true;
-                        // fall through
                     case 'h': {
-                        sb.append(getDeclaringClass().toJavaName(qualified));
+                        sb.append(getDeclaringClass().toJavaName(specifier == 'H'));
                         break;
                     }
                     case 'n': {

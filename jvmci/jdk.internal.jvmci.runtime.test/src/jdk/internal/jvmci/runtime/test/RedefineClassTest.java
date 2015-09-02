@@ -138,7 +138,7 @@ public class RedefineClassTest extends TypeUniverse {
                 for (int i = 0; i < allClasses.length; i++) {
                     Class<?> c = allClasses[i];
                     if (c == Foo.class) {
-                        inst.retransformClasses(new Class[]{c});
+                        inst.retransformClasses(new Class<?>[]{c});
                     }
                 }
             }

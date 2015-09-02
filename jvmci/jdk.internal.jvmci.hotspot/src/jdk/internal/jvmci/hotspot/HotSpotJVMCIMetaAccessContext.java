@@ -46,7 +46,7 @@ public class HotSpotJVMCIMetaAccessContext implements JVMCIMetaAccessContext {
      * The set of currently live contexts used for tracking of live metadata. Examined from the VM
      * during garbage collection.
      */
-    @SuppressWarnings("unchecked") private static WeakReference<HotSpotJVMCIMetaAccessContext>[] allContexts = new WeakReference[0];
+    private static WeakReference<?>[] allContexts = new WeakReference<?>[0];
 
     /**
      * This is a chunked list of metadata roots. It can be read from VM native code so it's been

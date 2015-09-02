@@ -82,23 +82,18 @@ public interface JavaMethod extends TrustedInterface {
                     throw new UnknownFormatConversionException("An unquoted '%' character cannot terminate a method format specification");
                 }
                 char specifier = format.charAt(index++);
-                boolean qualified = false;
                 switch (specifier) {
                     case 'R':
-                        qualified = true;
-                        // fall through
                     case 'r': {
                         if (sig == null) {
                             sig = getSignature();
                         }
-                        sb.append(sig.getReturnType(null).toJavaName(qualified));
+                        sb.append(sig.getReturnType(null).toJavaName(specifier == 'R'));
                         break;
                     }
                     case 'H':
-                        qualified = true;
-                        // fall through
                     case 'h': {
-                        sb.append(getDeclaringClass().toJavaName(qualified));
+                        sb.append(getDeclaringClass().toJavaName(specifier == 'H'));
                         break;
                     }
                     case 'n': {
@@ -106,8 +101,6 @@ public interface JavaMethod extends TrustedInterface {
                         break;
                     }
                     case 'P':
-                        qualified = true;
-                        // fall through
                     case 'p': {
                         if (sig == null) {
                             sig = getSignature();
@@ -116,7 +109,7 @@ public interface JavaMethod extends TrustedInterface {
                             if (i != 0) {
                                 sb.append(", ");
                             }
-                            sb.append(sig.getParameterType(i, null).toJavaName(qualified));
+                            sb.append(sig.getParameterType(i, null).toJavaName(specifier == 'P'));
                         }
                         break;
                     }

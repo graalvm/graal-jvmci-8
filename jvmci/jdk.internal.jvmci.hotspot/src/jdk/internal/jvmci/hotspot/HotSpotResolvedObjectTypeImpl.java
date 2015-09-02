@@ -221,7 +221,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     @Override
     public HotSpotResolvedObjectTypeImpl getSuperclass() {
         Class<?> javaSuperclass = mirror().getSuperclass();
-        return javaSuperclass == null ? null : (HotSpotResolvedObjectTypeImpl) fromObjectClass(javaSuperclass);
+        return javaSuperclass == null ? null : fromObjectClass(javaSuperclass);
     }
 
     @Override

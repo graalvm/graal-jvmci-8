@@ -427,11 +427,22 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
      * @param index constant pool index
      * @return klass reference index
      */
-    private int getUncachedKlassRefIndexAt(int index) {
-        assertTagIsFieldOrMethod(index);
-        final int refIndex = unsafe.getInt(getMetaspaceConstantPool() + runtime().getConfig().constantPoolSize + index * runtime().getHostJVMCIBackend().getTarget().wordSize);
-        // klass ref index is in the low 16-bits.
-        return refIndex & 0xFFFF;
+    private int getUncachedKlassRefIndexAt(int index, JVM_CONSTANT tag) {
+        int resultIndex;
+        if (tag == JVM_CONSTANT.MethodRef || tag == JVM_CONSTANT.Fieldref || tag == JVM_CONSTANT.InterfaceMethodref) {
+            assertTagIsFieldOrMethod(index);
+            final int refIndex = unsafe.getInt(getMetaspaceConstantPool() + runtime().getConfig().constantPoolSize + index * runtime().getHostJVMCIBackend().getTarget().wordSize);
+            // klass ref index is in the low 16-bits.
+            resultIndex = refIndex & 0xFFFF;
+        } else {
+            resultIndex = index;
+        }
+
+        // Read the tag only once because it could change between multiple reads.
+        final JVM_CONSTANT klassTag = getTagAt(resultIndex);
+        assert klassTag == JVM_CONSTANT.Class || klassTag == JVM_CONSTANT.UnresolvedClass || klassTag == JVM_CONSTANT.UnresolvedClassInError : klassTag;
+
+        return resultIndex;
     }
 
     /**
@@ -661,14 +672,10 @@ public final class HotSpotConstantPool implements ConstantPool, HotSpotProxified
             case MethodRef:
             case Fieldref:
             case InterfaceMethodref:
-                index = getUncachedKlassRefIndexAt(index);
-                // Read the tag only once because it could change between multiple reads.
-                final JVM_CONSTANT klassTag = getTagAt(index);
-                assert klassTag == JVM_CONSTANT.Class || klassTag == JVM_CONSTANT.UnresolvedClass || klassTag == JVM_CONSTANT.UnresolvedClassInError : klassTag;
-                // fall through
             case Class:
             case UnresolvedClass:
             case UnresolvedClassInError:
+                index = getUncachedKlassRefIndexAt(index, tag);
                 final HotSpotResolvedObjectTypeImpl type = runtime().getCompilerToVM().resolveTypeInPool(this, index);
                 Class<?> klass = type.mirror();
                 if (!klass.isPrimitive() && !klass.isArray()) {
