@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,16 +23,15 @@
 package jdk.internal.jvmci.meta;
 
 /**
- * Interface for values manipulated by the compiler. All values have a {@linkplain Kind kind} and
- * are immutable.
+ * Abstract base class for values.
  */
-public interface Value extends TrustedInterface {
+public abstract class Value {
 
-    Value[] NO_VALUES = new Value[0];
+    public static final Value[] NO_VALUES = new Value[0];
 
-    AllocatableValue ILLEGAL = new IllegalValue();
+    public static final AllocatableValue ILLEGAL = new IllegalValue();
 
-    public final class IllegalValue extends AllocatableValue {
+    private static final class IllegalValue extends AllocatableValue {
         private IllegalValue() {
             super(LIRKind.Illegal);
         }
@@ -50,14 +49,62 @@ public interface Value extends TrustedInterface {
         }
     }
 
-    Kind getKind();
+    private final Kind kind;
+    private final LIRKind lirKind;
 
-    LIRKind getLIRKind();
+    /**
+     * Initializes a new value of the specified kind.
+     *
+     * @param lirKind the kind
+     */
+    protected Value(LIRKind lirKind) {
+        this.lirKind = lirKind;
+        if (getPlatformKind() instanceof Kind) {
+            this.kind = (Kind) getPlatformKind();
+        } else {
+            this.kind = Kind.Illegal;
+        }
+    }
+
+    /**
+     * Returns a String representation of the kind, which should be the end of all
+     * {@link #toString()} implementation of subclasses.
+     */
+    protected final String getKindSuffix() {
+        return "|" + getKind().getTypeChar();
+    }
+
+    /**
+     * Returns the kind of this value.
+     */
+    public final Kind getKind() {
+        return kind;
+    }
+
+    public final LIRKind getLIRKind() {
+        return lirKind;
+    }
 
     /**
      * Returns the platform specific kind used to store this value.
      */
-    PlatformKind getPlatformKind();
+    public final PlatformKind getPlatformKind() {
+        return lirKind.getPlatformKind();
+    }
+
+    @Override
+    public int hashCode() {
+        return 41 + lirKind.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Value) {
+            Value that = (Value) obj;
+            return kind.equals(that.kind) && lirKind.equals(that.lirKind);
+        }
+        return false;
+    }
 
     /**
      * Checks if this value is identical to {@code other}.
@@ -65,7 +112,7 @@ public interface Value extends TrustedInterface {
      * Warning: Use with caution! Usually equivalence {@link #equals(Object)} is sufficient and
      * should be used.
      */
-    default boolean identityEquals(Value other) {
+    public final boolean identityEquals(Value other) {
         return this == other;
     }
 }

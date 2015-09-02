@@ -227,10 +227,10 @@ void jvmci_compute_offsets();
     oop_field(LIRKind, platformKind, "Ljdk/internal/jvmci/meta/PlatformKind;")                                                                                   \
     int_field(LIRKind, referenceMask)                                                                                                                          \
   end_class                                                                                                                                                    \
-  start_class(AbstractValue)                                                                                                                                   \
-    oop_field(AbstractValue, kind, "Ljdk/internal/jvmci/meta/Kind;")                                                                                             \
-    oop_field(AbstractValue, lirKind, "Ljdk/internal/jvmci/meta/LIRKind;")                                                                                       \
-    static_oop_field(AbstractValue, ILLEGAL, "Ljdk/internal/jvmci/meta/AllocatableValue;");                                                                      \
+  start_class(Value)                                                                                                                                           \
+    oop_field(Value, kind, "Ljdk/internal/jvmci/meta/Kind;")                                                                                                   \
+    oop_field(Value, lirKind, "Ljdk/internal/jvmci/meta/LIRKind;")                                                                                             \
+    static_oop_field(Value, ILLEGAL, "Ljdk/internal/jvmci/meta/AllocatableValue;");                                                                            \
   end_class                                                                                                                                                    \
   start_class(RegisterValue)                                                                                                                                   \
     oop_field(RegisterValue, reg, "Ljdk/internal/jvmci/code/Register;")                                                                                          \

@@ -166,7 +166,7 @@ static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder)
   if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
     oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
     jlong prim = HotSpotMetaspaceConstantImpl::primitive(constant);
-    assert(Kind::typeChar(AbstractValue::kind(constant)) == 'j', "must have word kind");
+    assert(Kind::typeChar(Value::kind(constant)) == 'j', "must have word kind");
     assert(obj != NULL, "must have an object");
     assert(prim != 0, "must have a primitive value");
 
@@ -179,7 +179,7 @@ static void record_metadata_in_patch(Handle& constant, OopRecorder* oop_recorder
 }
 
 static Location::Type get_oop_type(oop value) {
-  oop lirKind = AbstractValue::lirKind(value);
+  oop lirKind = Value::lirKind(value);
   oop platformKind = LIRKind::platformKind(lirKind);
   assert(LIRKind::referenceMask(lirKind) == 1, "unexpected referenceMask");
   
@@ -192,7 +192,7 @@ static Location::Type get_oop_type(oop value) {
 
 ScopeValue* CodeInstaller::get_scope_value(oop value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second) {
   second = NULL;
-  if (value == AbstractValue::ILLEGAL()) {
+  if (value == Value::ILLEGAL()) {
     assert(type == T_ILLEGAL, "expected legal value");
     return _illegal_value;
   } else if (value->is_a(RegisterValue::klass())) {
@@ -811,7 +811,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
       if (second != NULL) {
         i++;
         assert(i < values->length(), "double-slot value not followed by Value.ILLEGAL");
-        assert(values->obj_at(i) == AbstractValue::ILLEGAL(), "double-slot value not followed by Value.ILLEGAL");
+        assert(values->obj_at(i) == Value::ILLEGAL(), "double-slot value not followed by Value.ILLEGAL");
       }
     }
 

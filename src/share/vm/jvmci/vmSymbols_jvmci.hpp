@@ -52,7 +52,7 @@
   template(jdk_internal_jvmci_meta_ExceptionHandler,                   "jdk/internal/jvmci/meta/ExceptionHandler")                        \
   template(jdk_internal_jvmci_meta_Kind,                               "jdk/internal/jvmci/meta/Kind")                                    \
   template(jdk_internal_jvmci_meta_LIRKind,                            "jdk/internal/jvmci/meta/LIRKind")                                 \
-  template(jdk_internal_jvmci_meta_AbstractValue,                      "jdk/internal/jvmci/meta/AbstractValue")                           \
+  template(jdk_internal_jvmci_meta_Value,                              "jdk/internal/jvmci/meta/Value")                                   \
   template(jdk_internal_jvmci_meta_Assumptions_ConcreteSubtype,        "jdk/internal/jvmci/meta/Assumptions$ConcreteSubtype")             \
   template(jdk_internal_jvmci_meta_Assumptions_LeafType,               "jdk/internal/jvmci/meta/Assumptions$LeafType")                    \
   template(jdk_internal_jvmci_meta_Assumptions_NoFinalizableSubclass,  "jdk/internal/jvmci/meta/Assumptions$NoFinalizableSubclass")       \

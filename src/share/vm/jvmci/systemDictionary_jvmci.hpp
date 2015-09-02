@@ -79,7 +79,7 @@
   do_klass(ExceptionHandler_klass,                       jdk_internal_jvmci_meta_ExceptionHandler,                       Jvmci) \
   do_klass(Kind_klass,                                   jdk_internal_jvmci_meta_Kind,                                   Jvmci) \
   do_klass(LIRKind_klass,                                jdk_internal_jvmci_meta_LIRKind,                                Jvmci) \
-  do_klass(AbstractValue_klass,                          jdk_internal_jvmci_meta_AbstractValue,                          Jvmci)
+  do_klass(Value_klass,                                  jdk_internal_jvmci_meta_Value,                                  Jvmci)
 #endif
 
 #endif // SHARE_VM_JVMCI_SYSTEMDICTIONARY_JVMCI_HPP

@@ -219,7 +219,7 @@ class SystemDictionary : AllStatic {
 
 #if INCLUDE_JVMCI
     FIRST_JVMCI_WKID = WK_KLASS_ENUM_NAME(HotSpotCompiledCode_klass),
-    LAST_JVMCI_WKID  = WK_KLASS_ENUM_NAME(AbstractValue_klass),
+    LAST_JVMCI_WKID  = WK_KLASS_ENUM_NAME(Value_klass),
 #endif
 
     FIRST_WKID = NO_WKID + 1
