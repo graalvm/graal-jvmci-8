@@ -1013,6 +1013,7 @@ JRT_END
 
 
 JRT_ENTRY_NO_ASYNC(void, SharedRuntime::register_finalizer(JavaThread* thread, oopDesc* obj))
+  assert(obj->is_oop(), "must be a valid oop");
 #if INCLUDE_JVMCI
   // This removes the requirement for JVMCI compilers to emit code
   // performing a dynamic check that obj has a finalizer before
@@ -1023,7 +1024,6 @@ JRT_ENTRY_NO_ASYNC(void, SharedRuntime::register_finalizer(JavaThread* thread, o
     return;
   }
 #endif
-  assert(obj->is_oop(), "must be a valid oop");
   assert(obj->klass()->has_finalizer(), "shouldn't be here otherwise");
   InstanceKlass::register_finalizer(instanceOop(obj), CHECK);
 JRT_END
