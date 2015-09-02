@@ -51,6 +51,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         JVMCI.initialize();
     }
 
+    @SuppressWarnings("try")
     static class DelayedInit {
         private static final HotSpotJVMCIRuntime instance;
 
@@ -133,6 +134,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     private final Iterable<HotSpotVMEventListener> vmEventListeners;
 
+    @SuppressWarnings("try")
     private HotSpotJVMCIRuntime() {
         compilerToVm = new CompilerToVMImpl();
         try (InitTimer t = timer("HotSpotVMConfig<init>")) {

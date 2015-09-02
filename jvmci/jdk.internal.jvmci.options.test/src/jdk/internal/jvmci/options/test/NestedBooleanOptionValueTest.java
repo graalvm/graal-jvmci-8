@@ -47,6 +47,7 @@ public class NestedBooleanOptionValueTest {
     static final OptionDescriptor master2 = OptionDescriptor.create("Master2", Boolean.class, "", Options.class, "Master2", Master2);
     static final OptionDescriptor nestedOption2 = OptionDescriptor.create("NestedOption2", Boolean.class, "", Options.class, "NestedOption2", NestedOption2);
 
+    @SuppressWarnings("try")
     @Test
     public void runOverrides() {
         assertTrue(Master0.getValue());

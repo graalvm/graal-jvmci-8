@@ -32,6 +32,7 @@ import jdk.internal.jvmci.options.OptionValue.*;
 
 import org.junit.*;
 
+@SuppressWarnings("try")
 public class TestOptionValue {
 
     public static class Options {

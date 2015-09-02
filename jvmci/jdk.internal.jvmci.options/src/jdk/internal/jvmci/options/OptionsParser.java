@@ -74,6 +74,7 @@ public class OptionsParser {
      *
      * @param options space separated set of JVMCI options to parse
      */
+    @SuppressWarnings("try")
     public static Boolean parseOptionsFromVM(String options) {
         try (InitTimer t = timer("ParseOptions")) {
             JVMCIJarsOptionDescriptorsProvider odp = new JVMCIJarsOptionDescriptorsProvider();

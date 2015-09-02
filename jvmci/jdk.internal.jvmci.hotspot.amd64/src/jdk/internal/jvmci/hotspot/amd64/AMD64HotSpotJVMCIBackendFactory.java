@@ -131,6 +131,7 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         return "JVMCIBackend:" + getArchitecture();
     }
 
+    @SuppressWarnings("try")
     public JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, CompilerFactory compilerFactory, JVMCIBackend host) {
 
         assert host == null;
