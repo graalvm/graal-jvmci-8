@@ -862,7 +862,7 @@ C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject 
   ResourceMark rm;
 
   if (!thread->has_last_Java_frame()) return NULL;
-  Handle result = InstanceKlass::cast(HotSpotStackFrameReference::klass())->allocate_instance(thread);
+  Handle result = HotSpotStackFrameReference::klass()->allocate_instance(thread);
   HotSpotStackFrameReference::klass()->initialize(thread);
 
   StackFrameStream fst(thread);

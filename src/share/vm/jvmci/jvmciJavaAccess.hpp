@@ -286,7 +286,7 @@ class name : AllStatic {                                                        
     }                                                                                                                                                          \
     static void compute_offsets();                                                                                                                             \
   public:                                                                                                                                                      \
-    static Klass* klass() { return SystemDictionary::name##_klass(); }
+    static InstanceKlass* klass() { return SystemDictionary::name##_klass() == NULL ? NULL : InstanceKlass::cast(SystemDictionary::name##_klass()); }
 
 #define END_CLASS };
 
@@ -314,7 +314,7 @@ class name : AllStatic {                                                        
     static int _##name##_offset;                                                                               \
     static type name() {                                                                                       \
       assert(klassName::klass() != NULL, "Class not yet loaded: " #klassName);                                 \
-      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
+      InstanceKlass* ik = klassName::klass();                                                                  \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       if (UseCompressedOops) {                                                                                 \
         return (type) oopDesc::load_decode_heap_oop((narrowOop *)addr);                                        \
@@ -324,7 +324,7 @@ class name : AllStatic {                                                        
     }                                                                                                          \
     static void set_##name(type x) {                                                                           \
       assert(klassName::klass() != NULL, "Class not yet loaded: " #klassName);                                 \
-      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
+      InstanceKlass* ik = klassName::klass();                                                                  \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       if (UseCompressedOops) {                                                                                 \
         oop_store((narrowOop *)addr, x);                                                                       \
@@ -335,12 +335,12 @@ class name : AllStatic {                                                        
 #define STATIC_PRIMITIVE_FIELD(klassName, name, jtypename)                                                     \
     static int _##name##_offset;                                                                               \
     static jtypename name() {                                                                                  \
-      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
+      InstanceKlass* ik = klassName::klass();                                                                  \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       return *((jtypename *)addr);                                                                             \
     }                                                                                                          \
     static void set_##name(jtypename x) {                                                                      \
-      InstanceKlass* ik = InstanceKlass::cast(klassName::klass());                                             \
+      InstanceKlass* ik = klassName::klass();                                                                  \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       *((jtypename *)addr) = x;                                                                                \
     }
