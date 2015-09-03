@@ -595,9 +595,9 @@ def _updateInstalledJVMCIOptionsFile(jdkDir):
     jvmciOptions = join(_suite.dir, 'jvmci.options')
     jreLibDir = join(jdkDir, 'jre', 'lib')
     if exists(jvmciOptions):
-        shutil.copy(jvmciOptions, join(jreLibDir, 'jvmci.options'))
+        shutil.copy(jvmciOptions, join(jreLibDir, 'jvmci', 'options'))
     else:
-        toDelete = join(jreLibDir, 'jvmci.options')
+        toDelete = join(jreLibDir, 'jvmci', 'options')
         if exists(toDelete):
             os.unlink(toDelete)
 

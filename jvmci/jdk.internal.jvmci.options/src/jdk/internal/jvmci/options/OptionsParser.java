@@ -67,24 +67,50 @@ public class OptionsParser {
     }
 
     /**
-     * Parses the set of space separated JVMCI options in {@code options}.
+     * Parses the options in {@code <jre>/lib/jvmci/options} if {@code parseOptionsFile == true} and
+     * the file exists followed by the space separated JVMCI options in {@code options} if
+     * {@code options != null}.
      *
      * Called from VM. This method has an object return type to allow it to be called with a VM
      * utility function used to call other static initialization methods.
      *
      * @param options space separated set of JVMCI options to parse
+     * @param parseOptionsFile specifies whether to look for and parse
+     *            {@code <jre>/lib/jvmci.options}
      */
     @SuppressWarnings("try")
-    public static Boolean parseOptionsFromVM(String options) {
+    public static Boolean parseOptionsFromVM(String options, boolean parseOptionsFile) {
         try (InitTimer t = timer("ParseOptions")) {
             JVMCIJarsOptionDescriptorsProvider odp = new JVMCIJarsOptionDescriptorsProvider();
-            assert options != null;
-            int index = skip(options, 0, true);
-            while (index < options.length()) {
-                int end = skip(options, index, false);
-                String option = options.substring(index, end);
-                parseOption(option, null, odp);
-                index = skip(options, end, true);
+
+            if (parseOptionsFile) {
+                File javaHome = new File(System.getProperty("java.home"));
+                File lib = new File(javaHome, "lib");
+                File jvmci = new File(lib, "jvmci");
+                File jvmciOptions = new File(jvmci, "options");
+                if (jvmciOptions.exists()) {
+                    try (BufferedReader br = new BufferedReader(new FileReader(jvmciOptions))) {
+                        String option = null;
+                        while ((option = br.readLine()) != null) {
+                            option = option.trim();
+                            if (!option.isEmpty() && option.charAt(0) != '#') {
+                                parseOption(option, null, odp);
+                            }
+                        }
+                    } catch (IOException e) {
+                        throw new InternalError("Error reading " + jvmciOptions, e);
+                    }
+                }
+            }
+
+            if (options != null) {
+                int index = skip(options, 0, true);
+                while (index < options.length()) {
+                    int end = skip(options, index, false);
+                    String option = options.substring(index, end);
+                    parseOption(option, null, odp);
+                    index = skip(options, end, true);
+                }
             }
         }
         return Boolean.TRUE;

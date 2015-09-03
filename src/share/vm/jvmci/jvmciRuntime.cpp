@@ -663,6 +663,16 @@ Handle JVMCIRuntime::callStatic(const char* className, const char* methodName, c
   return Handle((oop)result.get_jobject());
 }
 
+static bool jvmci_options_file_exists() {
+  const char* home = Arguments::get_java_home();
+  size_t path_len = strlen(home) + strlen("/lib/jvmci/options") + 1;
+  char path[JVM_MAXPATHLEN];
+  char sep = os::file_separator()[0];
+  jio_snprintf(path, JVM_MAXPATHLEN, "%s%clib%cjvmci%coptions", home, sep, sep, sep);
+  struct stat st;
+  return os::stat(path, &st) == 0;
+}
+
 void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
     Thread* THREAD = Thread::current();
@@ -674,13 +684,15 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
            "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
 #endif
 
-    if (_options != NULL) {
+    bool parseOptionsFile = jvmci_options_file_exists();
+    if (_options != NULL || parseOptionsFile) {
       JavaCallArguments args;
       oop options = java_lang_String::create_oop_from_str(_options, CHECK_ABORT);
       args.push_oop(options);
+      args.push_int(parseOptionsFile);
       callStatic("jdk/internal/jvmci/options/OptionsParser",
                  "parseOptionsFromVM",
-                 "(Ljava/lang/String;)Ljava/lang/Boolean;", &args);
+                 "(Ljava/lang/String;Z)Ljava/lang/Boolean;", &args);
     }
 
     if (_compiler != NULL) {
