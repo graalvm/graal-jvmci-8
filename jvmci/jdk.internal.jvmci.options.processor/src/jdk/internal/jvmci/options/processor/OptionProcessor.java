@@ -239,19 +239,6 @@ public class OptionProcessor extends AbstractProcessor {
             }
             out.println("}");
         }
-
-        try {
-            createOptionsFile(pkg, topDeclaringClass.toString(), originatingElements);
-        } catch (IOException e) {
-            processingEnv.getMessager().printMessage(Kind.ERROR, e.getMessage(), info.topDeclaringType);
-        }
-    }
-
-    private void createOptionsFile(String pkg, String relativeName, Element... originatingElements) throws IOException {
-        String filename = "META-INF/jvmci.options/" + pkg + "." + relativeName;
-        FileObject file = processingEnv.getFiler().createResource(StandardLocation.CLASS_OUTPUT, "", filename, originatingElements);
-        PrintWriter writer = new PrintWriter(new OutputStreamWriter(file.openOutputStream(), "UTF-8"));
-        writer.close();
     }
 
     protected PrintWriter createSourceFile(String pkg, String relativeName, Filer filer, Element... originatingElements) {

@@ -44,16 +44,15 @@ define process_providers
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
-# Reads the files in jvmci.options/ created by OptionProcessor (the processor for the @Option annotation)
-# and appends to services/jdk.internal.jvmci.options.Options entries for the providers
-# also created by the same processor.
+# Finds the *_OptionsDescriptors classes created by OptionProcessor (the processor for the @Option annotation)
+# and appends their names to services/jdk.internal.jvmci.options.OptionDescriptors.
 # Arguments:
 #  1: directory with contents of the JAR file
 define process_options
-    $(eval options := $(1)/$(OPTIONS_INF))
     $(eval services := $(1)/META-INF/services)
     $(QUIETLY) test -d $(services) || mkdir -p $(services)
-    $(QUIETLY) test ! -d $(options) || (cd $(options) && for i in $$(ls); do echo $${i}_OptionDescriptors >> $(abspath $(services))/jdk.internal.jvmci.options.Options; done)
+    $(eval optionDescriptors := $(1)/META-INF/services/jdk.internal.jvmci.options.OptionDescriptors)
+    $(QUIETLY) cd $(1) && for i in $$(find . -name '*_OptionDescriptors.class' 2>/dev/null); do echo $${i} | sed 's:\./\(.*\)\.class:\1:g' | tr '/' '.' >> $(abspath $(optionDescriptors)); done
 endef
 
 # Extracts META-INF/jvmci.services from a JAR file into a given directory

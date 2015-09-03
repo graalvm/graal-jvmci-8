@@ -1694,7 +1694,6 @@ class JVMCIArchiveParticipant:
     def __opened__(self, arc, srcArc, services):
         self.services = services
         self.arc = arc
-        self.expectedOptionsProviders = set()
 
     def __add__(self, arcname, contents):
         if arcname.startswith('META-INF/jvmci.services/'):
@@ -1706,13 +1705,11 @@ class JVMCIArchiveParticipant:
             for service in contents.split(os.linesep):
                 self.jvmciServices.setdefault(service, []).append(provider)
             return True
-        elif arcname.startswith('META-INF/jvmci.options/'):
+        elif arcname.endswith('_OptionDescriptors.class'):
             # Need to create service files for the providers of the
             # jdk.internal.jvmci.options.Options service created by
             # jdk.internal.jvmci.options.processor.OptionProcessor.
-            optionsOwner = arcname[len('META-INF/jvmci.options/'):]
-            provider = optionsOwner + '_OptionDescriptors'
-            self.expectedOptionsProviders.add(provider.replace('.', '/') + '.class')
+            provider = arcname[:-len('.class'):].replace('/', '.')
             self.services.setdefault('jdk.internal.jvmci.options.OptionDescriptors', []).append(provider)
         return False
 
@@ -1720,8 +1717,6 @@ class JVMCIArchiveParticipant:
         return False
 
     def __closing__(self):
-        self.expectedOptionsProviders -= set(self.arc.zf.namelist())
-        assert len(self.expectedOptionsProviders) == 0, 'missing generated Options providers:\n  ' + '\n  '.join(self.expectedOptionsProviders)
         for service, providers in self.jvmciServices.iteritems():
             arcname = 'META-INF/jvmci.services/' + service
             # Convert providers to a set before printing to remove duplicates
