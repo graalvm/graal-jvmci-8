@@ -313,7 +313,7 @@ class name : AllStatic {                                                        
 #define STATIC_OOPISH_FIELD(klassName, name, type, signature)                                                  \
     static int _##name##_offset;                                                                               \
     static type name() {                                                                                       \
-      assert(klassName::klass() != NULL, "Class not yet loaded: " #klassName);                                 \
+      assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
       InstanceKlass* ik = klassName::klass();                                                                  \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       if (UseCompressedOops) {                                                                                 \
@@ -323,6 +323,7 @@ class name : AllStatic {                                                        
       }                                                                                                        \
     }                                                                                                          \
     static void set_##name(type x) {                                                                           \
+      assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
       assert(klassName::klass() != NULL, "Class not yet loaded: " #klassName);                                 \
       InstanceKlass* ik = klassName::klass();                                                                  \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
@@ -335,11 +336,13 @@ class name : AllStatic {                                                        
 #define STATIC_PRIMITIVE_FIELD(klassName, name, jtypename)                                                     \
     static int _##name##_offset;                                                                               \
     static jtypename name() {                                                                                  \
+      assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
       InstanceKlass* ik = klassName::klass();                                                                  \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       return *((jtypename *)addr);                                                                             \
     }                                                                                                          \
     static void set_##name(jtypename x) {                                                                      \
+      assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
       InstanceKlass* ik = klassName::klass();                                                                  \
       address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
       *((jtypename *)addr) = x;                                                                                \
