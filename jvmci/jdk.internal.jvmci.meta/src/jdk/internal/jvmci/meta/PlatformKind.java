@@ -35,11 +35,10 @@ public interface PlatformKind {
 
     }
 
-    public class EnumKey implements Key {
-        @SuppressWarnings("rawtypes") private final Enum e;
+    public class EnumKey<E extends Enum<E>> implements Key {
+        private final Enum<E> e;
 
-        @SuppressWarnings("rawtypes")
-        public EnumKey(Enum e) {
+        public EnumKey(Enum<E> e) {
             this.e = e;
         }
 
@@ -54,7 +53,7 @@ public interface PlatformKind {
                 return true;
             }
             if (obj instanceof EnumKey) {
-                EnumKey that = (EnumKey) obj;
+                EnumKey<?> that = (EnumKey<?>) obj;
                 return this.e == that.e;
             }
             return false;

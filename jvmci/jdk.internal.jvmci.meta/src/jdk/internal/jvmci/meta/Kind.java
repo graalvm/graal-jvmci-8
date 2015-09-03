@@ -70,7 +70,7 @@ public enum Kind implements PlatformKind {
     private final boolean isStackInt;
     private final Class<?> primitiveJavaClass;
     private final Class<?> boxedJavaClass;
-    private final EnumKey key = new EnumKey(this);
+    private final EnumKey<Kind> key = new EnumKey<>(this);
     private final int slotCount;
 
     private Kind(char typeChar, String javaName, int slotCount, boolean isStackInt, Class<?> primitiveJavaClass, Class<?> boxedJavaClass) {
