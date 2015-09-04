@@ -29,7 +29,6 @@ package jdk.internal.jvmci.meta;
  * {@link #NULL_POINTER}.
  */
 public interface JavaConstant extends Constant, JavaValue {
-
     /*
      * Using a larger cache for integers leads to only a slight increase in cache hit ratio which is
      * not enough to justify the impact on startup time.

@@ -33,7 +33,6 @@ import jdk.internal.jvmci.meta.Assumptions.*;
  * .
  */
 public interface ResolvedJavaType extends JavaType, ModifiersProvider {
-
     /**
      * Gets the runtime representation of the Java class object of this type.
      */

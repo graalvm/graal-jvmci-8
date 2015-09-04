@@ -149,5 +149,4 @@ public interface JavaType extends TrustedInterface {
     default String toClassName() {
         return internalNameToJava(getName(), true, true);
     }
-
 }

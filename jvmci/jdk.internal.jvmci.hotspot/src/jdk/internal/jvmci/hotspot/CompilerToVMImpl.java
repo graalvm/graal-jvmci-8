@@ -39,11 +39,11 @@ public class CompilerToVMImpl implements CompilerToVM {
     private static native void init();
 
     static {
-        timedInit();
+        initialize();
     }
 
     @SuppressWarnings("try")
-    private static void timedInit() {
+    private static void initialize() {
         try (InitTimer t = timer("CompilerToVMImpl.init")) {
             init();
         }

@@ -45,7 +45,6 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
      * The Java class this type represents.
      */
     private final Class<?> javaClass;
-
     private HashMap<Long, HotSpotResolvedJavaField> fieldCache;
     private HashMap<Long, HotSpotResolvedJavaMethodImpl> methodCache;
     private HotSpotResolvedJavaField[] instanceFields;
