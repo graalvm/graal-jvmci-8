@@ -3468,6 +3468,9 @@ void SharedRuntime::generate_deopt_blob() {
     pad += StackShadowPages*16 + 32;
   }
 #endif
+#if INCLUDE_JVMCI
+  pad += 512; // Increase the buffer size when compiling for JVMCI
+#endif
 #ifdef _LP64
   CodeBuffer buffer("deopt_blob", 2100+pad, 512);
 #else
