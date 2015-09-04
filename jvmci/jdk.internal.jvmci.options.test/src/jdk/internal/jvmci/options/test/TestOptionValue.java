@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,6 +20,12 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
+/**
+ * @test
+ * @run junit jdk.internal.jvmci.options.test.TestOptionValue
+ */
+
 package jdk.internal.jvmci.options.test;
 
 import static jdk.internal.jvmci.options.test.TestOptionValue.Options.*;
