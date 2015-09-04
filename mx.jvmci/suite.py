@@ -32,7 +32,7 @@ suite = {
 
     "HCFDIS" : {
       "path" : "lib/hcfdis-3.jar",
-      "urls" : ["http://lafo.ssw.uni-linz.ac.at/hcfdis-3.jar"],
+      "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/hcfdis-3.jar"],
       "sha1" : "a71247c6ddb90aad4abf7c77e501acc60674ef57",
     },
 
@@ -44,14 +44,14 @@ suite = {
 
     "JOL_INTERNALS" : {
       "path" : "lib/jol-internals.jar",
-      "urls" : ["http://lafo.ssw.uni-linz.ac.at/truffle/jol/jol-internals.jar"],
+      "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/truffle/jol/jol-internals.jar"],
       "sha1" : "508bcd26a4d7c4c44048990c6ea789a3b11a62dc",
     },
 
     "BATIK" : {
       "path" : "lib/batik-all-1.7.jar",
       "sha1" : "122b87ca88e41a415cf8b523fd3d03b4325134a3",
-      "urls" : ["http://lafo.ssw.uni-linz.ac.at/graal-external-deps/batik-all-1.7.jar"],
+      "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/graal-external-deps/batik-all-1.7.jar"],
     },
   },
 

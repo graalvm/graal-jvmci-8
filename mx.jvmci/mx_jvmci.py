@@ -1586,7 +1586,7 @@ def hsdis(args, copyToDir=None):
     if not exists(path):
         sha1 = sha1s[flavoredLib]
         sha1path = path + '.sha1'
-        mx.download_file_with_sha1('hsdis', path, ['http://lafo.ssw.uni-linz.ac.at/hsdis/' + flavoredLib], sha1, sha1path, True, True, sources=False)
+        mx.download_file_with_sha1('hsdis', path, ['https://lafo.ssw.uni-linz.ac.at/pub/hsdis/' + flavoredLib], sha1, sha1path, True, True, sources=False)
     if copyToDir is not None and exists(copyToDir):
         shutil.copy(path, copyToDir)
 
