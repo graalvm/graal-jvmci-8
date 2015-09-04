@@ -10,7 +10,7 @@ suite = {
   },
   "repositories" : {
     "lafo-snapshots" : {
-      "url" : "http://lafo.ssw.uni-linz.ac.at/nexus/content/repositories/snapshots",
+      "url" : "https://curio.ssw.jku.at/nexus/content/repositories/snapshots",
       "licenses" : ["GPLv2-CPE", "UPL"]
     },
   },
