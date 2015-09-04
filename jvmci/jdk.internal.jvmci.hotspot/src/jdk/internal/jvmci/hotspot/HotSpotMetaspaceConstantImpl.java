@@ -86,6 +86,13 @@ public final class HotSpotMetaspaceConstantImpl extends PrimitiveConstant implem
         return null;
     }
 
+    public HotSpotResolvedJavaMethod asResolvedJavaMethod() {
+        if (metaspaceObject instanceof HotSpotResolvedJavaMethod) {
+            return (HotSpotResolvedJavaMethod) metaspaceObject;
+        }
+        return null;
+    }
+
     public long rawValue() {
         return asLong();
     }

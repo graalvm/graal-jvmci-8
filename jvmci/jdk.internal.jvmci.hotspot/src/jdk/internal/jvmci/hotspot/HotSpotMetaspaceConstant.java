@@ -33,5 +33,7 @@ public interface HotSpotMetaspaceConstant extends HotSpotConstant, VMConstant {
 
     HotSpotResolvedObjectType asResolvedJavaType();
 
+    HotSpotResolvedJavaMethod asResolvedJavaMethod();
+
     long rawValue();
 }

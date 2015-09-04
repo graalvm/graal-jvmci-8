@@ -206,6 +206,10 @@ public final class DataSection implements Iterable<Data> {
         sectionSize = position;
     }
 
+    public boolean isFinalized() {
+        return finalLayout;
+    }
+
     /**
      * Get the size of the data section. Can only be called after {@link #finalizeLayout}.
      */

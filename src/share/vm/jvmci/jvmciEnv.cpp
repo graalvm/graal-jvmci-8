@@ -27,6 +27,7 @@
 #include "classfile/javaAssertions.hpp"
 #include "classfile/systemDictionary.hpp"
 #include "classfile/vmSymbols.hpp"
+#include "code/codeCache.hpp"
 #include "code/scopeDesc.hpp"
 #include "runtime/sweeper.hpp"
 #include "compiler/compileBroker.hpp"
@@ -38,6 +39,7 @@
 #include "memory/universe.inline.hpp"
 #include "oops/methodData.hpp"
 #include "oops/objArrayKlass.hpp"
+#include "oops/oop.inline.hpp"
 #include "prims/jvmtiExport.hpp"
 #include "runtime/init.hpp"
 #include "runtime/reflection.hpp"
@@ -180,25 +182,7 @@ KlassHandle JVMCIEnv::get_klass_by_index_impl(constantPoolHandle& cpool,
   KlassHandle klass (THREAD, ConstantPool::klass_at_if_loaded(cpool, index));
   Symbol* klass_name = NULL;
   if (klass.is_null()) {
-    // The klass has not been inserted into the constant pool.
-    // Try to look it up by name.
-    {
-      // We have to lock the cpool to keep the oop from being resolved
-      // while we are accessing it.
-      MonitorLockerEx ml(cpool->lock());
-
-      constantTag tag = cpool->tag_at(index);
-      if (tag.is_klass()) {
-        // The klass has been inserted into the constant pool
-        // very recently.
-        klass = KlassHandle(THREAD, cpool->resolved_klass_at(index));
-      } else if (tag.is_symbol()) {
-        klass_name = cpool->symbol_at(index);
-      } else {
-        assert(cpool->tag_at(index).is_unresolved_klass(), "wrong tag");
-        klass_name = cpool->unresolved_klass_at(index);
-      }
-    }
+    klass_name = cpool->klass_name_at(index);
   }
 
   if (klass.is_null()) {
@@ -538,7 +522,6 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
 
       // Free codeBlobs
       //code_buffer->free_blob();
-
       if (nm == NULL) {
         // The CodeCache is full.  Print out warning and disable compilation.
         {

@@ -23,6 +23,7 @@
 
 #include "precompiled.hpp"
 #include "asm/codeBuffer.hpp"
+#include "code/codeCache.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/disassembler.hpp"
 #include "jvmci/jvmciRuntime.hpp"
@@ -31,10 +32,12 @@
 #include "jvmci/jvmciJavaAccess.hpp"
 #include "jvmci/jvmciEnv.hpp"
 #include "memory/oopFactory.hpp"
+#include "oops/oop.inline.hpp"
 #include "prims/jvm.h"
 #include "runtime/biasedLocking.hpp"
 #include "runtime/interfaceSupport.hpp"
 #include "runtime/reflection.hpp"
+#include "runtime/sharedRuntime.hpp"
 #include "utilities/debug.hpp"
 #include "utilities/defaultStream.hpp"
 
@@ -49,10 +52,13 @@ const char* JVMCIRuntime::_options = NULL;
 bool JVMCIRuntime::_shutdown_called = false;
 
 void JVMCIRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
+#ifdef _LP64
   uintptr_t heap_end = (uintptr_t) Universe::heap()->reserved_region().end();
   uintptr_t allocation_end = heap_end + ((uintptr_t)16) * 1024 * 1024 * 1024;
-  AMD64_ONLY(guarantee(heap_end < allocation_end, "heap end too close to end of address space (might lead to erroneous TLAB allocations)"));
-  NOT_LP64(error("check TLAB allocation code for address space conflicts"));
+  guarantee(heap_end < allocation_end, "heap end too close to end of address space (might lead to erroneous TLAB allocations)");
+#else
+  fatal("check TLAB allocation code for address space conflicts");
+#endif
 
   ensure_jvmci_class_loader_is_initialized();
 
@@ -252,7 +258,7 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
 
   Handle exception(thread, ex);
   nm = CodeCache::find_nmethod(pc);
-  assert(nm != NULL, "this is not an nmethod");
+  assert(nm != NULL, "this is not a compiled method");
   // Adjust the pc as needed/
   if (nm->is_deopt_pc(pc)) {
     RegisterMap map(thread, false);
@@ -378,7 +384,7 @@ address JVMCIRuntime::exception_handler_for_pc(JavaThread* thread) {
   }
   // Back in JAVA, use no oops DON'T safepoint
 
-  // Now check to see if the nmethod we were called from is now deoptimized.
+  // Now check to see if the compiled method we were called from is now deoptimized.
   // If so we must return to the deopt blob and deoptimize the nmethod
   if (nm != NULL && caller_is_deopted()) {
     continuation = SharedRuntime::deopt_blob()->unpack_with_exception_in_tls();
@@ -531,12 +537,15 @@ JRT_LEAF(oopDesc*, JVMCIRuntime::load_and_clear_exception(JavaThread* thread))
   return exception;
 JRT_END
 
+PRAGMA_DIAG_PUSH
+PRAGMA_FORMAT_NONLITERAL_IGNORED
 JRT_LEAF(void, JVMCIRuntime::log_printf(JavaThread* thread, oopDesc* format, jlong v1, jlong v2, jlong v3))
   ResourceMark rm;
   assert(format != NULL && java_lang_String::is_instance(format), "must be");
   char *buf = java_lang_String::as_utf8_string(format);
-  tty->print(buf, v1, v2, v3);
+  tty->print((const char*)buf, v1, v2, v3);
 JRT_END
+PRAGMA_DIAG_POP
 
 static void decipher(jlong v, bool ignoreZero) {
   if (v != 0 || !ignoreZero) {
@@ -560,9 +569,11 @@ static void decipher(jlong v, bool ignoreZero) {
   }
 }
 
+PRAGMA_DIAG_PUSH
+PRAGMA_FORMAT_NONLITERAL_IGNORED
 JRT_LEAF(void, JVMCIRuntime::vm_message(jboolean vmError, jlong format, jlong v1, jlong v2, jlong v3))
   ResourceMark rm;
-  char *buf = (char*) (address) format;
+  const char *buf = (const char*) (address) format;
   if (vmError) {
     if (buf != NULL) {
       fatal(err_msg(buf, v1, v2, v3));
@@ -577,6 +588,7 @@ JRT_LEAF(void, JVMCIRuntime::vm_message(jboolean vmError, jlong format, jlong v1
     decipher(v1, false);
   }
 JRT_END
+PRAGMA_DIAG_POP
 
 JRT_LEAF(void, JVMCIRuntime::log_primitive(JavaThread* thread, jchar typeChar, jlong value, jboolean newline))
   union {

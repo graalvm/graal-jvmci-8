@@ -188,4 +188,29 @@ public final class ValueUtil {
         }
         return registers;
     }
+
+    /**
+     * Subtract sets of registers (x - y).
+     *
+     * @param x a set of register to subtract from.
+     * @param y a set of registers to subtract.
+     * @return resulting set of registers (x - y).
+     */
+    public static Value[] subtractRegisters(Value[] x, Value[] y) {
+        ArrayList<Value> result = new ArrayList<>(x.length);
+        for (Value i : x) {
+            boolean append = true;
+            for (Value j : y) {
+                if (ValueUtil.sameRegister(i, j)) {
+                    append = false;
+                    break;
+                }
+            }
+            if (append) {
+                result.add(i);
+            }
+        }
+        Value[] resultArray = new Value[result.size()];
+        return result.toArray(resultArray);
+    }
 }
