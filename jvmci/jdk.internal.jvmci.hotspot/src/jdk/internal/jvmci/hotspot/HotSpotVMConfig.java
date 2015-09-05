@@ -745,7 +745,6 @@ public class HotSpotVMConfig {
     }
 
     @HotSpotVMFlag(name = "ReduceInitialCardMarks") @Stable public boolean useDeferredInitBarriers;
-    @HotSpotVMFlag(name = "JVMCIHProfEnabled") @Stable public boolean useHeapProfiler;
 
     // Compressed Oops related values.
     @HotSpotVMFlag(name = "UseCompressedOops") @Stable public boolean useCompressedOops;

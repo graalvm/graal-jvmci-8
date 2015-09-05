@@ -88,9 +88,6 @@
   product(bool, JVMCICountersExcludeCompiler, true,                         \
           "Exclude JVMCI compiler threads from benchmark counters")         \
                                                                             \
-  product(bool, JVMCIHProfEnabled, false,                                   \
-          "Is Heap  Profiler enabled")                                      \
-                                                                            \
   product(bool, JVMCICompileWithC1Only, true,                               \
           "Only compile JVMCI classes with C1")                             \
                                                                             \
