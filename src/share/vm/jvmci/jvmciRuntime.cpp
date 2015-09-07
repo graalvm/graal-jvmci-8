@@ -865,9 +865,7 @@ public:
     *sep = '\0';
     const char* name = line;
     char* value = sep + 1;
-    if(Arguments::PropertyList_get_value(*_plist, name) == NULL) {
-      Arguments::PropertyList_add(_plist, name, value);
-    }
+    Arguments::PropertyList_add(_plist, name, value);
   }
 };
 

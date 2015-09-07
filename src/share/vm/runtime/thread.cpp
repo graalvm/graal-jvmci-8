@@ -3703,13 +3703,11 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   }
 
 #if INCLUDE_JVMCI
-  SystemProperty *properties = Arguments::system_properties();
-  JVMCIRuntime::parse_properties(&properties);
-  const char* jvmciCompiler = Arguments::PropertyList_get_value(properties, "jvmci.compiler");
+  const char* jvmciCompiler = Arguments::PropertyList_get_value(Arguments::system_properties(), "jvmci.compiler");
   if (jvmciCompiler != NULL) {
     JVMCIRuntime::save_compiler(jvmciCompiler);
   }
-  const char* jvmciOptions = Arguments::PropertyList_get_value(properties, "jvmci.options");
+  const char* jvmciOptions = Arguments::PropertyList_get_value(Arguments::system_properties(), "jvmci.options");
   if (jvmciOptions != NULL) {
     JVMCIRuntime::save_options(jvmciOptions);
   }
