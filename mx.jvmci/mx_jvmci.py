@@ -669,29 +669,27 @@ def _updateJVMCIFiles(jdkDir, obsoleteCheck=False):
 
 def _updateJVMCIProperties(jdkDir, compilers):
     jvmciProperties = join(jdkDir, 'jre', 'lib', 'jvmci', 'jvmci.properties')
-    def createFile(compilers):
+    def createFile(lines):
         with open(jvmciProperties, 'w') as fp:
-            print >> fp, "# the first entry wins, reorder entries to change the default compiler"
-            for compiler in compilers:
-                print >> fp, "jvmci.compiler=" + compiler
+            header = "# the last definition of a property wins (i.e., it overwrites any earlier definitions)"
+            if header not in lines:
+                print >> fp, header
+            for line in lines:
+                print >> fp, line
 
-    if not exists(jvmciProperties):
-        createFile(compilers)
-    else:
-        oldCompilers = []
+    lines = []
+    if exists(jvmciProperties):
         with open(jvmciProperties) as fp:
             for line in fp:
                 if line.startswith('jvmci.compiler='):
-                    oldCompilers += [line.strip().split('=')[1]]
-        changed = False
-        newCompilers = []
-        for c in compilers:
-            if not c in oldCompilers:
-                changed = True
-                newCompilers += [c]
-        if changed:
-            # prepend new compilers, since the first property wins
-            createFile(newCompilers + oldCompilers)
+                    compiler = line.strip().split('=')[1]
+                    if compiler not in compilers:
+                        lines.append(line.strip())
+                else:
+                    lines.append(line.strip())
+    for compiler in compilers:
+        lines.append("jvmci.compiler=" + compiler)
+    createFile(lines)
 
 def _installDistInJdks(deployableDist):
     """

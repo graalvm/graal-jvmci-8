@@ -841,7 +841,8 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
  * Everything before the '=' is the property name and everything after '=' is the value.
  * Lines that start with '#' are treated as comments and ignored.
  * No special processing of whitespace or any escape characters is performed.
- * Also, no check is made whether an existing property is overridden.
+ * The last definition of a property "wins" (i.e., it overrides all earlier
+ * definitions of the property).
  */
 class JVMCIPropertiesFileClosure : public ParseClosure {
   SystemProperty** _plist;
@@ -865,7 +866,7 @@ public:
     *sep = '\0';
     const char* name = line;
     char* value = sep + 1;
-    Arguments::PropertyList_add(_plist, name, value);
+    Arguments::PropertyList_unique_add(_plist, name, value);
   }
 };
 
