@@ -65,12 +65,12 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
     /**
      * {@link Field} object of {@link Method#slot}.
      */
-    @SuppressWarnings("javadoc") private Field reflectionMethodSlot = getReflectionSlotField(Method.class);
+    private Field reflectionMethodSlot = getReflectionSlotField(Method.class);
 
     /**
      * {@link Field} object of {@link Constructor#slot}.
      */
-    @SuppressWarnings("javadoc") private Field reflectionConstructorSlot = getReflectionSlotField(Constructor.class);
+    private Field reflectionConstructorSlot = getReflectionSlotField(Constructor.class);
 
     private static Field getReflectionSlotField(Class<?> reflectionClass) {
         try {

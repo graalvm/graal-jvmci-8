@@ -335,7 +335,6 @@ public interface CompilerToVM {
      * Gets the method corresponding to {@code holder} and slot number {@code slot} (i.e.
      * {@link Method#slot} or {@link Constructor#slot}).
      */
-    @SuppressWarnings("javadoc")
     HotSpotResolvedJavaMethodImpl getResolvedJavaMethodAtSlot(Class<?> holder, int slot);
 
     /**
