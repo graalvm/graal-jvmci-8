@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -67,7 +67,19 @@ public interface PlatformKind {
      */
     Key getKey();
 
-    default int getVectorLength() {
-        return 1;
-    }
+    /**
+     * Get the size in bytes of this {@link PlatformKind}.
+     */
+    int getSizeInBytes();
+
+    /**
+     * Returns how many primitive values fit in this {@link PlatformKind}. For scalar types this is
+     * one, for SIMD types it may be higher.
+     */
+    int getVectorLength();
+
+    /**
+     * Gets a single type char that identifies this type for use in debug output.
+     */
+    char getTypeChar();
 }

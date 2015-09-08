@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@ package jdk.internal.jvmci.code;
 import java.nio.*;
 import java.util.*;
 
-import jdk.internal.jvmci.code.Register.*;
+import jdk.internal.jvmci.code.Register.RegisterCategory;
 import jdk.internal.jvmci.meta.*;
 
 /**
@@ -42,10 +42,9 @@ public abstract class Architecture {
     private final int registerReferenceMapSize;
 
     /**
-     * Represents the natural size of words (typically registers and pointers) of this architecture,
-     * in bytes.
+     * The architecture specific type of a native word.
      */
-    private final int wordSize;
+    private final PlatformKind wordKind;
 
     /**
      * The name of this architecture (e.g. "AMD64", "SPARCv9").
@@ -85,11 +84,11 @@ public abstract class Architecture {
      */
     private final int returnAddressSize;
 
-    protected Architecture(String name, int wordSize, ByteOrder byteOrder, boolean unalignedMemoryAccess, Register[] registers, int implicitMemoryBarriers, int nativeCallDisplacementOffset,
+    protected Architecture(String name, PlatformKind wordKind, ByteOrder byteOrder, boolean unalignedMemoryAccess, Register[] registers, int implicitMemoryBarriers, int nativeCallDisplacementOffset,
                     int registerReferenceMapSize, int returnAddressSize) {
         this.name = name;
         this.registers = registers;
-        this.wordSize = wordSize;
+        this.wordKind = wordKind;
         this.byteOrder = byteOrder;
         this.unalignedMemoryAccess = unalignedMemoryAccess;
         this.implicitMemoryBarriers = implicitMemoryBarriers;
@@ -117,7 +116,11 @@ public abstract class Architecture {
      * bytes.
      */
     public int getWordSize() {
-        return wordSize;
+        return getSizeInBytes(wordKind);
+    }
+
+    public PlatformKind getWordKind() {
+        return wordKind;
     }
 
     /**
@@ -198,7 +201,7 @@ public abstract class Architecture {
             case Double:
                 return 8;
             case Object:
-                return wordSize;
+                return getWordSize();
             default:
                 return 0;
         }
@@ -220,6 +223,11 @@ public abstract class Architecture {
      */
     public abstract PlatformKind getLargestStorableKind(RegisterCategory category);
 
+    /**
+     * Return the {@link PlatformKind} that is used to store Java values of a given {@link Kind}.
+     */
+    public abstract PlatformKind getPlatformKind(Kind javaKind);
+
     @Override
     public final boolean equals(Object obj) {
         if (obj == this) {
@@ -235,7 +243,7 @@ public abstract class Architecture {
                 assert Arrays.equals(this.registers, that.registers);
                 assert this.returnAddressSize == that.returnAddressSize;
                 assert this.unalignedMemoryAccess == that.unalignedMemoryAccess;
-                assert this.wordSize == that.wordSize;
+                assert this.wordKind == that.wordKind;
                 return true;
             }
         }

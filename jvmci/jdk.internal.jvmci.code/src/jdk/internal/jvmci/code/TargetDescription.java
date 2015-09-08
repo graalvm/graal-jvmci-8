@@ -120,20 +120,11 @@ public class TargetDescription {
     }
 
     public LIRKind getLIRKind(Kind javaKind) {
-        switch (javaKind) {
-            case Boolean:
-            case Byte:
-            case Short:
-            case Char:
-            case Int:
-            case Long:
-            case Float:
-            case Double:
-                return LIRKind.value(javaKind);
-            case Object:
-                return LIRKind.reference(javaKind);
-            default:
-                return LIRKind.Illegal;
+        PlatformKind platformKind = arch.getPlatformKind(javaKind);
+        if (javaKind.isObject()) {
+            return LIRKind.reference(platformKind);
+        } else {
+            return LIRKind.value(platformKind);
         }
     }
 }

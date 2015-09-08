@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -149,7 +149,7 @@ public class AMD64 extends Architecture {
     private final EnumSet<Flag> flags;
 
     public AMD64(EnumSet<CPUFeature> features, EnumSet<Flag> flags) {
-        super("AMD64", 8, ByteOrder.LITTLE_ENDIAN, true, allRegisters, LOAD_STORE | STORE_STORE, 1, cpuRegisters.length + (xmmRegisters.length << XMM_REFERENCE_MAP_SHIFT), 8);
+        super("AMD64", Kind.Long, ByteOrder.LITTLE_ENDIAN, true, allRegisters, LOAD_STORE | STORE_STORE, 1, cpuRegisters.length + (xmmRegisters.length << XMM_REFERENCE_MAP_SHIFT), 8);
         this.features = features;
         this.flags = flags;
         assert features.contains(CPUFeature.SSE2) : "minimum config for x64";
@@ -161,6 +161,11 @@ public class AMD64 extends Architecture {
 
     public EnumSet<Flag> getFlags() {
         return flags;
+    }
+
+    @Override
+    public PlatformKind getPlatformKind(Kind javaKind) {
+        return javaKind;
     }
 
     @Override

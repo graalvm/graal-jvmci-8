@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -252,7 +252,7 @@ public class SPARC extends Architecture {
     public final Set<CPUFeature> features;
 
     public SPARC(Set<CPUFeature> features) {
-        super("SPARC", 8, BIG_ENDIAN, false, allRegisters, LOAD_LOAD | LOAD_STORE | STORE_STORE, 1, r31.encoding + FLOAT_REGISTER_COUNT + 1, 8);
+        super("SPARC", Kind.Long, BIG_ENDIAN, false, allRegisters, LOAD_LOAD | LOAD_STORE | STORE_STORE, 1, r31.encoding + FLOAT_REGISTER_COUNT + 1, 8);
         this.features = features;
     }
 
@@ -293,6 +293,11 @@ public class SPARC extends Architecture {
         } else {
             return Kind.Illegal;
         }
+    }
+
+    @Override
+    public PlatformKind getPlatformKind(Kind javaKind) {
+        return javaKind;
     }
 
     public static int spillSlotSize(TargetDescription td, PlatformKind kind) {

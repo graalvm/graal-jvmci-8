@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -167,11 +167,42 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
     }
 
     public Register[] getCallingConventionRegisters(Type type, Kind kind) {
-        if (architecture.canStoreValue(XMM, kind)) {
-            return xmmParameterRegisters;
+        switch (kind) {
+            case Boolean:
+            case Byte:
+            case Short:
+            case Char:
+            case Int:
+            case Long:
+            case Object:
+                return type == Type.NativeCall ? nativeGeneralParameterRegisters : javaGeneralParameterRegisters;
+            case Float:
+            case Double:
+                return xmmParameterRegisters;
+            default:
+                throw JVMCIError.shouldNotReachHere();
         }
-        assert architecture.canStoreValue(CPU, kind);
-        return type == Type.NativeCall ? nativeGeneralParameterRegisters : javaGeneralParameterRegisters;
+    }
+
+    private static LIRKind argumentKind(Kind kind) {
+        switch (kind) {
+            case Byte:
+            case Boolean:
+            case Short:
+            case Char:
+            case Int:
+                return LIRKind.value(Kind.Int);
+            case Long:
+                return LIRKind.value(Kind.Long);
+            case Float:
+                return LIRKind.value(Kind.Float);
+            case Double:
+                return LIRKind.value(Kind.Double);
+            case Object:
+                return LIRKind.reference(Kind.Object);
+            default:
+                throw JVMCIError.shouldNotReachHere("invalid argument kind " + kind);
+        }
     }
 
     private CallingConvention callingConvention(Register[] generalParameterRegisters, JavaType returnType, JavaType[] parameterTypes, Type type, TargetDescription target, boolean stackOnly) {
@@ -194,14 +225,14 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
                 case Object:
                     if (!stackOnly && currentGeneral < generalParameterRegisters.length) {
                         Register register = generalParameterRegisters[currentGeneral++];
-                        locations[i] = register.asValue(target.getLIRKind(kind));
+                        locations[i] = register.asValue(argumentKind(kind));
                     }
                     break;
                 case Float:
                 case Double:
                     if (!stackOnly && currentXMM < xmmParameterRegisters.length) {
                         Register register = xmmParameterRegisters[currentXMM++];
-                        locations[i] = register.asValue(target.getLIRKind(kind));
+                        locations[i] = register.asValue(argumentKind(kind));
                     }
                     break;
                 default:
@@ -209,13 +240,14 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
             }
 
             if (locations[i] == null) {
-                locations[i] = StackSlot.get(target.getLIRKind(kind.getStackKind()), currentStackOffset, !type.out);
-                currentStackOffset += Math.max(target.getSizeInBytes(kind), target.wordSize);
+                LIRKind lirKind = target.getLIRKind(kind.getStackKind());
+                locations[i] = StackSlot.get(lirKind, currentStackOffset, !type.out);
+                currentStackOffset += Math.max(target.getSizeInBytes(lirKind.getPlatformKind()), target.wordSize);
             }
         }
 
         Kind returnKind = returnType == null ? Kind.Void : returnType.getKind();
-        AllocatableValue returnLocation = returnKind == Kind.Void ? Value.ILLEGAL : getReturnRegister(returnKind).asValue(target.getLIRKind(returnKind.getStackKind()));
+        AllocatableValue returnLocation = returnKind == Kind.Void ? Value.ILLEGAL : getReturnRegister(returnKind).asValue(argumentKind(returnKind));
         return new CallingConvention(currentStackOffset, returnLocation, locations);
     }
 

@@ -166,7 +166,6 @@ static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder)
   if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
     oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
     jlong prim = HotSpotMetaspaceConstantImpl::primitive(constant);
-    assert(Kind::typeChar(Value::kind(constant)) == 'j', "must have word kind");
     assert(obj != NULL, "must have an object");
     assert(prim != 0, "must have a primitive value");
 

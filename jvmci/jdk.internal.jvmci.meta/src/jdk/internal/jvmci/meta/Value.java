@@ -49,7 +49,6 @@ public abstract class Value {
         }
     }
 
-    private final Kind kind;
     private final LIRKind lirKind;
 
     /**
@@ -59,11 +58,6 @@ public abstract class Value {
      */
     protected Value(LIRKind lirKind) {
         this.lirKind = lirKind;
-        if (getPlatformKind() instanceof Kind) {
-            this.kind = (Kind) getPlatformKind();
-        } else {
-            this.kind = Kind.Illegal;
-        }
     }
 
     /**
@@ -71,14 +65,7 @@ public abstract class Value {
      * {@link #toString()} implementation of subclasses.
      */
     protected final String getKindSuffix() {
-        return "|" + getKind().getTypeChar();
-    }
-
-    /**
-     * Returns the kind of this value.
-     */
-    public final Kind getKind() {
-        return kind;
+        return "|" + getPlatformKind().getTypeChar();
     }
 
     public final LIRKind getLIRKind() {
@@ -101,7 +88,7 @@ public abstract class Value {
     public boolean equals(Object obj) {
         if (obj instanceof Value) {
             Value that = (Value) obj;
-            return kind.equals(that.kind) && lirKind.equals(that.lirKind);
+            return lirKind.equals(that.lirKind);
         }
         return false;
     }

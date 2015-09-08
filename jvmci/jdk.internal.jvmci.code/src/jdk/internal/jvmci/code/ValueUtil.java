@@ -114,35 +114,12 @@ public final class ValueUtil {
         return (RegisterValue) value;
     }
 
-    public static Register asIntReg(Value value) {
-        if (value.getKind().getStackKind() != Kind.Int) {
-            throw new InternalError("needed Int got: " + value.getKind());
+    public static Register asRegister(Value value, PlatformKind kind) {
+        if (value.getPlatformKind() != kind) {
+            throw new InternalError("needed: " + kind + " got: " + value.getPlatformKind());
         } else {
             return asRegister(value);
         }
-    }
-
-    public static Register asLongReg(Value value) {
-        if (value.getKind() != Kind.Long) {
-            throw new InternalError("needed Long got: " + value.getKind());
-        } else {
-            return asRegister(value);
-        }
-    }
-
-    public static Register asObjectReg(Value value) {
-        assert value.getKind() == Kind.Object : value.getKind();
-        return asRegister(value);
-    }
-
-    public static Register asFloatReg(Value value) {
-        assert value.getKind() == Kind.Float : value.getKind();
-        return asRegister(value);
-    }
-
-    public static Register asDoubleReg(Value value) {
-        assert value.getKind() == Kind.Double : value.getKind();
-        return asRegister(value);
     }
 
     public static boolean sameRegister(Value v1, Value v2) {
