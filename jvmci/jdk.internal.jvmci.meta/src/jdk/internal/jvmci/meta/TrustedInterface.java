@@ -23,7 +23,7 @@
 package jdk.internal.jvmci.meta;
 
 /**
- * Interfaces extanding this interface should be trusted by the compiler. See
+ * Interfaces extending this interface should be trusted by the compiler. See
  * {@link ResolvedJavaType#isTrustedInterfaceType()}.
  *
  */
