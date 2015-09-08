@@ -128,10 +128,10 @@ private:
   void initialize_fields(oop target, oop target_method);
   void initialize_dependencies(oop target_method);
   
-  int estimate_stub_entries();
+  int estimate_stubs_size();
   
   // perform data and call relocation on the CodeBuffer
-  bool initialize_buffer(CodeBuffer& buffer);
+  JVMCIEnv::CodeInstallResult initialize_buffer(CodeBuffer& buffer);
 
   void assumption_NoFinalizableSubclass(Handle assumption);
   void assumption_ConcreteSubtype(Handle assumption);

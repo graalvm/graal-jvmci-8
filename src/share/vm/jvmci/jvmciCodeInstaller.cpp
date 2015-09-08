@@ -390,12 +390,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code) {
 
 // constructor used to create a method
 JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle target, Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log) {
-  BufferBlob* buffer_blob = JVMCIRuntime::initialize_buffer_blob();
-  if (buffer_blob == NULL) {
-    return JVMCIEnv::cache_full;
-  }
-
-  CodeBuffer buffer(buffer_blob);
+  CodeBuffer buffer("JVMCI Compiler CodeBuffer");
   jobject compiled_code_obj = JNIHandles::make_local(compiled_code());
   initialize_dependencies(JNIHandles::resolve(compiled_code_obj));
 
@@ -403,18 +398,15 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle target, Handle& compil
   _instructions = buffer.insts();
   _constants = buffer.consts();
 
-  {
-    jobject target_obj = JNIHandles::make_local(target());
-    initialize_fields(JNIHandles::resolve(target_obj), JNIHandles::resolve(compiled_code_obj));
-    if (!initialize_buffer(buffer)) {
-      return JVMCIEnv::code_too_large;
-    }
-    process_exception_handlers();
+  initialize_fields(target(), JNIHandles::resolve(compiled_code_obj));
+  JVMCIEnv::CodeInstallResult result = initialize_buffer(buffer);
+  if (result != JVMCIEnv::ok) {
+    return result;
   }
+  process_exception_handlers();
 
   int stack_slots = _total_frame_size / HeapWordSize; // conversion to words
 
-  JVMCIEnv::CodeInstallResult result;
   if (!compiled_code->is_a(HotSpotCompiledNmethod::klass())) {
     oop stubName = HotSpotCompiledCode::name(compiled_code_obj);
     char* name = strdup(java_lang_String::as_utf8_string(stubName));
@@ -488,7 +480,7 @@ void CodeInstaller::initialize_fields(oop target, oop compiled_code) {
   _word_kind_handle = JNIHandles::make_local(Architecture::wordKind(arch));
 }
 
-int CodeInstaller::estimate_stub_entries() {
+int CodeInstaller::estimate_stubs_size() {
   // Estimate the number of static call stubs that might be emitted.
   int static_call_stubs = 0;
   objArrayOop sites = this->sites();
@@ -505,21 +497,31 @@ int CodeInstaller::estimate_stub_entries() {
       }
     }
   }
-  return static_call_stubs;
+  return static_call_stubs * CompiledStaticCall::to_interp_stub_size();
 }
 
 // perform data and call relocation on the CodeBuffer
-bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
+JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
   HandleMark hm;
   objArrayHandle sites = this->sites();
   int locs_buffer_size = sites->length() * (relocInfo::length_limit + sizeof(relocInfo));
-  char* locs_buffer = NEW_RESOURCE_ARRAY(char, locs_buffer_size);
-  buffer.insts()->initialize_shared_locs((relocInfo*)locs_buffer, locs_buffer_size / sizeof(relocInfo));
+
   // Allocate enough space in the stub section for the static call
   // stubs.  Stubs have extra relocs but they are managed by the stub
   // section itself so they don't need to be accounted for in the
   // locs_buffer above.
-  buffer.initialize_stubs_size(estimate_stub_entries() * CompiledStaticCall::to_interp_stub_size());
+  int stubs_size = estimate_stubs_size();
+  int total_size = round_to(_code_size, buffer.insts()->alignment()) + round_to(_constants_size, buffer.consts()->alignment()) + round_to(stubs_size, buffer.stubs()->alignment());
+
+  if (total_size > JVMCINMethodSizeLimit) {
+    return JVMCIEnv::code_too_large;
+  }
+
+  buffer.initialize(total_size, locs_buffer_size);
+  if (buffer.blob() == NULL) {
+    return JVMCIEnv::cache_full;
+  }
+  buffer.initialize_stubs_size(stubs_size);
   buffer.initialize_consts_size(_constants_size);
 
   _debug_recorder = new DebugInformationRecorder(_oop_recorder);
@@ -534,9 +536,7 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
 
   // copy the code into the newly created CodeBuffer
   address end_pc = _instructions->start() + _code_size;
-  if (!_instructions->allocates2(end_pc)) {
-    return false;
-  }
+  guarantee(_instructions->allocates2(end_pc), "initialize should have reserved enough space for all the code");
   memcpy(_instructions->start(), code()->base(T_BYTE), _code_size);
   _instructions->set_end(end_pc);
 
@@ -617,7 +617,7 @@ bool CodeInstaller::initialize_buffer(CodeBuffer& buffer) {
     }
   }
 #endif
-  return true;
+  return JVMCIEnv::ok;
 }
 
 void CodeInstaller::assumption_NoFinalizableSubclass(Handle assumption) {

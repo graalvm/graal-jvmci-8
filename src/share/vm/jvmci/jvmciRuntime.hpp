@@ -184,8 +184,6 @@ class JVMCIRuntime: public AllStatic {
    */
   static Klass* load_required_class(Symbol* name);
 
-  static BufferBlob* initialize_buffer_blob();
-
   static BasicType kindToBasicType(jchar ch);
 
   // The following routines are all called from compiled JVMCI code

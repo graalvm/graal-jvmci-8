@@ -1458,7 +1458,6 @@ void JavaThread::initialize() {
   // Set the claimed par_id to UINT_MAX (ie not claiming any par_ids)
   set_claimed_par_id(UINT_MAX);
 
-  _buffer_blob = NULL;
   set_saved_exception_pc(NULL);
   set_threadObj(NULL);
   _anchor.clear();

@@ -50,12 +50,8 @@ void JVMCICompiler::initialize() {
     return;
   }
 
-  BufferBlob* buffer_blob = JVMCIRuntime::initialize_buffer_blob();
-  if (buffer_blob == NULL) {
-    set_state(failed);
-  } else {
-    set_state(initialized);
-  }
+  set_state(initialized);
+
   // JVMCI is considered as application code so we need to
   // stop the VM deferring compilation now.
   CompilationPolicy::completed_vm_startup();

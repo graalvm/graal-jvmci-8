@@ -785,10 +785,6 @@ class JavaThread: public Thread {
   JavaThread*    _next;                          // The next thread in the Threads list
   oop            _threadObj;                     // The Java level thread object
 
-  // (thomaswue) Necessary for holding a compilation buffer.
-  // Moved up from CompilerThread to JavaThread in order to enable code
-  // installation from Java application code.
-  BufferBlob*   _buffer_blob;
 #ifdef ASSERT
  private:
   int _java_call_counter;
@@ -1035,10 +1031,6 @@ class JavaThread: public Thread {
   struct JNINativeInterface_* get_jni_functions() {
     return (struct JNINativeInterface_ *)_jni_environment.functions;
   }
-
-
-  BufferBlob*   get_buffer_blob()                { return _buffer_blob; }
-  void          set_buffer_blob(BufferBlob* b)   { _buffer_blob = b; };
 
   // This function is called at thread creation to allow
   // platform specific thread variables to be initialized.

@@ -83,18 +83,6 @@ void JVMCIRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
   }
 }
 
-BufferBlob* JVMCIRuntime::initialize_buffer_blob() {
-  JavaThread* THREAD = JavaThread::current();
-  BufferBlob* buffer_blob = THREAD->get_buffer_blob();
-  if (buffer_blob == NULL) {
-    buffer_blob = BufferBlob::create("JVMCI thread-local CodeBuffer", JVMCINMethodSizeLimit);
-    if (buffer_blob != NULL) {
-      THREAD->set_buffer_blob(buffer_blob);
-    }
-  }
-  return buffer_blob;
-}
-
 BasicType JVMCIRuntime::kindToBasicType(jchar ch) {
   switch(ch) {
     case 'z': return T_BOOLEAN;
