@@ -70,6 +70,15 @@ public class JVMCIError extends Error {
     }
 
     /**
+     * This constructor creates a {@link JVMCIError} with a given message.
+     *
+     * @param msg the message that will be associated with the error
+     */
+    public JVMCIError(String msg) {
+        super(msg);
+    }
+
+    /**
      * This constructor creates a {@link JVMCIError} with a message assembled via
      * {@link String#format(String, Object...)}. It always uses the ENGLISH locale in order to
      * always generate the same output.

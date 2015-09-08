@@ -1756,9 +1756,9 @@ class JVMCIJDKConfig(mx.JDKConfig):
         existingJvmciOptionsProperty = None
         for a in args:
             if a.startswith('-G:'):
-                jvmciArg = a[len('-G:'):]
-                assert ' ' not in jvmciArg, 'space not supported in JVMCI arg: ' + a
-                jvmciArgs.append(a[len('-G:'):])
+                # Escape space with % and % with %%
+                jvmciArg = a[len('-G:'):].replace('%', '%%').replace(' ', '% ')
+                jvmciArgs.append(jvmciArg)
             else:
                 if a.startswith('-Djvmci.options=') or a == '-Djvmci.options':
                     existingJvmciOptionsProperty = a

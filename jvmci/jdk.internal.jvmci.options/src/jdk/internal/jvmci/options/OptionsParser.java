@@ -36,6 +36,11 @@ import jdk.internal.jvmci.inittimer.*;
  */
 public class OptionsParser {
 
+    /**
+     * Character used to escape a space or a literal % in a JVMCI option value.
+     */
+    private static final char ESCAPE = '%';
+
     private static final OptionValue<Boolean> PrintFlags = new OptionValue<>(false);
 
     /**
@@ -54,27 +59,68 @@ public class OptionsParser {
     }
 
     /**
-     * Finds the index of the next character in {@code s} starting at {@code from} that is a space
-     * iff {@code spaces == true}.
+     * Finds the index of the next character in {@code s} starting at {@code from} that is a
+     * {@linkplain #ESCAPE non-escaped} space iff {@code spaces == true}.
      */
     private static int skip(String s, int from, boolean spaces) {
-        for (int i = from; i < s.length(); i++) {
-            if ((s.charAt(i) != ' ') == spaces) {
+        int len = s.length();
+        int i = from;
+        while (i < len) {
+            char ch = s.charAt(i);
+            if (ch == ESCAPE) {
+                if (i == len - 1) {
+                    throw new InternalError("Escape character " + ESCAPE + " cannot be at end of jvmci.options value: " + s);
+                }
+                ch = s.charAt(i + 1);
+                if (ch != ESCAPE && ch != ' ') {
+                    throw new InternalError("Escape character " + ESCAPE + " must be followed by space or another " + ESCAPE + " character");
+                }
+                if (spaces) {
+                    return i;
+                }
+                i++;
+            } else if (ch == ' ' != spaces) {
                 return i;
             }
+            i++;
         }
-        return s.length();
+        return len;
+    }
+
+    private static String unescape(String s) {
+        int esc = s.indexOf(ESCAPE);
+        if (esc == -1) {
+            return s;
+        }
+        StringBuilder sb = new StringBuilder(s.length());
+        int start = 0;
+        do {
+            sb.append(s.substring(start, esc));
+            char escaped = s.charAt(esc + 1);
+            if (escaped == ' ') {
+                sb.append(' ');
+            } else {
+                assert escaped == ESCAPE;
+                sb.append(ESCAPE);
+            }
+            start = esc + 2;
+            esc = s.indexOf(ESCAPE, start);
+        } while (esc != -1);
+        if (start < s.length()) {
+            sb.append(s.substring(start));
+        }
+        return sb.toString();
     }
 
     /**
      * Parses the options in {@code <jre>/lib/jvmci/options} if {@code parseOptionsFile == true} and
-     * the file exists followed by the space separated JVMCI options in {@code options} if
-     * {@code options != null}.
+     * the file exists followed by the {@linkplain #ESCAPE non-escaped} space separated JVMCI
+     * options in {@code options} if {@code options != null}.
      *
      * Called from VM. This method has an object return type to allow it to be called with a VM
      * utility function used to call other static initialization methods.
      *
-     * @param options space separated set of JVMCI options to parse
+     * @param options {@linkplain #ESCAPE non-escaped} space separated set of JVMCI options to parse
      * @param parseOptionsFile specifies whether to look for and parse
      *            {@code <jre>/lib/jvmci.options}
      */
@@ -107,7 +153,7 @@ public class OptionsParser {
                 int index = skip(options, 0, true);
                 while (index < options.length()) {
                     int end = skip(options, index, false);
-                    String option = options.substring(index, end);
+                    String option = unescape(options.substring(index, end));
                     parseOption(option, null, odp);
                     index = skip(options, end, true);
                 }
