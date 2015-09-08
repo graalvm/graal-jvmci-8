@@ -177,15 +177,15 @@ static void record_metadata_in_patch(Handle& constant, OopRecorder* oop_recorder
   record_metadata_reference(HotSpotMetaspaceConstantImpl::metaspaceObject(constant), HotSpotMetaspaceConstantImpl::primitive(constant), HotSpotMetaspaceConstantImpl::compressed(constant), oop_recorder);
 }
 
-static Location::Type get_oop_type(oop value) {
+Location::Type CodeInstaller::get_oop_type(oop value) {
   oop lirKind = Value::lirKind(value);
   oop platformKind = LIRKind::platformKind(lirKind);
   assert(LIRKind::referenceMask(lirKind) == 1, "unexpected referenceMask");
   
-  if (JVMCIRuntime::kindToBasicType(Kind::typeChar(platformKind)) == T_INT) {
-    return Location::narrowoop;
-  } else {
+  if (platformKind == word_kind()) {
     return Location::oop;
+  } else {
+    return Location::narrowoop;
   }
 }
 
@@ -404,7 +404,8 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle target, Handle& compil
   _constants = buffer.consts();
 
   {
-    initialize_fields(JNIHandles::resolve(compiled_code_obj));
+    jobject target_obj = JNIHandles::make_local(target());
+    initialize_fields(JNIHandles::resolve(target_obj), JNIHandles::resolve(compiled_code_obj));
     if (!initialize_buffer(buffer)) {
       return JVMCIEnv::code_too_large;
     }
@@ -449,7 +450,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle target, Handle& compil
   return result;
 }
 
-void CodeInstaller::initialize_fields(oop compiled_code) {
+void CodeInstaller::initialize_fields(oop target, oop compiled_code) {
   if (compiled_code->is_a(HotSpotCompiledNmethod::klass())) {
     Handle hotspotJavaMethod = HotSpotCompiledNmethod::method(compiled_code);
     methodHandle method = getMethodFromHotSpotMethod(hotspotJavaMethod());
@@ -482,6 +483,9 @@ void CodeInstaller::initialize_fields(oop compiled_code) {
   _next_call_type = INVOKE_INVALID;
 
   _has_wide_vector = false;
+
+  oop arch = TargetDescription::arch(target);
+  _word_kind_handle = JNIHandles::make_local(Architecture::wordKind(arch));
 }
 
 int CodeInstaller::estimate_stub_entries() {

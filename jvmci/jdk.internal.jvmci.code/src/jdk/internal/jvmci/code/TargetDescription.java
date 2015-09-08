@@ -116,7 +116,7 @@ public class TargetDescription {
     }
 
     public int getSizeInBytes(PlatformKind kind) {
-        return arch.getSizeInBytes(kind);
+        return kind.getSizeInBytes();
     }
 
     public LIRKind getLIRKind(Kind javaKind) {

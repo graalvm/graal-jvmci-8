@@ -71,6 +71,7 @@ private:
 #endif
 
   bool          _has_wide_vector;
+  jobject       _word_kind_handle;
 
   MarkId        _next_call_type;
   address       _invoke_mark_pc;
@@ -107,6 +108,8 @@ private:
   objArrayOop comments() { return (objArrayOop) JNIHandles::resolve(_comments_handle); }
 #endif
 
+  oop word_kind() { return (oop) JNIHandles::resolve(_word_kind_handle); }
+
 public:
 
   CodeInstaller() : _arena(mtCompiler) {}
@@ -117,11 +120,12 @@ public:
   static bool is_general_purpose_reg(VMReg hotspotRegister);
 
 private:
+  Location::Type get_oop_type(oop value);
   ScopeValue* get_scope_value(oop value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second);
   MonitorValue* get_monitor_value(oop value, GrowableArray<ScopeValue*>* objects);
 
   // extract the fields of the CompilationResult
-  void initialize_fields(oop target_method);
+  void initialize_fields(oop target, oop target_method);
   void initialize_dependencies(oop target_method);
   
   int estimate_stub_entries();

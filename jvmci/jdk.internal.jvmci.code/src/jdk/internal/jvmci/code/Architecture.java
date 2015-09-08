@@ -116,7 +116,7 @@ public abstract class Architecture {
      * bytes.
      */
     public int getWordSize() {
-        return getSizeInBytes(wordKind);
+        return wordKind.getSizeInBytes();
     }
 
     public PlatformKind getWordKind() {
@@ -173,38 +173,6 @@ public abstract class Architecture {
      */
     public final int requiredBarriers(int barriers) {
         return barriers & ~implicitMemoryBarriers;
-    }
-
-    /**
-     * Gets the size in bytes of the specified kind for this target.
-     *
-     * @param kind the kind for which to get the size
-     *
-     * @return the size in bytes of {@code kind}
-     */
-    public int getSizeInBytes(PlatformKind kind) {
-        switch ((Kind) kind) {
-            case Boolean:
-                return 1;
-            case Byte:
-                return 1;
-            case Char:
-                return 2;
-            case Short:
-                return 2;
-            case Int:
-                return 4;
-            case Long:
-                return 8;
-            case Float:
-                return 4;
-            case Double:
-                return 8;
-            case Object:
-                return getWordSize();
-            default:
-                return 0;
-        }
     }
 
     /**

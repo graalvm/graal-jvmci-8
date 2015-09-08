@@ -184,27 +184,6 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
         }
     }
 
-    private static LIRKind argumentKind(Kind kind) {
-        switch (kind) {
-            case Byte:
-            case Boolean:
-            case Short:
-            case Char:
-            case Int:
-                return LIRKind.value(Kind.Int);
-            case Long:
-                return LIRKind.value(Kind.Long);
-            case Float:
-                return LIRKind.value(Kind.Float);
-            case Double:
-                return LIRKind.value(Kind.Double);
-            case Object:
-                return LIRKind.reference(Kind.Object);
-            default:
-                throw JVMCIError.shouldNotReachHere("invalid argument kind " + kind);
-        }
-    }
-
     private CallingConvention callingConvention(Register[] generalParameterRegisters, JavaType returnType, JavaType[] parameterTypes, Type type, TargetDescription target, boolean stackOnly) {
         AllocatableValue[] locations = new AllocatableValue[parameterTypes.length];
 
@@ -213,7 +192,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
         int currentStackOffset = type == Type.NativeCall && needsNativeStackHomeSpace ? generalParameterRegisters.length * target.wordSize : 0;
 
         for (int i = 0; i < parameterTypes.length; i++) {
-            final Kind kind = parameterTypes[i].getKind();
+            final Kind kind = parameterTypes[i].getKind().getStackKind();
 
             switch (kind) {
                 case Byte:
@@ -225,14 +204,14 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
                 case Object:
                     if (!stackOnly && currentGeneral < generalParameterRegisters.length) {
                         Register register = generalParameterRegisters[currentGeneral++];
-                        locations[i] = register.asValue(argumentKind(kind));
+                        locations[i] = register.asValue(target.getLIRKind(kind));
                     }
                     break;
                 case Float:
                 case Double:
                     if (!stackOnly && currentXMM < xmmParameterRegisters.length) {
                         Register register = xmmParameterRegisters[currentXMM++];
-                        locations[i] = register.asValue(argumentKind(kind));
+                        locations[i] = register.asValue(target.getLIRKind(kind));
                     }
                     break;
                 default:
@@ -240,14 +219,14 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
             }
 
             if (locations[i] == null) {
-                LIRKind lirKind = target.getLIRKind(kind.getStackKind());
+                LIRKind lirKind = target.getLIRKind(kind);
                 locations[i] = StackSlot.get(lirKind, currentStackOffset, !type.out);
                 currentStackOffset += Math.max(target.getSizeInBytes(lirKind.getPlatformKind()), target.wordSize);
             }
         }
 
         Kind returnKind = returnType == null ? Kind.Void : returnType.getKind();
-        AllocatableValue returnLocation = returnKind == Kind.Void ? Value.ILLEGAL : getReturnRegister(returnKind).asValue(argumentKind(returnKind));
+        AllocatableValue returnLocation = returnKind == Kind.Void ? Value.ILLEGAL : getReturnRegister(returnKind).asValue(target.getLIRKind(returnKind.getStackKind()));
         return new CallingConvention(currentStackOffset, returnLocation, locations);
     }
 

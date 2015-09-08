@@ -197,7 +197,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         int currentStackOffset = 0;
 
         for (int i = 0; i < parameterTypes.length; i++) {
-            final Kind kind = parameterTypes[i].getKind();
+            final Kind kind = parameterTypes[i].getKind().getStackKind();
 
             switch (kind) {
                 case Byte:

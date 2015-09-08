@@ -70,6 +70,7 @@ public final class LIRKind {
     private static final int UNKNOWN_REFERENCE = -1;
 
     private LIRKind(PlatformKind platformKind, int referenceMask, AllocatableValue derivedReferenceBase) {
+        assert platformKind != Kind.Object : "Kind.Object shouldn't be used in the backend";
         this.platformKind = platformKind;
         this.referenceMask = referenceMask;
         this.derivedReferenceBase = derivedReferenceBase;
@@ -83,7 +84,6 @@ public final class LIRKind {
      * reference. Otherwise, {@link #combine(Value...)} should be used instead.
      */
     public static LIRKind value(PlatformKind platformKind) {
-        assert platformKind != Kind.Object : "Object should always be used as reference type";
         return new LIRKind(platformKind, 0, null);
     }
 

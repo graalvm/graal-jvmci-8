@@ -165,7 +165,11 @@ public class AMD64 extends Architecture {
 
     @Override
     public PlatformKind getPlatformKind(Kind javaKind) {
-        return javaKind;
+        if (javaKind.isObject()) {
+            return getWordKind();
+        } else {
+            return javaKind;
+        }
     }
 
     @Override
@@ -183,7 +187,6 @@ public class AMD64 extends Architecture {
                 case Short:
                 case Int:
                 case Long:
-                case Object:
                     return true;
             }
         } else if (category.equals(XMM)) {

@@ -271,7 +271,6 @@ public class SPARC extends Architecture {
                 case Short:
                 case Int:
                 case Long:
-                case Object:
                     return true;
             }
         } else if (category.equals(FPUs) && kind.equals(Kind.Float)) {
@@ -297,7 +296,11 @@ public class SPARC extends Architecture {
 
     @Override
     public PlatformKind getPlatformKind(Kind javaKind) {
-        return javaKind;
+        if (javaKind.isObject()) {
+            return Kind.Long;
+        } else {
+            return javaKind;
+        }
     }
 
     public static int spillSlotSize(TargetDescription td, PlatformKind kind) {
