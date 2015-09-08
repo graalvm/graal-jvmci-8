@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -86,9 +86,9 @@ public interface JavaType extends TrustedInterface {
     JavaType getArrayClass();
 
     /**
-     * Gets the kind of this type.
+     * Gets the {@link JavaKind} of this type.
      */
-    Kind getKind();
+    JavaKind getJavaKind();
 
     /**
      * Resolves this type to a {@link ResolvedJavaType}.
@@ -136,11 +136,11 @@ public interface JavaType extends TrustedInterface {
      * @return the Java name corresponding to this type
      */
     default String toJavaName(boolean qualified) {
-        Kind kind = getKind();
-        if (kind == Kind.Object) {
+        JavaKind kind = getJavaKind();
+        if (kind == JavaKind.Object) {
             return internalNameToJava(getName(), qualified, false);
         }
-        return getKind().getJavaName();
+        return getJavaKind().getJavaName();
     }
 
     /**

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -157,7 +157,7 @@ public final class Register implements Comparable<Register> {
     /**
      * Gets this register as a {@linkplain RegisterValue value} with no particular kind.
      *
-     * @return a {@link RegisterValue} with {@link Kind#Illegal} kind.
+     * @return a {@link RegisterValue} with {@link JavaKind#Illegal} kind.
      */
     public RegisterValue asValue() {
         return asValue(LIRKind.Illegal);

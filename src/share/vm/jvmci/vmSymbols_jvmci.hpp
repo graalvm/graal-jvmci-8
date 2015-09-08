@@ -50,7 +50,7 @@
   template(jdk_internal_jvmci_meta_RawConstant,                        "jdk/internal/jvmci/meta/RawConstant")                             \
   template(jdk_internal_jvmci_meta_NullConstant,                       "jdk/internal/jvmci/meta/NullConstant")                            \
   template(jdk_internal_jvmci_meta_ExceptionHandler,                   "jdk/internal/jvmci/meta/ExceptionHandler")                        \
-  template(jdk_internal_jvmci_meta_Kind,                               "jdk/internal/jvmci/meta/Kind")                                    \
+  template(jdk_internal_jvmci_meta_JavaKind,                           "jdk/internal/jvmci/meta/JavaKind")                                \
   template(jdk_internal_jvmci_meta_LIRKind,                            "jdk/internal/jvmci/meta/LIRKind")                                 \
   template(jdk_internal_jvmci_meta_Value,                              "jdk/internal/jvmci/meta/Value")                                   \
   template(jdk_internal_jvmci_meta_Assumptions_ConcreteSubtype,        "jdk/internal/jvmci/meta/Assumptions$ConcreteSubtype")             \

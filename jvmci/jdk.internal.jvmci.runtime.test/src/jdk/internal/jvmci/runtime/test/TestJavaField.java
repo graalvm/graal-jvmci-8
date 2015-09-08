@@ -64,10 +64,10 @@ public class TestJavaField extends FieldUniverse {
     }
 
     @Test
-    public void getKindTest() {
+    public void getJavaKindTest() {
         for (Map.Entry<Field, ResolvedJavaField> e : fields.entrySet()) {
-            Kind expected = metaAccess.lookupJavaType(e.getKey().getType()).getKind();
-            Kind actual = e.getValue().getKind();
+            JavaKind expected = metaAccess.lookupJavaType(e.getKey().getType()).getJavaKind();
+            JavaKind actual = e.getValue().getJavaKind();
             assertEquals(expected, actual);
         }
     }

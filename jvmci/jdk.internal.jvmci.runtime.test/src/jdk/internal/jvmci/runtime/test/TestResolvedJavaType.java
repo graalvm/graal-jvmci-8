@@ -62,7 +62,7 @@ public class TestResolvedJavaType extends TypeUniverse {
                 ResolvedJavaField rf = lookupField(type.getInstanceFields(true), f);
                 assertNotNull(rf);
                 long offset = isStatic(f.getModifiers()) ? unsafe.staticFieldOffset(f) : unsafe.objectFieldOffset(f);
-                ResolvedJavaField result = type.findInstanceFieldWithOffset(offset, rf.getKind());
+                ResolvedJavaField result = type.findInstanceFieldWithOffset(offset, rf.getJavaKind());
                 assertNotNull(result);
                 assertTrue(fieldsEqual(f, result));
             }
@@ -142,7 +142,7 @@ public class TestResolvedJavaType extends TypeUniverse {
     public void isInstanceTest() {
         for (ConstantValue cv : constants()) {
             JavaConstant c = cv.value;
-            if (c.getKind() == Kind.Object && !c.isNull()) {
+            if (c.getJavaKind() == JavaKind.Object && !c.isNull()) {
                 ResolvedJavaType cType = metaAccess.lookupJavaType(c);
                 for (ResolvedJavaType t : javaTypes) {
                     if (t.isAssignableFrom(cType)) {

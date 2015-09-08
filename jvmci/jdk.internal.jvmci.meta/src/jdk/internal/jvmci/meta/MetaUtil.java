@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -53,7 +53,7 @@ public class MetaUtil {
     public static long getMemorySizeRecursive(MetaAccessProvider access, ConstantReflectionProvider constantReflection, JavaConstant constant, PrintStream out, int printTopN) {
         Set<JavaConstant> marked = new HashSet<>();
         Deque<JavaConstant> stack = new ArrayDeque<>();
-        if (constant.getKind() == Kind.Object && constant.isNonNull()) {
+        if (constant.getJavaKind() == JavaKind.Object && constant.isNonNull()) {
             marked.add(constant);
         }
         final HashMap<ResolvedJavaType, ClassInfo> histogram = new HashMap<>();
@@ -63,7 +63,7 @@ public class MetaUtil {
             JavaConstant c = stack.pop();
             long memorySize = access.getMemorySize(constant);
             sum += memorySize;
-            if (c.getKind() == Kind.Object && c.isNonNull()) {
+            if (c.getJavaKind() == JavaKind.Object && c.isNonNull()) {
                 ResolvedJavaType clazz = access.lookupJavaType(c);
                 if (!histogram.containsKey(clazz)) {
                     histogram.put(clazz, new ClassInfo());
@@ -83,7 +83,7 @@ public class MetaUtil {
                 } else {
                     ResolvedJavaField[] instanceFields = type.getInstanceFields(true);
                     for (ResolvedJavaField f : instanceFields) {
-                        if (f.getKind() == Kind.Object) {
+                        if (f.getJavaKind() == JavaKind.Object) {
                             JavaConstant value = constantReflection.readFieldValue(f, c);
                             pushConstant(marked, stack, value);
                         }
@@ -195,7 +195,7 @@ public class MetaUtil {
                 if (name.length() != 1) {
                     throw new IllegalArgumentException("Illegal internal name: " + name);
                 }
-                return Kind.fromPrimitiveOrVoidTypeChar(name.charAt(0)).getJavaName();
+                return JavaKind.fromPrimitiveOrVoidTypeChar(name.charAt(0)).getJavaName();
         }
     }
 
@@ -203,7 +203,7 @@ public class MetaUtil {
      * Turns an class name in internal format into a resolved Java type.
      */
     public static ResolvedJavaType classForName(String internal, MetaAccessProvider metaAccess, ClassLoader cl) {
-        Kind k = Kind.fromTypeString(internal);
+        JavaKind k = JavaKind.fromTypeString(internal);
         try {
             String n = internalNameToJava(internal, true, true);
             return metaAccess.lookupJavaType(k.isPrimitive() ? k.toJavaClass() : Class.forName(n, true, cl));

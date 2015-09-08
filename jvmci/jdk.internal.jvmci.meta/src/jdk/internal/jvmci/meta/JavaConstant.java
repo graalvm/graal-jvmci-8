@@ -34,23 +34,23 @@ public interface JavaConstant extends Constant, JavaValue {
      * not enough to justify the impact on startup time.
      */
     JavaConstant NULL_POINTER = new NullConstant();
-    PrimitiveConstant INT_MINUS_1 = new PrimitiveConstant(Kind.Int, -1);
-    PrimitiveConstant INT_0 = new PrimitiveConstant(Kind.Int, 0);
-    PrimitiveConstant INT_1 = new PrimitiveConstant(Kind.Int, 1);
-    PrimitiveConstant INT_2 = new PrimitiveConstant(Kind.Int, 2);
-    PrimitiveConstant LONG_0 = new PrimitiveConstant(Kind.Long, 0L);
-    PrimitiveConstant LONG_1 = new PrimitiveConstant(Kind.Long, 1L);
-    PrimitiveConstant FLOAT_0 = new PrimitiveConstant(Kind.Float, Float.floatToRawIntBits(0.0F));
-    PrimitiveConstant FLOAT_1 = new PrimitiveConstant(Kind.Float, Float.floatToRawIntBits(1.0F));
-    PrimitiveConstant DOUBLE_0 = new PrimitiveConstant(Kind.Double, Double.doubleToRawLongBits(0.0D));
-    PrimitiveConstant DOUBLE_1 = new PrimitiveConstant(Kind.Double, Double.doubleToRawLongBits(1.0D));
-    PrimitiveConstant TRUE = new PrimitiveConstant(Kind.Boolean, 1L);
-    PrimitiveConstant FALSE = new PrimitiveConstant(Kind.Boolean, 0L);
+    PrimitiveConstant INT_MINUS_1 = new PrimitiveConstant(JavaKind.Int, -1);
+    PrimitiveConstant INT_0 = new PrimitiveConstant(JavaKind.Int, 0);
+    PrimitiveConstant INT_1 = new PrimitiveConstant(JavaKind.Int, 1);
+    PrimitiveConstant INT_2 = new PrimitiveConstant(JavaKind.Int, 2);
+    PrimitiveConstant LONG_0 = new PrimitiveConstant(JavaKind.Long, 0L);
+    PrimitiveConstant LONG_1 = new PrimitiveConstant(JavaKind.Long, 1L);
+    PrimitiveConstant FLOAT_0 = new PrimitiveConstant(JavaKind.Float, Float.floatToRawIntBits(0.0F));
+    PrimitiveConstant FLOAT_1 = new PrimitiveConstant(JavaKind.Float, Float.floatToRawIntBits(1.0F));
+    PrimitiveConstant DOUBLE_0 = new PrimitiveConstant(JavaKind.Double, Double.doubleToRawLongBits(0.0D));
+    PrimitiveConstant DOUBLE_1 = new PrimitiveConstant(JavaKind.Double, Double.doubleToRawLongBits(1.0D));
+    PrimitiveConstant TRUE = new PrimitiveConstant(JavaKind.Boolean, 1L);
+    PrimitiveConstant FALSE = new PrimitiveConstant(JavaKind.Boolean, 0L);
 
     /**
      * Returns the Java kind of this constant.
      */
-    Kind getKind();
+    JavaKind getJavaKind();
 
     /**
      * Checks whether this constant is null.
@@ -92,7 +92,7 @@ public interface JavaConstant extends Constant, JavaValue {
 
     /**
      * Returns the primitive int value this constant represents. The constant must have a
-     * {@link Kind#getStackKind()} of {@link Kind#Int}.
+     * {@link JavaKind#getStackKind()} of {@link JavaKind#Int}.
      *
      * @return the constant value
      */
@@ -100,7 +100,7 @@ public interface JavaConstant extends Constant, JavaValue {
 
     /**
      * Returns the primitive boolean value this constant represents. The constant must have kind
-     * {@link Kind#Boolean}.
+     * {@link JavaKind#Boolean}.
      *
      * @return the constant value
      */
@@ -108,7 +108,7 @@ public interface JavaConstant extends Constant, JavaValue {
 
     /**
      * Returns the primitive long value this constant represents. The constant must have kind
-     * {@link Kind#Long}, a {@link Kind#getStackKind()} of {@link Kind#Int}.
+     * {@link JavaKind#Long}, a {@link JavaKind#getStackKind()} of {@link JavaKind#Int}.
      *
      * @return the constant value
      */
@@ -116,7 +116,7 @@ public interface JavaConstant extends Constant, JavaValue {
 
     /**
      * Returns the primitive float value this constant represents. The constant must have kind
-     * {@link Kind#Float}.
+     * {@link JavaKind#Float}.
      *
      * @return the constant value
      */
@@ -124,25 +124,25 @@ public interface JavaConstant extends Constant, JavaValue {
 
     /**
      * Returns the primitive double value this constant represents. The constant must have kind
-     * {@link Kind#Double}.
+     * {@link JavaKind#Double}.
      *
      * @return the constant value
      */
     double asDouble();
 
     default String toValueString() {
-        if (getKind() == Kind.Illegal) {
+        if (getJavaKind() == JavaKind.Illegal) {
             return "illegal";
         } else {
-            return getKind().format(asBoxedPrimitive());
+            return getJavaKind().format(asBoxedPrimitive());
         }
     }
 
     static String toString(JavaConstant constant) {
-        if (constant.getKind() == Kind.Illegal) {
+        if (constant.getJavaKind() == JavaKind.Illegal) {
             return "illegal";
         } else {
-            return constant.getKind().getJavaName() + "[" + constant.toValueString() + "]";
+            return constant.getJavaKind().getJavaName() + "[" + constant.toValueString() + "]";
         }
     }
 
@@ -159,7 +159,7 @@ public interface JavaConstant extends Constant, JavaValue {
         if (Double.compare(d, 1.0D) == 0) {
             return DOUBLE_1;
         }
-        return new PrimitiveConstant(Kind.Double, Double.doubleToRawLongBits(d));
+        return new PrimitiveConstant(JavaKind.Double, Double.doubleToRawLongBits(d));
     }
 
     /**
@@ -175,7 +175,7 @@ public interface JavaConstant extends Constant, JavaValue {
         if (Float.compare(f, 1.0F) == 0) {
             return FLOAT_1;
         }
-        return new PrimitiveConstant(Kind.Float, Float.floatToRawIntBits(f));
+        return new PrimitiveConstant(JavaKind.Float, Float.floatToRawIntBits(f));
     }
 
     /**
@@ -190,7 +190,7 @@ public interface JavaConstant extends Constant, JavaValue {
         } else if (i == 1) {
             return LONG_1;
         } else {
-            return new PrimitiveConstant(Kind.Long, i);
+            return new PrimitiveConstant(JavaKind.Long, i);
         }
     }
 
@@ -211,7 +211,7 @@ public interface JavaConstant extends Constant, JavaValue {
             case 2:
                 return INT_2;
             default:
-                return new PrimitiveConstant(Kind.Int, i);
+                return new PrimitiveConstant(JavaKind.Int, i);
         }
     }
 
@@ -222,7 +222,7 @@ public interface JavaConstant extends Constant, JavaValue {
      * @return a boxed copy of {@code value}
      */
     static PrimitiveConstant forByte(byte i) {
-        return new PrimitiveConstant(Kind.Byte, i);
+        return new PrimitiveConstant(JavaKind.Byte, i);
     }
 
     /**
@@ -242,7 +242,7 @@ public interface JavaConstant extends Constant, JavaValue {
      * @return a boxed copy of {@code value}
      */
     static PrimitiveConstant forChar(char i) {
-        return new PrimitiveConstant(Kind.Char, i);
+        return new PrimitiveConstant(JavaKind.Char, i);
     }
 
     /**
@@ -252,13 +252,13 @@ public interface JavaConstant extends Constant, JavaValue {
      * @return a boxed copy of {@code value}
      */
     static PrimitiveConstant forShort(short i) {
-        return new PrimitiveConstant(Kind.Short, i);
+        return new PrimitiveConstant(JavaKind.Short, i);
     }
 
     /**
      * Creates a {@link JavaConstant} from a primitive integer of a certain kind.
      */
-    static PrimitiveConstant forIntegerKind(Kind kind, long i) {
+    static PrimitiveConstant forIntegerKind(JavaKind kind, long i) {
         switch (kind) {
             case Boolean:
                 return forBoolean(i != 0);
@@ -327,13 +327,13 @@ public interface JavaConstant extends Constant, JavaValue {
     }
 
     static PrimitiveConstant forIllegal() {
-        return new PrimitiveConstant(Kind.Illegal, 0);
+        return new PrimitiveConstant(JavaKind.Illegal, 0);
     }
 
     /**
      * Returns a constant with the default value for the given kind.
      */
-    static JavaConstant defaultForKind(Kind kind) {
+    static JavaConstant defaultForKind(JavaKind kind) {
         switch (kind) {
             case Boolean:
                 return FALSE;
@@ -361,7 +361,7 @@ public interface JavaConstant extends Constant, JavaValue {
     /**
      * Returns the zero value for a given numeric kind.
      */
-    static JavaConstant zero(Kind kind) {
+    static JavaConstant zero(JavaKind kind) {
         switch (kind) {
             case Boolean:
                 return FALSE;
@@ -387,7 +387,7 @@ public interface JavaConstant extends Constant, JavaValue {
     /**
      * Returns the one value for a given numeric kind.
      */
-    static JavaConstant one(Kind kind) {
+    static JavaConstant one(JavaKind kind) {
         switch (kind) {
             case Boolean:
                 return TRUE;
@@ -414,8 +414,8 @@ public interface JavaConstant extends Constant, JavaValue {
      * Adds two numeric constants.
      */
     static JavaConstant add(JavaConstant x, JavaConstant y) {
-        assert x.getKind() == y.getKind();
-        switch (x.getKind()) {
+        assert x.getJavaKind() == y.getJavaKind();
+        switch (x.getJavaKind()) {
             case Byte:
                 return forByte((byte) (x.asInt() + y.asInt()));
             case Char:
@@ -431,7 +431,7 @@ public interface JavaConstant extends Constant, JavaValue {
             case Short:
                 return forShort((short) (x.asInt() + y.asInt()));
             default:
-                throw new IllegalArgumentException(x.getKind().toString());
+                throw new IllegalArgumentException(x.getJavaKind().toString());
         }
     }
 
@@ -439,8 +439,8 @@ public interface JavaConstant extends Constant, JavaValue {
      * Multiplies two numeric constants.
      */
     static PrimitiveConstant mul(JavaConstant x, JavaConstant y) {
-        assert x.getKind() == y.getKind();
-        switch (x.getKind()) {
+        assert x.getJavaKind() == y.getJavaKind();
+        switch (x.getJavaKind()) {
             case Byte:
                 return forByte((byte) (x.asInt() * y.asInt()));
             case Char:
@@ -456,7 +456,7 @@ public interface JavaConstant extends Constant, JavaValue {
             case Short:
                 return forShort((short) (x.asInt() * y.asInt()));
             default:
-                throw new IllegalArgumentException(x.getKind().toString());
+                throw new IllegalArgumentException(x.getJavaKind().toString());
         }
     }
 }

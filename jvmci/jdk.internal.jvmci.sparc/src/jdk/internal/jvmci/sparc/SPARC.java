@@ -252,17 +252,17 @@ public class SPARC extends Architecture {
     public final Set<CPUFeature> features;
 
     public SPARC(Set<CPUFeature> features) {
-        super("SPARC", Kind.Long, BIG_ENDIAN, false, allRegisters, LOAD_LOAD | LOAD_STORE | STORE_STORE, 1, r31.encoding + FLOAT_REGISTER_COUNT + 1, 8);
+        super("SPARC", JavaKind.Long, BIG_ENDIAN, false, allRegisters, LOAD_LOAD | LOAD_STORE | STORE_STORE, 1, r31.encoding + FLOAT_REGISTER_COUNT + 1, 8);
         this.features = features;
     }
 
     @Override
     public boolean canStoreValue(RegisterCategory category, PlatformKind lirKind) {
-        if (!(lirKind instanceof Kind)) {
+        if (!(lirKind instanceof JavaKind)) {
             return false;
         }
 
-        Kind kind = (Kind) lirKind;
+        JavaKind kind = (JavaKind) lirKind;
         if (category.equals(CPU)) {
             switch (kind) {
                 case Boolean:
@@ -273,9 +273,9 @@ public class SPARC extends Architecture {
                 case Long:
                     return true;
             }
-        } else if (category.equals(FPUs) && kind.equals(Kind.Float)) {
+        } else if (category.equals(FPUs) && kind.equals(JavaKind.Float)) {
             return true;
-        } else if (category.equals(FPUd) && kind.equals(Kind.Double)) {
+        } else if (category.equals(FPUd) && kind.equals(JavaKind.Double)) {
             return true;
         }
         return false;
@@ -284,20 +284,20 @@ public class SPARC extends Architecture {
     @Override
     public PlatformKind getLargestStorableKind(RegisterCategory category) {
         if (category.equals(CPU)) {
-            return Kind.Long;
+            return JavaKind.Long;
         } else if (category.equals(FPUd)) {
-            return Kind.Double;
+            return JavaKind.Double;
         } else if (category.equals(FPUs)) {
-            return Kind.Float;
+            return JavaKind.Float;
         } else {
-            return Kind.Illegal;
+            return JavaKind.Illegal;
         }
     }
 
     @Override
-    public PlatformKind getPlatformKind(Kind javaKind) {
+    public PlatformKind getPlatformKind(JavaKind javaKind) {
         if (javaKind.isObject()) {
-            return Kind.Long;
+            return JavaKind.Long;
         } else {
             return javaKind;
         }

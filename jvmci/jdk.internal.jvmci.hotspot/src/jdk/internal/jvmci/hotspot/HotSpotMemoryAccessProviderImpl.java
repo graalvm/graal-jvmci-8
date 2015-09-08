@@ -70,7 +70,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
             return ((HotSpotMetaspaceConstant) base).rawValue();
         } else if (base instanceof PrimitiveConstant) {
             PrimitiveConstant prim = (PrimitiveConstant) base;
-            if (prim.getKind().isNumericInteger()) {
+            if (prim.getJavaKind().isNumericInteger()) {
                 return prim.asLong();
             }
         }
@@ -147,8 +147,8 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
     }
 
     @Override
-    public JavaConstant readUnsafeConstant(Kind kind, JavaConstant baseConstant, long displacement) {
-        if (kind == Kind.Object) {
+    public JavaConstant readUnsafeConstant(JavaKind kind, JavaConstant baseConstant, long displacement) {
+        if (kind == JavaKind.Object) {
             Object o = readRawObject(baseConstant, displacement, runtime.getConfig().useCompressedOops);
             return HotSpotObjectConstantImpl.forObject(o);
         } else {
@@ -157,7 +157,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
     }
 
     @Override
-    public JavaConstant readPrimitiveConstant(Kind kind, Constant baseConstant, long initialDisplacement, int bits) {
+    public JavaConstant readPrimitiveConstant(JavaKind kind, Constant baseConstant, long initialDisplacement, int bits) {
         try {
             long rawValue = readRawValue(baseConstant, initialDisplacement, bits);
             switch (kind) {
@@ -221,7 +221,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
         if (klass == null) {
             return HotSpotCompressedNullConstant.COMPRESSED_NULL;
         }
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(Kind.Int, encoding.compress(klass.getMetaspaceKlass()), klass, true);
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(JavaKind.Int, encoding.compress(klass.getMetaspaceKlass()), klass, true);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,7 +29,7 @@ import jdk.internal.jvmci.meta.*;
 
 public final class HotSpotMetaspaceConstantImpl extends PrimitiveConstant implements HotSpotMetaspaceConstant, VMConstant, HotSpotProxified {
 
-    static HotSpotMetaspaceConstantImpl forMetaspaceObject(Kind kind, long primitive, Object metaspaceObject, boolean compressed) {
+    static HotSpotMetaspaceConstantImpl forMetaspaceObject(JavaKind kind, long primitive, Object metaspaceObject, boolean compressed) {
         return new HotSpotMetaspaceConstantImpl(kind, primitive, metaspaceObject, compressed);
     }
 
@@ -40,7 +40,7 @@ public final class HotSpotMetaspaceConstantImpl extends PrimitiveConstant implem
     private final Object metaspaceObject;
     private final boolean compressed;
 
-    private HotSpotMetaspaceConstantImpl(Kind kind, long primitive, Object metaspaceObject, boolean compressed) {
+    private HotSpotMetaspaceConstantImpl(JavaKind kind, long primitive, Object metaspaceObject, boolean compressed) {
         super(kind, primitive);
         this.metaspaceObject = metaspaceObject;
         this.compressed = compressed;
@@ -67,14 +67,14 @@ public final class HotSpotMetaspaceConstantImpl extends PrimitiveConstant implem
 
     public JavaConstant compress(CompressEncoding encoding) {
         assert !isCompressed();
-        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(Kind.Int, encoding.compress(asLong()), metaspaceObject, true);
+        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(JavaKind.Int, encoding.compress(asLong()), metaspaceObject, true);
         assert res.isCompressed();
         return res;
     }
 
     public JavaConstant uncompress(CompressEncoding encoding) {
         assert isCompressed();
-        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(Kind.Long, encoding.uncompress(asInt()), metaspaceObject, false);
+        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(JavaKind.Long, encoding.uncompress(asInt()), metaspaceObject, false);
         assert !res.isCompressed();
         return res;
     }

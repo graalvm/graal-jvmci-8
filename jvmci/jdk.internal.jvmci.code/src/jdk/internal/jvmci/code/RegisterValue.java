@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,7 +26,7 @@ import jdk.internal.jvmci.meta.*;
 
 /**
  * Denotes a register that stores a value of a fixed kind. There is exactly one (canonical) instance
- * of {@link RegisterValue} for each ({@link Register}, {@link Kind}) pair. Use
+ * of {@link RegisterValue} for each ({@link Register}, {@link JavaKind}) pair. Use
  * {@link Register#asValue(LIRKind)} to retrieve the canonical {@link RegisterValue} instance for a
  * given (register,kind) pair.
  */

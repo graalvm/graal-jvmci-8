@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -52,11 +52,11 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
             if (architecture.canStoreValue(reg.getRegisterCategory(), kind)) {
                 // Special treatment for double precision
                 // TODO: This is wasteful it uses only half of the registers as float.
-                if (kind == Kind.Double) {
+                if (kind == JavaKind.Double) {
                     if (reg.getRegisterCategory().equals(FPUd)) {
                         list.add(reg);
                     }
-                } else if (kind == Kind.Float) {
+                } else if (kind == JavaKind.Float) {
                     if (reg.getRegisterCategory().equals(FPUs)) {
                         list.add(reg);
                     }
@@ -181,7 +181,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         throw JVMCIError.shouldNotReachHere();
     }
 
-    public Register[] getCallingConventionRegisters(Type type, Kind kind) {
+    public Register[] getCallingConventionRegisters(Type type, JavaKind kind) {
         if (architecture.canStoreValue(FPUs, kind) || architecture.canStoreValue(FPUd, kind)) {
             return fpuParameterRegisters;
         }
@@ -197,7 +197,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         int currentStackOffset = 0;
 
         for (int i = 0; i < parameterTypes.length; i++) {
-            final Kind kind = parameterTypes[i].getKind().getStackKind();
+            final JavaKind kind = parameterTypes[i].getJavaKind().getStackKind();
 
             switch (kind) {
                 case Byte:
@@ -243,8 +243,8 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
             }
         }
 
-        Kind returnKind = returnType == null ? Kind.Void : returnType.getKind();
-        AllocatableValue returnLocation = returnKind == Kind.Void ? Value.ILLEGAL : getReturnRegister(returnKind, type).asValue(target.getLIRKind(returnKind.getStackKind()));
+        JavaKind returnKind = returnType == null ? JavaKind.Void : returnType.getJavaKind();
+        AllocatableValue returnLocation = returnKind == JavaKind.Void ? Value.ILLEGAL : getReturnRegister(returnKind, type).asValue(target.getLIRKind(returnKind.getStackKind()));
         return new CallingConvention(currentStackOffset, returnLocation, locations);
     }
 
@@ -253,11 +253,11 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     }
 
     @Override
-    public Register getReturnRegister(Kind kind) {
+    public Register getReturnRegister(JavaKind kind) {
         return getReturnRegister(kind, Type.JavaCallee);
     }
 
-    private static Register getReturnRegister(Kind kind, Type type) {
+    private static Register getReturnRegister(JavaKind kind, Type type) {
         switch (kind) {
             case Boolean:
             case Byte:

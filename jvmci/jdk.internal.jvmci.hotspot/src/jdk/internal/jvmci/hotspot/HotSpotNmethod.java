@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -81,9 +81,9 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
 
     protected boolean checkThreeObjectArgs() {
         assert method.getSignature().getParameterCount(!method.isStatic()) == 3;
-        assert method.getSignature().getParameterKind(0) == Kind.Object;
-        assert method.getSignature().getParameterKind(1) == Kind.Object;
-        assert !method.isStatic() || method.getSignature().getParameterKind(2) == Kind.Object;
+        assert method.getSignature().getParameterKind(0) == JavaKind.Object;
+        assert method.getSignature().getParameterKind(1) == JavaKind.Object;
+        assert !method.isStatic() || method.getSignature().getParameterKind(2) == JavaKind.Object;
         return true;
     }
 
@@ -93,9 +93,9 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
         for (int i = 0; i < sig.length; i++) {
             Object arg = args[i];
             if (arg == null) {
-                assert sig[i].getKind() == Kind.Object : method.format("%H.%n(%p): expected arg ") + i + " to be Object, not " + sig[i];
-            } else if (sig[i].getKind() != Kind.Object) {
-                assert sig[i].getKind().toBoxedJavaClass() == arg.getClass() : method.format("%H.%n(%p): expected arg ") + i + " to be " + sig[i] + ", not " + arg.getClass();
+                assert sig[i].getJavaKind() == JavaKind.Object : method.format("%H.%n(%p): expected arg ") + i + " to be Object, not " + sig[i];
+            } else if (sig[i].getJavaKind() != JavaKind.Object) {
+                assert sig[i].getJavaKind().toBoxedJavaClass() == arg.getClass() : method.format("%H.%n(%p): expected arg ") + i + " to be " + sig[i] + ", not " + arg.getClass();
             }
         }
         return true;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,10 +37,10 @@ import jdk.internal.jvmci.meta.*;
  */
 public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType implements HotSpotProxified {
 
-    private final Kind kind;
+    private final JavaKind kind;
 
     /**
-     * Creates the JVMCI mirror for a primitive {@link Kind}.
+     * Creates the JVMCI mirror for a primitive {@link JavaKind}.
      *
      * <p>
      * <b>NOTE</b>: Creating an instance of this class does not install the mirror for the
@@ -49,7 +49,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
      *
      * @param kind the Kind to create the mirror for
      */
-    public HotSpotResolvedPrimitiveType(Kind kind) {
+    public HotSpotResolvedPrimitiveType(JavaKind kind) {
         super(String.valueOf(Character.toUpperCase(kind.getTypeChar())));
         this.kind = kind;
         assert mirror().isPrimitive() : mirror() + " not a primitive type";
@@ -62,7 +62,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
 
     @Override
     public HotSpotResolvedObjectTypeImpl getArrayClass() {
-        if (kind == Kind.Void) {
+        if (kind == JavaKind.Void) {
             return null;
         }
         Class<?> javaArrayMirror = Array.newInstance(mirror(), 0).getClass();
@@ -164,7 +164,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     }
 
     @Override
-    public Kind getKind() {
+    public JavaKind getJavaKind() {
         return kind;
     }
 
@@ -229,7 +229,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     }
 
     @Override
-    public ResolvedJavaField findInstanceFieldWithOffset(long offset, Kind expectedType) {
+    public ResolvedJavaField findInstanceFieldWithOffset(long offset, JavaKind expectedType) {
         return null;
     }
 

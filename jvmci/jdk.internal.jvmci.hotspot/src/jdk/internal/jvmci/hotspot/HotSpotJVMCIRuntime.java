@@ -118,7 +118,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     /**
      * Gets the kind of a word value on the {@linkplain #getHostJVMCIBackend() host} backend.
      */
-    public static Kind getHostWordKind() {
+    public static JavaKind getHostWordKind() {
         return runtime().getHostJVMCIBackend().getCodeCache().getTarget().wordKind;
     }
 
@@ -200,7 +200,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         Objects.requireNonNull(accessingType, "cannot resolve type without an accessing class");
         // If the name represents a primitive type we can short-circuit the lookup.
         if (name.length() == 1) {
-            Kind kind = Kind.fromPrimitiveOrVoidTypeChar(name.charAt(0));
+            JavaKind kind = JavaKind.fromPrimitiveOrVoidTypeChar(name.charAt(0));
             return fromClass(kind.toJavaClass());
         }
 

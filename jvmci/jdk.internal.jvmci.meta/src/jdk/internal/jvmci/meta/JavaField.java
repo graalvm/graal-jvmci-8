@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,10 +42,10 @@ public interface JavaField extends TrustedInterface {
 
     /**
      * Returns the kind of this field. This is the same as calling {@link #getType}.
-     * {@link JavaType#getKind getKind}.
+     * {@link JavaType#getJavaKind getJavaKind}.
      */
-    default Kind getKind() {
-        return getType().getKind();
+    default JavaKind getJavaKind() {
+        return getType().getJavaKind();
     }
 
     /**

@@ -109,7 +109,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
      * Gets the metaspace Klass for this type.
      */
     public long getMetaspaceKlass() {
-        if (HotSpotJVMCIRuntime.getHostWordKind() == Kind.Long) {
+        if (HotSpotJVMCIRuntime.getHostWordKind() == JavaKind.Long) {
             return unsafe.getLong(javaClass, (long) runtime().getConfig().klassOffset);
         }
         return unsafe.getInt(javaClass, (long) runtime().getConfig().klassOffset) & 0xFFFFFFFFL;
@@ -349,7 +349,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
 
     @Override
     public boolean isInstance(JavaConstant obj) {
-        if (obj.getKind() == Kind.Object && !obj.isNull()) {
+        if (obj.getJavaKind() == JavaKind.Object && !obj.isNull()) {
             return mirror().isInstance(((HotSpotObjectConstantImpl) obj).object());
         }
         return false;
@@ -381,8 +381,8 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.Object;
+    public JavaKind getJavaKind() {
+        return JavaKind.Object;
     }
 
     @Override
@@ -807,7 +807,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     }
 
     @Override
-    public ResolvedJavaField findInstanceFieldWithOffset(long offset, Kind expectedEntryKind) {
+    public ResolvedJavaField findInstanceFieldWithOffset(long offset, JavaKind expectedEntryKind) {
         ResolvedJavaField[] declaredFields = getInstanceFields(true);
         for (ResolvedJavaField field : declaredFields) {
             HotSpotResolvedJavaField resolvedField = (HotSpotResolvedJavaField) field;
@@ -815,11 +815,11 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
             // @formatter:off
             if (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN  &&
                             expectedEntryKind.isPrimitive() &&
-                            !expectedEntryKind.equals(Kind.Void) &&
-                            resolvedField.getKind().isPrimitive()) {
+                            !expectedEntryKind.equals(JavaKind.Void) &&
+                            resolvedField.getJavaKind().isPrimitive()) {
                 resolvedFieldOffset +=
-                                resolvedField.getKind().getByteCount() -
-                                Math.min(resolvedField.getKind().getByteCount(), 4 + expectedEntryKind.getByteCount());
+                                resolvedField.getJavaKind().getByteCount() -
+                                Math.min(resolvedField.getJavaKind().getByteCount(), 4 + expectedEntryKind.getByteCount());
             }
             if (resolvedFieldOffset == offset) {
                 return field;

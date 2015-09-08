@@ -34,8 +34,8 @@ public final class HotSpotCompressedNullConstant implements JavaConstant, HotSpo
     private HotSpotCompressedNullConstant() {
     }
 
-    public Kind getKind() {
-        return Kind.Object;
+    public JavaKind getJavaKind() {
+        return JavaKind.Object;
     }
 
     @Override

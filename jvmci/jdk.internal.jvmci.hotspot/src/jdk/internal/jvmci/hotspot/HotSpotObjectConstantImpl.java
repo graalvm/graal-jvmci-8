@@ -56,8 +56,8 @@ public final class HotSpotObjectConstantImpl implements HotSpotObjectConstant, H
         }
     }
 
-    public static JavaConstant forBoxedValue(Kind kind, Object value) {
-        if (kind == Kind.Object) {
+    public static JavaConstant forBoxedValue(JavaKind kind, Object value) {
+        if (kind == JavaKind.Object) {
             return HotSpotObjectConstantImpl.forObject(value);
         } else {
             return JavaConstant.forBoxedPrimitive(value);
@@ -95,8 +95,8 @@ public final class HotSpotObjectConstantImpl implements HotSpotObjectConstant, H
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.Object;
+    public JavaKind getJavaKind() {
+        return JavaKind.Object;
     }
 
     /**
@@ -267,13 +267,13 @@ public final class HotSpotObjectConstantImpl implements HotSpotObjectConstant, H
         if (object instanceof String) {
             return "\"" + (String) object + "\"";
         } else {
-            return Kind.Object.format(object);
+            return JavaKind.Object.format(object);
         }
     }
 
     @Override
     public String toString() {
-        return (compressed ? "NarrowOop" : getKind().getJavaName()) + "[" + Kind.Object.format(object) + "]";
+        return (compressed ? "NarrowOop" : getJavaKind().getJavaName()) + "[" + JavaKind.Object.format(object) + "]";
     }
 
     /**

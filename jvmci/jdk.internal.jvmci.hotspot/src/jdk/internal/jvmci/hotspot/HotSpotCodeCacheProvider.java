@@ -185,7 +185,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
                 throw new JVMCIError(String.valueOf(constant));
             }
 
-            size = target.getSizeInBytes(compressed ? Kind.Int : target.wordKind);
+            size = target.getSizeInBytes(compressed ? JavaKind.Int : target.wordKind);
             if (size == 4) {
                 builder = (buffer, patch) -> {
                     patch.accept(new DataPatch(buffer.position(), new ConstantReference(vmConstant)));
@@ -200,7 +200,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
             }
         } else if (JavaConstant.isNull(constant)) {
             boolean compressed = COMPRESSED_NULL.equals(constant);
-            size = target.getSizeInBytes(compressed ? Kind.Int : target.wordKind);
+            size = target.getSizeInBytes(compressed ? JavaKind.Int : target.wordKind);
             builder = DataBuilder.zero(size);
         } else if (constant instanceof SerializableConstant) {
             SerializableConstant s = (SerializableConstant) constant;

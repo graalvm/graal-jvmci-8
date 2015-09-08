@@ -166,7 +166,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
         return callingConvention(javaGeneralParameterRegisters, returnType, parameterTypes, type, target, stackOnly);
     }
 
-    public Register[] getCallingConventionRegisters(Type type, Kind kind) {
+    public Register[] getCallingConventionRegisters(Type type, JavaKind kind) {
         switch (kind) {
             case Boolean:
             case Byte:
@@ -192,7 +192,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
         int currentStackOffset = type == Type.NativeCall && needsNativeStackHomeSpace ? generalParameterRegisters.length * target.wordSize : 0;
 
         for (int i = 0; i < parameterTypes.length; i++) {
-            final Kind kind = parameterTypes[i].getKind().getStackKind();
+            final JavaKind kind = parameterTypes[i].getJavaKind().getStackKind();
 
             switch (kind) {
                 case Byte:
@@ -225,13 +225,13 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
             }
         }
 
-        Kind returnKind = returnType == null ? Kind.Void : returnType.getKind();
-        AllocatableValue returnLocation = returnKind == Kind.Void ? Value.ILLEGAL : getReturnRegister(returnKind).asValue(target.getLIRKind(returnKind.getStackKind()));
+        JavaKind returnKind = returnType == null ? JavaKind.Void : returnType.getJavaKind();
+        AllocatableValue returnLocation = returnKind == JavaKind.Void ? Value.ILLEGAL : getReturnRegister(returnKind).asValue(target.getLIRKind(returnKind.getStackKind()));
         return new CallingConvention(currentStackOffset, returnLocation, locations);
     }
 
     @Override
-    public Register getReturnRegister(Kind kind) {
+    public Register getReturnRegister(JavaKind kind) {
         switch (kind) {
             case Boolean:
             case Byte:

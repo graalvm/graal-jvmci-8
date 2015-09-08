@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,7 +34,7 @@ public interface RegisterConfig {
     /**
      * Gets the register to be used for returning a value of a given kind.
      */
-    Register getReturnRegister(Kind kind);
+    Register getReturnRegister(JavaKind kind);
 
     /**
      * Gets the maximum allowed size of the frame.
@@ -68,7 +68,7 @@ public interface RegisterConfig {
      * @return the ordered set of registers that may be used to pass parameters in a call conforming
      *         to {@code type}
      */
-    Register[] getCallingConventionRegisters(Type type, Kind kind);
+    Register[] getCallingConventionRegisters(Type type, JavaKind kind);
 
     /**
      * Gets the set of all registers that might be used by the register allocator.

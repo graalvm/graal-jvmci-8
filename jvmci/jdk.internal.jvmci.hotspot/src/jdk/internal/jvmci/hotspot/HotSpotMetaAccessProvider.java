@@ -281,7 +281,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
 
     @Override
     public long getMemorySize(JavaConstant constant) {
-        if (constant.getKind() == Kind.Object) {
+        if (constant.getJavaKind() == JavaKind.Object) {
             HotSpotResolvedObjectType lookupJavaType = lookupJavaType(constant);
 
             if (lookupJavaType == null) {
@@ -291,7 +291,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
                     // TODO(tw): Add compressed pointer support.
                     int length = Array.getLength(((HotSpotObjectConstantImpl) constant).object());
                     ResolvedJavaType elementType = lookupJavaType.getComponentType();
-                    Kind elementKind = elementType.getKind();
+                    JavaKind elementKind = elementType.getJavaKind();
                     final int headerSize = runtime.getArrayBaseOffset(elementKind);
                     TargetDescription target = runtime.getHostJVMCIBackend().getTarget();
                     int sizeOfElement = target.getSizeInBytes(elementKind);
@@ -302,7 +302,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
                 return lookupJavaType.instanceSize();
             }
         } else {
-            return constant.getKind().getByteCount();
+            return constant.getJavaKind().getByteCount();
         }
     }
 

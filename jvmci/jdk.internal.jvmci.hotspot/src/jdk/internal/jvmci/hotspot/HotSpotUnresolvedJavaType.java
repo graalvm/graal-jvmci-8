@@ -56,8 +56,8 @@ public class HotSpotUnresolvedJavaType extends HotSpotJavaType {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.Object;
+    public JavaKind getJavaKind() {
+        return JavaKind.Object;
     }
 
     @Override

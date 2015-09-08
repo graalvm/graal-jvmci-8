@@ -133,7 +133,7 @@ public class HotSpotJVMCIMetaAccessContext implements JVMCIMetaAccessContext {
 
     protected ResolvedJavaType createClass(Class<?> javaClass) {
         if (javaClass.isPrimitive()) {
-            Kind kind = Kind.fromJavaClass(javaClass);
+            JavaKind kind = JavaKind.fromJavaClass(javaClass);
             return new HotSpotResolvedPrimitiveType(kind);
         } else {
             return new HotSpotResolvedObjectTypeImpl(javaClass, this);

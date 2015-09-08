@@ -73,7 +73,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
 
     @Override
     public Integer readArrayLength(JavaConstant array) {
-        if (array.getKind() != Kind.Object || array.isNull()) {
+        if (array.getJavaKind() != JavaKind.Object || array.isNull()) {
             return null;
         }
 
@@ -100,11 +100,11 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
      * @return the computed index or -1 if the offset isn't within the array
      */
     private int indexForOffset(JavaConstant array, long offset) {
-        if (array.getKind() != Kind.Object || array.isNull()) {
+        if (array.getJavaKind() != JavaKind.Object || array.isNull()) {
             return -1;
         }
         Class<?> componentType = ((HotSpotObjectConstantImpl) array).object().getClass().getComponentType();
-        Kind kind = runtime.getHostJVMCIBackend().getMetaAccess().lookupJavaType(componentType).getKind();
+        JavaKind kind = runtime.getHostJVMCIBackend().getMetaAccess().lookupJavaType(componentType).getJavaKind();
         int arraybase = runtime.getArrayBaseOffset(kind);
         int scale = runtime.getArrayIndexScale(kind);
         if (offset < arraybase) {
@@ -130,7 +130,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
 
     @Override
     public JavaConstant readArrayElement(JavaConstant array, int index) {
-        if (array.getKind() != Kind.Object || array.isNull()) {
+        if (array.getJavaKind() != JavaKind.Object || array.isNull()) {
             return null;
         }
         Object a = ((HotSpotObjectConstantImpl) array).object();
@@ -160,7 +160,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
      * @return true if the box is cached
      */
     private static boolean isBoxCached(JavaConstant source) {
-        switch (source.getKind()) {
+        switch (source.getJavaKind()) {
             case Boolean:
                 return true;
             case Char:
@@ -175,13 +175,13 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
             case Double:
                 return false;
             default:
-                throw new IllegalArgumentException("unexpected kind " + source.getKind());
+                throw new IllegalArgumentException("unexpected kind " + source.getJavaKind());
         }
     }
 
     @Override
     public JavaConstant boxPrimitive(JavaConstant source) {
-        if (!source.getKind().isPrimitive() || !isBoxCached(source)) {
+        if (!source.getJavaKind().isPrimitive() || !isBoxCached(source)) {
             return null;
         }
         return HotSpotObjectConstantImpl.forObject(source.asBoxedPrimitive());
@@ -189,7 +189,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
 
     @Override
     public JavaConstant unboxPrimitive(JavaConstant source) {
-        if (!source.getKind().isObject()) {
+        if (!source.getJavaKind().isObject()) {
             return null;
         }
         if (source.isNull()) {
@@ -331,11 +331,11 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         if (hotspotField.isStatic()) {
             HotSpotResolvedJavaType holder = (HotSpotResolvedJavaType) hotspotField.getDeclaringClass();
             if (holder.isInitialized()) {
-                return memoryAccess.readUnsafeConstant(hotspotField.getKind(), HotSpotObjectConstantImpl.forObject(holder.mirror()), hotspotField.offset());
+                return memoryAccess.readUnsafeConstant(hotspotField.getJavaKind(), HotSpotObjectConstantImpl.forObject(holder.mirror()), hotspotField.offset());
             }
         } else {
             if (receiver.isNonNull() && hotspotField.isInObject(((HotSpotObjectConstantImpl) receiver).object())) {
-                return memoryAccess.readUnsafeConstant(hotspotField.getKind(), receiver, hotspotField.offset());
+                return memoryAccess.readUnsafeConstant(hotspotField.getJavaKind(), receiver, hotspotField.offset());
             }
         }
         return null;

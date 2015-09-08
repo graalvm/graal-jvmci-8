@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -44,7 +44,7 @@ public class TestConstantReflectionProvider extends TypeUniverse {
             for (ConstantValue c2 : constants()) {
                 // test symmetry
                 assertEquals(constantReflection.constantEquals(c1.value, c2.value), constantReflection.constantEquals(c2.value, c1.value));
-                if (c1.value.getKind() != Kind.Object && c2.value.getKind() != Kind.Object) {
+                if (c1.value.getJavaKind() != JavaKind.Object && c2.value.getJavaKind() != JavaKind.Object) {
                     assertEquals(c1.value.equals(c2.value), constantReflection.constantEquals(c2.value, c1.value));
                 }
             }
@@ -56,7 +56,7 @@ public class TestConstantReflectionProvider extends TypeUniverse {
         for (ConstantValue cv : constants()) {
             JavaConstant c = cv.value;
             Integer actual = constantReflection.readArrayLength(c);
-            if (c.getKind() != Kind.Object || c.isNull() || !cv.boxed.getClass().isArray()) {
+            if (c.getJavaKind() != JavaKind.Object || c.isNull() || !cv.boxed.getClass().isArray()) {
                 assertNull(actual);
             } else {
                 assertNotNull(actual);
@@ -85,8 +85,8 @@ public class TestConstantReflectionProvider extends TypeUniverse {
         for (ConstantValue cv : constants()) {
             JavaConstant c = cv.value;
             JavaConstant boxed = constantReflection.boxPrimitive(c);
-            if (boxed != null && c.getKind().isPrimitive()) {
-                assertTrue(boxed.getKind().isObject());
+            if (boxed != null && c.getJavaKind().isPrimitive()) {
+                assertTrue(boxed.getJavaKind().isObject());
                 assertFalse(boxed.isNull());
             }
         }
@@ -108,7 +108,7 @@ public class TestConstantReflectionProvider extends TypeUniverse {
             JavaConstant c = cv.value;
             JavaConstant unboxed = c.isNull() ? null : constantReflection.unboxPrimitive(c);
             if (unboxed != null) {
-                assertFalse(unboxed.getKind().isObject());
+                assertFalse(unboxed.getJavaKind().isObject());
             }
         }
         List<ConstantValue> primitiveConstants = readConstants(PrimitiveConstants.class);

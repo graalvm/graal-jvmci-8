@@ -35,7 +35,7 @@ public final class VirtualObject implements JavaValue {
 
     private final ResolvedJavaType type;
     private JavaValue[] values;
-    private Kind[] slotKinds;
+    private JavaKind[] slotKinds;
     private final int id;
 
     /**
@@ -122,7 +122,7 @@ public final class VirtualObject implements JavaValue {
     /**
      * Returns an array containing the Java kind of all values in the object.
      */
-    public Kind[] getSlotKinds() {
+    public JavaKind[] getSlotKinds() {
         return slotKinds;
     }
 
@@ -143,29 +143,29 @@ public final class VirtualObject implements JavaValue {
                 int fieldIndex = 0;
                 for (int i = 0; i < values.length; i++) {
                     ResolvedJavaField field = fields[fieldIndex++];
-                    Kind valKind = slotKinds[i].getStackKind();
-                    if (field.getKind() == Kind.Object) {
-                        assert valKind.isObject() : field + ": " + valKind + " != " + field.getKind();
+                    JavaKind valKind = slotKinds[i].getStackKind();
+                    if (field.getJavaKind() == JavaKind.Object) {
+                        assert valKind.isObject() : field + ": " + valKind + " != " + field.getJavaKind();
                     } else {
-                        if ((valKind == Kind.Double || valKind == Kind.Long) && field.getKind() == Kind.Int) {
-                            assert fields[fieldIndex].getKind() == Kind.Int;
+                        if ((valKind == JavaKind.Double || valKind == JavaKind.Long) && field.getJavaKind() == JavaKind.Int) {
+                            assert fields[fieldIndex].getJavaKind() == JavaKind.Int;
                             fieldIndex++;
                         } else {
-                            assert valKind == field.getKind().getStackKind() : field + ": " + valKind + " != " + field.getKind();
+                            assert valKind == field.getJavaKind().getStackKind() : field + ": " + valKind + " != " + field.getJavaKind();
                         }
                     }
                 }
                 assert fields.length == fieldIndex : type + ": fields=" + Arrays.toString(fields) + ", field values=" + Arrays.toString(values);
             } else {
-                Kind componentKind = type.getComponentType().getKind().getStackKind();
-                if (componentKind == Kind.Object) {
+                JavaKind componentKind = type.getComponentType().getJavaKind().getStackKind();
+                if (componentKind == JavaKind.Object) {
                     for (int i = 0; i < values.length; i++) {
                         assert slotKinds[i].isObject() : slotKinds[i] + " != " + componentKind;
                     }
                 } else {
                     for (int i = 0; i < values.length; i++) {
                         assert slotKinds[i] == componentKind || componentKind.getBitCount() >= slotKinds[i].getBitCount() ||
-                                        (componentKind == Kind.Int && slotKinds[i].getBitCount() >= Kind.Int.getBitCount()) : slotKinds[i] + " != " + componentKind;
+                                        (componentKind == JavaKind.Int && slotKinds[i].getBitCount() >= JavaKind.Int.getBitCount()) : slotKinds[i] + " != " + componentKind;
                     }
                 }
             }
@@ -180,7 +180,7 @@ public final class VirtualObject implements JavaValue {
      *            recreated.
      * @param slotKinds an array containing the Java kinds of the values.
      */
-    public void setValues(JavaValue[] values, Kind[] slotKinds) {
+    public void setValues(JavaValue[] values, JavaKind[] slotKinds) {
         this.values = values;
         this.slotKinds = slotKinds;
         assert checkValues();

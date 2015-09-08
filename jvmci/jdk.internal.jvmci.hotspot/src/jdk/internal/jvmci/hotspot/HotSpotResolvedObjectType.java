@@ -50,8 +50,8 @@ public interface HotSpotResolvedObjectType extends ResolvedJavaType {
         return false;
     }
 
-    default Kind getKind() {
-        return Kind.Object;
+    default JavaKind getJavaKind() {
+        return JavaKind.Object;
     }
 
     ConstantPool getConstantPool();

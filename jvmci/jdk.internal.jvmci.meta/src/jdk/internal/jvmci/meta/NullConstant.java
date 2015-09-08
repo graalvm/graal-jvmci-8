@@ -31,8 +31,8 @@ final class NullConstant implements JavaConstant {
     }
 
     @Override
-    public Kind getKind() {
-        return Kind.Object;
+    public JavaKind getJavaKind() {
+        return JavaKind.Object;
     }
 
     @Override

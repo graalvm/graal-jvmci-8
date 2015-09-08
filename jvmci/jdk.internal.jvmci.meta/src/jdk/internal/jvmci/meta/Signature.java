@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -54,13 +54,13 @@ public interface Signature {
 
     /**
      * Gets the parameter kind at the specified position. This is the same as calling
-     * {@link #getParameterType}. {@link JavaType#getKind getKind}.
+     * {@link #getParameterType}. {@link JavaType#getJavaKind getJavaKind}.
      *
      * @param index the index into the parameters, with {@code 0} indicating the first parameter
      * @return the kind of the parameter at the specified position
      */
-    default Kind getParameterKind(int index) {
-        return getParameterType(index, null).getKind();
+    default JavaKind getParameterKind(int index) {
+        return getParameterType(index, null).getJavaKind();
     }
 
     /**
@@ -77,10 +77,10 @@ public interface Signature {
 
     /**
      * Gets the return kind of this signature. This is the same as calling {@link #getReturnType}.
-     * {@link JavaType#getKind getKind}.
+     * {@link JavaType#getJavaKind getJavaKind}.
      */
-    default Kind getReturnKind() {
-        return getReturnType(null).getKind();
+    default JavaKind getReturnKind() {
+        return getReturnType(null).getJavaKind();
     }
 
     /**
@@ -120,16 +120,16 @@ public interface Signature {
         return result;
     }
 
-    default Kind[] toParameterKinds(boolean receiver) {
+    default JavaKind[] toParameterKinds(boolean receiver) {
         int args = getParameterCount(false);
-        Kind[] result;
+        JavaKind[] result;
         int i = 0;
         if (receiver) {
-            result = new Kind[args + 1];
-            result[0] = Kind.Object;
+            result = new JavaKind[args + 1];
+            result[0] = JavaKind.Object;
             i = 1;
         } else {
-            result = new Kind[args];
+            result = new JavaKind[args];
         }
         for (int j = 0; j < args; j++) {
             result[i + j] = getParameterKind(j);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,11 +26,11 @@ import java.lang.invoke.*;
 
 /**
  * Reflection operations on values represented as {@linkplain JavaConstant constants}. All methods
- * in this interface require the VM to access the actual object encapsulated in {@link Kind#Object
- * object} constants. This access is not always possible, depending on kind of VM and the state that
- * the VM is in. Therefore, all methods can return {@code null} at any time, to indicate that the
- * result is not available at this point. The caller is responsible to check for {@code null}
- * results and handle them properly, e.g., not perform an optimization.
+ * in this interface require the VM to access the actual object encapsulated in
+ * {@link JavaKind#Object object} constants. This access is not always possible, depending on kind
+ * of VM and the state that the VM is in. Therefore, all methods can return {@code null} at any
+ * time, to indicate that the result is not available at this point. The caller is responsible to
+ * check for {@code null} results and handle them properly, e.g., not perform an optimization.
  */
 public interface ConstantReflectionProvider {
 
@@ -113,18 +113,18 @@ public interface ConstantReflectionProvider {
     JavaConstant readStableFieldValue(JavaField field, JavaConstant receiver, boolean isDefaultStable);
 
     /**
-     * Converts the given {@link Kind#isPrimitive() primitive} constant to a boxed
-     * {@link Kind#Object object} constant, according to the Java boxing rules. Returns {@code null}
-     * if the source is is not a primitive constant, or the boxed value is not available at this
-     * point.
+     * Converts the given {@link JavaKind#isPrimitive() primitive} constant to a boxed
+     * {@link JavaKind#Object object} constant, according to the Java boxing rules. Returns
+     * {@code null} if the source is is not a primitive constant, or the boxed value is not
+     * available at this point.
      */
     JavaConstant boxPrimitive(JavaConstant source);
 
     /**
-     * Converts the given {@link Kind#Object object} constant to a {@link Kind#isPrimitive()
-     * primitive} constant, according to the Java unboxing rules. Returns {@code null} if the source
-     * is is not an object constant that can be unboxed, or the unboxed value is not available at
-     * this point.
+     * Converts the given {@link JavaKind#Object object} constant to a
+     * {@link JavaKind#isPrimitive() primitive} constant, according to the Java unboxing rules.
+     * Returns {@code null} if the source is is not an object constant that can be unboxed, or the
+     * unboxed value is not available at this point.
      */
     JavaConstant unboxPrimitive(JavaConstant source);
 

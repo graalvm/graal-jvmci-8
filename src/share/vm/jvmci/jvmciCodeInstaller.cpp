@@ -257,7 +257,7 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, BasicType type, GrowableAr
         jlong prim = PrimitiveConstant::primitive(value);
         return new ConstantLongValue(prim);
       } else {
-        assert(type == JVMCIRuntime::kindToBasicType(Kind::typeChar(PrimitiveConstant::kind(value))), "primitive constant type doesn't match");
+        assert(type == JVMCIRuntime::kindToBasicType(JavaKind::typeChar(PrimitiveConstant::kind(value))), "primitive constant type doesn't match");
         if (type == T_INT || type == T_FLOAT) {
           jint prim = (jint)PrimitiveConstant::primitive(value);
           switch (prim) {
@@ -312,7 +312,7 @@ void CodeInstaller::record_object_value(ObjectValue* sv, oop value, GrowableArra
     ScopeValue* cur_second = NULL;
     oop object = values->obj_at(i);
     oop kind = slotKinds->obj_at(i);
-    BasicType type = JVMCIRuntime::kindToBasicType(Kind::typeChar(kind));
+    BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(kind));
     ScopeValue* value = get_scope_value(object, type, objects, cur_second);
 
     if (isLongArray && cur_second == NULL) {
@@ -794,7 +794,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
       oop value = values->obj_at(i);
       if (i < local_count) {
         oop kind = slotKinds->obj_at(i);
-        BasicType type = JVMCIRuntime::kindToBasicType(Kind::typeChar(kind));
+        BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(kind));
         ScopeValue* first = get_scope_value(value, type, objects, second);
         if (second != NULL) {
           locals->append(second);
@@ -802,7 +802,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
         locals->append(first);
       } else if (i < local_count + expression_count) {
         oop kind = slotKinds->obj_at(i);
-        BasicType type = JVMCIRuntime::kindToBasicType(Kind::typeChar(kind));
+        BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(kind));
         ScopeValue* first = get_scope_value(value, type, objects, second);
         if (second != NULL) {
           expressions->append(second);

@@ -69,7 +69,7 @@ public class BytecodeFrame extends BytecodePosition {
      * An array describing the Java kind of the {@link #values}. It records a kind for the locals
      * and the operand stack.
      */
-    public final Kind[] slotKinds;
+    public final JavaKind[] slotKinds;
 
     /**
      * The number of locals in the values array.
@@ -175,7 +175,7 @@ public class BytecodeFrame extends BytecodePosition {
      * @param numStack the depth of the stack
      * @param numLocks the number of locked objects
      */
-    public BytecodeFrame(BytecodeFrame caller, ResolvedJavaMethod method, int bci, boolean rethrowException, boolean duringCall, JavaValue[] values, Kind[] slotKinds, int numLocals, int numStack,
+    public BytecodeFrame(BytecodeFrame caller, ResolvedJavaMethod method, int bci, boolean rethrowException, boolean duringCall, JavaValue[] values, JavaKind[] slotKinds, int numLocals, int numStack,
                     int numLocks) {
         super(caller, method, bci);
         assert values != null;
@@ -200,10 +200,10 @@ public class BytecodeFrame extends BytecodePosition {
         }
         for (int i = 0; i < numLocals + numStack; i++) {
             if (values[i] != null) {
-                Kind kind = slotKinds[i];
+                JavaKind kind = slotKinds[i];
                 if (kind.needsTwoSlots()) {
                     assert slotKinds.length > i + 1 : String.format("missing second word %s", this);
-                    assert slotKinds[i + 1] == Kind.Illegal : this;
+                    assert slotKinds[i + 1] == JavaKind.Illegal : this;
                 }
             }
         }

@@ -179,7 +179,7 @@ void jvmci_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(BytecodeFrame)                                                                                                                                   \
     objArrayOop_field(BytecodeFrame, values, "[Ljdk/internal/jvmci/meta/JavaValue;")                                                                           \
-    objArrayOop_field(BytecodeFrame, slotKinds, "[Ljdk/internal/jvmci/meta/Kind;")                                                                             \
+    objArrayOop_field(BytecodeFrame, slotKinds, "[Ljdk/internal/jvmci/meta/JavaKind;")                                                                         \
     int_field(BytecodeFrame, numLocals)                                                                                                                        \
     int_field(BytecodeFrame, numStack)                                                                                                                         \
     int_field(BytecodeFrame, numLocks)                                                                                                                         \
@@ -195,7 +195,7 @@ void jvmci_compute_offsets();
   start_class(JavaConstant)                                                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(PrimitiveConstant)                                                                                                                               \
-    oop_field(PrimitiveConstant, kind, "Ljdk/internal/jvmci/meta/Kind;")                                                                                       \
+    oop_field(PrimitiveConstant, kind, "Ljdk/internal/jvmci/meta/JavaKind;")                                                                                   \
     long_field(PrimitiveConstant, primitive)                                                                                                                   \
   end_class                                                                                                                                                    \
   start_class(RawConstant)                                                                                                                                     \
@@ -214,14 +214,14 @@ void jvmci_compute_offsets();
     oop_field(HotSpotMetaspaceConstantImpl, metaspaceObject, "Ljava/lang/Object;")                                                                             \
     boolean_field(HotSpotMetaspaceConstantImpl, compressed)                                                                                                    \
   end_class                                                                                                                                                    \
-  start_class(Kind)                                                                                                                                            \
-    char_field(Kind, typeChar)                                                                                                                                 \
-    static_oop_field(Kind, Boolean, "Ljdk/internal/jvmci/meta/Kind;");                                                                                           \
-    static_oop_field(Kind, Byte, "Ljdk/internal/jvmci/meta/Kind;");                                                                                              \
-    static_oop_field(Kind, Char, "Ljdk/internal/jvmci/meta/Kind;");                                                                                              \
-    static_oop_field(Kind, Short, "Ljdk/internal/jvmci/meta/Kind;");                                                                                             \
-    static_oop_field(Kind, Int, "Ljdk/internal/jvmci/meta/Kind;");                                                                                               \
-    static_oop_field(Kind, Long, "Ljdk/internal/jvmci/meta/Kind;");                                                                                              \
+  start_class(JavaKind)                                                                                                                                        \
+    char_field(JavaKind, typeChar)                                                                                                                             \
+    static_oop_field(JavaKind, Boolean, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                 \
+    static_oop_field(JavaKind, Byte, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                    \
+    static_oop_field(JavaKind, Char, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                    \
+    static_oop_field(JavaKind, Short, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                   \
+    static_oop_field(JavaKind, Int, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                     \
+    static_oop_field(JavaKind, Long, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                    \
   end_class                                                                                                                                                    \
   start_class(LIRKind)                                                                                                                                         \
     oop_field(LIRKind, platformKind, "Ljdk/internal/jvmci/meta/PlatformKind;")                                                                                   \
@@ -250,7 +250,7 @@ void jvmci_compute_offsets();
     int_field(VirtualObject, id)                                                                                                                               \
     oop_field(VirtualObject, type, "Ljdk/internal/jvmci/meta/ResolvedJavaType;")                                                                               \
     objArrayOop_field(VirtualObject, values, "[Ljdk/internal/jvmci/meta/JavaValue;")                                                                           \
-    objArrayOop_field(VirtualObject, slotKinds, "[Ljdk/internal/jvmci/meta/Kind;")                                                                             \
+    objArrayOop_field(VirtualObject, slotKinds, "[Ljdk/internal/jvmci/meta/JavaKind;")                                                                         \
   end_class                                                                                                                                                    \
   start_class(StackLockValue)                                                                                                                                  \
     oop_field(StackLockValue, owner, "Ljdk/internal/jvmci/meta/JavaValue;")                                                                                    \

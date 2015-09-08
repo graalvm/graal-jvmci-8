@@ -51,7 +51,7 @@ public class TargetDescription {
     /**
      * The kind to be used for representing raw pointers and CPU registers.
      */
-    public final Kind wordKind;
+    public final JavaKind wordKind;
 
     /**
      * The stack alignment requirement of the platform. For example, from Appendix D of <a
@@ -77,7 +77,7 @@ public class TargetDescription {
         this.arch = arch;
         this.isMP = isMP;
         this.wordSize = arch.getWordSize();
-        this.wordKind = Kind.fromWordSize(wordSize);
+        this.wordKind = JavaKind.fromWordSize(wordSize);
         this.stackAlignment = stackAlignment;
         this.implicitNullCheckLimit = implicitNullCheckLimit;
         this.inlineObjects = inlineObjects;
@@ -119,7 +119,7 @@ public class TargetDescription {
         return kind.getSizeInBytes();
     }
 
-    public LIRKind getLIRKind(Kind javaKind) {
+    public LIRKind getLIRKind(JavaKind javaKind) {
         PlatformKind platformKind = arch.getPlatformKind(javaKind);
         if (javaKind.isObject()) {
             return LIRKind.reference(platformKind);

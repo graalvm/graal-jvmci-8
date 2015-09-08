@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -137,7 +137,7 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider {
      */
     default boolean isJavaLangObject() {
         // Removed assertion due to https://bugs.eclipse.org/bugs/show_bug.cgi?id=434442
-        return getSuperclass() == null && !isInterface() && getKind() == Kind.Object;
+        return getSuperclass() == null && !isInterface() && getJavaKind() == JavaKind.Object;
     }
 
     /**
@@ -311,7 +311,7 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider {
      * @param offset the offset of the field to look for
      * @return the field with the given offset, or {@code null} if there is no such field.
      */
-    ResolvedJavaField findInstanceFieldWithOffset(long offset, Kind expectedKind);
+    ResolvedJavaField findInstanceFieldWithOffset(long offset, JavaKind expectedKind);
 
     /**
      * Returns name of source file of this type.

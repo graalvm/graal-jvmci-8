@@ -30,7 +30,7 @@ import java.nio.*;
  */
 public class PrimitiveConstant implements JavaConstant, SerializableConstant {
 
-    private final Kind kind;
+    private final JavaKind kind;
 
     /**
      * The boxed primitive value as a {@code long}. For {@code float} and {@code double} values,
@@ -39,15 +39,15 @@ public class PrimitiveConstant implements JavaConstant, SerializableConstant {
      */
     private final long primitive;
 
-    protected PrimitiveConstant(Kind kind, long primitive) {
+    protected PrimitiveConstant(JavaKind kind, long primitive) {
         this.primitive = primitive;
         this.kind = kind;
 
-        assert kind.isPrimitive() || kind == Kind.Illegal;
+        assert kind.isPrimitive() || kind == JavaKind.Illegal;
     }
 
     @Override
-    public Kind getKind() {
+    public JavaKind getJavaKind() {
         return kind;
     }
 
@@ -63,37 +63,37 @@ public class PrimitiveConstant implements JavaConstant, SerializableConstant {
 
     @Override
     public boolean asBoolean() {
-        assert getKind() == Kind.Boolean;
+        assert getJavaKind() == JavaKind.Boolean;
         return primitive != 0L;
     }
 
     @Override
     public int asInt() {
-        assert getKind().getStackKind() == Kind.Int : getKind().getStackKind();
+        assert getJavaKind().getStackKind() == JavaKind.Int : getJavaKind().getStackKind();
         return (int) primitive;
     }
 
     @Override
     public long asLong() {
-        assert getKind().isNumericInteger();
+        assert getJavaKind().isNumericInteger();
         return primitive;
     }
 
     @Override
     public float asFloat() {
-        assert getKind() == Kind.Float;
+        assert getJavaKind() == JavaKind.Float;
         return Float.intBitsToFloat((int) primitive);
     }
 
     @Override
     public double asDouble() {
-        assert getKind() == Kind.Double;
+        assert getJavaKind() == JavaKind.Double;
         return Double.longBitsToDouble(primitive);
     }
 
     @Override
     public Object asBoxedPrimitive() {
-        switch (getKind()) {
+        switch (getJavaKind()) {
             case Byte:
                 return Byte.valueOf((byte) primitive);
             case Boolean:
@@ -111,18 +111,18 @@ public class PrimitiveConstant implements JavaConstant, SerializableConstant {
             case Double:
                 return Double.valueOf(asDouble());
             default:
-                throw new IllegalArgumentException("unexpected kind " + getKind());
+                throw new IllegalArgumentException("unexpected kind " + getJavaKind());
         }
     }
 
     @Override
     public int getSerializedSize() {
-        return getKind().getByteCount();
+        return getJavaKind().getByteCount();
     }
 
     @Override
     public void serialize(ByteBuffer buffer) {
-        switch (getKind()) {
+        switch (getJavaKind()) {
             case Byte:
             case Boolean:
                 buffer.put((byte) primitive);
@@ -146,13 +146,13 @@ public class PrimitiveConstant implements JavaConstant, SerializableConstant {
                 buffer.putDouble(asDouble());
                 break;
             default:
-                throw new IllegalArgumentException("unexpected kind " + getKind());
+                throw new IllegalArgumentException("unexpected kind " + getJavaKind());
         }
     }
 
     @Override
     public int hashCode() {
-        return (int) (primitive ^ (primitive >>> 32)) * (getKind().ordinal() + 31);
+        return (int) (primitive ^ (primitive >>> 32)) * (getJavaKind().ordinal() + 31);
     }
 
     @Override
@@ -169,10 +169,10 @@ public class PrimitiveConstant implements JavaConstant, SerializableConstant {
 
     @Override
     public String toString() {
-        if (getKind() == Kind.Illegal) {
+        if (getJavaKind() == JavaKind.Illegal) {
             return "illegal";
         } else {
-            return getKind().getJavaName() + "[" + asBoxedPrimitive() + "|0x" + Long.toHexString(primitive) + "]";
+            return getJavaKind().getJavaName() + "[" + asBoxedPrimitive() + "|0x" + Long.toHexString(primitive) + "]";
         }
     }
 }

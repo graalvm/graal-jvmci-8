@@ -77,7 +77,7 @@
   do_klass(RawConstant_klass,                            jdk_internal_jvmci_meta_RawConstant,                            Jvmci) \
   do_klass(NullConstant_klass,                           jdk_internal_jvmci_meta_NullConstant,                           Jvmci) \
   do_klass(ExceptionHandler_klass,                       jdk_internal_jvmci_meta_ExceptionHandler,                       Jvmci) \
-  do_klass(Kind_klass,                                   jdk_internal_jvmci_meta_Kind,                                   Jvmci) \
+  do_klass(JavaKind_klass,                               jdk_internal_jvmci_meta_JavaKind,                               Jvmci) \
   do_klass(LIRKind_klass,                                jdk_internal_jvmci_meta_LIRKind,                                Jvmci) \
   do_klass(Value_klass,                                  jdk_internal_jvmci_meta_Value,                                  Jvmci)
 #endif

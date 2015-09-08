@@ -28,10 +28,10 @@ import java.lang.reflect.*;
 
 /**
  * Denotes the basic kinds of types in CRI, including the all the Java primitive types, for example,
- * {@link Kind#Int} for {@code int} and {@link Kind#Object} for all object types. A kind has a
- * single character short name, a Java name, and a set of flags further describing its behavior.
+ * {@link JavaKind#Int} for {@code int} and {@link JavaKind#Object} for all object types. A kind has
+ * a single character short name, a Java name, and a set of flags further describing its behavior.
  */
-public enum Kind implements PlatformKind {
+public enum JavaKind implements PlatformKind {
     /** The primitive boolean kind, represented as an int on the stack. */
     Boolean('z', "boolean", 1, true, java.lang.Boolean.TYPE, java.lang.Boolean.class),
 
@@ -70,10 +70,10 @@ public enum Kind implements PlatformKind {
     private final boolean isStackInt;
     private final Class<?> primitiveJavaClass;
     private final Class<?> boxedJavaClass;
-    private final EnumKey<Kind> key = new EnumKey<>(this);
+    private final EnumKey<JavaKind> key = new EnumKey<>(this);
     private final int slotCount;
 
-    private Kind(char typeChar, String javaName, int slotCount, boolean isStackInt, Class<?> primitiveJavaClass, Class<?> boxedJavaClass) {
+    private JavaKind(char typeChar, String javaName, int slotCount, boolean isStackInt, Class<?> primitiveJavaClass, Class<?> boxedJavaClass) {
         this.typeChar = typeChar;
         this.javaName = javaName;
         this.slotCount = slotCount;
@@ -133,7 +133,7 @@ public enum Kind implements PlatformKind {
      *
      * @return the kind used on the operand stack
      */
-    public Kind getStackKind() {
+    public JavaKind getStackKind() {
         if (isStackInt) {
             return Int;
         }
@@ -146,7 +146,7 @@ public enum Kind implements PlatformKind {
      * @return {@code true} if the stack kind is {@link #Int} or {@link #Long}.
      */
     public boolean isNumericInteger() {
-        return isStackInt || this == Kind.Long;
+        return isStackInt || this == JavaKind.Long;
     }
 
     /**
@@ -155,7 +155,7 @@ public enum Kind implements PlatformKind {
      * @return {@code true} if the kind is {@link #Boolean} or {@link #Char}.
      */
     public boolean isUnsigned() {
-        return this == Kind.Boolean || this == Kind.Char;
+        return this == JavaKind.Boolean || this == JavaKind.Char;
     }
 
     /**
@@ -164,7 +164,7 @@ public enum Kind implements PlatformKind {
      * @return {@code true} if this is {@link #Float} or {@link #Double}.
      */
     public boolean isNumericFloat() {
-        return this == Kind.Float || this == Kind.Double;
+        return this == JavaKind.Float || this == JavaKind.Double;
     }
 
     /**
@@ -173,7 +173,7 @@ public enum Kind implements PlatformKind {
      * @return {@code true} if this is {@link #Object}.
      */
     public boolean isObject() {
-        return this == Kind.Object;
+        return this == JavaKind.Object;
     }
 
     /**
@@ -182,13 +182,13 @@ public enum Kind implements PlatformKind {
      * @param typeString the Java type string
      * @return the kind
      */
-    public static Kind fromTypeString(String typeString) {
+    public static JavaKind fromTypeString(String typeString) {
         assert typeString.length() > 0;
         final char first = typeString.charAt(0);
         if (first == '[' || first == 'L') {
-            return Kind.Object;
+            return JavaKind.Object;
         }
-        return Kind.fromPrimitiveOrVoidTypeChar(first);
+        return JavaKind.fromPrimitiveOrVoidTypeChar(first);
     }
 
     /**
@@ -197,12 +197,12 @@ public enum Kind implements PlatformKind {
      * @param wordSizeInBytes the size of a word in bytes
      * @return the kind representing a word value
      */
-    public static Kind fromWordSize(int wordSizeInBytes) {
+    public static JavaKind fromWordSize(int wordSizeInBytes) {
         if (wordSizeInBytes == 8) {
-            return Kind.Long;
+            return JavaKind.Long;
         } else {
             assert wordSizeInBytes == 4 : "Unsupported word size!";
-            return Kind.Int;
+            return JavaKind.Int;
         }
     }
 
@@ -212,7 +212,7 @@ public enum Kind implements PlatformKind {
      * @param ch the character
      * @return the kind
      */
-    public static Kind fromPrimitiveOrVoidTypeChar(char ch) {
+    public static JavaKind fromPrimitiveOrVoidTypeChar(char ch) {
         switch (ch) {
             case 'Z':
                 return Boolean;
@@ -242,7 +242,7 @@ public enum Kind implements PlatformKind {
      * @param klass the class
      * @return the kind
      */
-    public static Kind fromJavaClass(Class<?> klass) {
+    public static JavaKind fromJavaClass(Class<?> klass) {
         if (klass == Boolean.primitiveJavaClass) {
             return Boolean;
         } else if (klass == Byte.primitiveJavaClass) {
@@ -293,7 +293,7 @@ public enum Kind implements PlatformKind {
     }
 
     /**
-     * Marker interface for types that should be {@linkplain Kind#format(Object) formatted} with
+     * Marker interface for types that should be {@linkplain JavaKind#format(Object) formatted} with
      * their {@link Object#toString()} value. Calling {@link Object#toString()} on other objects
      * poses a security risk because it can potentially call user code.
      */
@@ -361,7 +361,7 @@ public enum Kind implements PlatformKind {
                 buf.append(Array.get(array, i));
             } else {
                 Object o = ((Object[]) array)[i];
-                buf.append(Kind.Object.format(o));
+                buf.append(JavaKind.Object.format(o));
             }
             if (i != length - 1) {
                 buf.append(", ");

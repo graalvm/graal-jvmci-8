@@ -149,7 +149,7 @@ public class AMD64 extends Architecture {
     private final EnumSet<Flag> flags;
 
     public AMD64(EnumSet<CPUFeature> features, EnumSet<Flag> flags) {
-        super("AMD64", Kind.Long, ByteOrder.LITTLE_ENDIAN, true, allRegisters, LOAD_STORE | STORE_STORE, 1, cpuRegisters.length + (xmmRegisters.length << XMM_REFERENCE_MAP_SHIFT), 8);
+        super("AMD64", JavaKind.Long, ByteOrder.LITTLE_ENDIAN, true, allRegisters, LOAD_STORE | STORE_STORE, 1, cpuRegisters.length + (xmmRegisters.length << XMM_REFERENCE_MAP_SHIFT), 8);
         this.features = features;
         this.flags = flags;
         assert features.contains(CPUFeature.SSE2) : "minimum config for x64";
@@ -164,7 +164,7 @@ public class AMD64 extends Architecture {
     }
 
     @Override
-    public PlatformKind getPlatformKind(Kind javaKind) {
+    public PlatformKind getPlatformKind(JavaKind javaKind) {
         if (javaKind.isObject()) {
             return getWordKind();
         } else {
@@ -174,11 +174,11 @@ public class AMD64 extends Architecture {
 
     @Override
     public boolean canStoreValue(RegisterCategory category, PlatformKind platformKind) {
-        if (!(platformKind instanceof Kind)) {
+        if (!(platformKind instanceof JavaKind)) {
             return false;
         }
 
-        Kind kind = (Kind) platformKind;
+        JavaKind kind = (JavaKind) platformKind;
         if (category.equals(CPU)) {
             switch (kind) {
                 case Boolean:
@@ -203,11 +203,11 @@ public class AMD64 extends Architecture {
     @Override
     public PlatformKind getLargestStorableKind(RegisterCategory category) {
         if (category.equals(CPU)) {
-            return Kind.Long;
+            return JavaKind.Long;
         } else if (category.equals(XMM)) {
-            return Kind.Double;
+            return JavaKind.Double;
         } else {
-            return Kind.Illegal;
+            return JavaKind.Illegal;
         }
     }
 }

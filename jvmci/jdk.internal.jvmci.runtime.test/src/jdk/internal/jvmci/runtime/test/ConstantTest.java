@@ -48,27 +48,27 @@ public class ConstantTest extends FieldUniverse {
 
     @Test
     public void testOne() {
-        for (Kind kind : Kind.values()) {
+        for (JavaKind kind : JavaKind.values()) {
             if (kind.isNumericInteger() || kind.isNumericFloat()) {
-                Assert.assertTrue(JavaConstant.one(kind).getKind() == kind);
+                Assert.assertTrue(JavaConstant.one(kind).getJavaKind() == kind);
             }
         }
-        Assert.assertEquals(1, JavaConstant.one(Kind.Int).asInt());
-        Assert.assertEquals(1L, JavaConstant.one(Kind.Long).asLong());
-        Assert.assertEquals(1, JavaConstant.one(Kind.Byte).asInt());
-        Assert.assertEquals(1, JavaConstant.one(Kind.Short).asInt());
-        Assert.assertEquals(1, JavaConstant.one(Kind.Char).asInt());
-        Assert.assertTrue(1F == JavaConstant.one(Kind.Float).asFloat());
-        Assert.assertTrue(1D == JavaConstant.one(Kind.Double).asDouble());
+        Assert.assertEquals(1, JavaConstant.one(JavaKind.Int).asInt());
+        Assert.assertEquals(1L, JavaConstant.one(JavaKind.Long).asLong());
+        Assert.assertEquals(1, JavaConstant.one(JavaKind.Byte).asInt());
+        Assert.assertEquals(1, JavaConstant.one(JavaKind.Short).asInt());
+        Assert.assertEquals(1, JavaConstant.one(JavaKind.Char).asInt());
+        Assert.assertTrue(1F == JavaConstant.one(JavaKind.Float).asFloat());
+        Assert.assertTrue(1D == JavaConstant.one(JavaKind.Double).asDouble());
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testIllegalOne() {
-        JavaConstant.one(Kind.Illegal);
+        JavaConstant.one(JavaKind.Illegal);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testVoidOne() {
-        JavaConstant.one(Kind.Void);
+        JavaConstant.one(JavaKind.Void);
     }
 }

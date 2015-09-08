@@ -112,8 +112,8 @@ public class HotSpotSignature implements Signature {
     }
 
     @Override
-    public Kind getParameterKind(int index) {
-        return Kind.fromTypeString(parameters.get(index));
+    public JavaKind getParameterKind(int index) {
+        return JavaKind.fromTypeString(parameters.get(index));
     }
 
     private static boolean checkValidCache(ResolvedJavaType type, ResolvedJavaType accessingClass) {
@@ -128,7 +128,7 @@ public class HotSpotSignature implements Signature {
 
     private static JavaType getUnresolvedOrPrimitiveType(HotSpotJVMCIRuntimeProvider runtime, String name) {
         if (name.length() == 1) {
-            Kind kind = Kind.fromPrimitiveOrVoidTypeChar(name.charAt(0));
+            JavaKind kind = JavaKind.fromPrimitiveOrVoidTypeChar(name.charAt(0));
             return runtime.getHostJVMCIBackend().getMetaAccess().lookupJavaType(kind.toJavaClass());
         }
         return new HotSpotUnresolvedJavaType(name, runtime);
@@ -165,8 +165,8 @@ public class HotSpotSignature implements Signature {
     }
 
     @Override
-    public Kind getReturnKind() {
-        return Kind.fromTypeString(returnType);
+    public JavaKind getReturnKind() {
+        return JavaKind.fromTypeString(returnType);
     }
 
     @Override

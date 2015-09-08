@@ -70,7 +70,7 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
      *
      * @return the offset in bytes
      */
-    default int getArrayBaseOffset(Kind kind) {
+    default int getArrayBaseOffset(JavaKind kind) {
         switch (kind) {
             case Boolean:
                 return Unsafe.ARRAY_BOOLEAN_BASE_OFFSET;
@@ -100,7 +100,7 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
      *
      * @return the scale in order to convert the index into a byte offset
      */
-    default int getArrayIndexScale(Kind kind) {
+    default int getArrayIndexScale(JavaKind kind) {
         switch (kind) {
             case Boolean:
                 return Unsafe.ARRAY_BOOLEAN_INDEX_SCALE;
