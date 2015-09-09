@@ -46,12 +46,9 @@ public interface HotSpotVMEventListener {
     /**
      * Perform any extra initialization required.
      *
-     * @param hotSpotJVMCIRuntime
-     * @param compilerToVM the current {@link CompilerToVM instance}
-     * @return the original compilerToVM instance or a proxied version.
+     * @param runtime
      */
-    default CompilerToVM completeInitialization(HotSpotJVMCIRuntime hotSpotJVMCIRuntime, CompilerToVM compilerToVM) {
-        return compilerToVM;
+    default void completeInitialization(HotSpotJVMCIRuntime runtime) {
     }
 
     /**

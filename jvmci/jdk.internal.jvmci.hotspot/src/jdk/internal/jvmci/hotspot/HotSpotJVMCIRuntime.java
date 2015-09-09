@@ -44,8 +44,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * initialization of the JVMCI and really should only ever be triggered through
      * {@link JVMCI#getRuntime}. However since {@link #runtime} can also be called directly it
      * should also trigger proper initialization. To ensure proper ordering, the static initializer
-     * of this class initializes {@link JVMCI} and then access to {@link Once#instance} triggers the
-     * final initialization of the {@link HotSpotJVMCIRuntime}.
+     * of this class initializes {@link JVMCI} and then access to {@link DelayedInit#instance}
+     * triggers the final initialization of the {@link HotSpotJVMCIRuntime}.
      */
     static {
         JVMCI.initialize();
@@ -68,7 +68,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
                 }
 
                 try (InitTimer t = timer("HotSpotJVMCIRuntime.completeInitialization")) {
-                    // Why deferred initialization? See comment in completeInitialization().
                     instance.completeInitialization();
                 }
             }
@@ -88,21 +87,9 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     public void completeInitialization() {
         compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
-
-        // Proxies for the VM/Compiler interfaces cannot be initialized
-        // in the constructor as proxy creation causes static
-        // initializers to be executed for all the types involved in the
-        // proxied methods. Some of these static initializers (e.g. in
-        // HotSpotMethodData) rely on the static 'instance' field being set
-        // to retrieve configuration details.
-
-        CompilerToVM toVM = this.compilerToVm;
-
         for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
-            toVM = vmEventListener.completeInitialization(this, toVM);
+            vmEventListener.completeInitialization(this);
         }
-
-        this.compilerToVm = toVM;
     }
 
     public static HotSpotJVMCIBackendFactory findFactory(String architecture) {
@@ -122,7 +109,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         return runtime().getHostJVMCIBackend().getCodeCache().getTarget().wordKind;
     }
 
-    protected/* final */CompilerToVM compilerToVm;
+    protected final CompilerToVM compilerToVm;
 
     protected final HotSpotVMConfig config;
     private final JVMCIBackend hostBackend;
