@@ -76,8 +76,8 @@ public class HotSpotVMConfig {
         oopEncoding = new CompressEncoding(narrowOopBase, narrowOopShift, logMinObjAlignment());
         klassEncoding = new CompressEncoding(narrowKlassBase, narrowKlassShift, logKlassAlignment);
 
-        codeCacheLowBoundary = unsafe.getAddress(codeCacheHeap + codeHeapMemoryOffset + virtualSpaceLowBoundaryOffset);
-        codeCacheHighBoundary = unsafe.getAddress(codeCacheHeap + codeHeapMemoryOffset + virtualSpaceHighBoundaryOffset);
+        codeCacheLowBound = unsafe.getAddress(codeCacheHeap + codeHeapMemoryOffset + virtualSpaceLowBoundaryOffset);
+        codeCacheHighBound = unsafe.getAddress(codeCacheHeap + codeHeapMemoryOffset + virtualSpaceHighBoundaryOffset);
 
         final long barrierSetAddress = unsafe.getAddress(universeCollectedHeap + collectedHeapBarrierSetOffset);
         final int kind = unsafe.getInt(barrierSetAddress + barrierSetKindOffset);
@@ -862,7 +862,16 @@ public class HotSpotVMConfig {
     /**
      * The offset of the array length word in an array object's header.
      */
-    @HotSpotVMValue(expression = "arrayOopDesc::length_offset_in_bytes()") @Stable public int arrayLengthOffset;
+    @HotSpotVMValue(expression = "arrayOopDesc::length_offset_in_bytes()") @Stable private int arrayLengthOffset;
+
+    /**
+     * The offset of the array length word in an array object's header.
+     *
+     * See {@code arrayOopDesc::length_offset_in_bytes()}.
+     */
+    public final int arrayOopDescLengthOffset() {
+        return arrayLengthOffset;
+    }
 
     @HotSpotVMField(name = "Array<int>::_length", type = "int", get = HotSpotVMField.Type.OFFSET) @Stable public int arrayU1LengthOffset;
     @HotSpotVMField(name = "Array<u1>::_data", type = "", get = HotSpotVMField.Type.OFFSET) @Stable public int arrayU1DataOffset;
@@ -1314,33 +1323,15 @@ public class HotSpotVMConfig {
     @HotSpotVMValue(expression = "SharedRuntime::deopt_blob()->unpack()", get = HotSpotVMValue.Type.ADDRESS) @Stable public long handleDeoptStub;
     @HotSpotVMValue(expression = "SharedRuntime::deopt_blob()->uncommon_trap()", get = HotSpotVMValue.Type.ADDRESS) @Stable public long uncommonTrapStub;
 
-    private final long inlineCacheMissStub;
-
-    public long inlineCacheMissStub() {
-        return inlineCacheMissStub;
-    }
+    public final long inlineCacheMissStub;
 
     @HotSpotVMField(name = "CodeCache::_heap", type = "CodeHeap*", get = HotSpotVMField.Type.VALUE) @Stable private long codeCacheHeap;
     @HotSpotVMField(name = "CodeHeap::_memory", type = "VirtualSpace", get = HotSpotVMField.Type.OFFSET) @Stable private int codeHeapMemoryOffset;
     @HotSpotVMField(name = "VirtualSpace::_low_boundary", type = "char*", get = HotSpotVMField.Type.OFFSET) @Stable private int virtualSpaceLowBoundaryOffset;
     @HotSpotVMField(name = "VirtualSpace::_high_boundary", type = "char*", get = HotSpotVMField.Type.OFFSET) @Stable private int virtualSpaceHighBoundaryOffset;
 
-    private final long codeCacheLowBoundary;
-    private final long codeCacheHighBoundary;
-
-    /**
-     * @return CodeCache::_heap-&gt;_memory._low_boundary
-     */
-    public long codeCacheLowBoundary() {
-        return codeCacheLowBoundary;
-    }
-
-    /**
-     * @return CodeCache::_heap-&gt;_memory._high_boundary
-     */
-    public long codeCacheHighBoundary() {
-        return codeCacheHighBoundary;
-    }
+    public final long codeCacheLowBound;
+    public final long codeCacheHighBound;
 
     @HotSpotVMField(name = "StubRoutines::_aescrypt_encryptBlock", type = "address", get = HotSpotVMField.Type.VALUE) @Stable public long aescryptEncryptBlockStub;
     @HotSpotVMField(name = "StubRoutines::_aescrypt_decryptBlock", type = "address", get = HotSpotVMField.Type.VALUE) @Stable public long aescryptDecryptBlockStub;
