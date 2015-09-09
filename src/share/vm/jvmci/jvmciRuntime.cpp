@@ -724,10 +724,20 @@ void JVMCIRuntime::initialize_JVMCI() {
 }
 
 void JVMCIRuntime::metadata_do(void f(Metadata*)) {
-  if (!is_HotSpotJVMCIRuntime_initialized()) {
-    assert(HotSpotJVMCIMetaAccessContext::klass() == NULL ||
-           !HotSpotJVMCIMetaAccessContext::klass()->is_linked() ||
-           HotSpotJVMCIMetaAccessContext::allContexts() == NULL, "shouldn't be anything registered yet");
+  // For simplicity, the existence of HotSpotJVMCIMetaAccessContext in
+  // the SystemDictionary well known classes should ensure the other
+  // classes have already been loaded, so make sure their order in the
+  // table enforces that.
+  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotResolvedJavaMethodImpl) <
+         SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
+  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotConstantPool) <
+         SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
+  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotResolvedObjectTypeImpl) <
+         SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
+
+  if (HotSpotJVMCIMetaAccessContext::klass() == NULL ||
+      !HotSpotJVMCIMetaAccessContext::klass()->is_linked()) {
+    // Nothing could be registered yet
     return;
   }
 
@@ -736,6 +746,12 @@ void JVMCIRuntime::metadata_do(void f(Metadata*)) {
   if (allContexts == NULL) {
     return;
   }
+
+  // These must be loaded at this point but the linking state doesn't matter.
+  assert(SystemDictionary::HotSpotResolvedJavaMethodImpl_klass() != NULL, "must be loaded");
+  assert(SystemDictionary::HotSpotConstantPool_klass() != NULL, "must be loaded");
+  assert(SystemDictionary::HotSpotResolvedObjectTypeImpl_klass() != NULL, "must be loaded");
+  
   for (int i = 0; i < allContexts->length(); i++) {
     oop ref = allContexts->obj_at(i);
     if (ref != NULL) {
