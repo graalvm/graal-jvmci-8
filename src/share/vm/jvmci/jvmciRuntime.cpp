@@ -399,11 +399,11 @@ JRT_ENTRY(void, JVMCIRuntime::create_out_of_bounds_exception(JavaThread* thread,
 JRT_END
 
 JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc* obj, BasicLock* lock))
-  if (TraceJVMCI >= 3) {
+  IF_TRACE_jvmci_3 {
     char type[O_BUFLEN];
     obj->klass()->name()->as_C_string(type, O_BUFLEN);
     markOop mark = obj->mark();
-    tty->print_cr("%s: entered locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(mark), p2i(lock));
+    TRACE_jvmci_3("%s: entered locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(mark), p2i(lock));
     tty->flush();
   }
 #ifdef ASSERT
@@ -424,9 +424,7 @@ JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc*
       ObjectSynchronizer::fast_enter(h_obj, lock, false, THREAD);
     }
   }
-  if (TraceJVMCI >= 3) {
-    tty->print_cr("%s: exiting locking slow with obj=" INTPTR_FORMAT, thread->name(), p2i(obj));
-  }
+  TRACE_jvmci_3("%s: exiting locking slow with obj=" INTPTR_FORMAT, thread->name(), p2i(obj));
 JRT_END
 
 JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, BasicLock* lock))
@@ -453,10 +451,10 @@ JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
   } else {
     ObjectSynchronizer::fast_exit(obj, lock, THREAD);
   }
-  if (TraceJVMCI >= 3) {
+  IF_TRACE_jvmci_3 {
     char type[O_BUFLEN];
     obj->klass()->name()->as_C_string(type, O_BUFLEN);
-    tty->print_cr("%s: exited locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(obj->mark()), p2i(lock));
+    TRACE_jvmci_3("%s: exited locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(obj->mark()), p2i(lock));
     tty->flush();
   }
 JRT_END

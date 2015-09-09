@@ -748,9 +748,7 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
     bci = SynchronizationEntryBCI;
   }
 
-  if (TraceJVMCI >= 2) {
-    tty->print_cr("Recording scope pc_offset=%d bci=%d method=%s", pc_offset, bci, method->name_and_sig_as_C_string());
-  }
+  TRACE_jvmci_2("Recording scope pc_offset=%d bci=%d method=%s", pc_offset, bci, method->name_and_sig_as_C_string());
 
   bool reexecute = false;
   if (frame != NULL) {
@@ -784,10 +782,8 @@ void CodeInstaller::record_scope(jint pc_offset, oop position, GrowableArray<Sco
     GrowableArray<ScopeValue*>* expressions = expression_count > 0 ? new GrowableArray<ScopeValue*> (expression_count) : NULL;
     GrowableArray<MonitorValue*>* monitors = monitor_count > 0 ? new GrowableArray<MonitorValue*> (monitor_count) : NULL;
 
-    if (TraceJVMCI >= 2) {
-      tty->print_cr("Scope at bci %d with %d values", bci, values->length());
-      tty->print_cr("%d locals %d expressions, %d monitors", local_count, expression_count, monitor_count);
-    }
+    TRACE_jvmci_2("Scope at bci %d with %d values", bci, values->length());
+    TRACE_jvmci_2("%d locals %d expressions, %d monitors", local_count, expression_count, monitor_count);
 
     for (jint i = 0; i < values->length(); i++) {
       ScopeValue* second = NULL;
