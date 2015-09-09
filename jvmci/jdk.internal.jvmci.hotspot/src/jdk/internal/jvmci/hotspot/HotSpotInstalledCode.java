@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 import jdk.internal.jvmci.code.InstalledCode;
 import jdk.internal.jvmci.inittimer.SuppressFBWarnings;
 import sun.misc.Unsafe;
@@ -66,7 +66,7 @@ public abstract class HotSpotInstalledCode extends InstalledCode {
             return null;
         }
         byte[] blob = new byte[size];
-        unsafe.copyMemory(null, getAddress(), blob, Unsafe.ARRAY_BYTE_BASE_OFFSET, size);
+        UNSAFE.copyMemory(null, getAddress(), blob, Unsafe.ARRAY_BYTE_BASE_OFFSET, size);
         return blob;
     }
 
@@ -89,7 +89,7 @@ public abstract class HotSpotInstalledCode extends InstalledCode {
             return null;
         }
         byte[] code = new byte[codeSize];
-        unsafe.copyMemory(null, codeStart, code, Unsafe.ARRAY_BYTE_BASE_OFFSET, codeSize);
+        UNSAFE.copyMemory(null, codeStart, code, Unsafe.ARRAY_BYTE_BASE_OFFSET, codeSize);
         return code;
     }
 }

@@ -23,7 +23,7 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 import sun.misc.*;
 
 /**
@@ -43,6 +43,6 @@ public final class HotSpotVmSymbols {
         HotSpotVMConfig config = runtime.getConfig();
         assert config.vmSymbolsFirstSID <= index && index < config.vmSymbolsSIDLimit : "index " + index + " is out of bounds";
         assert config.symbolPointerSize == Unsafe.ADDRESS_SIZE : "the following address read is broken";
-        return runtime.getCompilerToVM().getSymbol(unsafe.getAddress(config.vmSymbolsSymbols + index * config.symbolPointerSize));
+        return runtime.getCompilerToVM().getSymbol(UNSAFE.getAddress(config.vmSymbolsSymbols + index * config.symbolPointerSize));
     }
 }

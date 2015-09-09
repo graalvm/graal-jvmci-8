@@ -24,7 +24,7 @@ package jdk.internal.jvmci.hotspot;
 
 import static java.lang.String.*;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.util.*;
 
@@ -78,7 +78,7 @@ public final class HotSpotMethodData {
      * @return value of the MethodData::_data_size field
      */
     private int normalDataSize() {
-        return unsafe.getInt(metaspaceMethodData + config.methodDataDataSize);
+        return UNSAFE.getInt(metaspaceMethodData + config.methodDataDataSize);
     }
 
     /**
@@ -89,7 +89,7 @@ public final class HotSpotMethodData {
      */
     private int extraDataSize() {
         final int extraDataBase = config.methodDataOopDataOffset + normalDataSize();
-        final int extraDataLimit = unsafe.getInt(metaspaceMethodData + config.methodDataSize);
+        final int extraDataLimit = UNSAFE.getInt(metaspaceMethodData + config.methodDataSize);
         return extraDataLimit - extraDataBase;
     }
 
@@ -112,13 +112,13 @@ public final class HotSpotMethodData {
     public int getDeoptimizationCount(DeoptimizationReason reason) {
         HotSpotMetaAccessProvider metaAccess = (HotSpotMetaAccessProvider) runtime().getHostJVMCIBackend().getMetaAccess();
         int reasonIndex = metaAccess.convertDeoptReason(reason);
-        return unsafe.getByte(metaspaceMethodData + config.methodDataOopTrapHistoryOffset + reasonIndex) & 0xFF;
+        return UNSAFE.getByte(metaspaceMethodData + config.methodDataOopTrapHistoryOffset + reasonIndex) & 0xFF;
     }
 
     public int getOSRDeoptimizationCount(DeoptimizationReason reason) {
         HotSpotMetaAccessProvider metaAccess = (HotSpotMetaAccessProvider) runtime().getHostJVMCIBackend().getMetaAccess();
         int reasonIndex = metaAccess.convertDeoptReason(reason);
-        return unsafe.getByte(metaspaceMethodData + config.methodDataOopTrapHistoryOffset + config.deoptReasonOSROffset + reasonIndex) & 0xFF;
+        return UNSAFE.getByte(metaspaceMethodData + config.methodDataOopTrapHistoryOffset + config.deoptReasonOSROffset + reasonIndex) & 0xFF;
     }
 
     public HotSpotMethodDataAccessor getNormalData(int position) {
@@ -160,12 +160,12 @@ public final class HotSpotMethodData {
 
     private int readUnsignedByte(int position, int offsetInBytes) {
         long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
-        return unsafe.getByte(metaspaceMethodData + fullOffsetInBytes) & 0xFF;
+        return UNSAFE.getByte(metaspaceMethodData + fullOffsetInBytes) & 0xFF;
     }
 
     private int readUnsignedShort(int position, int offsetInBytes) {
         long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
-        return unsafe.getShort(metaspaceMethodData + fullOffsetInBytes) & 0xFFFF;
+        return UNSAFE.getShort(metaspaceMethodData + fullOffsetInBytes) & 0xFFFF;
     }
 
     /**
@@ -174,7 +174,7 @@ public final class HotSpotMethodData {
      */
     private long readUnsignedInt(int position, int offsetInBytes) {
         long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
-        return unsafe.getAddress(metaspaceMethodData + fullOffsetInBytes) & 0xFFFFFFFFL;
+        return UNSAFE.getAddress(metaspaceMethodData + fullOffsetInBytes) & 0xFFFFFFFFL;
     }
 
     private int readUnsignedIntAsSignedInt(int position, int offsetInBytes) {
@@ -188,7 +188,7 @@ public final class HotSpotMethodData {
      */
     private int readInt(int position, int offsetInBytes) {
         long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
-        return (int) unsafe.getAddress(metaspaceMethodData + fullOffsetInBytes);
+        return (int) UNSAFE.getAddress(metaspaceMethodData + fullOffsetInBytes);
     }
 
     private HotSpotResolvedJavaMethod readMethod(int position, int offsetInBytes) {
@@ -855,10 +855,10 @@ public final class HotSpotMethodData {
     }
 
     public void setCompiledIRSize(int size) {
-        unsafe.putInt(metaspaceMethodData + config.methodDataIRSizeOffset, size);
+        UNSAFE.putInt(metaspaceMethodData + config.methodDataIRSizeOffset, size);
     }
 
     public int getCompiledIRSize() {
-        return unsafe.getInt(metaspaceMethodData + config.methodDataIRSizeOffset);
+        return UNSAFE.getInt(metaspaceMethodData + config.methodDataIRSizeOffset);
     }
 }

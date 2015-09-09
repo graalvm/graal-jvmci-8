@@ -23,7 +23,7 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
-import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.reflect.*;
 
@@ -100,7 +100,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
         // java.lang.reflect.Field's modifiers should be enough here since VM internal modifier bits
         // are not used (yet).
         final int modifiers = reflectionField.getModifiers();
-        final long offset = Modifier.isStatic(modifiers) ? unsafe.staticFieldOffset(reflectionField) : unsafe.objectFieldOffset(reflectionField);
+        final long offset = Modifier.isStatic(modifiers) ? UNSAFE.staticFieldOffset(reflectionField) : UNSAFE.objectFieldOffset(reflectionField);
 
         HotSpotResolvedObjectType holder = fromObjectClass(fieldHolder);
         JavaType type = runtime.fromClass(fieldType);

@@ -23,7 +23,7 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.common.UnsafeUtil.readCString;
-import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.reflect.*;
 import java.util.*;
@@ -76,13 +76,13 @@ public class HotSpotVMConfig {
         oopEncoding = new CompressEncoding(narrowOopBase, narrowOopShift, logMinObjAlignment());
         klassEncoding = new CompressEncoding(narrowKlassBase, narrowKlassShift, logKlassAlignment);
 
-        codeCacheLowBound = unsafe.getAddress(codeCacheHeap + codeHeapMemoryOffset + virtualSpaceLowBoundaryOffset);
-        codeCacheHighBound = unsafe.getAddress(codeCacheHeap + codeHeapMemoryOffset + virtualSpaceHighBoundaryOffset);
+        codeCacheLowBound = UNSAFE.getAddress(codeCacheHeap + codeHeapMemoryOffset + virtualSpaceLowBoundaryOffset);
+        codeCacheHighBound = UNSAFE.getAddress(codeCacheHeap + codeHeapMemoryOffset + virtualSpaceHighBoundaryOffset);
 
-        final long barrierSetAddress = unsafe.getAddress(universeCollectedHeap + collectedHeapBarrierSetOffset);
-        final int kind = unsafe.getInt(barrierSetAddress + barrierSetKindOffset);
+        final long barrierSetAddress = UNSAFE.getAddress(universeCollectedHeap + collectedHeapBarrierSetOffset);
+        final int kind = UNSAFE.getInt(barrierSetAddress + barrierSetKindOffset);
         if ((kind == barrierSetCardTableModRef) || (kind == barrierSetCardTableExtension) || (kind == barrierSetG1SATBCT) || (kind == barrierSetG1SATBCTLogging)) {
-            final long base = unsafe.getAddress(barrierSetAddress + cardTableModRefBSByteMapBaseOffset);
+            final long base = UNSAFE.getAddress(barrierSetAddress + cardTableModRefBSByteMapBaseOffset);
             assert base != 0 : "unexpected byte_map_base: " + base;
             cardtableStartAddress = base;
             cardtableShift = cardTableModRefBSCardShift;
@@ -95,7 +95,7 @@ public class HotSpotVMConfig {
             cardtableShift = -1;
         }
 
-        inlineCacheMissStub = inlineCacheMissBlob + unsafe.getInt(inlineCacheMissBlob + codeBlobCodeOffsetOffset);
+        inlineCacheMissStub = inlineCacheMissBlob + UNSAFE.getInt(inlineCacheMissBlob + codeBlobCodeOffsetOffset);
 
         assert check();
         assert HotSpotVMConfigVerifier.check();
@@ -329,30 +329,30 @@ public class HotSpotVMConfig {
             }
 
             public String getTypeName() {
-                long typeNameAddress = unsafe.getAddress(entryAddress + gHotSpotVMStructEntryTypeNameOffset);
-                return readCString(unsafe, typeNameAddress);
+                long typeNameAddress = UNSAFE.getAddress(entryAddress + gHotSpotVMStructEntryTypeNameOffset);
+                return readCString(UNSAFE, typeNameAddress);
             }
 
             public String getFieldName() {
-                long fieldNameAddress = unsafe.getAddress(entryAddress + gHotSpotVMStructEntryFieldNameOffset);
-                return readCString(unsafe, fieldNameAddress);
+                long fieldNameAddress = UNSAFE.getAddress(entryAddress + gHotSpotVMStructEntryFieldNameOffset);
+                return readCString(UNSAFE, fieldNameAddress);
             }
 
             public String getTypeString() {
-                long typeStringAddress = unsafe.getAddress(entryAddress + gHotSpotVMStructEntryTypeStringOffset);
-                return readCString(unsafe, typeStringAddress);
+                long typeStringAddress = UNSAFE.getAddress(entryAddress + gHotSpotVMStructEntryTypeStringOffset);
+                return readCString(UNSAFE, typeStringAddress);
             }
 
             public boolean isStatic() {
-                return unsafe.getInt(entryAddress + gHotSpotVMStructEntryIsStaticOffset) != 0;
+                return UNSAFE.getInt(entryAddress + gHotSpotVMStructEntryIsStaticOffset) != 0;
             }
 
             public long getOffset() {
-                return unsafe.getLong(entryAddress + gHotSpotVMStructEntryOffsetOffset);
+                return UNSAFE.getLong(entryAddress + gHotSpotVMStructEntryOffsetOffset);
             }
 
             public long getAddress() {
-                return unsafe.getAddress(entryAddress + gHotSpotVMStructEntryAddressOffset);
+                return UNSAFE.getAddress(entryAddress + gHotSpotVMStructEntryAddressOffset);
             }
 
             public String getName() {
@@ -365,14 +365,14 @@ public class HotSpotVMConfig {
                 String type = getTypeString();
                 switch (type) {
                     case "int":
-                        return unsafe.getInt(getAddress());
+                        return UNSAFE.getInt(getAddress());
                     case "address":
                     case "intptr_t":
-                        return unsafe.getAddress(getAddress());
+                        return UNSAFE.getAddress(getAddress());
                     default:
                         // All foo* types are addresses.
                         if (type.endsWith("*")) {
-                            return unsafe.getAddress(getAddress());
+                            return UNSAFE.getAddress(getAddress());
                         }
                         throw new JVMCIError(type);
                 }
@@ -440,29 +440,29 @@ public class HotSpotVMConfig {
             }
 
             public String getTypeName() {
-                long typeNameAddress = unsafe.getAddress(entryAddress + gHotSpotVMTypeEntryTypeNameOffset);
-                return readCString(unsafe, typeNameAddress);
+                long typeNameAddress = UNSAFE.getAddress(entryAddress + gHotSpotVMTypeEntryTypeNameOffset);
+                return readCString(UNSAFE, typeNameAddress);
             }
 
             public String getSuperclassName() {
-                long superclassNameAddress = unsafe.getAddress(entryAddress + gHotSpotVMTypeEntrySuperclassNameOffset);
-                return readCString(unsafe, superclassNameAddress);
+                long superclassNameAddress = UNSAFE.getAddress(entryAddress + gHotSpotVMTypeEntrySuperclassNameOffset);
+                return readCString(UNSAFE, superclassNameAddress);
             }
 
             public boolean isOopType() {
-                return unsafe.getInt(entryAddress + gHotSpotVMTypeEntryIsOopTypeOffset) != 0;
+                return UNSAFE.getInt(entryAddress + gHotSpotVMTypeEntryIsOopTypeOffset) != 0;
             }
 
             public boolean isIntegerType() {
-                return unsafe.getInt(entryAddress + gHotSpotVMTypeEntryIsIntegerTypeOffset) != 0;
+                return UNSAFE.getInt(entryAddress + gHotSpotVMTypeEntryIsIntegerTypeOffset) != 0;
             }
 
             public boolean isUnsigned() {
-                return unsafe.getInt(entryAddress + gHotSpotVMTypeEntryIsUnsignedOffset) != 0;
+                return UNSAFE.getInt(entryAddress + gHotSpotVMTypeEntryIsUnsignedOffset) != 0;
             }
 
             public long getSize() {
-                return unsafe.getLong(entryAddress + gHotSpotVMTypeEntrySizeOffset);
+                return UNSAFE.getLong(entryAddress + gHotSpotVMTypeEntrySizeOffset);
             }
 
             @Override
@@ -486,8 +486,8 @@ public class HotSpotVMConfig {
         }
 
         public String getName() {
-            long nameAddress = unsafe.getAddress(address + nameOffset);
-            return readCString(unsafe, nameAddress);
+            long nameAddress = UNSAFE.getAddress(address + nameOffset);
+            return readCString(UNSAFE, nameAddress);
         }
 
         public abstract long getValue();
@@ -542,7 +542,7 @@ public class HotSpotVMConfig {
 
             @Override
             public long getValue() {
-                return unsafe.getInt(address + valueOffset);
+                return UNSAFE.getInt(address + valueOffset);
             }
 
             @Override
@@ -601,7 +601,7 @@ public class HotSpotVMConfig {
 
             @Override
             public long getValue() {
-                return unsafe.getLong(address + valueOffset);
+                return UNSAFE.getLong(address + valueOffset);
             }
 
             @Override
@@ -665,32 +665,32 @@ public class HotSpotVMConfig {
             }
 
             public String getType() {
-                long typeAddress = unsafe.getAddress(entryAddress + typeOffset);
-                return readCString(unsafe, typeAddress);
+                long typeAddress = UNSAFE.getAddress(entryAddress + typeOffset);
+                return readCString(UNSAFE, typeAddress);
             }
 
             public String getName() {
-                long nameAddress = unsafe.getAddress(entryAddress + nameOffset);
-                return readCString(unsafe, nameAddress);
+                long nameAddress = UNSAFE.getAddress(entryAddress + nameOffset);
+                return readCString(UNSAFE, nameAddress);
             }
 
             public long getAddr() {
-                return unsafe.getAddress(entryAddress + addrOffset);
+                return UNSAFE.getAddress(entryAddress + addrOffset);
             }
 
             public Object getValue() {
                 switch (getType()) {
                     case "bool":
-                        return Boolean.valueOf(unsafe.getByte(getAddr()) != 0);
+                        return Boolean.valueOf(UNSAFE.getByte(getAddr()) != 0);
                     case "intx":
                     case "uintx":
                     case "uint64_t":
-                        return Long.valueOf(unsafe.getLong(getAddr()));
+                        return Long.valueOf(UNSAFE.getLong(getAddr()));
                     case "double":
-                        return Double.valueOf(unsafe.getDouble(getAddr()));
+                        return Double.valueOf(UNSAFE.getDouble(getAddr()));
                     case "ccstr":
                     case "ccstrlist":
-                        return readCString(unsafe, getAddr());
+                        return readCString(UNSAFE, getAddr());
                     default:
                         throw new JVMCIError(getType());
                 }

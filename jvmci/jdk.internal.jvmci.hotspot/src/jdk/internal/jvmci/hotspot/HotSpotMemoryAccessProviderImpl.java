@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 import jdk.internal.jvmci.code.TargetDescription;
 import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.hotspot.HotSpotVMConfig.CompressEncoding;
@@ -86,13 +86,13 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
         if (base != null) {
             switch (bits) {
                 case 8:
-                    return unsafe.getByte(base, displacement);
+                    return UNSAFE.getByte(base, displacement);
                 case 16:
-                    return unsafe.getShort(base, displacement);
+                    return UNSAFE.getShort(base, displacement);
                 case 32:
-                    return unsafe.getInt(base, displacement);
+                    return UNSAFE.getInt(base, displacement);
                 case 64:
-                    return unsafe.getLong(base, displacement);
+                    return UNSAFE.getLong(base, displacement);
                 default:
                     throw new JVMCIError("%d", bits);
             }
@@ -100,13 +100,13 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
             long pointer = asRawPointer(baseConstant);
             switch (bits) {
                 case 8:
-                    return unsafe.getByte(pointer + displacement);
+                    return UNSAFE.getByte(pointer + displacement);
                 case 16:
-                    return unsafe.getShort(pointer + displacement);
+                    return UNSAFE.getShort(pointer + displacement);
                 case 32:
-                    return unsafe.getInt(pointer + displacement);
+                    return UNSAFE.getInt(pointer + displacement);
                 case 64:
-                    return unsafe.getLong(pointer + displacement);
+                    return UNSAFE.getLong(pointer + displacement);
                 default:
                     throw new JVMCIError("%d", bits);
             }
@@ -117,7 +117,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
         if (compressed == runtime.getConfig().useCompressedOops) {
             Object obj = asObject(base);
             if (obj != null) {
-                assert expected == unsafe.getObject(obj, displacement) : "readUnsafeOop doesn't agree with unsafe.getObject";
+                assert expected == UNSAFE.getObject(obj, displacement) : "readUnsafeOop doesn't agree with unsafe.getObject";
             }
         }
         if (base instanceof HotSpotMetaspaceConstant) {
@@ -144,7 +144,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
             ret = runtime.getCompilerToVM().readUncompressedOop(displacement);
         } else {
             assert runtime.getConfig().useCompressedOops == compressed;
-            ret = unsafe.getObject(base, displacement);
+            ret = UNSAFE.getObject(base, displacement);
         }
         assert verifyReadRawObject(ret, baseConstant, initialDisplacement, compressed);
         return ret;

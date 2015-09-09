@@ -24,7 +24,7 @@ package jdk.internal.jvmci.hotspot;
 
 import static java.util.Objects.*;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.annotation.*;
 import java.lang.reflect.*;
@@ -110,9 +110,9 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
      */
     public long getMetaspaceKlass() {
         if (HotSpotJVMCIRuntime.getHostWordKind() == JavaKind.Long) {
-            return unsafe.getLong(javaClass, (long) runtime().getConfig().klassOffset);
+            return UNSAFE.getLong(javaClass, (long) runtime().getConfig().klassOffset);
         }
-        return unsafe.getInt(javaClass, (long) runtime().getConfig().klassOffset) & 0xFFFFFFFFL;
+        return UNSAFE.getInt(javaClass, (long) runtime().getConfig().klassOffset) & 0xFFFFFFFFL;
     }
 
     public long getMetaspacePointer() {
@@ -130,7 +130,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
 
     public int getAccessFlags() {
         HotSpotVMConfig config = runtime().getConfig();
-        return unsafe.getInt(getMetaspaceKlass() + config.klassAccessFlagsOffset);
+        return UNSAFE.getInt(getMetaspaceKlass() + config.klassAccessFlagsOffset);
     }
 
     @Override
@@ -180,7 +180,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
             HotSpotResolvedObjectTypeImpl type = this;
             while (type.isAbstract()) {
                 HotSpotResolvedObjectTypeImpl subklass = type.getSubklass();
-                if (subklass == null || unsafe.getAddress(subklass.getMetaspaceKlass() + config.nextSiblingOffset) != 0) {
+                if (subklass == null || UNSAFE.getAddress(subklass.getMetaspaceKlass() + config.nextSiblingOffset) != 0) {
                     return null;
                 }
                 type = subklass;
@@ -336,13 +336,13 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
      */
     private int getInitState() {
         assert !isArray() : "_init_state only exists in InstanceKlass";
-        return unsafe.getByte(getMetaspaceKlass() + runtime().getConfig().instanceKlassInitStateOffset) & 0xFF;
+        return UNSAFE.getByte(getMetaspaceKlass() + runtime().getConfig().instanceKlassInitStateOffset) & 0xFF;
     }
 
     @Override
     public void initialize() {
         if (!isInitialized()) {
-            unsafe.ensureClassInitialized(mirror());
+            UNSAFE.ensureClassInitialized(mirror());
             assert isInitialized();
         }
     }
@@ -439,7 +439,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
 
     public int layoutHelper() {
         HotSpotVMConfig config = runtime().getConfig();
-        return unsafe.getInt(getMetaspaceKlass() + config.klassLayoutHelperOffset);
+        return UNSAFE.getInt(getMetaspaceKlass() + config.klassLayoutHelperOffset);
     }
 
     synchronized HotSpotResolvedJavaMethod createMethod(long metaspaceMethod) {
@@ -463,8 +463,8 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
             /* Everything has the core vtable of java.lang.Object */
             return config.baseVtableLength;
         }
-        int result = unsafe.getInt(getMetaspaceKlass() + config.instanceKlassVtableLengthOffset) / (config.vtableEntrySize / config.heapWordSize);
-        assert result >= config.baseVtableLength : unsafe.getInt(getMetaspaceKlass() + config.instanceKlassVtableLengthOffset) + " " + config.vtableEntrySize;
+        int result = UNSAFE.getInt(getMetaspaceKlass() + config.instanceKlassVtableLengthOffset) / (config.vtableEntrySize / config.heapWordSize);
+        assert result >= config.baseVtableLength : UNSAFE.getInt(getMetaspaceKlass() + config.instanceKlassVtableLengthOffset) + " " + config.vtableEntrySize;
         return result;
     }
 
@@ -549,7 +549,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
         public FieldInfo(int index) {
             HotSpotVMConfig config = runtime().getConfig();
             // Get Klass::_fields
-            final long metaspaceFields = unsafe.getAddress(getMetaspaceKlass() + config.instanceKlassFieldsOffset);
+            final long metaspaceFields = UNSAFE.getAddress(getMetaspaceKlass() + config.instanceKlassFieldsOffset);
             assert config.fieldInfoFieldSlots == 6 : "revisit the field parsing code";
             metaspaceData = metaspaceFields + config.arrayU2DataOffset + config.fieldInfoFieldSlots * Short.BYTES * index;
         }
@@ -579,7 +579,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
          * on top an array of Java shorts.
          */
         private int readFieldSlot(int index) {
-            return unsafe.getChar(metaspaceData + Short.BYTES * index);
+            return UNSAFE.getChar(metaspaceData + Short.BYTES * index);
         }
 
         /**
@@ -708,8 +708,8 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
      */
     private int getFieldCount() {
         HotSpotVMConfig config = runtime().getConfig();
-        final long metaspaceFields = unsafe.getAddress(getMetaspaceKlass() + config.instanceKlassFieldsOffset);
-        int metaspaceFieldsLength = unsafe.getInt(metaspaceFields + config.arrayU1LengthOffset);
+        final long metaspaceFields = UNSAFE.getAddress(getMetaspaceKlass() + config.instanceKlassFieldsOffset);
+        int metaspaceFieldsLength = UNSAFE.getInt(metaspaceFields + config.arrayU1LengthOffset);
         int fieldCount = 0;
 
         for (int i = 0, index = 0; i < metaspaceFieldsLength; i += config.fieldInfoFieldSlots, index++) {
@@ -730,7 +730,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     @Override
     public String getSourceFileName() {
         HotSpotVMConfig config = runtime().getConfig();
-        final int sourceFileNameIndex = unsafe.getChar(getMetaspaceKlass() + config.instanceKlassSourceFileNameIndexOffset);
+        final int sourceFileNameIndex = UNSAFE.getChar(getMetaspaceKlass() + config.instanceKlassSourceFileNameIndexOffset);
         if (sourceFileNameIndex == 0) {
             return null;
         }
@@ -794,7 +794,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
 
     public int superCheckOffset() {
         HotSpotVMConfig config = runtime().getConfig();
-        return unsafe.getInt(getMetaspaceKlass() + config.superCheckOffsetOffset);
+        return UNSAFE.getInt(getMetaspaceKlass() + config.superCheckOffsetOffset);
     }
 
     public long prototypeMarkWord() {
@@ -802,7 +802,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
         if (isArray()) {
             return config.arrayPrototypeMarkWord();
         } else {
-            return unsafe.getAddress(getMetaspaceKlass() + config.prototypeMarkWordOffset);
+            return UNSAFE.getAddress(getMetaspaceKlass() + config.prototypeMarkWordOffset);
         }
     }
 

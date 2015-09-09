@@ -31,7 +31,7 @@ import sun.misc.Unsafe;
  */
 class UnsafeAccess {
 
-    static final Unsafe unsafe = initUnsafe();
+    static final Unsafe UNSAFE = initUnsafe();
 
     private static Unsafe initUnsafe() {
         try {
