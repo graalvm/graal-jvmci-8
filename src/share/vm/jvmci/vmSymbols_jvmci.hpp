@@ -34,7 +34,7 @@
   template(jdk_internal_jvmci_hotspot_HotSpotCompiledNmethod,          "jdk/internal/jvmci/hotspot/HotSpotCompiledNmethod")               \
   template(jdk_internal_jvmci_hotspot_HotSpotForeignCallTarget,        "jdk/internal/jvmci/hotspot/HotSpotForeignCallTarget")             \
   template(jdk_internal_jvmci_hotspot_HotSpotReferenceMap,             "jdk/internal/jvmci/hotspot/HotSpotReferenceMap")                  \
-  template(jdk_internal_jvmci_hotspot_CompilerToVMImpl,                "jdk/internal/jvmci/hotspot/CompilerToVMImpl")                     \
+  template(jdk_internal_jvmci_hotspot_CompilerToVM,                    "jdk/internal/jvmci/hotspot/CompilerToVM")                         \
   template(jdk_internal_jvmci_hotspot_HotSpotInstalledCode,            "jdk/internal/jvmci/hotspot/HotSpotInstalledCode")                 \
   template(jdk_internal_jvmci_hotspot_HotSpotNmethod,                  "jdk/internal/jvmci/hotspot/HotSpotNmethod")                       \
   template(jdk_internal_jvmci_hotspot_HotSpotResolvedJavaMethodImpl,   "jdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethodImpl")        \

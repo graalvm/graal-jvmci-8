@@ -789,7 +789,7 @@ void JVMCIRuntime::metadata_do(void f(Metadata*)) {
   }
 }
 
-// private static void CompilerToVMImpl.init()
+// private static void CompilerToVM.init()
 JVM_ENTRY(void, JVM_InitializeJVMCINatives(JNIEnv *env, jclass c2vmClass))
   JVMCIRuntime::initialize_natives(env, c2vmClass);
 JVM_END

@@ -146,7 +146,7 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_jdk_internal_jvmci_service_JVMCIClassLoaderFactory_init", NULL, FN_PTR(JVM_InitJVMCIClassLoader)     },
   { CC"Java_jdk_internal_jvmci_runtime_JVMCI_initializeRuntime",      NULL, FN_PTR(JVM_GetJVMCIRuntime)          },
   { CC"Java_jdk_internal_jvmci_service_Services_getServiceImpls",     NULL, FN_PTR(JVM_GetJVMCIServiceImpls)     },
-  { CC"Java_jdk_internal_jvmci_hotspot_CompilerToVMImpl_init",        NULL, FN_PTR(JVM_InitializeJVMCINatives)   },
+  { CC"Java_jdk_internal_jvmci_hotspot_CompilerToVM_init",            NULL, FN_PTR(JVM_InitializeJVMCINatives)   },
 #endif
 };
 

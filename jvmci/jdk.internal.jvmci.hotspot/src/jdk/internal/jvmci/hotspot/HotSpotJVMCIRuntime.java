@@ -123,7 +123,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     @SuppressWarnings("try")
     private HotSpotJVMCIRuntime() {
-        compilerToVm = new CompilerToVMImpl();
+        compilerToVm = new CompilerToVM();
         try (InitTimer t = timer("HotSpotVMConfig<init>")) {
             config = new HotSpotVMConfig(compilerToVm);
         }

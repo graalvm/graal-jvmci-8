@@ -23,32 +23,56 @@
 
 package jdk.internal.jvmci.hotspot;
 
-import java.lang.reflect.*;
+import static jdk.internal.jvmci.inittimer.InitTimer.timer;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.hotspotvmconfig.*;
-import jdk.internal.jvmci.meta.*;
-import sun.misc.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+
+import jdk.internal.jvmci.code.InstalledCode;
+import jdk.internal.jvmci.code.InvalidInstalledCodeException;
+import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMField;
+import jdk.internal.jvmci.inittimer.InitTimer;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.meta.SpeculationLog;
+import sun.misc.Unsafe;
 
 /**
  * Calls from Java into HotSpot. The behavior of all the methods in this class that take a native
  * pointer as an argument (e.g., {@link #getSymbol(long)}) is undefined if the argument does not
  * denote a valid native object.
  */
-public interface CompilerToVM {
+public final class CompilerToVM {
+    /**
+     * Initializes the native part of the JVMCI runtime.
+     */
+    private static native void init();
+
+    static {
+        initialize();
+    }
+
+    @SuppressWarnings("try")
+    private static void initialize() {
+        try (InitTimer t = timer("CompilerToVMImpl.init")) {
+            init();
+        }
+    }
 
     /**
      * Copies the original bytecode of {@code method} into a new byte array and returns it.
      *
      * @return a new byte array containing the original bytecode of {@code method}
      */
-    byte[] getBytecode(HotSpotResolvedJavaMethodImpl method);
+    native byte[] getBytecode(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Gets the number of entries in {@code method}'s exception handler table or 0 if it has not
      * exception handler table.
      */
-    int getExceptionTableLength(HotSpotResolvedJavaMethodImpl method);
+    native int getExceptionTableLength(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Gets the address of the first entry in {@code method}'s exception handler table.
@@ -66,12 +90,12 @@ public interface CompilerToVM {
      * @return 0 if {@code method} has no exception handlers (i.e.
      *         {@code getExceptionTableLength(method) == 0})
      */
-    long getExceptionTableStart(HotSpotResolvedJavaMethodImpl method);
+    native long getExceptionTableStart(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Determines if {@code method} has balanced monitors.
      */
-    boolean hasBalancedMonitors(HotSpotResolvedJavaMethodImpl method);
+    native boolean hasBalancedMonitors(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Determines if {@code method} can be inlined. A method may not be inlinable for a number of
@@ -82,7 +106,7 @@ public interface CompilerToVM {
      * <li>the method may have other bytecode features that require special handling by the VM</li>
      * </ul>
      */
-    boolean canInlineMethod(HotSpotResolvedJavaMethodImpl method);
+    native boolean canInlineMethod(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Determines if {@code method} should be inlined at any cost. This could be because:
@@ -91,7 +115,7 @@ public interface CompilerToVM {
      * <li>an annotation forces inlining of this method</li>
      * </ul>
      */
-    boolean shouldInlineMethod(HotSpotResolvedJavaMethodImpl method);
+    native boolean shouldInlineMethod(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Used to implement {@link ResolvedJavaType#findUniqueConcreteMethod(ResolvedJavaMethod)}.
@@ -100,7 +124,7 @@ public interface CompilerToVM {
      * @param actualHolderType the best known type of receiver
      * @return the method result or 0 is there is no unique concrete method for {@code method}
      */
-    HotSpotResolvedJavaMethodImpl findUniqueConcreteMethod(HotSpotResolvedObjectTypeImpl actualHolderType, HotSpotResolvedJavaMethodImpl method);
+    native HotSpotResolvedJavaMethodImpl findUniqueConcreteMethod(HotSpotResolvedObjectTypeImpl actualHolderType, HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Gets the implementor for the interface class {@code type}.
@@ -108,12 +132,12 @@ public interface CompilerToVM {
      * @return the implementor if there is a single implementor, 0 if there is no implementor, or
      *         {@code type} itself if there is more than one implementor
      */
-    HotSpotResolvedObjectTypeImpl getImplementor(HotSpotResolvedObjectTypeImpl type);
+    native HotSpotResolvedObjectTypeImpl getImplementor(HotSpotResolvedObjectTypeImpl type);
 
     /**
      * Determines if {@code method} is ignored by security stack walks.
      */
-    boolean methodIsIgnoredBySecurityStackWalk(HotSpotResolvedJavaMethodImpl method);
+    native boolean methodIsIgnoredBySecurityStackWalk(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Converts a name to a type.
@@ -125,7 +149,7 @@ public interface CompilerToVM {
      * @return the type for {@code name} or 0 if resolution failed and {@code resolve == false}
      * @throws LinkageError if {@code resolve == true} and the resolution failed
      */
-    HotSpotResolvedObjectTypeImpl lookupType(String name, Class<?> accessingClass, boolean resolve);
+    native HotSpotResolvedObjectTypeImpl lookupType(String name, Class<?> accessingClass, boolean resolve);
 
     /**
      * Resolves the entry at index {@code cpi} in {@code constantPool} to an object.
@@ -133,7 +157,7 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code cpi} does not denote an entry that can be
      * resolved to an object.
      */
-    Object resolveConstantInPool(HotSpotConstantPool constantPool, int cpi);
+    native Object resolveConstantInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Resolves the entry at index {@code cpi} in {@code constantPool} to an object, looking in the
@@ -142,7 +166,7 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code cpi} does not denote an entry that can be
      * resolved to an object.
      */
-    Object resolvePossiblyCachedConstantInPool(HotSpotConstantPool constantPool, int cpi);
+    native Object resolvePossiblyCachedConstantInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Gets the {@code JVM_CONSTANT_NameAndType} index from the entry at index {@code cpi} in
@@ -151,7 +175,7 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code cpi} does not denote an entry containing a
      * {@code JVM_CONSTANT_NameAndType} index.
      */
-    int lookupNameAndTypeRefIndexInPool(HotSpotConstantPool constantPool, int cpi);
+    native int lookupNameAndTypeRefIndexInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Gets the name of the {@code JVM_CONSTANT_NameAndType} entry at index {@code cpi} in
@@ -160,7 +184,7 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code cpi} does not denote a
      * {@code JVM_CONSTANT_NameAndType} entry.
      */
-    String lookupNameRefInPool(HotSpotConstantPool constantPool, int cpi);
+    native String lookupNameRefInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Gets the signature of the {@code JVM_CONSTANT_NameAndType} entry at index {@code cpi} in
@@ -169,7 +193,7 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code cpi} does not denote a
      * {@code JVM_CONSTANT_NameAndType} entry.
      */
-    String lookupSignatureRefInPool(HotSpotConstantPool constantPool, int cpi);
+    native String lookupSignatureRefInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Gets the {@code JVM_CONSTANT_Class} index from the entry at index {@code cpi} in
@@ -178,7 +202,7 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code cpi} does not denote an entry containing a
      * {@code JVM_CONSTANT_Class} index.
      */
-    int lookupKlassRefIndexInPool(HotSpotConstantPool constantPool, int cpi);
+    native int lookupKlassRefIndexInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Looks up a class denoted by the {@code JVM_CONSTANT_Class} entry at index {@code cpi} in
@@ -189,7 +213,7 @@ public interface CompilerToVM {
      *
      * @return the resolved class entry or a String otherwise
      */
-    Object lookupKlassInPool(HotSpotConstantPool constantPool, int cpi);
+    native Object lookupKlassInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Looks up a method denoted by the entry at index {@code cpi} in {@code constantPool}. This
@@ -204,7 +228,7 @@ public interface CompilerToVM {
      *            checks fail, 0 is returned.
      * @return the resolved method entry, 0 otherwise
      */
-    HotSpotResolvedJavaMethodImpl lookupMethodInPool(HotSpotConstantPool constantPool, int cpi, byte opcode);
+    native HotSpotResolvedJavaMethodImpl lookupMethodInPool(HotSpotConstantPool constantPool, int cpi, byte opcode);
 
     /**
      * Ensures that the type referenced by the specified {@code JVM_CONSTANT_InvokeDynamic} entry at
@@ -213,7 +237,7 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code cpi} does not denote a
      * {@code JVM_CONSTANT_InvokeDynamic} entry.
      */
-    void resolveInvokeDynamicInPool(HotSpotConstantPool constantPool, int cpi);
+    native void resolveInvokeDynamicInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Ensures that the type referenced by the entry for a <a
@@ -224,7 +248,7 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code cpi} does not denote an entry representing
      * a signature polymorphic method.
      */
-    void resolveInvokeHandleInPool(HotSpotConstantPool constantPool, int cpi);
+    native void resolveInvokeHandleInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Gets the resolved type denoted by the entry at index {@code cpi} in {@code constantPool}.
@@ -234,7 +258,7 @@ public interface CompilerToVM {
      *
      * @throws LinkageError if resolution failed
      */
-    HotSpotResolvedObjectTypeImpl resolveTypeInPool(HotSpotConstantPool constantPool, int cpi) throws LinkageError;
+    native HotSpotResolvedObjectTypeImpl resolveTypeInPool(HotSpotConstantPool constantPool, int cpi) throws LinkageError;
 
     /**
      * Looks up and attempts to resolve the {@code JVM_CONSTANT_Field} entry at index {@code cpi} in
@@ -251,7 +275,7 @@ public interface CompilerToVM {
      * @param info an array in which the details of the field are returned
      * @return the type defining the field if resolution is successful, 0 otherwise
      */
-    HotSpotResolvedObjectTypeImpl resolveFieldInPool(HotSpotConstantPool constantPool, int cpi, byte opcode, long[] info);
+    native HotSpotResolvedObjectTypeImpl resolveFieldInPool(HotSpotConstantPool constantPool, int cpi, byte opcode, long[] info);
 
     /**
      * Converts {@code cpci} from an index into the cache for {@code constantPool} to an index
@@ -260,13 +284,13 @@ public interface CompilerToVM {
      * The behavior of this method is undefined if {@code ccpi} is an invalid constant pool cache
      * index.
      */
-    int constantPoolRemapInstructionOperandFromCache(HotSpotConstantPool constantPool, int cpci);
+    native int constantPoolRemapInstructionOperandFromCache(HotSpotConstantPool constantPool, int cpci);
 
     /**
      * Gets the appendix object (if any) associated with the entry at index {@code cpi} in
      * {@code constantPool}.
      */
-    Object lookupAppendixInPool(HotSpotConstantPool constantPool, int cpi);
+    native Object lookupAppendixInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
      * Installs the result of a compilation into the code cache.
@@ -281,7 +305,7 @@ public interface CompilerToVM {
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesFailed} or
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesInvalid}.
      */
-    int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog);
+    public native int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog);
 
     /**
      * Notifies the VM of statistics for a completed compilation.
@@ -295,17 +319,18 @@ public interface CompilerToVM {
      * @param timeUnitsPerSecond the granularity of the units for the {@code time} value
      * @param installedCode the nmethod installed as a result of the compilation
      */
-    void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethodImpl method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond, InstalledCode installedCode);
+    public synchronized native void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethodImpl method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond,
+                    InstalledCode installedCode);
 
     /**
      * Resets all compilation statistics.
      */
-    void resetCompilationStatistics();
+    public native void resetCompilationStatistics();
 
     /**
      * Initializes the fields of {@code config}.
      */
-    void initializeConfiguration(HotSpotVMConfig config);
+    native void initializeConfiguration(HotSpotVMConfig config);
 
     /**
      * Resolves the implementation of {@code method} for virtual dispatches on objects of dynamic
@@ -316,26 +341,26 @@ public interface CompilerToVM {
      * @return the link-time resolved method (might be abstract) or {@code 0} if it can not be
      *         linked
      */
-    HotSpotResolvedJavaMethodImpl resolveMethod(HotSpotResolvedObjectTypeImpl exactReceiver, HotSpotResolvedJavaMethodImpl method, HotSpotResolvedObjectTypeImpl caller);
+    native HotSpotResolvedJavaMethodImpl resolveMethod(HotSpotResolvedObjectTypeImpl exactReceiver, HotSpotResolvedJavaMethodImpl method, HotSpotResolvedObjectTypeImpl caller);
 
     /**
      * Gets the static initializer of {@code type}.
      *
      * @return 0 if {@code type} has no static initializer
      */
-    HotSpotResolvedJavaMethodImpl getClassInitializer(HotSpotResolvedObjectTypeImpl type);
+    native HotSpotResolvedJavaMethodImpl getClassInitializer(HotSpotResolvedObjectTypeImpl type);
 
     /**
      * Determines if {@code type} or any of its currently loaded subclasses overrides
      * {@code Object.finalize()}.
      */
-    boolean hasFinalizableSubclass(HotSpotResolvedObjectTypeImpl type);
+    native boolean hasFinalizableSubclass(HotSpotResolvedObjectTypeImpl type);
 
     /**
      * Gets the method corresponding to {@code holder} and slot number {@code slot} (i.e.
      * {@link Method#slot} or {@link Constructor#slot}).
      */
-    HotSpotResolvedJavaMethodImpl getResolvedJavaMethodAtSlot(Class<?> holder, int slot);
+    native HotSpotResolvedJavaMethodImpl getResolvedJavaMethodAtSlot(Class<?> holder, int slot);
 
     /**
      * Gets the maximum absolute offset of a PC relative call to {@code address} from any position
@@ -344,7 +369,7 @@ public interface CompilerToVM {
      * @param address an address that may be called from any code in the code cache
      * @return -1 if {@code address == 0}
      */
-    long getMaxCallTargetOffset(long address);
+    public native long getMaxCallTargetOffset(long address);
 
     /**
      * Gets a textual disassembly of {@code codeBlob}.
@@ -352,12 +377,13 @@ public interface CompilerToVM {
      * @return a non-zero length string containing a disassembly of {@code codeBlob} or null if
      *         {@code codeBlob} could not be disassembled for some reason
      */
-    String disassembleCodeBlob(long codeBlob);
+    // The HotSpot disassembler seems not to be thread safe so it's better to synchronize its usage
+    public synchronized native String disassembleCodeBlob(long codeBlob);
 
     /**
      * Gets a stack trace element for {@code method} at bytecode index {@code bci}.
      */
-    StackTraceElement getStackTraceElement(HotSpotResolvedJavaMethodImpl method, int bci);
+    native StackTraceElement getStackTraceElement(HotSpotResolvedJavaMethodImpl method, int bci);
 
     /**
      * Executes some {@code installedCode} with arguments {@code args}.
@@ -365,7 +391,7 @@ public interface CompilerToVM {
      * @return the result of executing {@code installedCode}
      * @throws InvalidInstalledCodeException if {@code installedCode} has been invalidated
      */
-    Object executeInstalledCode(Object[] args, InstalledCode installedCode) throws InvalidInstalledCodeException;
+    native Object executeInstalledCode(Object[] args, InstalledCode installedCode) throws InvalidInstalledCodeException;
 
     /**
      * Gets the line number table for {@code method}. The line number table is encoded as (bci,
@@ -373,14 +399,14 @@ public interface CompilerToVM {
      *
      * @return the line number table for {@code method} or null if it doesn't have one
      */
-    long[] getLineNumberTable(HotSpotResolvedJavaMethodImpl method);
+    native long[] getLineNumberTable(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Gets the number of entries in the local variable table for {@code method}.
      *
      * @return the number of entries in the local variable table for {@code method}
      */
-    int getLocalVariableTableLength(HotSpotResolvedJavaMethodImpl method);
+    native int getLocalVariableTableLength(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Gets the address of the first entry in the local variable table for {@code method}.
@@ -399,7 +425,7 @@ public interface CompilerToVM {
      *
      * @return 0 if {@code method} does not have a local variable table
      */
-    long getLocalVariableTableStart(HotSpotResolvedJavaMethodImpl method);
+    native long getLocalVariableTableStart(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Reads an object pointer within a VM data structure. That is, any {@link HotSpotVMField} whose
@@ -413,65 +439,50 @@ public interface CompilerToVM {
      *
      * @param address address of an oop field within a VM data structure
      */
-    Object readUncompressedOop(long address);
+    native Object readUncompressedOop(long address);
 
     /**
      * Determines if {@code method} should not be inlined or compiled.
      */
-    void doNotInlineOrCompile(HotSpotResolvedJavaMethodImpl method);
+    native void doNotInlineOrCompile(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Invalidates the profiling information for {@code method} and (re)initializes it such that
      * profiling restarts upon its next invocation.
      */
-    void reprofile(HotSpotResolvedJavaMethodImpl method);
+    native void reprofile(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Invalidates {@code installedCode} such that {@link InvalidInstalledCodeException} will be
      * raised the next time {@code installedCode} is executed.
      */
-    void invalidateInstalledCode(InstalledCode installedCode);
+    public native void invalidateInstalledCode(InstalledCode installedCode);
 
     /**
      * Collects the current values of all JVMCI benchmark counters, summed up over all threads.
      */
-    long[] collectCounters();
+    public native long[] collectCounters();
 
     /**
      * Determines if {@code metaspaceMethodData} is mature.
      */
-    boolean isMature(long metaspaceMethodData);
+    native boolean isMature(long metaspaceMethodData);
 
     /**
      * Generate a unique id to identify the result of the compile.
      */
-    int allocateCompileId(HotSpotResolvedJavaMethodImpl method, int entryBCI);
-
-    /**
-     * Gets the names of the supported GPU architectures.
-     *
-     * @return a comma separated list of names
-     */
-    String getGPUs();
+    native int allocateCompileId(HotSpotResolvedJavaMethodImpl method, int entryBCI);
 
     /**
      * Determines if {@code method} has OSR compiled code identified by {@code entryBCI} for
      * compilation level {@code level}.
      */
-    boolean hasCompiledCodeForOSR(HotSpotResolvedJavaMethodImpl method, int entryBCI, int level);
-
-    /**
-     * Fetch the time stamp used for printing inside hotspot. It's relative to VM start so that all
-     * events can be ordered.
-     *
-     * @return milliseconds since VM start
-     */
-    long getTimeStamp();
+    native boolean hasCompiledCodeForOSR(HotSpotResolvedJavaMethodImpl method, int entryBCI, int level);
 
     /**
      * Gets the value of {@code metaspaceSymbol} as a String.
      */
-    String getSymbol(long metaspaceSymbol);
+    native String getSymbol(long metaspaceSymbol);
 
     /**
      * Looks for the next Java stack frame matching an entry in {@code methods}.
@@ -480,7 +491,7 @@ public interface CompilerToVM {
      * @param methods the methods to look for, where {@code null} means that any frame is returned
      * @return the frame, or {@code null} if the end of the stack was reached during the search
      */
-    HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, HotSpotResolvedJavaMethodImpl[] methods, int initialSkip);
+    public native HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, HotSpotResolvedJavaMethodImpl[] methods, int initialSkip);
 
     /**
      * Materializes all virtual objects within {@code stackFrame} updates its locals.
@@ -488,30 +499,30 @@ public interface CompilerToVM {
      * @param invalidate if {@code true}, the compiled method for the stack frame will be
      *            invalidated.
      */
-    void materializeVirtualObjects(HotSpotStackFrameReference stackFrame, boolean invalidate);
+    native void materializeVirtualObjects(HotSpotStackFrameReference stackFrame, boolean invalidate);
 
     /**
      * Gets the v-table index for interface method {@code method} in the receiver {@code type} or
      * {@link HotSpotVMConfig#invalidVtableIndex} if {@code method} is not in {@code type}'s
      * v-table.
      */
-    int getVtableIndexForInterface(HotSpotResolvedObjectTypeImpl type, HotSpotResolvedJavaMethodImpl method);
+    native int getVtableIndexForInterface(HotSpotResolvedObjectTypeImpl type, HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Determines if debug info should also be emitted at non-safepoint locations.
      */
-    boolean shouldDebugNonSafepoints();
+    public native boolean shouldDebugNonSafepoints();
 
     /**
      * Writes {@code length} bytes from {@code buf} starting at offset {@code offset} to the
      * HotSpot's log stream. No range checking is performed.
      */
-    void writeDebugOutput(byte[] bytes, int offset, int length);
+    public native void writeDebugOutput(byte[] bytes, int offset, int length);
 
     /**
      * Flush HotSpot's log stream.
      */
-    void flushDebugOutput();
+    public native void flushDebugOutput();
 
     /**
      * Read a value representing a metaspace Method* and return the
@@ -524,7 +535,7 @@ public interface CompilerToVM {
      * @param displacement
      * @return null or the resolved method for this location
      */
-    HotSpotResolvedJavaMethodImpl getResolvedJavaMethod(Object base, long displacement);
+    native HotSpotResolvedJavaMethodImpl getResolvedJavaMethod(Object base, long displacement);
 
     /**
      * Read a value representing a metaspace ConstantPool* and return the
@@ -537,7 +548,7 @@ public interface CompilerToVM {
      * @param displacement
      * @return null or the resolved method for this location
      */
-    HotSpotConstantPool getConstantPool(Object base, long displacement);
+    native HotSpotConstantPool getConstantPool(Object base, long displacement);
 
     /**
      * Read a value representing a metaspace Klass* and return the
@@ -551,5 +562,5 @@ public interface CompilerToVM {
      * @param compressed true if the location contains a compressed Klass*
      * @return null or the resolved method for this location
      */
-    HotSpotResolvedObjectTypeImpl getResolvedJavaType(Object base, long displacement, boolean compressed);
+    native HotSpotResolvedObjectTypeImpl getResolvedJavaType(Object base, long displacement, boolean compressed);
 }

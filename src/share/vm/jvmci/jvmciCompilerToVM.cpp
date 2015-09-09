@@ -837,12 +837,6 @@ C2V_VMENTRY(jboolean, hasCompiledCodeForOSR, (JNIEnv*, jobject, jobject jvmci_me
   return method->lookup_osr_nmethod_for(entry_bci, comp_level, true) != NULL;
 C2V_END
 
-C2V_VMENTRY(jlong, getTimeStamp, (JNIEnv*, jobject))
-  // tty->time_stamp is the time since VM start which should be used
-  // for all HotSpot log output when a timestamp is required.
-  return tty->time_stamp().milliseconds();
-C2V_END
-
 C2V_VMENTRY(jobject, getSymbol, (JNIEnv*, jobject, jlong symbol))
   Handle sym = java_lang_String::create_from_symbol((Symbol*)(address)symbol, CHECK_NULL);
   return JNIHandles::make_local(THREAD, sym());
@@ -1194,7 +1188,6 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"isMature",                                     CC"("METASPACE_METHOD_DATA")Z",                                                   FN_PTR(isMature)},
   {CC"hasCompiledCodeForOSR",                        CC"("HS_RESOLVED_METHOD"II)Z",                                                    FN_PTR(hasCompiledCodeForOSR)},
   {CC"getSymbol",                                    CC"(J)"STRING,                                                                    FN_PTR(getSymbol)},
-  {CC"getTimeStamp",                                 CC"()J",                                                                          FN_PTR(getTimeStamp)},
   {CC"getNextStackFrame",                            CC"("HS_STACK_FRAME_REF "["HS_RESOLVED_METHOD"I)"HS_STACK_FRAME_REF,              FN_PTR(getNextStackFrame)},
   {CC"materializeVirtualObjects",                    CC"("HS_STACK_FRAME_REF"Z)V",                                                     FN_PTR(materializeVirtualObjects)},
   {CC"shouldDebugNonSafepoints",                     CC"()Z",                                                                          FN_PTR(shouldDebugNonSafepoints)},
