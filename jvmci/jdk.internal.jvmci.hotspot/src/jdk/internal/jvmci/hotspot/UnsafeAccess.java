@@ -20,26 +20,32 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.internal.jvmci.common;
+package jdk.internal.jvmci.hotspot;
 
 import java.lang.reflect.Field;
 
 import sun.misc.Unsafe;
 
-public class UnsafeAccess {
+/**
+ * Package private access to the {@link Unsafe} capability.
+ */
+class UnsafeAccess {
 
-    /**
-     * An instance of {@link Unsafe} for use within JVMCI.
-     */
-    public static final Unsafe unsafe;
+    static final Unsafe unsafe = initUnsafe();
 
-    static {
+    private static Unsafe initUnsafe() {
         try {
-            Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
-            theUnsafeInstance.setAccessible(true);
-            unsafe = (Unsafe) theUnsafeInstance.get(Unsafe.class);
-        } catch (Exception e) {
-            throw new RuntimeException("exception while trying to get Unsafe", e);
+            // Fast path when we are trusted.
+            return Unsafe.getUnsafe();
+        } catch (SecurityException se) {
+            // Slow path when we are not trusted.
+            try {
+                Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+                theUnsafe.setAccessible(true);
+                return (Unsafe) theUnsafe.get(Unsafe.class);
+            } catch (Exception e) {
+                throw new RuntimeException("exception while trying to get Unsafe", e);
+            }
         }
     }
 }

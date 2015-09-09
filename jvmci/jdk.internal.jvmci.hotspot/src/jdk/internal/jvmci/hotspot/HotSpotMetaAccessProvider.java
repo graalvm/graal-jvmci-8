@@ -22,8 +22,8 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.common.UnsafeAccess.*;
 import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
 
 import java.lang.reflect.*;
 

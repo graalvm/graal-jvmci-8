@@ -22,9 +22,9 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.common.UnsafeAccess.*;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
 import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaMethodImpl.Options.*;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
 
 import java.lang.annotation.*;
 import java.lang.reflect.*;

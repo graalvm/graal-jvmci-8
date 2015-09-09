@@ -22,10 +22,10 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.common.UnsafeAccess.*;
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.inittimer.*;
-import sun.misc.*;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
+import jdk.internal.jvmci.code.InstalledCode;
+import jdk.internal.jvmci.inittimer.SuppressFBWarnings;
+import sun.misc.Unsafe;
 
 /**
  * Implementation of {@link InstalledCode} for HotSpot.

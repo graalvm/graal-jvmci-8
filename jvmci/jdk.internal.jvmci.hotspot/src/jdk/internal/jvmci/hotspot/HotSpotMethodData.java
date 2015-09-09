@@ -23,8 +23,8 @@
 package jdk.internal.jvmci.hotspot;
 
 import static java.lang.String.*;
-import static jdk.internal.jvmci.common.UnsafeAccess.*;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
+import static jdk.internal.jvmci.hotspot.UnsafeAccess.unsafe;
 
 import java.util.*;
 
