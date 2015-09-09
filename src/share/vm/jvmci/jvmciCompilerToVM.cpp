@@ -49,6 +49,7 @@
 #define C2V_VMENTRY(result_type, name, signature) \
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
   TRACE_jvmci_1("CompilerToVM::" #name); \
+  TRACE_CALL(result_type, jvmci_ ## name signature) \
   JVMCI_VM_ENTRY_MARK; \
 
 #define C2V_END }
