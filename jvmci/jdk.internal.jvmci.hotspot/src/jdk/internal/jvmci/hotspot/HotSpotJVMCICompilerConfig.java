@@ -38,10 +38,6 @@ final class HotSpotJVMCICompilerConfig {
             throw new JVMCIError("no JVMCI compiler selected");
         }
 
-        public void compileTheWorld() throws Throwable {
-            throw new JVMCIError("no JVMCI compiler selected");
-        }
-
         public String getCompilerName() {
             return "<none>";
         }

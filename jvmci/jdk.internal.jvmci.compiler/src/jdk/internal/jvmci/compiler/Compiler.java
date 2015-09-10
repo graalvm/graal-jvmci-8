@@ -47,10 +47,4 @@ public interface Compiler {
      * @param id a unique identifier for this compilation
      */
     void compileMethod(ResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id);
-
-    /**
-     * Notifies this JVMCI compiler that the VM is running in CompileTheWorld mode and it should now
-     * perform its version of CompileTheWorld.
-     */
-    void compileTheWorld() throws Throwable;
 }

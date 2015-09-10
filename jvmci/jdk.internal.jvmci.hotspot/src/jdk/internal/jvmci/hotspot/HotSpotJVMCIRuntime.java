@@ -224,14 +224,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     }
 
     /**
-     * Called from the VM.
-     */
-    @SuppressWarnings({"unused"})
-    private void compileTheWorld() throws Throwable {
-        compiler.compileTheWorld();
-    }
-
-    /**
      * Shuts down the runtime.
      *
      * Called from the VM.
