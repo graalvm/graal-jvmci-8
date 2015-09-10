@@ -85,7 +85,7 @@ class DIR_Chunk {
   }
 
 #if INCLUDE_JVMCI
-  static int compare(DIR_Chunk* a, DIR_Chunk* b) {
+  static int compare(DIR_Chunk*& a, DIR_Chunk*& b) {
     if (b->_hash > a->_hash) {
       return 1;
     }
@@ -278,7 +278,7 @@ int DebugInformationRecorder::find_sharable_decode_offset(int stream_offset) {
   DIR_Chunk* ns = new(this) DIR_Chunk(stream_offset, stream_length, this);
 
 #if INCLUDE_JVMCI
-  DIR_Chunk* match = _all_chunks->find_insert_binary<DIR_Chunk::compare>(ns);
+  DIR_Chunk* match = _all_chunks->insert_sorted<DIR_Chunk::compare>(ns);
   if (match != ns) {
     // Found an existing chunk
     NOT_PRODUCT(++dir_stats.chunks_shared);

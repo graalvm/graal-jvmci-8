@@ -168,7 +168,7 @@ class ObjectLookup : public ResourceObj {
   // Utility sort functions
   static int sort_by_address(oop a, oop b);
   static int sort_by_address(ObjectEntry* a, ObjectEntry* b);
-  static int sort_oop_by_address(oop a, ObjectEntry b);
+  static int sort_oop_by_address(oop& a, ObjectEntry& b);
 
  public:
   ObjectLookup();

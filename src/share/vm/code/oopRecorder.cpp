@@ -181,7 +181,7 @@ int ObjectLookup::sort_by_address(ObjectEntry* a, ObjectEntry* b) {
   return sort_by_address(a->oop_value(), b->oop_value());
 }
 
-int ObjectLookup::sort_oop_by_address(oop a, ObjectEntry b) {
+int ObjectLookup::sort_oop_by_address(oop& a, ObjectEntry& b) {
   return sort_by_address(a, b.oop_value());
 }
   
@@ -192,12 +192,12 @@ int ObjectLookup::find_index(jobject handle, OopRecorder* oop_recorder) {
   oop object = JNIHandles::resolve(handle);
   maybe_resort();
   bool found;
-  int location = _values.find_binary<oop, sort_oop_by_address>(object, found);
+  int location = _values.find_sorted<oop, sort_oop_by_address>(object, found);
   if (!found) {
     assert(location <= _values.length(), "out of range");
     jobject handle = JNIHandles::make_local(object);
     ObjectEntry r(handle, oop_recorder->allocate_oop_index(handle));
-    _values.insert_binary(location, r);
+    _values.insert_before(location, r);
     return r.index();
   }
   return _values.at(location).index();

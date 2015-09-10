@@ -377,17 +377,17 @@ template<class E> class GrowableArray : public GenericGrowableArray {
   // matching key according to the static compare function.  Insert
   // that element is not already in the list.  Assumes the list is
   // already sorted according to compare function.
-  template <int compare(E, E)> E find_insert_binary(E key) {
+  template <int compare(E&, E&)> E insert_sorted(E& key) {
     bool found;
-    int location = find_binary<E, compare>(key, found);
+    int location = find_sorted<E, compare>(key, found);
     if (!found) {
       assert(location <= length(), "out of range");
-      insert_binary(location, key);
+      insert_before(location, key);
     }
     return at(location);
   }
 
-  template <typename K, int compare(K, E)> int find_binary(K key, bool& found) {
+  template <typename K, int compare(K&, E&)> int find_sorted(K& key, bool& found) {
     found = false;
     int min = 0;
     int max = length() - 1;
@@ -406,21 +406,6 @@ template<class E> class GrowableArray : public GenericGrowableArray {
       }
     }
     return min;
-  }
-
-  // Insert a new element at location, moving values as needed.
-  void insert_binary(int location, E element) {
-    int len = length();
-    if (len == location) {
-      append(element);
-    } else {
-      append(at(len-1));
-      int pos;
-      for (pos = len-2; pos >= location; pos--) {
-        at_put(pos+1, at(pos));
-      }
-      at_put(location, element);
-    }
   }
 };
 
