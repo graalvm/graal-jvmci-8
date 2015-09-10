@@ -35,7 +35,7 @@
 #include "jvmci/jvmciCompilerToVM.hpp"
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciEnv.hpp"
-#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciCodeInstaller.hpp"
 #include "gc_implementation/g1/heapRegion.hpp"
 #include "runtime/javaCalls.hpp"

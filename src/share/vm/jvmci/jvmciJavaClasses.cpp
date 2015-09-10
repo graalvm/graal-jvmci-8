@@ -22,7 +22,7 @@
  */
 
 #include "precompiled.hpp"
-#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 #include "runtime/jniHandles.hpp"
 #include "classfile/symbolTable.hpp"
 // This function is similar to javaClasses.cpp, it computes the field offset of a (static or instance) field.

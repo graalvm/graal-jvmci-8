@@ -41,7 +41,7 @@
 #include "opto/runtime.hpp"
 #endif
 #if INCLUDE_JVMCI
-#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 #endif
 
 #define __ masm->

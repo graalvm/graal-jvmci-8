@@ -46,7 +46,7 @@
 #include "runtime/sharedRuntime.hpp"
 #include "utilities/dtrace.hpp"
 #include "jvmci/jvmciRuntime.hpp"
-#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 
 JVMCIEnv::JVMCIEnv(CompileTask* task, int system_dictionary_modification_counter) {
   _task = task;

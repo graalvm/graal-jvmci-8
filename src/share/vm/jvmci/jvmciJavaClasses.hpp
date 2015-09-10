@@ -21,8 +21,8 @@
  * questions.
  */
 
-#ifndef SHARE_VM_JVMCI_JVMCI_JAVA_ACCESS_HPP
-#define SHARE_VM_JVMCI_JVMCI_JAVA_ACCESS_HPP
+#ifndef SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP
+#define SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP
 
 void jvmci_compute_offsets();
 
@@ -371,4 +371,4 @@ COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD
 
 void compute_offset(int &dest_offset, Klass* klass, const char* name, const char* signature, bool static_field);
 
-#endif // SHARE_VM_JVMCI_JVMCI_JAVA_ACCESS_HPP
+#endif // SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP

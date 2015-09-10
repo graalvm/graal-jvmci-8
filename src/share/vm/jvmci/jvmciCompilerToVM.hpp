@@ -26,7 +26,7 @@
 
 #include "prims/jni.h"
 #include "runtime/javaCalls.hpp"
-#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 
 class CompilerToVM {
 public:

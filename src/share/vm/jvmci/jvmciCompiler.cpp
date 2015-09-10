@@ -24,7 +24,7 @@
 #include "precompiled.hpp"
 #include "memory/oopFactory.hpp"
 #include "runtime/javaCalls.hpp"
-#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciEnv.hpp"
 #include "jvmci/jvmciRuntime.hpp"

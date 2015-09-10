@@ -26,7 +26,7 @@
 #include "runtime/javaCalls.hpp"
 #include "jvmci/jvmciEnv.hpp"
 #include "jvmci/jvmciCodeInstaller.hpp"
-#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciCompilerToVM.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "asm/register.hpp"

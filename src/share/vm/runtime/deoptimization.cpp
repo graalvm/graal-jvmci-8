@@ -94,7 +94,7 @@ PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
 #if INCLUDE_JVMCI
 #include "jvmci/jvmciRuntime.hpp"
-#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 #endif
 
 

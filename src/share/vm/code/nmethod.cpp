@@ -62,7 +62,7 @@
 #include "shark/sharkCompiler.hpp"
 #endif
 #if INCLUDE_JVMCI
-#include "jvmci/jvmciJavaAccess.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 #endif
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
