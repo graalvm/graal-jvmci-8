@@ -818,7 +818,7 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
       }
     }
 
-    // We cannot use jvmciJavaAccess for this because we are currently in the
+    // We cannot use jvmciJavaClasses for this because we are currently in the
     // process of initializing that mechanism.
     TempNewSymbol field_name = SymbolTable::new_symbol("useJVMCIClassLoader", CHECK_ABORT);
     fieldDescriptor field_desc;

@@ -449,8 +449,8 @@ void CodeInstaller::initialize_fields(oop target, oop compiled_code) {
     _parameter_count = method->size_of_parameters();
     TRACE_jvmci_2("installing code for %s", method->name_and_sig_as_C_string());
   } else {
-    // Must be a HotSpotCompiledRuntimeStub
-    // TODO (ds) not sure if this is correct - only used in OopMap constructor for non-product builds
+    // Must be a HotSpotCompiledRuntimeStub.
+    // Only used in OopMap constructor for non-product builds
     _parameter_count = 0;
   }
   _sites_handle = JNIHandles::make_local(HotSpotCompiledCode::sites(compiled_code));

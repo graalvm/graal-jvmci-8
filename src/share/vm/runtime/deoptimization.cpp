@@ -1425,7 +1425,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
 
   // We need to update the map if we have biased locking.
 #if INCLUDE_JVMCI
-  // (lstadler) JVMCI might need to get an exception from the stack, which in turn requires the register map to be valid
+  // JVMCI might need to get an exception from the stack, which in turn requires the register map to be valid
   RegisterMap reg_map(thread, true);
 #else
   RegisterMap reg_map(thread, UseBiasedLocking);

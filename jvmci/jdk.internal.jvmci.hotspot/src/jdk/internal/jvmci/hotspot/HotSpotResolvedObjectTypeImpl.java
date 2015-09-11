@@ -475,7 +475,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
 
         final long id = offset + ((long) flags << 32);
 
-        // (thomaswue) Must cache the fields, because the local load elimination only works if the
+        // Must cache the fields, because the local load elimination only works if the
         // objects from two field lookups are identical.
         if (fieldCache == null) {
             fieldCache = new HashMap<>(8);
