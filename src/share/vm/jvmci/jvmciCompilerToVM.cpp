@@ -268,10 +268,13 @@ C2V_VMENTRY(jobject, getResolvedJavaType, (JNIEnv *, jobject, jobject base, jlon
 }
 
 C2V_VMENTRY(jobject, findUniqueConcreteMethod, (JNIEnv *, jobject, jobject jvmci_type, jobject jvmci_method))
+  ResourceMark rm;
   methodHandle method = CompilerToVM::asMethod(jvmci_method);
   KlassHandle holder = CompilerToVM::asKlass(jvmci_type);
-  assert(!holder->is_interface(), "should be handled in Java code");
-  ResourceMark rm;
+  if (holder->is_interface()) {
+    THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Interface %s should be handled in Java code", holder->external_name()));
+  }
+
   methodHandle ucm;
   {
     MutexLocker locker(Compile_lock);
@@ -305,15 +308,16 @@ C2V_END
 C2V_VMENTRY(jobject, lookupType, (JNIEnv*, jobject, jstring jname, jclass accessing_class, jboolean resolve))
   ResourceMark rm;
   Handle name = JNIHandles::resolve(jname);
-  Symbol* class_name = java_lang_String::as_symbol(name, THREAD);
-  assert(class_name != NULL, "name to symbol creation failed");
-  assert(class_name->size() > 1, "primitive types should be handled in Java code");
+  Symbol* class_name = java_lang_String::as_symbol(name, CHECK_0);
+  if (java_lang_String::length(name()) <= 1) {
+    THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Primitive type %s should be handled in Java code", class_name->as_C_string()));
+  }
 
   Klass* resolved_klass = NULL;
   Handle class_loader;
   Handle protection_domain;
   if (JNIHandles::resolve(accessing_class) == NULL) {
-    THROW_(vmSymbols::java_lang_NullPointerException(), 0L);
+    THROW_0(vmSymbols::java_lang_NullPointerException());
   }
   Klass* accessing_klass = java_lang_Class::as_Klass(JNIHandles::resolve(accessing_class));
   class_loader = accessing_klass->class_loader();
@@ -466,7 +470,10 @@ C2V_END
 C2V_VMENTRY(jint, getVtableIndexForInterface, (JNIEnv *, jobject, jobject jvmci_type, jobject jvmci_method))
   Klass* klass = CompilerToVM::asKlass(jvmci_type);
   Method* method = CompilerToVM::asMethod(jvmci_method);
-  assert(!klass->is_interface(), "");
+  if (klass->is_interface()) {
+    ResourceMark rm;
+    THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Interface %s should be handled in Java code", klass->external_name()));
+  }
   return LinkResolver::vtable_index_of_interface_method(klass, method);
 C2V_END
 
@@ -693,7 +700,7 @@ C2V_VMENTRY(jobject, executeInstalledCode, (JNIEnv*, jobject, jobject args, jobj
 
   jlong nmethodValue = InstalledCode::address(hotspotInstalledCode);
   if (nmethodValue == 0L) {
-    THROW_(vmSymbols::jdk_internal_jvmci_code_InvalidInstalledCodeException(), NULL);
+    THROW_NULL(vmSymbols::jdk_internal_jvmci_code_InvalidInstalledCodeException());
   }
   nmethod* nm = (nmethod*) (address) nmethodValue;
   methodHandle mh = nm->method();
