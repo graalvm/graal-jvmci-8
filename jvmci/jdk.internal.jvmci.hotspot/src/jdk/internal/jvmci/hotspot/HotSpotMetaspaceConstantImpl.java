@@ -27,10 +27,10 @@ import java.util.*;
 import jdk.internal.jvmci.hotspot.HotSpotVMConfig.*;
 import jdk.internal.jvmci.meta.*;
 
-public final class HotSpotMetaspaceConstantImpl extends PrimitiveConstant implements HotSpotMetaspaceConstant, VMConstant, HotSpotProxified {
+public final class HotSpotMetaspaceConstantImpl implements HotSpotMetaspaceConstant, VMConstant, HotSpotProxified {
 
-    static HotSpotMetaspaceConstantImpl forMetaspaceObject(JavaKind kind, long primitive, Object metaspaceObject, boolean compressed) {
-        return new HotSpotMetaspaceConstantImpl(kind, primitive, metaspaceObject, compressed);
+    static HotSpotMetaspaceConstantImpl forMetaspaceObject(long rawValue, Object metaspaceObject, boolean compressed) {
+        return new HotSpotMetaspaceConstantImpl(rawValue, metaspaceObject, compressed);
     }
 
     static Object getMetaspaceObject(Constant constant) {
@@ -38,43 +38,61 @@ public final class HotSpotMetaspaceConstantImpl extends PrimitiveConstant implem
     }
 
     private final Object metaspaceObject;
+    private final long rawValue;
     private final boolean compressed;
 
-    private HotSpotMetaspaceConstantImpl(JavaKind kind, long primitive, Object metaspaceObject, boolean compressed) {
-        super(kind, primitive);
+    private HotSpotMetaspaceConstantImpl(long rawValue, Object metaspaceObject, boolean compressed) {
         this.metaspaceObject = metaspaceObject;
+        this.rawValue = rawValue;
         this.compressed = compressed;
     }
 
     @Override
     public int hashCode() {
-        return super.hashCode() ^ System.identityHashCode(metaspaceObject);
+        return System.identityHashCode(metaspaceObject) ^ (int) (rawValue ^ (rawValue >>> 32)) ^ (compressed ? 1 : 2);
     }
 
     @Override
     public boolean equals(Object o) {
-        return o == this || (o instanceof HotSpotMetaspaceConstantImpl && super.equals(o) && Objects.equals(metaspaceObject, ((HotSpotMetaspaceConstantImpl) o).metaspaceObject));
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof HotSpotMetaspaceConstantImpl)) {
+            return false;
+        }
+
+        HotSpotMetaspaceConstantImpl other = (HotSpotMetaspaceConstantImpl) o;
+        return Objects.equals(this.metaspaceObject, other.metaspaceObject) && this.rawValue == other.rawValue && this.compressed == other.compressed;
+    }
+
+    @Override
+    public String toValueString() {
+        return String.format("meta[%08x]{%s%s}", rawValue, metaspaceObject, compressed ? ";compressed" : "");
     }
 
     @Override
     public String toString() {
-        return super.toString() + "{" + metaspaceObject + (compressed ? ";compressed}" : "}");
+        return toValueString();
+    }
+
+    public boolean isDefaultForKind() {
+        return rawValue == 0;
     }
 
     public boolean isCompressed() {
         return compressed;
     }
 
-    public JavaConstant compress(CompressEncoding encoding) {
+    public Constant compress(CompressEncoding encoding) {
         assert !isCompressed();
-        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(JavaKind.Int, encoding.compress(asLong()), metaspaceObject, true);
+        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(encoding.compress(rawValue), metaspaceObject, true);
         assert res.isCompressed();
         return res;
     }
 
-    public JavaConstant uncompress(CompressEncoding encoding) {
+    public Constant uncompress(CompressEncoding encoding) {
         assert isCompressed();
-        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(JavaKind.Long, encoding.uncompress(asInt()), metaspaceObject, false);
+        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(encoding.uncompress((int) rawValue), metaspaceObject, false);
         assert !res.isCompressed();
         return res;
     }
@@ -94,6 +112,6 @@ public final class HotSpotMetaspaceConstantImpl extends PrimitiveConstant implem
     }
 
     public long rawValue() {
-        return asLong();
+        return rawValue;
     }
 }

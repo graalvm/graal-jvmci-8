@@ -289,7 +289,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     }
 
     @Override
-    public JavaConstant getObjectHub() {
+    public Constant getObjectHub() {
         return klass();
     }
 
@@ -784,8 +784,8 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     /**
      * Gets the metaspace Klass boxed in a {@link JavaConstant}.
      */
-    public JavaConstant klass() {
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(runtime().getHostJVMCIBackend().getTarget().wordKind, getMetaspaceKlass(), this, false);
+    public Constant klass() {
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(getMetaspaceKlass(), this, false);
     }
 
     public boolean isPrimaryType() {

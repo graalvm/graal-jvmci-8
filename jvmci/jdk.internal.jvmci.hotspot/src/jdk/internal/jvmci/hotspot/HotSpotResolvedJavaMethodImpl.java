@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -172,8 +172,8 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
     /**
      * Gets the address of the C++ Method object for this method.
      */
-    public JavaConstant getMetaspaceMethodConstant() {
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(getHostWordKind(), metaspaceMethod, this, false);
+    public Constant getMetaspaceMethodConstant() {
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(metaspaceMethod, this, false);
     }
 
     public long getMetaspaceMethod() {
@@ -185,7 +185,7 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
     }
 
     @Override
-    public JavaConstant getEncoding() {
+    public Constant getEncoding() {
         return getMetaspaceMethodConstant();
     }
 

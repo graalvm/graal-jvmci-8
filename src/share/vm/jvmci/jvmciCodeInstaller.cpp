@@ -165,16 +165,16 @@ static void record_metadata_reference(oop obj, jlong prim, jboolean compressed, 
 static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder) {
   if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
     oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
-    jlong prim = HotSpotMetaspaceConstantImpl::primitive(constant);
+    jlong raw = HotSpotMetaspaceConstantImpl::rawValue(constant);
     assert(obj != NULL, "must have an object");
-    assert(prim != 0, "must have a primitive value");
+    assert(raw != 0, "must have a raw value");
 
-    record_metadata_reference(obj, prim, false, oop_recorder);
+    record_metadata_reference(obj, raw, false, oop_recorder);
   }
 }
 
 static void record_metadata_in_patch(Handle& constant, OopRecorder* oop_recorder) {
-  record_metadata_reference(HotSpotMetaspaceConstantImpl::metaspaceObject(constant), HotSpotMetaspaceConstantImpl::primitive(constant), HotSpotMetaspaceConstantImpl::compressed(constant), oop_recorder);
+  record_metadata_reference(HotSpotMetaspaceConstantImpl::metaspaceObject(constant), HotSpotMetaspaceConstantImpl::rawValue(constant), HotSpotMetaspaceConstantImpl::compressed(constant), oop_recorder);
 }
 
 Location::Type CodeInstaller::get_oop_type(oop value) {

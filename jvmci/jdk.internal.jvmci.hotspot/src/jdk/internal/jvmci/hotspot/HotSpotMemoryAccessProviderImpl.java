@@ -23,7 +23,6 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
-import jdk.internal.jvmci.code.TargetDescription;
 import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.hotspot.HotSpotVMConfig.CompressEncoding;
 import jdk.internal.jvmci.meta.Constant;
@@ -215,8 +214,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
         if (klass == null) {
             return JavaConstant.NULL_POINTER;
         }
-        TargetDescription target = runtime.getHostJVMCIBackend().getCodeCache().getTarget();
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(target.wordKind, klass.getMetaspaceKlass(), klass, false);
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(klass.getMetaspaceKlass(), klass, false);
     }
 
     @Override
@@ -225,15 +223,14 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
         if (klass == null) {
             return HotSpotCompressedNullConstant.COMPRESSED_NULL;
         }
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(JavaKind.Int, encoding.compress(klass.getMetaspaceKlass()), klass, true);
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(encoding.compress(klass.getMetaspaceKlass()), klass, true);
     }
 
     @Override
     public Constant readMethodPointerConstant(Constant base, long displacement) {
-        TargetDescription target = runtime.getHostJVMCIBackend().getCodeCache().getTarget();
         assert (base instanceof HotSpotObjectConstantImpl);
         Object baseObject = ((HotSpotObjectConstantImpl) base).object();
         HotSpotResolvedJavaMethodImpl method = runtime.getCompilerToVM().getResolvedJavaMethod(baseObject, displacement);
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(target.wordKind, method.getMetaspaceMethod(), method, false);
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(method.getMetaspaceMethod(), method, false);
     }
 }
