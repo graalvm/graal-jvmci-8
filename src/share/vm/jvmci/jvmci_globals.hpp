@@ -94,17 +94,8 @@
   develop(bool, JVMCIUseFastLocking, true,                                  \
           "Use fast inlined locking code")                                  \
                                                                             \
-  develop(bool, JVMCIUseFastNewTypeArray, true,                             \
-          "Use fast inlined type array allocation")                         \
-                                                                            \
-  develop(bool, JVMCIUseFastNewObjectArray, true,                           \
-          "Use fast inlined object array allocation")                       \
-                                                                            \
   product(intx, JVMCINMethodSizeLimit, (80*K)*wordSize,                     \
           "Maximum size of a compiled method.")                             \
-                                                                            \
-  notproduct(bool, JVMCIPrintSimpleStubs, false,                            \
-          "Print simple JVMCI stubs")                                       \
                                                                             \
   develop(bool, TraceUncollectedSpeculations, false,                        \
           "Print message when a failed speculation was not collected")      \
