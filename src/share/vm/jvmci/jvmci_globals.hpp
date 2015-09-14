@@ -46,9 +46,6 @@
 //
 #define JVMCI_FLAGS(develop, develop_pd, product, product_pd, notproduct)   \
                                                                             \
-  product(bool, DebugJVMCI, true,                                           \
-          "Enable JVMTI for the compiler thread")                           \
-                                                                            \
   product(bool, UseJVMCIClassLoader, true,                                  \
           "Load JVMCI classes with separate class loader")                  \
                                                                             \
