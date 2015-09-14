@@ -185,7 +185,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         if (architecture.canStoreValue(FPUs, kind) || architecture.canStoreValue(FPUd, kind)) {
             return fpuParameterRegisters;
         }
-        assert architecture.canStoreValue(CPU, kind);
+        assert architecture.canStoreValue(CPU, kind) : kind;
         return type == Type.JavaCallee ? cpuCalleeParameterRegisters : cpuCallerParameterRegisters;
     }
 
@@ -234,11 +234,12 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
             }
 
             if (locations[i] == null) {
+                LIRKind lirKind = target.getLIRKind(kind);
                 // Stack slot is always aligned to its size in bytes but minimum wordsize
-                int typeSize = SPARC.spillSlotSize(target, kind);
+                int typeSize = target.getSizeInBytes(lirKind.getPlatformKind());
                 currentStackOffset = roundUp(currentStackOffset, typeSize);
                 int slotOffset = currentStackOffset + SPARC.REGISTER_SAFE_AREA_SIZE;
-                locations[i] = StackSlot.get(target.getLIRKind(kind.getStackKind()), slotOffset, !type.out);
+                locations[i] = StackSlot.get(lirKind, slotOffset, !type.out);
                 currentStackOffset += typeSize;
             }
         }

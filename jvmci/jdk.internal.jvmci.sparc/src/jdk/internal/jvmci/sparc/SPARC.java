@@ -265,6 +265,7 @@ public class SPARC extends Architecture {
         JavaKind kind = (JavaKind) lirKind;
         if (category.equals(CPU)) {
             switch (kind) {
+                case Object:
                 case Boolean:
                 case Byte:
                 case Char:
