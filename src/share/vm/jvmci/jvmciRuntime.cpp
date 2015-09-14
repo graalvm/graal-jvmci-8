@@ -988,18 +988,18 @@ Klass* JVMCIRuntime::load_required_class(Symbol* name) {
 
 void JVMCIRuntime::parse_lines(char* path, ParseClosure* closure, bool warnStatFailure) {
   struct stat st;
-  if (os::stat(path, &st) == 0 && (st.st_mode & S_IFREG) == S_IFREG) { // exists & is regular file
-    int file_handle = os::open(path, 0, 0);
+  if (::stat(path, &st) == 0 && (st.st_mode & S_IFREG) == S_IFREG) { // exists & is regular file
+    int file_handle = ::open(path, 0, 0);
     if (file_handle != -1) {
       char* buffer = NEW_C_HEAP_ARRAY(char, st.st_size + 1, mtInternal);
       int num_read;
-      num_read = (int) os::read(file_handle, (char*) buffer, st.st_size);
+      num_read = (int) ::read(file_handle, (char*) buffer, st.st_size);
       if (num_read == -1) {
         warning("Error reading file %s due to %s", path, strerror(errno));
       } else if (num_read != st.st_size) {
         warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
       }
-      os::close(file_handle);
+      ::close(file_handle);
       closure->set_filename(path);
       if (num_read == st.st_size) {
         buffer[num_read] = '\0';
