@@ -22,12 +22,25 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider.Options.*;
+import static jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider.Options.TrustFinalDefaultFields;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider.getArrayBaseOffset;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider.getArrayIndexScale;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Array;
 
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.options.*;
+import jdk.internal.jvmci.meta.Constant;
+import jdk.internal.jvmci.meta.ConstantReflectionProvider;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaField;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.MemoryAccessProvider;
+import jdk.internal.jvmci.meta.MethodHandleAccessProvider;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.options.Option;
+import jdk.internal.jvmci.options.OptionType;
+import jdk.internal.jvmci.options.OptionValue;
+import jdk.internal.jvmci.options.StableOptionValue;
 
 /**
  * HotSpot implementation of {@link ConstantReflectionProvider}.
@@ -105,8 +118,8 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         }
         Class<?> componentType = ((HotSpotObjectConstantImpl) array).object().getClass().getComponentType();
         JavaKind kind = runtime.getHostJVMCIBackend().getMetaAccess().lookupJavaType(componentType).getJavaKind();
-        int arraybase = runtime.getArrayBaseOffset(kind);
-        int scale = runtime.getArrayIndexScale(kind);
+        int arraybase = getArrayBaseOffset(kind);
+        int scale = getArrayIndexScale(kind);
         if (offset < arraybase) {
             return -1;
         }
