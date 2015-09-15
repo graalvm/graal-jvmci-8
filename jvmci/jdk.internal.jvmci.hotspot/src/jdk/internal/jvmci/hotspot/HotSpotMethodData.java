@@ -193,12 +193,12 @@ public final class HotSpotMethodData {
 
     private HotSpotResolvedJavaMethod readMethod(int position, int offsetInBytes) {
         long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
-        return runtime().compilerToVm.getResolvedJavaMethod(null, metaspaceMethodData + fullOffsetInBytes);
+        return runtime().getCompilerToVM().getResolvedJavaMethod(null, metaspaceMethodData + fullOffsetInBytes);
     }
 
     private HotSpotResolvedObjectTypeImpl readKlass(int position, int offsetInBytes) {
         long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
-        return runtime().compilerToVm.getResolvedJavaType(null, metaspaceMethodData + fullOffsetInBytes, false);
+        return runtime().getCompilerToVM().getResolvedJavaType(null, metaspaceMethodData + fullOffsetInBytes, false);
     }
 
     private static int truncateLongToInt(long value) {

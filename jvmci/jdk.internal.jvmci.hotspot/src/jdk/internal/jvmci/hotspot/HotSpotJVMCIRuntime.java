@@ -22,21 +22,39 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.inittimer.InitTimer.*;
+import static jdk.internal.jvmci.inittimer.InitTimer.timer;
 
-import java.util.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.compiler.*;
+import jdk.internal.jvmci.code.Architecture;
+import jdk.internal.jvmci.code.CompilationResult;
+import jdk.internal.jvmci.code.InstalledCode;
+import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.compiler.Compiler;
-import jdk.internal.jvmci.inittimer.*;
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.runtime.*;
-import jdk.internal.jvmci.service.*;
+import jdk.internal.jvmci.compiler.CompilerFactory;
+import jdk.internal.jvmci.compiler.StartupEventListener;
+import jdk.internal.jvmci.inittimer.InitTimer;
+import jdk.internal.jvmci.meta.JVMCIMetaAccessContext;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.runtime.JVMCI;
+import jdk.internal.jvmci.runtime.JVMCIBackend;
+import jdk.internal.jvmci.service.Services;
 
 //JaCoCo Exclude
 
+/**
+ * HotSpot implementation of a JVMCI runtime.
+ */
 public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, HotSpotProxified {
 
     /**
@@ -44,11 +62,16 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * initialization of the JVMCI and really should only ever be triggered through
      * {@link JVMCI#getRuntime}. However since {@link #runtime} can also be called directly it
      * should also trigger proper initialization. To ensure proper ordering, the static initializer
-     * of this class initializes {@link JVMCI} and then access to {@link DelayedInit#instance}
-     * triggers the final initialization of the {@link HotSpotJVMCIRuntime}.
+     * of this class initializes {@link JVMCI} and then access to
+     * {@link HotSpotJVMCIRuntime.DelayedInit#instance} triggers the final initialization of the
+     * {@link HotSpotJVMCIRuntime}.
      */
-    static {
+    private static void initializeJVMCI() {
         JVMCI.initialize();
+    }
+
+    static {
+        initializeJVMCI();
     }
 
     @SuppressWarnings("try")
@@ -87,9 +110,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     public void completeInitialization() {
         compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
-        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
-            vmEventListener.completeInitialization(this);
-        }
     }
 
     public static HotSpotJVMCIBackendFactory findFactory(String architecture) {
@@ -124,6 +144,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     @SuppressWarnings("try")
     private HotSpotJVMCIRuntime() {
         compilerToVm = new CompilerToVM();
+
         try (InitTimer t = timer("HotSpotVMConfig<init>")) {
             config = new HotSpotVMConfig(compilerToVm);
         }
@@ -154,6 +175,10 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             context = new HotSpotJVMCIMetaAccessContext();
         }
         metaAccessContext = context;
+
+        if (Boolean.valueOf(System.getProperty("jvmci.printconfig"))) {
+            printConfig(config, compilerToVm);
+        }
     }
 
     private JVMCIBackend registerBackend(JVMCIBackend backend) {
@@ -211,7 +236,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         return backends.get(arch);
     }
 
-    public Map<Class<? extends Architecture>, JVMCIBackend> getBackends() {
+    public Map<Class<? extends Architecture>, JVMCIBackend> getJVMCIBackends() {
         return Collections.unmodifiableMap(backends);
     }
 
@@ -235,16 +260,76 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         }
     }
 
-    /**
-     * Shuts down the runtime.
-     *
-     * Called from the VM.
-     *
-     * @param hotSpotCodeCacheProvider
-     */
     void notifyInstall(HotSpotCodeCacheProvider hotSpotCodeCacheProvider, InstalledCode installedCode, CompilationResult compResult) {
         for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
             vmEventListener.notifyInstall(hotSpotCodeCacheProvider, installedCode, compResult);
         }
+    }
+
+    private static void printConfig(HotSpotVMConfig config, CompilerToVM vm) {
+        Field[] fields = config.getClass().getDeclaredFields();
+        Map<String, Field> sortedFields = new TreeMap<>();
+        for (Field f : fields) {
+            if (!f.isSynthetic() && !Modifier.isStatic(f.getModifiers())) {
+                f.setAccessible(true);
+                sortedFields.put(f.getName(), f);
+            }
+        }
+        for (Field f : sortedFields.values()) {
+            try {
+                String line = String.format("%9s %-40s = %s%n", f.getType().getSimpleName(), f.getName(), pretty(f.get(config)));
+                byte[] lineBytes = line.getBytes();
+                vm.writeDebugOutput(lineBytes, 0, lineBytes.length);
+                vm.flushDebugOutput();
+            } catch (Exception e) {
+            }
+        }
+    }
+
+    private static String pretty(Object value) {
+        if (value == null) {
+            return "null";
+        }
+
+        Class<?> klass = value.getClass();
+        if (value instanceof String) {
+            return "\"" + value + "\"";
+        } else if (value instanceof Method) {
+            return "method \"" + ((Method) value).getName() + "\"";
+        } else if (value instanceof Class<?>) {
+            return "class \"" + ((Class<?>) value).getSimpleName() + "\"";
+        } else if (value instanceof Integer) {
+            if ((Integer) value < 10) {
+                return value.toString();
+            }
+            return value + " (0x" + Integer.toHexString((Integer) value) + ")";
+        } else if (value instanceof Long) {
+            if ((Long) value < 10 && (Long) value > -10) {
+                return value + "l";
+            }
+            return value + "l (0x" + Long.toHexString((Long) value) + "l)";
+        } else if (klass.isArray()) {
+            StringBuilder str = new StringBuilder();
+            int dimensions = 0;
+            while (klass.isArray()) {
+                dimensions++;
+                klass = klass.getComponentType();
+            }
+            int length = Array.getLength(value);
+            str.append(klass.getSimpleName()).append('[').append(length).append(']');
+            for (int i = 1; i < dimensions; i++) {
+                str.append("[]");
+            }
+            str.append(" {");
+            for (int i = 0; i < length; i++) {
+                str.append(pretty(Array.get(value, i)));
+                if (i < length - 1) {
+                    str.append(", ");
+                }
+            }
+            str.append('}');
+            return str.toString();
+        }
+        return value.toString();
     }
 }

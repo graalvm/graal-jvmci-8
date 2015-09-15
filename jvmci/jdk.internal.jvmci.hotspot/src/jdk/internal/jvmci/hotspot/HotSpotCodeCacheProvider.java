@@ -99,7 +99,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
     }
 
     public InstalledCode logOrDump(InstalledCode installedCode, CompilationResult compResult) {
-        HotSpotJVMCIRuntime.runtime().notifyInstall(this, installedCode, compResult);
+        ((HotSpotJVMCIRuntime) runtime).notifyInstall(this, installedCode, compResult);
         return installedCode;
     }
 

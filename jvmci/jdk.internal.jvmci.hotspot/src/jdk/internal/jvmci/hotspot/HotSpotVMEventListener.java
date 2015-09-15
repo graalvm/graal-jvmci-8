@@ -34,21 +34,13 @@ public interface HotSpotVMEventListener {
     }
 
     /**
-     * Notify on successful install into the CodeCache.
+     * Notify on successful install into the code cache.
      *
      * @param hotSpotCodeCacheProvider
      * @param installedCode
      * @param compResult
      */
     default void notifyInstall(HotSpotCodeCacheProvider hotSpotCodeCacheProvider, InstalledCode installedCode, CompilationResult compResult) {
-    }
-
-    /**
-     * Perform any extra initialization required.
-     *
-     * @param runtime
-     */
-    default void completeInitialization(HotSpotJVMCIRuntime runtime) {
     }
 
     /**
