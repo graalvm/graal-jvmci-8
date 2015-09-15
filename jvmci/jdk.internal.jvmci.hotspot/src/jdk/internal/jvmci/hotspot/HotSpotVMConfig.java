@@ -59,6 +59,10 @@ public class HotSpotVMConfig {
         return false;
     }
 
+    public static HotSpotVMConfig config() {
+        return HotSpotJVMCIRuntime.runtime().getConfig();
+    }
+
     /**
      * Maximum allowed size of allocated area for a frame.
      */
