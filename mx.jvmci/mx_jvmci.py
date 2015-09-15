@@ -1736,6 +1736,12 @@ def get_jvmci_bootstrap_jdk():
         _jvmci_bootstrap_jdk = mx.get_jdk(_versionCheck, versionDescription=versionDesc, tag='default')
     return _jvmci_bootstrap_jdk
 
+_jvmci_bootclasspath_prepends = []
+
+def add_bootclasspath_prepend(dep):
+    assert isinstance(dep, mx.ClasspathDependency)
+    _jvmci_bootclasspath_prepends.append(dep)
+
 class JVMCIJDKConfig(mx.JDKConfig):
     def __init__(self, vmbuild):
         # Ignore the deployable distributions here - they are only deployed during building.
@@ -1767,6 +1773,8 @@ class JVMCIJDKConfig(mx.JDKConfig):
             if existingJvmciOptionsProperty:
                 mx.abort('defining jvmci.option property is incompatible with defining one or more -G: options: ' + existingJvmciOptionsProperty)
             args = ['-Djvmci.options=' + ' '.join(jvmciArgs)] + nonJvmciArgs
+
+        args = ['-Xbootclasspath/p:' + dep.classpath_repr() for dep in _jvmci_bootclasspath_prepends] + args
 
         if '-version' in args:
             ignoredArgs = args[args.index('-version') + 1:]
