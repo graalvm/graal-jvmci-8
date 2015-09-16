@@ -126,7 +126,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * Gets the kind of a word value on the {@linkplain #getHostJVMCIBackend() host} backend.
      */
     public static JavaKind getHostWordKind() {
-        return runtime().getHostJVMCIBackend().getCodeCache().getTarget().wordKind;
+        return runtime().getHostJVMCIBackend().getCodeCache().getTarget().wordJavaKind;
     }
 
     protected final CompilerToVM compilerToVm;
