@@ -379,6 +379,10 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
             // seeing A.foo().
             return null;
         }
+        if (this.isDefault()) {
+            // CHA for default methods doesn't work and may crash the VM
+            return null;
+        }
         return runtime().getCompilerToVM().findUniqueConcreteMethod(((HotSpotResolvedObjectTypeImpl) receiver), this);
     }
 
