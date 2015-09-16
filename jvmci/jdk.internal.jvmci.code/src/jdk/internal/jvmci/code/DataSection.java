@@ -176,11 +176,27 @@ public final class DataSection implements Iterable<Data> {
      */
     public DataSectionReference insertData(Data data) {
         assert !finalLayout;
-        if (data.ref == null) {
-            data.ref = new DataSectionReference();
+        synchronized (data) {
+            if (data.ref == null) {
+                data.ref = new DataSectionReference();
+                dataItems.add(data);
+            }
+            return data.ref;
+        }
+    }
+
+    /**
+     * Transfers all {@link Data} from the provided other {@link DataSection} to this
+     * {@link DataSection}, and empties the other section.
+     */
+    public void addAll(DataSection other) {
+        assert !finalLayout && !other.finalLayout;
+
+        for (Data data : other.dataItems) {
+            assert data.ref != null;
             dataItems.add(data);
         }
-        return data.ref;
+        other.dataItems.clear();
     }
 
     /**
@@ -195,14 +211,16 @@ public final class DataSection implements Iterable<Data> {
         dataItems.sort((a, b) -> a.alignment - b.alignment);
 
         int position = 0;
+        int alignment = 1;
         for (Data d : dataItems) {
-            sectionAlignment = lcm(sectionAlignment, d.alignment);
+            alignment = lcm(alignment, d.alignment);
             position = align(position, d.alignment);
 
             d.ref.setOffset(position);
             position += d.size;
         }
 
+        sectionAlignment = alignment;
         sectionSize = position;
     }
 
