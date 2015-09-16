@@ -22,10 +22,10 @@
  */
 package jdk.internal.jvmci.meta;
 
-import java.lang.annotation.*;
-import java.net.*;
+import java.lang.annotation.Annotation;
+import java.net.URL;
 
-import jdk.internal.jvmci.meta.Assumptions.*;
+import jdk.internal.jvmci.meta.Assumptions.AssumptionResult;
 
 /**
  * Represents a resolved Java type. Types include primitives, objects, {@code void}, and arrays

@@ -22,7 +22,8 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.SpeculationLog;
 
 public class HotSpotSpeculationLog extends SpeculationLog {
 

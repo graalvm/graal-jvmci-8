@@ -28,15 +28,21 @@
 
 package jdk.internal.jvmci.options.test;
 
-import static jdk.internal.jvmci.options.test.TestOptionValue.Options.*;
-import static org.junit.Assert.*;
+import static jdk.internal.jvmci.options.test.TestOptionValue.Options.Mutable;
+import static jdk.internal.jvmci.options.test.TestOptionValue.Options.SecondMutable;
+import static jdk.internal.jvmci.options.test.TestOptionValue.Options.Stable;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import java.util.*;
+import java.util.Arrays;
 
-import jdk.internal.jvmci.options.*;
-import jdk.internal.jvmci.options.OptionValue.*;
+import jdk.internal.jvmci.options.OptionDescriptor;
+import jdk.internal.jvmci.options.OptionValue;
+import jdk.internal.jvmci.options.OptionValue.OverrideScope;
+import jdk.internal.jvmci.options.StableOptionValue;
 
-import org.junit.*;
+import org.junit.Test;
 
 @SuppressWarnings("try")
 public class TestOptionValue {

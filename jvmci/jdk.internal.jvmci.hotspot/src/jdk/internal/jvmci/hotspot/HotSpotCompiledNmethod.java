@@ -22,8 +22,8 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.inittimer.*;
+import jdk.internal.jvmci.code.CompilationResult;
+import jdk.internal.jvmci.inittimer.SuppressFBWarnings;
 
 /**
  * {@link HotSpotCompiledCode} destined for installation as an nmethod.

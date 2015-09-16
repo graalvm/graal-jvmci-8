@@ -22,8 +22,11 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import jdk.internal.jvmci.meta.*;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
+import jdk.internal.jvmci.meta.JavaMethodProfile;
+import jdk.internal.jvmci.meta.JavaTypeProfile;
+import jdk.internal.jvmci.meta.ProfilingInfo;
+import jdk.internal.jvmci.meta.TriState;
 
 /**
  * Interface for accessor objects that encapsulate the logic for accessing the different kinds of

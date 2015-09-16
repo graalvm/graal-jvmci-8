@@ -23,14 +23,29 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider.getArrayBaseOffset;
-import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
+import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.fromObjectClass;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.code.CodeUtil;
+import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.meta.DeoptimizationAction;
+import jdk.internal.jvmci.meta.DeoptimizationReason;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.MetaAccessProvider;
+import jdk.internal.jvmci.meta.ResolvedJavaField;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.meta.Signature;
 
 // JaCoCo Exclude
 

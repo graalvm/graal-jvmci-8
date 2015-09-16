@@ -22,8 +22,10 @@
  */
 package jdk.internal.jvmci.code;
 
-import jdk.internal.jvmci.meta.*;
-import static jdk.internal.jvmci.meta.MetaUtil.*;
+import static jdk.internal.jvmci.meta.MetaUtil.identityHashCodeString;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.LIRKind;
+import jdk.internal.jvmci.meta.PlatformKind;
 
 /**
  * Represents the target machine for a compiler, including the CPU architecture, the size of

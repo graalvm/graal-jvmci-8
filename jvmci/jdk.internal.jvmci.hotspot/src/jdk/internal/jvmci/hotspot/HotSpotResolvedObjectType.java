@@ -22,8 +22,15 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.meta.Assumptions.*;
+import jdk.internal.jvmci.meta.Assumptions.AssumptionResult;
+import jdk.internal.jvmci.meta.Constant;
+import jdk.internal.jvmci.meta.ConstantPool;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.ResolvedJavaField;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
 
 /**
  * Implementation of {@link JavaType} for resolved non-primitive HotSpot classes.

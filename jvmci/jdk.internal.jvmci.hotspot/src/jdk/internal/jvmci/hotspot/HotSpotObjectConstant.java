@@ -22,10 +22,13 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import java.lang.invoke.*;
-import java.util.*;
+import java.lang.invoke.CallSite;
+import java.util.Objects;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.Assumptions;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.meta.VMConstant;
 
 /**
  * Represents a constant non-{@code null} object reference, within the compiler and across the

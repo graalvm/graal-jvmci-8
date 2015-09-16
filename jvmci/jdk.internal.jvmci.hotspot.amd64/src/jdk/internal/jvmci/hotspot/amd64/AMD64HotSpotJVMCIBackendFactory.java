@@ -22,18 +22,25 @@
  */
 package jdk.internal.jvmci.hotspot.amd64;
 
-import static jdk.internal.jvmci.inittimer.InitTimer.*;
+import static jdk.internal.jvmci.inittimer.InitTimer.timer;
 
-import java.util.*;
+import java.util.EnumSet;
 
-import jdk.internal.jvmci.amd64.*;
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.compiler.*;
-import jdk.internal.jvmci.hotspot.*;
-import jdk.internal.jvmci.inittimer.*;
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.runtime.*;
-import jdk.internal.jvmci.service.*;
+import jdk.internal.jvmci.amd64.AMD64;
+import jdk.internal.jvmci.code.Architecture;
+import jdk.internal.jvmci.code.RegisterConfig;
+import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.compiler.CompilerFactory;
+import jdk.internal.jvmci.hotspot.HotSpotCodeCacheProvider;
+import jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider;
+import jdk.internal.jvmci.hotspot.HotSpotJVMCIBackendFactory;
+import jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider;
+import jdk.internal.jvmci.hotspot.HotSpotMetaAccessProvider;
+import jdk.internal.jvmci.hotspot.HotSpotVMConfig;
+import jdk.internal.jvmci.inittimer.InitTimer;
+import jdk.internal.jvmci.meta.ConstantReflectionProvider;
+import jdk.internal.jvmci.runtime.JVMCIBackend;
+import jdk.internal.jvmci.service.ServiceProvider;
 
 @ServiceProvider(HotSpotJVMCIBackendFactory.class)
 public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFactory {

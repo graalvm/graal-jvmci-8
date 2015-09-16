@@ -22,13 +22,13 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.compiler.*;
+import jdk.internal.jvmci.code.Architecture;
+import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.compiler.Compiler;
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.runtime.*;
-import jdk.internal.jvmci.service.*;
+import jdk.internal.jvmci.compiler.CompilerFactory;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.runtime.JVMCIRuntime;
+import jdk.internal.jvmci.service.Services;
 
 final class HotSpotJVMCICompilerConfig {
 

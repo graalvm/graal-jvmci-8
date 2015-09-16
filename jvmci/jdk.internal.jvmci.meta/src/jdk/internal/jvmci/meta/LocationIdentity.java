@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.meta;
 
-import java.util.*;
+import java.util.IdentityHashMap;
 
 // JaCoCo Exclude
 

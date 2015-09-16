@@ -22,9 +22,11 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Modifier;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
 
 /**
  * Implementation of {@link JavaMethod} for resolved HotSpot methods.

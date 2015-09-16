@@ -22,9 +22,15 @@
  */
 package jdk.internal.jvmci.code;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Map;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.MetaUtil;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.Signature;
 
 /**
  * Miscellaneous collection of utility methods used by {@code jdk.internal.jvmci.code} and its

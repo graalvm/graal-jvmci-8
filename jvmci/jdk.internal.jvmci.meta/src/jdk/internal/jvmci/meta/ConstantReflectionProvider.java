@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.meta;
 
-import java.lang.invoke.*;
+import java.lang.invoke.MethodHandle;
 
 /**
  * Reflection operations on values represented as {@linkplain JavaConstant constants}. All methods

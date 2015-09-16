@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.runtime;
 
-import java.util.*;
+import java.util.Formatter;
 
 public class JVMCI {
 

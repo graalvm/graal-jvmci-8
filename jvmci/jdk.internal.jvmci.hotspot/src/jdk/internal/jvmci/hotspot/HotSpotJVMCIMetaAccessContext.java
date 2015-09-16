@@ -22,10 +22,17 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import java.lang.ref.*;
-import java.util.*;
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
+import java.lang.ref.WeakReference;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.WeakHashMap;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JVMCIMetaAccessContext;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
 
 /**
  * This class manages the set of metadata roots that must be scanned during garbage collection.

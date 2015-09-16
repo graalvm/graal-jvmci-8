@@ -22,11 +22,14 @@
  */
 package jdk.internal.jvmci.runtime.test;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.runtime.*;
+import jdk.internal.jvmci.meta.MetaAccessProvider;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.meta.Signature;
+import jdk.internal.jvmci.runtime.JVMCI;
 
 class NameAndSignature {
 

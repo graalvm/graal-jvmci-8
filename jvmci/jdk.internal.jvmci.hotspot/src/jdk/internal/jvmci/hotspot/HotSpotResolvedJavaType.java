@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
 
 public abstract class HotSpotResolvedJavaType extends HotSpotJavaType implements ResolvedJavaType {
 

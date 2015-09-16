@@ -22,7 +22,9 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaMethod;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.Signature;
 
 /**
  * Implementation of {@link JavaMethod} for unresolved HotSpot methods.

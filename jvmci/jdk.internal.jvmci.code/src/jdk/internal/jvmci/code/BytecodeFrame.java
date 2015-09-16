@@ -22,9 +22,12 @@
  */
 package jdk.internal.jvmci.code;
 
-import java.util.*;
+import java.util.Arrays;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaValue;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.Value;
 
 /**
  * Represents the Java bytecode frame state(s) at a given position including {@link Value locations}

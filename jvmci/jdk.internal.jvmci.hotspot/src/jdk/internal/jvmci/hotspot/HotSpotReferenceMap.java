@@ -22,9 +22,10 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import java.util.*;
+import java.util.Arrays;
 
-import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.code.Location;
+import jdk.internal.jvmci.code.ReferenceMap;
 
 public final class HotSpotReferenceMap extends ReferenceMap {
 

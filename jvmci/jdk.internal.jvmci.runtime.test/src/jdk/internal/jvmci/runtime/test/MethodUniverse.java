@@ -22,10 +22,12 @@
  */
 package jdk.internal.jvmci.runtime.test;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.Map;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
 
 /**
  * Context for method related tests.

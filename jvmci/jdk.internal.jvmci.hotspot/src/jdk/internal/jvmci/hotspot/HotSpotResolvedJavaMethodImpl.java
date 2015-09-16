@@ -22,17 +22,44 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaMethodImpl.Options.*;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaMethodImpl.Options.UseProfilingInformation;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
-import java.lang.annotation.*;
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
 
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.options.*;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.meta.Constant;
+import jdk.internal.jvmci.meta.ConstantPool;
+import jdk.internal.jvmci.meta.DefaultProfilingInfo;
+import jdk.internal.jvmci.meta.ExceptionHandler;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaMethod;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.LineNumberTable;
+import jdk.internal.jvmci.meta.LineNumberTableImpl;
+import jdk.internal.jvmci.meta.Local;
+import jdk.internal.jvmci.meta.LocalImpl;
+import jdk.internal.jvmci.meta.LocalVariableTable;
+import jdk.internal.jvmci.meta.LocalVariableTableImpl;
+import jdk.internal.jvmci.meta.ModifiersProvider;
+import jdk.internal.jvmci.meta.ProfilingInfo;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.meta.Signature;
+import jdk.internal.jvmci.meta.SpeculationLog;
+import jdk.internal.jvmci.meta.TriState;
+import jdk.internal.jvmci.options.Option;
+import jdk.internal.jvmci.options.OptionType;
+import jdk.internal.jvmci.options.OptionValue;
 
 /**
  * Implementation of {@link JavaMethod} for resolved HotSpot methods.

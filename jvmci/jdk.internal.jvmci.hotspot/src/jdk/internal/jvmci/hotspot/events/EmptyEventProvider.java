@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot.events;
 
-import jdk.internal.jvmci.common.*;
+import jdk.internal.jvmci.common.JVMCIError;
 
 /**
  * An empty implementation for {@link EventProvider}. This implementation is used when no logging is

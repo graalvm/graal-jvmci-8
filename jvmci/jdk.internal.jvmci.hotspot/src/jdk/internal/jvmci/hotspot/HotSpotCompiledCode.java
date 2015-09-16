@@ -22,12 +22,16 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import java.nio.*;
-import java.util.*;
-import java.util.stream.*;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
 
-import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.code.BytecodeFrame;
+import jdk.internal.jvmci.code.CompilationResult;
 import jdk.internal.jvmci.code.CompilationResult.CodeAnnotation;
 import jdk.internal.jvmci.code.CompilationResult.CodeComment;
 import jdk.internal.jvmci.code.CompilationResult.DataPatch;
@@ -36,8 +40,9 @@ import jdk.internal.jvmci.code.CompilationResult.Infopoint;
 import jdk.internal.jvmci.code.CompilationResult.JumpTable;
 import jdk.internal.jvmci.code.CompilationResult.Mark;
 import jdk.internal.jvmci.code.CompilationResult.Site;
+import jdk.internal.jvmci.code.DataSection;
 import jdk.internal.jvmci.meta.Assumptions.Assumption;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
 
 /**
  * A {@link CompilationResult} with additional HotSpot-specific information required for installing

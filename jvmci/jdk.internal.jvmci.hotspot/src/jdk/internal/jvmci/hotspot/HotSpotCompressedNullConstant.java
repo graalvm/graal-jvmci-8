@@ -22,7 +22,8 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaKind;
 
 /**
  * The compressed representation of the {@link JavaConstant#NULL_POINTER null constant}.

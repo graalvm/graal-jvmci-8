@@ -22,15 +22,22 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaFieldImpl.Options.*;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaFieldImpl.Options.ImplicitStableValues;
 
-import java.lang.annotation.*;
-import java.lang.reflect.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.options.*;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.LocationIdentity;
+import jdk.internal.jvmci.meta.MetaAccessProvider;
+import jdk.internal.jvmci.meta.ModifiersProvider;
+import jdk.internal.jvmci.meta.ResolvedJavaField;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.options.Option;
+import jdk.internal.jvmci.options.OptionType;
+import jdk.internal.jvmci.options.OptionValue;
 
 /**
  * Represents a field in a HotSpot type.

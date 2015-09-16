@@ -22,11 +22,14 @@
  */
 package jdk.internal.jvmci.runtime.test;
 
-import static org.junit.Assert.*;
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.runtime.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import jdk.internal.jvmci.meta.MetaAccessProvider;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.runtime.JVMCI;
 
-import org.junit.*;
+import org.junit.Test;
 
 public class ResolvedJavaTypeResolveConcreteMethodTest {
     public final MetaAccessProvider metaAccess;

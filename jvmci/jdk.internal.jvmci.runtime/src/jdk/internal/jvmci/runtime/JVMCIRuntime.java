@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.runtime;
 
-import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.code.Architecture;
 
 /**
  * Interface for accessing the {@link JVMCI} APIs supported by the runtime.

@@ -25,11 +25,17 @@ package jdk.internal.jvmci.hotspot;
 import static jdk.internal.jvmci.common.UnsafeUtil.readCString;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.HashMap;
+import java.util.Iterator;
 
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.hotspotvmconfig.*;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMConstant;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMField;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMFlag;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMType;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMValue;
 
 //JaCoCo Exclude
 

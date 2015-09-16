@@ -22,8 +22,8 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.compiler.*;
-import jdk.internal.jvmci.runtime.*;
+import jdk.internal.jvmci.compiler.CompilerFactory;
+import jdk.internal.jvmci.runtime.JVMCIBackend;
 
 public interface HotSpotJVMCIBackendFactory {
 

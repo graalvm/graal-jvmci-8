@@ -22,8 +22,10 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.hotspot.HotSpotVMConfig.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.hotspot.HotSpotVMConfig.CompressEncoding;
+import jdk.internal.jvmci.meta.Constant;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.MemoryAccessProvider;
 
 /**
  * HotSpot specific extension of {@link MemoryAccessProvider}.

@@ -22,9 +22,12 @@
  */
 package jdk.internal.jvmci.service;
 
-import java.io.*;
-import java.net.*;
-import java.util.*;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Utility called from the VM to create and register a separate class loader for loading JVMCI

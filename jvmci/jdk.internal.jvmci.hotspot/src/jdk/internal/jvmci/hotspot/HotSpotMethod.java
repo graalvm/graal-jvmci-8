@@ -22,10 +22,15 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static java.util.FormattableFlags.*;
-import java.util.*;
+import static java.util.FormattableFlags.ALTERNATE;
+import static java.util.FormattableFlags.LEFT_JUSTIFY;
+import static java.util.FormattableFlags.UPPERCASE;
 
-import jdk.internal.jvmci.meta.*;
+import java.util.Formattable;
+import java.util.Formatter;
+
+import jdk.internal.jvmci.meta.JavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
 
 public abstract class HotSpotMethod implements JavaMethod, Formattable /* , JavaMethodContex */{
 

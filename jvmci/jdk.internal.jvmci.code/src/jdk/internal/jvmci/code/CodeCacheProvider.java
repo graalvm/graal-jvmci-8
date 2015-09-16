@@ -22,9 +22,14 @@
  */
 package jdk.internal.jvmci.code;
 
-import jdk.internal.jvmci.code.CompilationResult.*;
-import jdk.internal.jvmci.code.DataSection.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.code.CompilationResult.Call;
+import jdk.internal.jvmci.code.CompilationResult.DataPatch;
+import jdk.internal.jvmci.code.CompilationResult.Mark;
+import jdk.internal.jvmci.code.DataSection.Data;
+import jdk.internal.jvmci.meta.Constant;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.SpeculationLog;
 
 /**
  * Access to code cache related details and requirements.

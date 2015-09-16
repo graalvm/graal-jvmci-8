@@ -29,14 +29,22 @@
 
 package jdk.internal.jvmci.runtime.test;
 
-import static jdk.internal.jvmci.meta.MetaUtil.*;
-import static org.junit.Assert.*;
+import static jdk.internal.jvmci.meta.MetaUtil.toInternalName;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.MetaAccessProvider;
+import jdk.internal.jvmci.meta.ResolvedJavaField;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
 
-import org.junit.*;
+import org.junit.Test;
 
 /**
  * Tests for {@link MetaAccessProvider}.

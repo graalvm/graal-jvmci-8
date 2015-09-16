@@ -22,10 +22,11 @@
  */
 package jdk.internal.jvmci.runtime.test;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.ResolvedJavaField;
 
 /**
  * Context for field related tests.

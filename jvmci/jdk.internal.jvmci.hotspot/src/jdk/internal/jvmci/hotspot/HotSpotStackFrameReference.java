@@ -22,10 +22,10 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import java.util.*;
+import java.util.Arrays;
 
-import jdk.internal.jvmci.code.stack.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.code.stack.InspectedFrame;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
 
 public class HotSpotStackFrameReference implements InspectedFrame {
 

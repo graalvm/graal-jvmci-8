@@ -22,9 +22,14 @@
  */
 package jdk.internal.jvmci.code;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.AllocatableValue;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaValue;
+import jdk.internal.jvmci.meta.PlatformKind;
+import jdk.internal.jvmci.meta.Value;
 
 /**
  * Utility class for working with the {@link Value} class and its subclasses.

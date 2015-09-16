@@ -22,8 +22,8 @@
  */
 package jdk.internal.jvmci.compiler;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.runtime.*;
+import jdk.internal.jvmci.code.Architecture;
+import jdk.internal.jvmci.runtime.JVMCIRuntime;
 
 /**
  * Factory for a JVMCI compiler.

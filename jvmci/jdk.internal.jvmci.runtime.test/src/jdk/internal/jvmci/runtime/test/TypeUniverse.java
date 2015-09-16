@@ -22,20 +22,42 @@
  */
 package jdk.internal.jvmci.runtime.test;
 
-import static java.lang.reflect.Modifier.*;
+import static java.lang.reflect.Modifier.isFinal;
+import static java.lang.reflect.Modifier.isStatic;
 
-import java.io.*;
-import java.lang.reflect.*;
-import java.util.*;
+import java.io.Serializable;
+import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.util.AbstractCollection;
+import java.util.AbstractList;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
-import java.util.stream.*;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.runtime.*;
+import jdk.internal.jvmci.meta.ConstantReflectionProvider;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaField;
+import jdk.internal.jvmci.meta.MetaAccessProvider;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.meta.TrustedInterface;
+import jdk.internal.jvmci.runtime.JVMCI;
 
-import org.junit.*;
+import org.junit.Test;
 
-import sun.misc.*;
+import sun.misc.Unsafe;
 
 //JaCoCo Exclude
 

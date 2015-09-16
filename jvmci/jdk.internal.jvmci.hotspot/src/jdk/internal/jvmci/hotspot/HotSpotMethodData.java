@@ -22,17 +22,22 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static java.lang.String.*;
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
+import static java.lang.String.format;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
-import java.util.*;
+import java.util.Arrays;
 
-import jdk.internal.jvmci.hotspot.HotSpotMethodDataAccessor.*;
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.meta.JavaMethodProfile.*;
-import jdk.internal.jvmci.meta.JavaTypeProfile.*;
-import sun.misc.*;
+import jdk.internal.jvmci.hotspot.HotSpotMethodDataAccessor.Tag;
+import jdk.internal.jvmci.meta.DeoptimizationReason;
+import jdk.internal.jvmci.meta.JavaMethodProfile;
+import jdk.internal.jvmci.meta.JavaMethodProfile.ProfiledMethod;
+import jdk.internal.jvmci.meta.JavaTypeProfile;
+import jdk.internal.jvmci.meta.JavaTypeProfile.ProfiledType;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.meta.TriState;
+import sun.misc.Unsafe;
 
 /**
  * Access to a HotSpot MethodData structure (defined in methodData.hpp).

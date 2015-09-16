@@ -22,19 +22,37 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static java.util.Objects.*;
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
+import static java.util.Objects.requireNonNull;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
-import java.lang.annotation.*;
-import java.lang.reflect.*;
-import java.net.*;
-import java.nio.*;
-import java.util.*;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.net.URL;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.meta.Assumptions.*;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.meta.Assumptions.AssumptionResult;
+import jdk.internal.jvmci.meta.Assumptions.ConcreteMethod;
+import jdk.internal.jvmci.meta.Assumptions.ConcreteSubtype;
+import jdk.internal.jvmci.meta.Assumptions.LeafType;
+import jdk.internal.jvmci.meta.Assumptions.NoFinalizableSubclass;
+import jdk.internal.jvmci.meta.Constant;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.MetaUtil;
+import jdk.internal.jvmci.meta.ModifiersProvider;
+import jdk.internal.jvmci.meta.ResolvedJavaField;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.meta.TrustedInterface;
 
 /**
  * Implementation of {@link JavaType} for resolved non-primitive HotSpot classes.

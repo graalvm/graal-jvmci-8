@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.meta;
 
-import static jdk.internal.jvmci.meta.MetaUtil.*;
+import static jdk.internal.jvmci.meta.MetaUtil.internalNameToJava;
 
 /**
  * Represents a resolved or unresolved type. Types include primitives, objects, {@code void}, and

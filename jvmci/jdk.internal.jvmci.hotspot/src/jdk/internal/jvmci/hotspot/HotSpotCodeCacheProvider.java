@@ -22,15 +22,30 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotCompressedNullConstant.*;
+import static jdk.internal.jvmci.hotspot.HotSpotCompressedNullConstant.COMPRESSED_NULL;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Field;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.code.CompilationResult.*;
-import jdk.internal.jvmci.code.DataSection.*;
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.code.BailoutException;
+import jdk.internal.jvmci.code.CodeCacheProvider;
+import jdk.internal.jvmci.code.CompilationResult;
+import jdk.internal.jvmci.code.CompilationResult.Call;
+import jdk.internal.jvmci.code.CompilationResult.ConstantReference;
+import jdk.internal.jvmci.code.CompilationResult.DataPatch;
+import jdk.internal.jvmci.code.CompilationResult.Mark;
+import jdk.internal.jvmci.code.DataSection;
+import jdk.internal.jvmci.code.DataSection.Data;
+import jdk.internal.jvmci.code.DataSection.DataBuilder;
+import jdk.internal.jvmci.code.InstalledCode;
+import jdk.internal.jvmci.code.RegisterConfig;
+import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.meta.Constant;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.SerializableConstant;
+import jdk.internal.jvmci.meta.SpeculationLog;
+import jdk.internal.jvmci.meta.VMConstant;
 
 /**
  * HotSpot implementation of {@link CodeCacheProvider}.

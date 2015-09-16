@@ -22,9 +22,9 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
-import sun.misc.*;
+import sun.misc.Unsafe;
 
 /**
  * Class to access the C++ {@code vmSymbols} table.

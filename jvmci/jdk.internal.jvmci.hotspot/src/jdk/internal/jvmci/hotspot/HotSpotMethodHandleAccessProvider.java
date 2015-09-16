@@ -22,10 +22,15 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.meta.*;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.fromObjectClass;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.meta.ConstantReflectionProvider;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.MethodHandleAccessProvider;
+import jdk.internal.jvmci.meta.ResolvedJavaField;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
 
 public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProvider, HotSpotProxified {
 

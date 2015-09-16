@@ -22,13 +22,24 @@
  */
 package jdk.internal.jvmci.code;
 
-import static java.util.Collections.*;
-import static jdk.internal.jvmci.meta.MetaUtil.*;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
+import static jdk.internal.jvmci.meta.MetaUtil.identityHashCodeString;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.meta.Assumptions.*;
+import jdk.internal.jvmci.meta.Assumptions.Assumption;
+import jdk.internal.jvmci.meta.InvokeTarget;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.MetaUtil;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.meta.VMConstant;
 
 /**
  * Represents the output from compiling a method, including the compiled machine code, associated

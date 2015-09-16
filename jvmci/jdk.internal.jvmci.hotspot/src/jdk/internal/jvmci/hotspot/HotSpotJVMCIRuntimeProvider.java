@@ -22,11 +22,14 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.common.*;
+import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.compiler.Compiler;
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.runtime.*;
-import sun.misc.*;
+import jdk.internal.jvmci.meta.JVMCIMetaAccessContext;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.runtime.JVMCIRuntime;
+import sun.misc.Unsafe;
 
 //JaCoCo Exclude
 

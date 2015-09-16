@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.ResolvedJavaField;
 
 /**
  * Represents a field in a HotSpot type.

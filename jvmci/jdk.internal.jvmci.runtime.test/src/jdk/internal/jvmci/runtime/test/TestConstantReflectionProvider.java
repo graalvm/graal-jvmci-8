@@ -22,14 +22,20 @@
  */
 package jdk.internal.jvmci.runtime.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Array;
+import java.util.List;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.ConstantReflectionProvider;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaKind;
 
-import org.junit.*;
+import org.junit.Test;
 
 /**
  * Tests for {@link ConstantReflectionProvider}. It assumes an implementation of the interface that

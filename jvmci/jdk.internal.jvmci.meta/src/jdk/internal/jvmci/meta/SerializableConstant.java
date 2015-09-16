@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.meta;
 
-import java.nio.*;
+import java.nio.ByteBuffer;
 
 /**
  * Represents a compile-time constant that can be converted to a byte array.

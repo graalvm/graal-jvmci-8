@@ -22,7 +22,8 @@
  */
 package jdk.internal.jvmci.meta;
 
-import java.util.*;
+import java.util.IllegalFormatException;
+import java.util.UnknownFormatConversionException;
 
 /**
  * Represents a reference to a Java field, either resolved or unresolved fields. Fields, like

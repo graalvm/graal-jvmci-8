@@ -22,11 +22,12 @@
  */
 package jdk.internal.jvmci.code;
 
-import java.nio.*;
-import java.util.*;
+import java.nio.ByteOrder;
+import java.util.Arrays;
 
 import jdk.internal.jvmci.code.Register.RegisterCategory;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.PlatformKind;
 
 /**
  * Represents a CPU architecture, including information such as its endianness, CPU registers, word

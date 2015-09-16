@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.Constant;
 
 /**
  * Marker interface for hotspot specific constants.

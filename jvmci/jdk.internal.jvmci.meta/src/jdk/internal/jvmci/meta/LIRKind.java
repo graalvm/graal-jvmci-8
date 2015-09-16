@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.meta;
 
-import java.util.*;
+import java.util.ArrayList;
 
 /**
  * Represents the type of values in the LIR. It is composed of a {@link PlatformKind} that gives the

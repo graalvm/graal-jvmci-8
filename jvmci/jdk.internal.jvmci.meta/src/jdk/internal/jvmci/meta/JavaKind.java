@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.meta;
 
-import java.lang.reflect.*;
+import java.lang.reflect.Array;
 
 //JaCoCo Exclude
 

@@ -22,9 +22,9 @@
  */
 package jdk.internal.jvmci.code;
 
-import java.util.*;
+import java.util.Objects;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
 
 /**
  * Represents a code position, that is, a chain of inlined methods with bytecode locations, that is

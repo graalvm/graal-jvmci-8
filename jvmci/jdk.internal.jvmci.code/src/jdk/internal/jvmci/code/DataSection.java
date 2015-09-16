@@ -22,15 +22,18 @@
  */
 package jdk.internal.jvmci.code;
 
-import static jdk.internal.jvmci.meta.MetaUtil.*;
+import static jdk.internal.jvmci.meta.MetaUtil.identityHashCodeString;
 
-import java.nio.*;
-import java.util.*;
-import java.util.function.*;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.function.Consumer;
 
-import jdk.internal.jvmci.code.CompilationResult.*;
-import jdk.internal.jvmci.code.DataSection.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.code.CompilationResult.DataPatch;
+import jdk.internal.jvmci.code.CompilationResult.DataSectionReference;
+import jdk.internal.jvmci.code.DataSection.Data;
+import jdk.internal.jvmci.meta.SerializableConstant;
 
 public final class DataSection implements Iterable<Data> {
 

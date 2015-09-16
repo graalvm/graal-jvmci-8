@@ -22,8 +22,10 @@
  */
 package jdk.internal.jvmci.code;
 
-import jdk.internal.jvmci.meta.*;
-import static jdk.internal.jvmci.code.ValueUtil.*;
+import static jdk.internal.jvmci.code.ValueUtil.isStackSlot;
+import static jdk.internal.jvmci.code.ValueUtil.isVirtualStackSlot;
+import jdk.internal.jvmci.meta.JavaValue;
+import jdk.internal.jvmci.meta.Value;
 
 /**
  * Represents lock information in the debug information.

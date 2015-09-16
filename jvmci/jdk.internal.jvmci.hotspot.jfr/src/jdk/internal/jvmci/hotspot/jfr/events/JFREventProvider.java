@@ -22,20 +22,23 @@
  */
 package jdk.internal.jvmci.hotspot.jfr.events;
 
-import java.net.*;
+import java.net.URISyntaxException;
 
-import jdk.internal.jvmci.hotspot.*;
-import jdk.internal.jvmci.hotspot.events.*;
-import jdk.internal.jvmci.hotspot.events.EmptyEventProvider.*;
-import jdk.internal.jvmci.service.*;
-
-import com.oracle.jrockit.jfr.*;
+import jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime;
+import jdk.internal.jvmci.hotspot.events.EmptyEventProvider.EmptyCompilationEvent;
+import jdk.internal.jvmci.hotspot.events.EmptyEventProvider.EmptyCompilerFailureEvent;
+import jdk.internal.jvmci.hotspot.events.EventProvider;
+import jdk.internal.jvmci.service.ServiceProvider;
 
 /**
  * A JFR implementation for {@link EventProvider}. This implementation is used when Flight Recorder
  * is turned on.
+ *
+ * Note: The use of fully qualified names for deprecated types is a workaround for <a
+ * href="https://bugs.openjdk.java.net/browse/JDK-8032211">JDK-8032211</a>.
  */
 @ServiceProvider(EventProvider.class)
+@SuppressWarnings("deprecation")
 public final class JFREventProvider implements EventProvider {
 
     private final boolean enabled;
@@ -43,12 +46,11 @@ public final class JFREventProvider implements EventProvider {
     /**
      * Need to store the producer in a field so that it doesn't disappear.
      */
-    @SuppressWarnings({"deprecation", "unused"}) private final Producer producer;
+    @SuppressWarnings("unused") private final com.oracle.jrockit.jfr.Producer producer;
 
-    @SuppressWarnings("deprecation")
     public JFREventProvider() {
         enabled = HotSpotJVMCIRuntime.runtime().getConfig().flightRecorder;
-        Producer p = null;
+        com.oracle.jrockit.jfr.Producer p = null;
         if (enabled) {
             try {
                 /*
@@ -57,11 +59,11 @@ public final class JFREventProvider implements EventProvider {
                  * doesn't show JVMCI events in the "Code" tab. There are plans to revise the JFR
                  * code for JDK 9.
                  */
-                p = new Producer("HotSpot JVM", "Oracle Hotspot JVM", "http://www.oracle.com/hotspot/jvm/");
+                p = new com.oracle.jrockit.jfr.Producer("HotSpot JVM", "Oracle Hotspot JVM", "http://www.oracle.com/hotspot/jvm/");
                 p.register();
                 // Register event classes with Producer.
                 for (Class<?> c : JFREventProvider.class.getDeclaredClasses()) {
-                    if (c.isAnnotationPresent(EventDefinition.class)) {
+                    if (c.isAnnotationPresent(com.oracle.jrockit.jfr.EventDefinition.class)) {
                         assert com.oracle.jrockit.jfr.InstantEvent.class.isAssignableFrom(c) : c;
                         registerEvent(p, c);
                     }
@@ -74,16 +76,16 @@ public final class JFREventProvider implements EventProvider {
     }
 
     /**
-     * Register an event class with the {@link Producer}.
+     * Register an event class with the {@link com.oracle.jrockit.jfr.Producer}.
      *
      * @param c event class
      * @return the {@link EventToken event token}
      */
-    @SuppressWarnings({"deprecation", "javadoc", "unchecked"})
-    private static EventToken registerEvent(Producer producer, Class<?> c) {
+    @SuppressWarnings({"javadoc", "unchecked"})
+    private static com.oracle.jrockit.jfr.EventToken registerEvent(com.oracle.jrockit.jfr.Producer producer, Class<?> c) {
         try {
             return producer.addEvent((Class<? extends com.oracle.jrockit.jfr.InstantEvent>) c);
-        } catch (InvalidEventDefinitionException | InvalidValueException e) {
+        } catch (com.oracle.jrockit.jfr.InvalidEventDefinitionException | com.oracle.jrockit.jfr.InvalidValueException e) {
             throw new InternalError(e);
         }
     }
@@ -101,20 +103,19 @@ public final class JFREventProvider implements EventProvider {
      * <p>
      * See: event {@code Compilation} in {@code src/share/vm/trace/trace.xml}
      */
-    @SuppressWarnings("deprecation")
-    @EventDefinition(name = "Compilation", path = "vm/compiler/compilation")
+    @com.oracle.jrockit.jfr.EventDefinition(name = "Compilation", path = "vm/compiler/compilation")
     public static class JFRCompilationEvent extends com.oracle.jrockit.jfr.DurationEvent implements CompilationEvent {
 
         /*
          * FIXME method should be a Method* but we can't express that in Java.
          */
-        @ValueDefinition(name = "Java Method") public String method;
-        @ValueDefinition(name = "Compilation ID", relationKey = "COMP_ID") public int compileId;
-        @ValueDefinition(name = "Compilation Level") public short compileLevel;
-        @ValueDefinition(name = "Succeeded") public boolean succeeded;
-        @ValueDefinition(name = "On Stack Replacement") public boolean isOsr;
-        @ValueDefinition(name = "Compiled Code Size", contentType = ContentType.Bytes) public int codeSize;
-        @ValueDefinition(name = "Inlined Code Size", contentType = ContentType.Bytes) public int inlinedBytes;
+        @com.oracle.jrockit.jfr.ValueDefinition(name = "Java Method") public String method;
+        @com.oracle.jrockit.jfr.ValueDefinition(name = "Compilation ID", relationKey = "COMP_ID") public int compileId;
+        @com.oracle.jrockit.jfr.ValueDefinition(name = "Compilation Level") public short compileLevel;
+        @com.oracle.jrockit.jfr.ValueDefinition(name = "Succeeded") public boolean succeeded;
+        @com.oracle.jrockit.jfr.ValueDefinition(name = "On Stack Replacement") public boolean isOsr;
+        @com.oracle.jrockit.jfr.ValueDefinition(name = "Compiled Code Size", contentType = com.oracle.jrockit.jfr.ContentType.Bytes) public int codeSize;
+        @com.oracle.jrockit.jfr.ValueDefinition(name = "Inlined Code Size", contentType = com.oracle.jrockit.jfr.ContentType.Bytes) public int inlinedBytes;
 
         public void setMethod(String method) {
             this.method = method;
@@ -158,12 +159,11 @@ public final class JFREventProvider implements EventProvider {
      * <p>
      * See: event {@code CompilerFailure} in {@code src/share/vm/trace/trace.xml}
      */
-    @SuppressWarnings("deprecation")
-    @EventDefinition(name = "Compilation Failure", path = "vm/compiler/failure")
+    @com.oracle.jrockit.jfr.EventDefinition(name = "Compilation Failure", path = "vm/compiler/failure")
     public static class JFRCompilerFailureEvent extends com.oracle.jrockit.jfr.InstantEvent implements CompilerFailureEvent {
 
-        @ValueDefinition(name = "Compilation ID", relationKey = "COMP_ID") public int compileId;
-        @ValueDefinition(name = "Message", description = "The failure message") public String failure;
+        @com.oracle.jrockit.jfr.ValueDefinition(name = "Compilation ID", relationKey = "COMP_ID") public int compileId;
+        @com.oracle.jrockit.jfr.ValueDefinition(name = "Message", description = "The failure message") public String failure;
 
         public void setCompileId(int id) {
             this.compileId = id;

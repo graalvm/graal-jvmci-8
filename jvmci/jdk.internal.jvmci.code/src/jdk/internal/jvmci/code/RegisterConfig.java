@@ -22,8 +22,10 @@
  */
 package jdk.internal.jvmci.code;
 
-import jdk.internal.jvmci.code.CallingConvention.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.code.CallingConvention.Type;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.PlatformKind;
 
 /**
  * A register configuration binds roles and {@linkplain RegisterAttributes attributes} to physical

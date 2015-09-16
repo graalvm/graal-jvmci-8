@@ -22,12 +22,18 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.*;
+import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.fromObjectClass;
 
-import java.lang.invoke.*;
+import java.lang.invoke.CallSite;
+import java.lang.invoke.ConstantCallSite;
+import java.lang.invoke.MethodHandle;
 
-import jdk.internal.jvmci.inittimer.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.inittimer.SuppressFBWarnings;
+import jdk.internal.jvmci.meta.Assumptions;
+import jdk.internal.jvmci.meta.Constant;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
 
 /**
  * Represents a constant non-{@code null} object reference, within the compiler and across the

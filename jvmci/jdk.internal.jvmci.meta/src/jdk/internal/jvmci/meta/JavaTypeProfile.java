@@ -22,9 +22,9 @@
  */
 package jdk.internal.jvmci.meta;
 
-import java.util.*;
+import java.util.ArrayList;
 
-import jdk.internal.jvmci.meta.JavaTypeProfile.*;
+import jdk.internal.jvmci.meta.JavaTypeProfile.ProfiledType;
 
 /**
  * This profile object represents the type profile at a specific BCI. The precision of the supplied

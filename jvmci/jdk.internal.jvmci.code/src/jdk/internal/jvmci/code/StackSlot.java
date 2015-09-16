@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.code;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.LIRKind;
 
 /**
  * Represents a compiler spill slot or an outgoing stack-based argument in a method's frame or an

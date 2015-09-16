@@ -22,8 +22,10 @@
  */
 package jdk.internal.jvmci.runtime;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.code.CodeCacheProvider;
+import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.meta.ConstantReflectionProvider;
+import jdk.internal.jvmci.meta.MetaAccessProvider;
 
 /**
  * A JVMCI backend encapsulates the capabilities needed by a Java based compiler for compiling and

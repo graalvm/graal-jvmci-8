@@ -22,10 +22,14 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.meta.Signature;
 
 /**
  * Represents a method signature.

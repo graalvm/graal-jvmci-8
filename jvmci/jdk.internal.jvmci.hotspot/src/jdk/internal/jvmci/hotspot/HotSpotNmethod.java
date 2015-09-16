@@ -22,9 +22,12 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.*;
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.meta.*;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
+import jdk.internal.jvmci.code.InstalledCode;
+import jdk.internal.jvmci.code.InvalidInstalledCodeException;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
 
 /**
  * Implementation of {@link InstalledCode} for code installed as an nmethod. The nmethod stores a

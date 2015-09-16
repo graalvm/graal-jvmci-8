@@ -22,7 +22,8 @@
  */
 package jdk.internal.jvmci.code;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.AllocatableValue;
+import jdk.internal.jvmci.meta.LIRKind;
 
 /**
  * Common base class for {@linkplain StackSlot real} and {@linkplain VirtualStackSlot virtual} stack

@@ -22,17 +22,24 @@
  */
 package jdk.internal.jvmci.hotspot.sparc;
 
-import static jdk.internal.jvmci.inittimer.InitTimer.*;
+import static jdk.internal.jvmci.inittimer.InitTimer.timer;
 
-import java.util.*;
+import java.util.EnumSet;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.compiler.*;
-import jdk.internal.jvmci.hotspot.*;
-import jdk.internal.jvmci.inittimer.*;
-import jdk.internal.jvmci.runtime.*;
-import jdk.internal.jvmci.service.*;
-import jdk.internal.jvmci.sparc.*;
+import jdk.internal.jvmci.code.Architecture;
+import jdk.internal.jvmci.code.RegisterConfig;
+import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.compiler.CompilerFactory;
+import jdk.internal.jvmci.hotspot.HotSpotCodeCacheProvider;
+import jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider;
+import jdk.internal.jvmci.hotspot.HotSpotJVMCIBackendFactory;
+import jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider;
+import jdk.internal.jvmci.hotspot.HotSpotMetaAccessProvider;
+import jdk.internal.jvmci.hotspot.HotSpotVMConfig;
+import jdk.internal.jvmci.inittimer.InitTimer;
+import jdk.internal.jvmci.runtime.JVMCIBackend;
+import jdk.internal.jvmci.service.ServiceProvider;
+import jdk.internal.jvmci.sparc.SPARC;
 import jdk.internal.jvmci.sparc.SPARC.CPUFeature;
 
 @ServiceProvider(HotSpotJVMCIBackendFactory.class)

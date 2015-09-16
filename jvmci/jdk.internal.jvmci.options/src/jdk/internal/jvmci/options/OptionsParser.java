@@ -22,12 +22,22 @@
  */
 package jdk.internal.jvmci.options;
 
-import static jdk.internal.jvmci.inittimer.InitTimer.*;
+import static jdk.internal.jvmci.inittimer.InitTimer.timer;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Formatter;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.SortedMap;
 
-import jdk.internal.jvmci.inittimer.*;
+import jdk.internal.jvmci.inittimer.InitTimer;
 
 /**
  * This class contains methods for parsing JVMCI options and matching them against a set of

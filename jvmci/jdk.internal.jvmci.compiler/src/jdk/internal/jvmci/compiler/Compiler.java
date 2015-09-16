@@ -22,8 +22,10 @@
  */
 package jdk.internal.jvmci.compiler;
 
-import jdk.internal.jvmci.meta.*;
-import jdk.internal.jvmci.options.*;
+import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.options.Option;
+import jdk.internal.jvmci.options.OptionType;
+import jdk.internal.jvmci.options.OptionValue;
 
 public interface Compiler {
     int INVOCATION_ENTRY_BCI = -1;

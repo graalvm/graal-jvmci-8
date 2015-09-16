@@ -22,10 +22,10 @@
  */
 package jdk.internal.jvmci.options;
 
-import java.io.*;
-import java.util.function.*;
+import java.io.Serializable;
+import java.util.function.Supplier;
 
-import jdk.internal.jvmci.options.OptionValue.*;
+import jdk.internal.jvmci.options.OptionValue.OverrideScope;
 
 /**
  * A cached value that needs to be recomputed when an option changes.

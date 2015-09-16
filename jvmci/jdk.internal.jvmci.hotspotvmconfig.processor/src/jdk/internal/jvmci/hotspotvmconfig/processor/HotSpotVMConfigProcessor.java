@@ -22,20 +22,37 @@
  */
 package jdk.internal.jvmci.hotspotvmconfig.processor;
 
-import java.io.*;
-import java.lang.annotation.*;
-import java.util.*;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.*;
+import java.util.Set;
+import java.util.function.BiFunction;
 
-import javax.annotation.processing.*;
-import javax.lang.model.*;
-import javax.lang.model.element.*;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Filer;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.SourceVersion;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.tools.Diagnostic.Kind;
-import javax.tools.*;
+import javax.tools.FileObject;
+import javax.tools.StandardLocation;
 
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.hotspotvmconfig.*;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMConstant;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMField;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMFlag;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMType;
+import jdk.internal.jvmci.hotspotvmconfig.HotSpotVMValue;
 
 @SupportedAnnotationTypes({
     // @formatter:off

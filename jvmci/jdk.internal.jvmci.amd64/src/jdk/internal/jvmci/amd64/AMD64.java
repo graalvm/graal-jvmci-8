@@ -22,15 +22,18 @@
  */
 package jdk.internal.jvmci.amd64;
 
-import static jdk.internal.jvmci.code.MemoryBarriers.*;
-import static jdk.internal.jvmci.code.Register.*;
+import static jdk.internal.jvmci.code.MemoryBarriers.LOAD_STORE;
+import static jdk.internal.jvmci.code.MemoryBarriers.STORE_STORE;
+import static jdk.internal.jvmci.code.Register.SPECIAL;
 
-import java.nio.*;
-import java.util.*;
+import java.nio.ByteOrder;
+import java.util.EnumSet;
 
-import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.code.Architecture;
+import jdk.internal.jvmci.code.Register;
 import jdk.internal.jvmci.code.Register.RegisterCategory;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.PlatformKind;
 
 /**
  * Represents the AMD64 architecture.

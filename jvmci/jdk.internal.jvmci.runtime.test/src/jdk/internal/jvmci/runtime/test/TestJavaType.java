@@ -29,10 +29,11 @@
 
 package jdk.internal.jvmci.runtime.test;
 
-import jdk.internal.jvmci.meta.*;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
 
-import org.junit.*;
+import org.junit.Test;
 
 /**
  * Tests for {@link JavaType}.

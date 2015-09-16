@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaType;
 
 /**
  * Common base class for all HotSpot {@link JavaType} implementations.

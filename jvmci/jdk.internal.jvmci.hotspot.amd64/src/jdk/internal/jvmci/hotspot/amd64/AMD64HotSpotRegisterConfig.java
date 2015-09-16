@@ -22,16 +22,61 @@
  */
 package jdk.internal.jvmci.hotspot.amd64;
 
-import static jdk.internal.jvmci.amd64.AMD64.*;
+import static jdk.internal.jvmci.amd64.AMD64.r10;
+import static jdk.internal.jvmci.amd64.AMD64.r11;
+import static jdk.internal.jvmci.amd64.AMD64.r12;
+import static jdk.internal.jvmci.amd64.AMD64.r13;
+import static jdk.internal.jvmci.amd64.AMD64.r14;
+import static jdk.internal.jvmci.amd64.AMD64.r8;
+import static jdk.internal.jvmci.amd64.AMD64.r9;
+import static jdk.internal.jvmci.amd64.AMD64.rax;
+import static jdk.internal.jvmci.amd64.AMD64.rbp;
+import static jdk.internal.jvmci.amd64.AMD64.rbx;
+import static jdk.internal.jvmci.amd64.AMD64.rcx;
+import static jdk.internal.jvmci.amd64.AMD64.rdi;
+import static jdk.internal.jvmci.amd64.AMD64.rdx;
+import static jdk.internal.jvmci.amd64.AMD64.rsi;
+import static jdk.internal.jvmci.amd64.AMD64.rsp;
+import static jdk.internal.jvmci.amd64.AMD64.xmm0;
+import static jdk.internal.jvmci.amd64.AMD64.xmm1;
+import static jdk.internal.jvmci.amd64.AMD64.xmm10;
+import static jdk.internal.jvmci.amd64.AMD64.xmm11;
+import static jdk.internal.jvmci.amd64.AMD64.xmm12;
+import static jdk.internal.jvmci.amd64.AMD64.xmm13;
+import static jdk.internal.jvmci.amd64.AMD64.xmm14;
+import static jdk.internal.jvmci.amd64.AMD64.xmm15;
+import static jdk.internal.jvmci.amd64.AMD64.xmm2;
+import static jdk.internal.jvmci.amd64.AMD64.xmm3;
+import static jdk.internal.jvmci.amd64.AMD64.xmm4;
+import static jdk.internal.jvmci.amd64.AMD64.xmm5;
+import static jdk.internal.jvmci.amd64.AMD64.xmm6;
+import static jdk.internal.jvmci.amd64.AMD64.xmm7;
+import static jdk.internal.jvmci.amd64.AMD64.xmm8;
+import static jdk.internal.jvmci.amd64.AMD64.xmm9;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
-import jdk.internal.jvmci.amd64.*;
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.code.CallingConvention.*;
-import jdk.internal.jvmci.common.*;
-import jdk.internal.jvmci.hotspot.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.amd64.AMD64;
+import jdk.internal.jvmci.code.Architecture;
+import jdk.internal.jvmci.code.CallingConvention;
+import jdk.internal.jvmci.code.CallingConvention.Type;
+import jdk.internal.jvmci.code.Register;
+import jdk.internal.jvmci.code.RegisterAttributes;
+import jdk.internal.jvmci.code.RegisterConfig;
+import jdk.internal.jvmci.code.StackSlot;
+import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.common.JVMCIError;
+import jdk.internal.jvmci.hotspot.HotSpotVMConfig;
+import jdk.internal.jvmci.meta.AllocatableValue;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.LIRKind;
+import jdk.internal.jvmci.meta.PlatformKind;
+import jdk.internal.jvmci.meta.Value;
 
 public class AMD64HotSpotRegisterConfig implements RegisterConfig {
 

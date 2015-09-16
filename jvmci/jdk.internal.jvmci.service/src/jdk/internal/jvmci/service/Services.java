@@ -22,9 +22,12 @@
  */
 package jdk.internal.jvmci.service;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Formatter;
+import java.util.List;
 
-import sun.reflect.*;
+import sun.reflect.Reflection;
 
 /**
  * An mechanism for accessing service providers via JVMCI. These providers are loaded via a JVMCI

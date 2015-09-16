@@ -22,8 +22,10 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.code.*;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.code.CompilationResult;
+import jdk.internal.jvmci.code.InstalledCode;
+import jdk.internal.jvmci.meta.JVMCIMetaAccessContext;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
 
 public interface HotSpotVMEventListener {
 

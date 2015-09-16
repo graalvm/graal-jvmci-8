@@ -22,7 +22,8 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaField;
+import jdk.internal.jvmci.meta.JavaType;
 
 /**
  * A implementation of {@link JavaField} for an unresolved field.

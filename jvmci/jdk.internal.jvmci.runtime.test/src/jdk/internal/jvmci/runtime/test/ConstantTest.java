@@ -29,9 +29,11 @@
 
 package jdk.internal.jvmci.runtime.test;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaConstant;
+import jdk.internal.jvmci.meta.JavaKind;
 
-import org.junit.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class ConstantTest extends FieldUniverse {
 

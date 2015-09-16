@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.code;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.LIRKind;
 
 /**
  * {@link VirtualStackSlot}s are stack slots that are not yet fixed to specific frame offset. They

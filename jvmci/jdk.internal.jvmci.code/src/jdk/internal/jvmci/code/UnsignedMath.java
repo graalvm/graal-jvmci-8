@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.code;
 
-import java.math.*;
+import java.math.BigInteger;
 
 //JaCoCo Exclude
 

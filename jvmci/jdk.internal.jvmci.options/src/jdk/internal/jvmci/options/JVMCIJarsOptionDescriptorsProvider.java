@@ -22,12 +22,17 @@
  */
 package jdk.internal.jvmci.options;
 
-import java.io.*;
-import java.util.*;
-import java.util.jar.*;
-import java.util.zip.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
 
-import jdk.internal.jvmci.options.OptionsParser.*;
+import jdk.internal.jvmci.options.OptionsParser.OptionDescriptorsProvider;
 
 /**
  * Access to the {@link OptionDescriptors} declared by

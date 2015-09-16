@@ -22,8 +22,10 @@
  */
 package jdk.internal.jvmci.code;
 
-import jdk.internal.jvmci.meta.*;
-import static jdk.internal.jvmci.code.ValueUtil.*;
+import static jdk.internal.jvmci.code.ValueUtil.isAllocatableValue;
+import static jdk.internal.jvmci.code.ValueUtil.isStackSlot;
+import jdk.internal.jvmci.meta.AllocatableValue;
+import jdk.internal.jvmci.meta.Value;
 
 /**
  * A calling convention describes the locations in which the arguments for a call are placed and the

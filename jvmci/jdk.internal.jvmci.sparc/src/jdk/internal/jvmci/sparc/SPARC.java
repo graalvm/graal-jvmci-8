@@ -22,14 +22,19 @@
  */
 package jdk.internal.jvmci.sparc;
 
-import static java.nio.ByteOrder.*;
-import static jdk.internal.jvmci.code.MemoryBarriers.*;
+import static java.nio.ByteOrder.BIG_ENDIAN;
+import static jdk.internal.jvmci.code.MemoryBarriers.LOAD_LOAD;
+import static jdk.internal.jvmci.code.MemoryBarriers.LOAD_STORE;
+import static jdk.internal.jvmci.code.MemoryBarriers.STORE_STORE;
 
-import java.util.*;
+import java.util.Set;
 
-import jdk.internal.jvmci.code.*;
+import jdk.internal.jvmci.code.Architecture;
+import jdk.internal.jvmci.code.Register;
 import jdk.internal.jvmci.code.Register.RegisterCategory;
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.PlatformKind;
 
 /**
  * Represents the SPARC architecture.

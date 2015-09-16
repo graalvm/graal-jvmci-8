@@ -29,14 +29,19 @@
 
 package jdk.internal.jvmci.runtime.test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.*;
-import java.util.*;
+import java.lang.reflect.Field;
+import java.util.Map;
 
-import jdk.internal.jvmci.meta.*;
+import jdk.internal.jvmci.meta.JavaField;
+import jdk.internal.jvmci.meta.JavaKind;
+import jdk.internal.jvmci.meta.JavaType;
+import jdk.internal.jvmci.meta.ResolvedJavaField;
+import jdk.internal.jvmci.meta.ResolvedJavaType;
 
-import org.junit.*;
+import org.junit.Test;
 
 /**
  * Tests for {@link JavaField}.

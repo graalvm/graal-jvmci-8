@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.meta;
 
-import java.util.*;
+import java.util.Objects;
 
 /**
  * Represents an exception handler within the bytecodes.
