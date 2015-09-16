@@ -163,23 +163,23 @@ public class SPARC extends Architecture {
     public static final Register f30 = new Register(62, 30, "f30", FPUs);
     public static final Register f31 = new Register(63, 31, "f31", FPUs);
 
-    public static final Register d0 = new Register(32, getDoubleEncoding(0), "d0", FPUs);
-    public static final Register d2 = new Register(34, getDoubleEncoding(2), "d2", FPUs);
-    public static final Register d4 = new Register(36, getDoubleEncoding(4), "d4", FPUs);
-    public static final Register d6 = new Register(38, getDoubleEncoding(6), "d6", FPUs);
-    public static final Register d8 = new Register(40, getDoubleEncoding(8), "d8", FPUs);
-    public static final Register d10 = new Register(42, getDoubleEncoding(10), "d10", FPUs);
-    public static final Register d12 = new Register(44, getDoubleEncoding(12), "d12", FPUs);
-    public static final Register d14 = new Register(46, getDoubleEncoding(14), "d14", FPUs);
+    public static final Register d0 = new Register(32, getDoubleEncoding(0), "d0", FPUd);
+    public static final Register d2 = new Register(34, getDoubleEncoding(2), "d2", FPUd);
+    public static final Register d4 = new Register(36, getDoubleEncoding(4), "d4", FPUd);
+    public static final Register d6 = new Register(38, getDoubleEncoding(6), "d6", FPUd);
+    public static final Register d8 = new Register(40, getDoubleEncoding(8), "d8", FPUd);
+    public static final Register d10 = new Register(42, getDoubleEncoding(10), "d10", FPUd);
+    public static final Register d12 = new Register(44, getDoubleEncoding(12), "d12", FPUd);
+    public static final Register d14 = new Register(46, getDoubleEncoding(14), "d14", FPUd);
 
-    public static final Register d16 = new Register(48, getDoubleEncoding(16), "d16", FPUs);
-    public static final Register d18 = new Register(50, getDoubleEncoding(18), "d18", FPUs);
-    public static final Register d20 = new Register(52, getDoubleEncoding(20), "d20", FPUs);
-    public static final Register d22 = new Register(54, getDoubleEncoding(22), "d22", FPUs);
-    public static final Register d24 = new Register(56, getDoubleEncoding(24), "d24", FPUs);
-    public static final Register d26 = new Register(58, getDoubleEncoding(26), "d26", FPUs);
-    public static final Register d28 = new Register(60, getDoubleEncoding(28), "d28", FPUs);
-    public static final Register d30 = new Register(62, getDoubleEncoding(28), "d28", FPUs);
+    public static final Register d16 = new Register(48, getDoubleEncoding(16), "d16", FPUd);
+    public static final Register d18 = new Register(50, getDoubleEncoding(18), "d18", FPUd);
+    public static final Register d20 = new Register(52, getDoubleEncoding(20), "d20", FPUd);
+    public static final Register d22 = new Register(54, getDoubleEncoding(22), "d22", FPUd);
+    public static final Register d24 = new Register(56, getDoubleEncoding(24), "d24", FPUd);
+    public static final Register d26 = new Register(58, getDoubleEncoding(26), "d26", FPUd);
+    public static final Register d28 = new Register(60, getDoubleEncoding(28), "d28", FPUd);
+    public static final Register d30 = new Register(62, getDoubleEncoding(28), "d28", FPUd);
 
     public static final Register d32 = new Register(64, getDoubleEncoding(32), "d32", FPUd);
     public static final Register d34 = new Register(65, getDoubleEncoding(34), "d34", FPUd);
