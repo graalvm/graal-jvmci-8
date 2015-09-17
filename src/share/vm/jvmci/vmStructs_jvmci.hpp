@@ -62,6 +62,20 @@
   declare_constant(CompilerToVM::KLASS_TAG)                                                       \
   declare_constant(CompilerToVM::SYMBOL_TAG)                                                      \
                                                                                                   \
+  declare_constant(BitData::exception_seen_flag)                                                  \
+  declare_constant(BitData::null_seen_flag)                                                       \
+  declare_constant(CounterData::count_off)                                                        \
+  declare_constant(JumpData::taken_off_set)                                                       \
+  declare_constant(JumpData::displacement_off_set)                                                \
+  declare_constant(ReceiverTypeData::nonprofiled_count_off_set)                                   \
+  declare_constant(ReceiverTypeData::receiver_type_row_cell_count)                                \
+  declare_constant(ReceiverTypeData::receiver0_offset)                                            \
+  declare_constant(ReceiverTypeData::count0_offset)                                               \
+  declare_constant(BranchData::not_taken_off_set)                                                 \
+  declare_constant(ArrayData::array_len_off_set)                                                  \
+  declare_constant(ArrayData::array_start_off_set)                                                \
+  declare_constant(MultiBranchData::per_case_cell_count)                                          \
+                                                                                                  \
   declare_constant(CodeInstaller::VERIFIED_ENTRY)                                                 \
   declare_constant(CodeInstaller::UNVERIFIED_ENTRY)                                               \
   declare_constant(CodeInstaller::OSR_ENTRY)                                                      \

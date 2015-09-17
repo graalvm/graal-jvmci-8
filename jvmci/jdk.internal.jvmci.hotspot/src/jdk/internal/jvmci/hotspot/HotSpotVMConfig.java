@@ -1521,6 +1521,20 @@ public class HotSpotVMConfig {
     @HotSpotVMConstant(name = "CodeInstaller::CARD_TABLE_ADDRESS") @Stable public int MARKID_CARD_TABLE_ADDRESS;
     @HotSpotVMConstant(name = "CodeInstaller::INVOKE_INVALID") @Stable public int MARKID_INVOKE_INVALID;
 
+    @HotSpotVMConstant(name = "BitData::exception_seen_flag") @Stable public int bitDataExceptionSeenFlag;
+    @HotSpotVMConstant(name = "BitData::null_seen_flag") @Stable public int bitDataNullSeenFlag;
+    @HotSpotVMConstant(name = "CounterData::count_off") @Stable public int methodDataCountOffset;
+    @HotSpotVMConstant(name = "JumpData::taken_off_set") @Stable public int jumpDataTakenOffset;
+    @HotSpotVMConstant(name = "JumpData::displacement_off_set") @Stable public int jumpDataDisplacementOffset;
+    @HotSpotVMConstant(name = "ReceiverTypeData::nonprofiled_count_off_set") @Stable public int receiverTypeDataNonprofiledCountOffset;
+    @HotSpotVMConstant(name = "ReceiverTypeData::receiver_type_row_cell_count") @Stable public int receiverTypeDataReceiverTypeRowCellCount;
+    @HotSpotVMConstant(name = "ReceiverTypeData::receiver0_offset") @Stable public int receiverTypeDataReceiver0Offset;
+    @HotSpotVMConstant(name = "ReceiverTypeData::count0_offset") @Stable public int receiverTypeDataCount0Offset;
+    @HotSpotVMConstant(name = "BranchData::not_taken_off_set") @Stable public int branchDataNotTakenOffset;
+    @HotSpotVMConstant(name = "ArrayData::array_len_off_set") @Stable public int arrayDataArrayLenOffset;
+    @HotSpotVMConstant(name = "ArrayData::array_start_off_set") @Stable public int arrayDataArrayStartOffset;
+    @HotSpotVMConstant(name = "MultiBranchData::per_case_cell_count") @Stable public int multiBranchDataPerCaseCellCount;
+
     // Checkstyle: resume
 
     public boolean check() {

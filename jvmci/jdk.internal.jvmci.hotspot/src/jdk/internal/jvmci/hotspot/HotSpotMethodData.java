@@ -55,7 +55,7 @@ public final class HotSpotMethodData {
         new BitData(),
         new CounterData(),
         new JumpData(),
-        new TypeCheckData(),
+        new ReceiverTypeData(),
         new VirtualCallData(),
         new RetData(),
         new BranchData(),
@@ -271,7 +271,7 @@ public final class HotSpotMethodData {
         /**
          * Corresponds to {@code exception_seen_flag}.
          */
-        private static final int EXCEPTIONS_MASK = 0x2;
+        private static final int EXCEPTIONS_MASK = 1 << config.bitDataExceptionSeenFlag;
 
         private final Tag tag;
         private final int staticSize;
@@ -380,7 +380,7 @@ public final class HotSpotMethodData {
     private static class BitData extends AbstractMethodData {
 
         private static final int BIT_DATA_SIZE = cellIndexToOffset(0);
-        private static final int BIT_DATA_NULL_SEEN_FLAG = 0x01;
+        private static final int BIT_DATA_NULL_SEEN_FLAG = 1 << config.bitDataNullSeenFlag;
 
         private BitData() {
             super(Tag.BitData, BIT_DATA_SIZE);
@@ -404,7 +404,7 @@ public final class HotSpotMethodData {
     private static class CounterData extends BitData {
 
         private static final int COUNTER_DATA_SIZE = cellIndexToOffset(1);
-        private static final int COUNTER_DATA_COUNT_OFFSET = cellIndexToOffset(0);
+        private static final int COUNTER_DATA_COUNT_OFFSET = cellIndexToOffset(config.methodDataCountOffset);
 
         public CounterData() {
             super(Tag.CounterData, COUNTER_DATA_SIZE);
@@ -432,8 +432,8 @@ public final class HotSpotMethodData {
     private static class JumpData extends AbstractMethodData {
 
         private static final int JUMP_DATA_SIZE = cellIndexToOffset(2);
-        protected static final int TAKEN_COUNT_OFFSET = cellIndexToOffset(0);
-        protected static final int TAKEN_DISPLACEMENT_OFFSET = cellIndexToOffset(1);
+        protected static final int TAKEN_COUNT_OFFSET = cellIndexToOffset(config.jumpDataTakenOffset);
+        protected static final int TAKEN_DISPLACEMENT_OFFSET = cellIndexToOffset(config.jumpDataDisplacementOffset);
 
         public JumpData() {
             super(Tag.JumpData, JUMP_DATA_SIZE);
@@ -479,11 +479,11 @@ public final class HotSpotMethodData {
 
     private abstract static class AbstractTypeData extends CounterData {
 
-        protected static final int TYPE_DATA_ROW_SIZE = cellsToBytes(2);
+        protected static final int TYPE_DATA_ROW_SIZE = cellsToBytes(config.receiverTypeDataReceiverTypeRowCellCount);
 
-        protected static final int NONPROFILED_COUNT_OFFSET = cellIndexToOffset(1);
-        protected static final int TYPE_DATA_FIRST_TYPE_OFFSET = cellIndexToOffset(2);
-        protected static final int TYPE_DATA_FIRST_TYPE_COUNT_OFFSET = cellIndexToOffset(3);
+        protected static final int NONPROFILED_COUNT_OFFSET = cellIndexToOffset(config.receiverTypeDataNonprofiledCountOffset);
+        protected static final int TYPE_DATA_FIRST_TYPE_OFFSET = cellIndexToOffset(config.receiverTypeDataReceiver0Offset);
+        protected static final int TYPE_DATA_FIRST_TYPE_COUNT_OFFSET = cellIndexToOffset(config.receiverTypeDataCount0Offset);
 
         protected AbstractTypeData(Tag tag, int staticSize) {
             super(tag, staticSize);
@@ -576,12 +576,16 @@ public final class HotSpotMethodData {
         }
     }
 
-    private static class TypeCheckData extends AbstractTypeData {
+    private static class ReceiverTypeData extends AbstractTypeData {
 
         private static final int TYPE_CHECK_DATA_SIZE = cellIndexToOffset(2) + TYPE_DATA_ROW_SIZE * config.typeProfileWidth;
 
-        public TypeCheckData() {
+        public ReceiverTypeData() {
             super(Tag.ReceiverTypeData, TYPE_CHECK_DATA_SIZE);
+        }
+
+        protected ReceiverTypeData(Tag tag, int staticSize) {
+            super(tag, staticSize);
         }
 
         @Override
@@ -595,7 +599,7 @@ public final class HotSpotMethodData {
         }
     }
 
-    private static class VirtualCallData extends AbstractTypeData {
+    private static class VirtualCallData extends ReceiverTypeData {
 
         private static final int VIRTUAL_CALL_DATA_SIZE = cellIndexToOffset(2) + TYPE_DATA_ROW_SIZE * (config.typeProfileWidth + config.methodProfileWidth);
         private static final int VIRTUAL_CALL_DATA_FIRST_METHOD_OFFSET = TYPE_DATA_FIRST_TYPE_OFFSET + TYPE_DATA_ROW_SIZE * config.typeProfileWidth;
@@ -710,7 +714,7 @@ public final class HotSpotMethodData {
     private static class BranchData extends JumpData {
 
         private static final int BRANCH_DATA_SIZE = cellIndexToOffset(3);
-        private static final int NOT_TAKEN_COUNT_OFFSET = cellIndexToOffset(2);
+        private static final int NOT_TAKEN_COUNT_OFFSET = cellIndexToOffset(config.branchDataNotTakenOffset);
 
         public BranchData() {
             super(Tag.BranchData, BRANCH_DATA_SIZE);
@@ -742,8 +746,8 @@ public final class HotSpotMethodData {
 
     private static class ArrayData extends AbstractMethodData {
 
-        private static final int ARRAY_DATA_LENGTH_OFFSET = cellIndexToOffset(0);
-        protected static final int ARRAY_DATA_START_OFFSET = cellIndexToOffset(1);
+        private static final int ARRAY_DATA_LENGTH_OFFSET = cellIndexToOffset(config.arrayDataArrayLenOffset);
+        protected static final int ARRAY_DATA_START_OFFSET = cellIndexToOffset(config.arrayDataArrayStartOffset);
 
         public ArrayData(Tag tag, int staticSize) {
             super(tag, staticSize);
@@ -767,7 +771,7 @@ public final class HotSpotMethodData {
     private static class MultiBranchData extends ArrayData {
 
         private static final int MULTI_BRANCH_DATA_SIZE = cellIndexToOffset(1);
-        private static final int MULTI_BRANCH_DATA_ROW_SIZE_IN_CELLS = 2;
+        private static final int MULTI_BRANCH_DATA_ROW_SIZE_IN_CELLS = config.multiBranchDataPerCaseCellCount;
         private static final int MULTI_BRANCH_DATA_ROW_SIZE = cellsToBytes(MULTI_BRANCH_DATA_ROW_SIZE_IN_CELLS);
         private static final int MULTI_BRANCH_DATA_FIRST_COUNT_OFFSET = ARRAY_DATA_START_OFFSET + cellsToBytes(0);
         private static final int MULTI_BRANCH_DATA_FIRST_DISPLACEMENT_OFFSET = ARRAY_DATA_START_OFFSET + cellsToBytes(1);
