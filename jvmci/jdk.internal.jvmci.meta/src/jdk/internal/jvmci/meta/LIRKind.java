@@ -431,21 +431,9 @@ public final class LIRKind {
         if (src.equals(dst)) {
             return true;
         }
-        /*
-         * TODO(je,rs) What we actually want is toStackKind(src.getPlatformKind()).equals(
-         * dst.getPlatformKind()) but due to the handling of sub-integer at the current point
-         * (phi-)moves from e.g. integer to short can happen. Therefore we compare stack kinds.
-         */
-        if (toStackKind(src.getPlatformKind()).equals(toStackKind(dst.getPlatformKind()))) {
+        if (src.getPlatformKind().equals(dst.getPlatformKind())) {
             return !src.isUnknownReference() || dst.isUnknownReference();
         }
         return false;
-    }
-
-    private static PlatformKind toStackKind(PlatformKind platformKind) {
-        if (platformKind instanceof JavaKind) {
-            return ((JavaKind) platformKind).getStackKind();
-        }
-        return platformKind;
     }
 }
