@@ -23,6 +23,7 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider.getArrayBaseOffset;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider.getArrayIndexScale;
 import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.fromObjectClass;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
@@ -310,7 +311,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
                     JavaKind elementKind = elementType.getJavaKind();
                     final int headerSize = getArrayBaseOffset(elementKind);
                     TargetDescription target = runtime.getHostJVMCIBackend().getTarget();
-                    int sizeOfElement = target.getSizeInBytes(elementKind);
+                    int sizeOfElement = getArrayIndexScale(elementKind);
                     int alignment = target.wordSize;
                     int log2ElementSize = CodeUtil.log2(sizeOfElement);
                     return computeArrayAllocationSize(length, alignment, headerSize, log2ElementSize);
