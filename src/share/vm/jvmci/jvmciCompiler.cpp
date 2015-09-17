@@ -129,7 +129,7 @@ void JVMCICompiler::compile_method(methodHandle method, int entry_bci, JVMCIEnv*
   jvmci_compute_offsets();
   HandleMark hm;
   ResourceMark rm;
-  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime();
+  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK_ABORT);
 
   JavaValue method_result(T_OBJECT);
   {

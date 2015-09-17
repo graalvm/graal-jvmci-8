@@ -633,8 +633,8 @@ JVM_END
 
 // private static JVMCIRuntime JVMCI.initializeRuntime()
 JVM_ENTRY(jobject, JVM_GetJVMCIRuntime(JNIEnv *env, jclass c))
-  JVMCIRuntime::initialize_HotSpotJVMCIRuntime();
-  return JVMCIRuntime::get_HotSpotJVMCIRuntime_jobject();
+  JVMCIRuntime::initialize_HotSpotJVMCIRuntime(CHECK_NULL);
+  return JVMCIRuntime::get_HotSpotJVMCIRuntime_jobject(CHECK_NULL);
 JVM_END
 
 // private static Service[] Services.getServiceImpls(String serviceClass)
@@ -646,19 +646,18 @@ JVM_ENTRY(jobject, JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass servic
   return JNIHandles::make_local(THREAD, JVMCIRuntime::get_service_impls(serviceKlass, THREAD)());
 JVM_END
 
-Handle JVMCIRuntime::callStatic(const char* className, const char* methodName, const char* signature, JavaCallArguments* args) {
+Handle JVMCIRuntime::callStatic(const char* className, const char* methodName, const char* signature, JavaCallArguments* args, TRAPS) {
   guarantee(!_HotSpotJVMCIRuntime_initialized, "cannot reinitialize HotSpotJVMCIRuntime");
-  Thread* THREAD = Thread::current();
 
-  TempNewSymbol name = SymbolTable::new_symbol(className, CHECK_ABORT_(Handle()));
+  TempNewSymbol name = SymbolTable::new_symbol(className, CHECK_(Handle()));
   KlassHandle klass = load_required_class(name);
-  TempNewSymbol runtime = SymbolTable::new_symbol(methodName, CHECK_ABORT_(Handle()));
-  TempNewSymbol sig = SymbolTable::new_symbol(signature, CHECK_ABORT_(Handle()));
+  TempNewSymbol runtime = SymbolTable::new_symbol(methodName, CHECK_(Handle()));
+  TempNewSymbol sig = SymbolTable::new_symbol(signature, CHECK_(Handle()));
   JavaValue result(T_OBJECT);
   if (args == NULL) {
-    JavaCalls::call_static(&result, klass, runtime, sig, CHECK_ABORT_(Handle()));
+    JavaCalls::call_static(&result, klass, runtime, sig, CHECK_(Handle()));
   } else {
-    JavaCalls::call_static(&result, klass, runtime, sig, args, CHECK_ABORT_(Handle()));
+    JavaCalls::call_static(&result, klass, runtime, sig, args, CHECK_(Handle()));
   }
   return Handle((oop)result.get_jobject());
 }
@@ -673,12 +672,12 @@ static bool jvmci_options_file_exists() {
   return os::stat(path, &st) == 0;
 }
 
-void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
+void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
     Thread* THREAD = Thread::current();
 #ifdef ASSERT
     // This should only be called in the context of the JVMCI class being initialized
-    TempNewSymbol name = SymbolTable::new_symbol("jdk/internal/jvmci/runtime/JVMCI", CHECK_ABORT);
+    TempNewSymbol name = SymbolTable::new_symbol("jdk/internal/jvmci/runtime/JVMCI", CHECK);
     instanceKlassHandle klass = InstanceKlass::cast(load_required_class(name));
     assert(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
            "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
@@ -687,36 +686,36 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime() {
     bool parseOptionsFile = jvmci_options_file_exists();
     if (_options != NULL || parseOptionsFile) {
       JavaCallArguments args;
-      oop options = java_lang_String::create_oop_from_str(_options, CHECK_ABORT);
+      oop options = java_lang_String::create_oop_from_str(_options, CHECK);
       args.push_oop(options);
       args.push_int(parseOptionsFile);
       callStatic("jdk/internal/jvmci/options/OptionsParser",
                  "parseOptionsFromVM",
-                 "(Ljava/lang/String;Z)Ljava/lang/Boolean;", &args);
+                 "(Ljava/lang/String;Z)Ljava/lang/Boolean;", &args, CHECK);
     }
 
     if (_compiler != NULL) {
       JavaCallArguments args;
-      oop compiler = java_lang_String::create_oop_from_str(_compiler, CHECK_ABORT);
+      oop compiler = java_lang_String::create_oop_from_str(_compiler, CHECK);
       args.push_oop(compiler);
       callStatic("jdk/internal/jvmci/hotspot/HotSpotJVMCICompilerConfig",
                  "selectCompiler",
-                 "(Ljava/lang/String;)Ljava/lang/Boolean;", &args);
+                 "(Ljava/lang/String;)Ljava/lang/Boolean;", &args, CHECK);
     }
 
     Handle result = callStatic("jdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime",
                                "runtime",
-                               "()Ljdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime;");
+                               "()Ljdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime;", NULL, CHECK);
     _HotSpotJVMCIRuntime_initialized = true;
     _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result());
   }
 }
 
-void JVMCIRuntime::initialize_JVMCI() {
+void JVMCIRuntime::initialize_JVMCI(TRAPS) {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
     callStatic("jdk/internal/jvmci/runtime/JVMCI",
                "getRuntime",
-               "()Ljdk/internal/jvmci/runtime/JVMCIRuntime;");
+               "()Ljdk/internal/jvmci/runtime/JVMCIRuntime;", NULL, CHECK);
   }
   assert(_HotSpotJVMCIRuntime_initialized == true, "what?");
 }
@@ -935,7 +934,7 @@ void JVMCIRuntime::shutdown() {
     _shutdown_called = true;
     JavaThread* THREAD = JavaThread::current();
     HandleMark hm(THREAD);
-    Handle receiver = get_HotSpotJVMCIRuntime();
+    Handle receiver = get_HotSpotJVMCIRuntime(CHECK_ABORT);
     JavaValue result(T_VOID);
     JavaCallArguments args;
     args.push_oop(receiver);

@@ -101,28 +101,28 @@ class JVMCIRuntime: public AllStatic {
   /**
    * Gets the singleton HotSpotJVMCIRuntime instance, initializing it if necessary
    */
-  static Handle get_HotSpotJVMCIRuntime() {
-    initialize_JVMCI();
+  static Handle get_HotSpotJVMCIRuntime(TRAPS) {
+    initialize_JVMCI(CHECK_(Handle()));
     return Handle(JNIHandles::resolve_non_null(_HotSpotJVMCIRuntime_instance));
   }
 
-  static jobject get_HotSpotJVMCIRuntime_jobject() {
-    initialize_JVMCI();
+  static jobject get_HotSpotJVMCIRuntime_jobject(TRAPS) {
+    initialize_JVMCI(CHECK_NULL);
     assert(_HotSpotJVMCIRuntime_initialized, "must be");
     return _HotSpotJVMCIRuntime_instance;
   }
 
-  static Handle callStatic(const char* className, const char* methodName, const char* returnType, JavaCallArguments* args = NULL);
+  static Handle callStatic(const char* className, const char* methodName, const char* returnType, JavaCallArguments* args, TRAPS);
 
   /**
    * Trigger initialization of HotSpotJVMCIRuntime through JVMCI.getRuntime()
    */
-  static void initialize_JVMCI();
+  static void initialize_JVMCI(TRAPS);
 
   /**
    * Explicitly initialize HotSpotJVMCIRuntime itself
    */
-  static void initialize_HotSpotJVMCIRuntime();
+  static void initialize_HotSpotJVMCIRuntime(TRAPS);
 
   static void metadata_do(void f(Metadata*));
 
