@@ -563,4 +563,12 @@ public final class CompilerToVM {
      * @return null or the resolved method for this location
      */
     native HotSpotResolvedObjectTypeImpl getResolvedJavaType(Object base, long displacement, boolean compressed);
+
+    /**
+     * @param metaspaceMethodData
+     * @param position
+     * @return Return the size of the ProfileData item pointed at by {@code current}. Throws
+     *         {@link IllegalArgumentException} if an invalid position is given.
+     */
+    native int methodDataProfileDataSize(long metaspaceMethodData, int position);
 }

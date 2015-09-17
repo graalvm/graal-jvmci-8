@@ -1122,6 +1122,26 @@ C2V_VMENTRY(void, flushDebugOutput, (JNIEnv*, jobject))
   tty->flush();
 C2V_END
 
+C2V_VMENTRY(int, methodDataProfileDataSize, (JNIEnv*, jobject, jlong metaspace_method_data, jint position))
+  ResourceMark rm;
+  MethodData* mdo = CompilerToVM::asMethodData(metaspace_method_data);
+  ProfileData* profile_data = mdo->data_at(position);
+  if (mdo->is_valid(profile_data)) {
+    return profile_data->size_in_bytes();
+  }
+  DataLayout* data    = mdo->extra_data_base();
+  DataLayout* end   = mdo->extra_data_limit();
+  for (;; data = mdo->next_extra(data)) {
+    assert(data < end, "moved past end of extra data");
+    profile_data = data->data_in();
+    if (mdo->dp_to_di(profile_data->dp()) == position) {
+      return profile_data->size_in_bytes();
+    }
+  }
+  mdo->print();
+  THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), err_msg("Invalid profile data position %d", position));
+C2V_END
+
 
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
@@ -1200,6 +1220,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"shouldDebugNonSafepoints",                     CC"()Z",                                                                          FN_PTR(shouldDebugNonSafepoints)},
   {CC"writeDebugOutput",                             CC"([BII)V",                                                                      FN_PTR(writeDebugOutput)},
   {CC"flushDebugOutput",                             CC"()V",                                                                          FN_PTR(flushDebugOutput)},
+  {CC"methodDataProfileDataSize",                    CC"(JI)I",                                                                        FN_PTR(methodDataProfileDataSize)},
 };
 
 int CompilerToVM::methods_count() {

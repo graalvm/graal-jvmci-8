@@ -80,8 +80,12 @@ define_pd_global(bool, UseMembar,            false);
 // GC Ergo Flags
 define_pd_global(uintx, CMSYoungGenPerWorker, 64*M);  // default max size of CMS young gen, per GC worker thread
 
-// Disabled in JVMCI until HotSpotMethodData is updated to be aware of the new profiling tags
-define_pd_global(uintx, TypeProfileLevel, JVMCI_ONLY(0) NOT_JVMCI(111));
+#ifdef COMPILER_JVMCI
+// Don't bother enabling type profiling since JVMCI doesn't currently expose it
+define_pd_global(uintx, TypeProfileLevel, 0);
+#else
+define_pd_global(uintx, TypeProfileLevel, 111);
+#endif
 
 #define ARCH_FLAGS(develop, product, diagnostic, experimental, notproduct) \
                                                                             \

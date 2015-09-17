@@ -61,10 +61,10 @@ public final class HotSpotMethodData {
         new BranchData(),
         new MultiBranchData(),
         new ArgInfoData(),
-        null, // call_type_data_tag
-        null, // virtual_call_type_data_tag
-        null, // parameters_type_data_tag
-        null, // speculative_trap_data_tag
+        new UnknownProfileData(Tag.CallTypeData),
+        new VirtualCallTypeData(),
+        new UnknownProfileData(Tag.ParametersTypeData),
+        new UnknownProfileData(Tag.SpeculativeTrapData),
     };
     // @formatter:on
 
@@ -132,7 +132,8 @@ public final class HotSpotMethodData {
         }
 
         HotSpotMethodDataAccessor result = getData(position);
-        assert result != null : "NO_DATA tag is not allowed";
+        final Tag tag = AbstractMethodData.readTag(this, position);
+        assert result != null : "NO_DATA tag is not allowed " + tag;
         return result;
     }
 
@@ -274,7 +275,7 @@ public final class HotSpotMethodData {
         private static final int EXCEPTIONS_MASK = 1 << config.bitDataExceptionSeenFlag;
 
         private final Tag tag;
-        private final int staticSize;
+        protected final int staticSize;
 
         protected AbstractMethodData(Tag tag, int staticSize) {
             this.tag = tag;
@@ -296,8 +297,12 @@ public final class HotSpotMethodData {
         }
 
         @Override
-        public int getSize(HotSpotMethodData data, int position) {
-            return staticSize + getDynamicSize(data, position);
+        public final int getSize(HotSpotMethodData data, int position) {
+            int size = staticSize + getDynamicSize(data, position);
+            // Sanity check against VM
+            int vmSize = HotSpotJVMCIRuntime.runtime().compilerToVm.methodDataProfileDataSize(data.metaspaceMethodData, position);
+            assert size == vmSize : size + " != " + vmSize;
+            return size;
         }
 
         @Override
@@ -609,6 +614,10 @@ public final class HotSpotMethodData {
             super(Tag.VirtualCallData, VIRTUAL_CALL_DATA_SIZE);
         }
 
+        protected VirtualCallData(Tag tag, int staticSize) {
+            super(tag, staticSize);
+        }
+
         @Override
         public int getExecutionCount(HotSpotMethodData data, int position) {
             final int typeProfileWidth = config.typeProfileWidth;
@@ -698,6 +707,19 @@ public final class HotSpotMethodData {
                 sb.append(format("%n  %s (%d, %4.2f)", profile.items[i].format("%H.%n(%p)"), count, (double) count / profile.totalCount));
             }
             return sb;
+        }
+    }
+
+    private static class VirtualCallTypeData extends VirtualCallData {
+
+        public VirtualCallTypeData() {
+            super(Tag.VirtualCallTypeData, 0);
+        }
+
+        @Override
+        protected int getDynamicSize(HotSpotMethodData data, int position) {
+            assert staticSize == 0;
+            return HotSpotJVMCIRuntime.runtime().compilerToVm.methodDataProfileDataSize(data.metaspaceMethodData, position);
         }
     }
 
@@ -860,6 +882,24 @@ public final class HotSpotMethodData {
 
         public ArgInfoData() {
             super(Tag.ArgInfoData, ARG_INFO_DATA_SIZE);
+        }
+    }
+
+    private static class UnknownProfileData extends AbstractMethodData {
+        public UnknownProfileData(Tag tag) {
+            super(tag, 0);
+        }
+
+        @Override
+        protected int getDynamicSize(HotSpotMethodData data, int position) {
+            assert staticSize == 0;
+            return HotSpotJVMCIRuntime.runtime().compilerToVm.methodDataProfileDataSize(data.metaspaceMethodData, position);
+        }
+
+        @Override
+        public StringBuilder appendTo(StringBuilder sb, HotSpotMethodData data, int pos) {
+            // TODO Auto-generated method stub
+            return null;
         }
     }
 
