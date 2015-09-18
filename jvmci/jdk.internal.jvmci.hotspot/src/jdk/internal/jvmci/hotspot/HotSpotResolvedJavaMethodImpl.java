@@ -680,7 +680,7 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
             if (resolved.isInterface()) {
                 return config().invalidVtableIndex;
             }
-            return getVtableIndexForInterface(resolved);
+            return getVtableIndexForInterfaceMethod(resolved);
         }
         return getVtableIndex();
     }
@@ -698,9 +698,9 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
         return result;
     }
 
-    private int getVtableIndexForInterface(ResolvedJavaType resolved) {
+    private int getVtableIndexForInterfaceMethod(ResolvedJavaType resolved) {
         HotSpotResolvedObjectTypeImpl hotspotType = (HotSpotResolvedObjectTypeImpl) resolved;
-        return compilerToVM().getVtableIndexForInterface(hotspotType, this);
+        return compilerToVM().getVtableIndexForInterfaceMethod(hotspotType, this);
     }
 
     /**

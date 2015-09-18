@@ -514,8 +514,11 @@ public final class CompilerToVM {
      * Gets the v-table index for interface method {@code method} in the receiver {@code type} or
      * {@link HotSpotVMConfig#invalidVtableIndex} if {@code method} is not in {@code type}'s
      * v-table.
+     *
+     * @throws InternalError if {@code type} is an interface or {@code method} is not held by an
+     *             interface
      */
-    native int getVtableIndexForInterface(HotSpotResolvedObjectTypeImpl type, HotSpotResolvedJavaMethodImpl method);
+    native int getVtableIndexForInterfaceMethod(HotSpotResolvedObjectTypeImpl type, HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Determines if debug info should also be emitted at non-safepoint locations.

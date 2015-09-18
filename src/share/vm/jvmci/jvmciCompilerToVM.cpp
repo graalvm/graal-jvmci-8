@@ -467,12 +467,16 @@ C2V_VMENTRY(jobject, resolveFieldInPool, (JNIEnv*, jobject, jobject jvmci_consta
   return JNIHandles::make_local(THREAD, field_holder);
 C2V_END
 
-C2V_VMENTRY(jint, getVtableIndexForInterface, (JNIEnv *, jobject, jobject jvmci_type, jobject jvmci_method))
+C2V_VMENTRY(jint, getVtableIndexForInterfaceMethod, (JNIEnv *, jobject, jobject jvmci_type, jobject jvmci_method))
   Klass* klass = CompilerToVM::asKlass(jvmci_type);
   Method* method = CompilerToVM::asMethod(jvmci_method);
   if (klass->is_interface()) {
     ResourceMark rm;
     THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Interface %s should be handled in Java code", klass->external_name()));
+  }
+  if (!method->method_holder()->is_interface()) {
+    ResourceMark rm;
+    THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Method %s is not held by an interface, this case should be handled in Java code", method->name_and_sig_as_C_string()));
   }
   return LinkResolver::vtable_index_of_interface_method(klass, method);
 C2V_END
@@ -1189,7 +1193,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"resolveInvokeDynamicInPool",                   CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeDynamicInPool)},
   {CC"resolveInvokeHandleInPool",                    CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeHandleInPool)},
   {CC"resolveMethod",                                CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD HS_RESOLVED_KLASS")"HS_RESOLVED_METHOD, FN_PTR(resolveMethod)},
-  {CC"getVtableIndexForInterface",                   CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD")I",                                    FN_PTR(getVtableIndexForInterface)},
+  {CC"getVtableIndexForInterfaceMethod",             CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD")I",                                    FN_PTR(getVtableIndexForInterfaceMethod)},
   {CC"getClassInitializer",                          CC"("HS_RESOLVED_KLASS")"HS_RESOLVED_METHOD,                                      FN_PTR(getClassInitializer)},
   {CC"hasFinalizableSubclass",                       CC"("HS_RESOLVED_KLASS")Z",                                                       FN_PTR(hasFinalizableSubclass)},
   {CC"getMaxCallTargetOffset",                       CC"(J)J",                                                                         FN_PTR(getMaxCallTargetOffset)},
