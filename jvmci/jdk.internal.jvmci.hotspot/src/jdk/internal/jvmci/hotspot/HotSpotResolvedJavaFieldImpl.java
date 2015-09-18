@@ -24,6 +24,7 @@ package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaFieldImpl.Options.ImplicitStableValues;
+import static jdk.internal.jvmci.hotspot.HotSpotVMConfig.config;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -137,7 +138,7 @@ public class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, H
 
     @Override
     public boolean isInternal() {
-        return (modifiers & runtime().getConfig().jvmAccFieldInternal) != 0;
+        return (modifiers & config().jvmAccFieldInternal) != 0;
     }
 
     /**
@@ -190,7 +191,7 @@ public class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, H
 
     @Override
     public boolean isSynthetic() {
-        return (runtime().getConfig().syntheticFlag & modifiers) != 0;
+        return (config().syntheticFlag & modifiers) != 0;
     }
 
     /**
@@ -199,7 +200,7 @@ public class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, H
      * @return true if field has {@link Stable} annotation, false otherwise
      */
     public boolean isStable() {
-        if ((runtime().getConfig().jvmAccFieldStable & modifiers) != 0) {
+        if ((config().jvmAccFieldStable & modifiers) != 0) {
             return true;
         }
         assert getAnnotation(Stable.class) == null;

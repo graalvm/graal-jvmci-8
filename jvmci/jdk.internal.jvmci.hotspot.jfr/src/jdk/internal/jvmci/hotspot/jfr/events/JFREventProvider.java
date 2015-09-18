@@ -22,9 +22,10 @@
  */
 package jdk.internal.jvmci.hotspot.jfr.events;
 
+import static jdk.internal.jvmci.hotspot.HotSpotVMConfig.config;
+
 import java.net.URISyntaxException;
 
-import jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime;
 import jdk.internal.jvmci.hotspot.events.EmptyEventProvider.EmptyCompilationEvent;
 import jdk.internal.jvmci.hotspot.events.EmptyEventProvider.EmptyCompilerFailureEvent;
 import jdk.internal.jvmci.hotspot.events.EventProvider;
@@ -49,7 +50,7 @@ public final class JFREventProvider implements EventProvider {
     @SuppressWarnings("unused") private final com.oracle.jrockit.jfr.Producer producer;
 
     public JFREventProvider() {
-        enabled = HotSpotJVMCIRuntime.runtime().getConfig().flightRecorder;
+        enabled = config().flightRecorder;
         com.oracle.jrockit.jfr.Producer p = null;
         if (enabled) {
             try {

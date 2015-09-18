@@ -24,6 +24,7 @@ package jdk.internal.jvmci.hotspot;
 
 import static java.lang.String.format;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.internal.jvmci.hotspot.HotSpotVMConfig.config;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.util.Arrays;
@@ -44,7 +45,7 @@ import sun.misc.Unsafe;
  */
 public final class HotSpotMethodData {
 
-    private static final HotSpotVMConfig config = runtime().getConfig();
+    private static final HotSpotVMConfig config = config();
     private static final HotSpotMethodDataAccessor NO_DATA_NO_EXCEPTION_ACCESSOR = new NoMethodData(TriState.FALSE);
     private static final HotSpotMethodDataAccessor NO_DATA_EXCEPTION_POSSIBLY_NOT_RECORDED_ACCESSOR = new NoMethodData(TriState.UNKNOWN);
 

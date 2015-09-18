@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.internal.jvmci.hotspot.HotSpotVMConfig.config;
 import jdk.internal.jvmci.meta.JavaMethodProfile;
 import jdk.internal.jvmci.meta.JavaTypeProfile;
 import jdk.internal.jvmci.meta.ProfilingInfo;
@@ -62,10 +62,6 @@ public interface HotSpotMethodDataAccessor {
 
         public int getValue() {
             return value;
-        }
-
-        private static HotSpotVMConfig config() {
-            return runtime().getConfig();
         }
 
         public static Tag getEnum(int value) {

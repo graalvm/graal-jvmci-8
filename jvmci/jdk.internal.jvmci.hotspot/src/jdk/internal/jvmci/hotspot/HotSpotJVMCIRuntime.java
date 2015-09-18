@@ -101,7 +101,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * Gets the singleton {@link HotSpotJVMCIRuntime} object.
      */
     public static HotSpotJVMCIRuntime runtime() {
-        assert DelayedInit.instance != null;
         return DelayedInit.instance;
     }
 

@@ -23,6 +23,7 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.common.UnsafeUtil.readCString;
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.reflect.Field;
@@ -65,8 +66,11 @@ public class HotSpotVMConfig {
         return false;
     }
 
+    /**
+     * Gets the configuration associated with the current {@link HotSpotJVMCIRuntime}.
+     */
     public static HotSpotVMConfig config() {
-        return HotSpotJVMCIRuntime.runtime().getConfig();
+        return runtime().getConfig();
     }
 
     /**
