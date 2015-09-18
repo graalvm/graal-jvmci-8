@@ -22,6 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
+import static jdk.internal.jvmci.hotspot.CompilerToVM.compilerToVM;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.internal.jvmci.hotspot.HotSpotResolvedObjectTypeImpl.fromObjectClass;
 import jdk.internal.jvmci.common.JVMCIError;
@@ -159,6 +160,6 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
 
         Object object = ((HotSpotObjectConstantImpl) memberName).object();
         /* Read the ResolvedJavaMethod from the injected field MemberName.vmtarget */
-        return runtime().getCompilerToVM().getResolvedJavaMethod(object, LazyInitialization.memberNameVmtargetField.offset());
+        return compilerToVM().getResolvedJavaMethod(object, LazyInitialization.memberNameVmtargetField.offset());
     }
 }

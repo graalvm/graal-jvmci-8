@@ -23,6 +23,7 @@
 package jdk.internal.jvmci.hotspot;
 
 import static java.lang.String.format;
+import static jdk.internal.jvmci.hotspot.CompilerToVM.compilerToVM;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.internal.jvmci.hotspot.HotSpotVMConfig.config;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
@@ -200,12 +201,12 @@ public final class HotSpotMethodData {
 
     private HotSpotResolvedJavaMethod readMethod(int position, int offsetInBytes) {
         long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
-        return runtime().getCompilerToVM().getResolvedJavaMethod(null, metaspaceMethodData + fullOffsetInBytes);
+        return compilerToVM().getResolvedJavaMethod(null, metaspaceMethodData + fullOffsetInBytes);
     }
 
     private HotSpotResolvedObjectTypeImpl readKlass(int position, int offsetInBytes) {
         long fullOffsetInBytes = computeFullOffset(position, offsetInBytes);
-        return runtime().getCompilerToVM().getResolvedJavaType(null, metaspaceMethodData + fullOffsetInBytes, false);
+        return compilerToVM().getResolvedJavaType(null, metaspaceMethodData + fullOffsetInBytes, false);
     }
 
     private static int truncateLongToInt(long value) {

@@ -23,6 +23,7 @@
 
 package jdk.internal.jvmci.hotspot;
 
+import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.internal.jvmci.inittimer.InitTimer.timer;
 
 import java.lang.reflect.Constructor;
@@ -59,6 +60,14 @@ public final class CompilerToVM {
         try (InitTimer t = timer("CompilerToVMImpl.init")) {
             init();
         }
+    }
+
+    /**
+     * Gets the {@link CompilerToVM} instance associated with the singleton
+     * {@link HotSpotJVMCIRuntime} instance.
+     */
+    public static CompilerToVM compilerToVM() {
+        return runtime().getCompilerToVM();
     }
 
     /**

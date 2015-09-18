@@ -67,7 +67,7 @@ public class HotSpotVMConfig {
     }
 
     /**
-     * Gets the configuration associated with the current {@link HotSpotJVMCIRuntime}.
+     * Gets the configuration associated with the singleton {@link HotSpotJVMCIRuntime}.
      */
     public static HotSpotVMConfig config() {
         return runtime().getConfig();

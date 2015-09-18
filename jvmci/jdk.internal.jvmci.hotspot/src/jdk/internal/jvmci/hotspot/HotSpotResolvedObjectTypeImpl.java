@@ -23,6 +23,7 @@
 package jdk.internal.jvmci.hotspot;
 
 import static java.util.Objects.requireNonNull;
+import static jdk.internal.jvmci.hotspot.CompilerToVM.compilerToVM;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.internal.jvmci.hotspot.HotSpotVMConfig.config;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
@@ -233,7 +234,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
      * @return value of the subklass field as metaspace klass pointer
      */
     private HotSpotResolvedObjectTypeImpl getSubklass() {
-        return runtime().getCompilerToVM().getResolvedJavaType(this, config().subklassOffset, false);
+        return compilerToVM().getResolvedJavaType(this, config().subklassOffset, false);
     }
 
     @Override
@@ -260,7 +261,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
         if (!isInterface()) {
             throw new JVMCIError("Cannot call getSingleImplementor() on a non-interface type: %s", this);
         }
-        return runtime().getCompilerToVM().getImplementor(this);
+        return compilerToVM().getImplementor(this);
     }
 
     public HotSpotResolvedObjectTypeImpl getSupertype() {
@@ -315,7 +316,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     @Override
     public AssumptionResult<Boolean> hasFinalizableSubclass() {
         assert !isArray();
-        if (!runtime().getCompilerToVM().hasFinalizableSubclass(this)) {
+        if (!compilerToVM().hasFinalizableSubclass(this)) {
             return new AssumptionResult<>(false, new NoFinalizableSubclass(this));
         }
         return new AssumptionResult<>(true);
@@ -424,12 +425,12 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
         }
         HotSpotResolvedJavaMethodImpl hotSpotMethod = (HotSpotResolvedJavaMethodImpl) method;
         HotSpotResolvedObjectTypeImpl hotSpotCallerType = (HotSpotResolvedObjectTypeImpl) callerType;
-        return runtime().getCompilerToVM().resolveMethod(this, hotSpotMethod, hotSpotCallerType);
+        return compilerToVM().resolveMethod(this, hotSpotMethod, hotSpotCallerType);
     }
 
     public HotSpotConstantPool getConstantPool() {
         if (constantPool == null) {
-            constantPool = runtime().getCompilerToVM().getConstantPool(this, config().instanceKlassConstantsOffset);
+            constantPool = compilerToVM().getConstantPool(this, config().instanceKlassConstantsOffset);
         }
         return constantPool;
     }
@@ -893,7 +894,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     }
 
     public ResolvedJavaMethod getClassInitializer() {
-        return runtime().getCompilerToVM().getClassInitializer(this);
+        return compilerToVM().getClassInitializer(this);
     }
 
     @Override

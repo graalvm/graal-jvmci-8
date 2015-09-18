@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.internal.jvmci.hotspot.CompilerToVM.compilerToVM;
 import jdk.internal.jvmci.code.InstalledCode;
 import jdk.internal.jvmci.code.InvalidInstalledCodeException;
 import jdk.internal.jvmci.meta.JavaKind;
@@ -74,7 +74,7 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
 
     @Override
     public void invalidate() {
-        runtime().getCompilerToVM().invalidateInstalledCode(this);
+        compilerToVM().invalidateInstalledCode(this);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
     public Object executeVarargs(Object... args) throws InvalidInstalledCodeException {
         assert checkArgs(args);
         assert !isExternal();
-        return runtime().getCompilerToVM().executeInstalledCode(args, this);
+        return compilerToVM().executeInstalledCode(args, this);
     }
 
     @Override
