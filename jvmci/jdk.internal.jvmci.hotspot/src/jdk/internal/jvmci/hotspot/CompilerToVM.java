@@ -516,7 +516,7 @@ public final class CompilerToVM {
      * v-table.
      *
      * @throws InternalError if {@code type} is an interface or {@code method} is not held by an
-     *             interface
+     *             interface or class represented by {@code type} is not initialized
      */
     native int getVtableIndexForInterfaceMethod(HotSpotResolvedObjectTypeImpl type, HotSpotResolvedJavaMethodImpl method);
 

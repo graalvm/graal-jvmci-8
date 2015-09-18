@@ -470,13 +470,19 @@ C2V_END
 C2V_VMENTRY(jint, getVtableIndexForInterfaceMethod, (JNIEnv *, jobject, jobject jvmci_type, jobject jvmci_method))
   Klass* klass = CompilerToVM::asKlass(jvmci_type);
   Method* method = CompilerToVM::asMethod(jvmci_method);
+  err_msg error_message("");
   if (klass->is_interface()) {
-    ResourceMark rm;
-    THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Interface %s should be handled in Java code", klass->external_name()));
+    error_message = err_msg("Interface %s should be handled in Java code", klass->external_name());
   }
   if (!method->method_holder()->is_interface()) {
+    error_message = err_msg("Method %s is not held by an interface, this case should be handled in Java code", method->name_and_sig_as_C_string());
+  }
+  if (!InstanceKlass::cast(klass)->is_initialized()) {
+    error_message = err_msg("Class %s must be initialized", klass->external_name());
+  }
+  if (error_message.size() > 0) {
     ResourceMark rm;
-    THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Method %s is not held by an interface, this case should be handled in Java code", method->name_and_sig_as_C_string()));
+    THROW_MSG_0(vmSymbols::java_lang_InternalError(), error_message);
   }
   return LinkResolver::vtable_index_of_interface_method(klass, method);
 C2V_END
