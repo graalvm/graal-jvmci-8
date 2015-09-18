@@ -461,29 +461,6 @@ public enum JavaKind implements PlatformKind {
         }
     }
 
-    public JavaConstant getDefaultValue() {
-        switch (this) {
-            case Boolean:
-                return JavaConstant.FALSE;
-            case Int:
-                return JavaConstant.INT_0;
-            case Long:
-                return JavaConstant.LONG_0;
-            case Float:
-                return JavaConstant.FLOAT_0;
-            case Double:
-                return JavaConstant.DOUBLE_0;
-            case Object:
-                return JavaConstant.NULL_POINTER;
-            case Byte:
-            case Char:
-            case Short:
-                return new PrimitiveConstant(this, 0);
-            default:
-                throw new IllegalArgumentException("illegal call to getDefaultValue on " + this);
-        }
-    }
-
     @Override
     public int getSizeInBytes() {
         return getByteCount();
