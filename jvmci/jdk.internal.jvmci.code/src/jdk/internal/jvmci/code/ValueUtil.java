@@ -65,6 +65,11 @@ public final class ValueUtil {
         return value instanceof JavaConstant;
     }
 
+    public static JavaConstant asConstantJavaValue(JavaValue value) {
+        assert value != null;
+        return (JavaConstant) value;
+    }
+
     public static boolean isAllocatableValue(Value value) {
         assert value != null;
         return value instanceof AllocatableValue;
