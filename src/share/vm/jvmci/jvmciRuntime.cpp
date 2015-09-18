@@ -716,7 +716,7 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
         if (str == NULL) {
           THROW(vmSymbols::java_lang_NullPointerException());
         } else {
-          _trivial_prefixes[i] = strdup(java_lang_String::as_utf8_string(str));
+          prefixes[i] = strdup(java_lang_String::as_utf8_string(str));
         }
       }
       _trivial_prefixes = prefixes;
