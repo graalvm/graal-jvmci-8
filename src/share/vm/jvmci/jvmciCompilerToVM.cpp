@@ -1138,7 +1138,6 @@ C2V_VMENTRY(int, methodDataProfileDataSize, (JNIEnv*, jobject, jlong metaspace_m
       return profile_data->size_in_bytes();
     }
   }
-  mdo->print();
   THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), err_msg("Invalid profile data position %d", position));
 C2V_END
 
