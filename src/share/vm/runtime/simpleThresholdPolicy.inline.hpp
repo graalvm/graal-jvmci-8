@@ -59,9 +59,8 @@ bool SimpleThresholdPolicy::is_trivial(Method* method) {
     return true;
   }
 #ifdef COMPILERJVMCI
-  if (TieredCompilation && JVMCICompileWithC1Only &&
-      SystemDictionary::jvmci_loader() != NULL &&
-      method->method_holder()->class_loader() == SystemDictionary::jvmci_loader()) {
+  if (TieredCompilation && CompileBroker::compiler(CompLevel_full_optimization) != NULL &&
+      CompileBroker::compiler(CompLevel_full_optimization)->is_trivial(method)) {
     return true;
   }
 #endif

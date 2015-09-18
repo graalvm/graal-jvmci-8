@@ -44,6 +44,7 @@
   do_klass(HotSpotStackFrameReference_klass,             jdk_internal_jvmci_hotspot_HotSpotStackFrameReference,          Jvmci) \
   do_klass(HotSpotConstantPool_klass,                    jdk_internal_jvmci_hotspot_HotSpotConstantPool,                 Jvmci) \
   do_klass(HotSpotJVMCIMetaAccessContext_klass,          jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext,       Jvmci) \
+  do_klass(HotSpotJVMCIRuntime_klass,                    jdk_internal_jvmci_hotspot_HotSpotJVMCIRuntime,                 Jvmci) \
   do_klass(Assumptions_ConcreteMethod_klass,             jdk_internal_jvmci_meta_Assumptions_ConcreteMethod,             Jvmci) \
   do_klass(Assumptions_NoFinalizableSubclass_klass,      jdk_internal_jvmci_meta_Assumptions_NoFinalizableSubclass,      Jvmci) \
   do_klass(Assumptions_ConcreteSubtype_klass,            jdk_internal_jvmci_meta_Assumptions_ConcreteSubtype,            Jvmci) \

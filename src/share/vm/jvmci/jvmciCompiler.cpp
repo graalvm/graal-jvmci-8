@@ -69,8 +69,6 @@ void JVMCICompiler::bootstrap() {
   JavaThread* THREAD = JavaThread::current();
   _bootstrapping = true;
   // Allow bootstrap to perform JVMCI compilations of itself
-  bool c1only = JVMCICompileWithC1Only;
-  JVMCICompileWithC1Only = false;
   ResourceMark rm;
   HandleMark hm;
   if (PrintBootstrap) {
@@ -111,7 +109,6 @@ void JVMCICompiler::bootstrap() {
   if (PrintBootstrap) {
     tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methodsCompiled);
   }
-  JVMCICompileWithC1Only = c1only;
   _bootstrapping = false;
 }
 
@@ -154,6 +151,13 @@ void JVMCICompiler::compile_method(methodHandle method, int entry_bci, JVMCIEnv*
 // Compilation entry point for methods
 void JVMCICompiler::compile_method(ciEnv* env, ciMethod* target, int entry_bci) {
   ShouldNotReachHere();
+}
+
+bool JVMCICompiler::is_trivial(Method* method) {
+  if (_bootstrapping) {
+    return false;
+  }
+  return JVMCIRuntime::treat_as_trivial(method);
 }
 
 // Print compilation timers and statistics

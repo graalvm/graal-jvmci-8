@@ -46,4 +46,17 @@ public interface CompilerFactory {
      * Create a new instance of the {@link Compiler}.
      */
     Compiler createCompiler(JVMCIRuntime runtime);
+
+    /**
+     * In a tiered system it might be advantageous for startup to keep the JVMCI compiler from
+     * compiling itself so provide a hook to request that certain packages are compiled only by an
+     * optimizing first tier. The prefixes should class or package names using / as the separator,
+     * i.e. jdk/internal/jvmci for instance.
+     *
+     * @return 0 or more Strings identifying packages that should by compiled by the first tier
+     *         only.
+     */
+    default String[] getTrivialPrefixes() {
+        return null;
+    }
 }

@@ -61,6 +61,9 @@ class JVMCIRuntime: public AllStatic {
   static const char* _compiler;
   static const char* _options;
 
+  static int _trivial_prefixes_count;
+  static char** _trivial_prefixes;
+
   static bool _shutdown_called;
 
   /**
@@ -131,6 +134,8 @@ class JVMCIRuntime: public AllStatic {
   static bool shutdown_called() {
     return _shutdown_called;
   }
+
+  static bool treat_as_trivial(Method* method);
 
   /**
    * Given an interface representing a JVMCI service (i.e. sub-interface of

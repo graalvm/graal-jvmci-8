@@ -110,6 +110,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     public void completeInitialization() {
         compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
+        trivialPrefixes = HotSpotJVMCICompilerConfig.getCompilerFactory().getTrivialPrefixes();
     }
 
     public static HotSpotJVMCIBackendFactory findFactory(String architecture) {
@@ -140,6 +141,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
 
     private final Iterable<HotSpotVMEventListener> vmEventListeners;
+
+    @SuppressWarnings("unused") private String[] trivialPrefixes;
 
     @SuppressWarnings("try")
     private HotSpotJVMCIRuntime() {

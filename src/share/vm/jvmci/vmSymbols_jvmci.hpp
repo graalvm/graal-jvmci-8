@@ -45,6 +45,7 @@
   template(jdk_internal_jvmci_hotspot_HotSpotStackFrameReference,      "jdk/internal/jvmci/hotspot/HotSpotStackFrameReference")           \
   template(jdk_internal_jvmci_hotspot_HotSpotConstantPool,             "jdk/internal/jvmci/hotspot/HotSpotConstantPool")                  \
   template(jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext,   "jdk/internal/jvmci/hotspot/HotSpotJVMCIMetaAccessContext")        \
+  template(jdk_internal_jvmci_hotspot_HotSpotJVMCIRuntime,             "jdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime")                  \
   template(jdk_internal_jvmci_meta_JavaConstant,                       "jdk/internal/jvmci/meta/JavaConstant")                            \
   template(jdk_internal_jvmci_meta_PrimitiveConstant,                  "jdk/internal/jvmci/meta/PrimitiveConstant")                       \
   template(jdk_internal_jvmci_meta_RawConstant,                        "jdk/internal/jvmci/meta/RawConstant")                             \

@@ -114,6 +114,9 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   bool is_shark()                                { return _type == shark; }
   bool is_jvmci()                                { return _type == jvmci; }
 
+  // Extra tests to identity trivial methods for the tiered compilation policy.
+  virtual bool is_trivial(Method* method) { return false; }
+
   // Customization
   virtual void initialize () = 0;
 

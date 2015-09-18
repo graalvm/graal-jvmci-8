@@ -272,6 +272,9 @@ void jvmci_compute_offsets();
   start_class(HotSpotConstantPool)                                                                                                                             \
     long_field(HotSpotConstantPool, metaspaceConstantPool)                                                                                                     \
   end_class                                                                                                                                                    \
+  start_class(HotSpotJVMCIRuntime)                                                                                                                             \
+  objArrayOop_field(HotSpotJVMCIRuntime, trivialPrefixes, "[Ljava/lang/String;")                                                                               \
+  end_class                                                                                                                                                    \
   /* end*/
 
 #define START_CLASS(name)                                                                                                                                      \

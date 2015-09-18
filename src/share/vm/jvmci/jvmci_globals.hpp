@@ -85,12 +85,6 @@
   product(bool, JVMCICountersExcludeCompiler, true,                         \
           "Exclude JVMCI compiler threads from benchmark counters")         \
                                                                             \
-  product(bool, JVMCICompileWithC1Only, true,                               \
-          "Only compile JVMCI classes with C1")                             \
-                                                                            \
-  product(bool, JVMCICompileAppFirst, false,                                \
-          "Prioritize application compilations over JVMCI compilations")    \
-                                                                            \
   develop(bool, JVMCIUseFastLocking, true,                                  \
           "Use fast inlined locking code")                                  \
                                                                             \

@@ -49,6 +49,8 @@ jobject JVMCIRuntime::_HotSpotJVMCIRuntime_instance = NULL;
 bool JVMCIRuntime::_HotSpotJVMCIRuntime_initialized = false;
 const char* JVMCIRuntime::_compiler = NULL;
 const char* JVMCIRuntime::_options = NULL;
+int JVMCIRuntime::_trivial_prefixes_count = 0;
+char** JVMCIRuntime::_trivial_prefixes = NULL;
 bool JVMCIRuntime::_shutdown_called = false;
 
 void JVMCIRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
@@ -706,6 +708,19 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
     Handle result = callStatic("jdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime",
                                "runtime",
                                "()Ljdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime;", NULL, CHECK);
+    objArrayOop trivial_prefixes = HotSpotJVMCIRuntime::trivialPrefixes(result);
+    if (trivial_prefixes != NULL) {
+      _trivial_prefixes_count = trivial_prefixes->length();
+      _trivial_prefixes = NEW_C_HEAP_ARRAY(char*, _trivial_prefixes_count, mtCompiler);
+      for (int i = 0; i < trivial_prefixes->length(); i++) {
+        oop str = trivial_prefixes->obj_at(i);
+        if (str == NULL) {
+          THROW(vmSymbols::java_lang_NullPointerException());
+        } else {
+          _trivial_prefixes[i] = strdup(java_lang_String::as_utf8_string(str));
+        }
+      }
+    }
     _HotSpotJVMCIRuntime_initialized = true;
     _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result());
   }
@@ -940,6 +955,15 @@ void JVMCIRuntime::shutdown() {
     args.push_oop(receiver);
     JavaCalls::call_special(&result, receiver->klass(), vmSymbols::shutdown_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
   }
+}
+
+bool JVMCIRuntime::treat_as_trivial(Method* method) {
+  for (int i = 0; i < _trivial_prefixes_count; i++) {
+    if (method->method_holder()->name()->starts_with(_trivial_prefixes[i])) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void JVMCIRuntime::call_printStackTrace(Handle exception, Thread* thread) {
