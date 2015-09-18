@@ -151,11 +151,19 @@ public class AMD64 extends Architecture {
 
     private final EnumSet<Flag> flags;
 
+    private final AMD64Kind largestKind;
+
     public AMD64(EnumSet<CPUFeature> features, EnumSet<Flag> flags) {
-        super("AMD64", JavaKind.Long, ByteOrder.LITTLE_ENDIAN, true, allRegisters, LOAD_STORE | STORE_STORE, 1, cpuRegisters.length + (xmmRegisters.length << XMM_REFERENCE_MAP_SHIFT), 8);
+        super("AMD64", AMD64Kind.QWORD, ByteOrder.LITTLE_ENDIAN, true, allRegisters, LOAD_STORE | STORE_STORE, 1, cpuRegisters.length + (xmmRegisters.length << XMM_REFERENCE_MAP_SHIFT), 8);
         this.features = features;
         this.flags = flags;
         assert features.contains(CPUFeature.SSE2) : "minimum config for x64";
+
+        if (features.contains(CPUFeature.AVX)) {
+            largestKind = AMD64Kind.V256_QWORD;
+        } else {
+            largestKind = AMD64Kind.V128_QWORD;
+        }
     }
 
     public EnumSet<CPUFeature> getFeatures() {
@@ -168,49 +176,46 @@ public class AMD64 extends Architecture {
 
     @Override
     public PlatformKind getPlatformKind(JavaKind javaKind) {
-        if (javaKind.isObject()) {
-            return getWordKind();
-        } else {
-            return javaKind;
+        switch (javaKind) {
+            case Boolean:
+            case Byte:
+                return AMD64Kind.BYTE;
+            case Short:
+            case Char:
+                return AMD64Kind.WORD;
+            case Int:
+                return AMD64Kind.DWORD;
+            case Long:
+            case Object:
+                return AMD64Kind.QWORD;
+            case Float:
+                return AMD64Kind.SINGLE;
+            case Double:
+                return AMD64Kind.DOUBLE;
+            default:
+                return null;
         }
     }
 
     @Override
     public boolean canStoreValue(RegisterCategory category, PlatformKind platformKind) {
-        if (!(platformKind instanceof JavaKind)) {
-            return false;
+        AMD64Kind kind = (AMD64Kind) platformKind;
+        if (kind.isInteger()) {
+            return category.equals(CPU);
+        } else {
+            assert kind.isXMM();
+            return category.equals(XMM);
         }
-
-        JavaKind kind = (JavaKind) platformKind;
-        if (category.equals(CPU)) {
-            switch (kind) {
-                case Boolean:
-                case Byte:
-                case Char:
-                case Short:
-                case Int:
-                case Long:
-                    return true;
-            }
-        } else if (category.equals(XMM)) {
-            switch (kind) {
-                case Float:
-                case Double:
-                    return true;
-            }
-        }
-
-        return false;
     }
 
     @Override
-    public PlatformKind getLargestStorableKind(RegisterCategory category) {
+    public AMD64Kind getLargestStorableKind(RegisterCategory category) {
         if (category.equals(CPU)) {
-            return JavaKind.Long;
+            return AMD64Kind.QWORD;
         } else if (category.equals(XMM)) {
-            return JavaKind.Double;
+            return largestKind;
         } else {
-            return JavaKind.Illegal;
+            return null;
         }
     }
 }
