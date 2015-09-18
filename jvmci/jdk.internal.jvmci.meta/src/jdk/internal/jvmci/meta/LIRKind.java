@@ -57,10 +57,32 @@ import java.util.ArrayList;
  */
 public final class LIRKind {
 
+    private static enum IllegalKind implements PlatformKind {
+        ILLEGAL;
+
+        private final EnumKey<IllegalKind> key = new EnumKey<>(this);
+
+        public Key getKey() {
+            return key;
+        }
+
+        public int getSizeInBytes() {
+            return 0;
+        }
+
+        public int getVectorLength() {
+            return 0;
+        }
+
+        public char getTypeChar() {
+            return '-';
+        }
+    }
+
     /**
      * The non-type. This uses {@link #unknownReference}, so it can never be part of an oop map.
      */
-    public static final LIRKind Illegal = unknownReference(JavaKind.Illegal);
+    public static final LIRKind Illegal = unknownReference(IllegalKind.ILLEGAL);
 
     private final PlatformKind platformKind;
     private final int referenceMask;
