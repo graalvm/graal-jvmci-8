@@ -1700,7 +1700,8 @@ class JVMCIArchiveParticipant:
             return True
         if arcname.startswith('META-INF/jvmci.providers/'):
             provider = arcname[len('META-INF/jvmci.providers/'):]
-            for service in contents.split(os.linesep):
+            for service in contents.strip().split(os.linesep):
+                assert service
                 self.jvmciServices.setdefault(service, []).append(provider)
             return True
         elif arcname.endswith('_OptionDescriptors.class'):
