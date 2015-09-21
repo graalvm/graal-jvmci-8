@@ -156,6 +156,7 @@ Metadata* CodeInstaller::record_metadata_reference(Handle& constant) {
     return method;
   } else {
     fatal(err_msg("unexpected metadata reference for constant of type %s", obj->klass()->name()->as_C_string()));
+    return NULL;
   }
 }
 
