@@ -262,6 +262,13 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         }
     }
 
+    /**
+     * Notify on successful install into the CodeCache.
+     *
+     * @param hotSpotCodeCacheProvider
+     * @param installedCode
+     * @param compResult
+     */
     void notifyInstall(HotSpotCodeCacheProvider hotSpotCodeCacheProvider, InstalledCode installedCode, CompilationResult compResult) {
         for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
             vmEventListener.notifyInstall(hotSpotCodeCacheProvider, installedCode, compResult);

@@ -118,27 +118,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         return installedCode;
     }
 
-    public InstalledCode installMethod(HotSpotResolvedJavaMethod method, CompilationResult compResult, long jvmciEnv, boolean isDefault) {
-        if (compResult.getId() == -1) {
-            compResult.setId(method.allocateCompileId(compResult.getEntryBCI()));
-        }
-        HotSpotInstalledCode installedCode = new HotSpotNmethod(method, compResult.getName(), isDefault);
-        runtime.getCompilerToVM().installCode(target, new HotSpotCompiledNmethod(method, compResult, jvmciEnv), installedCode, method.getSpeculationLog());
-        return logOrDump(installedCode, compResult);
-    }
-
-    @Override
-    public InstalledCode addMethod(ResolvedJavaMethod method, CompilationResult compResult, SpeculationLog log, InstalledCode predefinedInstalledCode) {
-        HotSpotResolvedJavaMethod hotspotMethod = (HotSpotResolvedJavaMethod) method;
-        if (compResult.getId() == -1) {
-            compResult.setId(hotspotMethod.allocateCompileId(compResult.getEntryBCI()));
-        }
-        InstalledCode installedCode = predefinedInstalledCode;
-        if (installedCode == null) {
-            HotSpotInstalledCode code = new HotSpotNmethod(hotspotMethod, compResult.getName(), false);
-            installedCode = code;
-        }
-        HotSpotCompiledNmethod compiledCode = new HotSpotCompiledNmethod(hotspotMethod, compResult);
+    private InstalledCode installCode(CompilationResult compResult, HotSpotCompiledNmethod compiledCode, InstalledCode installedCode, SpeculationLog log) {
         int result = runtime.getCompilerToVM().installCode(target, compiledCode, installedCode, log);
         if (result != config.codeInstallResultOk) {
             String msg = compiledCode.getInstallationFailureMessage();
@@ -154,6 +134,30 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
             throw new BailoutException(result != config.codeInstallResultDependenciesFailed, msg);
         }
         return logOrDump(installedCode, compResult);
+    }
+
+    public InstalledCode installMethod(HotSpotResolvedJavaMethod method, CompilationResult compResult, long jvmciEnv, boolean isDefault) {
+        if (compResult.getId() == -1) {
+            compResult.setId(method.allocateCompileId(compResult.getEntryBCI()));
+        }
+        HotSpotInstalledCode installedCode = new HotSpotNmethod(method, compResult.getName(), isDefault);
+        HotSpotCompiledNmethod compiledCode = new HotSpotCompiledNmethod(method, compResult, jvmciEnv);
+        return installCode(compResult, compiledCode, installedCode, method.getSpeculationLog());
+    }
+
+    @Override
+    public InstalledCode addMethod(ResolvedJavaMethod method, CompilationResult compResult, SpeculationLog log, InstalledCode predefinedInstalledCode) {
+        HotSpotResolvedJavaMethod hotspotMethod = (HotSpotResolvedJavaMethod) method;
+        if (compResult.getId() == -1) {
+            compResult.setId(hotspotMethod.allocateCompileId(compResult.getEntryBCI()));
+        }
+        InstalledCode installedCode = predefinedInstalledCode;
+        if (installedCode == null) {
+            HotSpotInstalledCode code = new HotSpotNmethod(hotspotMethod, compResult.getName(), false);
+            installedCode = code;
+        }
+        HotSpotCompiledNmethod compiledCode = new HotSpotCompiledNmethod(hotspotMethod, compResult);
+        return installCode(compResult, compiledCode, installedCode, log);
     }
 
     @Override
