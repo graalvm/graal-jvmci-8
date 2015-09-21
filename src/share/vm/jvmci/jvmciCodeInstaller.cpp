@@ -140,42 +140,37 @@ OopMap* CodeInstaller::create_oop_map(oop debug_info) {
   return map;
 }
 
-static void record_metadata_reference(oop obj, jlong prim, jboolean compressed, OopRecorder* oop_recorder) {
+Metadata* CodeInstaller::record_metadata_reference(Handle& constant) {
+  oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
   if (obj->is_a(HotSpotResolvedObjectTypeImpl::klass())) {
     Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(obj));
-    if (compressed) {
-      assert(Klass::decode_klass((narrowKlass) prim) == klass, err_msg("%s @ " INTPTR_FORMAT " != " PTR64_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
-    } else {
-      assert((Klass*) prim == klass, err_msg("%s @ " INTPTR_FORMAT " != " PTR64_FORMAT, klass->name()->as_C_string(), p2i(klass), prim));
-    }
-    int index = oop_recorder->find_index(klass);
-    TRACE_jvmci_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), klass->name()->as_C_string());
+    assert(!HotSpotMetaspaceConstantImpl::compressed(constant), err_msg("unexpected compressed klass pointer %s @ " INTPTR_FORMAT, klass->name()->as_C_string(), p2i(klass)));
+    int index = _oop_recorder->find_index(klass);
+    TRACE_jvmci_3("metadata[%d of %d] = %s", index, _oop_recorder->metadata_count(), klass->name()->as_C_string());
+    return klass;
   } else if (obj->is_a(HotSpotResolvedJavaMethodImpl::klass())) {
     Method* method = (Method*) (address) HotSpotResolvedJavaMethodImpl::metaspaceMethod(obj);
-    assert(!compressed, err_msg("unexpected compressed method pointer %s @ " INTPTR_FORMAT " = " PTR64_FORMAT, method->name()->as_C_string(), p2i(method), prim));
-    int index = oop_recorder->find_index(method);
-    TRACE_jvmci_3("metadata[%d of %d] = %s", index, oop_recorder->metadata_count(), method->name()->as_C_string());
+    assert(!HotSpotMetaspaceConstantImpl::compressed(constant), err_msg("unexpected compressed method pointer %s @ " INTPTR_FORMAT, method->name()->as_C_string(), p2i(method)));
+    int index = _oop_recorder->find_index(method);
+    TRACE_jvmci_3("metadata[%d of %d] = %s", index, _oop_recorder->metadata_count(), method->name()->as_C_string());
+    return method;
   } else {
-    assert(java_lang_String::is_instance(obj),
-        err_msg("unexpected metadata reference (%s) for constant " JLONG_FORMAT " (" PTR64_FORMAT ")", obj->klass()->name()->as_C_string(), prim, prim));
+    fatal(err_msg("unexpected metadata reference for constant of type %s", obj->klass()->name()->as_C_string()));
   }
 }
 
-// Records any Metadata values embedded in a Constant (e.g., the value returned by HotSpotResolvedObjectTypeImpl.klass()).
-static void record_metadata_in_constant(oop constant, OopRecorder* oop_recorder) {
-  if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
-    oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
-    jlong raw = HotSpotMetaspaceConstantImpl::rawValue(constant);
-    assert(obj != NULL, "must have an object");
-    assert(raw != 0, "must have a raw value");
+#ifdef _LP64
+narrowKlass CodeInstaller::record_narrow_metadata_reference(Handle& constant) {
+  oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
+  assert(HotSpotMetaspaceConstantImpl::compressed(constant), err_msg("unexpected uncompressed pointer"));
+  assert(obj->is_a(HotSpotResolvedObjectTypeImpl::klass()), err_msg("unexpected compressed pointer of type %s", obj->klass()->name()->as_C_string()));
 
-    record_metadata_reference(obj, raw, false, oop_recorder);
-  }
+  Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(obj));
+  int index = _oop_recorder->find_index(klass);
+  TRACE_jvmci_3("narrowKlass[%d of %d] = %s", index, _oop_recorder->metadata_count(), klass->name()->as_C_string());
+  return Klass::encode_klass(klass);
 }
-
-static void record_metadata_in_patch(Handle& constant, OopRecorder* oop_recorder) {
-  record_metadata_reference(HotSpotMetaspaceConstantImpl::metaspaceObject(constant), HotSpotMetaspaceConstantImpl::rawValue(constant), HotSpotMetaspaceConstantImpl::compressed(constant), oop_recorder);
-}
+#endif
 
 Location::Type CodeInstaller::get_oop_type(oop value) {
   oop lirKind = Value::lirKind(value);
@@ -251,7 +246,6 @@ ScopeValue* CodeInstaller::get_scope_value(oop value, BasicType type, GrowableAr
     }
     return value;
   } else if (value->is_a(JavaConstant::klass())) {
-    record_metadata_in_constant(value, _oop_recorder);
     if (value->is_a(PrimitiveConstant::klass())) {
       if (value->is_a(RawConstant::klass())) {
         jlong prim = PrimitiveConstant::primitive(value);
@@ -545,14 +539,22 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer)
     Handle reference = CompilationResult_DataPatch::reference(patch);
     assert(reference->is_a(CompilationResult_ConstantReference::klass()), err_msg("patch in data section must be a ConstantReference"));
     Handle constant = CompilationResult_ConstantReference::constant(reference);
+    address dest = _constants->start() + CompilationResult_Site::pcOffset(patch);
     if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
-      record_metadata_in_patch(constant, _oop_recorder);
+      if (HotSpotMetaspaceConstantImpl::compressed(constant)) {
+#ifdef _LP64
+        *((narrowKlass*) dest) = record_narrow_metadata_reference(constant);
+#else
+        fatal("unexpected compressed Klass* in 32-bit mode");
+#endif
+      } else {
+        *((Metadata**) dest) = record_metadata_reference(constant);
+      }
     } else if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
       Handle obj = HotSpotObjectConstantImpl::object(constant);
       jobject value = JNIHandles::make_local(obj());
       int oop_index = _oop_recorder->find_index(value);
 
-      address dest = _constants->start() + CompilationResult_Site::pcOffset(patch);
       if (HotSpotObjectConstantImpl::compressed(constant)) {
 #ifdef _LP64
         _constants->relocate(dest, oop_Relocation::spec(oop_index), relocInfo::narrow_oop_in_const);
@@ -899,7 +901,7 @@ void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, oop site)
     if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
       pd_patch_OopConstant(pc_offset, constant);
     } else if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
-      record_metadata_in_patch(constant, _oop_recorder);
+      pd_patch_MetaspaceConstant(pc_offset, constant);
     } else {
       fatal("unknown constant type in data patch");
     }

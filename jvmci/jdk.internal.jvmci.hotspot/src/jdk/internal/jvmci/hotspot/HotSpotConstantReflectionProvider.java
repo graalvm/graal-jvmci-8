@@ -224,7 +224,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
             }
         }
         if (constant instanceof HotSpotMetaspaceConstant) {
-            Object obj = HotSpotMetaspaceConstantImpl.getMetaspaceObject(constant);
+            MetaspaceWrapperObject obj = HotSpotMetaspaceConstantImpl.getMetaspaceObject(constant);
             if (obj instanceof HotSpotResolvedObjectTypeImpl) {
                 return (ResolvedJavaType) obj;
             }

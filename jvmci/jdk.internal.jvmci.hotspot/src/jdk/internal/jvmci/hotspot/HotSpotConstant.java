@@ -30,4 +30,8 @@ import jdk.internal.jvmci.meta.Constant;
 public interface HotSpotConstant extends Constant {
 
     boolean isCompressed();
+
+    Constant compress();
+
+    Constant uncompress();
 }

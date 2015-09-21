@@ -28,7 +28,7 @@ package jdk.internal.jvmci.hotspot;
  * It would preferable if this were the base class containing the pointer but that would require
  * mixins since most of the wrapper types have complex supertype hierarchies.
  */
-public interface MetaspaceWrapperObject {
+interface MetaspaceWrapperObject {
 
     long getMetaspacePointer();
 }

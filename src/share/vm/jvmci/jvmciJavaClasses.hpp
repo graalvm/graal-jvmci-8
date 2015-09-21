@@ -210,8 +210,7 @@ void jvmci_compute_offsets();
     boolean_field(HotSpotObjectConstantImpl, compressed)                                                                                                       \
   end_class                                                                                                                                                    \
   start_class(HotSpotMetaspaceConstantImpl)                                                                                                                    \
-    oop_field(HotSpotMetaspaceConstantImpl, metaspaceObject, "Ljava/lang/Object;")                                                                             \
-    long_field(HotSpotMetaspaceConstantImpl, rawValue)                                                                                                         \
+    oop_field(HotSpotMetaspaceConstantImpl, metaspaceObject, "Ljdk/internal/jvmci/hotspot/MetaspaceWrapperObject;")                                            \
     boolean_field(HotSpotMetaspaceConstantImpl, compressed)                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(JavaKind)                                                                                                                                        \

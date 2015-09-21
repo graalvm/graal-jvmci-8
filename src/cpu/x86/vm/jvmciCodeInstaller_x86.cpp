@@ -83,6 +83,23 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
   }
 }
 
+void CodeInstaller::pd_patch_MetaspaceConstant(int pc_offset, Handle& constant) {
+  address pc = _instructions->start() + pc_offset;
+  if (HotSpotMetaspaceConstantImpl::compressed(constant)) {
+#ifdef _LP64
+    address operand = Assembler::locate_operand(pc, Assembler::narrow_oop_operand);
+    *((narrowKlass*) operand) = record_narrow_metadata_reference(constant);
+    TRACE_jvmci_3("relocating (narrow metaspace constant) at %p/%p", pc, operand);
+#else
+    fatal("compressed Klass* on 32bit");
+#endif
+  } else {
+    address operand = Assembler::locate_operand(pc, Assembler::imm_operand);
+    *((Metadata**) operand) = record_metadata_reference(constant);
+    TRACE_jvmci_3("relocating (metaspace constant) at %p/%p", pc, operand);
+  }
+}
+
 void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset) {
   address pc = _instructions->start() + pc_offset;
 

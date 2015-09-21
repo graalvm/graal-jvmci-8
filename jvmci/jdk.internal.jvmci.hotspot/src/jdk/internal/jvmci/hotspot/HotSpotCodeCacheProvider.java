@@ -187,15 +187,9 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         if (constant instanceof VMConstant) {
             VMConstant vmConstant = (VMConstant) constant;
             boolean compressed;
-            long raw;
-            if (constant instanceof HotSpotObjectConstant) {
-                HotSpotObjectConstant c = (HotSpotObjectConstant) vmConstant;
+            if (constant instanceof HotSpotConstant) {
+                HotSpotConstant c = (HotSpotConstant) vmConstant;
                 compressed = c.isCompressed();
-                raw = 0xDEADDEADDEADDEADL;
-            } else if (constant instanceof HotSpotMetaspaceConstant) {
-                HotSpotMetaspaceConstant meta = (HotSpotMetaspaceConstant) constant;
-                compressed = meta.isCompressed();
-                raw = meta.rawValue();
             } else {
                 throw new JVMCIError(String.valueOf(constant));
             }
@@ -204,13 +198,13 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
             if (size == 4) {
                 builder = (buffer, patch) -> {
                     patch.accept(new DataPatch(buffer.position(), new ConstantReference(vmConstant)));
-                    buffer.putInt((int) raw);
+                    buffer.putInt(0xDEADDEAD);
                 };
             } else {
                 assert size == 8;
                 builder = (buffer, patch) -> {
                     patch.accept(new DataPatch(buffer.position(), new ConstantReference(vmConstant)));
-                    buffer.putLong(raw);
+                    buffer.putLong(0xDEADDEADDEADDEADL);
                 };
             }
         } else if (JavaConstant.isNull(constant)) {

@@ -22,19 +22,11 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.hotspot.HotSpotVMConfig.CompressEncoding;
-import jdk.internal.jvmci.meta.Constant;
 import jdk.internal.jvmci.meta.VMConstant;
 
 public interface HotSpotMetaspaceConstant extends HotSpotConstant, VMConstant {
 
-    Constant compress(CompressEncoding encoding);
-
-    Constant uncompress(CompressEncoding encoding);
-
     HotSpotResolvedObjectType asResolvedJavaType();
 
     HotSpotResolvedJavaMethod asResolvedJavaMethod();
-
-    long rawValue();
 }

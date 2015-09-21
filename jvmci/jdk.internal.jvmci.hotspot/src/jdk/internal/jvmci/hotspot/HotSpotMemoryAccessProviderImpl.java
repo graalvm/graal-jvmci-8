@@ -52,7 +52,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
 
     private boolean isValidObjectFieldDisplacement(Constant base, long displacement) {
         if (base instanceof HotSpotMetaspaceConstant) {
-            Object metaspaceObject = HotSpotMetaspaceConstantImpl.getMetaspaceObject(base);
+            MetaspaceWrapperObject metaspaceObject = HotSpotMetaspaceConstantImpl.getMetaspaceObject(base);
             if (metaspaceObject instanceof HotSpotResolvedObjectTypeImpl) {
                 if (displacement == runtime.getConfig().classMirrorOffset) {
                     // Klass::_java_mirror is valid for all Klass* values
@@ -69,8 +69,9 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
     }
 
     private static long asRawPointer(Constant base) {
-        if (base instanceof HotSpotMetaspaceConstant) {
-            return ((HotSpotMetaspaceConstant) base).rawValue();
+        if (base instanceof HotSpotMetaspaceConstantImpl) {
+            MetaspaceWrapperObject meta = HotSpotMetaspaceConstantImpl.getMetaspaceObject(base);
+            return meta.getMetaspacePointer();
         } else if (base instanceof PrimitiveConstant) {
             PrimitiveConstant prim = (PrimitiveConstant) base;
             if (prim.getJavaKind().isNumericInteger()) {
@@ -120,7 +121,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
             }
         }
         if (base instanceof HotSpotMetaspaceConstant) {
-            Object metaspaceObject = HotSpotMetaspaceConstantImpl.getMetaspaceObject(base);
+            MetaspaceWrapperObject metaspaceObject = HotSpotMetaspaceConstantImpl.getMetaspaceObject(base);
             if (metaspaceObject instanceof HotSpotResolvedObjectTypeImpl) {
                 if (displacement == runtime.getConfig().classMirrorOffset) {
                     assert expected == ((HotSpotResolvedObjectTypeImpl) metaspaceObject).mirror();
@@ -214,7 +215,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
         if (klass == null) {
             return JavaConstant.NULL_POINTER;
         }
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(klass.getMetaspaceKlass(), klass, false);
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(klass, false);
     }
 
     @Override
@@ -223,7 +224,7 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
         if (klass == null) {
             return HotSpotCompressedNullConstant.COMPRESSED_NULL;
         }
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(encoding.compress(klass.getMetaspaceKlass()), klass, true);
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(klass, true);
     }
 
     @Override
@@ -231,6 +232,6 @@ public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvi
         assert (base instanceof HotSpotObjectConstantImpl);
         Object baseObject = ((HotSpotObjectConstantImpl) base).object();
         HotSpotResolvedJavaMethodImpl method = runtime.getCompilerToVM().getResolvedJavaMethod(baseObject, displacement);
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(method.getMetaspaceMethod(), method, false);
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(method, false);
     }
 }

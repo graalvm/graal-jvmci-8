@@ -24,33 +24,30 @@ package jdk.internal.jvmci.hotspot;
 
 import java.util.Objects;
 
-import jdk.internal.jvmci.hotspot.HotSpotVMConfig.CompressEncoding;
 import jdk.internal.jvmci.meta.Constant;
 import jdk.internal.jvmci.meta.VMConstant;
 
 public final class HotSpotMetaspaceConstantImpl implements HotSpotMetaspaceConstant, VMConstant, HotSpotProxified {
 
-    static HotSpotMetaspaceConstantImpl forMetaspaceObject(long rawValue, Object metaspaceObject, boolean compressed) {
-        return new HotSpotMetaspaceConstantImpl(rawValue, metaspaceObject, compressed);
+    static HotSpotMetaspaceConstantImpl forMetaspaceObject(MetaspaceWrapperObject metaspaceObject, boolean compressed) {
+        return new HotSpotMetaspaceConstantImpl(metaspaceObject, compressed);
     }
 
-    static Object getMetaspaceObject(Constant constant) {
+    static MetaspaceWrapperObject getMetaspaceObject(Constant constant) {
         return ((HotSpotMetaspaceConstantImpl) constant).metaspaceObject;
     }
 
-    private final Object metaspaceObject;
-    private final long rawValue;
+    private final MetaspaceWrapperObject metaspaceObject;
     private final boolean compressed;
 
-    private HotSpotMetaspaceConstantImpl(long rawValue, Object metaspaceObject, boolean compressed) {
+    private HotSpotMetaspaceConstantImpl(MetaspaceWrapperObject metaspaceObject, boolean compressed) {
         this.metaspaceObject = metaspaceObject;
-        this.rawValue = rawValue;
         this.compressed = compressed;
     }
 
     @Override
     public int hashCode() {
-        return System.identityHashCode(metaspaceObject) ^ (int) (rawValue ^ (rawValue >>> 32)) ^ (compressed ? 1 : 2);
+        return System.identityHashCode(metaspaceObject) ^ (compressed ? 1 : 2);
     }
 
     @Override
@@ -63,12 +60,12 @@ public final class HotSpotMetaspaceConstantImpl implements HotSpotMetaspaceConst
         }
 
         HotSpotMetaspaceConstantImpl other = (HotSpotMetaspaceConstantImpl) o;
-        return Objects.equals(this.metaspaceObject, other.metaspaceObject) && this.rawValue == other.rawValue && this.compressed == other.compressed;
+        return Objects.equals(this.metaspaceObject, other.metaspaceObject) && this.compressed == other.compressed;
     }
 
     @Override
     public String toValueString() {
-        return String.format("meta[%08x]{%s%s}", rawValue, metaspaceObject, compressed ? ";compressed" : "");
+        return String.format("meta{%s%s}", metaspaceObject, compressed ? ";compressed" : "");
     }
 
     @Override
@@ -77,23 +74,23 @@ public final class HotSpotMetaspaceConstantImpl implements HotSpotMetaspaceConst
     }
 
     public boolean isDefaultForKind() {
-        return rawValue == 0;
+        return false;
     }
 
     public boolean isCompressed() {
         return compressed;
     }
 
-    public Constant compress(CompressEncoding encoding) {
+    public Constant compress() {
         assert !isCompressed();
-        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(encoding.compress(rawValue), metaspaceObject, true);
+        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(metaspaceObject, true);
         assert res.isCompressed();
         return res;
     }
 
-    public Constant uncompress(CompressEncoding encoding) {
+    public Constant uncompress() {
         assert isCompressed();
-        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(encoding.uncompress((int) rawValue), metaspaceObject, false);
+        HotSpotMetaspaceConstantImpl res = HotSpotMetaspaceConstantImpl.forMetaspaceObject(metaspaceObject, false);
         assert !res.isCompressed();
         return res;
     }
@@ -110,9 +107,5 @@ public final class HotSpotMetaspaceConstantImpl implements HotSpotMetaspaceConst
             return (HotSpotResolvedJavaMethod) metaspaceObject;
         }
         return null;
-    }
-
-    public long rawValue() {
-        return rawValue;
     }
 }

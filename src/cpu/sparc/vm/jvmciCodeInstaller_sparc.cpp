@@ -64,6 +64,11 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
   }
 }
 
+void CodeInstaller::pd_patch_MetaspaceConstant(int pc_offset, Handle& constant) {
+  address pc = _instructions->start() + pc_offset;
+  fatal(err_msg("unexpected inline metaspace constant at %p (+%d)", pc, pc_offset));
+}
+
 void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset) {
   address pc = _instructions->start() + pc_offset;
   NativeInstruction* inst = nativeInstruction_at(pc);

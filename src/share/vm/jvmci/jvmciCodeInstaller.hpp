@@ -93,6 +93,7 @@ private:
 
   jint pd_next_offset(NativeInstruction* inst, jint pc_offset, oop method);
   void pd_patch_OopConstant(int pc_offset, Handle& constant);
+  void pd_patch_MetaspaceConstant(int pc_offset, Handle& constant);
   void pd_patch_DataSectionReference(int pc_offset, int data_offset);
   void pd_relocate_CodeBlob(CodeBlob* cb, NativeInstruction* inst);
   void pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination);
@@ -123,6 +124,11 @@ private:
   Location::Type get_oop_type(oop value);
   ScopeValue* get_scope_value(oop value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second);
   MonitorValue* get_monitor_value(oop value, GrowableArray<ScopeValue*>* objects);
+
+  Metadata* record_metadata_reference(Handle& constant);
+#ifdef _LP64
+  narrowKlass record_narrow_metadata_reference(Handle& constant);
+#endif
 
   // extract the fields of the CompilationResult
   void initialize_fields(oop target, oop target_method);

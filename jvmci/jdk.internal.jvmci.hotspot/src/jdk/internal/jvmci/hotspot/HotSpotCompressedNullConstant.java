@@ -22,6 +22,7 @@
  */
 package jdk.internal.jvmci.hotspot;
 
+import jdk.internal.jvmci.meta.Constant;
 import jdk.internal.jvmci.meta.JavaConstant;
 import jdk.internal.jvmci.meta.JavaKind;
 
@@ -47,6 +48,14 @@ public final class HotSpotCompressedNullConstant implements JavaConstant, HotSpo
     @Override
     public boolean isCompressed() {
         return true;
+    }
+
+    public Constant compress() {
+        throw new IllegalArgumentException();
+    }
+
+    public Constant uncompress() {
+        return NULL_POINTER;
     }
 
     @Override
