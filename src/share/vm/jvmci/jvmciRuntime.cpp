@@ -1015,7 +1015,7 @@ Klass* JVMCIRuntime::load_required_class(Symbol* name) {
 void JVMCIRuntime::parse_lines(char* path, ParseClosure* closure, bool warnStatFailure) {
   struct stat st;
   if (::stat(path, &st) == 0 && (st.st_mode & S_IFREG) == S_IFREG) { // exists & is regular file
-    int file_handle = os::open(path, os::default_file_open_flags(), 0);
+    int file_handle = ::open(path, os::default_file_open_flags(), 0);
     if (file_handle != -1) {
       char* buffer = NEW_C_HEAP_ARRAY(char, st.st_size + 1, mtInternal);
       int num_read;
