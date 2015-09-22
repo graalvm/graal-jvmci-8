@@ -927,7 +927,7 @@ C2V_VMENTRY(jobject, getNextStackFrameImpl, (JNIEnv*, jobject compilerToVM, jobj
             bool reallocated = false;
             if (objects != NULL) {
               reallocated = Deoptimization::realloc_objects(thread, fst.current(), objects, THREAD);
-              Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, reallocated);
+              Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, reallocated, false);
 
               GrowableArray<ScopeValue*>* local_values = cvf->scope()->locals();
               typeArrayHandle array = oopFactory::new_boolArray(local_values->length(), thread);
@@ -1082,7 +1082,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
   }
 
   bool reallocated = Deoptimization::realloc_objects(thread, fst.current(), objects, THREAD);
-  Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, reallocated);
+  Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, reallocated, false);
 
   for (int frame_index = 0; frame_index < virtualFrames->length(); frame_index++) {
     compiledVFrame* cvf = virtualFrames->at(frame_index);
