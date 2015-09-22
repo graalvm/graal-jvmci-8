@@ -34,7 +34,7 @@ import jdk.internal.jvmci.meta.PrimitiveConstant;
 /**
  * HotSpot implementation of {@link MemoryAccessProvider}.
  */
-public class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider, HotSpotProxified {
+class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider, HotSpotProxified {
 
     protected final HotSpotJVMCIRuntimeProvider runtime;
 

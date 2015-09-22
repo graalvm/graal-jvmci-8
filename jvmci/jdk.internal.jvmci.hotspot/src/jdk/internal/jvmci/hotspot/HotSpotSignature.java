@@ -135,7 +135,7 @@ public class HotSpotSignature implements Signature {
             JavaKind kind = JavaKind.fromPrimitiveOrVoidTypeChar(name.charAt(0));
             return runtime.getHostJVMCIBackend().getMetaAccess().lookupJavaType(kind.toJavaClass());
         }
-        return new HotSpotUnresolvedJavaType(name, runtime);
+        return HotSpotUnresolvedJavaType.create(runtime, name);
     }
 
     @Override

@@ -24,7 +24,7 @@ package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.hotspot.CompilerToVM.compilerToVM;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
-import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaMethodImpl.Options.UseProfilingInformation;
+import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaMethod.Options.UseProfilingInformation;
 import static jdk.internal.jvmci.hotspot.HotSpotVMConfig.config;
 import static jdk.internal.jvmci.hotspot.UnsafeAccess.UNSAFE;
 
@@ -59,21 +59,11 @@ import jdk.internal.jvmci.meta.ResolvedJavaType;
 import jdk.internal.jvmci.meta.Signature;
 import jdk.internal.jvmci.meta.SpeculationLog;
 import jdk.internal.jvmci.meta.TriState;
-import jdk.internal.jvmci.options.Option;
-import jdk.internal.jvmci.options.OptionType;
-import jdk.internal.jvmci.options.OptionValue;
 
 /**
  * Implementation of {@link JavaMethod} for resolved HotSpot methods.
  */
-public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSpotResolvedJavaMethod, HotSpotProxified, MetaspaceWrapperObject {
-
-    public static class Options {
-        // @formatter:off
-        @Option(help = "", type = OptionType.Debug)
-        public static final OptionValue<Boolean> UseProfilingInformation = new OptionValue<>(true);
-        // @formatter:on
-    }
+final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSpotResolvedJavaMethod, HotSpotProxified, MetaspaceWrapperObject {
 
     /**
      * Reference to metaspace Method object.
@@ -205,12 +195,8 @@ public final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implement
         return HotSpotMetaspaceConstantImpl.forMetaspaceObject(this, false);
     }
 
-    public long getMetaspaceMethod() {
-        return metaspaceMethod;
-    }
-
     public long getMetaspacePointer() {
-        return getMetaspaceMethod();
+        return metaspaceMethod;
     }
 
     @Override

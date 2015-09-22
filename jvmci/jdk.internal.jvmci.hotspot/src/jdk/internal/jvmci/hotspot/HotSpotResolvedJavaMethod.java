@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,11 +27,21 @@ import java.lang.reflect.Modifier;
 import jdk.internal.jvmci.meta.JavaMethod;
 import jdk.internal.jvmci.meta.ResolvedJavaMethod;
 import jdk.internal.jvmci.meta.ResolvedJavaType;
+import jdk.internal.jvmci.options.Option;
+import jdk.internal.jvmci.options.OptionType;
+import jdk.internal.jvmci.options.OptionValue;
 
 /**
  * Implementation of {@link JavaMethod} for resolved HotSpot methods.
  */
 public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
+
+    public static class Options {
+        // @formatter:off
+        @Option(help = "", type = OptionType.Debug)
+        public static final OptionValue<Boolean> UseProfilingInformation = new OptionValue<>(true);
+        // @formatter:on
+    }
 
     /**
      * Returns true if this method has a {@code CallerSensitive} annotation.

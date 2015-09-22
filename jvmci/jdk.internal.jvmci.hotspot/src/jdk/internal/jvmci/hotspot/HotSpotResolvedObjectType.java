@@ -37,6 +37,15 @@ import jdk.internal.jvmci.meta.ResolvedJavaType;
  */
 public interface HotSpotResolvedObjectType extends ResolvedJavaType {
 
+    /**
+     * Gets the JVMCI mirror for a {@link Class} object.
+     *
+     * @return the {@link HotSpotResolvedJavaType} corresponding to {@code javaClass}
+     */
+    static HotSpotResolvedObjectType fromObjectClass(Class<?> javaClass) {
+        return HotSpotResolvedObjectTypeImpl.fromObjectClass(javaClass);
+    }
+
     HotSpotResolvedObjectType getArrayClass();
 
     ResolvedJavaType getComponentType();

@@ -59,7 +59,7 @@ import jdk.internal.jvmci.meta.TrustedInterface;
 /**
  * Implementation of {@link JavaType} for resolved non-primitive HotSpot classes.
  */
-public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implements HotSpotResolvedObjectType, HotSpotProxified, MetaspaceWrapperObject {
+final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implements HotSpotResolvedObjectType, HotSpotProxified, MetaspaceWrapperObject {
 
     /**
      * The Java class this type represents.
@@ -78,7 +78,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
      *
      * @return the {@link HotSpotResolvedJavaType} corresponding to {@code javaClass}
      */
-    public static HotSpotResolvedObjectTypeImpl fromObjectClass(Class<?> javaClass) {
+    static HotSpotResolvedObjectTypeImpl fromObjectClass(Class<?> javaClass) {
         return (HotSpotResolvedObjectTypeImpl) runtime().fromClass(javaClass);
     }
 
@@ -128,7 +128,7 @@ public final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType
     /**
      * Gets the metaspace Klass for this type.
      */
-    public long getMetaspaceKlass() {
+    long getMetaspaceKlass() {
         if (HotSpotJVMCIRuntime.getHostWordKind() == JavaKind.Long) {
             return UNSAFE.getLong(javaClass, (long) config().klassOffset);
         }

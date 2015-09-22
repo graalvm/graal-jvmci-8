@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,7 +43,7 @@ import jdk.internal.jvmci.options.OptionValue;
 /**
  * Represents a field in a HotSpot type.
  */
-public class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, HotSpotProxified {
+class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, HotSpotProxified {
 
     static class Options {
         //@formatter:off
@@ -99,7 +99,7 @@ public class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, H
         }
     }
 
-    public HotSpotResolvedJavaFieldImpl(HotSpotResolvedObjectTypeImpl holder, String name, JavaType type, long offset, int modifiers) {
+    HotSpotResolvedJavaFieldImpl(HotSpotResolvedObjectTypeImpl holder, String name, JavaType type, long offset, int modifiers) {
         this.holder = holder;
         this.name = name;
         this.type = type;

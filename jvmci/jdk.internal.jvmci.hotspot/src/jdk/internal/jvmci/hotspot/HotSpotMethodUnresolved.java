@@ -29,7 +29,7 @@ import jdk.internal.jvmci.meta.Signature;
 /**
  * Implementation of {@link JavaMethod} for unresolved HotSpot methods.
  */
-public final class HotSpotMethodUnresolved extends HotSpotMethod {
+final class HotSpotMethodUnresolved extends HotSpotMethod {
 
     private final Signature signature;
     protected JavaType holder;
