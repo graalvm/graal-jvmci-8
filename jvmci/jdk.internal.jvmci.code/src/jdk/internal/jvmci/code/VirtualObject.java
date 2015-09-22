@@ -140,45 +140,6 @@ public final class VirtualObject implements JavaValue {
         return id;
     }
 
-    private boolean checkValues() {
-        assert (values == null) == (slotKinds == null);
-        if (values != null) {
-            assert values.length == slotKinds.length;
-            if (!type.isArray()) {
-                ResolvedJavaField[] fields = type.getInstanceFields(true);
-                int fieldIndex = 0;
-                for (int i = 0; i < values.length; i++) {
-                    ResolvedJavaField field = fields[fieldIndex++];
-                    JavaKind valKind = slotKinds[i].getStackKind();
-                    if (field.getJavaKind() == JavaKind.Object) {
-                        assert valKind.isObject() : field + ": " + valKind + " != " + field.getJavaKind();
-                    } else {
-                        if ((valKind == JavaKind.Double || valKind == JavaKind.Long) && field.getJavaKind() == JavaKind.Int) {
-                            assert fields[fieldIndex].getJavaKind() == JavaKind.Int;
-                            fieldIndex++;
-                        } else {
-                            assert valKind == field.getJavaKind().getStackKind() : field + ": " + valKind + " != " + field.getJavaKind();
-                        }
-                    }
-                }
-                assert fields.length == fieldIndex : type + ": fields=" + Arrays.toString(fields) + ", field values=" + Arrays.toString(values);
-            } else {
-                JavaKind componentKind = type.getComponentType().getJavaKind().getStackKind();
-                if (componentKind == JavaKind.Object) {
-                    for (int i = 0; i < values.length; i++) {
-                        assert slotKinds[i].isObject() : slotKinds[i] + " != " + componentKind;
-                    }
-                } else {
-                    for (int i = 0; i < values.length; i++) {
-                        assert slotKinds[i] == componentKind || componentKind.getBitCount() >= slotKinds[i].getBitCount() ||
-                                        (componentKind == JavaKind.Int && slotKinds[i].getBitCount() >= JavaKind.Int.getBitCount()) : slotKinds[i] + " != " + componentKind;
-                    }
-                }
-            }
-        }
-        return true;
-    }
-
     /**
      * Overwrites the current set of values with a new one.
      *
@@ -189,7 +150,6 @@ public final class VirtualObject implements JavaValue {
     public void setValues(JavaValue[] values, JavaKind[] slotKinds) {
         this.values = values;
         this.slotKinds = slotKinds;
-        assert checkValues();
     }
 
     @Override
