@@ -214,7 +214,7 @@ void Arguments::init_system_properties() {
   os::init_system_properties_values();
 
 #if INCLUDE_JVMCI
-  JVMCIRuntime::parse_properties(&_system_properties);
+  JVMCIRuntime::init_system_properties(&_system_properties);
 #endif
 }
 

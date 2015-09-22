@@ -903,7 +903,7 @@ public:
   }
 };
 
-void JVMCIRuntime::parse_properties(SystemProperty** plist) {
+void JVMCIRuntime::init_system_properties(SystemProperty** plist) {
   char jvmciDir[JVM_MAXPATHLEN];
   const char* fileSep = os::file_separator();
   jio_snprintf(jvmciDir, sizeof(jvmciDir), "%s%slib%sjvmci",

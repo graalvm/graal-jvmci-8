@@ -79,7 +79,7 @@ class JVMCIRuntime: public AllStatic {
   /**
    * Parses *.properties files in jre/lib/jvmci/ and adds the properties to plist.
    */
-  static void parse_properties(SystemProperty** plist);
+  static void init_system_properties(SystemProperty** plist);
 
   /**
    * Saves the value of the "jvmci.compiler" system property for processing
