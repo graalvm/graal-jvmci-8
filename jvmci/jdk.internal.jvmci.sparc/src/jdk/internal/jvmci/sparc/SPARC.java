@@ -308,10 +308,6 @@ public class SPARC extends Architecture {
         }
     }
 
-    public static int spillSlotSize(PlatformKind kind) {
-        return Math.max(kind.getSizeInBytes(), MEMORY_ACCESS_ALIGN);
-    }
-
     public static int getDoubleEncoding(int reg) {
         assert reg < 64 && ((reg & 1) == 0);
         // ignore v8 assertion for now
