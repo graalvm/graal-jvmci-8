@@ -46,11 +46,6 @@ import jdk.internal.jvmci.inittimer.InitTimer;
  */
 public class OptionsParser {
 
-    /**
-     * Character used to escape a space or a literal % in a JVMCI option value.
-     */
-    private static final char ESCAPE = '%';
-
     private static final OptionValue<Boolean> PrintFlags = new OptionValue<>(false);
 
     /**
@@ -69,73 +64,18 @@ public class OptionsParser {
     }
 
     /**
-     * Finds the index of the next character in {@code s} starting at {@code from} that is a
-     * {@linkplain #ESCAPE non-escaped} space iff {@code spaces == true}.
-     */
-    private static int skip(String s, int from, boolean spaces) {
-        int len = s.length();
-        int i = from;
-        while (i < len) {
-            char ch = s.charAt(i);
-            if (ch == ESCAPE) {
-                if (i == len - 1) {
-                    throw new InternalError("Escape character " + ESCAPE + " cannot be at end of jvmci.options value: " + s);
-                }
-                ch = s.charAt(i + 1);
-                if (ch != ESCAPE && ch != ' ') {
-                    throw new InternalError("Escape character " + ESCAPE + " must be followed by space or another " + ESCAPE + " character");
-                }
-                if (spaces) {
-                    return i;
-                }
-                i++;
-            } else if (ch == ' ' != spaces) {
-                return i;
-            }
-            i++;
-        }
-        return len;
-    }
-
-    private static String unescape(String s) {
-        int esc = s.indexOf(ESCAPE);
-        if (esc == -1) {
-            return s;
-        }
-        StringBuilder sb = new StringBuilder(s.length());
-        int start = 0;
-        do {
-            sb.append(s.substring(start, esc));
-            char escaped = s.charAt(esc + 1);
-            if (escaped == ' ') {
-                sb.append(' ');
-            } else {
-                assert escaped == ESCAPE;
-                sb.append(ESCAPE);
-            }
-            start = esc + 2;
-            esc = s.indexOf(ESCAPE, start);
-        } while (esc != -1);
-        if (start < s.length()) {
-            sb.append(s.substring(start));
-        }
-        return sb.toString();
-    }
-
-    /**
      * Parses the options in {@code <jre>/lib/jvmci/options} if {@code parseOptionsFile == true} and
-     * the file exists followed by the {@linkplain #ESCAPE non-escaped} space separated JVMCI
-     * options in {@code options} if {@code options != null}.
+     * the file exists followed by the JVMCI options in {@code options} if {@code options != null}.
      *
      * Called from VM. This method has an object return type to allow it to be called with a VM
      * utility function used to call other static initialization methods.
      *
-     * @param options {@linkplain #ESCAPE non-escaped} space separated set of JVMCI options to parse
+     * @param options JVMCI options as serialized (name, value) pairs
      * @param parseOptionsFile specifies whether to look for and parse
      *            {@code <jre>/lib/jvmci.options}
      */
     @SuppressWarnings("try")
-    public static Boolean parseOptionsFromVM(String options, boolean parseOptionsFile) {
+    public static Boolean parseOptionsFromVM(String[] options, boolean parseOptionsFile) {
         try (InitTimer t = timer("ParseOptions")) {
             JVMCIJarsOptionDescriptorsProvider odp = new JVMCIJarsOptionDescriptorsProvider();
 
@@ -146,12 +86,17 @@ public class OptionsParser {
                 File jvmciOptions = new File(jvmci, "options");
                 if (jvmciOptions.exists()) {
                     try (BufferedReader br = new BufferedReader(new FileReader(jvmciOptions))) {
-                        String option = null;
-                        while ((option = br.readLine()) != null) {
-                            option = option.trim();
-                            if (!option.isEmpty() && option.charAt(0) != '#') {
-                                parseOption(option, null, odp);
+                        String optionSetting = null;
+                        int lineNo = 1;
+                        while ((optionSetting = br.readLine()) != null) {
+                            if (!optionSetting.isEmpty() && optionSetting.charAt(0) != '#') {
+                                try {
+                                    parseOptionSetting(optionSetting, null, odp);
+                                } catch (Throwable e) {
+                                    throw new InternalError("Error parsing " + jvmciOptions + ", line " + lineNo, e);
+                                }
                             }
+                            lineNo++;
                         }
                     } catch (IOException e) {
                         throw new InternalError("Error reading " + jvmciOptions, e);
@@ -160,106 +105,82 @@ public class OptionsParser {
             }
 
             if (options != null) {
-                int index = skip(options, 0, true);
-                while (index < options.length()) {
-                    int end = skip(options, index, false);
-                    String option = unescape(options.substring(index, end));
-                    parseOption(option, null, odp);
-                    index = skip(options, end, true);
+                assert options.length % 2 == 0;
+                for (int i = 0; i < options.length / 2; i++) {
+                    String name = options[i * 2];
+                    String value = options[i * 2 + 1];
+                    parseOption(OptionsLoader.options, name, value, null, odp);
                 }
             }
         }
         return Boolean.TRUE;
     }
 
-    public static void parseOption(String option, OptionConsumer setter, OptionDescriptorsProvider odp) {
-        parseOption(OptionsLoader.options, option, setter, odp);
+    /**
+     * Parses a given option setting.
+     *
+     * @param optionSetting a string matching the pattern {@code <name>=<value>}
+     * @param setter the object to notify of the parsed option and value
+     */
+    public static void parseOptionSetting(String optionSetting, OptionConsumer setter, OptionDescriptorsProvider odp) {
+        int eqIndex = optionSetting.indexOf('=');
+        if (eqIndex == -1) {
+            throw new InternalError("Option setting has does not match the pattern <name>=<value>: " + optionSetting);
+        }
+        String name = optionSetting.substring(0, eqIndex);
+        String value = optionSetting.substring(eqIndex + 1);
+        parseOption(OptionsLoader.options, name, value, setter, odp);
     }
 
     /**
-     * Parses a given option value specification.
+     * Parses a given option name and value.
      *
-     * @param option the specification of an option and its value
+     * @param name the option name
+     * @param valueString the option value as a string
      * @param setter the object to notify of the parsed option and value
      * @throws IllegalArgumentException if there's a problem parsing {@code option}
      */
-    public static void parseOption(SortedMap<String, OptionDescriptor> options, String option, OptionConsumer setter, OptionDescriptorsProvider odp) {
-        if (option.length() == 0) {
-            return;
-        }
+    public static void parseOption(SortedMap<String, OptionDescriptor> options, String name, String valueString, OptionConsumer setter, OptionDescriptorsProvider odp) {
 
-        Object value = null;
-        String optionName = null;
-        String valueString = null;
-
-        char first = option.charAt(0);
-        if (first == '+' || first == '-') {
-            optionName = option.substring(1);
-            value = (first == '+');
-        } else {
-            int index = option.indexOf('=');
-            if (index == -1) {
-                optionName = option;
-                valueString = null;
-            } else {
-                optionName = option.substring(0, index);
-                valueString = option.substring(index + 1);
-            }
-        }
-
-        OptionDescriptor desc = odp == null ? options.get(optionName) : odp.get(optionName);
-        if (desc == null && value != null) {
-            int index = option.indexOf('=');
-            if (index != -1) {
-                optionName = option.substring(1, index);
-                desc = odp == null ? options.get(optionName) : odp.get(optionName);
-            }
-            if (desc == null && optionName.equals("PrintFlags")) {
-                desc = OptionDescriptor.create("PrintFlags", Boolean.class, "Prints all JVMCI flags and exits", OptionsParser.class, "PrintFlags", PrintFlags);
-            }
+        OptionDescriptor desc = odp == null ? options.get(name) : odp.get(name);
+        if (desc == null && name.equals("PrintFlags")) {
+            desc = OptionDescriptor.create("PrintFlags", Boolean.class, "Prints all JVMCI flags and exits", OptionsParser.class, "PrintFlags", PrintFlags);
         }
         if (desc == null) {
-            List<OptionDescriptor> matches = fuzzyMatch(options, optionName);
+            List<OptionDescriptor> matches = fuzzyMatch(options, name);
             Formatter msg = new Formatter();
-            msg.format("Could not find option %s", optionName);
+            msg.format("Could not find option %s", name);
             if (!matches.isEmpty()) {
                 msg.format("%nDid you mean one of the following?");
                 for (OptionDescriptor match : matches) {
-                    boolean isBoolean = match.getType() == Boolean.class;
-                    msg.format("%n    %s%s%s", isBoolean ? "(+/-)" : "", match.getName(), isBoolean ? "" : "=<value>");
+                    msg.format("%n    %s=<value>", match.getName());
                 }
             }
             throw new IllegalArgumentException(msg.toString());
         }
 
         Class<?> optionType = desc.getType();
-
-        if (value == null) {
-            if (optionType == Boolean.TYPE || optionType == Boolean.class) {
-                throw new IllegalArgumentException("Boolean option '" + optionName + "' must use +/- prefix");
-            }
-
-            if (valueString == null) {
-                throw new IllegalArgumentException("Missing value for non-boolean option '" + optionName + "' must use " + optionName + "=<value> format");
-            }
-
-            if (optionType == Float.class) {
-                value = Float.parseFloat(valueString);
-            } else if (optionType == Double.class) {
-                value = Double.parseDouble(valueString);
-            } else if (optionType == Integer.class) {
-                value = Integer.valueOf((int) parseLong(valueString));
-            } else if (optionType == Long.class) {
-                value = Long.valueOf(parseLong(valueString));
-            } else if (optionType == String.class) {
-                value = valueString;
+        Object value;
+        if (optionType == Boolean.class) {
+            if ("true".equals(valueString)) {
+                value = Boolean.TRUE;
+            } else if ("false".equals(valueString)) {
+                value = Boolean.FALSE;
             } else {
-                throw new IllegalArgumentException("Wrong value for option '" + optionName + "'");
+                throw new IllegalArgumentException("Boolean option '" + name + "' must have value \"true\" or \"false\", not \"" + valueString + "\"");
             }
+        } else if (optionType == Float.class) {
+            value = Float.parseFloat(valueString);
+        } else if (optionType == Double.class) {
+            value = Double.parseDouble(valueString);
+        } else if (optionType == Integer.class) {
+            value = Integer.valueOf((int) parseLong(valueString));
+        } else if (optionType == Long.class) {
+            value = Long.valueOf(parseLong(valueString));
+        } else if (optionType == String.class) {
+            value = valueString;
         } else {
-            if (optionType != Boolean.class) {
-                throw new IllegalArgumentException("Non-boolean option '" + optionName + "' can not use +/- prefix. Use " + optionName + "=<value> format");
-            }
+            throw new IllegalArgumentException("Wrong value for option '" + name + "'");
         }
         if (setter == null) {
             desc.getOptionValue().setValue(value);

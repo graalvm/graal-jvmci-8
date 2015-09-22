@@ -48,10 +48,14 @@
 jobject JVMCIRuntime::_HotSpotJVMCIRuntime_instance = NULL;
 bool JVMCIRuntime::_HotSpotJVMCIRuntime_initialized = false;
 const char* JVMCIRuntime::_compiler = NULL;
-const char* JVMCIRuntime::_options = NULL;
+int JVMCIRuntime::_options_count = 0;
+SystemProperty** JVMCIRuntime::_options = NULL;
 int JVMCIRuntime::_trivial_prefixes_count = 0;
 char** JVMCIRuntime::_trivial_prefixes = NULL;
 bool JVMCIRuntime::_shutdown_called = false;
+
+static const char* OPTION_PREFIX = "jvmci.option.";
+static const int OPTION_PREFIX_LEN = strlen(OPTION_PREFIX);
 
 void JVMCIRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
 #ifdef _LP64
@@ -688,12 +692,24 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
     bool parseOptionsFile = jvmci_options_file_exists();
     if (_options != NULL || parseOptionsFile) {
       JavaCallArguments args;
-      oop options = java_lang_String::create_oop_from_str(_options, CHECK);
+      objArrayOop options;
+      if (_options != NULL) {
+        options = oopFactory::new_objArray(SystemDictionary::String_klass(), _options_count * 2, CHECK);
+        for (int i = 0; i < _options_count; i++) {
+          SystemProperty* prop = _options[i];
+          oop name = java_lang_String::create_oop_from_str(prop->key() + OPTION_PREFIX_LEN, CHECK);
+          oop value = java_lang_String::create_oop_from_str(prop->value(), CHECK);
+          options->obj_at_put(i * 2, name);
+          options->obj_at_put((i * 2) + 1, value);
+        }
+      } else {
+        options = NULL;
+      }
       args.push_oop(options);
       args.push_int(parseOptionsFile);
       callStatic("jdk/internal/jvmci/options/OptionsParser",
                  "parseOptionsFromVM",
-                 "(Ljava/lang/String;Z)Ljava/lang/Boolean;", &args, CHECK);
+                 "([Ljava/lang/String;Z)Ljava/lang/Boolean;", &args, CHECK);
     }
 
     if (_compiler != NULL) {
@@ -927,10 +943,35 @@ void JVMCIRuntime::save_compiler(const char* compiler) {
   _compiler = compiler;
 }
 
-void JVMCIRuntime::save_options(const char* options) {
-  assert(options != NULL, "npe");
-  assert(_options == NULL, "cannot reassign JVMCI options");
-  _options = options;
+jint JVMCIRuntime::save_options(SystemProperty* props) {
+  int count = 0;
+  SystemProperty* first = NULL;
+  for (SystemProperty* p = props; p != NULL; p = p->next()) {
+    if (strncmp(p->key(), OPTION_PREFIX, OPTION_PREFIX_LEN) == 0) {
+      if (p->value() == NULL || strlen(p->value()) == 0) {
+        jio_fprintf(defaultStream::output_stream(), "JVMCI option %s must have non-zero length value\n", p->key());
+        return JNI_ERR;
+      }
+      if (first == NULL) {
+        first = p;
+      }
+      count++;
+    }
+  }
+  if (count != 0) {
+    _options_count = count;
+    _options = NEW_C_HEAP_ARRAY(SystemProperty*, count, mtCompiler);
+    _options[0] = first;
+    SystemProperty** insert_pos = _options + 1;
+    for (SystemProperty* p = first->next(); p != NULL; p = p->next()) {
+      if (strncmp(p->key(), OPTION_PREFIX, OPTION_PREFIX_LEN) == 0) {
+        *insert_pos = p;
+        insert_pos++;
+      }
+    }
+    assert (insert_pos - _options == count, "must be");
+  }
+  return JNI_OK;
 }
 
 Handle JVMCIRuntime::create_Service(const char* name, TRAPS) {

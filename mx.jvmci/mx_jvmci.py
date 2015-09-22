@@ -1758,22 +1758,15 @@ class JVMCIJDKConfig(mx.JDKConfig):
             args = jacocoArgs + args
 
         # Support for -G: options
-        jvmciArgs = []
-        nonJvmciArgs = []
-        existingJvmciOptionsProperty = None
-        for a in args:
-            if a.startswith('-G:'):
-                # Escape space with % and % with %%
-                jvmciArg = a[len('-G:'):].replace('%', '%%').replace(' ', '% ')
-                jvmciArgs.append(jvmciArg)
-            else:
-                if a.startswith('-Djvmci.options=') or a == '-Djvmci.options':
-                    existingJvmciOptionsProperty = a
-                nonJvmciArgs.append(a)
-        if jvmciArgs:
-            if existingJvmciOptionsProperty:
-                mx.abort('defining jvmci.option property is incompatible with defining one or more -G: options: ' + existingJvmciOptionsProperty)
-            args = ['-Djvmci.options=' + ' '.join(jvmciArgs)] + nonJvmciArgs
+        def translateGOption(arg):
+            if arg.startswith('-G:+'):
+                arg = '-Djvmci.option.' + arg[len('-G:+'):] + '=true'
+            elif arg.startswith('-G:-'):
+                arg = '-Djvmci.option.' + arg[len('-G:+'):] + '=false'
+            elif arg.startswith('-G:'):
+                arg = '-Djvmci.option.' + arg[len('-G:'):]
+            return arg
+        args = map(translateGOption, args)
 
         args = ['-Xbootclasspath/p:' + dep.classpath_repr() for dep in _jvmci_bootclasspath_prepends] + args
 

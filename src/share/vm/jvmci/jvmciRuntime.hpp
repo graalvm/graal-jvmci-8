@@ -59,7 +59,8 @@ class JVMCIRuntime: public AllStatic {
   static jobject _HotSpotJVMCIRuntime_instance;
   static bool _HotSpotJVMCIRuntime_initialized;
   static const char* _compiler;
-  static const char* _options;
+  static int _options_count;
+  static SystemProperty** _options;
 
   static int _trivial_prefixes_count;
   static char** _trivial_prefixes;
@@ -87,10 +88,13 @@ class JVMCIRuntime: public AllStatic {
   static void save_compiler(const char* compiler);
 
   /**
-   * Saves the value of the "jvmci.options" system property for processing
+   * Saves the value of the system properties starting with "jvmci.option." for processing
    * when JVMCI is initialized.
+   *
+   * @param props the head of the system property list
+   * @return JNI_ERR if a JVMCI option has a zero length value, JNI_OK otherwise
    */
-  static void save_options(const char* options);
+  static jint save_options(SystemProperty* props);
 
   /**
    * Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.

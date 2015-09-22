@@ -3706,10 +3706,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   if (jvmciCompiler != NULL) {
     JVMCIRuntime::save_compiler(jvmciCompiler);
   }
-  const char* jvmciOptions = Arguments::PropertyList_get_value(Arguments::system_properties(), "jvmci.options");
-  if (jvmciOptions != NULL) {
-    JVMCIRuntime::save_options(jvmciOptions);
-  }
 #endif
 
   // initialize compiler(s)
