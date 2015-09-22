@@ -32,7 +32,6 @@ import java.util.Set;
 import jdk.internal.jvmci.code.Architecture;
 import jdk.internal.jvmci.code.Register;
 import jdk.internal.jvmci.code.Register.RegisterCategory;
-import jdk.internal.jvmci.code.TargetDescription;
 import jdk.internal.jvmci.meta.JavaKind;
 import jdk.internal.jvmci.meta.PlatformKind;
 
@@ -309,8 +308,8 @@ public class SPARC extends Architecture {
         }
     }
 
-    public static int spillSlotSize(TargetDescription td, PlatformKind kind) {
-        return Math.max(td.getSizeInBytes(kind), MEMORY_ACCESS_ALIGN);
+    public static int spillSlotSize(PlatformKind kind) {
+        return Math.max(kind.getSizeInBytes(), MEMORY_ACCESS_ALIGN);
     }
 
     public static int getDoubleEncoding(int reg) {

@@ -119,10 +119,6 @@ public class TargetDescription {
         return identityHashCodeString(this);
     }
 
-    public int getSizeInBytes(PlatformKind kind) {
-        return kind.getSizeInBytes();
-    }
-
     public LIRKind getLIRKind(JavaKind javaKind) {
         PlatformKind platformKind = arch.getPlatformKind(javaKind);
         if (javaKind.isObject()) {

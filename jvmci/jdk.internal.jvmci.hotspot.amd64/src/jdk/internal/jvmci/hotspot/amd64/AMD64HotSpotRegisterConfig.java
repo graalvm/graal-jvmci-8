@@ -266,7 +266,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
             if (locations[i] == null) {
                 LIRKind lirKind = target.getLIRKind(kind);
                 locations[i] = StackSlot.get(lirKind, currentStackOffset, !type.out);
-                currentStackOffset += Math.max(target.getSizeInBytes(lirKind.getPlatformKind()), target.wordSize);
+                currentStackOffset += Math.max(lirKind.getPlatformKind().getSizeInBytes(), target.wordSize);
             }
         }
 
