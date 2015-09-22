@@ -1770,6 +1770,14 @@ class JVMCIJDKConfig(mx.JDKConfig):
 
         args = ['-Xbootclasspath/p:' + dep.classpath_repr() for dep in _jvmci_bootclasspath_prepends] + args
 
+        # Set the default JVMCI compiler
+        for jdkDist in reversed(jdkDeployedDists):
+            if isinstance(jdkDist, JvmciJDKDeployedDist):
+                if jdkDist._compilers:
+                    jvmciCompiler = jdkDist._compilers[-1]
+                    args = ['-Djvmci.compiler=' + jvmciCompiler] + args
+                    break
+
         if '-version' in args:
             ignoredArgs = args[args.index('-version') + 1:]
             if  len(ignoredArgs) > 0:
