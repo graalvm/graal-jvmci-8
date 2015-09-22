@@ -1047,12 +1047,23 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
   }
 
   if (invalidate) {
+    if (!fst.current()->is_compiled_frame()) {
+      THROW_MSG(vmSymbols::java_lang_IllegalStateException(), "compiled stack frame expected")
+    }
     assert(fst.current()->cb()->is_nmethod(), "nmethod expected");
     ((nmethod*) fst.current()->cb())->make_not_entrant();
   }
   Deoptimization::deoptimize(thread, *fst.current(), fst.register_map(), Deoptimization::Reason_none);
+  // look for the frame again as it has been updated by deopt (pc, deopt state...)
+  StackFrameStream fstAfterDeopt(thread);
+  while (fstAfterDeopt.current()->sp() != stack_pointer && !fstAfterDeopt.is_done()) {
+    fstAfterDeopt.next();
+  }
+  if (fstAfterDeopt.current()->sp() != stack_pointer) {
+    THROW_MSG(vmSymbols::java_lang_IllegalStateException(), "stack frame not found after deopt")
+  }
 
-  vframe* vf = vframe::new_vframe(fst.current(), fst.register_map(), thread);
+  vframe* vf = vframe::new_vframe(fstAfterDeopt.current(), fstAfterDeopt.register_map(), thread);
   if (!vf->is_compiled_frame()) {
     THROW_MSG(vmSymbols::java_lang_IllegalStateException(), "compiled stack frame expected")
   }
@@ -1081,8 +1092,8 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     return;
   }
 
-  bool reallocated = Deoptimization::realloc_objects(thread, fst.current(), objects, THREAD);
-  Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, reallocated, false);
+  bool reallocated = Deoptimization::realloc_objects(thread, fstAfterDeopt.current(), objects, THREAD);
+  Deoptimization::reassign_fields(fstAfterDeopt.current(), fstAfterDeopt.register_map(), objects, reallocated, false);
 
   for (int frame_index = 0; frame_index < virtualFrames->length(); frame_index++) {
     compiledVFrame* cvf = virtualFrames->at(frame_index);
