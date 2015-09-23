@@ -368,14 +368,14 @@ final class HotSpotConstantPool implements ConstantPool, HotSpotProxified, Metas
     }
 
     /**
-     * Gets the name of a {@code JVM_CONSTANT_NameAndType} constant pool entry at index
-     * {@code index}.
+     * Gets the name of a {@code JVM_CONSTANT_NameAndType} constant pool entry referenced by another
+     * entry denoted by {@code which}.
      *
-     * @param index constant pool index
+     * @param which constant pool index or constant pool cache index
      * @return name as {@link String}
      */
-    private String getNameRefAt(int index) {
-        return compilerToVM().lookupNameRefInPool(this, index);
+    private String getNameOf(int which) {
+        return compilerToVM().lookupNameInPool(this, which);
     }
 
     /**
@@ -392,14 +392,14 @@ final class HotSpotConstantPool implements ConstantPool, HotSpotProxified, Metas
     }
 
     /**
-     * Gets the signature of a {@code JVM_CONSTANT_NameAndType} constant pool entry at index
-     * {@code index}.
+     * Gets the signature of a {@code JVM_CONSTANT_NameAndType} constant pool entry referenced by
+     * another entry denoted by {@code which}.
      *
-     * @param index constant pool index
+     * @param which constant pool index or constant pool cache index
      * @return signature as {@link String}
      */
-    private String getSignatureRefAt(int index) {
-        return compilerToVM().lookupSignatureRefInPool(this, index);
+    private String getSignatureOf(int which) {
+        return compilerToVM().lookupSignatureInPool(this, which);
     }
 
     /**
@@ -557,8 +557,8 @@ final class HotSpotConstantPool implements ConstantPool, HotSpotProxified, Metas
             return method;
         } else {
             // Get the method's name and signature.
-            String name = getNameRefAt(index);
-            HotSpotSignature signature = new HotSpotSignature(runtime(), getSignatureRefAt(index));
+            String name = getNameOf(index);
+            HotSpotSignature signature = new HotSpotSignature(runtime(), getSignatureOf(index));
             if (opcode == Bytecodes.INVOKEDYNAMIC) {
                 HotSpotResolvedObjectType holder = HotSpotResolvedObjectTypeImpl.fromObjectClass(MethodHandle.class);
                 return new HotSpotMethodUnresolved(name, signature, holder);
@@ -703,7 +703,7 @@ final class HotSpotConstantPool implements ConstantPool, HotSpotProxified, Metas
 
     private boolean isInvokeHandle(int methodRefCacheIndex, HotSpotResolvedObjectTypeImpl klass) {
         assertTag(compilerToVM().constantPoolRemapInstructionOperandFromCache(this, methodRefCacheIndex), JVM_CONSTANT.MethodRef);
-        return ResolvedJavaMethod.isSignaturePolymorphic(klass, getNameRefAt(methodRefCacheIndex), runtime().getHostJVMCIBackend().getMetaAccess());
+        return ResolvedJavaMethod.isSignaturePolymorphic(klass, getNameOf(methodRefCacheIndex), runtime().getHostJVMCIBackend().getMetaAccess());
     }
 
     @Override

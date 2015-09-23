@@ -378,15 +378,15 @@ C2V_VMENTRY(jint, lookupNameAndTypeRefIndexInPool, (JNIEnv*, jobject, jobject jv
   return cp->name_and_type_ref_index_at(index);
 C2V_END
 
-C2V_VMENTRY(jobject, lookupNameRefInPool, (JNIEnv*, jobject, jobject jvmci_constant_pool, jint index))
+C2V_VMENTRY(jobject, lookupNameInPool, (JNIEnv*, jobject, jobject jvmci_constant_pool, jint which))
   constantPoolHandle cp = CompilerToVM::asConstantPool(jvmci_constant_pool);
-  Handle sym = java_lang_String::create_from_symbol(cp->name_ref_at(index), CHECK_NULL);
+  Handle sym = java_lang_String::create_from_symbol(cp->name_ref_at(which), CHECK_NULL);
   return JNIHandles::make_local(THREAD, sym());
 C2V_END
 
-C2V_VMENTRY(jobject, lookupSignatureRefInPool, (JNIEnv*, jobject, jobject jvmci_constant_pool, jint index))
+C2V_VMENTRY(jobject, lookupSignatureInPool, (JNIEnv*, jobject, jobject jvmci_constant_pool, jint which))
   constantPoolHandle cp = CompilerToVM::asConstantPool(jvmci_constant_pool);
-  Handle sym = java_lang_String::create_from_symbol(cp->signature_ref_at(index), CHECK_NULL);
+  Handle sym = java_lang_String::create_from_symbol(cp->signature_ref_at(which), CHECK_NULL);
   return JNIHandles::make_local(THREAD, sym());
 C2V_END
 
@@ -1181,9 +1181,9 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"canInlineMethod",                              CC"("HS_RESOLVED_METHOD")Z",                                                      FN_PTR(canInlineMethod)},
   {CC"shouldInlineMethod",                           CC"("HS_RESOLVED_METHOD")Z",                                                      FN_PTR(shouldInlineMethod)},
   {CC"lookupType",                                   CC"("STRING CLASS"Z)"HS_RESOLVED_KLASS,                                           FN_PTR(lookupType)},
-  {CC"lookupNameRefInPool",                          CC"("HS_CONSTANT_POOL"I)"STRING,                                                  FN_PTR(lookupNameRefInPool)},
+  {CC"lookupNameInPool",                             CC"("HS_CONSTANT_POOL"I)"STRING,                                                  FN_PTR(lookupNameInPool)},
   {CC"lookupNameAndTypeRefIndexInPool",              CC"("HS_CONSTANT_POOL"I)I",                                                       FN_PTR(lookupNameAndTypeRefIndexInPool)},
-  {CC"lookupSignatureRefInPool",                     CC"("HS_CONSTANT_POOL"I)"STRING,                                                  FN_PTR(lookupSignatureRefInPool)},
+  {CC"lookupSignatureInPool",                        CC"("HS_CONSTANT_POOL"I)"STRING,                                                  FN_PTR(lookupSignatureInPool)},
   {CC"lookupKlassRefIndexInPool",                    CC"("HS_CONSTANT_POOL"I)I",                                                       FN_PTR(lookupKlassRefIndexInPool)},
   {CC"lookupKlassInPool",                            CC"("HS_CONSTANT_POOL"I)Ljava/lang/Object;",                                      FN_PTR(lookupKlassInPool)},
   {CC"lookupAppendixInPool",                         CC"("HS_CONSTANT_POOL"I)"OBJECT,                                                  FN_PTR(lookupAppendixInPool)},

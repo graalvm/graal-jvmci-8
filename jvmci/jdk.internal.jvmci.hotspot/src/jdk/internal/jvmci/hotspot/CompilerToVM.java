@@ -187,22 +187,22 @@ public final class CompilerToVM {
     native int lookupNameAndTypeRefIndexInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
-     * Gets the name of the {@code JVM_CONSTANT_NameAndType} entry at index {@code cpi} in
-     * {@code constantPool}.
+     * Gets the name of the {@code JVM_CONSTANT_NameAndType} entry referenced by another entry
+     * denoted by {@code which} in {@code constantPool}.
      *
-     * The behavior of this method is undefined if {@code cpi} does not denote a
-     * {@code JVM_CONSTANT_NameAndType} entry.
+     * The behavior of this method is undefined if {@code which} does not denote a entry that
+     * references a {@code JVM_CONSTANT_NameAndType} entry.
      */
-    native String lookupNameRefInPool(HotSpotConstantPool constantPool, int cpi);
+    native String lookupNameInPool(HotSpotConstantPool constantPool, int which);
 
     /**
-     * Gets the signature of the {@code JVM_CONSTANT_NameAndType} entry at index {@code cpi} in
-     * {@code constantPool}.
+     * Gets the signature of the {@code JVM_CONSTANT_NameAndType} entry referenced by another entry
+     * denoted by {@code which} in {@code constantPool}.
      *
-     * The behavior of this method is undefined if {@code cpi} does not denote a
-     * {@code JVM_CONSTANT_NameAndType} entry.
+     * The behavior of this method is undefined if {@code which} does not denote a entry that
+     * references a {@code JVM_CONSTANT_NameAndType} entry.
      */
-    native String lookupSignatureRefInPool(HotSpotConstantPool constantPool, int cpi);
+    native String lookupSignatureInPool(HotSpotConstantPool constantPool, int which);
 
     /**
      * Gets the {@code JVM_CONSTANT_Class} index from the entry at index {@code cpi} in
