@@ -32,6 +32,9 @@ public enum SPARCKind implements PlatformKind {
     SINGLE(4),
     DOUBLE(8),
 
+    V32_BYTE(4, BYTE),
+    V32_HWORD(4, HWORD),
+
     V64_BYTE(8, BYTE),
     V64_HWORD(8, HWORD),
     V64_WORD(8, WORD);
