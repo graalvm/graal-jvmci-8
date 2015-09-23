@@ -256,31 +256,17 @@ public class SPARC extends Architecture {
     public final Set<CPUFeature> features;
 
     public SPARC(Set<CPUFeature> features) {
-        super("SPARC", JavaKind.Long, BIG_ENDIAN, false, allRegisters, LOAD_LOAD | LOAD_STORE | STORE_STORE, 1, r31.encoding + FLOAT_REGISTER_COUNT + 1, 8);
+        super("SPARC", SPARCKind.DWORD, BIG_ENDIAN, false, allRegisters, LOAD_LOAD | LOAD_STORE | STORE_STORE, 1, r31.encoding + FLOAT_REGISTER_COUNT + 1, 8);
         this.features = features;
     }
 
     @Override
-    public boolean canStoreValue(RegisterCategory category, PlatformKind lirKind) {
-        if (!(lirKind instanceof JavaKind)) {
-            return false;
-        }
-
-        JavaKind kind = (JavaKind) lirKind;
+    public boolean canStoreValue(RegisterCategory category, PlatformKind kind) {
         if (category.equals(CPU)) {
-            switch (kind) {
-                case Object:
-                case Boolean:
-                case Byte:
-                case Char:
-                case Short:
-                case Int:
-                case Long:
-                    return true;
-            }
-        } else if (category.equals(FPUs) && kind.equals(JavaKind.Float)) {
+            return ((SPARCKind) kind).isInteger();
+        } else if (category.equals(FPUs) && kind == SPARCKind.SINGLE) {
             return true;
-        } else if (category.equals(FPUd) && kind.equals(JavaKind.Double)) {
+        } else if (category.equals(FPUd) && kind == SPARCKind.DOUBLE) {
             return true;
         }
         return false;
@@ -289,22 +275,36 @@ public class SPARC extends Architecture {
     @Override
     public PlatformKind getLargestStorableKind(RegisterCategory category) {
         if (category.equals(CPU)) {
-            return JavaKind.Long;
+            return SPARCKind.DWORD;
         } else if (category.equals(FPUd)) {
-            return JavaKind.Double;
+            return SPARCKind.DOUBLE;
         } else if (category.equals(FPUs)) {
-            return JavaKind.Float;
+            return SPARCKind.SINGLE;
         } else {
-            return JavaKind.Illegal;
+            throw new IllegalArgumentException("Unknown register category: " + category);
         }
     }
 
     @Override
     public PlatformKind getPlatformKind(JavaKind javaKind) {
-        if (javaKind.isObject()) {
-            return JavaKind.Long;
-        } else {
-            return javaKind;
+        switch (javaKind) {
+            case Boolean:
+            case Byte:
+                return SPARCKind.BYTE;
+            case Short:
+            case Char:
+                return SPARCKind.HWORD;
+            case Int:
+                return SPARCKind.WORD;
+            case Long:
+            case Object:
+                return SPARCKind.DWORD;
+            case Float:
+                return SPARCKind.SINGLE;
+            case Double:
+                return SPARCKind.DOUBLE;
+            default:
+                throw new IllegalArgumentException("Unknown JavaKind: " + javaKind);
         }
     }
 

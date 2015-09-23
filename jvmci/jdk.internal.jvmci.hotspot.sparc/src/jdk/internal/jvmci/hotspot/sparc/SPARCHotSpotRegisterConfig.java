@@ -22,7 +22,6 @@
  */
 package jdk.internal.jvmci.hotspot.sparc;
 
-import static jdk.internal.jvmci.sparc.SPARC.CPU;
 import static jdk.internal.jvmci.sparc.SPARC.FPUd;
 import static jdk.internal.jvmci.sparc.SPARC.FPUs;
 import static jdk.internal.jvmci.sparc.SPARC.d0;
@@ -129,6 +128,7 @@ import jdk.internal.jvmci.meta.LIRKind;
 import jdk.internal.jvmci.meta.PlatformKind;
 import jdk.internal.jvmci.meta.Value;
 import jdk.internal.jvmci.sparc.SPARC;
+import jdk.internal.jvmci.sparc.SPARCKind;
 
 public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
@@ -149,11 +149,11 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
             if (architecture.canStoreValue(reg.getRegisterCategory(), kind)) {
                 // Special treatment for double precision
                 // TODO: This is wasteful it uses only half of the registers as float.
-                if (kind == JavaKind.Double) {
+                if (kind == SPARCKind.DOUBLE) {
                     if (reg.getRegisterCategory().equals(FPUd)) {
                         list.add(reg);
                     }
-                } else if (kind == JavaKind.Float) {
+                } else if (kind == SPARCKind.SINGLE) {
                     if (reg.getRegisterCategory().equals(FPUs)) {
                         list.add(reg);
                     }
@@ -279,11 +279,21 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     }
 
     public Register[] getCallingConventionRegisters(Type type, JavaKind kind) {
-        if (architecture.canStoreValue(FPUs, kind) || architecture.canStoreValue(FPUd, kind)) {
-            return fpuParameterRegisters;
+        switch (kind) {
+            case Boolean:
+            case Byte:
+            case Short:
+            case Char:
+            case Int:
+            case Long:
+            case Object:
+                return type == Type.JavaCallee ? cpuCalleeParameterRegisters : cpuCallerParameterRegisters;
+            case Double:
+            case Float:
+                return fpuParameterRegisters;
+            default:
+                throw JVMCIError.shouldNotReachHere("Unknown JavaKind " + kind);
         }
-        assert architecture.canStoreValue(CPU, kind) : kind;
-        return type == Type.JavaCallee ? cpuCalleeParameterRegisters : cpuCallerParameterRegisters;
     }
 
     private CallingConvention callingConvention(Register[] generalParameterRegisters, JavaType returnType, JavaType[] parameterTypes, Type type, TargetDescription target, boolean stackOnly) {
