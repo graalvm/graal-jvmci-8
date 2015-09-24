@@ -2080,6 +2080,7 @@ void GenerateOopMap::compute_map(TRAPS) {
   _ret_adr_tos    = new GrowableArray<intptr_t>(5);  // 5 seems like a good number;
   _did_rewriting  = false;
   _did_relocation = false;
+  _monitor_safe = true;
 
   if (TraceNewOopMapGeneration) {
     tty->print("Method name: %s\n", method()->name()->as_C_string());
