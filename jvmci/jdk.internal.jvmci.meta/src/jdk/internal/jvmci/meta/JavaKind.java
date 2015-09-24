@@ -31,7 +31,7 @@ import java.lang.reflect.Array;
  * {@link JavaKind#Int} for {@code int} and {@link JavaKind#Object} for all object types. A kind has
  * a single character short name, a Java name, and a set of flags further describing its behavior.
  */
-public enum JavaKind implements PlatformKind {
+public enum JavaKind {
     /** The primitive boolean kind, represented as an int on the stack. */
     Boolean('z', "boolean", 1, true, java.lang.Boolean.TYPE, java.lang.Boolean.class),
 
@@ -70,7 +70,6 @@ public enum JavaKind implements PlatformKind {
     private final boolean isStackInt;
     private final Class<?> primitiveJavaClass;
     private final Class<?> boxedJavaClass;
-    private final EnumKey<JavaKind> key = new EnumKey<>(this);
     private final int slotCount;
 
     private JavaKind(char typeChar, String javaName, int slotCount, boolean isStackInt, Class<?> primitiveJavaClass, Class<?> boxedJavaClass) {
@@ -111,10 +110,6 @@ public enum JavaKind implements PlatformKind {
      */
     public String getJavaName() {
         return javaName;
-    }
-
-    public Key getKey() {
-        return key;
     }
 
     /**
@@ -459,15 +454,5 @@ public enum JavaKind implements PlatformKind {
             default:
                 throw new IllegalArgumentException("illegal call to bits on " + this);
         }
-    }
-
-    @Override
-    public int getSizeInBytes() {
-        return getByteCount();
-    }
-
-    @Override
-    public int getVectorLength() {
-        return 1;
     }
 }

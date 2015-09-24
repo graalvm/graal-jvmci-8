@@ -92,7 +92,6 @@ public final class LIRKind {
     private static final int UNKNOWN_REFERENCE = -1;
 
     private LIRKind(PlatformKind platformKind, int referenceMask, AllocatableValue derivedReferenceBase) {
-        assert platformKind != JavaKind.Object : "Kind.Object shouldn't be used in the backend";
         this.platformKind = platformKind;
         this.referenceMask = referenceMask;
         this.derivedReferenceBase = derivedReferenceBase;
