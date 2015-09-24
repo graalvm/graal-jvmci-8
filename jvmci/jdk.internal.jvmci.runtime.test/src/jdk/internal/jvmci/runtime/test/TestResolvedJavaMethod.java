@@ -370,6 +370,18 @@ public class TestResolvedJavaMethod extends MethodUniverse {
     }
 
     @Test
+    public void hasBalancedMonitorsTest() {
+        // Everything normally seen should have balanced monitors.
+        for (Map.Entry<Method, ResolvedJavaMethod> e : methods.entrySet()) {
+            ResolvedJavaMethod m = e.getValue();
+            if (!m.hasBalancedMonitors()) {
+                System.err.println(m.hasBalancedMonitors());
+            }
+            assertTrue(m.toString(), m.hasBalancedMonitors());
+        }
+    }
+
+    @Test
     public void isJavaLangObjectInitTest() throws NoSuchMethodException {
         ResolvedJavaMethod method = metaAccess.lookupJavaMethod(Object.class.getConstructor());
         assertTrue(method.isJavaLangObjectInit());

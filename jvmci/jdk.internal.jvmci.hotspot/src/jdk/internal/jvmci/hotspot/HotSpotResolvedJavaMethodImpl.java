@@ -326,13 +326,14 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         return compilerToVM().methodIsIgnoredBySecurityStackWalk(this);
     }
 
+    @Override
     public boolean hasBalancedMonitors() {
         HotSpotVMConfig config = config();
         final int modifiers = getAllModifiers();
 
         // Method has no monitorenter/exit bytecodes.
         if ((modifiers & config.jvmAccHasMonitorBytecodes) == 0) {
-            return false;
+            return true;
         }
 
         // Check to see if a previous compilation computed the monitor-matching analysis.

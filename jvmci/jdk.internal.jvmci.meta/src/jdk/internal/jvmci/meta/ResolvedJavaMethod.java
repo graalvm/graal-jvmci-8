@@ -244,6 +244,14 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
     LocalVariableTable getLocalVariableTable();
 
     /**
+     * Check if the monitor operations are properly block structured with monitorexits for every
+     * monitorenter and the exits performed in the same order as the enters.
+     *
+     * @return true if monitor operations are balanced.
+     */
+    boolean hasBalancedMonitors();
+
+    /**
      * Invokes the underlying method represented by this object, on the specified object with the
      * specified parameters. This method is similar to a reflective method invocation by
      * {@link Method#invoke}.
