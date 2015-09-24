@@ -22,7 +22,6 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.code.Architecture;
 import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.compiler.Compiler;
 import jdk.internal.jvmci.compiler.CompilerFactory;
@@ -40,10 +39,6 @@ final class HotSpotJVMCICompilerConfig {
 
         public String getCompilerName() {
             return "<none>";
-        }
-
-        public Architecture initializeArchitecture(Architecture arch) {
-            return arch;
         }
 
         public Compiler createCompiler(JVMCIRuntime runtime) {

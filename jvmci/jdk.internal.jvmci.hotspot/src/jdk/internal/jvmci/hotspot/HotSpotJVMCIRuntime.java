@@ -39,7 +39,6 @@ import jdk.internal.jvmci.code.CompilationResult;
 import jdk.internal.jvmci.code.InstalledCode;
 import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.compiler.Compiler;
-import jdk.internal.jvmci.compiler.CompilerFactory;
 import jdk.internal.jvmci.compiler.StartupEventListener;
 import jdk.internal.jvmci.inittimer.InitTimer;
 import jdk.internal.jvmci.meta.JVMCIMetaAccessContext;
@@ -158,10 +157,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             factory = findFactory(hostArchitecture);
         }
 
-        CompilerFactory compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory();
-
         try (InitTimer t = timer("create JVMCI backend:", hostArchitecture)) {
-            hostBackend = registerBackend(factory.createJVMCIBackend(this, compilerFactory, null));
+            hostBackend = registerBackend(factory.createJVMCIBackend(this, null));
         }
 
         vmEventListeners = Services.load(HotSpotVMEventListener.class);

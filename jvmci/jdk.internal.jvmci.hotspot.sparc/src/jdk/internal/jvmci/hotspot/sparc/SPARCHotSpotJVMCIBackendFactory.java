@@ -29,7 +29,6 @@ import java.util.EnumSet;
 import jdk.internal.jvmci.code.Architecture;
 import jdk.internal.jvmci.code.RegisterConfig;
 import jdk.internal.jvmci.code.TargetDescription;
-import jdk.internal.jvmci.compiler.CompilerFactory;
 import jdk.internal.jvmci.hotspot.HotSpotCodeCacheProvider;
 import jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider;
 import jdk.internal.jvmci.hotspot.HotSpotJVMCIBackendFactory;
@@ -45,12 +44,12 @@ import jdk.internal.jvmci.sparc.SPARC.CPUFeature;
 @ServiceProvider(HotSpotJVMCIBackendFactory.class)
 public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFactory {
 
-    protected TargetDescription createTarget(HotSpotVMConfig config, CompilerFactory compilerFactory) {
+    protected TargetDescription createTarget(HotSpotVMConfig config) {
         final int stackFrameAlignment = 16;
         final int implicitNullCheckLimit = 4096;
         final boolean inlineObjects = false;
         Architecture arch = new SPARC(computeFeatures(config));
-        return new TargetDescription(compilerFactory.initializeArchitecture(arch), true, stackFrameAlignment, implicitNullCheckLimit, inlineObjects);
+        return new TargetDescription(arch, true, stackFrameAlignment, implicitNullCheckLimit, inlineObjects);
     }
 
     protected HotSpotCodeCacheProvider createCodeCache(HotSpotJVMCIRuntimeProvider runtime, TargetDescription target, RegisterConfig regConfig) {
@@ -88,9 +87,9 @@ public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
     }
 
     @SuppressWarnings("try")
-    public JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, CompilerFactory compilerFactory, JVMCIBackend host) {
+    public JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, JVMCIBackend host) {
         assert host == null;
-        TargetDescription target = createTarget(runtime.getConfig(), compilerFactory);
+        TargetDescription target = createTarget(runtime.getConfig());
 
         HotSpotMetaAccessProvider metaAccess = new HotSpotMetaAccessProvider(runtime);
         RegisterConfig regConfig = new SPARCHotSpotRegisterConfig(target, runtime.getConfig());

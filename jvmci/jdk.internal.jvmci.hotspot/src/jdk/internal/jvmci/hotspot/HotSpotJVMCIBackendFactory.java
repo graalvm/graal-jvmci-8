@@ -22,12 +22,11 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import jdk.internal.jvmci.compiler.CompilerFactory;
 import jdk.internal.jvmci.runtime.JVMCIBackend;
 
 public interface HotSpotJVMCIBackendFactory {
 
-    JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, CompilerFactory compilerFactory, JVMCIBackend host);
+    JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, JVMCIBackend host);
 
     /**
      * Gets the CPU architecture of this backend.

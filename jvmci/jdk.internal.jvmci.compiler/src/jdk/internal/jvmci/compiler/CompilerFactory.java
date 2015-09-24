@@ -22,7 +22,6 @@
  */
 package jdk.internal.jvmci.compiler;
 
-import jdk.internal.jvmci.code.Architecture;
 import jdk.internal.jvmci.runtime.JVMCIRuntime;
 
 /**
@@ -35,12 +34,6 @@ public interface CompilerFactory {
      * property is equal to this name.
      */
     String getCompilerName();
-
-    /**
-     * Initialize an {@link Architecture}. The compiler has the opportunity to extend the
-     * {@link Architecture} description with a custom subclass.
-     */
-    Architecture initializeArchitecture(Architecture arch);
 
     /**
      * Create a new instance of the {@link Compiler}.
