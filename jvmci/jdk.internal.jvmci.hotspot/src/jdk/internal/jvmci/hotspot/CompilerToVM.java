@@ -163,8 +163,9 @@ public final class CompilerToVM {
     /**
      * Resolves the entry at index {@code cpi} in {@code constantPool} to an object.
      *
-     * The behavior of this method is undefined if {@code cpi} does not denote an entry that can be
-     * resolved to an object.
+     * The behavior of this method is undefined if {@code cpi} does not denote one of the following
+     * entry types: {@code JVM_CONSTANT_MethodHandle}, {@code JVM_CONSTANT_MethodHandleInError},
+     * {@code JVM_CONSTANT_MethodType} and {@code JVM_CONSTANT_MethodTypeInError}.
      */
     native Object resolveConstantInPool(HotSpotConstantPool constantPool, int cpi);
 
@@ -172,8 +173,8 @@ public final class CompilerToVM {
      * Resolves the entry at index {@code cpi} in {@code constantPool} to an object, looking in the
      * constant pool cache first.
      *
-     * The behavior of this method is undefined if {@code cpi} does not denote an entry that can be
-     * resolved to an object.
+     * The behavior of this method is undefined if {@code cpi} does not denote a
+     * {@code JVM_CONSTANT_String} entry.
      */
     native Object resolvePossiblyCachedConstantInPool(HotSpotConstantPool constantPool, int cpi);
 
