@@ -698,7 +698,8 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
         for (int i = 0; i < _options_count; i++) {
           SystemProperty* prop = _options[i];
           oop name = java_lang_String::create_oop_from_str(prop->key() + OPTION_PREFIX_LEN, CHECK);
-          oop value = java_lang_String::create_oop_from_str(prop->value(), CHECK);
+          const char* prop_value = prop->value() != NULL ? prop->value() : "";
+          oop value = java_lang_String::create_oop_from_str(prop_value, CHECK);
           options->obj_at_put(i * 2, name);
           options->obj_at_put((i * 2) + 1, value);
         }
@@ -948,10 +949,6 @@ jint JVMCIRuntime::save_options(SystemProperty* props) {
   SystemProperty* first = NULL;
   for (SystemProperty* p = props; p != NULL; p = p->next()) {
     if (strncmp(p->key(), OPTION_PREFIX, OPTION_PREFIX_LEN) == 0) {
-      if (p->value() == NULL || strlen(p->value()) == 0) {
-        jio_fprintf(defaultStream::output_stream(), "JVMCI option %s must have non-zero length value\n", p->key());
-        return JNI_ERR;
-      }
       if (first == NULL) {
         first = p;
       }

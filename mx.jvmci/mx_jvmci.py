@@ -1760,8 +1760,12 @@ class JVMCIJDKConfig(mx.JDKConfig):
         # Support for -G: options
         def translateGOption(arg):
             if arg.startswith('-G:+'):
+                if '=' in arg:
+                    mx.abort('Mixing + and = in -G: option specification: ' + arg)
                 arg = '-Djvmci.option.' + arg[len('-G:+'):] + '=true'
             elif arg.startswith('-G:-'):
+                if '=' in arg:
+                    mx.abort('Mixing - and = in -G: option specification: ' + arg)
                 arg = '-Djvmci.option.' + arg[len('-G:+'):] + '=false'
             elif arg.startswith('-G:'):
                 arg = '-Djvmci.option.' + arg[len('-G:'):]
