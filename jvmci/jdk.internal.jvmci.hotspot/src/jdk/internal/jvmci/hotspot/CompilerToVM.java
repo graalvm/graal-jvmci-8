@@ -585,8 +585,9 @@ public final class CompilerToVM {
      * Read a value representing a metaspace Method* and return the
      * {@link HotSpotResolvedJavaMethodImpl} wrapping it. This method does no checking that the
      * location actually contains a valid Method*. If the {@code base} object is a
-     * {@link MetaspaceWrapperObject} then the metaspace pointer is fetched from that object and
-     * used as the base. Otherwise the object itself is used as the base.
+     * {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
+     * {@link HotSpotResolvedObjectTypeImpl} then the metaspace pointer is fetched from that object
+     * and used as the base. Otherwise the object itself is used as the base.
      *
      * @param base an object to read from or null
      * @param displacement
@@ -598,8 +599,9 @@ public final class CompilerToVM {
      * Read a value representing a metaspace ConstantPool* and return the
      * {@link HotSpotConstantPool} wrapping it. This method does no checking that the location
      * actually contains a valid ConstantPool*. If the {@code base} object is a
-     * {@link MetaspaceWrapperObject} then the metaspace pointer is fetched from that object and
-     * used as the base. Otherwise the object itself is used as the base.
+     * {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
+     * {@link HotSpotResolvedObjectTypeImpl} then the metaspace pointer is fetched from that object
+     * and used as the base. Otherwise the object itself is used as the base.
      *
      * @param base an object to read from or null
      * @param displacement
@@ -611,8 +613,9 @@ public final class CompilerToVM {
      * Read a value representing a metaspace Klass* and return the
      * {@link HotSpotResolvedObjectTypeImpl} wrapping it. The method does no checking that the
      * location actually contains a valid Klass*. If the {@code base} object is a
-     * {@link MetaspaceWrapperObject} then the metaspace pointer is fetched from that object and
-     * used as the base. Otherwise the object itself is used as the base.
+     * {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
+     * {@link HotSpotResolvedObjectTypeImpl} then the metaspace pointer is fetched from that object
+     * and used as the base. Otherwise the object itself is used as the base.
      *
      * @param base an object to read from or null
      * @param displacement
