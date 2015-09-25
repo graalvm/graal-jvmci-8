@@ -92,9 +92,8 @@ class JVMCIRuntime: public AllStatic {
    * when JVMCI is initialized.
    *
    * @param props the head of the system property list
-   * @return JNI_ERR if a JVMCI option has a zero length value, JNI_OK otherwise
    */
-  static jint save_options(SystemProperty* props);
+  static void save_options(SystemProperty* props);
 
   /**
    * Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.

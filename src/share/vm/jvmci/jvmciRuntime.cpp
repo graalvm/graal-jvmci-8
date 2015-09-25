@@ -944,7 +944,7 @@ void JVMCIRuntime::save_compiler(const char* compiler) {
   _compiler = compiler;
 }
 
-jint JVMCIRuntime::save_options(SystemProperty* props) {
+void JVMCIRuntime::save_options(SystemProperty* props) {
   int count = 0;
   SystemProperty* first = NULL;
   for (SystemProperty* p = props; p != NULL; p = p->next()) {
@@ -968,7 +968,6 @@ jint JVMCIRuntime::save_options(SystemProperty* props) {
     }
     assert (insert_pos - _options == count, "must be");
   }
-  return JNI_OK;
 }
 
 Handle JVMCIRuntime::create_Service(const char* name, TRAPS) {

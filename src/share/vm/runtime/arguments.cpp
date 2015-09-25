@@ -3570,10 +3570,7 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
   scp_p->expand_endorsed();
 
 #if INCLUDE_JVMCI
-  jint res = JVMCIRuntime::save_options(_system_properties);
-  if (res != JNI_OK) {
-    return res;
-  }
+  JVMCIRuntime::save_options(_system_properties);
 
   if (!UseJVMCIClassLoader) {
     // Append lib/jvmci/*.jar to boot class path
