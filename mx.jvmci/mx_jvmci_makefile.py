@@ -189,7 +189,7 @@ define process_providers
     @# Since all projects are built together with one javac call we cannot determine
     @# which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
     $(eval vmconfig := $(1)/hotspot/HotSpotVMConfig.inline.hpp)
-    $(eval vmconfigDest := $(HS_COMMON_SRC)/../jvmci/jdk.internal.jvmci.hotspot/src_gen/hotspot)
+    $(eval vmconfigDest := $(HS_COMMON_SRC)/../mxbuild/jvmci/jdk.internal.jvmci.hotspot/src_gen/hotspot)
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
