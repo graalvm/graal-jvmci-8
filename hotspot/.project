@@ -86,49 +86,14 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>bsd</name>
+			<name>agent</name>
 			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os/bsd/vm</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/agent</locationURI>
 		</link>
 		<link>
-			<name>bsd_x86</name>
+			<name>build</name>
 			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/bsd_x86/vm</locationURI>
-		</link>
-		<link>
-			<name>generated_compiler1</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/build/linux/linux_amd64_compiler1/generated</locationURI>
-		</link>
-		<link>
-			<name>generated_compiler2</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/build/linux/linux_amd64_compiler2/generated</locationURI>
-		</link>
-		<link>
-			<name>generated_jvmci</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/build/linux/linux_amd64_jvmci/generated</locationURI>
-		</link>
-		<link>
-			<name>generated_java_processor</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/mxbuild/jvmci/jdk.internal.jvmci.hotspot/src_gen/hotspot</locationURI>
-		</link>
-		<link>
-			<name>linux</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os/linux/vm</locationURI>
-		</link>
-		<link>
-			<name>linux_sparc</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/linux_sparc/vm</locationURI>
-		</link>
-		<link>
-			<name>linux_x86</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/linux_x86/vm</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/build</locationURI>
 		</link>
 		<link>
 			<name>make</name>
@@ -136,39 +101,14 @@
 			<locationURI>PARENT-1-PROJECT_LOC/make</locationURI>
 		</link>
 		<link>
-			<name>solaris</name>
+			<name>src</name>
 			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os/solaris/vm</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/src</locationURI>
 		</link>
 		<link>
-			<name>solaris_sparc</name>
+			<name>test</name>
 			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/solaris_sparc/vm</locationURI>
-		</link>
-		<link>
-			<name>sparc</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/cpu/sparc/vm</locationURI>
-		</link>
-		<link>
-			<name>vm</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/share/vm</locationURI>
-		</link>
-		<link>
-			<name>windows</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os/windows/vm</locationURI>
-		</link>
-		<link>
-			<name>windows_x86</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/os_cpu/windows_x86/vm</locationURI>
-		</link>
-		<link>
-			<name>x86</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/src/cpu/x86/vm</locationURI>
+			<locationURI>PARENT-1-PROJECT_LOC/test</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
