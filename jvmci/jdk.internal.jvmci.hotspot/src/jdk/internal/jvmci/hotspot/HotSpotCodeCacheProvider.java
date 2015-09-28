@@ -166,21 +166,6 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         return installMethod(hotspotMethod, compResult, 0L, true);
     }
 
-    public HotSpotNmethod addExternalMethod(ResolvedJavaMethod method, CompilationResult compResult) {
-        HotSpotResolvedJavaMethod javaMethod = (HotSpotResolvedJavaMethod) method;
-        if (compResult.getId() == -1) {
-            compResult.setId(javaMethod.allocateCompileId(compResult.getEntryBCI()));
-        }
-        HotSpotNmethod code = new HotSpotNmethod(javaMethod, compResult.getName(), false, true);
-        HotSpotCompiledNmethod compiled = new HotSpotCompiledNmethod(javaMethod, compResult);
-        CompilerToVM vm = runtime.getCompilerToVM();
-        int result = vm.installCode(target, compiled, code, null);
-        if (result != runtime.getConfig().codeInstallResultOk) {
-            return null;
-        }
-        return code;
-    }
-
     public boolean needsDataPatch(JavaConstant constant) {
         return constant instanceof HotSpotMetaspaceConstant;
     }
