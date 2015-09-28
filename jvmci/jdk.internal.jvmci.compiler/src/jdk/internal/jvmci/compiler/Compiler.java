@@ -22,7 +22,7 @@
  */
 package jdk.internal.jvmci.compiler;
 
-import jdk.internal.jvmci.meta.ResolvedJavaMethod;
+import jdk.internal.jvmci.code.CompilationRequest;
 import jdk.internal.jvmci.options.Option;
 import jdk.internal.jvmci.options.OptionType;
 import jdk.internal.jvmci.options.OptionValue;
@@ -39,14 +39,8 @@ public interface Compiler {
     @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> PrintStackTraceOnException = new OptionValue<>(false);
 
     /**
-     * Request the compilation of a method by this JVMCI compiler. The compiler should compile the
-     * method to machine code and install it in the code cache if the compilation is successful.
-     *
-     * @param method the method that should be compiled
-     * @param entryBCI the BCI at which to start compiling where -1 denotes a non-OSR compilation
-     *            request and all other values denote an OSR compilation request
-     * @param jvmciEnv pointer to native {@code JVMCIEnv} object
-     * @param id a unique identifier for this compilation
+     * Services a compilation request. This object should compile the method to machine code and
+     * install it in the code cache if the compilation is successful.
      */
-    void compileMethod(ResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id);
+    void compileMethod(CompilationRequest request);
 }

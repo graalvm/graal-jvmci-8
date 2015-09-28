@@ -22,10 +22,10 @@
  */
 package jdk.internal.jvmci.hotspot;
 
+import jdk.internal.jvmci.code.CompilationRequest;
 import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.compiler.Compiler;
 import jdk.internal.jvmci.compiler.CompilerFactory;
-import jdk.internal.jvmci.meta.ResolvedJavaMethod;
 import jdk.internal.jvmci.runtime.JVMCIRuntime;
 import jdk.internal.jvmci.service.Services;
 
@@ -33,7 +33,7 @@ final class HotSpotJVMCICompilerConfig {
 
     private static class DummyCompilerFactory implements CompilerFactory, Compiler {
 
-        public void compileMethod(ResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
+        public void compileMethod(CompilationRequest request) {
             throw new JVMCIError("no JVMCI compiler selected");
         }
 

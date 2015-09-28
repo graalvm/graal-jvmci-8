@@ -244,7 +244,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     @SuppressWarnings({"unused"})
     private void compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
-        compiler.compileMethod(method, entryBCI, jvmciEnv, id);
+        compiler.compileMethod(new HotSpotCompilationRequest(method, entryBCI, jvmciEnv, id));
     }
 
     /**
