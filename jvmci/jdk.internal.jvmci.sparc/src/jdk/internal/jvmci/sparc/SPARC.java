@@ -253,6 +253,8 @@ public class SPARC extends Architecture {
      */
     public static final int REGISTER_SAFE_AREA_SIZE = 128;
 
+    public static final int BLOCK_ZERO_LENGTH = 64;
+
     public final Set<CPUFeature> features;
 
     public SPARC(Set<CPUFeature> features) {
@@ -262,14 +264,26 @@ public class SPARC extends Architecture {
 
     @Override
     public boolean canStoreValue(RegisterCategory category, PlatformKind kind) {
-        if (category.equals(CPU)) {
-            return ((SPARCKind) kind).isInteger();
-        } else if (category.equals(FPUs) && kind == SPARCKind.SINGLE) {
-            return true;
-        } else if (category.equals(FPUd) && kind == SPARCKind.DOUBLE) {
-            return true;
+        SPARCKind sparcKind = (SPARCKind) kind;
+        switch (sparcKind) {
+            case BYTE:
+            case HWORD:
+            case WORD:
+            case DWORD:
+                return SPARC.CPU.equals(category);
+            case SINGLE:
+            case V32_BYTE:
+            case V32_HWORD:
+                return SPARC.FPUs.equals(category);
+            case DOUBLE:
+            case V64_BYTE:
+            case V64_HWORD:
+            case V64_WORD:
+            case V64_SINGLE:
+                return SPARC.FPUd.equals(category);
+            default:
+                return false;
         }
-        return false;
     }
 
     @Override

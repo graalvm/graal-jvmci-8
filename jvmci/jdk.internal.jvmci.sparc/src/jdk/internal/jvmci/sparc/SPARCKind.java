@@ -37,7 +37,8 @@ public enum SPARCKind implements PlatformKind {
 
     V64_BYTE(8, BYTE),
     V64_HWORD(8, HWORD),
-    V64_WORD(8, WORD);
+    V64_WORD(8, WORD),
+    V64_SINGLE(8, SINGLE);
 
     private final int size;
     private final int vectorLength;
@@ -99,6 +100,8 @@ public enum SPARCKind implements PlatformKind {
         switch (this) {
             case BYTE:
                 return 'b';
+            case HWORD:
+                return 'h';
             case WORD:
                 return 'w';
             case DWORD:
