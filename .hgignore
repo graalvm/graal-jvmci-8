@@ -1,3 +1,4 @@
+^mxbuild/
 ^build/
 ^build-nograal/
 ^build-nojvmci/
@@ -28,7 +29,6 @@
 \.dot$
 \.pyc$
 \.hprof$
-\javafilelist.txt$
 \.hprof\.txt$
 ^doc/.*/dot_temp_
 ^doc/doxygen/.*$
@@ -42,7 +42,6 @@ output\.cfg$
 ^test-output/
 scratch/
 bin/
-src_gen/
 ^local/
 ^src/share/tools/hsdis/build/
 ^src/share/tools/IdealGraphVisualizer/[a-zA-Z0-9]*/build/
@@ -62,18 +61,12 @@ javadoc/
 
 syntax: glob
 lib
-currentAnnotationProcessors
 ecj.jar
 jmh
 env
 nbproject
 dist
 build.xml
-checkstyle-timestamps
-eclipse-config.zip
-eclipse-config-libs.zip
-netbeans-config.zip
-netbeans-config-libs.zip
 eclipse-launches
 *.bgv
 core.*
