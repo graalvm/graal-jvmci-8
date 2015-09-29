@@ -529,7 +529,7 @@ public final class CompilerToVM {
      * @param methods the methods to look for, where {@code null} means that any frame is returned
      * @return the frame, or {@code null} if the end of the stack was reached during the search
      */
-    public HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, ResolvedJavaMethod[] methods, int initialSkip) {
+    HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, ResolvedJavaMethod[] methods, int initialSkip) {
         return getNextStackFrameImpl(frame, methods, initialSkip);
     }
 

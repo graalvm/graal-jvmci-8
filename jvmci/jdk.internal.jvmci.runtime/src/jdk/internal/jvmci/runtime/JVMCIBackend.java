@@ -24,6 +24,7 @@ package jdk.internal.jvmci.runtime;
 
 import jdk.internal.jvmci.code.CodeCacheProvider;
 import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.code.stack.StackIntrospection;
 import jdk.internal.jvmci.meta.ConstantReflectionProvider;
 import jdk.internal.jvmci.meta.MetaAccessProvider;
 
@@ -37,11 +38,13 @@ public class JVMCIBackend {
     private final MetaAccessProvider metaAccess;
     private final CodeCacheProvider codeCache;
     private final ConstantReflectionProvider constantReflection;
+    private final StackIntrospection stackIntrospection;
 
-    public JVMCIBackend(MetaAccessProvider metaAccess, CodeCacheProvider codeCache, ConstantReflectionProvider constantReflection) {
+    public JVMCIBackend(MetaAccessProvider metaAccess, CodeCacheProvider codeCache, ConstantReflectionProvider constantReflection, StackIntrospection stackIntrospection) {
         this.metaAccess = metaAccess;
         this.codeCache = codeCache;
         this.constantReflection = constantReflection;
+        this.stackIntrospection = stackIntrospection;
     }
 
     public MetaAccessProvider getMetaAccess() {
@@ -58,5 +61,9 @@ public class JVMCIBackend {
 
     public TargetDescription getTarget() {
         return codeCache.getTarget();
+    }
+
+    public StackIntrospection getStackIntrospection() {
+        return stackIntrospection;
     }
 }

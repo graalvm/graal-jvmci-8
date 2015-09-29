@@ -29,11 +29,13 @@ import java.util.EnumSet;
 import jdk.internal.jvmci.code.Architecture;
 import jdk.internal.jvmci.code.RegisterConfig;
 import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.code.stack.StackIntrospection;
 import jdk.internal.jvmci.hotspot.HotSpotCodeCacheProvider;
 import jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider;
 import jdk.internal.jvmci.hotspot.HotSpotJVMCIBackendFactory;
 import jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider;
 import jdk.internal.jvmci.hotspot.HotSpotMetaAccessProvider;
+import jdk.internal.jvmci.hotspot.HotSpotStackIntrospection;
 import jdk.internal.jvmci.hotspot.HotSpotVMConfig;
 import jdk.internal.jvmci.inittimer.InitTimer;
 import jdk.internal.jvmci.runtime.JVMCIBackend;
@@ -95,12 +97,14 @@ public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         RegisterConfig regConfig = new SPARCHotSpotRegisterConfig(target, runtime.getConfig());
         HotSpotCodeCacheProvider codeCache = createCodeCache(runtime, target, regConfig);
         HotSpotConstantReflectionProvider constantReflection = new HotSpotConstantReflectionProvider(runtime);
+        StackIntrospection stackIntrospection = new HotSpotStackIntrospection(runtime);
         try (InitTimer rt = timer("instantiate backend")) {
-            return createBackend(metaAccess, codeCache, constantReflection);
+            return createBackend(metaAccess, codeCache, constantReflection, stackIntrospection);
         }
     }
 
-    protected JVMCIBackend createBackend(HotSpotMetaAccessProvider metaAccess, HotSpotCodeCacheProvider codeCache, HotSpotConstantReflectionProvider constantReflection) {
-        return new JVMCIBackend(metaAccess, codeCache, constantReflection);
+    protected JVMCIBackend createBackend(HotSpotMetaAccessProvider metaAccess, HotSpotCodeCacheProvider codeCache, HotSpotConstantReflectionProvider constantReflection,
+                    StackIntrospection stackIntrospection) {
+        return new JVMCIBackend(metaAccess, codeCache, constantReflection, stackIntrospection);
     }
 }

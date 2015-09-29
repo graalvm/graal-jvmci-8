@@ -30,11 +30,13 @@ import jdk.internal.jvmci.amd64.AMD64;
 import jdk.internal.jvmci.code.Architecture;
 import jdk.internal.jvmci.code.RegisterConfig;
 import jdk.internal.jvmci.code.TargetDescription;
+import jdk.internal.jvmci.code.stack.StackIntrospection;
 import jdk.internal.jvmci.hotspot.HotSpotCodeCacheProvider;
 import jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider;
 import jdk.internal.jvmci.hotspot.HotSpotJVMCIBackendFactory;
 import jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider;
 import jdk.internal.jvmci.hotspot.HotSpotMetaAccessProvider;
+import jdk.internal.jvmci.hotspot.HotSpotStackIntrospection;
 import jdk.internal.jvmci.hotspot.HotSpotVMConfig;
 import jdk.internal.jvmci.inittimer.InitTimer;
 import jdk.internal.jvmci.meta.ConstantReflectionProvider;
@@ -147,6 +149,7 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         HotSpotCodeCacheProvider codeCache;
         ConstantReflectionProvider constantReflection;
         HotSpotMetaAccessProvider metaAccess;
+        StackIntrospection stackIntrospection;
         try (InitTimer t = timer("create providers")) {
             try (InitTimer rt = timer("create MetaAccess provider")) {
                 metaAccess = createMetaAccess(runtime);
@@ -160,13 +163,16 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
             try (InitTimer rt = timer("create ConstantReflection provider")) {
                 constantReflection = createConstantReflection(runtime);
             }
+            try (InitTimer rt = timer("create StackIntrospection provider")) {
+                stackIntrospection = new HotSpotStackIntrospection(runtime);
+            }
         }
         try (InitTimer rt = timer("instantiate backend")) {
-            return createBackend(metaAccess, codeCache, constantReflection);
+            return createBackend(metaAccess, codeCache, constantReflection, stackIntrospection);
         }
     }
 
-    protected JVMCIBackend createBackend(HotSpotMetaAccessProvider metaAccess, HotSpotCodeCacheProvider codeCache, ConstantReflectionProvider constantReflection) {
-        return new JVMCIBackend(metaAccess, codeCache, constantReflection);
+    protected JVMCIBackend createBackend(HotSpotMetaAccessProvider metaAccess, HotSpotCodeCacheProvider codeCache, ConstantReflectionProvider constantReflection, StackIntrospection stackIntrospection) {
+        return new JVMCIBackend(metaAccess, codeCache, constantReflection, stackIntrospection);
     }
 }
