@@ -136,4 +136,11 @@ public interface CodeCacheProvider {
      * Create a new speculation log for the target runtime.
      */
     SpeculationLog createSpeculationLog();
+
+    /**
+     * Returns the maximum absolute offset of a PC relative call to a given address from any
+     * position in the code cache or -1 when not applicable. Intended for determining the required
+     * size of address/offset fields.
+     */
+    long getMaxCallTargetOffset(long address);
 }

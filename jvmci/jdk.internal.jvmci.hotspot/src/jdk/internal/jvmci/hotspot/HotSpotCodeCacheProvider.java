@@ -256,4 +256,8 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
     public SpeculationLog createSpeculationLog() {
         return new HotSpotSpeculationLog();
     }
+
+    public long getMaxCallTargetOffset(long address) {
+        return runtime.getCompilerToVM().getMaxCallTargetOffset(address);
+    }
 }

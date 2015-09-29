@@ -391,7 +391,7 @@ public final class CompilerToVM {
      * @param address an address that may be called from any code in the code cache
      * @return -1 if {@code address == 0}
      */
-    public long getMaxCallTargetOffset(long address) {
+    long getMaxCallTargetOffset(long address) {
         return getMaxCallTargetOffsetImpl(address);
     }
 
