@@ -489,7 +489,6 @@ public class CompilationResult {
         }
     }
 
-    private int id = -1;
     private int entryBCI = -1;
 
     private final DataSection dataSection = new DataSection();
@@ -560,7 +559,6 @@ public class CompilationResult {
             CompilationResult that = (CompilationResult) obj;
             // @formatter:off
             if (this.entryBCI == that.entryBCI &&
-                this.id == that.id &&
                 this.customStackAreaOffset == that.customStackAreaOffset &&
                 this.totalFrameSize == that.totalFrameSize &&
                 this.targetCodeSize == that.targetCodeSize &&
@@ -578,20 +576,6 @@ public class CompilationResult {
             // @formatter:on
         }
         return false;
-    }
-
-    /**
-     * @return the compile id
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * @param id the compile id to set
-     */
-    public void setId(int id) {
-        this.id = id;
     }
 
     /**

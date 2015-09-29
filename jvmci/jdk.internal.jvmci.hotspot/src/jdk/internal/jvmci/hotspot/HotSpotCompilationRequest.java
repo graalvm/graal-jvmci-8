@@ -26,13 +26,34 @@ import jdk.internal.jvmci.code.CompilationRequest;
 
 /**
  * A compilation request with extra HotSpot specific context such as a compilation identifier and
- * the address of a {@code JVMCIEnv} object that provides extra native level context for a
- * compilation.
+ * the address of a {@code JVMCIEnv} object that provides native context for a compilation.
  */
 public class HotSpotCompilationRequest extends CompilationRequest {
     private final long jvmciEnv;
     private final int id;
 
+    /**
+     * Creates a request to compile a method starting at a given BCI and allocates an identifier to
+     * the request.
+     *
+     * @param method the method to be compiled
+     * @param entryBCI the bytecode index (BCI) at which to start compiling where -1 denotes the
+     *            method's entry point
+     * @param jvmciEnv address of a native {@code JVMCIEnv} object or 0L
+     */
+    public HotSpotCompilationRequest(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv) {
+        this(method, entryBCI, jvmciEnv, method.allocateCompileId(-1));
+    }
+
+    /**
+     * Creates a request to compile a method starting at a given BCI.
+     *
+     * @param method the method to be compiled
+     * @param entryBCI the bytecode index (BCI) at which to start compiling where -1 denotes the
+     *            method's entry point
+     * @param jvmciEnv address of a native {@code JVMCIEnv} object or 0L
+     * @param id an identifier for the request
+     */
     public HotSpotCompilationRequest(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
         super(method, entryBCI);
         this.jvmciEnv = jvmciEnv;

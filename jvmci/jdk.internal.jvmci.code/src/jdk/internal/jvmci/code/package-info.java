@@ -23,8 +23,8 @@
 /**
  * Package that defines the interface between a Java application that wants to install code and the runtime.
  * The runtime provides in implementation of the {@link jdk.internal.jvmci.code.CodeCacheProvider} interface.
- * The method {@link jdk.internal.jvmci.code.CodeCacheProvider#addMethod(jdk.internal.jvmci.meta.ResolvedJavaMethod, CompilationResult, jdk.internal.jvmci.meta.SpeculationLog, InstalledCode)}
- * can be used to install code for a given method.
+ * The method {@link jdk.internal.jvmci.code.CodeCacheProvider#addCode(jdk.internal.jvmci.meta.ResolvedJavaMethod, CompilationResult, jdk.internal.jvmci.meta.SpeculationLog, InstalledCode)}
+ * can be used to install code.
  */
 package jdk.internal.jvmci.code;
 

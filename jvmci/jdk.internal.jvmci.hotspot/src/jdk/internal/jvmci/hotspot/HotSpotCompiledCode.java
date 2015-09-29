@@ -48,7 +48,7 @@ import jdk.internal.jvmci.meta.ResolvedJavaMethod;
  * A {@link CompilationResult} with additional HotSpot-specific information required for installing
  * the code in HotSpot's code cache.
  */
-public abstract class HotSpotCompiledCode {
+public class HotSpotCompiledCode {
 
     public final String name;
     public final Site[] sites;
@@ -175,5 +175,10 @@ public abstract class HotSpotCompiledCode {
         }
         Arrays.sort(result, new SiteComparator());
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 }

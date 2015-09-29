@@ -28,6 +28,7 @@ import java.lang.reflect.Field;
 
 import jdk.internal.jvmci.code.BailoutException;
 import jdk.internal.jvmci.code.CodeCacheProvider;
+import jdk.internal.jvmci.code.CompilationRequest;
 import jdk.internal.jvmci.code.CompilationResult;
 import jdk.internal.jvmci.code.CompilationResult.Call;
 import jdk.internal.jvmci.code.CompilationResult.ConstantReference;
@@ -42,7 +43,6 @@ import jdk.internal.jvmci.code.TargetDescription;
 import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.meta.Constant;
 import jdk.internal.jvmci.meta.JavaConstant;
-import jdk.internal.jvmci.meta.ResolvedJavaMethod;
 import jdk.internal.jvmci.meta.SerializableConstant;
 import jdk.internal.jvmci.meta.SpeculationLog;
 import jdk.internal.jvmci.meta.VMConstant;
@@ -113,57 +113,60 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         return runtime.getConfig().runtimeCallStackSize;
     }
 
-    public InstalledCode logOrDump(InstalledCode installedCode, CompilationResult compResult) {
+    private InstalledCode logOrDump(InstalledCode installedCode, CompilationResult compResult) {
         ((HotSpotJVMCIRuntime) runtime).notifyInstall(this, installedCode, compResult);
         return installedCode;
     }
 
-    private InstalledCode installCode(CompilationResult compResult, HotSpotCompiledNmethod compiledCode, InstalledCode installedCode, SpeculationLog log) {
-        int result = runtime.getCompilerToVM().installCode(target, compiledCode, installedCode, log);
-        if (result != config.codeInstallResultOk) {
-            String msg = compiledCode.getInstallationFailureMessage();
-            String resultDesc = config.getCodeInstallResultDescription(result);
-            if (msg != null) {
-                msg = String.format("Code installation failed: %s%n%s", resultDesc, msg);
-            } else {
-                msg = String.format("Code installation failed: %s", resultDesc);
-            }
-            if (result == config.codeInstallResultDependenciesInvalid) {
-                throw new AssertionError(resultDesc + " " + msg);
-            }
-            throw new BailoutException(result != config.codeInstallResultDependenciesFailed, msg);
-        }
-        return logOrDump(installedCode, compResult);
-    }
-
-    public InstalledCode installMethod(HotSpotResolvedJavaMethod method, CompilationResult compResult, long jvmciEnv, boolean isDefault) {
-        if (compResult.getId() == -1) {
-            compResult.setId(method.allocateCompileId(compResult.getEntryBCI()));
-        }
-        HotSpotInstalledCode installedCode = new HotSpotNmethod(method, compResult.getName(), isDefault);
-        HotSpotCompiledNmethod compiledCode = new HotSpotCompiledNmethod(method, compResult, jvmciEnv);
-        return installCode(compResult, compiledCode, installedCode, method.getSpeculationLog());
-    }
-
-    @Override
-    public InstalledCode addMethod(ResolvedJavaMethod method, CompilationResult compResult, SpeculationLog log, InstalledCode predefinedInstalledCode) {
-        HotSpotResolvedJavaMethod hotspotMethod = (HotSpotResolvedJavaMethod) method;
-        if (compResult.getId() == -1) {
-            compResult.setId(hotspotMethod.allocateCompileId(compResult.getEntryBCI()));
-        }
-        InstalledCode installedCode = predefinedInstalledCode;
+    public InstalledCode installCode(CompilationRequest compRequest, CompilationResult compResult, InstalledCode installedCode, SpeculationLog log, boolean isDefault) {
+        HotSpotResolvedJavaMethod method = compRequest != null ? (HotSpotResolvedJavaMethod) compRequest.getMethod() : null;
+        InstalledCode resultInstalledCode;
         if (installedCode == null) {
-            HotSpotInstalledCode code = new HotSpotNmethod(hotspotMethod, compResult.getName(), false);
-            installedCode = code;
+            if (method == null) {
+                // Must be a stub
+                resultInstalledCode = new HotSpotRuntimeStub(compResult.getName());
+            } else {
+                resultInstalledCode = new HotSpotNmethod(method, compResult.getName(), isDefault);
+            }
+        } else {
+            resultInstalledCode = installedCode;
         }
-        HotSpotCompiledNmethod compiledCode = new HotSpotCompiledNmethod(hotspotMethod, compResult);
-        return installCode(compResult, compiledCode, installedCode, log);
-    }
-
-    @Override
-    public InstalledCode setDefaultMethod(ResolvedJavaMethod method, CompilationResult compResult) {
-        HotSpotResolvedJavaMethod hotspotMethod = (HotSpotResolvedJavaMethod) method;
-        return installMethod(hotspotMethod, compResult, 0L, true);
+        HotSpotCompiledCode compiledCode;
+        if (method != null) {
+            final int id;
+            final long jvmciEnv;
+            if (compRequest instanceof HotSpotCompilationRequest) {
+                HotSpotCompilationRequest hsCompRequest = (HotSpotCompilationRequest) compRequest;
+                id = hsCompRequest.getId();
+                jvmciEnv = hsCompRequest.getJvmciEnv();
+            } else {
+                id = method.allocateCompileId(compRequest.getEntryBCI());
+                jvmciEnv = 0L;
+            }
+            compiledCode = new HotSpotCompiledNmethod(method, compResult, id, jvmciEnv);
+        } else {
+            compiledCode = new HotSpotCompiledCode(compResult);
+        }
+        int result = runtime.getCompilerToVM().installCode(target, compiledCode, resultInstalledCode, log);
+        if (result != config.codeInstallResultOk) {
+            String resultDesc = config.getCodeInstallResultDescription(result);
+            if (compiledCode instanceof HotSpotCompiledNmethod) {
+                HotSpotCompiledNmethod compiledNmethod = (HotSpotCompiledNmethod) compiledCode;
+                String msg = compiledNmethod.getInstallationFailureMessage();
+                if (msg != null) {
+                    msg = String.format("Code installation failed: %s%n%s", resultDesc, msg);
+                } else {
+                    msg = String.format("Code installation failed: %s", resultDesc);
+                }
+                if (result == config.codeInstallResultDependenciesInvalid) {
+                    throw new AssertionError(resultDesc + " " + msg);
+                }
+                throw new BailoutException(result != config.codeInstallResultDependenciesFailed, msg);
+            } else {
+                throw new BailoutException("Error installing %s: %s", compResult.getName(), resultDesc);
+            }
+        }
+        return logOrDump(resultInstalledCode, compResult);
     }
 
     public boolean needsDataPatch(JavaConstant constant) {

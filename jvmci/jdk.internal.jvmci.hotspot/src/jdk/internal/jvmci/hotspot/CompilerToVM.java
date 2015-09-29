@@ -315,7 +315,7 @@ public final class CompilerToVM {
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesFailed} or
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesInvalid}.
      */
-    public int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog) {
+    int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog) {
         return installCodeImpl(target, compiledCode, code, speculationLog);
     }
 

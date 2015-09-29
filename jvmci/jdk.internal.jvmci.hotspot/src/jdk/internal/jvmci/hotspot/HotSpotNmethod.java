@@ -47,25 +47,15 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
     private final HotSpotResolvedJavaMethod method;
 
     private final boolean isDefault;
-    private final boolean isExternal;
 
     public HotSpotNmethod(HotSpotResolvedJavaMethod method, String name, boolean isDefault) {
-        this(method, name, isDefault, false);
-    }
-
-    public HotSpotNmethod(HotSpotResolvedJavaMethod method, String name, boolean isDefault, boolean isExternal) {
         super(name);
         this.method = method;
         this.isDefault = isDefault;
-        this.isExternal = isExternal;
     }
 
     public boolean isDefault() {
         return isDefault;
-    }
-
-    public boolean isExternal() {
-        return isExternal;
     }
 
     public ResolvedJavaMethod getMethod() {
@@ -107,7 +97,6 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
     @Override
     public Object executeVarargs(Object... args) throws InvalidInstalledCodeException {
         assert checkArgs(args);
-        assert !isExternal();
         return compilerToVM().executeInstalledCode(args, this);
     }
 
