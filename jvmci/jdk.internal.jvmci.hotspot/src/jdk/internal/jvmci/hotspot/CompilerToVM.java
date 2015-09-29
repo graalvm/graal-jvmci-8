@@ -403,7 +403,7 @@ public final class CompilerToVM {
      * @return a non-zero length string containing a disassembly of {@code codeBlob} or null if
      *         {@code codeBlob} could not be disassembled for some reason
      */
-    public String disassembleCodeBlob(long codeBlob) {
+    String disassembleCodeBlob(long codeBlob) {
         return disassembleCodeBlobImpl(codeBlob);
     }
 
