@@ -562,7 +562,7 @@ C2V_VMENTRY(jobject, getClassInitializer, (JNIEnv *, jobject, jobject jvmci_type
   return JNIHandles::make_local(THREAD, result);
 C2V_END
 
-C2V_VMENTRY(jlong, getMaxCallTargetOffsetImpl, (JNIEnv*, jobject, jlong addr))
+C2V_VMENTRY(jlong, getMaxCallTargetOffset, (JNIEnv*, jobject, jlong addr))
   address target_addr = (address) addr;
   if (target_addr != 0x0) {
     int64_t off_low = (int64_t)target_addr - ((int64_t)CodeCache::low_bound() + sizeof(int));
@@ -579,7 +579,7 @@ C2V_VMENTRY(void, doNotInlineOrCompile,(JNIEnv *, jobject,  jobject jvmci_method
   method->set_dont_inline(true);
 C2V_END
 
-C2V_VMENTRY(jint, installCodeImpl, (JNIEnv *jniEnv, jobject, jobject target, jobject compiled_code, jobject installed_code, jobject speculation_log))
+C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject compiled_code, jobject installed_code, jobject speculation_log))
   ResourceMark rm;
   HandleMark hm;
   Handle target_handle = JNIHandles::resolve(target);
@@ -627,7 +627,7 @@ C2V_VMENTRY(jint, installCodeImpl, (JNIEnv *jniEnv, jobject, jobject target, job
   return result;
 C2V_END
 
-C2V_VMENTRY(void, notifyCompilationStatisticsImpl, (JNIEnv *jniEnv, jobject, jint id, jobject hotspot_method, jboolean osr, jint processedBytecodes, jlong time, jlong timeUnitsPerSecond, jobject installed_code))
+C2V_VMENTRY(void, notifyCompilationStatistics, (JNIEnv *jniEnv, jobject, jint id, jobject hotspot_method, jboolean osr, jint processedBytecodes, jlong time, jlong timeUnitsPerSecond, jobject installed_code))
   CompilerStatistics* stats = JVMCICompiler::instance()->stats();
 
   elapsedTimer timer = elapsedTimer(time, timeUnitsPerSecond);
@@ -650,13 +650,13 @@ C2V_VMENTRY(void, notifyCompilationStatisticsImpl, (JNIEnv *jniEnv, jobject, jin
   }
 C2V_END
 
-C2V_VMENTRY(void, resetCompilationStatisticsImpl, (JNIEnv *jniEnv, jobject))
+C2V_VMENTRY(void, resetCompilationStatistics, (JNIEnv *jniEnv, jobject))
   CompilerStatistics* stats = JVMCICompiler::instance()->stats();
   stats->_standard.reset();
   stats->_osr.reset();
 C2V_END
 
-C2V_VMENTRY(jobject, disassembleCodeBlobImpl, (JNIEnv *jniEnv, jobject, jlong codeBlob))
+C2V_VMENTRY(jobject, disassembleCodeBlob, (JNIEnv *jniEnv, jobject, jlong codeBlob))
   ResourceMark rm;
   HandleMark hm;
 
@@ -810,7 +810,7 @@ C2V_VMENTRY(void, reprofile, (JNIEnv*, jobject, jobject jvmci_method))
 C2V_END
 
 
-C2V_VMENTRY(void, invalidateInstalledCodeImpl, (JNIEnv*, jobject, jobject hotspotInstalledCode))
+C2V_VMENTRY(void, invalidateInstalledCode, (JNIEnv*, jobject, jobject hotspotInstalledCode))
   jlong nativeMethod = InstalledCode::address(hotspotInstalledCode);
   nmethod* m = (nmethod*)nativeMethod;
   if (m != NULL && !m->is_not_entrant()) {
@@ -826,7 +826,7 @@ C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv*, jobject, jlong addr))
   return JNIHandles::make_local(THREAD, ret);
 C2V_END
 
-C2V_VMENTRY(jlongArray, collectCountersImpl, (JNIEnv*, jobject))
+C2V_VMENTRY(jlongArray, collectCounters, (JNIEnv*, jobject))
   typeArrayOop arrayOop = oopFactory::new_longArray(JVMCICounterSize, CHECK_NULL);
   JavaThread::collect_counters(arrayOop);
   return (jlongArray) JNIHandles::make_local(THREAD, arrayOop);
@@ -867,7 +867,7 @@ bool matches(jobjectArray methods, Method* method) {
   return false;
 }
 
-C2V_VMENTRY(jobject, getNextStackFrameImpl, (JNIEnv*, jobject compilerToVM, jobject hs_frame, jobjectArray methods, jint initialSkip))
+C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject hs_frame, jobjectArray methods, jint initialSkip))
   ResourceMark rm;
 
   if (!thread->has_last_Java_frame()) return NULL;
@@ -1018,7 +1018,7 @@ C2V_VMENTRY(void, resolveInvokeHandleInPool, (JNIEnv*, jobject, jobject jvmci_co
   cp_cache_entry->set_method_handle(cp, callInfo);
 C2V_END
 
-C2V_VMENTRY(jboolean, shouldDebugNonSafepointsImpl, (JNIEnv*, jobject))
+C2V_VMENTRY(jboolean, shouldDebugNonSafepoints, (JNIEnv*, jobject))
   //see compute_recording_non_safepoints in debugInfroRec.cpp
   if (JvmtiExport::should_post_compiled_method_load() && FLAG_IS_DEFAULT(DebugNonSafepoints)) {
     return true;
@@ -1127,7 +1127,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
   }
 C2V_END
 
-C2V_VMENTRY(void, writeDebugOutputImpl, (JNIEnv*, jobject, jbyteArray bytes, jint offset, jint length))
+C2V_VMENTRY(void, writeDebugOutput, (JNIEnv*, jobject, jbyteArray bytes, jint offset, jint length))
   while (length > 0) {
     jbyte* start = ((typeArrayOop) JNIHandles::resolve(bytes))->byte_at_addr(offset);
     tty->write((char*) start, MIN2(length, O_BUFLEN));
@@ -1136,7 +1136,7 @@ C2V_VMENTRY(void, writeDebugOutputImpl, (JNIEnv*, jobject, jbyteArray bytes, jin
   }
 C2V_END
 
-C2V_VMENTRY(void, flushDebugOutputImpl, (JNIEnv*, jobject))
+C2V_VMENTRY(void, flushDebugOutput, (JNIEnv*, jobject))
   tty->flush();
 C2V_END
 
@@ -1210,33 +1210,33 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getVtableIndexForInterfaceMethod",             CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD")I",                                    FN_PTR(getVtableIndexForInterfaceMethod)},
   {CC"getClassInitializer",                          CC"("HS_RESOLVED_KLASS")"HS_RESOLVED_METHOD,                                      FN_PTR(getClassInitializer)},
   {CC"hasFinalizableSubclass",                       CC"("HS_RESOLVED_KLASS")Z",                                                       FN_PTR(hasFinalizableSubclass)},
-  {CC"getMaxCallTargetOffsetImpl",                   CC"(J)J",                                                                         FN_PTR(getMaxCallTargetOffsetImpl)},
+  {CC"getMaxCallTargetOffset",                       CC"(J)J",                                                                         FN_PTR(getMaxCallTargetOffset)},
   {CC"getResolvedJavaMethodAtSlot",                  CC"("CLASS"I)"HS_RESOLVED_METHOD,                                                 FN_PTR(getResolvedJavaMethodAtSlot)},
   {CC"getResolvedJavaMethod",                        CC"(Ljava/lang/Object;J)"HS_RESOLVED_METHOD,                                      FN_PTR(getResolvedJavaMethod)},
   {CC"getConstantPool",                              CC"(Ljava/lang/Object;J)"HS_CONSTANT_POOL,                                        FN_PTR(getConstantPool)},
   {CC"getResolvedJavaType",                          CC"(Ljava/lang/Object;JZ)"HS_RESOLVED_KLASS,                                      FN_PTR(getResolvedJavaType)},
   {CC"initializeConfiguration",                      CC"("HS_CONFIG")V",                                                               FN_PTR(initializeConfiguration)},
-  {CC"installCodeImpl",                              CC"("TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",      FN_PTR(installCodeImpl)},
-  {CC"notifyCompilationStatisticsImpl",              CC"(I"HS_RESOLVED_METHOD"ZIJJ"INSTALLED_CODE")V",                                 FN_PTR(notifyCompilationStatisticsImpl)},
-  {CC"resetCompilationStatisticsImpl",               CC"()V",                                                                          FN_PTR(resetCompilationStatisticsImpl)},
-  {CC"disassembleCodeBlobImpl",                      CC"(J)"STRING,                                                                    FN_PTR(disassembleCodeBlobImpl)},
+  {CC"installCode",                                  CC"("TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",      FN_PTR(installCode)},
+  {CC"notifyCompilationStatistics",                  CC"(I"HS_RESOLVED_METHOD"ZIJJ"INSTALLED_CODE")V",                                 FN_PTR(notifyCompilationStatistics)},
+  {CC"resetCompilationStatistics",                   CC"()V",                                                                          FN_PTR(resetCompilationStatistics)},
+  {CC"disassembleCodeBlob",                          CC"(J)"STRING,                                                                    FN_PTR(disassembleCodeBlob)},
   {CC"executeInstalledCode",                         CC"(["OBJECT INSTALLED_CODE")"OBJECT,                                             FN_PTR(executeInstalledCode)},
   {CC"getLineNumberTable",                           CC"("HS_RESOLVED_METHOD")[J",                                                     FN_PTR(getLineNumberTable)},
   {CC"getLocalVariableTableStart",                   CC"("HS_RESOLVED_METHOD")J",                                                      FN_PTR(getLocalVariableTableStart)},
   {CC"getLocalVariableTableLength",                  CC"("HS_RESOLVED_METHOD")I",                                                      FN_PTR(getLocalVariableTableLength)},
   {CC"reprofile",                                    CC"("HS_RESOLVED_METHOD")V",                                                      FN_PTR(reprofile)},
-  {CC"invalidateInstalledCodeImpl",                  CC"("INSTALLED_CODE")V",                                                          FN_PTR(invalidateInstalledCodeImpl)},
+  {CC"invalidateInstalledCode",                      CC"("INSTALLED_CODE")V",                                                          FN_PTR(invalidateInstalledCode)},
   {CC"readUncompressedOop",                          CC"(J)"OBJECT,                                                                    FN_PTR(readUncompressedOop)},
-  {CC"collectCountersImpl",                          CC"()[J",                                                                         FN_PTR(collectCountersImpl)},
+  {CC"collectCounters",                              CC"()[J",                                                                         FN_PTR(collectCounters)},
   {CC"allocateCompileId",                            CC"("HS_RESOLVED_METHOD"I)I",                                                     FN_PTR(allocateCompileId)},
   {CC"isMature",                                     CC"("METASPACE_METHOD_DATA")Z",                                                   FN_PTR(isMature)},
   {CC"hasCompiledCodeForOSR",                        CC"("HS_RESOLVED_METHOD"II)Z",                                                    FN_PTR(hasCompiledCodeForOSR)},
   {CC"getSymbol",                                    CC"(J)"STRING,                                                                    FN_PTR(getSymbol)},
-  {CC"getNextStackFrameImpl",                        CC"("HS_STACK_FRAME_REF "["RESOLVED_METHOD"I)"HS_STACK_FRAME_REF,                 FN_PTR(getNextStackFrameImpl)},
+  {CC"getNextStackFrame",                            CC"("HS_STACK_FRAME_REF "["RESOLVED_METHOD"I)"HS_STACK_FRAME_REF,                 FN_PTR(getNextStackFrame)},
   {CC"materializeVirtualObjects",                    CC"("HS_STACK_FRAME_REF"Z)V",                                                     FN_PTR(materializeVirtualObjects)},
-  {CC"shouldDebugNonSafepointsImpl",                 CC"()Z",                                                                          FN_PTR(shouldDebugNonSafepointsImpl)},
-  {CC"writeDebugOutputImpl",                         CC"([BII)V",                                                                      FN_PTR(writeDebugOutputImpl)},
-  {CC"flushDebugOutputImpl",                         CC"()V",                                                                          FN_PTR(flushDebugOutputImpl)},
+  {CC"shouldDebugNonSafepoints",                     CC"()Z",                                                                          FN_PTR(shouldDebugNonSafepoints)},
+  {CC"writeDebugOutput",                             CC"([BII)V",                                                                      FN_PTR(writeDebugOutput)},
+  {CC"flushDebugOutput",                             CC"()V",                                                                          FN_PTR(flushDebugOutput)},
   {CC"methodDataProfileDataSize",                    CC"(JI)I",                                                                        FN_PTR(methodDataProfileDataSize)},
 };
 

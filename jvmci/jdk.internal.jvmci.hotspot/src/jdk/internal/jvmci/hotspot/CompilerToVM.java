@@ -45,7 +45,7 @@ import sun.misc.Unsafe;
  * pointer as an argument (e.g., {@link #getSymbol(long)}) is undefined if the argument does not
  * denote a valid native object.
  */
-public final class CompilerToVM {
+final class CompilerToVM {
     /**
      * Initializes the native part of the JVMCI runtime.
      */
@@ -315,11 +315,7 @@ public final class CompilerToVM {
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesFailed} or
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesInvalid}.
      */
-    int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog) {
-        return installCodeImpl(target, compiledCode, code, speculationLog);
-    }
-
-    private native int installCodeImpl(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog);
+    native int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog);
 
     /**
      * Notifies the VM of statistics for a completed compilation.
@@ -333,21 +329,13 @@ public final class CompilerToVM {
      * @param timeUnitsPerSecond the granularity of the units for the {@code time} value
      * @param installedCode the nmethod installed as a result of the compilation
      */
-    void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethod method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond, InstalledCode installedCode) {
-        notifyCompilationStatisticsImpl(id, (HotSpotResolvedJavaMethodImpl) method, osr, processedBytecodes, time, timeUnitsPerSecond, installedCode);
-    }
-
-    private synchronized native void notifyCompilationStatisticsImpl(int id, HotSpotResolvedJavaMethodImpl method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond,
+    synchronized native void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethodImpl method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond,
                     InstalledCode installedCode);
 
     /**
      * Resets all compilation statistics.
      */
-    void resetCompilationStatistics() {
-        resetCompilationStatisticsImpl();
-    }
-
-    native void resetCompilationStatisticsImpl();
+    native void resetCompilationStatistics();
 
     /**
      * Initializes the fields of {@code config}.
@@ -391,11 +379,7 @@ public final class CompilerToVM {
      * @param address an address that may be called from any code in the code cache
      * @return -1 if {@code address == 0}
      */
-    long getMaxCallTargetOffset(long address) {
-        return getMaxCallTargetOffsetImpl(address);
-    }
-
-    private native long getMaxCallTargetOffsetImpl(long address);
+    native long getMaxCallTargetOffset(long address);
 
     /**
      * Gets a textual disassembly of {@code codeBlob}.
@@ -403,12 +387,8 @@ public final class CompilerToVM {
      * @return a non-zero length string containing a disassembly of {@code codeBlob} or null if
      *         {@code codeBlob} could not be disassembled for some reason
      */
-    String disassembleCodeBlob(long codeBlob) {
-        return disassembleCodeBlobImpl(codeBlob);
-    }
-
     // The HotSpot disassembler seems not to be thread safe so it's better to synchronize its usage
-    private synchronized native String disassembleCodeBlobImpl(long codeBlob);
+    synchronized native String disassembleCodeBlob(long codeBlob);
 
     /**
      * Gets a stack trace element for {@code method} at bytecode index {@code bci}.
@@ -486,20 +466,12 @@ public final class CompilerToVM {
      * Invalidates {@code installedCode} such that {@link InvalidInstalledCodeException} will be
      * raised the next time {@code installedCode} is executed.
      */
-    void invalidateInstalledCode(InstalledCode installedCode) {
-        invalidateInstalledCodeImpl(installedCode);
-    }
-
-    private native void invalidateInstalledCodeImpl(InstalledCode installedCode);
+    native void invalidateInstalledCode(InstalledCode installedCode);
 
     /**
      * Collects the current values of all JVMCI benchmark counters, summed up over all threads.
      */
-    long[] collectCounters() {
-        return collectCountersImpl();
-    }
-
-    private native long[] collectCountersImpl();
+    native long[] collectCounters();
 
     /**
      * Determines if {@code metaspaceMethodData} is mature.
@@ -529,11 +501,7 @@ public final class CompilerToVM {
      * @param methods the methods to look for, where {@code null} means that any frame is returned
      * @return the frame, or {@code null} if the end of the stack was reached during the search
      */
-    HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, ResolvedJavaMethod[] methods, int initialSkip) {
-        return getNextStackFrameImpl(frame, methods, initialSkip);
-    }
-
-    private native HotSpotStackFrameReference getNextStackFrameImpl(HotSpotStackFrameReference frame, ResolvedJavaMethod[] methods, int initialSkip);
+    native HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, ResolvedJavaMethod[] methods, int initialSkip);
 
     /**
      * Materializes all virtual objects within {@code stackFrame} updates its locals.
@@ -556,30 +524,20 @@ public final class CompilerToVM {
     /**
      * Determines if debug info should also be emitted at non-safepoint locations.
      */
-    boolean shouldDebugNonSafepoints() {
-        return shouldDebugNonSafepointsImpl();
-    }
 
-    private native boolean shouldDebugNonSafepointsImpl();
+    native boolean shouldDebugNonSafepoints();
 
     /**
      * Writes {@code length} bytes from {@code buf} starting at offset {@code offset} to the
      * HotSpot's log stream. No range checking is performed.
      */
-    void writeDebugOutput(byte[] bytes, int offset, int length) {
-        writeDebugOutputImpl(bytes, offset, length);
-    }
-
-    private native void writeDebugOutputImpl(byte[] bytes, int offset, int length);
+    native void writeDebugOutput(byte[] bytes, int offset, int length);
 
     /**
      * Flush HotSpot's log stream.
      */
-    void flushDebugOutput() {
-        flushDebugOutputImpl();
-    }
 
-    private native void flushDebugOutputImpl();
+    native void flushDebugOutput();
 
     /**
      * Read a value representing a metaspace Method* and return the

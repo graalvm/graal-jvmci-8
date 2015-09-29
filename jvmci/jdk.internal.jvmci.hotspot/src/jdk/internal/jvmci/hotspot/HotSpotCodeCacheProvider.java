@@ -282,7 +282,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
      * @param installedCode the nmethod installed as a result of the compilation
      */
     public void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethod method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond, InstalledCode installedCode) {
-        runtime.getCompilerToVM().notifyCompilationStatistics(id, method, osr, processedBytecodes, time, timeUnitsPerSecond, installedCode);
+        runtime.getCompilerToVM().notifyCompilationStatistics(id, (HotSpotResolvedJavaMethodImpl) method, osr, processedBytecodes, time, timeUnitsPerSecond, installedCode);
     }
 
     /**
