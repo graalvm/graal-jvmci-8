@@ -34,7 +34,11 @@
 #include "libproc_md.h"
 #endif
 
+#if defined(sparcv9) && defined(linux)
+#include <asm/ptrace.h>
+#else
 #include <sys/ptrace.h>
+#endif
 
 /************************************************************************************
 

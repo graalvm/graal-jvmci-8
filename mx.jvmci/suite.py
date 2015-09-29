@@ -330,6 +330,9 @@ suite = {
         "linux" : {
           "amd64" : {
             "path" : "build/<vmbuild>/linux/amd64/<vm>/jvm.tar",
+          },
+          "sparcv9" : {
+            "path" : "build/<vmbuild>/linux/sparcv9/<vm>/jvm.tar",
           }
         },
         "darwin" : {
