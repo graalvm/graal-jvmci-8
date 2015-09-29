@@ -566,7 +566,7 @@ public final class CompilerToVM {
      * Writes {@code length} bytes from {@code buf} starting at offset {@code offset} to the
      * HotSpot's log stream. No range checking is performed.
      */
-    public void writeDebugOutput(byte[] bytes, int offset, int length) {
+    void writeDebugOutput(byte[] bytes, int offset, int length) {
         writeDebugOutputImpl(bytes, offset, length);
     }
 
@@ -575,7 +575,7 @@ public final class CompilerToVM {
     /**
      * Flush HotSpot's log stream.
      */
-    public void flushDebugOutput() {
+    void flushDebugOutput() {
         flushDebugOutputImpl();
     }
 

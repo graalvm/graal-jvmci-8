@@ -22,6 +22,8 @@
  */
 package jdk.internal.jvmci.hotspot;
 
+import java.io.OutputStream;
+
 import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.compiler.Compiler;
 import jdk.internal.jvmci.meta.JVMCIMetaAccessContext;
@@ -43,6 +45,11 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
     CompilerToVM getCompilerToVM();
 
     Compiler getCompiler();
+
+    /**
+     * Gets an output stream that writes to the HotSpot's {@code tty} stream.
+     */
+    OutputStream getLogStream();
 
     /**
      * Converts a name to a Java type. This method attempts to resolve {@code name} to a

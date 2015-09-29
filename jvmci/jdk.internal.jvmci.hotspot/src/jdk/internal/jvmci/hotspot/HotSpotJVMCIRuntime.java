@@ -24,6 +24,8 @@ package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.inittimer.InitTimer.timer;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -337,5 +339,32 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             return str.toString();
         }
         return value.toString();
+    }
+
+    public OutputStream getLogStream() {
+        return new OutputStream() {
+
+            @Override
+            public void write(byte[] b, int off, int len) throws IOException {
+                if (b == null) {
+                    throw new NullPointerException();
+                } else if (off < 0 || off > b.length || len < 0 || (off + len) > b.length || (off + len) < 0) {
+                    throw new IndexOutOfBoundsException();
+                } else if (len == 0) {
+                    return;
+                }
+                compilerToVm.writeDebugOutput(b, off, len);
+            }
+
+            @Override
+            public void write(int b) throws IOException {
+                write(new byte[]{(byte) b}, 0, 1);
+            }
+
+            @Override
+            public void flush() throws IOException {
+                compilerToVm.flushDebugOutput();
+            }
+        };
     }
 }
