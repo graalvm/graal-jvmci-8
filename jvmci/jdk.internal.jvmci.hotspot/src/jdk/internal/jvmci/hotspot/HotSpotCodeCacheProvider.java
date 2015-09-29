@@ -268,4 +268,27 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
     public boolean shouldDebugNonSafepoints() {
         return runtime.getCompilerToVM().shouldDebugNonSafepoints();
     }
+
+    /**
+     * Notifies the VM of statistics for a completed compilation.
+     *
+     * @param id the identifier of the compilation
+     * @param method the method compiled
+     * @param osr specifies if the compilation was for on-stack-replacement
+     * @param processedBytecodes the number of bytecodes processed during the compilation, including
+     *            the bytecodes of all inlined methods
+     * @param time the amount time spent compiling {@code method}
+     * @param timeUnitsPerSecond the granularity of the units for the {@code time} value
+     * @param installedCode the nmethod installed as a result of the compilation
+     */
+    public void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethod method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond, InstalledCode installedCode) {
+        runtime.getCompilerToVM().notifyCompilationStatistics(id, method, osr, processedBytecodes, time, timeUnitsPerSecond, installedCode);
+    }
+
+    /**
+     * Resets all compilation statistics.
+     */
+    public void resetCompilationStatistics() {
+        runtime.getCompilerToVM().resetCompilationStatistics();
+    }
 }

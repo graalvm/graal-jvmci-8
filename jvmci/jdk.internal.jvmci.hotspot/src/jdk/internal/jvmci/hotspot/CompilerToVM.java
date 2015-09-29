@@ -333,7 +333,7 @@ public final class CompilerToVM {
      * @param timeUnitsPerSecond the granularity of the units for the {@code time} value
      * @param installedCode the nmethod installed as a result of the compilation
      */
-    public void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethod method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond, InstalledCode installedCode) {
+    void notifyCompilationStatistics(int id, HotSpotResolvedJavaMethod method, boolean osr, int processedBytecodes, long time, long timeUnitsPerSecond, InstalledCode installedCode) {
         notifyCompilationStatisticsImpl(id, (HotSpotResolvedJavaMethodImpl) method, osr, processedBytecodes, time, timeUnitsPerSecond, installedCode);
     }
 
@@ -343,7 +343,7 @@ public final class CompilerToVM {
     /**
      * Resets all compilation statistics.
      */
-    public void resetCompilationStatistics() {
+    void resetCompilationStatistics() {
         resetCompilationStatisticsImpl();
     }
 
