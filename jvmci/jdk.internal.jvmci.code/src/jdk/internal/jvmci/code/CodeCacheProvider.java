@@ -88,6 +88,13 @@ public interface CodeCacheProvider {
     InstalledCode installCode(CompilationRequest compRequest, CompilationResult compResult, InstalledCode installedCode, SpeculationLog log, boolean isDefault);
 
     /**
+     * Invalidates {@code installedCode} such that {@link InvalidInstalledCodeException} will be
+     * raised the next time {@code installedCode} is
+     * {@linkplain InstalledCode#executeVarargs(Object...) executed}.
+     */
+    void invalidateInstalledCode(InstalledCode installedCode);
+
+    /**
      * Gets a name for a {@link Mark} mark.
      */
     default String getMarkName(Mark mark) {

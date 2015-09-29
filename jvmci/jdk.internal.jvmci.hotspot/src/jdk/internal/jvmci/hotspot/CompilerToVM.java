@@ -486,7 +486,7 @@ public final class CompilerToVM {
      * Invalidates {@code installedCode} such that {@link InvalidInstalledCodeException} will be
      * raised the next time {@code installedCode} is executed.
      */
-    public void invalidateInstalledCode(InstalledCode installedCode) {
+    void invalidateInstalledCode(InstalledCode installedCode) {
         invalidateInstalledCodeImpl(installedCode);
     }
 

@@ -169,6 +169,10 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         return logOrDump(resultInstalledCode, compResult);
     }
 
+    public void invalidateInstalledCode(InstalledCode installedCode) {
+        runtime.getCompilerToVM().invalidateInstalledCode(installedCode);
+    }
+
     public boolean needsDataPatch(JavaConstant constant) {
         return constant instanceof HotSpotMetaspaceConstant;
     }
