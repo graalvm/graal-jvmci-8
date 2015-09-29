@@ -921,6 +921,10 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             setMakeVar('HOTSPOT_BUILD_JOBS', str(cpus), env=env)
             setMakeVar('ALT_BOOTDIR', get_jvmci_bootstrap_jdk().home, env=env)
             # setMakeVar("EXPORT_PATH", jdk)
+            if mx.get_os() == 'linux' and platform.processor() == 'sparc64':
+                # SPARC/Linux
+                setMakeVar("DEBUG_BINARIES", "true", env=env)
+                setMakeVar("EXTRA_CFLAGS", "-Wno-conversion-null -Wno-int-to-pointer-cast -Wno-unused-function", env=env)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
             if self.vm.endswith('nojvmci'):
