@@ -495,7 +495,7 @@ public final class CompilerToVM {
     /**
      * Collects the current values of all JVMCI benchmark counters, summed up over all threads.
      */
-    public long[] collectCounters() {
+    long[] collectCounters() {
         return collectCountersImpl();
     }
 

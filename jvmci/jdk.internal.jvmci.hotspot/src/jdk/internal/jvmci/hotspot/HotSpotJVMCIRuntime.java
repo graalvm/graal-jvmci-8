@@ -367,4 +367,11 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             }
         };
     }
+
+    /**
+     * Collects the current values of all JVMCI benchmark counters, summed up over all threads.
+     */
+    public long[] collectCounters() {
+        return compilerToVm.collectCounters();
+    }
 }
