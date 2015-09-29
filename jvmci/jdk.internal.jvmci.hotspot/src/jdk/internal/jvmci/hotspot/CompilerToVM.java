@@ -556,7 +556,7 @@ public final class CompilerToVM {
     /**
      * Determines if debug info should also be emitted at non-safepoint locations.
      */
-    public boolean shouldDebugNonSafepoints() {
+    boolean shouldDebugNonSafepoints() {
         return shouldDebugNonSafepointsImpl();
     }
 

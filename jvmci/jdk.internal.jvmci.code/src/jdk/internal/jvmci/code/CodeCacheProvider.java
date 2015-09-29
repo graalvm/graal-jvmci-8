@@ -150,4 +150,9 @@ public interface CodeCacheProvider {
      * size of address/offset fields.
      */
     long getMaxCallTargetOffset(long address);
+
+    /**
+     * Determines if debug info should also be emitted at non-safepoint locations.
+     */
+    boolean shouldDebugNonSafepoints();
 }

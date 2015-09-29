@@ -264,4 +264,8 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
     public long getMaxCallTargetOffset(long address) {
         return runtime.getCompilerToVM().getMaxCallTargetOffset(address);
     }
+
+    public boolean shouldDebugNonSafepoints() {
+        return runtime.getCompilerToVM().shouldDebugNonSafepoints();
+    }
 }
