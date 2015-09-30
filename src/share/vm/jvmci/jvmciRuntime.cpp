@@ -55,7 +55,7 @@ char** JVMCIRuntime::_trivial_prefixes = NULL;
 bool JVMCIRuntime::_shutdown_called = false;
 
 static const char* OPTION_PREFIX = "jvmci.option.";
-static const int OPTION_PREFIX_LEN = strlen(OPTION_PREFIX);
+static const int OPTION_PREFIX_LEN = (int)strlen(OPTION_PREFIX);
 
 void JVMCIRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
 #ifdef _LP64
