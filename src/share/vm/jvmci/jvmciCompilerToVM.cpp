@@ -943,13 +943,13 @@ C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject 
           if (initialSkip > 0) {
             initialSkip --;
           } else {
-            GrowableArray<ScopeValue*>* objects = cvf->scope()->objects();
-            bool realloc_failures = false;
-            if (objects != NULL) {
-              realloc_failures = Deoptimization::realloc_objects(thread, fst.current(), objects, THREAD);
-              Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, realloc_failures, false);
+            ScopeDesc* scope = cvf->scope();
+            // native wrapper do not have a scope
+            if (scope != NULL && scope->objects() != NULL) {
+              bool realloc_failures = Deoptimization::realloc_objects(thread, fst.current(), scope->objects(), THREAD);
+              Deoptimization::reassign_fields(fst.current(), fst.register_map(), scope->objects(), realloc_failures, false);
 
-              GrowableArray<ScopeValue*>* local_values = cvf->scope()->locals();
+              GrowableArray<ScopeValue*>* local_values = scope->locals();
               typeArrayHandle array = oopFactory::new_boolArray(local_values->length(), thread);
               for (int i = 0; i < local_values->length(); i++) {
                 ScopeValue* value = local_values->at(i);
