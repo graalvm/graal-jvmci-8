@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -72,7 +72,9 @@
   declare_constant(VM_Version::CPU_ERMS)                            \
   declare_constant(VM_Version::CPU_CLMUL)                           \
   declare_constant(VM_Version::CPU_BMI1)                            \
-  declare_constant(VM_Version::CPU_BMI2)
+  declare_constant(VM_Version::CPU_BMI2)                            \
+  declare_constant(VM_Version::CPU_RTM)                             \
+  declare_constant(VM_Version::CPU_ADX)
 
 #define VM_LONG_CONSTANTS_CPU(declare_constant, declare_preprocessor_constant, declare_c1_constant, declare_c2_constant, declare_c2_preprocessor_constant)
 

@@ -49,6 +49,9 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
     protected EnumSet<AMD64.CPUFeature> computeFeatures(HotSpotVMConfig config) {
         // Configure the feature set using the HotSpot flag settings.
         EnumSet<AMD64.CPUFeature> features = EnumSet.noneOf(AMD64.CPUFeature.class);
+        if ((config.x86CPUFeatures & config.cpu3DNOWPREFETCH) != 0) {
+            features.add(AMD64.CPUFeature.AMD_3DNOW_PREFETCH);
+        }
         assert config.useSSE >= 2 : "minimum config for x64";
         features.add(AMD64.CPUFeature.SSE);
         features.add(AMD64.CPUFeature.SSE2);
@@ -59,7 +62,7 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
             features.add(AMD64.CPUFeature.SSSE3);
         }
         if ((config.x86CPUFeatures & config.cpuSSE4A) != 0) {
-            features.add(AMD64.CPUFeature.SSE4a);
+            features.add(AMD64.CPUFeature.SSE4A);
         }
         if ((config.x86CPUFeatures & config.cpuSSE41) != 0) {
             features.add(AMD64.CPUFeature.SSE4_1);
@@ -67,26 +70,23 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         if ((config.x86CPUFeatures & config.cpuSSE42) != 0) {
             features.add(AMD64.CPUFeature.SSE4_2);
         }
+        if ((config.x86CPUFeatures & config.cpuPOPCNT) != 0) {
+            features.add(AMD64.CPUFeature.POPCNT);
+        }
+        if ((config.x86CPUFeatures & config.cpuLZCNT) != 0) {
+            features.add(AMD64.CPUFeature.LZCNT);
+        }
         if ((config.x86CPUFeatures & config.cpuAVX) != 0) {
             features.add(AMD64.CPUFeature.AVX);
         }
         if ((config.x86CPUFeatures & config.cpuAVX2) != 0) {
             features.add(AMD64.CPUFeature.AVX2);
         }
-        if ((config.x86CPUFeatures & config.cpuERMS) != 0) {
-            features.add(AMD64.CPUFeature.ERMS);
-        }
-        if ((config.x86CPUFeatures & config.cpuLZCNT) != 0) {
-            features.add(AMD64.CPUFeature.LZCNT);
-        }
-        if ((config.x86CPUFeatures & config.cpuPOPCNT) != 0) {
-            features.add(AMD64.CPUFeature.POPCNT);
-        }
         if ((config.x86CPUFeatures & config.cpuAES) != 0) {
             features.add(AMD64.CPUFeature.AES);
         }
-        if ((config.x86CPUFeatures & config.cpu3DNOWPREFETCH) != 0) {
-            features.add(AMD64.CPUFeature.AMD_3DNOW_PREFETCH);
+        if ((config.x86CPUFeatures & config.cpuERMS) != 0) {
+            features.add(AMD64.CPUFeature.ERMS);
         }
         if ((config.x86CPUFeatures & config.cpuBMI1) != 0) {
             features.add(AMD64.CPUFeature.BMI1);

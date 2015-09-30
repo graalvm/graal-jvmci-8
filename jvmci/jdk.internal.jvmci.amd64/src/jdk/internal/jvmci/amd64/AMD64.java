@@ -119,24 +119,42 @@ public class AMD64 extends Architecture {
     // @formatter:on
 
     /**
-     * Basic set of CPU features mirroring what is returned from the cpuid instruction.
+     * Basic set of CPU features mirroring what is returned from the cpuid instruction. See:
+     * {@code VM_Version::cpuFeatureFlags}.
      */
     public static enum CPUFeature {
+        CX8,
+        CMOV,
+        FXSR,
+        HT,
+        MMX,
+        AMD_3DNOW_PREFETCH,
         SSE,
         SSE2,
         SSE3,
-        SSE4a,
+        SSSE3,
+        SSE4A,
         SSE4_1,
         SSE4_2,
-        SSSE3,
         POPCNT,
         LZCNT,
+        TSC,
+        TSCINV,
         AVX,
         AVX2,
-        ERMS,
-        AMD_3DNOW_PREFETCH,
         AES,
-        BMI1
+        ERMS,
+        CLMUL,
+        BMI1,
+        BMI2,
+        RTM,
+        ADX,
+        AVX512F,
+        AVX512DQ,
+        AVX512PF,
+        AVX512ER,
+        AVX512CD,
+        AVX512BW
     }
 
     private final EnumSet<CPUFeature> features;
