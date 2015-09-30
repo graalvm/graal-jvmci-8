@@ -123,11 +123,11 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
 
         int idx = 0;
         for (Register reg : allRegisters) {
-            if (reg.equals(rsp) || reg.equals(r12)) {
+            if (reg.equals(rsp) || reg.equals(r15)) {
                 // skip stack pointer and thread register
                 continue;
             }
-            if (reserveForHeapBase && reg.equals(r15)) {
+            if (reserveForHeapBase && reg.equals(r12)) {
                 // skip heap base register
                 continue;
             }
