@@ -542,10 +542,12 @@ final class CompilerToVM {
     /**
      * Read a value representing a metaspace Method* and return the
      * {@link HotSpotResolvedJavaMethodImpl} wrapping it. This method does no checking that the
-     * location actually contains a valid Method*. If the {@code base} object is a
-     * {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
+     * location actually contains a valid Method* and may crash the VM if an invalid location is
+     * provided. If the {@code base} is null then {@code displacement} is used by itself. If
+     * {@code base} is a {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
      * {@link HotSpotResolvedObjectTypeImpl} then the metaspace pointer is fetched from that object
-     * and used as the base. Otherwise the object itself is used as the base.
+     * and added to {@code displacement}. Any other non-null object type causes an
+     * {@link IllegalArgumentException} to be thrown.
      *
      * @param base an object to read from or null
      * @param displacement
@@ -556,10 +558,12 @@ final class CompilerToVM {
     /**
      * Read a value representing a metaspace ConstantPool* and return the
      * {@link HotSpotConstantPool} wrapping it. This method does no checking that the location
-     * actually contains a valid ConstantPool*. If the {@code base} object is a
+     * actually contains a valid Method* and may crash the VM if an invalid location is provided. If
+     * the {@code base} is null then {@code displacement} is used by itself. If {@code base} is a
      * {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
      * {@link HotSpotResolvedObjectTypeImpl} then the metaspace pointer is fetched from that object
-     * and used as the base. Otherwise the object itself is used as the base.
+     * and added to {@code displacement}. Any other non-null object type causes an
+     * {@link IllegalArgumentException} to be thrown.
      *
      * @param base an object to read from or null
      * @param displacement
@@ -569,11 +573,13 @@ final class CompilerToVM {
 
     /**
      * Read a value representing a metaspace Klass* and return the
-     * {@link HotSpotResolvedObjectTypeImpl} wrapping it. The method does no checking that the
-     * location actually contains a valid Klass*. If the {@code base} object is a
-     * {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
+     * {@link HotSpotResolvedObjectTypeImpl} wrapping it. This method does no checking that the
+     * location actually contains a valid Method* and may crash the VM if an invalid location is
+     * provided. If the {@code base} is null then {@code displacement} is used by itself. If
+     * {@code base} is a {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
      * {@link HotSpotResolvedObjectTypeImpl} then the metaspace pointer is fetched from that object
-     * and used as the base. Otherwise the object itself is used as the base.
+     * and added to {@code displacement}. Any other non-null object type causes an
+     * {@link IllegalArgumentException} to be thrown.
      *
      * @param base an object to read from or null
      * @param displacement
