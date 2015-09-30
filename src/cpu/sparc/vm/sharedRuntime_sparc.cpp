@@ -993,14 +993,14 @@ void AdapterGenerator::gen_i2c_adapter(int total_args_passed,
   __ ld_ptr(G5_method, in_bytes(Method::from_compiled_offset()), G3);
 #if INCLUDE_JVMCI
   // check if this call should be routed towards a specific entry point
-  __ ld(Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())), G1);
+  __ ld_ptr(Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())), G1);
   __ cmp(G0, G1);
   Label no_alternative_target;
   __ br(Assembler::equal, false, Assembler::pn, no_alternative_target);
   __ delayed()->nop();
 
   __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset()), G3);
-  __ st(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())));
+  __ st_ptr(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())));
 
   __ bind(no_alternative_target);
 #endif
