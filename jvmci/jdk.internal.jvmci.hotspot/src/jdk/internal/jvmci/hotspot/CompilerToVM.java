@@ -388,7 +388,7 @@ final class CompilerToVM {
      *         {@code codeBlob} could not be disassembled for some reason
      */
     // The HotSpot disassembler seems not to be thread safe so it's better to synchronize its usage
-    synchronized native String disassembleCodeBlob(long codeBlob);
+    synchronized native String disassembleCodeBlob(InstalledCode installedCode);
 
     /**
      * Gets a stack trace element for {@code method} at bytecode index {@code bci}.

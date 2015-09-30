@@ -62,6 +62,7 @@ void jvmci_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(InstalledCode)                                                                                                                                   \
     long_field(InstalledCode, address)                                                                                                                         \
+    long_field(InstalledCode, entryPoint)                                                                                                                      \
     long_field(InstalledCode, version)                                                                                                                         \
     oop_field(InstalledCode, name, "Ljava/lang/String;")                                                                                                       \
   end_class                                                                                                                                                    \

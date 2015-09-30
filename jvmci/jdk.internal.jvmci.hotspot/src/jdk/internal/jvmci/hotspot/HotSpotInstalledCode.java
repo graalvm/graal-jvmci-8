@@ -58,18 +58,6 @@ public abstract class HotSpotInstalledCode extends InstalledCode {
         return size;
     }
 
-    /**
-     * @return a copy of this code blob if it is {@linkplain #isValid() valid}, null otherwise.
-     */
-    public byte[] getBlob() {
-        if (!isValid()) {
-            return null;
-        }
-        byte[] blob = new byte[size];
-        UNSAFE.copyMemory(null, getAddress(), blob, Unsafe.ARRAY_BYTE_BASE_OFFSET, size);
-        return blob;
-    }
-
     @Override
     public abstract String toString();
 
@@ -78,7 +66,6 @@ public abstract class HotSpotInstalledCode extends InstalledCode {
         return codeStart;
     }
 
-    @Override
     public long getCodeSize() {
         return codeSize;
     }

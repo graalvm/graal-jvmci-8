@@ -92,6 +92,8 @@ public:
   static oop get_jvmci_method(methodHandle method, TRAPS);
 
   static oop get_jvmci_type(KlassHandle klass, TRAPS);
+
+  static void invalidate_installed_code(Handle installedCode);
 };
 
 class JavaArgumentUnboxer : public SignatureIterator {

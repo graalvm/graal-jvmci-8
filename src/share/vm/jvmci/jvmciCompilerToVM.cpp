@@ -78,6 +78,20 @@ oop CompilerToVM::get_jvmci_type(KlassHandle klass, TRAPS) {
   return NULL;
 }
 
+void CompilerToVM::invalidate_installed_code(Handle installedCode) {
+  jlong nativeMethod = InstalledCode::address(installedCode);
+  nmethod* nm = (nmethod*)nativeMethod;
+  if (nm != NULL && nm->is_alive()) {
+    // The nmethod state machinery maintains the link between the
+    // HotSpotInstalledCode and nmethod* so as long as the nmethod appears to be
+    // alive assume there is work to do and deoptimize the nmethod.
+    nm->mark_for_deoptimization();
+    VM_Deoptimize op;
+    VMThread::execute(&op);
+  }
+  InstalledCode::set_address(installedCode, 0);
+}
+
 C2V_VMENTRY(void, initializeConfiguration, (JNIEnv *, jobject, jobject config))
   VMStructs::initHotSpotVMConfig(JNIHandles::resolve(config));
 C2V_END
@@ -608,8 +622,13 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
   } else {
     if (!installed_code_handle.is_null()) {
       assert(installed_code_handle->is_a(InstalledCode::klass()), "wrong type");
+      CompilerToVM::invalidate_installed_code(installed_code_handle);
       InstalledCode::set_address(installed_code_handle, (jlong) cb);
-      InstalledCode::set_version(installed_code_handle, InstalledCode::version(installed_code_handle) + 1);
+      if (cb->is_nmethod()) {
+        InstalledCode::set_entryPoint(installed_code_handle, (jlong) cb->as_nmethod_or_null()->verified_entry_point());
+      } else {
+        InstalledCode::set_entryPoint(installed_code_handle, (jlong) cb->code_begin());
+      }
       if (installed_code_handle->is_a(HotSpotInstalledCode::klass())) {
         HotSpotInstalledCode::set_size(installed_code_handle, cb->size());
         HotSpotInstalledCode::set_codeStart(installed_code_handle, (jlong) cb->code_begin());
@@ -656,9 +675,18 @@ C2V_VMENTRY(void, resetCompilationStatistics, (JNIEnv *jniEnv, jobject))
   stats->_osr.reset();
 C2V_END
 
-C2V_VMENTRY(jobject, disassembleCodeBlob, (JNIEnv *jniEnv, jobject, jlong codeBlob))
+C2V_VMENTRY(jobject, disassembleCodeBlob, (JNIEnv *jniEnv, jobject, jobject installedCode))
   ResourceMark rm;
   HandleMark hm;
+
+  if (installedCode == NULL) {
+    THROW_MSG_NULL(vmSymbols::java_lang_NullPointerException(), "installedCode is null");
+  }
+
+  jlong codeBlob = InstalledCode::address(installedCode);
+  if (codeBlob == 0L) {
+    return NULL;
+  }
 
   CodeBlob* cb = (CodeBlob*) (address) codeBlob;
   if (cb == NULL) {
@@ -810,15 +838,9 @@ C2V_VMENTRY(void, reprofile, (JNIEnv*, jobject, jobject jvmci_method))
 C2V_END
 
 
-C2V_VMENTRY(void, invalidateInstalledCode, (JNIEnv*, jobject, jobject hotspotInstalledCode))
-  jlong nativeMethod = InstalledCode::address(hotspotInstalledCode);
-  nmethod* m = (nmethod*)nativeMethod;
-  if (m != NULL && !m->is_not_entrant()) {
-    m->mark_for_deoptimization();
-    VM_Deoptimize op;
-    VMThread::execute(&op);
-  }
-  InstalledCode::set_address(hotspotInstalledCode, 0);
+C2V_VMENTRY(void, invalidateInstalledCode, (JNIEnv*, jobject, jobject installed_code))
+  Handle installed_code_handle = JNIHandles::resolve(installed_code);
+  CompilerToVM::invalidate_installed_code(installed_code_handle);
 C2V_END
 
 C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv*, jobject, jlong addr))
@@ -1225,7 +1247,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"installCode",                                  CC"("TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",      FN_PTR(installCode)},
   {CC"notifyCompilationStatistics",                  CC"(I"HS_RESOLVED_METHOD"ZIJJ"INSTALLED_CODE")V",                                 FN_PTR(notifyCompilationStatistics)},
   {CC"resetCompilationStatistics",                   CC"()V",                                                                          FN_PTR(resetCompilationStatistics)},
-  {CC"disassembleCodeBlob",                          CC"(J)"STRING,                                                                    FN_PTR(disassembleCodeBlob)},
+  {CC"disassembleCodeBlob",                          CC"("INSTALLED_CODE")"STRING,                                                     FN_PTR(disassembleCodeBlob)},
   {CC"executeInstalledCode",                         CC"(["OBJECT INSTALLED_CODE")"OBJECT,                                             FN_PTR(executeInstalledCode)},
   {CC"getLineNumberTable",                           CC"("HS_RESOLVED_METHOD")[J",                                                     FN_PTR(getLineNumberTable)},
   {CC"getLocalVariableTableStart",                   CC"("HS_RESOLVED_METHOD")J",                                                      FN_PTR(getLocalVariableTableStart)},
