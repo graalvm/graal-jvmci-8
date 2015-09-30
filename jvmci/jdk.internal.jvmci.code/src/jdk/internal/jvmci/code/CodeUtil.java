@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2010, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2010, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -343,8 +343,9 @@ public class CodeUtil {
 
         public DefaultRegFormatter(Architecture arch) {
             registers = new Register[arch.getRegisterReferenceMapSize()];
-            for (Register r : arch.getRegisters()) {
+            for (Register r : arch.getAvailableValueRegisters()) {
                 if (r.getReferenceMapIndex() >= 0) {
+                    assert registers[r.getReferenceMapIndex()] == null : "overlapping registers " + r + " and " + registers[r.getReferenceMapIndex()] + " in reference map";
                     registers[r.getReferenceMapIndex()] = r;
                 }
             }

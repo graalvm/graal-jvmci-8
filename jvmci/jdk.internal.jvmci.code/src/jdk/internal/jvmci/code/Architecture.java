@@ -132,11 +132,21 @@ public abstract class Architecture {
     }
 
     /**
-     * Gets an array of all available registers on this architecture. The index of each register in
-     * this array is equal to its {@linkplain Register#number number}.
+     * Gets an array of all registers that exist on this architecture. This contains all registers
+     * that exist in the specification of this architecture. Not all of them may be available on
+     * this particular architecture instance. The index of each register in this array is equal to
+     * its {@linkplain Register#number number}.
      */
     public Register[] getRegisters() {
         return registers.clone();
+    }
+
+    /**
+     * Gets an array of all registers available for storing values on this architecture. This may be
+     * a subset of {@link #getRegisters()}, depending on the capabilities of this particular CPU.
+     */
+    public Register[] getAvailableValueRegisters() {
+        return getRegisters();
     }
 
     public ByteOrder getByteOrder() {

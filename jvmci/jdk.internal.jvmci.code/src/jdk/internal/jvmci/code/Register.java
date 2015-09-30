@@ -89,6 +89,10 @@ public final class Register implements Comparable<Register> {
             this(name, 0, 0);
         }
 
+        public RegisterCategory(String name, boolean mayContainReference) {
+            this(name, mayContainReference ? 0 : Integer.MIN_VALUE, 0);
+        }
+
         public RegisterCategory(String name, int referenceMapOffset) {
             this(name, referenceMapOffset, 0);
         }

@@ -53,7 +53,20 @@ public enum AMD64Kind implements PlatformKind {
     V256_DWORD(32, DWORD),
     V256_QWORD(32, QWORD),
     V256_SINGLE(32, SINGLE),
-    V256_DOUBLE(32, DOUBLE);
+    V256_DOUBLE(32, DOUBLE),
+
+    // AVX512
+    V512_BYTE(64, BYTE),
+    V512_WORD(64, WORD),
+    V512_DWORD(64, DWORD),
+    V512_QWORD(64, QWORD),
+    V512_SINGLE(64, SINGLE),
+    V512_DOUBLE(64, DOUBLE),
+
+    MASK8(1),
+    MASK16(2),
+    MASK32(4),
+    MASK64(8);
 
     private final int size;
     private final int vectorLength;
@@ -104,7 +117,48 @@ public enum AMD64Kind implements PlatformKind {
     }
 
     public boolean isXMM() {
-        return !isInteger();
+        switch (this) {
+            case SINGLE:
+            case DOUBLE:
+            case V32_BYTE:
+            case V32_WORD:
+            case V64_BYTE:
+            case V64_WORD:
+            case V64_DWORD:
+            case V128_BYTE:
+            case V128_WORD:
+            case V128_DWORD:
+            case V128_QWORD:
+            case V128_SINGLE:
+            case V128_DOUBLE:
+            case V256_BYTE:
+            case V256_WORD:
+            case V256_DWORD:
+            case V256_QWORD:
+            case V256_SINGLE:
+            case V256_DOUBLE:
+            case V512_BYTE:
+            case V512_WORD:
+            case V512_DWORD:
+            case V512_QWORD:
+            case V512_SINGLE:
+            case V512_DOUBLE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    public boolean isMask() {
+        switch (this) {
+            case MASK8:
+            case MASK16:
+            case MASK32:
+            case MASK64:
+                return true;
+            default:
+                return false;
+        }
     }
 
     public char getTypeChar() {
@@ -141,6 +195,18 @@ public enum AMD64Kind implements PlatformKind {
             case V256_SINGLE:
             case V256_DOUBLE:
                 return 'y';
+            case V512_BYTE:
+            case V512_WORD:
+            case V512_DWORD:
+            case V512_QWORD:
+            case V512_SINGLE:
+            case V512_DOUBLE:
+                return 'z';
+            case MASK8:
+            case MASK16:
+            case MASK32:
+            case MASK64:
+                return 'k';
             default:
                 return '-';
         }
