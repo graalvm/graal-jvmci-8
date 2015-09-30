@@ -835,7 +835,13 @@ C2V_END
 C2V_VMENTRY(int, allocateCompileId, (JNIEnv*, jobject, jobject jvmci_method, int entry_bci))
   HandleMark hm;
   ResourceMark rm;
+  if (JNIHandles::resolve(jvmci_method) == NULL) {
+    THROW_0(vmSymbols::java_lang_NullPointerException());
+  }
   Method* method = CompilerToVM::asMethod(jvmci_method);
+  if (entry_bci >= method->code_size() || entry_bci < -1) {
+    THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(), err_msg("Unexpected bci %d", entry_bci));
+  }
   return CompileBroker::assign_compile_id_unlocked(THREAD, method, entry_bci);
 C2V_END
 
