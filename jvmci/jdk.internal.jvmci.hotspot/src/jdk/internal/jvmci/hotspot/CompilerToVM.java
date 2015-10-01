@@ -540,11 +540,12 @@ final class CompilerToVM {
     native void flushDebugOutput();
 
     /**
-     * Read a value representing a metaspace Method* and return the
-     * {@link HotSpotResolvedJavaMethodImpl} wrapping it. This method does no checking that the
-     * location actually contains a valid Method* and may crash the VM if an invalid location is
-     * provided. If the {@code base} is null then {@code displacement} is used by itself. If
-     * {@code base} is a {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
+     * Read a HotSpot Method* value from the memory location described by {@code base} plus
+     * {@code displacement} and return the {@link HotSpotResolvedJavaMethodImpl} wrapping it. This
+     * method does no checking that the memory location actually contains a valid pointer and may
+     * crash the VM if an invalid location is provided. If the {@code base} is null then
+     * {@code displacement} is used by itself. If {@code base} is a
+     * {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
      * {@link HotSpotResolvedObjectTypeImpl} then the metaspace pointer is fetched from that object
      * and added to {@code displacement}. Any other non-null object type causes an
      * {@link IllegalArgumentException} to be thrown.
@@ -556,14 +557,14 @@ final class CompilerToVM {
     native HotSpotResolvedJavaMethodImpl getResolvedJavaMethod(Object base, long displacement);
 
     /**
-     * Read a value representing a metaspace ConstantPool* and return the
-     * {@link HotSpotConstantPool} wrapping it. This method does no checking that the location
-     * actually contains a valid Method* and may crash the VM if an invalid location is provided. If
-     * the {@code base} is null then {@code displacement} is used by itself. If {@code base} is a
-     * {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
-     * {@link HotSpotResolvedObjectTypeImpl} then the metaspace pointer is fetched from that object
-     * and added to {@code displacement}. Any other non-null object type causes an
-     * {@link IllegalArgumentException} to be thrown.
+     * Read a HotSpot ConstantPool* value from the memory location described by {@code base} plus
+     * {@code displacement} and return the {@link HotSpotConstantPool} wrapping it. This method does
+     * no checking that the memory location actually contains a valid pointer and may crash the VM
+     * if an invalid location is provided. If the {@code base} is null then {@code displacement} is
+     * used by itself. If {@code base} is a {@link HotSpotResolvedJavaMethodImpl},
+     * {@link HotSpotConstantPool} or {@link HotSpotResolvedObjectTypeImpl} then the metaspace
+     * pointer is fetched from that object and added to {@code displacement}. Any other non-null
+     * object type causes an {@link IllegalArgumentException} to be thrown.
      *
      * @param base an object to read from or null
      * @param displacement
@@ -572,11 +573,12 @@ final class CompilerToVM {
     native HotSpotConstantPool getConstantPool(Object base, long displacement);
 
     /**
-     * Read a value representing a metaspace Klass* and return the
-     * {@link HotSpotResolvedObjectTypeImpl} wrapping it. This method does no checking that the
-     * location actually contains a valid Method* and may crash the VM if an invalid location is
-     * provided. If the {@code base} is null then {@code displacement} is used by itself. If
-     * {@code base} is a {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
+     * Read a HotSpot Klass* value from the memory location described by {@code base} plus
+     * {@code displacement} and return the {@link HotSpotResolvedObjectTypeImpl} wrapping it. This
+     * method does no checking that the memory location actually contains a valid pointer and may
+     * crash the VM if an invalid location is provided. If the {@code base} is null then
+     * {@code displacement} is used by itself. If {@code base} is a
+     * {@link HotSpotResolvedJavaMethodImpl}, {@link HotSpotConstantPool} or
      * {@link HotSpotResolvedObjectTypeImpl} then the metaspace pointer is fetched from that object
      * and added to {@code displacement}. Any other non-null object type causes an
      * {@link IllegalArgumentException} to be thrown.
