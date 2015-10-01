@@ -215,6 +215,10 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         return HotSpotObjectConstantImpl.forObject(value);
     }
 
+    public JavaConstant forObject(Object value) {
+        return HotSpotObjectConstantImpl.forObject(value);
+    }
+
     @Override
     public ResolvedJavaType asJavaType(Constant constant) {
         if (constant instanceof HotSpotObjectConstant) {

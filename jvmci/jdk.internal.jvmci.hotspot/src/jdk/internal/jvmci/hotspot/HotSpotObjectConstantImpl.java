@@ -39,9 +39,9 @@ import jdk.internal.jvmci.meta.ResolvedJavaType;
  * Represents a constant non-{@code null} object reference, within the compiler and across the
  * compiler/runtime interface.
  */
-public final class HotSpotObjectConstantImpl implements HotSpotObjectConstant, HotSpotProxified {
+final class HotSpotObjectConstantImpl implements HotSpotObjectConstant, HotSpotProxified {
 
-    public static JavaConstant forObject(Object object) {
+    static JavaConstant forObject(Object object) {
         return forObject(object, false);
     }
 
@@ -110,21 +110,6 @@ public final class HotSpotObjectConstantImpl implements HotSpotObjectConstant, H
      */
     Object object() {
         return object;
-    }
-
-    /**
-     * Determines if the object represented by this constant is {@link Object#equals(Object) equal}
-     * to a given object.
-     */
-    public boolean isEqualTo(Object obj) {
-        return object.equals(obj);
-    }
-
-    /**
-     * Gets the class of the object represented by this constant.
-     */
-    public Class<?> getObjectClass() {
-        return object.getClass();
     }
 
     public boolean isCompressed() {
