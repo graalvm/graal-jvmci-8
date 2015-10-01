@@ -1021,9 +1021,16 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 shutil.rmtree(name, ignore_errors=False, onerror=handleRemoveReadonly)
             elif os.path.isfile(name):
                 os.unlink(name)
-
-        rmIfExists(join(_suite.dir, 'build'))
-        rmIfExists(join(_suite.dir, 'build-nojvmci'))
+        nojvmci_outputdir = join(_suite.dir, 'build-nojvmci', _hotspotOs(mx.get_os()))
+        makeFiles = join(_suite.dir, 'make')
+        if mx._opts.verbose:
+            outCapture = None
+        else:
+            def _consume(s):
+                pass
+            outCapture = _consume
+        mx.run([mx.gmake_cmd(), 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'clean'], out=outCapture, cwd=makeFiles)
+        mx.run([mx.gmake_cmd(), 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'ALT_OUTPUTDIR=' + nojvmci_outputdir, 'clean'], out=outCapture, cwd=makeFiles)
         rmIfExists(_jdksDir())
         self._newestOutput = None
 
