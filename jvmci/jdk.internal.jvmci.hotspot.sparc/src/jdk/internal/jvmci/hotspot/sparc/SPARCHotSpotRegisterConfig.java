@@ -353,7 +353,9 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
         JavaKind returnKind = returnType == null ? JavaKind.Void : returnType.getJavaKind();
         AllocatableValue returnLocation = returnKind == JavaKind.Void ? Value.ILLEGAL : getReturnRegister(returnKind, type).asValue(target.getLIRKind(returnKind.getStackKind()));
-        return new CallingConvention(currentStackOffset, returnLocation, locations);
+        // Space where callee may spill outgoing parameters o0...o5
+        int lowerOutgoingSpace = Math.min(locations.length, 6) * target.wordSize;
+        return new CallingConvention(currentStackOffset + lowerOutgoingSpace, returnLocation, locations);
     }
 
     private static int roundUp(int number, int mod) {
