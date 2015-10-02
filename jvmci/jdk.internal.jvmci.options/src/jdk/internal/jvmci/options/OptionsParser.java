@@ -77,7 +77,7 @@ public class OptionsParser {
     @SuppressWarnings("try")
     public static Boolean parseOptionsFromVM(String[] options, boolean parseOptionsFile) {
         try (InitTimer t = timer("ParseOptions")) {
-            JVMCIJarsOptionDescriptorsProvider odp = new JVMCIJarsOptionDescriptorsProvider();
+            JVMCIJarsOptionDescriptorsProvider odp = JVMCIJarsOptionDescriptorsProvider.create();
 
             if (parseOptionsFile) {
                 File javaHome = new File(System.getProperty("java.home"));
@@ -109,7 +109,7 @@ public class OptionsParser {
                 for (int i = 0; i < options.length / 2; i++) {
                     String name = options[i * 2];
                     String value = options[i * 2 + 1];
-                    parseOption(OptionsLoader.options, name, value, null, odp);
+                    parseOption(name, value, null, odp, null);
                 }
             }
         }
@@ -129,7 +129,15 @@ public class OptionsParser {
         }
         String name = optionSetting.substring(0, eqIndex);
         String value = optionSetting.substring(eqIndex + 1);
-        parseOption(OptionsLoader.options, name, value, setter, odp);
+        parseOption(name, value, setter, odp, null);
+    }
+
+    /**
+     * Resolves {@code options} to a non-null value. This ensures {@link OptionsLoader#options} is
+     * only loaded if necessary.
+     */
+    private static SortedMap<String, OptionDescriptor> resolveOptions(SortedMap<String, OptionDescriptor> options) {
+        return options != null ? options : OptionsLoader.options;
     }
 
     /**
@@ -138,16 +146,18 @@ public class OptionsParser {
      * @param name the option name
      * @param valueString the option value as a string
      * @param setter the object to notify of the parsed option and value
+     * @param odp if non-null, the service to use for looking up {@link OptionDescriptor}s
+     * @param options the options database to use if {@code odp} is null
      * @throws IllegalArgumentException if there's a problem parsing {@code option}
      */
-    public static void parseOption(SortedMap<String, OptionDescriptor> options, String name, String valueString, OptionConsumer setter, OptionDescriptorsProvider odp) {
+    public static void parseOption(String name, String valueString, OptionConsumer setter, OptionDescriptorsProvider odp, SortedMap<String, OptionDescriptor> options) {
 
-        OptionDescriptor desc = odp == null ? options.get(name) : odp.get(name);
+        OptionDescriptor desc = odp != null ? odp.get(name) : resolveOptions(options).get(name);
         if (desc == null && name.equals("PrintFlags")) {
             desc = OptionDescriptor.create("PrintFlags", Boolean.class, "Prints all JVMCI flags and exits", OptionsParser.class, "PrintFlags", PrintFlags);
         }
         if (desc == null) {
-            List<OptionDescriptor> matches = fuzzyMatch(options, name);
+            List<OptionDescriptor> matches = fuzzyMatch(resolveOptions(options), name);
             Formatter msg = new Formatter();
             msg.format("Could not find option %s", name);
             if (!matches.isEmpty()) {
@@ -189,7 +199,7 @@ public class OptionsParser {
         }
 
         if (PrintFlags.getValue()) {
-            printFlags(options, "JVMCI", System.out);
+            printFlags(resolveOptions(options), "JVMCI", System.out);
             System.exit(0);
         }
     }

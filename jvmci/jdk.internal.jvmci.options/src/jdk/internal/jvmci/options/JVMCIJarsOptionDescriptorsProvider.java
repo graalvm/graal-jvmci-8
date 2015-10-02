@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.jar.JarFile;
@@ -39,15 +40,26 @@ import jdk.internal.jvmci.options.OptionsParser.OptionDescriptorsProvider;
  * {@code META-INF/services/jdk.internal.jvmci.options.OptionDescriptors} files in
  * {@code <jre>/lib/jvmci/*.jar}.
  */
-class JVMCIJarsOptionDescriptorsProvider implements OptionDescriptorsProvider {
+final class JVMCIJarsOptionDescriptorsProvider implements OptionDescriptorsProvider {
 
     static final String OptionDescriptorsServiceFile = "META-INF/services/" + OptionDescriptors.class.getName();
 
     private final Iterator<File> jars;
     private final List<OptionDescriptors> optionsDescriptorsList;
 
-    JVMCIJarsOptionDescriptorsProvider() {
+    /**
+     * Creates a {@link JVMCIJarsOptionDescriptorsProvider} if at least one JVMCI jar is available
+     * otherwise returns null.
+     */
+    static JVMCIJarsOptionDescriptorsProvider create() {
         List<File> jarsList = findJVMCIJars();
+        if (jarsList.isEmpty()) {
+            return null;
+        }
+        return new JVMCIJarsOptionDescriptorsProvider(jarsList);
+    }
+
+    private JVMCIJarsOptionDescriptorsProvider(List<File> jarsList) {
         this.jars = jarsList.iterator();
         this.optionsDescriptorsList = new ArrayList<>(jarsList.size() * 3);
     }
@@ -60,7 +72,7 @@ class JVMCIJarsOptionDescriptorsProvider implements OptionDescriptorsProvider {
         File lib = new File(javaHome, "lib");
         File jvmci = new File(lib, "jvmci");
         if (!jvmci.exists()) {
-            throw new InternalError(jvmci + " does not exist");
+            return Collections.emptyList();
         }
 
         List<File> jarFiles = new ArrayList<>();
