@@ -79,8 +79,6 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
      */
     boolean ignoredBySecurityStackWalk();
 
-    boolean hasBalancedMonitors();
-
     ResolvedJavaMethod uniqueConcreteMethod(HotSpotResolvedObjectType receiver);
 
     /**

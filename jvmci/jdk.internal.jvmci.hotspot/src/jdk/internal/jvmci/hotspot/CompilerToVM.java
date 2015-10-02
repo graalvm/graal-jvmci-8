@@ -102,11 +102,6 @@ final class CompilerToVM {
     native long getExceptionTableStart(HotSpotResolvedJavaMethodImpl method);
 
     /**
-     * Determines if {@code method} has balanced monitors.
-     */
-    native boolean hasBalancedMonitors(HotSpotResolvedJavaMethodImpl method);
-
-    /**
      * Determines if {@code method} can be inlined. A method may not be inlinable for a number of
      * reasons such as:
      * <ul>

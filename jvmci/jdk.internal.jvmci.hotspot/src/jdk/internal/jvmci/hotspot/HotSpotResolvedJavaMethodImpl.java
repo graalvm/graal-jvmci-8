@@ -327,25 +327,6 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     }
 
     @Override
-    public boolean hasBalancedMonitors() {
-        HotSpotVMConfig config = config();
-        final int modifiers = getAllModifiers();
-
-        // Method has no monitorenter/exit bytecodes.
-        if ((modifiers & config.jvmAccHasMonitorBytecodes) == 0) {
-            return true;
-        }
-
-        // Check to see if a previous compilation computed the monitor-matching analysis.
-        if ((modifiers & config.jvmAccMonitorMatch) != 0) {
-            return true;
-        }
-
-        // This either happens only once if monitors are balanced or very rarely multiple-times.
-        return compilerToVM().hasBalancedMonitors(this);
-    }
-
-    @Override
     public boolean isClassInitializer() {
         return "<clinit>".equals(name) && isStatic();
     }

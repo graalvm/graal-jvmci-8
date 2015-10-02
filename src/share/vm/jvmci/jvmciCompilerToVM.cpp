@@ -181,22 +181,6 @@ C2V_VMENTRY(jlong, getExceptionTableStart, (JNIEnv *, jobject, jobject jvmci_met
   return (jlong) (address) method->exception_table_start();
 C2V_END
 
-C2V_VMENTRY(jint, hasBalancedMonitors, (JNIEnv *, jobject, jobject jvmci_method))
-  // Analyze the method to see if monitors are used properly.
-  methodHandle method(THREAD, CompilerToVM::asMethod(jvmci_method));
-  {
-    EXCEPTION_MARK;
-    ResourceMark rm(THREAD);
-    GeneratePairingInfo gpi(method);
-    gpi.compute_map(CATCH);
-    if (!gpi.monitor_safe()) {
-      return false;
-    }
-    method->set_guaranteed_monitor_matching();
-  }
-  return true;
-C2V_END
-
 C2V_VMENTRY(jobject, getResolvedJavaMethodAtSlot, (JNIEnv *, jobject, jclass holder_handle, jint slot))
   oop java_class = JNIHandles::resolve(holder_handle);
   Klass* holder = java_lang_Class::as_Klass(java_class);
@@ -1211,7 +1195,6 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getBytecode",                                  CC"("HS_RESOLVED_METHOD")[B",                                                     FN_PTR(getBytecode)},
   {CC"getExceptionTableStart",                       CC"("HS_RESOLVED_METHOD")J",                                                      FN_PTR(getExceptionTableStart)},
   {CC"getExceptionTableLength",                      CC"("HS_RESOLVED_METHOD")I",                                                      FN_PTR(getExceptionTableLength)},
-  {CC"hasBalancedMonitors",                          CC"("HS_RESOLVED_METHOD")Z",                                                      FN_PTR(hasBalancedMonitors)},
   {CC"findUniqueConcreteMethod",                     CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD")"HS_RESOLVED_METHOD,                   FN_PTR(findUniqueConcreteMethod)},
   {CC"getImplementor",                               CC"("HS_RESOLVED_KLASS")"HS_RESOLVED_KLASS,                                       FN_PTR(getImplementor)},
   {CC"getStackTraceElement",                         CC"("HS_RESOLVED_METHOD"I)"STACK_TRACE_ELEMENT,                                   FN_PTR(getStackTraceElement)},
