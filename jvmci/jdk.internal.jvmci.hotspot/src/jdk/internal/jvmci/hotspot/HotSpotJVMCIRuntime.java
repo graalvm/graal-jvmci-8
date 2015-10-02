@@ -90,10 +90,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
                 try (InitTimer t = timer("HotSpotJVMCIRuntime.<init>")) {
                     instance = new HotSpotJVMCIRuntime();
                 }
-
-                try (InitTimer t = timer("HotSpotJVMCIRuntime.completeInitialization")) {
-                    instance.completeInitialization();
-                }
             }
         }
     }
@@ -103,14 +99,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     public static HotSpotJVMCIRuntime runtime() {
         return DelayedInit.instance;
-    }
-
-    /**
-     * Do deferred initialization.
-     */
-    public void completeInitialization() {
-        compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
-        trivialPrefixes = HotSpotJVMCICompilerConfig.getCompilerFactory().getTrivialPrefixes();
     }
 
     public static HotSpotJVMCIBackendFactory findFactory(String architecture) {
@@ -142,7 +130,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     private final Iterable<HotSpotVMEventListener> vmEventListeners;
 
-    @SuppressWarnings("unused") private String[] trivialPrefixes;
+    @SuppressWarnings("unused") private final String[] trivialPrefixes;
 
     @SuppressWarnings("try")
     private HotSpotJVMCIRuntime() {
@@ -180,6 +168,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         if (Boolean.valueOf(System.getProperty("jvmci.printconfig"))) {
             printConfig(config, compilerToVm);
         }
+
+        trivialPrefixes = HotSpotJVMCICompilerConfig.getCompilerFactory().getTrivialPrefixes();
     }
 
     private JVMCIBackend registerBackend(JVMCIBackend backend) {
@@ -206,6 +196,9 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     }
 
     public Compiler getCompiler() {
+        if (compiler == null) {
+            compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
+        }
         return compiler;
     }
 
@@ -246,7 +239,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      */
     @SuppressWarnings({"unused"})
     private void compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
-        compiler.compileMethod(new HotSpotCompilationRequest(method, entryBCI, jvmciEnv, id));
+        getCompiler().compileMethod(new HotSpotCompilationRequest(method, entryBCI, jvmciEnv, id));
     }
 
     /**
