@@ -1567,7 +1567,10 @@ def hsdis(args, copyToDir=None):
         flavor = 'att'
     if mx.get_arch() == "sparcv9":
         flavor = "sparcv9"
-    lib = mx.add_lib_suffix('hsdis-' + mx.get_arch())
+        osSuffix = mx.get_os() + '-'
+    else:
+        osSuffix = ''
+    lib = mx.add_lib_suffix('hsdis-' + osSuffix + mx.get_arch())
     path = join(_suite.dir, 'lib', lib)
 
     sha1s = {
@@ -1576,7 +1579,8 @@ def hsdis(args, copyToDir=None):
         'intel/hsdis-amd64.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
         'intel/hsdis-amd64.so' : '844ed9ffed64fe9599638f29a8450c50140e3192',
         'intel/hsdis-amd64.dylib' : 'fdb13ef0d7d23d93dacaae9c98837bea0d4fc5a2',
-        'sparcv9/hsdis-sparcv9.so': '970640a9af0bd63641f9063c11275b371a59ee60',
+        'sparcv9/hsdis-solaris-sparcv9.so': '970640a9af0bd63641f9063c11275b371a59ee60',
+        'sparcv9/hsdis-linux-sparcv9.so': '0c375986d727651dee1819308fbbc0de4927d5d9',
     }
 
     flavoredLib = flavor + "/" + lib
@@ -1589,7 +1593,8 @@ def hsdis(args, copyToDir=None):
         sha1path = path + '.sha1'
         mx.download_file_with_sha1('hsdis', path, ['https://lafo.ssw.uni-linz.ac.at/pub/hsdis/' + flavoredLib], sha1, sha1path, True, True, sources=False)
     if copyToDir is not None and exists(copyToDir):
-        shutil.copy(path, copyToDir)
+        destFileName = mx.add_lib_suffix('hsdis-' + mx.get_arch())
+        shutil.copy(path, copyToDir + os.sep + destFileName)
 
 def hcfdis(args):
     """disassemble HexCodeFiles embedded in text files
