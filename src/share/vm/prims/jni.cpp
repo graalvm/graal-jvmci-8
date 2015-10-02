@@ -5212,7 +5212,9 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
 #ifdef COMPILERJVMCI
     // JVMCI is initialized on a CompilerThread
     if (BootstrapJVMCI) {
-      JVMCICompiler::instance()->bootstrap();
+      JavaThread* THREAD = thread;
+      JVMCICompiler* compiler = JVMCICompiler::instance(CATCH);
+      compiler->bootstrap();
     }
 #endif
 

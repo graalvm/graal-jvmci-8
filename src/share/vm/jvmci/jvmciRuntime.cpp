@@ -55,39 +55,7 @@ char** JVMCIRuntime::_trivial_prefixes = NULL;
 bool JVMCIRuntime::_shutdown_called = false;
 
 static const char* OPTION_PREFIX = "jvmci.option.";
-static const int OPTION_PREFIX_LEN = (int)strlen(OPTION_PREFIX);
-
-void JVMCIRuntime::initialize_natives(JNIEnv *env, jclass c2vmClass) {
-#ifdef _LP64
-#ifndef TARGET_ARCH_sparc
-  uintptr_t heap_end = (uintptr_t) Universe::heap()->reserved_region().end();
-  uintptr_t allocation_end = heap_end + ((uintptr_t)16) * 1024 * 1024 * 1024;
-  guarantee(heap_end < allocation_end, "heap end too close to end of address space (might lead to erroneous TLAB allocations)");
-#endif // TARGET_ARCH_sparc
-#else
-  fatal("check TLAB allocation code for address space conflicts");
-#endif
-
-  ensure_jvmci_class_loader_is_initialized();
-
-  JavaThread* THREAD = JavaThread::current();
-  {
-    ThreadToNativeFromVM trans(THREAD);
-
-    ResourceMark rm;
-    HandleMark hm;
-
-    jvmci_compute_offsets();
-
-    // Ensure _non_oop_bits is initialized
-    Universe::non_oop_word();
-
-    env->RegisterNatives(c2vmClass, CompilerToVM::methods, CompilerToVM::methods_count());
-  }
-  if (HAS_PENDING_EXCEPTION) {
-    abort_on_pending_exception(PENDING_EXCEPTION, "Could not register natives");
-  }
-}
+static const size_t OPTION_PREFIX_LEN = strlen(OPTION_PREFIX);
 
 BasicType JVMCIRuntime::kindToBasicType(jchar ch) {
   switch(ch) {
@@ -781,7 +749,7 @@ void JVMCIRuntime::metadata_do(void f(Metadata*)) {
   assert(SystemDictionary::HotSpotResolvedJavaMethodImpl_klass() != NULL, "must be loaded");
   assert(SystemDictionary::HotSpotConstantPool_klass() != NULL, "must be loaded");
   assert(SystemDictionary::HotSpotResolvedObjectTypeImpl_klass() != NULL, "must be loaded");
-  
+
   for (int i = 0; i < allContexts->length(); i++) {
     oop ref = allContexts->obj_at(i);
     if (ref != NULL) {
@@ -821,9 +789,36 @@ void JVMCIRuntime::metadata_do(void f(Metadata*)) {
   }
 }
 
-// private static void CompilerToVM.init()
-JVM_ENTRY(void, JVM_InitializeJVMCINatives(JNIEnv *env, jclass c2vmClass))
-  JVMCIRuntime::initialize_natives(env, c2vmClass);
+// private static void CompilerToVM.registerNatives()
+JVM_ENTRY(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
+#ifdef _LP64
+#ifndef TARGET_ARCH_sparc
+  uintptr_t heap_end = (uintptr_t) Universe::heap()->reserved_region().end();
+  uintptr_t allocation_end = heap_end + ((uintptr_t)16) * 1024 * 1024 * 1024;
+  guarantee(heap_end < allocation_end, "heap end too close to end of address space (might lead to erroneous TLAB allocations)");
+#endif // TARGET_ARCH_sparc
+#else
+  fatal("check TLAB allocation code for address space conflicts");
+#endif
+
+  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
+
+  {
+    ThreadToNativeFromVM trans(thread);
+
+    ResourceMark rm;
+    HandleMark hm;
+
+    jvmci_compute_offsets();
+
+    // Ensure _non_oop_bits is initialized
+    Universe::non_oop_word();
+
+    env->RegisterNatives(c2vmClass, CompilerToVM::methods, CompilerToVM::methods_count());
+  }
+  if (HAS_PENDING_EXCEPTION) {
+    JVMCIRuntime::abort_on_pending_exception(PENDING_EXCEPTION, "Could not register natives");
+  }
 JVM_END
 
 void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {

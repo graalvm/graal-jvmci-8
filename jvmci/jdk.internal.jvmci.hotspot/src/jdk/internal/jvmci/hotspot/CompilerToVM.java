@@ -49,7 +49,7 @@ final class CompilerToVM {
     /**
      * Initializes the native part of the JVMCI runtime.
      */
-    private static native void init();
+    private static native void registerNatives();
 
     static {
         initialize();
@@ -57,8 +57,8 @@ final class CompilerToVM {
 
     @SuppressWarnings("try")
     private static void initialize() {
-        try (InitTimer t = timer("CompilerToVMImpl.init")) {
-            init();
+        try (InitTimer t = timer("CompilerToVM.registerNatives")) {
+            registerNatives();
         }
     }
 
@@ -523,15 +523,18 @@ final class CompilerToVM {
     native boolean shouldDebugNonSafepoints();
 
     /**
-     * Writes {@code length} bytes from {@code buf} starting at offset {@code offset} to the
-     * HotSpot's log stream. No range checking is performed.
+     * Writes {@code length} bytes from {@code bytes} starting at offset {@code offset} to the
+     * HotSpot's log stream.
+     *
+     * @exception NullPointerException if {@code bytes == null}
+     * @exception IndexOutOfBoundsException if copying would cause access of data outside array
+     *                bounds
      */
     native void writeDebugOutput(byte[] bytes, int offset, int length);
 
     /**
      * Flush HotSpot's log stream.
      */
-
     native void flushDebugOutput();
 
     /**

@@ -76,6 +76,9 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         if ((config.x86CPUFeatures & config.cpuLZCNT) != 0) {
             features.add(AMD64.CPUFeature.LZCNT);
         }
+        if ((config.x86CPUFeatures & config.cpuERMS) != 0) {
+            features.add(AMD64.CPUFeature.ERMS);
+        }
         if ((config.x86CPUFeatures & config.cpuAVX) != 0) {
             features.add(AMD64.CPUFeature.AVX);
         }
@@ -85,8 +88,8 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         if ((config.x86CPUFeatures & config.cpuAES) != 0) {
             features.add(AMD64.CPUFeature.AES);
         }
-        if ((config.x86CPUFeatures & config.cpuERMS) != 0) {
-            features.add(AMD64.CPUFeature.ERMS);
+        if ((config.x86CPUFeatures & config.cpu3DNOWPREFETCH) != 0) {
+            features.add(AMD64.CPUFeature.AMD_3DNOW_PREFETCH);
         }
         if ((config.x86CPUFeatures & config.cpuBMI1) != 0) {
             features.add(AMD64.CPUFeature.BMI1);

@@ -384,7 +384,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code) {
 }
 
 // constructor used to create a method
-JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle target, Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log) {
+JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Handle target, Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log) {
   CodeBuffer buffer("JVMCI Compiler CodeBuffer");
   jobject compiled_code_obj = JNIHandles::make_local(compiled_code());
   initialize_dependencies(JNIHandles::resolve(compiled_code_obj));
@@ -425,7 +425,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(Handle target, Handle& compil
     }
     result = JVMCIEnv::register_method(method, nm, entry_bci, &_offsets, _custom_stack_area_offset, &buffer,
                                        stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
-                                       JVMCICompiler::instance(), _debug_recorder, _dependencies, env, id,
+                                       compiler, _debug_recorder, _dependencies, env, id,
                                        has_unsafe_access, _has_wide_vector, installed_code, compiled_code, speculation_log);
     cb = nm;
   }

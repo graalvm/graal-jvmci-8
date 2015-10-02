@@ -100,8 +100,6 @@ class JVMCIRuntime: public AllStatic {
    */
   static void ensure_jvmci_class_loader_is_initialized();
 
-  static void initialize_natives(JNIEnv *env, jclass c2vmClass);
-
   static bool is_HotSpotJVMCIRuntime_initialized() { return _HotSpotJVMCIRuntime_initialized; }
 
   /**

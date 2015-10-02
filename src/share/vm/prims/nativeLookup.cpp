@@ -128,7 +128,7 @@ extern "C" {
   void JNICALL JVM_RegisterWhiteBoxMethods(JNIEnv *env, jclass wbclass);
 #if INCLUDE_JVMCI
   void     JNICALL JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader);
-  void     JNICALL JVM_InitializeJVMCINatives(JNIEnv *env, jclass compilerToVMClass);
+  void     JNICALL JVM_RegisterJVMCINatives(JNIEnv *env, jclass compilerToVMClass);
   jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
   jobject  JNICALL JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass serviceClass);
 #endif
@@ -146,7 +146,7 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_jdk_internal_jvmci_service_JVMCIClassLoaderFactory_init", NULL, FN_PTR(JVM_InitJVMCIClassLoader)     },
   { CC"Java_jdk_internal_jvmci_runtime_JVMCI_initializeRuntime",      NULL, FN_PTR(JVM_GetJVMCIRuntime)          },
   { CC"Java_jdk_internal_jvmci_service_Services_getServiceImpls",     NULL, FN_PTR(JVM_GetJVMCIServiceImpls)     },
-  { CC"Java_jdk_internal_jvmci_hotspot_CompilerToVM_init",            NULL, FN_PTR(JVM_InitializeJVMCINatives)   },
+  { CC"Java_jdk_internal_jvmci_hotspot_CompilerToVM_registerNatives", NULL, FN_PTR(JVM_RegisterJVMCINatives)     },
 #endif
 };
 

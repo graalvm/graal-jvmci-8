@@ -50,7 +50,7 @@ public:
 
   JVMCICompiler();
 
-  static JVMCICompiler* instance() { return _instance; }
+  static JVMCICompiler* instance(TRAPS) { return _instance; }
 
   virtual const char* name() { return "JVMCI"; }
 

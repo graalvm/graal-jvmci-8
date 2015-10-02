@@ -22,13 +22,17 @@
  */
 
 #include "precompiled.hpp"
+#include "code/codeCache.hpp"
 #include "code/scopeDesc.hpp"
+#include "interpreter/linkResolver.hpp"
 #include "memory/oopFactory.hpp"
 #include "oops/generateOopMap.hpp"
 #include "oops/fieldStreams.hpp"
+#include "oops/oop.inline.hpp"
 #include "runtime/fieldDescriptor.hpp"
 #include "runtime/javaCalls.hpp"
 #include "jvmci/jvmciRuntime.hpp"
+#include "compiler/abstractCompiler.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "compiler/disassembler.hpp"
@@ -586,9 +590,11 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
   Handle installed_code_handle = JNIHandles::resolve(installed_code);
   Handle speculation_log_handle = JNIHandles::resolve(speculation_log);
 
+  JVMCICompiler* compiler = JVMCICompiler::instance(CHECK_(JNI_ERR));
+
   TraceTime install_time("installCode", JVMCICompiler::codeInstallTimer());
   CodeInstaller installer;
-  JVMCIEnv::CodeInstallResult result = installer.install(target_handle, compiled_code_handle, cb, installed_code_handle, speculation_log_handle);
+  JVMCIEnv::CodeInstallResult result = installer.install(compiler, target_handle, compiled_code_handle, cb, installed_code_handle, speculation_log_handle);
 
   if (PrintCodeCacheOnCompilation) {
     stringStream s;
@@ -631,7 +637,8 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
 C2V_END
 
 C2V_VMENTRY(void, notifyCompilationStatistics, (JNIEnv *jniEnv, jobject, jint id, jobject hotspot_method, jboolean osr, jint processedBytecodes, jlong time, jlong timeUnitsPerSecond, jobject installed_code))
-  CompilerStatistics* stats = JVMCICompiler::instance()->stats();
+  JVMCICompiler* compiler = JVMCICompiler::instance(CHECK);
+  CompilerStatistics* stats = compiler->stats();
 
   elapsedTimer timer = elapsedTimer(time, timeUnitsPerSecond);
   if (osr) {
@@ -654,7 +661,8 @@ C2V_VMENTRY(void, notifyCompilationStatistics, (JNIEnv *jniEnv, jobject, jint id
 C2V_END
 
 C2V_VMENTRY(void, resetCompilationStatistics, (JNIEnv *jniEnv, jobject))
-  CompilerStatistics* stats = JVMCICompiler::instance()->stats();
+  JVMCICompiler* compiler = JVMCICompiler::instance(CHECK);
+  CompilerStatistics* stats = compiler->stats();
   stats->_standard.reset();
   stats->_osr.reset();
 C2V_END
@@ -936,10 +944,10 @@ C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject 
             initialSkip --;
           } else {
             GrowableArray<ScopeValue*>* objects = cvf->scope()->objects();
-            bool reallocated = false;
+            bool realloc_failures = false;
             if (objects != NULL) {
-              reallocated = Deoptimization::realloc_objects(thread, fst.current(), objects, THREAD);
-              Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, reallocated, false);
+              realloc_failures = Deoptimization::realloc_objects(thread, fst.current(), objects, THREAD);
+              Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, realloc_failures, false);
 
               GrowableArray<ScopeValue*>* local_values = cvf->scope()->locals();
               typeArrayHandle array = oopFactory::new_boolArray(local_values->length(), thread);
@@ -1104,8 +1112,8 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     return;
   }
 
-  bool reallocated = Deoptimization::realloc_objects(thread, fstAfterDeopt.current(), objects, THREAD);
-  Deoptimization::reassign_fields(fstAfterDeopt.current(), fstAfterDeopt.register_map(), objects, reallocated, false);
+  bool realloc_failures = Deoptimization::realloc_objects(thread, fstAfterDeopt.current(), objects, THREAD);
+  Deoptimization::reassign_fields(fstAfterDeopt.current(), fstAfterDeopt.register_map(), objects, realloc_failures, false);
 
   for (int frame_index = 0; frame_index < virtualFrames->length(); frame_index++) {
     compiledVFrame* cvf = virtualFrames->at(frame_index);
@@ -1140,8 +1148,21 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
 C2V_END
 
 C2V_VMENTRY(void, writeDebugOutput, (JNIEnv*, jobject, jbyteArray bytes, jint offset, jint length))
+  if (bytes == NULL) {
+    THROW(vmSymbols::java_lang_NullPointerException());
+  }
+  typeArrayOop array = (typeArrayOop) JNIHandles::resolve(bytes);
+
+  // Check if offset and length are non negative.
+  if (offset < 0 || length < 0) {
+    THROW(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
+  }
+  // Check if the range is valid.
+  if ((((unsigned int) length + (unsigned int) offset) > (unsigned int) array->length())) {
+    THROW(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
+  }
   while (length > 0) {
-    jbyte* start = ((typeArrayOop) JNIHandles::resolve(bytes))->byte_at_addr(offset);
+    jbyte* start = array->byte_at_addr(offset);
     tty->write((char*) start, MIN2(length, O_BUFLEN));
     length -= O_BUFLEN;
     offset += O_BUFLEN;
