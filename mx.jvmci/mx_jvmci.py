@@ -1193,11 +1193,12 @@ def buildvms(args):
 
 
 def _jvmci_gate_runner(args, tasks):
-    with Task('Check jvmci.make in sync with suite.py', tasks) as t:
-        if t:
-            jvmciMake = join(_suite.dir, 'make', 'jvmci.make')
-            if mx_jvmci_makefile.build_makefile(['-o', jvmciMake]) != 0:
-                t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
+    if mx.get_arch() != 'sparcv9':
+        with Task('Check jvmci.make in sync with suite.py', tasks) as t:
+            if t:
+                jvmciMake = join(_suite.dir, 'make', 'jvmci.make')
+                if mx_jvmci_makefile.build_makefile(['-o', jvmciMake]) != 0:
+                    t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
 
     # Build server-hosted-jvmci now so we can run the unit tests
     with Task('BuildHotSpotJVMCIHosted: product', tasks) as t:
