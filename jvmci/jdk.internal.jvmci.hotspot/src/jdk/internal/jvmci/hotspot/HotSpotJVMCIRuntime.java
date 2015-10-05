@@ -123,7 +123,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     protected final HotSpotVMConfig config;
     private final JVMCIBackend hostBackend;
 
-    private Compiler compiler;
+    private volatile Compiler compiler;
     protected final JVMCIMetaAccessContext metaAccessContext;
 
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
@@ -197,7 +197,11 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
 
     public Compiler getCompiler() {
         if (compiler == null) {
-            compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
+            synchronized (this) {
+                if (compiler == null) {
+                    compiler = HotSpotJVMCICompilerConfig.getCompilerFactory().createCompiler(this);
+                }
+            }
         }
         return compiler;
     }
