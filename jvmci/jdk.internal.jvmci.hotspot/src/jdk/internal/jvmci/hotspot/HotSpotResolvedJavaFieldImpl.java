@@ -23,7 +23,6 @@
 package jdk.internal.jvmci.hotspot;
 
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntime.runtime;
-import static jdk.internal.jvmci.hotspot.HotSpotResolvedJavaFieldImpl.Options.ImplicitStableValues;
 import static jdk.internal.jvmci.hotspot.HotSpotVMConfig.config;
 
 import java.lang.annotation.Annotation;
@@ -204,7 +203,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, HotSpotP
             return true;
         }
         assert getAnnotation(Stable.class) == null;
-        if (ImplicitStableValues.getValue() && isImplicitStableField()) {
+        if (Options.ImplicitStableValues.getValue() && isImplicitStableField()) {
             return true;
         }
         return false;

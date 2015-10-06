@@ -22,7 +22,6 @@
  */
 package jdk.internal.jvmci.hotspot;
 
-import static jdk.internal.jvmci.hotspot.HotSpotConstantReflectionProvider.Options.TrustFinalDefaultFields;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider.getArrayBaseOffset;
 import static jdk.internal.jvmci.hotspot.HotSpotJVMCIRuntimeProvider.getArrayIndexScale;
 
@@ -263,7 +262,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
      *            {@code value} was read
      */
     protected boolean isFinalInstanceFieldValueConstant(JavaConstant value, Class<?> receiverClass) {
-        return !value.isDefaultForKind() || TrustFinalDefaultFields.getValue();
+        return !value.isDefaultForKind() || Options.TrustFinalDefaultFields.getValue();
     }
 
     /**
