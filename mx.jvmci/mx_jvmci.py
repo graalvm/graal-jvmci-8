@@ -924,7 +924,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             if mx.get_os() == 'linux' and platform.processor() == 'sparc64':
                 # SPARC/Linux
                 setMakeVar("DEBUG_BINARIES", "true", env=env)
-                setMakeVar("EXTRA_CFLAGS", "-Wno-conversion-null -Wno-int-to-pointer-cast -Wno-unused-function", env=env)
+                setMakeVar("EXTRA_CFLAGS", "-Wno-conversion-null -Wno-int-to-pointer-cast -Wno-unused-function -fno-tree-loop-distribute-patterns", env=env)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
             if self.vm.endswith('nojvmci'):
