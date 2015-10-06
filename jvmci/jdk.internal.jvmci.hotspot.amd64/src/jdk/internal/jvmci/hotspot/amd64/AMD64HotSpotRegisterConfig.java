@@ -158,7 +158,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
             this.needsNativeStackHomeSpace = false;
         }
 
-        this.allocatable = allocatable.clone();
+        this.allocatable = allocatable;
         Set<Register> callerSaveSet = new HashSet<>();
         Collections.addAll(callerSaveSet, allocatable);
         Collections.addAll(callerSaveSet, xmmParameterRegisters);
