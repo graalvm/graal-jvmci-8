@@ -41,7 +41,6 @@ import jdk.internal.jvmci.code.CompilationResult;
 import jdk.internal.jvmci.code.InstalledCode;
 import jdk.internal.jvmci.common.JVMCIError;
 import jdk.internal.jvmci.compiler.Compiler;
-import jdk.internal.jvmci.compiler.StartupEventListener;
 import jdk.internal.jvmci.inittimer.InitTimer;
 import jdk.internal.jvmci.meta.JVMCIMetaAccessContext;
 import jdk.internal.jvmci.meta.JavaKind;
@@ -80,16 +79,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         private static final HotSpotJVMCIRuntime instance;
 
         static {
-            try (InitTimer t0 = timer("HotSpotJVMCIRuntime.<clinit>")) {
-                try (InitTimer t = timer("StartupEventListener.beforeJVMCIStartup")) {
-                    for (StartupEventListener l : Services.load(StartupEventListener.class)) {
-                        l.beforeJVMCIStartup();
-                    }
-                }
-
-                try (InitTimer t = timer("HotSpotJVMCIRuntime.<init>")) {
-                    instance = new HotSpotJVMCIRuntime();
-                }
+            try (InitTimer t = timer("HotSpotJVMCIRuntime.<init>")) {
+                instance = new HotSpotJVMCIRuntime();
             }
         }
     }
