@@ -433,12 +433,13 @@ JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
   }
 JRT_END
 
-JRT_LEAF(void, JVMCIRuntime::log_object(JavaThread* thread, oopDesc* obj, jint flags))
-  bool string =  mask_bits_are_true(flags, LOG_OBJECT_STRING);
-  bool addr = mask_bits_are_true(flags, LOG_OBJECT_ADDRESS);
-  bool newline = mask_bits_are_true(flags, LOG_OBJECT_NEWLINE);
-  if (!string) {
-    if (!addr && obj->is_oop_or_null(true)) {
+JRT_LEAF(void, JVMCIRuntime::log_object(JavaThread* thread, oopDesc* obj, bool as_string, bool newline))
+  ttyLocker ttyl;
+
+  if (obj == NULL) {
+    tty->print("NULL");
+  } else if (obj->is_oop_or_null(true) && (!as_string || !java_lang_String::is_instance(obj))) {
+    if (obj->is_oop_or_null(true)) {
       char buf[O_BUFLEN];
       tty->print("%s@" INTPTR_FORMAT, obj->klass()->name()->as_C_string(buf, O_BUFLEN), p2i(obj));
     } else {

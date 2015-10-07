@@ -211,13 +211,11 @@ class JVMCIRuntime: public AllStatic {
   static oopDesc* load_and_clear_exception(JavaThread* thread);
   static void log_printf(JavaThread* thread, oopDesc* format, jlong v1, jlong v2, jlong v3);
   static void log_primitive(JavaThread* thread, jchar typeChar, jlong value, jboolean newline);
-  // Note: Must be kept in sync with constants in jdk.internal.jvmci.replacements.Log
-  enum {
-    LOG_OBJECT_NEWLINE = 0x01,
-    LOG_OBJECT_STRING  = 0x02,
-    LOG_OBJECT_ADDRESS = 0x04
-  };
-  static void log_object(JavaThread* thread, oopDesc* msg, jint flags);
+  // Print the passed in object, optionally followed by a newline.  If
+  // as_string is true and the object is a java.lang.String then it
+  // printed as a string, otherwise the type of the object is printed
+  // followed by its address.
+  static void log_object(JavaThread* thread, oopDesc* object, bool as_string, bool newline);
   static void write_barrier_pre(JavaThread* thread, oopDesc* obj);
   static void write_barrier_post(JavaThread* thread, void* card);
   static jboolean validate_object(JavaThread* thread, oopDesc* parent, oopDesc* child);
