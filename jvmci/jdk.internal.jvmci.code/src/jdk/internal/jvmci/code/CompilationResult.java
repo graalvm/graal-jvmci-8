@@ -269,6 +269,15 @@ public class CompilationResult {
             }
             return false;
         }
+
+        @Override
+        public String toString() {
+            if (initialized) {
+                return String.format("DataSection[0x%x]", offset);
+            } else {
+                return "DataSection[?]";
+            }
+        }
     }
 
     /**
