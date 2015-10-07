@@ -82,23 +82,29 @@ public final class Register implements Comparable<Register> {
 
         private final String name;
 
+        private final boolean mayContainReference;
         private final int referenceMapOffset;
         private final int referenceMapShift;
 
         public RegisterCategory(String name) {
-            this(name, 0, 0);
+            this(name, true, 0, 0);
         }
 
         public RegisterCategory(String name, boolean mayContainReference) {
-            this(name, mayContainReference ? 0 : Integer.MIN_VALUE, 0);
+            this(name, mayContainReference, 0, 0);
         }
 
         public RegisterCategory(String name, int referenceMapOffset) {
-            this(name, referenceMapOffset, 0);
+            this(name, true, referenceMapOffset, 0);
         }
 
         public RegisterCategory(String name, int referenceMapOffset, int referenceMapShift) {
+            this(name, true, referenceMapOffset, referenceMapShift);
+        }
+
+        private RegisterCategory(String name, boolean mayContainReference, int referenceMapOffset, int referenceMapShift) {
             this.name = name;
+            this.mayContainReference = mayContainReference;
             this.referenceMapOffset = referenceMapOffset;
             this.referenceMapShift = referenceMapShift;
         }
@@ -143,9 +149,18 @@ public final class Register implements Comparable<Register> {
     }
 
     /**
-     * Get the start index of this register in the {@link ReferenceMap}.
+     * Determine whether this register needs to be part of the reference map.
+     */
+    public boolean mayContainReference() {
+        return registerCategory.mayContainReference;
+    }
+
+    /**
+     * Get the start index of this register in the {@link ReferenceMap}. This method may only be
+     * called if {@link #mayContainReference()} is true.
      */
     public int getReferenceMapIndex() {
+        assert mayContainReference();
         return (encoding << registerCategory.referenceMapShift) + registerCategory.referenceMapOffset;
     }
 

@@ -344,7 +344,7 @@ public class CodeUtil {
         public DefaultRegFormatter(Architecture arch) {
             registers = new Register[arch.getRegisterReferenceMapSize()];
             for (Register r : arch.getAvailableValueRegisters()) {
-                if (r.getReferenceMapIndex() >= 0) {
+                if (r.mayContainReference()) {
                     assert registers[r.getReferenceMapIndex()] == null : "overlapping registers " + r + " and " + registers[r.getReferenceMapIndex()] + " in reference map";
                     registers[r.getReferenceMapIndex()] = r;
                 }
