@@ -76,6 +76,9 @@ else
     ifeq ($(SYSROOT_CFLAGS),)
       # this will happen when building without spec.gmk, set SDKROOT to a valid SDK
       # path if your system does not have headers installed in the system frameworks
+      ifeq ($(SDKROOT),)
+        SDKROOT = `xcodebuild -sdk macosx -version|grep '^Path: '|sed 's/Path: //'`
+      endif
       SA_SYSROOT_FLAGS = -F"$(SDKROOT)/System/Library/Frameworks/JavaVM.framework/Frameworks"
     else
       # Just use SYSROOT_CFLAGS
