@@ -250,19 +250,25 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, HotSpotP
     }
 
     private boolean isImplicitStableField() {
-        if (isSynthetic()) {
-            if (isSyntheticImplicitStableField()) {
-                return true;
-            }
-        } else if (isWellKnownImplicitStableField()) {
+        if (isSyntheticEnumSwitchMap()) {
+            return true;
+        }
+        if (isWellKnownImplicitStableField()) {
             return true;
         }
         return false;
     }
 
-    private boolean isSyntheticImplicitStableField() {
-        assert this.isSynthetic();
-        if (isStatic() && isArray()) {
+    public boolean isDefaultStable() {
+        assert this.isStable();
+        if (isSyntheticEnumSwitchMap()) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean isSyntheticEnumSwitchMap() {
+        if (isSynthetic() && isStatic() && isArray()) {
             if (isFinal() && name.equals("$VALUES") || name.equals("ENUM$VALUES")) {
                 // generated int[] field for EnumClass::values()
                 return true;
@@ -288,6 +294,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, HotSpotP
         }
 
         private static final ResolvedJavaField STRING_VALUE_FIELD;
+
         static {
             try {
                 MetaAccessProvider metaAccess = runtime().getHostJVMCIBackend().getMetaAccess();

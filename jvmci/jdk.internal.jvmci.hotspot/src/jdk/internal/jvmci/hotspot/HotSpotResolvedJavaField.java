@@ -45,4 +45,12 @@ public interface HotSpotResolvedJavaField extends ResolvedJavaField {
      * @return true if field has {@link Stable} annotation, false otherwise
      */
     boolean isStable();
+
+    /**
+     * If this field is stable, checks if default values (0, null, etc.) should be considered stable
+     * as well.
+     *
+     * @return true if default values should be considered stable, false otherwise
+     */
+    boolean isDefaultStable();
 }

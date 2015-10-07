@@ -338,7 +338,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         if (!hotspotField.isStable()) {
             return readNonStableFieldValue(field, receiver);
         } else {
-            return readStableFieldValue(field, receiver, false);
+            return readStableFieldValue(field, receiver, hotspotField.isDefaultStable());
         }
     }
 
