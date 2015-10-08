@@ -42,7 +42,7 @@ public class HotSpotCompilationRequest extends CompilationRequest {
      * @param jvmciEnv address of a native {@code JVMCIEnv} object or 0L
      */
     public HotSpotCompilationRequest(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv) {
-        this(method, entryBCI, jvmciEnv, method.allocateCompileId(-1));
+        this(method, entryBCI, jvmciEnv, method.allocateCompileId(entryBCI));
     }
 
     /**
