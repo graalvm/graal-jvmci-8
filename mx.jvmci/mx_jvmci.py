@@ -1029,8 +1029,8 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             def _consume(s):
                 pass
             outCapture = _consume
-        mx.run([mx.gmake_cmd(), 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'clean'], out=outCapture, cwd=makeFiles)
-        mx.run([mx.gmake_cmd(), 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'ALT_OUTPUTDIR=' + nojvmci_outputdir, 'clean'], out=outCapture, cwd=makeFiles)
+        mx.run([mx.gmake_cmd(), 'ARCH_DATA_MODEL=64', 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'clean'], out=outCapture, cwd=makeFiles)
+        mx.run([mx.gmake_cmd(), 'ARCH_DATA_MODEL=64', 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'ALT_OUTPUTDIR=' + nojvmci_outputdir, 'clean'], out=outCapture, cwd=makeFiles)
         rmIfExists(_jdksDir())
         self._newestOutput = None
 
