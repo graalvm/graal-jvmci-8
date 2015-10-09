@@ -979,7 +979,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
 
     def needsBuild(self, newestInput):
         newestOutput = self.newestOutput()
-        for d in ['src', 'make', join('jvmci', 'jdk.internal.jvmci.hotspot', 'src_gen', 'hotspot')]:  # TODO should this be replaced by a dependency to the project?
+        for d in ['src', 'make', join('jvmci', 'jdk.vm.ci.hotspot', 'src_gen', 'hotspot')]:  # TODO should this be replaced by a dependency to the project?
             for root, dirnames, files in os.walk(join(_suite.dir, d)):
                 # ignore src/share/tools
                 if root == join(_suite.dir, 'src', 'share'):
@@ -1100,7 +1100,7 @@ def updateJvmCfg(jdkDir, vm):
                         continue
                 f.write(line)
 
-mx_gate.add_jacoco_includes(['jdk.internal.jvmci.*'])
+mx_gate.add_jacoco_includes(['jdk.vm.ci.*'])
 
 def run_vm(args, vm=None, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, vmbuild=None):
     """
@@ -1715,10 +1715,10 @@ class JVMCIArchiveParticipant:
             return True
         elif arcname.endswith('_OptionDescriptors.class'):
             # Need to create service files for the providers of the
-            # jdk.internal.jvmci.options.Options service created by
-            # jdk.internal.jvmci.options.processor.OptionProcessor.
+            # jdk.vm.ci.options.Options service created by
+            # jdk.vm.ci.options.processor.OptionProcessor.
             provider = arcname[:-len('.class'):].replace('/', '.')
-            self.services.setdefault('jdk.internal.jvmci.options.OptionDescriptors', []).append(provider)
+            self.services.setdefault('jdk.vm.ci.options.OptionDescriptors', []).append(provider)
         return False
 
     def __addsrc__(self, arcname, contents):

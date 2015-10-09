@@ -367,10 +367,10 @@ EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/jvmci-service.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-api.jar
 EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-hotspot.jar
 
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.HotSpotJVMCIBackendFactory
+EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory
 
-ifneq ("$(wildcard $(SHARED_DIR)/services/jdk.internal.jvmci.hotspot.events.EventProvider)","")
-CONDITIONAL_EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.internal.jvmci.hotspot.events.EventProvider
+ifneq ("$(wildcard $(SHARED_DIR)/services/jdk.vm.ci.hotspot.events.EventProvider)","")
+CONDITIONAL_EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.vm.ci.hotspot.events.EventProvider
 endif
 
 # The use of CONDITIONAL_EXPORT_LIST is for the checking

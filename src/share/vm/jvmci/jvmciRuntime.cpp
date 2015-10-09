@@ -652,7 +652,7 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
     Thread* THREAD = Thread::current();
 #ifdef ASSERT
     // This should only be called in the context of the JVMCI class being initialized
-    TempNewSymbol name = SymbolTable::new_symbol("jdk/internal/jvmci/runtime/JVMCI", CHECK);
+    TempNewSymbol name = SymbolTable::new_symbol("jdk/vm/ci/runtime/JVMCI", CHECK);
     instanceKlassHandle klass = InstanceKlass::cast(load_required_class(name));
     assert(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
            "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
@@ -677,7 +677,7 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
       }
       args.push_oop(options);
       args.push_int(parseOptionsFile);
-      callStatic("jdk/internal/jvmci/options/OptionsParser",
+      callStatic("jdk/vm/ci/options/OptionsParser",
                  "parseOptionsFromVM",
                  "([Ljava/lang/String;Z)Ljava/lang/Boolean;", &args, CHECK);
     }
@@ -686,14 +686,14 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
       JavaCallArguments args;
       oop compiler = java_lang_String::create_oop_from_str(_compiler, CHECK);
       args.push_oop(compiler);
-      callStatic("jdk/internal/jvmci/hotspot/HotSpotJVMCICompilerConfig",
+      callStatic("jdk/vm/ci/hotspot/HotSpotJVMCICompilerConfig",
                  "selectCompiler",
                  "(Ljava/lang/String;)Ljava/lang/Boolean;", &args, CHECK);
     }
 
-    Handle result = callStatic("jdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime",
+    Handle result = callStatic("jdk/vm/ci/hotspot/HotSpotJVMCIRuntime",
                                "runtime",
-                               "()Ljdk/internal/jvmci/hotspot/HotSpotJVMCIRuntime;", NULL, CHECK);
+                               "()Ljdk/vm/ci/hotspot/HotSpotJVMCIRuntime;", NULL, CHECK);
     objArrayOop trivial_prefixes = HotSpotJVMCIRuntime::trivialPrefixes(result);
     if (trivial_prefixes != NULL) {
       char** prefixes = NEW_C_HEAP_ARRAY(char*, trivial_prefixes->length(), mtCompiler);
@@ -715,9 +715,9 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
 
 void JVMCIRuntime::initialize_JVMCI(TRAPS) {
   if (JNIHandles::resolve(_HotSpotJVMCIRuntime_instance) == NULL) {
-    callStatic("jdk/internal/jvmci/runtime/JVMCI",
+    callStatic("jdk/vm/ci/runtime/JVMCI",
                "getRuntime",
-               "()Ljdk/internal/jvmci/runtime/JVMCIRuntime;", NULL, CHECK);
+               "()Ljdk/vm/ci/runtime/JVMCIRuntime;", NULL, CHECK);
   }
   assert(_HotSpotJVMCIRuntime_initialized == true, "what?");
 }
@@ -727,12 +727,12 @@ void JVMCIRuntime::metadata_do(void f(Metadata*)) {
   // the SystemDictionary well known classes should ensure the other
   // classes have already been loaded, so make sure their order in the
   // table enforces that.
-  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotResolvedJavaMethodImpl) <
-         SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
-  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotConstantPool) <
-         SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
-  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotResolvedObjectTypeImpl) <
-         SystemDictionary::WK_KLASS_ENUM_NAME(jdk_internal_jvmci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
+  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotResolvedJavaMethodImpl) <
+         SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
+  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotConstantPool) <
+         SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
+  assert(SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotResolvedObjectTypeImpl) <
+         SystemDictionary::WK_KLASS_ENUM_NAME(jdk_vm_ci_hotspot_HotSpotJVMCIMetaAccessContext), "must be loaded earlier");
 
   if (HotSpotJVMCIMetaAccessContext::klass() == NULL ||
       !HotSpotJVMCIMetaAccessContext::klass()->is_linked()) {
@@ -831,7 +831,7 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
   static Klass* _FactoryKlass = NULL;
   if (_FactoryKlass == NULL) {
     Thread* THREAD = Thread::current();
-    TempNewSymbol name = SymbolTable::new_symbol("jdk/internal/jvmci/service/JVMCIClassLoaderFactory", CHECK_ABORT);
+    TempNewSymbol name = SymbolTable::new_symbol("jdk/vm/ci/service/JVMCIClassLoaderFactory", CHECK_ABORT);
     KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, THREAD);
     if (HAS_PENDING_EXCEPTION) {
       static volatile int seen_error = 0;

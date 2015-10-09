@@ -70,7 +70,7 @@ class JVMCIRuntime: public AllStatic {
   /**
    * Instantiates a service object, calls its default constructor and returns it.
    *
-   * @param name the name of a class implementing jdk.internal.jvmci.service.Service
+   * @param name the name of a class implementing jdk.vm.ci.service.Service
    */
   static Handle create_Service(const char* name, TRAPS);
 
@@ -140,7 +140,7 @@ class JVMCIRuntime: public AllStatic {
 
   /**
    * Given an interface representing a JVMCI service (i.e. sub-interface of
-   * jdk.internal.jvmci.api.service.Service), gets an array of objects, one per
+   * jdk.vm.ci.api.service.Service), gets an array of objects, one per
    * known implementation of the service.
    */
   static objArrayHandle get_service_impls(KlassHandle serviceKlass, TRAPS);

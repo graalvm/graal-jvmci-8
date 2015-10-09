@@ -189,18 +189,18 @@ define process_providers
     @# Since all projects are built together with one javac call we cannot determine
     @# which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
     $(eval vmconfig := $(1)/hotspot/HotSpotVMConfig.inline.hpp)
-    $(eval vmconfigDest := $(HS_COMMON_SRC)/../mxbuild/jvmci/jdk.internal.jvmci.hotspot/src_gen/hotspot)
+    $(eval vmconfigDest := $(HS_COMMON_SRC)/../mxbuild/jvmci/jdk.vm.ci.hotspot/src_gen/hotspot)
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
 # Finds the *_OptionsDescriptors classes created by OptionProcessor (the processor for the @Option annotation)
-# and appends their names to services/jdk.internal.jvmci.options.OptionDescriptors.
+# and appends their names to services/jdk.vm.ci.options.OptionDescriptors.
 # Arguments:
 #  1: directory with contents of the JAR file
 define process_options
     $(eval services := $(1)/META-INF/services)
     $(QUIETLY) test -d $(services) || mkdir -p $(services)
-    $(eval optionDescriptors := $(1)/META-INF/services/jdk.internal.jvmci.options.OptionDescriptors)
+    $(eval optionDescriptors := $(1)/META-INF/services/jdk.vm.ci.options.OptionDescriptors)
     $(QUIETLY) cd $(1) && for i in $$(find . -name '*_OptionDescriptors.class' 2>/dev/null); do echo $${i} | sed 's:\\./\\(.*\\)\\.class:\\1:g' | tr '/' '.' >> $(abspath $(optionDescriptors)); done
 endef
 

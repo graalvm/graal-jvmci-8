@@ -40,18 +40,18 @@ define process_providers
     @# Since all projects are built together with one javac call we cannot determine
     @# which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
     $(eval vmconfig := $(1)/hotspot/HotSpotVMConfig.inline.hpp)
-    $(eval vmconfigDest := $(HS_COMMON_SRC)/../mxbuild/jvmci/jdk.internal.jvmci.hotspot/src_gen/hotspot)
+    $(eval vmconfigDest := $(HS_COMMON_SRC)/../mxbuild/jvmci/jdk.vm.ci.hotspot/src_gen/hotspot)
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
 # Finds the *_OptionsDescriptors classes created by OptionProcessor (the processor for the @Option annotation)
-# and appends their names to services/jdk.internal.jvmci.options.OptionDescriptors.
+# and appends their names to services/jdk.vm.ci.options.OptionDescriptors.
 # Arguments:
 #  1: directory with contents of the JAR file
 define process_options
     $(eval services := $(1)/META-INF/services)
     $(QUIETLY) test -d $(services) || mkdir -p $(services)
-    $(eval optionDescriptors := $(1)/META-INF/services/jdk.internal.jvmci.options.OptionDescriptors)
+    $(eval optionDescriptors := $(1)/META-INF/services/jdk.vm.ci.options.OptionDescriptors)
     $(QUIETLY) cd $(1) && for i in $$(find . -name '*_OptionDescriptors.class' 2>/dev/null); do echo $${i} | sed 's:\./\(.*\)\.class:\1:g' | tr '/' '.' >> $(abspath $(optionDescriptors)); done
 endef
 
@@ -119,32 +119,32 @@ clean:
 
 JDK_BOOTCLASSPATH = $(ABS_BOOTDIR)/jre/lib/resources.jar:$(ABS_BOOTDIR)/jre/lib/rt.jar:$(ABS_BOOTDIR)/jre/lib/sunrsasign.jar:$(ABS_BOOTDIR)/jre/lib/jsse.jar:$(ABS_BOOTDIR)/jre/lib/jce.jar:$(ABS_BOOTDIR)/jre/lib/charsets.jar:$(ABS_BOOTDIR)/jre/lib/jfr.jar:$(ABS_BOOTDIR)/jre/classes
 
-JVMCI_SERVICE_SRC += $(shell find jvmci/jdk.internal.jvmci.service/src -type f 2> /dev/null)
+JVMCI_SERVICE_SRC += $(shell find jvmci/jdk.vm.ci.service/src -type f 2> /dev/null)
 
 JVMCI_SERVICE_JAR = $(TARGET)/jvmci-service.jar
 
 EXPORTED_FILES += $(JVMCI_SERVICE_JAR)
 
-JVMCI_OPTIONS_SRC += $(shell find jvmci/jdk.internal.jvmci.inittimer/src -type f 2> /dev/null)
-JVMCI_OPTIONS_SRC += $(shell find jvmci/jdk.internal.jvmci.options/src -type f 2> /dev/null)
+JVMCI_OPTIONS_SRC += $(shell find jvmci/jdk.vm.ci.inittimer/src -type f 2> /dev/null)
+JVMCI_OPTIONS_SRC += $(shell find jvmci/jdk.vm.ci.options/src -type f 2> /dev/null)
 
 JVMCI_OPTIONS_JAR = $(TARGET)/jvmci-options.jar
 
 EXPORTED_FILES += $(JVMCI_OPTIONS_JAR)
 
-JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.options.processor/src -type f 2> /dev/null)
+JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find jvmci/jdk.vm.ci.options.processor/src -type f 2> /dev/null)
 
 JVMCI_OPTIONS_PROCESSOR_JAR = $(TARGET)/jvmci-options-processor.jar
 
 JVMCI_OPTIONS_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-options.jar
 
-JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.meta/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.code/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.runtime/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.common/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.compiler/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.amd64/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/jdk.internal.jvmci.sparc/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.meta/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.code/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.runtime/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.common/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.compiler/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.amd64/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.sparc/src -type f 2> /dev/null)
 
 JVMCI_API_JAR = $(TARGET)/jvmci-api.jar
 
@@ -152,29 +152,29 @@ JVMCI_API_DEP_JARS = $(TARGET)/jvmci-options.jar $(TARGET)/jvmci-service.jar
 
 EXPORTED_FILES += $(JVMCI_API_JAR)
 
-JVMCI_SERVICE_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.service.processor/src -type f 2> /dev/null)
+JVMCI_SERVICE_PROCESSOR_SRC += $(shell find jvmci/jdk.vm.ci.service.processor/src -type f 2> /dev/null)
 
 JVMCI_SERVICE_PROCESSOR_JAR = $(TARGET)/jvmci-service-processor.jar
 
 JVMCI_SERVICE_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-service.jar
 
-JVMCI_HOTSPOTVMCONFIG_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspotvmconfig/src -type f 2> /dev/null)
+JVMCI_HOTSPOTVMCONFIG_SRC += $(shell find jvmci/jdk.vm.ci.hotspotvmconfig/src -type f 2> /dev/null)
 
 JVMCI_HOTSPOTVMCONFIG_JAR = $(TARGET)/jvmci-hotspotvmconfig.jar
 
 EXPORTED_FILES += $(JVMCI_HOTSPOTVMCONFIG_JAR)
 
-JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspotvmconfig.processor/src -type f 2> /dev/null)
+JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find jvmci/jdk.vm.ci.hotspotvmconfig.processor/src -type f 2> /dev/null)
 
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/jvmci-hotspotvmconfig-processor.jar
 
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-options.jar $(TARGET)/jvmci-service.jar $(TARGET)/jvmci-api.jar $(TARGET)/jvmci-hotspotvmconfig.jar
 
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.amd64/src -type f 2> /dev/null)
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.sparc/src -type f 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot/src -type f 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot.amd64/src -type f 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot.sparc/src -type f 2> /dev/null)
 ifeq ($(shell find $(ABS_BOOTDIR)/ -name 'jfr.jar'; echo $$?),'0')
-JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.internal.jvmci.hotspot.jfr/src -type f 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot.jfr/src -type f 2> /dev/null)
 endif
 
 JVMCI_HOTSPOT_JAR = $(TARGET)/jvmci-hotspot.jar
@@ -194,7 +194,7 @@ $(JVMCI_OPTIONS_JAR): $(JVMCI_OPTIONS_SRC)
 
 
 $(JVMCI_OPTIONS_PROCESSOR_JAR): $(JVMCI_OPTIONS_PROCESSOR_SRC)  $(JVMCI_OPTIONS_PROCESSOR_DEP_JARS)
-	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_OPTIONS_PROCESSOR_DEP_JARS)),jvmci/jdk.internal.jvmci.options.processor/src/META-INF,$(JVMCI_OPTIONS_PROCESSOR_JAR))
+	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_OPTIONS_PROCESSOR_DEP_JARS)),jvmci/jdk.vm.ci.options.processor/src/META-INF,$(JVMCI_OPTIONS_PROCESSOR_JAR))
 
 
 $(JVMCI_API_JAR): $(JVMCI_API_SRC) $(JVMCI_OPTIONS_PROCESSOR_JAR) $(JVMCI_API_DEP_JARS)
@@ -202,7 +202,7 @@ $(JVMCI_API_JAR): $(JVMCI_API_SRC) $(JVMCI_OPTIONS_PROCESSOR_JAR) $(JVMCI_API_DE
 
 
 $(JVMCI_SERVICE_PROCESSOR_JAR): $(JVMCI_SERVICE_PROCESSOR_SRC)  $(JVMCI_SERVICE_PROCESSOR_DEP_JARS)
-	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_SERVICE_PROCESSOR_DEP_JARS)),jvmci/jdk.internal.jvmci.service.processor/src/META-INF,$(JVMCI_SERVICE_PROCESSOR_JAR))
+	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_SERVICE_PROCESSOR_DEP_JARS)),jvmci/jdk.vm.ci.service.processor/src/META-INF,$(JVMCI_SERVICE_PROCESSOR_JAR))
 
 
 $(JVMCI_HOTSPOTVMCONFIG_JAR): $(JVMCI_HOTSPOTVMCONFIG_SRC)  
@@ -210,7 +210,7 @@ $(JVMCI_HOTSPOTVMCONFIG_JAR): $(JVMCI_HOTSPOTVMCONFIG_SRC)
 
 
 $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR): $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)  $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS)
-	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS)),jvmci/jdk.internal.jvmci.hotspotvmconfig.processor/src/META-INF,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR))
+	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS)),jvmci/jdk.vm.ci.hotspotvmconfig.processor/src/META-INF,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR))
 
 
 $(JVMCI_HOTSPOT_JAR): $(JVMCI_HOTSPOT_SRC) $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR) $(JVMCI_OPTIONS_PROCESSOR_JAR) $(JVMCI_SERVICE_PROCESSOR_JAR) $(JVMCI_HOTSPOT_DEP_JARS)

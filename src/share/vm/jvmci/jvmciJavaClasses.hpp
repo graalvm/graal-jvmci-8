@@ -49,10 +49,10 @@ void jvmci_compute_offsets();
 
 #define COMPILER_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, oop_field, typeArrayOop_field, objArrayOop_field, static_oop_field, static_objArrayOop_field, static_int_field, static_boolean_field) \
   start_class(Architecture)                                                                                                                                    \
-    oop_field(Architecture, wordKind, "Ljdk/internal/jvmci/meta/PlatformKind;")                                                                                \
+    oop_field(Architecture, wordKind, "Ljdk/vm/ci/meta/PlatformKind;")                                                                                         \
   end_class                                                                                                                                                    \
   start_class(TargetDescription)                                                                                                                               \
-    oop_field(TargetDescription, arch, "Ljdk/internal/jvmci/code/Architecture;")                                                                               \
+    oop_field(TargetDescription, arch, "Ljdk/vm/ci/code/Architecture;")                                                                                        \
   end_class                                                                                                                                                    \
   start_class(HotSpotResolvedObjectTypeImpl)                                                                                                                   \
     oop_field(HotSpotResolvedObjectTypeImpl, javaClass, "Ljava/lang/Class;")                                                                                   \
@@ -76,52 +76,52 @@ void jvmci_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledCode)                                                                                                                             \
     oop_field(HotSpotCompiledCode, name, "Ljava/lang/String;")                                                                                                 \
-    objArrayOop_field(HotSpotCompiledCode, sites, "[Ljdk/internal/jvmci/code/CompilationResult$Site;")                                                           \
-    objArrayOop_field(HotSpotCompiledCode, exceptionHandlers, "[Ljdk/internal/jvmci/code/CompilationResult$ExceptionHandler;")                                   \
-    objArrayOop_field(HotSpotCompiledCode, comments, "[Ljdk/internal/jvmci/hotspot/HotSpotCompiledCode$Comment;")                                                \
-    objArrayOop_field(HotSpotCompiledCode, assumptions, "[Ljdk/internal/jvmci/meta/Assumptions$Assumption;")                                                     \
+    objArrayOop_field(HotSpotCompiledCode, sites, "[Ljdk/vm/ci/code/CompilationResult$Site;")                                                                  \
+    objArrayOop_field(HotSpotCompiledCode, exceptionHandlers, "[Ljdk/vm/ci/code/CompilationResult$ExceptionHandler;")                                          \
+    objArrayOop_field(HotSpotCompiledCode, comments, "[Ljdk/vm/ci/hotspot/HotSpotCompiledCode$Comment;")                                                       \
+    objArrayOop_field(HotSpotCompiledCode, assumptions, "[Ljdk/vm/ci/meta/Assumptions$Assumption;")                                                            \
     typeArrayOop_field(HotSpotCompiledCode, targetCode, "[B")                                                                                                  \
     int_field(HotSpotCompiledCode, targetCodeSize)                                                                                                             \
     typeArrayOop_field(HotSpotCompiledCode, dataSection, "[B")                                                                                                 \
     int_field(HotSpotCompiledCode, dataSectionAlignment)                                                                                                       \
-    objArrayOop_field(HotSpotCompiledCode, dataSectionPatches, "[Ljdk/internal/jvmci/code/CompilationResult$DataPatch;")                                         \
+    objArrayOop_field(HotSpotCompiledCode, dataSectionPatches, "[Ljdk/vm/ci/code/CompilationResult$DataPatch;")                                                \
     int_field(HotSpotCompiledCode, totalFrameSize)                                                                                                             \
     int_field(HotSpotCompiledCode, customStackAreaOffset)                                                                                                      \
-    objArrayOop_field(HotSpotCompiledCode, methods, "[Ljdk/internal/jvmci/meta/ResolvedJavaMethod;")                                                             \
+    objArrayOop_field(HotSpotCompiledCode, methods, "[Ljdk/vm/ci/meta/ResolvedJavaMethod;")                                                                    \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledCode_Comment)                                                                                                                     \
     oop_field(HotSpotCompiledCode_Comment, text, "Ljava/lang/String;")                                                                                         \
     int_field(HotSpotCompiledCode_Comment, pcOffset)                                                                                                           \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledNmethod)                                                                                                                          \
-    oop_field(HotSpotCompiledNmethod, method, "Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethod;")                                                          \
+    oop_field(HotSpotCompiledNmethod, method, "Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;")                                                                 \
     oop_field(HotSpotCompiledNmethod, installationFailureMessage, "Ljava/lang/String;")                                                                        \
     int_field(HotSpotCompiledNmethod, entryBCI)                                                                                                                \
     int_field(HotSpotCompiledNmethod, id)                                                                                                                      \
     long_field(HotSpotCompiledNmethod, jvmciEnv)                                                                                                               \
     boolean_field(HotSpotCompiledNmethod, hasUnsafeAccess)                                                                                                     \
   end_class                                                                                                                                                    \
-  start_class(HotSpotJVMCIMetaAccessContext)                                                                                                                      \
-    static_objArrayOop_field(HotSpotJVMCIMetaAccessContext, allContexts, "[Ljava/lang/ref/WeakReference;")                                                        \
-    objArrayOop_field(HotSpotJVMCIMetaAccessContext, metadataRoots, "[Ljava/lang/Object;")                                                                        \
+  start_class(HotSpotJVMCIMetaAccessContext)                                                                                                                   \
+    static_objArrayOop_field(HotSpotJVMCIMetaAccessContext, allContexts, "[Ljava/lang/ref/WeakReference;")                                                     \
+    objArrayOop_field(HotSpotJVMCIMetaAccessContext, metadataRoots, "[Ljava/lang/Object;")                                                                     \
   end_class                                                                                                                                                    \
   start_class(HotSpotForeignCallTarget)                                                                                                                        \
     long_field(HotSpotForeignCallTarget, address)                                                                                                              \
   end_class                                                                                                                                                    \
   start_class(Assumptions_NoFinalizableSubclass)                                                                                                               \
-    oop_field(Assumptions_NoFinalizableSubclass, receiverType, "Ljdk/internal/jvmci/meta/ResolvedJavaType;")                                                     \
+    oop_field(Assumptions_NoFinalizableSubclass, receiverType, "Ljdk/vm/ci/meta/ResolvedJavaType;")                                                            \
   end_class                                                                                                                                                    \
   start_class(Assumptions_ConcreteSubtype)                                                                                                                     \
-    oop_field(Assumptions_ConcreteSubtype, context, "Ljdk/internal/jvmci/meta/ResolvedJavaType;")                                                                \
-    oop_field(Assumptions_ConcreteSubtype, subtype, "Ljdk/internal/jvmci/meta/ResolvedJavaType;")                                                                \
+    oop_field(Assumptions_ConcreteSubtype, context, "Ljdk/vm/ci/meta/ResolvedJavaType;")                                                                       \
+    oop_field(Assumptions_ConcreteSubtype, subtype, "Ljdk/vm/ci/meta/ResolvedJavaType;")                                                                       \
   end_class                                                                                                                                                    \
   start_class(Assumptions_LeafType)                                                                                                                            \
-    oop_field(Assumptions_LeafType, context, "Ljdk/internal/jvmci/meta/ResolvedJavaType;")                                                                       \
+    oop_field(Assumptions_LeafType, context, "Ljdk/vm/ci/meta/ResolvedJavaType;")                                                                              \
   end_class                                                                                                                                                    \
   start_class(Assumptions_ConcreteMethod)                                                                                                                      \
-    oop_field(Assumptions_ConcreteMethod, method, "Ljdk/internal/jvmci/meta/ResolvedJavaMethod;")                                                                \
-    oop_field(Assumptions_ConcreteMethod, context, "Ljdk/internal/jvmci/meta/ResolvedJavaType;")                                                                 \
-    oop_field(Assumptions_ConcreteMethod, impl, "Ljdk/internal/jvmci/meta/ResolvedJavaMethod;")                                                                  \
+    oop_field(Assumptions_ConcreteMethod, method, "Ljdk/vm/ci/meta/ResolvedJavaMethod;")                                                                       \
+    oop_field(Assumptions_ConcreteMethod, context, "Ljdk/vm/ci/meta/ResolvedJavaType;")                                                                        \
+    oop_field(Assumptions_ConcreteMethod, impl, "Ljdk/vm/ci/meta/ResolvedJavaMethod;")                                                                         \
   end_class                                                                                                                                                    \
   start_class(Assumptions_CallSiteTargetValue)                                                                                                                 \
     oop_field(Assumptions_CallSiteTargetValue, callSite, "Ljava/lang/invoke/CallSite;")                                                                        \
@@ -131,30 +131,30 @@ void jvmci_compute_offsets();
     int_field(CompilationResult_Site, pcOffset)                                                                                                                \
   end_class                                                                                                                                                    \
   start_class(CompilationResult_Call)                                                                                                                          \
-    oop_field(CompilationResult_Call, target, "Ljdk/internal/jvmci/meta/InvokeTarget;")                                                                          \
-    oop_field(CompilationResult_Call, debugInfo, "Ljdk/internal/jvmci/code/DebugInfo;")                                                                          \
+    oop_field(CompilationResult_Call, target, "Ljdk/vm/ci/meta/InvokeTarget;")                                                                                 \
+    oop_field(CompilationResult_Call, debugInfo, "Ljdk/vm/ci/code/DebugInfo;")                                                                                 \
   end_class                                                                                                                                                    \
   start_class(CompilationResult_DataPatch)                                                                                                                     \
-    oop_field(CompilationResult_DataPatch, reference, "Ljdk/internal/jvmci/code/CompilationResult$Reference;")                                                   \
+    oop_field(CompilationResult_DataPatch, reference, "Ljdk/vm/ci/code/CompilationResult$Reference;")                                                          \
   end_class                                                                                                                                                    \
   start_class(CompilationResult_ConstantReference)                                                                                                             \
-    oop_field(CompilationResult_ConstantReference, constant, "Ljdk/internal/jvmci/meta/VMConstant;")                                                             \
+    oop_field(CompilationResult_ConstantReference, constant, "Ljdk/vm/ci/meta/VMConstant;")                                                                    \
   end_class                                                                                                                                                    \
   start_class(CompilationResult_DataSectionReference)                                                                                                          \
     int_field(CompilationResult_DataSectionReference, offset)                                                                                                  \
   end_class                                                                                                                                                    \
   start_class(InfopointReason)                                                                                                                                 \
-    static_oop_field(InfopointReason, UNKNOWN, "Ljdk/internal/jvmci/code/InfopointReason;")                                                                      \
-    static_oop_field(InfopointReason, SAFEPOINT, "Ljdk/internal/jvmci/code/InfopointReason;")                                                                    \
-    static_oop_field(InfopointReason, CALL, "Ljdk/internal/jvmci/code/InfopointReason;")                                                                         \
-    static_oop_field(InfopointReason, IMPLICIT_EXCEPTION, "Ljdk/internal/jvmci/code/InfopointReason;")                                                           \
-    static_oop_field(InfopointReason, METHOD_START, "Ljdk/internal/jvmci/code/InfopointReason;")                                                                 \
-    static_oop_field(InfopointReason, METHOD_END, "Ljdk/internal/jvmci/code/InfopointReason;")                                                                   \
-    static_oop_field(InfopointReason, LINE_NUMBER, "Ljdk/internal/jvmci/code/InfopointReason;")                                                                  \
+    static_oop_field(InfopointReason, UNKNOWN, "Ljdk/vm/ci/code/InfopointReason;")                                                                             \
+    static_oop_field(InfopointReason, SAFEPOINT, "Ljdk/vm/ci/code/InfopointReason;")                                                                           \
+    static_oop_field(InfopointReason, CALL, "Ljdk/vm/ci/code/InfopointReason;")                                                                                \
+    static_oop_field(InfopointReason, IMPLICIT_EXCEPTION, "Ljdk/vm/ci/code/InfopointReason;")                                                                  \
+    static_oop_field(InfopointReason, METHOD_START, "Ljdk/vm/ci/code/InfopointReason;")                                                                        \
+    static_oop_field(InfopointReason, METHOD_END, "Ljdk/vm/ci/code/InfopointReason;")                                                                          \
+    static_oop_field(InfopointReason, LINE_NUMBER, "Ljdk/vm/ci/code/InfopointReason;")                                                                         \
   end_class                                                                                                                                                    \
   start_class(CompilationResult_Infopoint)                                                                                                                     \
-    oop_field(CompilationResult_Infopoint, debugInfo, "Ljdk/internal/jvmci/code/DebugInfo;")                                                                     \
-    oop_field(CompilationResult_Infopoint, reason, "Ljdk/internal/jvmci/code/InfopointReason;")                                                                  \
+    oop_field(CompilationResult_Infopoint, debugInfo, "Ljdk/vm/ci/code/DebugInfo;")                                                                            \
+    oop_field(CompilationResult_Infopoint, reason, "Ljdk/vm/ci/code/InfopointReason;")                                                                         \
   end_class                                                                                                                                                    \
   start_class(CompilationResult_ExceptionHandler)                                                                                                              \
     int_field(CompilationResult_ExceptionHandler, handlerPos)                                                                                                  \
@@ -163,24 +163,24 @@ void jvmci_compute_offsets();
     oop_field(CompilationResult_Mark, id, "Ljava/lang/Object;")                                                                                                \
   end_class                                                                                                                                                    \
   start_class(DebugInfo)                                                                                                                                       \
-    oop_field(DebugInfo, bytecodePosition, "Ljdk/internal/jvmci/code/BytecodePosition;")                                                                         \
-    oop_field(DebugInfo, referenceMap, "Ljdk/internal/jvmci/code/ReferenceMap;")                                                                                 \
-    oop_field(DebugInfo, calleeSaveInfo, "Ljdk/internal/jvmci/code/RegisterSaveLayout;")                                                                         \
-    objArrayOop_field(DebugInfo, virtualObjectMapping, "[Ljdk/internal/jvmci/code/VirtualObject;")                                                               \
+    oop_field(DebugInfo, bytecodePosition, "Ljdk/vm/ci/code/BytecodePosition;")                                                                                \
+    oop_field(DebugInfo, referenceMap, "Ljdk/vm/ci/code/ReferenceMap;")                                                                                        \
+    oop_field(DebugInfo, calleeSaveInfo, "Ljdk/vm/ci/code/RegisterSaveLayout;")                                                                                \
+    objArrayOop_field(DebugInfo, virtualObjectMapping, "[Ljdk/vm/ci/code/VirtualObject;")                                                                      \
   end_class                                                                                                                                                    \
   start_class(HotSpotReferenceMap)                                                                                                                             \
-    objArrayOop_field(HotSpotReferenceMap, objects, "[Ljdk/internal/jvmci/code/Location;")                                                                       \
-    objArrayOop_field(HotSpotReferenceMap, derivedBase, "[Ljdk/internal/jvmci/code/Location;")                                                                   \
+    objArrayOop_field(HotSpotReferenceMap, objects, "[Ljdk/vm/ci/code/Location;")                                                                              \
+    objArrayOop_field(HotSpotReferenceMap, derivedBase, "[Ljdk/vm/ci/code/Location;")                                                                          \
     typeArrayOop_field(HotSpotReferenceMap, sizeInBytes, "[I")                                                                                                 \
     int_field(HotSpotReferenceMap, maxRegisterSize)                                                                                                            \
   end_class                                                                                                                                                    \
   start_class(RegisterSaveLayout)                                                                                                                              \
-    objArrayOop_field(RegisterSaveLayout, registers, "[Ljdk/internal/jvmci/code/Register;")                                                                      \
+    objArrayOop_field(RegisterSaveLayout, registers, "[Ljdk/vm/ci/code/Register;")                                                                             \
     typeArrayOop_field(RegisterSaveLayout, slots, "[I")                                                                                                        \
   end_class                                                                                                                                                    \
   start_class(BytecodeFrame)                                                                                                                                   \
-    objArrayOop_field(BytecodeFrame, values, "[Ljdk/internal/jvmci/meta/JavaValue;")                                                                           \
-    objArrayOop_field(BytecodeFrame, slotKinds, "[Ljdk/internal/jvmci/meta/JavaKind;")                                                                         \
+    objArrayOop_field(BytecodeFrame, values, "[Ljdk/vm/ci/meta/JavaValue;")                                                                                    \
+    objArrayOop_field(BytecodeFrame, slotKinds, "[Ljdk/vm/ci/meta/JavaKind;")                                                                                  \
     int_field(BytecodeFrame, numLocals)                                                                                                                        \
     int_field(BytecodeFrame, numStack)                                                                                                                         \
     int_field(BytecodeFrame, numLocks)                                                                                                                         \
@@ -189,14 +189,14 @@ void jvmci_compute_offsets();
     static_int_field(BytecodeFrame, BEFORE_BCI)                                                                                                                \
   end_class                                                                                                                                                    \
   start_class(BytecodePosition)                                                                                                                                \
-    oop_field(BytecodePosition, caller, "Ljdk/internal/jvmci/code/BytecodePosition;")                                                                            \
-    oop_field(BytecodePosition, method, "Ljdk/internal/jvmci/meta/ResolvedJavaMethod;")                                                                          \
+    oop_field(BytecodePosition, caller, "Ljdk/vm/ci/code/BytecodePosition;")                                                                                   \
+    oop_field(BytecodePosition, method, "Ljdk/vm/ci/meta/ResolvedJavaMethod;")                                                                                 \
     int_field(BytecodePosition, bci)                                                                                                                           \
   end_class                                                                                                                                                    \
   start_class(JavaConstant)                                                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(PrimitiveConstant)                                                                                                                               \
-    oop_field(PrimitiveConstant, kind, "Ljdk/internal/jvmci/meta/JavaKind;")                                                                                   \
+    oop_field(PrimitiveConstant, kind, "Ljdk/vm/ci/meta/JavaKind;")                                                                                            \
     long_field(PrimitiveConstant, primitive)                                                                                                                   \
   end_class                                                                                                                                                    \
   start_class(RawConstant)                                                                                                                                     \
@@ -211,31 +211,31 @@ void jvmci_compute_offsets();
     boolean_field(HotSpotObjectConstantImpl, compressed)                                                                                                       \
   end_class                                                                                                                                                    \
   start_class(HotSpotMetaspaceConstantImpl)                                                                                                                    \
-    oop_field(HotSpotMetaspaceConstantImpl, metaspaceObject, "Ljdk/internal/jvmci/hotspot/MetaspaceWrapperObject;")                                            \
+    oop_field(HotSpotMetaspaceConstantImpl, metaspaceObject, "Ljdk/vm/ci/hotspot/MetaspaceWrapperObject;")                                                     \
     boolean_field(HotSpotMetaspaceConstantImpl, compressed)                                                                                                    \
   end_class                                                                                                                                                    \
   start_class(JavaKind)                                                                                                                                        \
     char_field(JavaKind, typeChar)                                                                                                                             \
-    static_oop_field(JavaKind, Boolean, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                 \
-    static_oop_field(JavaKind, Byte, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                    \
-    static_oop_field(JavaKind, Char, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                    \
-    static_oop_field(JavaKind, Short, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                   \
-    static_oop_field(JavaKind, Int, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                     \
-    static_oop_field(JavaKind, Long, "Ljdk/internal/jvmci/meta/JavaKind;");                                                                                    \
+    static_oop_field(JavaKind, Boolean, "Ljdk/vm/ci/meta/JavaKind;");                                                                                          \
+    static_oop_field(JavaKind, Byte, "Ljdk/vm/ci/meta/JavaKind;");                                                                                             \
+    static_oop_field(JavaKind, Char, "Ljdk/vm/ci/meta/JavaKind;");                                                                                             \
+    static_oop_field(JavaKind, Short, "Ljdk/vm/ci/meta/JavaKind;");                                                                                            \
+    static_oop_field(JavaKind, Int, "Ljdk/vm/ci/meta/JavaKind;");                                                                                              \
+    static_oop_field(JavaKind, Long, "Ljdk/vm/ci/meta/JavaKind;");                                                                                             \
   end_class                                                                                                                                                    \
   start_class(LIRKind)                                                                                                                                         \
-    oop_field(LIRKind, platformKind, "Ljdk/internal/jvmci/meta/PlatformKind;")                                                                                   \
+    oop_field(LIRKind, platformKind, "Ljdk/vm/ci/meta/PlatformKind;")                                                                                          \
     int_field(LIRKind, referenceMask)                                                                                                                          \
   end_class                                                                                                                                                    \
   start_class(Value)                                                                                                                                           \
-    oop_field(Value, lirKind, "Ljdk/internal/jvmci/meta/LIRKind;")                                                                                             \
-    static_oop_field(Value, ILLEGAL, "Ljdk/internal/jvmci/meta/AllocatableValue;");                                                                            \
+    oop_field(Value, lirKind, "Ljdk/vm/ci/meta/LIRKind;")                                                                                                      \
+    static_oop_field(Value, ILLEGAL, "Ljdk/vm/ci/meta/AllocatableValue;");                                                                                     \
   end_class                                                                                                                                                    \
   start_class(RegisterValue)                                                                                                                                   \
-    oop_field(RegisterValue, reg, "Ljdk/internal/jvmci/code/Register;")                                                                                          \
+    oop_field(RegisterValue, reg, "Ljdk/vm/ci/code/Register;")                                                                                                 \
   end_class                                                                                                                                                    \
   start_class(code_Location)                                                                                                                                   \
-    oop_field(code_Location, reg, "Ljdk/internal/jvmci/code/Register;")                                                                                          \
+    oop_field(code_Location, reg, "Ljdk/vm/ci/code/Register;")                                                                                                 \
     int_field(code_Location, offset)                                                                                                                           \
   end_class                                                                                                                                                    \
   start_class(code_Register)                                                                                                                                   \
@@ -248,24 +248,24 @@ void jvmci_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(VirtualObject)                                                                                                                                   \
     int_field(VirtualObject, id)                                                                                                                               \
-    oop_field(VirtualObject, type, "Ljdk/internal/jvmci/meta/ResolvedJavaType;")                                                                               \
-    objArrayOop_field(VirtualObject, values, "[Ljdk/internal/jvmci/meta/JavaValue;")                                                                           \
-    objArrayOop_field(VirtualObject, slotKinds, "[Ljdk/internal/jvmci/meta/JavaKind;")                                                                         \
+    oop_field(VirtualObject, type, "Ljdk/vm/ci/meta/ResolvedJavaType;")                                                                                        \
+    objArrayOop_field(VirtualObject, values, "[Ljdk/vm/ci/meta/JavaValue;")                                                                                    \
+    objArrayOop_field(VirtualObject, slotKinds, "[Ljdk/vm/ci/meta/JavaKind;")                                                                                  \
   end_class                                                                                                                                                    \
   start_class(StackLockValue)                                                                                                                                  \
-    oop_field(StackLockValue, owner, "Ljdk/internal/jvmci/meta/JavaValue;")                                                                                    \
-    oop_field(StackLockValue, slot, "Ljdk/internal/jvmci/code/StackSlotValue;")                                                                                \
+    oop_field(StackLockValue, owner, "Ljdk/vm/ci/meta/JavaValue;")                                                                                             \
+    oop_field(StackLockValue, slot, "Ljdk/vm/ci/code/StackSlotValue;")                                                                                         \
     boolean_field(StackLockValue, eliminated)                                                                                                                  \
   end_class                                                                                                                                                    \
   start_class(SpeculationLog)                                                                                                                                  \
     oop_field(SpeculationLog, lastFailed, "Ljava/lang/Object;")                                                                                                \
   end_class                                                                                                                                                    \
   start_class(HotSpotStackFrameReference)                                                                                                                      \
-    oop_field(HotSpotStackFrameReference, compilerToVM, "Ljdk/internal/jvmci/hotspot/CompilerToVM;")                                                             \
+    oop_field(HotSpotStackFrameReference, compilerToVM, "Ljdk/vm/ci/hotspot/CompilerToVM;")                                                                    \
     long_field(HotSpotStackFrameReference, stackPointer)                                                                                                       \
     int_field(HotSpotStackFrameReference, frameNumber)                                                                                                         \
     int_field(HotSpotStackFrameReference, bci)                                                                                                                 \
-    oop_field(HotSpotStackFrameReference, method, "Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethod;")                                                    \
+    oop_field(HotSpotStackFrameReference, method, "Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;")                                                             \
     objArrayOop_field(HotSpotStackFrameReference, locals, "[Ljava/lang/Object;")                                                                               \
     typeArrayOop_field(HotSpotStackFrameReference, localIsVirtual, "[Z")                                                                                       \
   end_class                                                                                                                                                    \

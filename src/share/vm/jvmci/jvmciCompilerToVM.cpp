@@ -726,7 +726,7 @@ C2V_VMENTRY(jobject, executeInstalledCode, (JNIEnv*, jobject, jobject args, jobj
 
   jlong nmethodValue = InstalledCode::address(hotspotInstalledCode);
   if (nmethodValue == 0L) {
-    THROW_NULL(vmSymbols::jdk_internal_jvmci_code_InvalidInstalledCodeException());
+    THROW_NULL(vmSymbols::jdk_vm_ci_code_InvalidInstalledCodeException());
   }
   nmethod* nm = (nmethod*) (address) nmethodValue;
   methodHandle mh = nm->method();
@@ -1196,20 +1196,20 @@ C2V_END
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
 
-#define SPECULATION_LOG       "Ljdk/internal/jvmci/meta/SpeculationLog;"
+#define SPECULATION_LOG       "Ljdk/vm/ci/meta/SpeculationLog;"
 #define STRING                "Ljava/lang/String;"
 #define OBJECT                "Ljava/lang/Object;"
 #define CLASS                 "Ljava/lang/Class;"
 #define STACK_TRACE_ELEMENT   "Ljava/lang/StackTraceElement;"
-#define INSTALLED_CODE        "Ljdk/internal/jvmci/code/InstalledCode;"
-#define TARGET_DESCRIPTION    "Ljdk/internal/jvmci/code/TargetDescription;"
-#define RESOLVED_METHOD       "Ljdk/internal/jvmci/meta/ResolvedJavaMethod;"
-#define HS_RESOLVED_METHOD    "Ljdk/internal/jvmci/hotspot/HotSpotResolvedJavaMethodImpl;"
-#define HS_RESOLVED_KLASS     "Ljdk/internal/jvmci/hotspot/HotSpotResolvedObjectTypeImpl;"
-#define HS_CONSTANT_POOL      "Ljdk/internal/jvmci/hotspot/HotSpotConstantPool;"
-#define HS_COMPILED_CODE      "Ljdk/internal/jvmci/hotspot/HotSpotCompiledCode;"
-#define HS_CONFIG             "Ljdk/internal/jvmci/hotspot/HotSpotVMConfig;"
-#define HS_STACK_FRAME_REF    "Ljdk/internal/jvmci/hotspot/HotSpotStackFrameReference;"
+#define INSTALLED_CODE        "Ljdk/vm/ci/code/InstalledCode;"
+#define TARGET_DESCRIPTION    "Ljdk/vm/ci/code/TargetDescription;"
+#define RESOLVED_METHOD       "Ljdk/vm/ci/meta/ResolvedJavaMethod;"
+#define HS_RESOLVED_METHOD    "Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;"
+#define HS_RESOLVED_KLASS     "Ljdk/vm/ci/hotspot/HotSpotResolvedObjectTypeImpl;"
+#define HS_CONSTANT_POOL      "Ljdk/vm/ci/hotspot/HotSpotConstantPool;"
+#define HS_COMPILED_CODE      "Ljdk/vm/ci/hotspot/HotSpotCompiledCode;"
+#define HS_CONFIG             "Ljdk/vm/ci/hotspot/HotSpotVMConfig;"
+#define HS_STACK_FRAME_REF    "Ljdk/vm/ci/hotspot/HotSpotStackFrameReference;"
 #define METASPACE_METHOD_DATA "J"
 
 JNINativeMethod CompilerToVM::methods[] = {
