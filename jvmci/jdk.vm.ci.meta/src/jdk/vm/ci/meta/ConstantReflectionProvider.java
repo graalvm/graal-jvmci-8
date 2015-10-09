@@ -134,12 +134,6 @@ public interface ConstantReflectionProvider {
     JavaConstant forString(String value);
 
     /**
-     * Boxes a raw object as a {@link JavaConstant}. May return {@code null} if the object can not
-     * be transferred from the compiler VM to the runtime VM.
-     */
-    JavaConstant forObject(Object value);
-
-    /**
      * Returns the {@link ResolvedJavaType} for a {@link Class} object (or any other object regarded
      * as a class by the VM) encapsulated in the given constant. Returns {@code null} if the
      * constant does not encapsulate a class, or if the type is not available at this point.
