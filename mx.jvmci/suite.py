@@ -1,5 +1,5 @@
 suite = {
-  "mxversion" : "5.5.6",
+  "mxversion" : "5.5.7",
   "name" : "jvmci",
   "url" : "http://openjdk.java.net/projects/graal",
   "developer" : {
@@ -31,25 +31,21 @@ suite = {
     # ------------- Libraries -------------
 
     "HCFDIS" : {
-      "path" : "lib/hcfdis-3.jar",
       "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/hcfdis-3.jar"],
       "sha1" : "a71247c6ddb90aad4abf7c77e501acc60674ef57",
     },
 
     "C1VISUALIZER_DIST" : {
-      "path" : "lib/c1visualizer_2015-07-22.zip",
       "urls" : ["https://java.net/downloads/c1visualizer/c1visualizer_2015-07-22.zip"],
       "sha1" : "7ead6b2f7ed4643ef4d3343a5562e3d3f39564ac",
     },
 
     "JOL_INTERNALS" : {
-      "path" : "lib/jol-internals.jar",
       "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/truffle/jol/jol-internals.jar"],
       "sha1" : "508bcd26a4d7c4c44048990c6ea789a3b11a62dc",
     },
 
     "BATIK" : {
-      "path" : "lib/batik-all-1.7.jar",
       "sha1" : "122b87ca88e41a415cf8b523fd3d03b4325134a3",
       "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/graal-external-deps/batik-all-1.7.jar"],
     },
@@ -354,23 +350,17 @@ suite = {
     },
 
     "JVMCI_SERVICE" : {
-      "path" : "build/jvmci-service.jar",
       "subDir" : "jvmci",
-      "sourcesPath" : "build/jvmci-service.src.zip",
       "dependencies" : ["jdk.vm.ci.service"],
     },
 
     "JVMCI_OPTIONS" : {
-      "path" : "build/jvmci-options.jar",
       "subDir" : "jvmci",
-      "sourcesPath" : "build/jvmci-options.src.zip",
       "dependencies" : ["jdk.vm.ci.options"],
     },
 
     "JVMCI_API" : {
-      "path" : "build/jvmci-api.jar",
       "subDir" : "jvmci",
-      "sourcesPath" : "build/jvmci-api.src.zip",
       "dependencies" : [
         "jdk.vm.ci.inittimer",
         "jdk.vm.ci.runtime",
@@ -386,18 +376,14 @@ suite = {
     },
 
     "JVMCI_HOTSPOTVMCONFIG" : {
-      "path" : "build/jvmci-hotspotvmconfig.jar",
       "subDir" : "jvmci",
-      "sourcesPath" : "build/jvmci-hotspotvmconfig.src.zip",
       "dependencies" : [
         "jdk.vm.ci.hotspotvmconfig",
       ],
     },
 
     "JVMCI_HOTSPOT" : {
-      "path" : "build/jvmci-hotspot.jar",
       "subDir" : "jvmci",
-      "sourcesPath" : "build/jvmci-hotspot.src.zip",
       "dependencies" : [
         "jdk.vm.ci.hotspot.amd64",
         "jdk.vm.ci.hotspot.sparc",
@@ -411,9 +397,7 @@ suite = {
     },
 
     "JVMCI_TEST" : {
-      "path" : "build/jvmci-test.jar",
       "subDir" : "jvmci",
-      "sourcesPath" : "build/jvmci-test.src.zip",
       "dependencies" : [
         "jdk.vm.ci.options.test",
         "jdk.vm.ci.runtime.test",
@@ -425,9 +409,7 @@ suite = {
     },
 
     "JVMCI_OPTIONS_PROCESSOR" : {
-      "path" : "build/jvmci-options-processor.jar",
       "subDir" : "jvmci",
-      "sourcesPath" : "build/jvmci-options-processor.src.zip",
       "dependencies" : ["jdk.vm.ci.options.processor"],
       "distDependencies" : [
         "JVMCI_OPTIONS",
@@ -435,9 +417,7 @@ suite = {
     },
 
     "JVMCI_HOTSPOTVMCONFIG_PROCESSOR" : {
-      "path" : "build/jvmci-hotspotvmconfig-processor.jar",
       "subDir" : "jvmci",
-      "sourcesPath" : "build/jvmci-hotspotvmconfig-processor.src.zip",
       "dependencies" : ["jdk.vm.ci.hotspotvmconfig.processor"],
       "distDependencies" : [
         "JVMCI_API",
@@ -446,9 +426,7 @@ suite = {
     },
 
     "JVMCI_SERVICE_PROCESSOR" : {
-      "path" : "build/jvmci-service-processor.jar",
       "subDir" : "jvmci",
-      "sourcesPath" : "build/jvmci-service-processor.src.zip",
       "dependencies" : ["jdk.vm.ci.service.processor"],
       "distDependencies" : [
         "JVMCI_SERVICE",
