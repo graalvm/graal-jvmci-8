@@ -1305,22 +1305,22 @@ def igv(args):
 
 def c1visualizer(args):
     """run the Cl Compiler Visualizer"""
-    libpath = join(_suite.dir, 'lib')
+    extractPath = join(_suite.get_output_root())
     if mx.get_os() == 'windows':
-        executable = join(libpath, 'c1visualizer', 'bin', 'c1visualizer.exe')
+        executable = join(extractPath, 'c1visualizer', 'bin', 'c1visualizer.exe')
     else:
-        executable = join(libpath, 'c1visualizer', 'bin', 'c1visualizer')
+        executable = join(extractPath, 'c1visualizer', 'bin', 'c1visualizer')
 
-    # Check whether the current C1Visualizer installation is the up-to-date
+    # Check whether the current C1Visualizer installation is up-to-date
     if exists(executable) and not exists(mx.library('C1VISUALIZER_DIST').get_path(resolve=False)):
         mx.log('Updating C1Visualizer')
-        shutil.rmtree(join(libpath, 'c1visualizer'))
+        shutil.rmtree(join(extractPath, 'c1visualizer'))
 
     archive = mx.library('C1VISUALIZER_DIST').get_path(resolve=True)
 
     if not exists(executable):
         zf = zipfile.ZipFile(archive, 'r')
-        zf.extractall(libpath)
+        zf.extractall(extractPath)
 
     if not exists(executable):
         mx.abort('C1Visualizer binary does not exist: ' + executable)
@@ -1572,7 +1572,7 @@ def hsdis(args, copyToDir=None):
     else:
         osSuffix = ''
     lib = mx.add_lib_suffix('hsdis-' + osSuffix + mx.get_arch())
-    path = join(_suite.dir, 'lib', lib)
+    path = join(_suite.get_output_root(), lib)
 
     sha1s = {
         'att/hsdis-amd64.dll' : 'bcbd535a9568b5075ab41e96205e26a2bac64f72',
