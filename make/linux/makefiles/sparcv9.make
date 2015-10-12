@@ -24,4 +24,7 @@
 # gcc 4.0 miscompiles this code in -m64
 OPT_CFLAGS/macro.o = -O0
 
+# gcc 4.9.1 optimizes templateInterpreter.cpp copy_table with memcpy which does not work on SPARC
+OPT_FLAGS += -fno-tree-loop-distribute-patterns
+
 CFLAGS += -D_LP64=1
