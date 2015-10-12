@@ -120,6 +120,7 @@ void ConstantPoolCacheEntry::set_field(Bytecodes::Code get_code,
                   ((is_volatile ? 1 : 0) << is_volatile_shift) |
                   ((is_final    ? 1 : 0) << is_final_shift),
                   field_index);
+  OrderAccess::storestore();
   set_bytecode_1(get_code);
   set_bytecode_2(put_code);
   NOT_PRODUCT(verify(tty));
