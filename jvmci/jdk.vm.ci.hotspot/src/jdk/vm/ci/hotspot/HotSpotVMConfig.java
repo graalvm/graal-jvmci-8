@@ -865,7 +865,7 @@ public class HotSpotVMConfig {
      */
     public final int arrayKlassLayoutHelperIdentifier = 0x80000000;
 
-    @HotSpotVMField(name = "ArrayKlass::_component_mirror", type = "oop", get = HotSpotVMField.Type.OFFSET) @Stable public int arrayKlassComponentMirrorOffset;
+    @HotSpotVMField(name = "ArrayKlass::_component_mirror", type = "oop", get = HotSpotVMField.Type.OFFSET) @Stable int arrayKlassComponentMirrorOffset;
 
     @HotSpotVMType(name = "vtableEntry", get = HotSpotVMType.Type.SIZE) @Stable public int vtableEntrySize;
     @HotSpotVMField(name = "vtableEntry::_method", type = "Method*", get = HotSpotVMField.Type.OFFSET) @Stable public int vtableEntryMethodOffset;
@@ -1066,9 +1066,6 @@ public class HotSpotVMConfig {
     @HotSpotVMConstant(name = "Method::invalid_vtable_index") @Stable public int invalidVtableIndex;
 
     @HotSpotVMConstant(name = "InvocationEntryBci") @Stable public int invocationEntryBci;
-
-    @HotSpotVMConstant(name = "JVM_ACC_MONITOR_MATCH") @Stable public int jvmAccMonitorMatch;
-    @HotSpotVMConstant(name = "JVM_ACC_HAS_MONITOR_BYTECODES") @Stable public int jvmAccHasMonitorBytecodes;
 
     @HotSpotVMField(name = "JVMCIEnv::_task", type = "CompileTask*", get = HotSpotVMField.Type.OFFSET) @Stable public int jvmciEnvTaskOffset;
     @HotSpotVMField(name = "JVMCIEnv::_jvmti_can_hotswap_or_post_breakpoint", type = "bool", get = HotSpotVMField.Type.OFFSET) @Stable public int jvmciEnvJvmtiCanHotswapOrPostBreakpointOffset;
