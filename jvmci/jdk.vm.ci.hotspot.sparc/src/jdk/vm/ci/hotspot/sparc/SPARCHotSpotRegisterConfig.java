@@ -22,8 +22,6 @@
  */
 package jdk.vm.ci.hotspot.sparc;
 
-import static jdk.vm.ci.sparc.SPARC.FPUd;
-import static jdk.vm.ci.sparc.SPARC.FPUs;
 import static jdk.vm.ci.sparc.SPARC.d0;
 import static jdk.vm.ci.sparc.SPARC.d2;
 import static jdk.vm.ci.sparc.SPARC.d32;
@@ -76,6 +74,7 @@ import static jdk.vm.ci.sparc.SPARC.f6;
 import static jdk.vm.ci.sparc.SPARC.f7;
 import static jdk.vm.ci.sparc.SPARC.f8;
 import static jdk.vm.ci.sparc.SPARC.f9;
+import static jdk.vm.ci.sparc.SPARC.g0;
 import static jdk.vm.ci.sparc.SPARC.g1;
 import static jdk.vm.ci.sparc.SPARC.g2;
 import static jdk.vm.ci.sparc.SPARC.g3;
@@ -128,7 +127,6 @@ import jdk.vm.ci.meta.LIRKind;
 import jdk.vm.ci.meta.PlatformKind;
 import jdk.vm.ci.meta.Value;
 import jdk.vm.ci.sparc.SPARC;
-import jdk.vm.ci.sparc.SPARCKind;
 
 public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
@@ -152,22 +150,9 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         ArrayList<Register> list = new ArrayList<>();
         for (Register reg : registers) {
             if (architecture.canStoreValue(reg.getRegisterCategory(), kind)) {
-                // Special treatment for double precision
-                // TODO: This is wasteful it uses only half of the registers as float.
-                if (kind == SPARCKind.DOUBLE) {
-                    if (reg.getRegisterCategory().equals(FPUd)) {
-                        list.add(reg);
-                    }
-                } else if (kind == SPARCKind.SINGLE) {
-                    if (reg.getRegisterCategory().equals(FPUs)) {
-                        list.add(reg);
-                    }
-                } else {
-                    list.add(reg);
-                }
+                list.add(reg);
             }
         }
-
         Register[] ret = list.toArray(new Register[list.size()]);
         return ret;
     }
@@ -180,8 +165,9 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     private final Register[] cpuCallerParameterRegisters = {o0, o1, o2, o3, o4, o5};
     private final Register[] cpuCalleeParameterRegisters = {i0, i1, i2, i3, i4, i5};
 
-    private final Register[] fpuParameterRegisters = {f0, f1, f2, f3, f4, f5, f6, f7};
+    private final Register[] fpuFloatParameterRegisters = {f0, f1, f2, f3, f4, f5, f6, f7};
     private final Register[] fpuDoubleParameterRegisters = {d0, null, d2, null, d4, null, d6, null};
+
     // @formatter:off
     private final Register[] callerSaveRegisters =
                    {g1, g2, g3, g4, g5, g6, g7,
@@ -198,57 +184,40 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
      * Registers saved by the callee. This lists all L and I registers which are saved in the
      * register window.
      */
-    private final Register[] calleeSaveRegisters = {l0, l1, l2, l3, l4, l5, l6, l7, i0, i1, i2, i3, i4, i5, i6, i7};
+    // @formatter:off
+    private final Register[] calleeSaveRegisters = {
+                    l0, l1, l2, l3, l4, l5, l6, l7,
+                    i0, i1, i2, i3, i4, i5, i6, i7};
+    // @formatter:on
 
-    private static Register[] initAllocatable(boolean reserveForHeapBase) {
-        Register[] registers = null;
-        if (reserveForHeapBase) {
-            // @formatter:off
-            registers = new Register[]{
-                        // TODO this is not complete
-                        // o7 cannot be used as register because it is always overwritten on call
-                        // and the current register handler would ignore this fact if the called
-                        // method still does not modify registers, in fact o7 is modified by the Call instruction
-                        // There would be some extra handlin necessary to be able to handle the o7 properly for local usage
-                        g1, g4, g5,
-                        o0, o1, o2, o3, o4, o5, /*o6,o7,*/
-                        l0, l1, l2, l3, l4, l5, l6, l7,
-                        i0, i1, i2, i3, i4, i5, /*i6,*/ /*i7,*/
-                        //f0, f1, f2, f3, f4, f5, f6, f7,
-                        f8,  f9,  f10, f11, f12, f13, f14, f15,
-                        f16, f17, f18, f19, f20, f21, f22, f23,
-                        f24, f25, f26, f27, f28, f29, f30, f31,
-                        d32, d34, d36, d38, d40, d42, d44, d46,
-                        d48, d50, d52, d54, d56, d58, d60, d62
-            };
-            // @formatter:on
-        } else {
-            // @formatter:off
-            registers = new Register[]{
-                        // TODO this is not complete
-                        g1, g4, g5,
-                        o0, o1, o2, o3, o4, o5, /*o6, o7,*/
-                        l0, l1, l2, l3, l4, l5, l6, l7,
-                        i0, i1, i2, i3, i4, i5, /*i6,*/ /*i7,*/
-//                        f0, f1, f2, f3, f4, f5, f6, f7
-                        f8,  f9,  f10, f11, f12, f13, f14, f15,
-                        f16, f17, f18, f19, f20, f21, f22, f23,
-                        f24, f25, f26, f27, f28, f29, f30, f31,
-                        d32, d34, d36, d38, d40, d42, d44, d46,
-                        d48, d50, d52, d54, d56, d58, d60, d62
-            };
-            // @formatter:on
+    private static Register[] initAllocatable(Architecture arch, boolean reserveForHeapBase) {
+        Register[] allRegisters = arch.getAvailableValueRegisters();
+        Register[] registers = new Register[allRegisters.length - (reserveForHeapBase ? 4 : 3)];
+
+        int idx = 0;
+        for (Register reg : allRegisters) {
+            if (reg.equals(sp) || reg.equals(g2) || reg.equals(g0)) {
+                // skip g0, stack pointer and thread register
+                continue;
+            }
+            if (reserveForHeapBase && reg.equals(g6)) {
+                // skip heap base register
+                continue;
+            }
+
+            registers[idx++] = reg;
         }
 
+        assert idx == registers.length;
         return registers;
     }
 
-    public SPARCHotSpotRegisterConfig(TargetDescription target, HotSpotVMConfig config) {
-        this(target, initAllocatable(config.useCompressedOops), config);
+    public SPARCHotSpotRegisterConfig(Architecture arch, HotSpotVMConfig config) {
+        this(arch, initAllocatable(arch, config.useCompressedOops), config);
     }
 
-    public SPARCHotSpotRegisterConfig(TargetDescription target, Register[] allocatable, HotSpotVMConfig config) {
-        this.architecture = target.arch;
+    public SPARCHotSpotRegisterConfig(Architecture arch, Register[] allocatable, HotSpotVMConfig config) {
+        this.architecture = arch;
         this.allocatable = allocatable.clone();
         attributesMap = RegisterAttributes.createMap(this, SPARC.allRegisters);
         this.addNativeRegisterArgumentSlots = config.linuxOs;
@@ -296,7 +265,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
                 return type == Type.JavaCallee ? cpuCalleeParameterRegisters : cpuCallerParameterRegisters;
             case Double:
             case Float:
-                return fpuParameterRegisters;
+                return fpuFloatParameterRegisters;
             default:
                 throw JVMCIError.shouldNotReachHere("Unknown JavaKind " + kind);
         }
@@ -326,7 +295,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
                     }
                     break;
                 case Double:
-                    if (!stackOnly && currentFloating < fpuParameterRegisters.length) {
+                    if (!stackOnly && currentFloating < fpuFloatParameterRegisters.length) {
                         if (currentFloating % 2 != 0) {
                             // Make register number even to be a double reg
                             currentFloating++;
@@ -337,8 +306,8 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
                     }
                     break;
                 case Float:
-                    if (!stackOnly && currentFloating < fpuParameterRegisters.length) {
-                        Register register = fpuParameterRegisters[currentFloating++];
+                    if (!stackOnly && currentFloating < fpuFloatParameterRegisters.length) {
+                        Register register = fpuFloatParameterRegisters[currentFloating++];
                         locations[i] = register.asValue(target.getLIRKind(kind));
                     }
                     break;

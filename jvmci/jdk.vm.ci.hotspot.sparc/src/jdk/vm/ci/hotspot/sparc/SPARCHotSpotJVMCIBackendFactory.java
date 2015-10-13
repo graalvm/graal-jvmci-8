@@ -94,7 +94,7 @@ public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         TargetDescription target = createTarget(runtime.getConfig());
 
         HotSpotMetaAccessProvider metaAccess = new HotSpotMetaAccessProvider(runtime);
-        RegisterConfig regConfig = new SPARCHotSpotRegisterConfig(target, runtime.getConfig());
+        RegisterConfig regConfig = new SPARCHotSpotRegisterConfig(target.arch, runtime.getConfig());
         HotSpotCodeCacheProvider codeCache = createCodeCache(runtime, target, regConfig);
         HotSpotConstantReflectionProvider constantReflection = new HotSpotConstantReflectionProvider(runtime);
         StackIntrospection stackIntrospection = new HotSpotStackIntrospection(runtime);

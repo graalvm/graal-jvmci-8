@@ -236,8 +236,7 @@ public class SPARC extends Architecture {
      */
     public static final int STACK_BIAS = 0x7ff;
     /**
-     * In fact there are 64 single floating point registers, 32 of them could be accessed. TODO:
-     * Improve handling of these float registers
+     * In fact there are 64 single floating point registers, 32 of them could be accessed.
      */
     public static final int FLOAT_REGISTER_COUNT = 64;
 
@@ -324,7 +323,6 @@ public class SPARC extends Architecture {
 
     public static int getDoubleEncoding(int reg) {
         assert reg < 64 && ((reg & 1) == 0);
-        // ignore v8 assertion for now
         return (reg & 0x1e) | ((reg & 0x20) >> 5);
     }
 
@@ -346,11 +344,11 @@ public class SPARC extends Architecture {
     }
 
     public static boolean isSingleFloatRegister(Register r) {
-        return r.name.startsWith("f");
+        return r.getRegisterCategory().equals(FPUs);
     }
 
     public static boolean isDoubleFloatRegister(Register r) {
-        return r.name.startsWith("d");
+        return r.getRegisterCategory().equals(FPUd);
     }
 
     public Set<CPUFeature> getFeatures() {
