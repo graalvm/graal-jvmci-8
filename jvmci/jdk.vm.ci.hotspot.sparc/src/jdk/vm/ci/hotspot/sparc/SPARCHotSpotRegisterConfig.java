@@ -138,6 +138,11 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
     private final RegisterAttributes[] attributesMap;
 
+    /**
+     * Does native code (C++ code) spill arguments in registers to the parent frame?
+     */
+    private final boolean addNativeRegisterArgumentSlots;
+
     @Override
     public Register[] getAllocatableRegisters() {
         return allocatable.clone();
@@ -239,13 +244,14 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     }
 
     public SPARCHotSpotRegisterConfig(TargetDescription target, HotSpotVMConfig config) {
-        this(target, initAllocatable(config.useCompressedOops));
+        this(target, initAllocatable(config.useCompressedOops), config);
     }
 
-    public SPARCHotSpotRegisterConfig(TargetDescription target, Register[] allocatable) {
+    public SPARCHotSpotRegisterConfig(TargetDescription target, Register[] allocatable, HotSpotVMConfig config) {
         this.architecture = target.arch;
         this.allocatable = allocatable.clone();
         attributesMap = RegisterAttributes.createMap(this, SPARC.allRegisters);
+        this.addNativeRegisterArgumentSlots = config.linuxOs;
     }
 
     @Override
@@ -353,9 +359,15 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
         JavaKind returnKind = returnType == null ? JavaKind.Void : returnType.getJavaKind();
         AllocatableValue returnLocation = returnKind == JavaKind.Void ? Value.ILLEGAL : getReturnRegister(returnKind, type).asValue(target.getLIRKind(returnKind.getStackKind()));
-        // Space where callee may spill outgoing parameters o0...o5
-        int lowerOutgoingSpace = Math.min(locations.length, 6) * target.wordSize;
-        return new CallingConvention(currentStackOffset + lowerOutgoingSpace, returnLocation, locations);
+
+        int outArgSpillArea;
+        if (type == Type.NativeCall && addNativeRegisterArgumentSlots) {
+            // Space for native callee which may spill our outgoing arguments
+            outArgSpillArea = Math.min(locations.length, generalParameterRegisters.length) * target.wordSize;
+        } else {
+            outArgSpillArea = 0;
+        }
+        return new CallingConvention(currentStackOffset + outArgSpillArea, returnLocation, locations);
     }
 
     private static int roundUp(int number, int mod) {

@@ -720,6 +720,7 @@ public class HotSpotVMConfig {
     // os information, register layout, code generation, ...
     @HotSpotVMValue(expression = "DEBUG_ONLY(1) NOT_DEBUG(0)") @Stable public boolean cAssertions;
     public final boolean windowsOs = System.getProperty("os.name", "").startsWith("Windows");
+    public final boolean linuxOs = System.getProperty("os.name", "").startsWith("Linux");
 
     @HotSpotVMFlag(name = "CodeEntryAlignment") @Stable public int codeEntryAlignment;
     @HotSpotVMFlag(name = "VerifyOops") @Stable public boolean verifyOops;
