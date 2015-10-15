@@ -171,16 +171,20 @@ void CodeInstaller::pd_relocate_poll(address pc, jint mark) {
 
 // convert JVMCI register indices (as used in oop maps) to HotSpot registers
 VMReg CodeInstaller::get_hotspot_reg(jint jvmci_reg) {
+  // JVMCI Registers are numbered as follows:
+  //   0..31: Thirty-two General Purpose registers (CPU Registers)
+  //   32..63: Thirty-two single precision float registers
+  //   64..95: Thirty-two double precision float registers
+  //   96..111: Sixteen quad precision float registers
   if (jvmci_reg < RegisterImpl::number_of_registers) {
     return as_Register(jvmci_reg)->as_VMReg();
   } else {
-    jint floatRegisterNumber = jvmci_reg - RegisterImpl::number_of_registers;
-    floatRegisterNumber += MAX2(0, floatRegisterNumber-32); // Beginning with f32, only every second register is going to be addressed
-    if (floatRegisterNumber < FloatRegisterImpl::number_of_registers) {
-      return as_FloatRegister(floatRegisterNumber)->as_VMReg();
-    }
-    ShouldNotReachHere();
-    return NULL;
+    jint jvmciFloatRegisterNumber = jvmci_reg - RegisterImpl::number_of_registers;
+    jint floatRegisterNumber = MIN2(32, jvmciFloatRegisterNumber);
+    floatRegisterNumber += 2 * MAX2(0, MIN2(32, jvmciFloatRegisterNumber) - 32);
+    floatRegisterNumber += 4 * MAX2(0, MIN2(32, jvmciFloatRegisterNumber) - 32 - 32);
+    floatRegisterNumber = floatRegisterNumber % FloatRegisterImpl::number_of_registers;
+    return as_FloatRegister(floatRegisterNumber)->as_VMReg();
   }
 }
 

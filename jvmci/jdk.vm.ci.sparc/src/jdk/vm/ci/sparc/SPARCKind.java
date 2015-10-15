@@ -28,9 +28,10 @@ public enum SPARCKind implements PlatformKind {
     BYTE(1),
     HWORD(2),
     WORD(4),
-    DWORD(8),
+    XWORD(8),
     SINGLE(4),
     DOUBLE(8),
+    QUAD(16),
 
     V32_BYTE(4, BYTE),
     V32_HWORD(4, HWORD),
@@ -85,7 +86,7 @@ public enum SPARCKind implements PlatformKind {
             case BYTE:
             case HWORD:
             case WORD:
-            case DWORD:
+            case XWORD:
                 return true;
             default:
                 return false;
@@ -104,7 +105,7 @@ public enum SPARCKind implements PlatformKind {
                 return 'h';
             case WORD:
                 return 'w';
-            case DWORD:
+            case XWORD:
                 return 'd';
             case SINGLE:
                 return 'S';

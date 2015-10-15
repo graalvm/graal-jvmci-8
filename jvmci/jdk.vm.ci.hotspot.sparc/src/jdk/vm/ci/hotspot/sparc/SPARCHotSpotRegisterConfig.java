@@ -22,66 +22,27 @@
  */
 package jdk.vm.ci.hotspot.sparc;
 
+import static jdk.vm.ci.code.CallingConvention.Type.JavaCall;
+import static jdk.vm.ci.code.CallingConvention.Type.JavaCallee;
+import static jdk.vm.ci.code.CallingConvention.Type.NativeCall;
+import static jdk.vm.ci.meta.JavaKind.Void;
+import static jdk.vm.ci.meta.Value.ILLEGAL;
+import static jdk.vm.ci.sparc.SPARC.REGISTER_SAFE_AREA_SIZE;
 import static jdk.vm.ci.sparc.SPARC.d0;
 import static jdk.vm.ci.sparc.SPARC.d2;
-import static jdk.vm.ci.sparc.SPARC.d32;
-import static jdk.vm.ci.sparc.SPARC.d34;
-import static jdk.vm.ci.sparc.SPARC.d36;
-import static jdk.vm.ci.sparc.SPARC.d38;
 import static jdk.vm.ci.sparc.SPARC.d4;
-import static jdk.vm.ci.sparc.SPARC.d40;
-import static jdk.vm.ci.sparc.SPARC.d42;
-import static jdk.vm.ci.sparc.SPARC.d44;
-import static jdk.vm.ci.sparc.SPARC.d46;
-import static jdk.vm.ci.sparc.SPARC.d48;
-import static jdk.vm.ci.sparc.SPARC.d50;
-import static jdk.vm.ci.sparc.SPARC.d52;
-import static jdk.vm.ci.sparc.SPARC.d54;
-import static jdk.vm.ci.sparc.SPARC.d56;
-import static jdk.vm.ci.sparc.SPARC.d58;
 import static jdk.vm.ci.sparc.SPARC.d6;
-import static jdk.vm.ci.sparc.SPARC.d60;
-import static jdk.vm.ci.sparc.SPARC.d62;
 import static jdk.vm.ci.sparc.SPARC.f0;
 import static jdk.vm.ci.sparc.SPARC.f1;
-import static jdk.vm.ci.sparc.SPARC.f10;
-import static jdk.vm.ci.sparc.SPARC.f11;
-import static jdk.vm.ci.sparc.SPARC.f12;
-import static jdk.vm.ci.sparc.SPARC.f13;
-import static jdk.vm.ci.sparc.SPARC.f14;
-import static jdk.vm.ci.sparc.SPARC.f15;
-import static jdk.vm.ci.sparc.SPARC.f16;
-import static jdk.vm.ci.sparc.SPARC.f17;
-import static jdk.vm.ci.sparc.SPARC.f18;
-import static jdk.vm.ci.sparc.SPARC.f19;
 import static jdk.vm.ci.sparc.SPARC.f2;
-import static jdk.vm.ci.sparc.SPARC.f20;
-import static jdk.vm.ci.sparc.SPARC.f21;
-import static jdk.vm.ci.sparc.SPARC.f22;
-import static jdk.vm.ci.sparc.SPARC.f23;
-import static jdk.vm.ci.sparc.SPARC.f24;
-import static jdk.vm.ci.sparc.SPARC.f25;
-import static jdk.vm.ci.sparc.SPARC.f26;
-import static jdk.vm.ci.sparc.SPARC.f27;
-import static jdk.vm.ci.sparc.SPARC.f28;
-import static jdk.vm.ci.sparc.SPARC.f29;
 import static jdk.vm.ci.sparc.SPARC.f3;
-import static jdk.vm.ci.sparc.SPARC.f30;
-import static jdk.vm.ci.sparc.SPARC.f31;
 import static jdk.vm.ci.sparc.SPARC.f4;
 import static jdk.vm.ci.sparc.SPARC.f5;
 import static jdk.vm.ci.sparc.SPARC.f6;
 import static jdk.vm.ci.sparc.SPARC.f7;
-import static jdk.vm.ci.sparc.SPARC.f8;
-import static jdk.vm.ci.sparc.SPARC.f9;
 import static jdk.vm.ci.sparc.SPARC.g0;
-import static jdk.vm.ci.sparc.SPARC.g1;
 import static jdk.vm.ci.sparc.SPARC.g2;
-import static jdk.vm.ci.sparc.SPARC.g3;
-import static jdk.vm.ci.sparc.SPARC.g4;
-import static jdk.vm.ci.sparc.SPARC.g5;
 import static jdk.vm.ci.sparc.SPARC.g6;
-import static jdk.vm.ci.sparc.SPARC.g7;
 import static jdk.vm.ci.sparc.SPARC.i0;
 import static jdk.vm.ci.sparc.SPARC.i1;
 import static jdk.vm.ci.sparc.SPARC.i2;
@@ -104,11 +65,12 @@ import static jdk.vm.ci.sparc.SPARC.o2;
 import static jdk.vm.ci.sparc.SPARC.o3;
 import static jdk.vm.ci.sparc.SPARC.o4;
 import static jdk.vm.ci.sparc.SPARC.o5;
-import static jdk.vm.ci.sparc.SPARC.o7;
 import static jdk.vm.ci.sparc.SPARC.sp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 
 import jdk.vm.ci.code.Architecture;
 import jdk.vm.ci.code.CallingConvention;
@@ -125,7 +87,6 @@ import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.LIRKind;
 import jdk.vm.ci.meta.PlatformKind;
-import jdk.vm.ci.meta.Value;
 import jdk.vm.ci.sparc.SPARC;
 
 public class SPARCHotSpotRegisterConfig implements RegisterConfig {
@@ -169,22 +130,12 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     private final Register[] fpuDoubleParameterRegisters = {d0, null, d2, null, d4, null, d6, null};
 
     // @formatter:off
-    private final Register[] callerSaveRegisters =
-                   {g1, g2, g3, g4, g5, g6, g7,
-                    o0, o1, o2, o3, o4, o5, o7,
-                    f0,  f1,  f2,  f3,  f4,  f5,  f6,  f7,
-                    f8,  f9,  f10, f11, f12, f13, f14, f15,
-                    f16, f17, f18, f19, f20, f21, f22, f23,
-                    f24, f25, f26, f27, f28, f29, f30, f31,
-                    d32, d34, d36, d38, d40, d42, d44, d46,
-                    d48, d50, d52, d54, d56, d58, d60, d62};
-    // @formatter:on
+    private final Register[] callerSaveRegisters;
 
     /**
      * Registers saved by the callee. This lists all L and I registers which are saved in the
      * register window.
      */
-    // @formatter:off
     private final Register[] calleeSaveRegisters = {
                     l0, l1, l2, l3, l4, l5, l6, l7,
                     i0, i1, i2, i3, i4, i5, i6, i7};
@@ -219,8 +170,14 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     public SPARCHotSpotRegisterConfig(Architecture arch, Register[] allocatable, HotSpotVMConfig config) {
         this.architecture = arch;
         this.allocatable = allocatable.clone();
-        attributesMap = RegisterAttributes.createMap(this, SPARC.allRegisters);
         this.addNativeRegisterArgumentSlots = config.linuxOs;
+        HashSet<Register> callerSaveSet = new HashSet<>();
+        Collections.addAll(callerSaveSet, arch.getAvailableValueRegisters());
+        for (Register cs : calleeSaveRegisters) {
+            callerSaveSet.remove(cs);
+        }
+        this.callerSaveRegisters = callerSaveSet.toArray(new Register[callerSaveSet.size()]);
+        attributesMap = RegisterAttributes.createMap(this, SPARC.allRegisters);
     }
 
     @Override
@@ -244,10 +201,10 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
     @Override
     public CallingConvention getCallingConvention(Type type, JavaType returnType, JavaType[] parameterTypes, TargetDescription target, boolean stackOnly) {
-        if (type == Type.JavaCall || type == Type.NativeCall) {
+        if (type == JavaCall || type == NativeCall) {
             return callingConvention(cpuCallerParameterRegisters, returnType, parameterTypes, type, target, stackOnly);
         }
-        if (type == Type.JavaCallee) {
+        if (type == JavaCallee) {
             return callingConvention(cpuCalleeParameterRegisters, returnType, parameterTypes, type, target, stackOnly);
         }
         throw JVMCIError.shouldNotReachHere();
@@ -320,17 +277,17 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
                 // Stack slot is always aligned to its size in bytes but minimum wordsize
                 int typeSize = lirKind.getPlatformKind().getSizeInBytes();
                 currentStackOffset = roundUp(currentStackOffset, typeSize);
-                int slotOffset = currentStackOffset + SPARC.REGISTER_SAFE_AREA_SIZE;
+                int slotOffset = currentStackOffset + REGISTER_SAFE_AREA_SIZE;
                 locations[i] = StackSlot.get(lirKind, slotOffset, !type.out);
                 currentStackOffset += typeSize;
             }
         }
 
-        JavaKind returnKind = returnType == null ? JavaKind.Void : returnType.getJavaKind();
-        AllocatableValue returnLocation = returnKind == JavaKind.Void ? Value.ILLEGAL : getReturnRegister(returnKind, type).asValue(target.getLIRKind(returnKind.getStackKind()));
+        JavaKind returnKind = returnType == null ? Void : returnType.getJavaKind();
+        AllocatableValue returnLocation = returnKind == Void ? ILLEGAL : getReturnRegister(returnKind, type).asValue(target.getLIRKind(returnKind.getStackKind()));
 
         int outArgSpillArea;
-        if (type == Type.NativeCall && addNativeRegisterArgumentSlots) {
+        if (type == NativeCall && addNativeRegisterArgumentSlots) {
             // Space for native callee which may spill our outgoing arguments
             outArgSpillArea = Math.min(locations.length, generalParameterRegisters.length) * target.wordSize;
         } else {
@@ -345,7 +302,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
     @Override
     public Register getReturnRegister(JavaKind kind) {
-        return getReturnRegister(kind, Type.JavaCallee);
+        return getReturnRegister(kind, JavaCallee);
     }
 
     private static Register getReturnRegister(JavaKind kind, Type type) {
@@ -357,7 +314,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
             case Int:
             case Long:
             case Object:
-                return type == Type.JavaCallee ? i0 : o0;
+                return type == JavaCallee ? i0 : o0;
             case Float:
                 return f0;
             case Double:
