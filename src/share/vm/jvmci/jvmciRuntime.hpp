@@ -96,6 +96,12 @@ class JVMCIRuntime: public AllStatic {
   static void save_options(SystemProperty* props);
 
   /**
+   * If either the PrintFlags or ShowFlags JVMCI option is present,
+   * then JVMCI is initialized to show the help message.
+   */
+  static void maybe_print_flags(TRAPS);
+
+  /**
    * Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
    */
   static void ensure_jvmci_class_loader_is_initialized();

@@ -47,6 +47,7 @@ import jdk.vm.ci.inittimer.InitTimer;
 public class OptionsParser {
 
     private static final OptionValue<Boolean> PrintFlags = new OptionValue<>(false);
+    private static final OptionValue<Boolean> ShowFlags = new OptionValue<>(false);
 
     /**
      * A service for looking up {@link OptionDescriptor}s.
@@ -153,8 +154,12 @@ public class OptionsParser {
     public static void parseOption(String name, String valueString, OptionConsumer setter, OptionDescriptorsProvider odp, SortedMap<String, OptionDescriptor> options) {
 
         OptionDescriptor desc = odp != null ? odp.get(name) : resolveOptions(options).get(name);
-        if (desc == null && name.equals("PrintFlags")) {
-            desc = OptionDescriptor.create("PrintFlags", Boolean.class, "Prints all JVMCI flags and exits", OptionsParser.class, "PrintFlags", PrintFlags);
+        if (desc == null) {
+            if (name.equals("PrintFlags")) {
+                desc = OptionDescriptor.create("PrintFlags", Boolean.class, "Prints all JVMCI flags and exits", OptionsParser.class, "PrintFlags", PrintFlags);
+            } else if (name.equals("ShowFlags")) {
+                desc = OptionDescriptor.create("ShowFlags", Boolean.class, "Prints all JVMCI flags and continues", OptionsParser.class, "ShowFlags", ShowFlags);
+            }
         }
         if (desc == null) {
             List<OptionDescriptor> matches = fuzzyMatch(resolveOptions(options), name);
@@ -198,9 +203,11 @@ public class OptionsParser {
             setter.set(desc, value);
         }
 
-        if (PrintFlags.getValue()) {
+        if (PrintFlags.getValue() || ShowFlags.getValue()) {
             printFlags(resolveOptions(options), "JVMCI", System.out);
-            System.exit(0);
+            if (PrintFlags.getValue()) {
+                System.exit(0);
+            }
         }
     }
 

@@ -940,6 +940,23 @@ void JVMCIRuntime::save_compiler(const char* compiler) {
   _compiler = compiler;
 }
 
+void JVMCIRuntime::maybe_print_flags(TRAPS) {
+  if (_options != NULL) {
+    for (int i = 0; i < _options_count; i++) {
+      SystemProperty* p = _options[i];
+      const char* name = p->key() + OPTION_PREFIX_LEN;
+      if (strcmp(name, "PrintFlags") == 0 || strcmp(name, "ShowFlags") == 0) {
+        JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
+        jvmci_compute_offsets();
+        HandleMark hm;
+        ResourceMark rm;
+        JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
+        return;
+      }
+    }
+  }
+}
+
 void JVMCIRuntime::save_options(SystemProperty* props) {
   int count = 0;
   SystemProperty* first = NULL;
