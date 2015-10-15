@@ -96,7 +96,6 @@ private:
   void pd_patch_OopConstant(int pc_offset, Handle& constant);
   void pd_patch_MetaspaceConstant(int pc_offset, Handle& constant);
   void pd_patch_DataSectionReference(int pc_offset, int data_offset);
-  void pd_relocate_CodeBlob(CodeBlob* cb, NativeInstruction* inst);
   void pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination);
   void pd_relocate_JavaMethod(oop method, jint pc_offset);
   void pd_relocate_poll(address pc, jint mark);

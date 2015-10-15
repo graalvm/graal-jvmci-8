@@ -115,16 +115,6 @@ void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset
   TRACE_jvmci_3("relocating at %p/%p with destination at %p (%d)", pc, operand, dest, data_offset);
 }
 
-void CodeInstaller::pd_relocate_CodeBlob(CodeBlob* cb, NativeInstruction* inst) {
-  if (cb->is_nmethod()) {
-    nmethod* nm = (nmethod*) cb;
-    nativeJump_at((address)inst)->set_jump_destination(nm->verified_entry_point());
-  } else {
-    nativeJump_at((address)inst)->set_jump_destination(cb->code_begin());
-  }
-  _instructions->relocate((address)inst, runtime_call_Relocation::spec(), Assembler::call32_operand);
-}
-
 void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination) {
   address pc = (address) inst;
   if (inst->is_call()) {

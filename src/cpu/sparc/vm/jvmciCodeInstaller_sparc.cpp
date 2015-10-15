@@ -90,10 +90,6 @@ void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset
   }
 }
 
-void CodeInstaller::pd_relocate_CodeBlob(CodeBlob* cb, NativeInstruction* inst) {
-  fatal("CodeInstaller::pd_relocate_CodeBlob - sparc unimp");
-}
-
 void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination) {
   address pc = (address) inst;
   if (inst->is_call()) {
