@@ -346,6 +346,24 @@ public class SPARC extends Architecture {
         VIS2,
         VIS3,
         CBCOND,
-        BLOCK_ZEROING
+        V8,
+        HARDWARE_MUL32,
+        HARDWARE_DIV32,
+        HARDWARE_FSMULD,
+        HARDWARE_POPC,
+        V9,
+        SUN4V,
+        BLK_INIT_INSTRUCTIONS,
+        FMAF,
+        FMAU,
+        SPARC64_FAMILY,
+        M_FAMILY,
+        T_FAMILY,
+        T1_MODEL,
+        SPARC5,
+        AES,
+        SHA1,
+        SHA256,
+        SHA512
     }
 }

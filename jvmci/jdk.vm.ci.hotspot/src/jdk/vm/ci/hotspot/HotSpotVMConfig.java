@@ -814,6 +814,26 @@ public class HotSpotVMConfig {
     @HotSpotVMConstant(name = "VM_Version::vis2_instructions_m", archs = {"sparc"}) @Stable public int vis2Instructions;
     @HotSpotVMConstant(name = "VM_Version::vis1_instructions_m", archs = {"sparc"}) @Stable public int vis1Instructions;
     @HotSpotVMConstant(name = "VM_Version::cbcond_instructions_m", archs = {"sparc"}) @Stable public int cbcondInstructions;
+    @HotSpotVMConstant(name = "VM_Version::v8_instructions_m", archs = {"sparc"}) @Stable public int v8Instructions;
+    @HotSpotVMConstant(name = "VM_Version::hardware_mul32_m", archs = {"sparc"}) @Stable public int hardwareMul32;
+    @HotSpotVMConstant(name = "VM_Version::hardware_div32_m", archs = {"sparc"}) @Stable public int hardwareDiv32;
+    @HotSpotVMConstant(name = "VM_Version::hardware_fsmuld_m", archs = {"sparc"}) @Stable public int hardwareFsmuld;
+    @HotSpotVMConstant(name = "VM_Version::hardware_popc_m", archs = {"sparc"}) @Stable public int hardwarePopc;
+    @HotSpotVMConstant(name = "VM_Version::v9_instructions_m", archs = {"sparc"}) @Stable public int v9Instructions;
+    @HotSpotVMConstant(name = "VM_Version::sun4v_m", archs = {"sparc"}) @Stable public int sun4v;
+    @HotSpotVMConstant(name = "VM_Version::blk_init_instructions_m", archs = {"sparc"}) @Stable public int blkInitInstructions;
+    @HotSpotVMConstant(name = "VM_Version::fmaf_instructions_m", archs = {"sparc"}) @Stable public int fmafInstructions;
+    @HotSpotVMConstant(name = "VM_Version::fmau_instructions_m", archs = {"sparc"}) @Stable public int fmauInstructions;
+    @HotSpotVMConstant(name = "VM_Version::sparc64_family_m", archs = {"sparc"}) @Stable public int sparc64Family;
+    @HotSpotVMConstant(name = "VM_Version::M_family_m", archs = {"sparc"}) @Stable public int mFamily;
+    @HotSpotVMConstant(name = "VM_Version::T_family_m", archs = {"sparc"}) @Stable public int tFamily;
+    @HotSpotVMConstant(name = "VM_Version::T1_model_m", archs = {"sparc"}) @Stable public int t1Model;
+    @HotSpotVMConstant(name = "VM_Version::sparc5_instructions_m", archs = {"sparc"}) @Stable public int sparc5Instructions;
+    @HotSpotVMConstant(name = "VM_Version::aes_instructions_m", archs = {"sparc"}) @Stable public int aesInstructions;
+    @HotSpotVMConstant(name = "VM_Version::sha1_instruction_m", archs = {"sparc"}) @Stable public int sha1Instruction;
+    @HotSpotVMConstant(name = "VM_Version::sha256_instruction_m", archs = {"sparc"}) @Stable public int sha256Instruction;
+    @HotSpotVMConstant(name = "VM_Version::sha512_instruction_m", archs = {"sparc"}) @Stable public int sha512Instruction;
+
     @HotSpotVMFlag(name = "UseBlockZeroing", archs = {"sparc"}) @Stable public boolean useBlockZeroing;
     @HotSpotVMFlag(name = "BlockZeroingLowLimit", archs = {"sparc"}) @Stable public int blockZeroingLowLimit;
 

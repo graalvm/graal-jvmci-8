@@ -72,8 +72,62 @@ public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         if ((config.sparcFeatures & config.cbcondInstructions) != 0) {
             features.add(CPUFeature.CBCOND);
         }
-        if (config.useBlockZeroing) {
-            features.add(CPUFeature.BLOCK_ZEROING);
+        if ((config.sparcFeatures & config.v8Instructions) != 0) {
+            features.add(CPUFeature.V8);
+        }
+        if ((config.sparcFeatures & config.hardwareMul32) != 0) {
+            features.add(CPUFeature.HARDWARE_MUL32);
+        }
+        if ((config.sparcFeatures & config.hardwareDiv32) != 0) {
+            features.add(CPUFeature.HARDWARE_DIV32);
+        }
+        if ((config.sparcFeatures & config.hardwareFsmuld) != 0) {
+            features.add(CPUFeature.HARDWARE_FSMULD);
+        }
+        if ((config.sparcFeatures & config.hardwarePopc) != 0) {
+            features.add(CPUFeature.HARDWARE_POPC);
+        }
+        if ((config.sparcFeatures & config.v9Instructions) != 0) {
+            features.add(CPUFeature.V9);
+        }
+        if ((config.sparcFeatures & config.sun4v) != 0) {
+            features.add(CPUFeature.SUN4V);
+        }
+        if ((config.sparcFeatures & config.blkInitInstructions) != 0) {
+            features.add(CPUFeature.BLK_INIT_INSTRUCTIONS);
+        }
+        if ((config.sparcFeatures & config.fmafInstructions) != 0) {
+            features.add(CPUFeature.FMAF);
+        }
+        if ((config.sparcFeatures & config.fmauInstructions) != 0) {
+            features.add(CPUFeature.FMAU);
+        }
+        if ((config.sparcFeatures & config.sparc64Family) != 0) {
+            features.add(CPUFeature.SPARC64_FAMILY);
+        }
+        if ((config.sparcFeatures & config.mFamily) != 0) {
+            features.add(CPUFeature.M_FAMILY);
+        }
+        if ((config.sparcFeatures & config.tFamily) != 0) {
+            features.add(CPUFeature.T_FAMILY);
+        }
+        if ((config.sparcFeatures & config.t1Model) != 0) {
+            features.add(CPUFeature.T1_MODEL);
+        }
+        if ((config.sparcFeatures & config.sparc5Instructions) != 0) {
+            features.add(CPUFeature.SPARC5);
+        }
+        if ((config.sparcFeatures & config.aesInstructions) != 0) {
+            features.add(CPUFeature.SPARC64_FAMILY);
+        }
+        if ((config.sparcFeatures & config.sha1Instruction) != 0) {
+            features.add(CPUFeature.SHA1);
+        }
+        if ((config.sparcFeatures & config.sha256Instruction) != 0) {
+            features.add(CPUFeature.SHA256);
+        }
+        if ((config.sparcFeatures & config.sha512Instruction) != 0) {
+            features.add(CPUFeature.SHA512);
         }
         return features;
     }
