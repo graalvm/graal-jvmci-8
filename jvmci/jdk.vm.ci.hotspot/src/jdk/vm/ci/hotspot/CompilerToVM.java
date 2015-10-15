@@ -589,10 +589,15 @@ final class CompilerToVM {
     native HotSpotResolvedObjectTypeImpl getResolvedJavaType(Object base, long displacement, boolean compressed);
 
     /**
+     * Return the size of the HotSpot ProfileData* pointed at by {@code position}. If
+     * {@code position} is outside the space of the MethodData then an
+     * {@link IllegalArgumentException} is thrown. A {@code position} inside the MethodData but that
+     * isn't pointing at a valid ProfileData will crash the VM.
+     *
      * @param metaspaceMethodData
      * @param position
-     * @return Return the size of the ProfileData item pointed at by {@code current}. Throws
-     *         {@link IllegalArgumentException} if an invalid position is given.
+     * @return the size of the ProfileData item pointed at by {@code position}
+     * @throws IllegalArgumentException if an out of range position is given
      */
     native int methodDataProfileDataSize(long metaspaceMethodData, int position);
 }
