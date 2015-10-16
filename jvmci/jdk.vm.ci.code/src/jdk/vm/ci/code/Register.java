@@ -81,32 +81,15 @@ public final class Register implements Comparable<Register> {
     public static class RegisterCategory {
 
         private final String name;
-
         private final boolean mayContainReference;
-        private final int referenceMapOffset;
-        private final int referenceMapShift;
 
         public RegisterCategory(String name) {
-            this(name, true, 0, 0);
+            this(name, true);
         }
 
         public RegisterCategory(String name, boolean mayContainReference) {
-            this(name, mayContainReference, 0, 0);
-        }
-
-        public RegisterCategory(String name, int referenceMapOffset) {
-            this(name, true, referenceMapOffset, 0);
-        }
-
-        public RegisterCategory(String name, int referenceMapOffset, int referenceMapShift) {
-            this(name, true, referenceMapOffset, referenceMapShift);
-        }
-
-        private RegisterCategory(String name, boolean mayContainReference, int referenceMapOffset, int referenceMapShift) {
             this.name = name;
             this.mayContainReference = mayContainReference;
-            this.referenceMapOffset = referenceMapOffset;
-            this.referenceMapShift = referenceMapShift;
         }
 
         @Override
@@ -123,7 +106,7 @@ public final class Register implements Comparable<Register> {
         public boolean equals(Object obj) {
             if (obj instanceof RegisterCategory) {
                 RegisterCategory that = (RegisterCategory) obj;
-                return this.referenceMapOffset == that.referenceMapOffset && this.referenceMapShift == that.referenceMapShift && this.name.equals(that.name);
+                return this.name.equals(that.name);
             }
             return false;
         }
@@ -153,15 +136,6 @@ public final class Register implements Comparable<Register> {
      */
     public boolean mayContainReference() {
         return registerCategory.mayContainReference;
-    }
-
-    /**
-     * Get the start index of this register in the {@link ReferenceMap}. This method may only be
-     * called if {@link #mayContainReference()} is true.
-     */
-    public int getReferenceMapIndex() {
-        assert mayContainReference();
-        return (encoding << registerCategory.referenceMapShift) + registerCategory.referenceMapOffset;
     }
 
     /**

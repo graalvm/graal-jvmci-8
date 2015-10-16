@@ -40,17 +40,10 @@ import jdk.vm.ci.meta.PlatformKind;
  */
 public class SPARC extends Architecture {
 
-    private static final int CPU_REGISTER_COUNT = 32;
-    /**
-     * The upper half registers are counted as single precision even though registers d32..d62 are
-     * not accessible with single precision instructions.
-     */
-    private static final int FPU_REGISTER_COUNT = 64;
-
     public static final RegisterCategory CPU = new RegisterCategory("CPU");
-    public static final RegisterCategory FPUs = new RegisterCategory("FPUs", CPU_REGISTER_COUNT);
-    public static final RegisterCategory FPUd = new RegisterCategory("FPUd", CPU_REGISTER_COUNT);
-    public static final RegisterCategory FPUq = new RegisterCategory("FPUq", CPU_REGISTER_COUNT);
+    public static final RegisterCategory FPUs = new RegisterCategory("FPUs");
+    public static final RegisterCategory FPUd = new RegisterCategory("FPUd");
+    public static final RegisterCategory FPUq = new RegisterCategory("FPUq");
 
     // General purpose registers
     public static final Register g0 = new Register(0, 0, "g0", CPU);
@@ -250,7 +243,7 @@ public class SPARC extends Architecture {
     public final Set<CPUFeature> features;
 
     public SPARC(Set<CPUFeature> features) {
-        super("SPARC", SPARCKind.XWORD, BIG_ENDIAN, false, allRegisters, LOAD_LOAD | LOAD_STORE | STORE_STORE, 1, CPU_REGISTER_COUNT + FPU_REGISTER_COUNT, 8);
+        super("SPARC", SPARCKind.XWORD, BIG_ENDIAN, false, allRegisters, LOAD_LOAD | LOAD_STORE | STORE_STORE, 1, 8);
         this.features = features;
     }
 

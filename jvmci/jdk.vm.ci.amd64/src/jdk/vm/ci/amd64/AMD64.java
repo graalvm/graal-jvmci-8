@@ -68,9 +68,7 @@ public class AMD64 extends Architecture {
         r8, r9, r10, r11, r12, r13, r14, r15
     };
 
-    private static final int XMM_REFERENCE_MAP_SHIFT = 2;
-
-    public static final RegisterCategory XMM = new RegisterCategory("XMM", cpuRegisters.length, XMM_REFERENCE_MAP_SHIFT);
+    public static final RegisterCategory XMM = new RegisterCategory("XMM");
 
     // XMM registers
     public static final Register xmm0 = new Register(16, 0, "xmm0", XMM);
@@ -221,8 +219,7 @@ public class AMD64 extends Architecture {
     private final AMD64Kind largestKind;
 
     public AMD64(EnumSet<CPUFeature> features, EnumSet<Flag> flags) {
-        super("AMD64", AMD64Kind.QWORD, ByteOrder.LITTLE_ENDIAN, true, allRegisters, LOAD_STORE | STORE_STORE, 1, cpuRegisters.length +
-                        ((features.contains(CPUFeature.AVX512F) ? xmmRegistersAVX512 : xmmRegistersSSE).length << XMM_REFERENCE_MAP_SHIFT), 8);
+        super("AMD64", AMD64Kind.QWORD, ByteOrder.LITTLE_ENDIAN, true, allRegisters, LOAD_STORE | STORE_STORE, 1, 8);
         this.features = features;
         this.flags = flags;
         assert features.contains(CPUFeature.SSE2) : "minimum config for x64";

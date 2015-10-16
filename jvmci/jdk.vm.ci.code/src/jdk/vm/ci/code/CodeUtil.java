@@ -329,50 +329,12 @@ public class CodeUtil {
     public interface RefMapFormatter {
 
         String formatStackSlot(int frameRefMapIndex);
-
-        String formatRegister(int regRefMapIndex);
     }
 
     /**
-     * Formats a location in a register reference map.
+     * Formats a location present in a reference map.
      */
-    public static class DefaultRegFormatter implements RefMapFormatter {
-
-        private final Register[] registers;
-
-        public DefaultRegFormatter(Architecture arch) {
-            registers = new Register[arch.getRegisterReferenceMapSize()];
-            for (Register r : arch.getAvailableValueRegisters()) {
-                if (r.mayContainReference()) {
-                    assert registers[r.getReferenceMapIndex()] == null : "overlapping registers " + r + " and " + registers[r.getReferenceMapIndex()] + " in reference map";
-                    registers[r.getReferenceMapIndex()] = r;
-                }
-            }
-        }
-
-        public String formatStackSlot(int frameRefMapIndex) {
-            return null;
-        }
-
-        public String formatRegister(int regRefMapIndex) {
-            int i = regRefMapIndex;
-            int idx = 0;
-            while (registers[i] == null) {
-                i--;
-                idx++;
-            }
-            if (idx == 0) {
-                return registers[i].toString();
-            } else {
-                return String.format("%s+%d", registers[i].toString(), idx);
-            }
-        }
-    }
-
-    /**
-     * Formats a location present in a register or frame reference map.
-     */
-    public static class DefaultRefMapFormatter extends DefaultRegFormatter {
+    public static class DefaultRefMapFormatter implements RefMapFormatter {
 
         /**
          * The size of a stack slot.
@@ -390,8 +352,7 @@ public class CodeUtil {
          */
         public final int refMapToFPOffset;
 
-        public DefaultRefMapFormatter(Architecture arch, int slotSize, Register fp, int refMapToFPOffset) {
-            super(arch);
+        public DefaultRefMapFormatter(int slotSize, Register fp, int refMapToFPOffset) {
             this.slotSize = slotSize;
             this.fp = fp;
             this.refMapToFPOffset = refMapToFPOffset;

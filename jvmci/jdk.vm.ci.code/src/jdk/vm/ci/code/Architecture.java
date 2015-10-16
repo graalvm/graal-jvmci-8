@@ -36,13 +36,6 @@ import jdk.vm.ci.meta.PlatformKind;
 public abstract class Architecture {
 
     /**
-     * The number of entries required in a {@link ReferenceMap} covering all the registers that may
-     * store references. The index of a register in the reference map is given by
-     * {@link Register#getReferenceMapIndex()}.
-     */
-    private final int registerReferenceMapSize;
-
-    /**
      * The architecture specific type of a native word.
      */
     private final PlatformKind wordKind;
@@ -86,7 +79,7 @@ public abstract class Architecture {
     private final int returnAddressSize;
 
     protected Architecture(String name, PlatformKind wordKind, ByteOrder byteOrder, boolean unalignedMemoryAccess, Register[] registers, int implicitMemoryBarriers, int nativeCallDisplacementOffset,
-                    int registerReferenceMapSize, int returnAddressSize) {
+                    int returnAddressSize) {
         this.name = name;
         this.registers = registers;
         this.wordKind = wordKind;
@@ -94,7 +87,6 @@ public abstract class Architecture {
         this.unalignedMemoryAccess = unalignedMemoryAccess;
         this.implicitMemoryBarriers = implicitMemoryBarriers;
         this.machineCodeCallDisplacementOffset = nativeCallDisplacementOffset;
-        this.registerReferenceMapSize = registerReferenceMapSize;
         this.returnAddressSize = returnAddressSize;
     }
 
@@ -106,10 +98,6 @@ public abstract class Architecture {
     @Override
     public final String toString() {
         return getName().toLowerCase();
-    }
-
-    public int getRegisterReferenceMapSize() {
-        return registerReferenceMapSize;
     }
 
     /**
@@ -218,7 +206,6 @@ public abstract class Architecture {
                 assert this.byteOrder.equals(that.byteOrder);
                 assert this.implicitMemoryBarriers == that.implicitMemoryBarriers;
                 assert this.machineCodeCallDisplacementOffset == that.machineCodeCallDisplacementOffset;
-                assert this.registerReferenceMapSize == that.registerReferenceMapSize;
                 assert Arrays.equals(this.registers, that.registers);
                 assert this.returnAddressSize == that.returnAddressSize;
                 assert this.unalignedMemoryAccess == that.unalignedMemoryAccess;
