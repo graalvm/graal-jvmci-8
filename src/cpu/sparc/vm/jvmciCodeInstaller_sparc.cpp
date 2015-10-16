@@ -66,7 +66,21 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle& constant) {
 
 void CodeInstaller::pd_patch_MetaspaceConstant(int pc_offset, Handle& constant) {
   address pc = _instructions->start() + pc_offset;
-  fatal(err_msg("unexpected inline metaspace constant at %p (+%d)", pc, pc_offset));
+  if (HotSpotMetaspaceConstantImpl::compressed(constant)) {
+#ifdef _LP64
+    NativeMovConstReg32* move = nativeMovConstReg32_at(pc);
+    narrowKlass narrowOop = record_narrow_metadata_reference(constant);
+    move->set_data((intptr_t)narrowOop);
+    TRACE_jvmci_3("relocating (narrow metaspace constant) at %p/%p", pc, narrowOop);
+#else
+    fatal("compressed Klass* on 32bit");
+#endif
+  } else {
+    NativeMovConstReg* move = nativeMovConstReg_at(pc);
+    Metadata* reference = record_metadata_reference(constant);
+    move->set_data((intptr_t)reference);
+    TRACE_jvmci_3("relocating (metaspace constant) at %p/%p", pc, reference);
+  }
 }
 
 void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset) {
