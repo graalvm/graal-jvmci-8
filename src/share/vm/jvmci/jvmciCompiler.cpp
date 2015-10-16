@@ -60,6 +60,10 @@ void JVMCICompiler::initialize() {
 
 #ifdef COMPILERJVMCI
 void JVMCICompiler::bootstrap() {
+  if (Arguments::mode() == Arguments::_int) {
+    // Nothing to do in -Xint mode
+    return;
+  }
 #ifndef PRODUCT
   // We turn off CompileTheWorld so that compilation requests are not
   // ignored during bootstrap or that JVMCI can be compiled by C1/C2.
