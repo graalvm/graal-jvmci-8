@@ -22,8 +22,7 @@
  */
 package jdk.vm.ci.code;
 
-import static jdk.vm.ci.code.ValueUtil.isStackSlot;
-import static jdk.vm.ci.code.ValueUtil.isVirtualStackSlot;
+import jdk.vm.ci.meta.AllocatableValue;
 import jdk.vm.ci.meta.JavaValue;
 import jdk.vm.ci.meta.Value;
 
@@ -33,10 +32,10 @@ import jdk.vm.ci.meta.Value;
 public final class StackLockValue implements JavaValue {
 
     private JavaValue owner;
-    private StackSlotValue slot;
+    private AllocatableValue slot;
     private final boolean eliminated;
 
-    public StackLockValue(JavaValue object, StackSlotValue slot, boolean eliminated) {
+    public StackLockValue(JavaValue object, AllocatableValue slot, boolean eliminated) {
         this.owner = object;
         this.slot = slot;
         this.eliminated = eliminated;
@@ -82,8 +81,7 @@ public final class StackLockValue implements JavaValue {
         return false;
     }
 
-    public void setSlot(StackSlotValue stackSlot) {
-        assert slot == null || (isVirtualStackSlot(slot) && (slot.equals(stackSlot) || isStackSlot(stackSlot))) : String.format("Can not set slot for %s to %s", this, stackSlot);
+    public void setSlot(AllocatableValue stackSlot) {
         slot = stackSlot;
     }
 }

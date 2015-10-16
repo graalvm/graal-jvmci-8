@@ -254,7 +254,7 @@ void jvmci_compute_offsets();
   end_class                                                                                                                                                    \
   start_class(StackLockValue)                                                                                                                                  \
     oop_field(StackLockValue, owner, "Ljdk/vm/ci/meta/JavaValue;")                                                                                             \
-    oop_field(StackLockValue, slot, "Ljdk/vm/ci/code/StackSlotValue;")                                                                                         \
+    oop_field(StackLockValue, slot, "Ljdk/vm/ci/meta/AllocatableValue;")                                                                                       \
     boolean_field(StackLockValue, eliminated)                                                                                                                  \
   end_class                                                                                                                                                    \
   start_class(SpeculationLog)                                                                                                                                  \
