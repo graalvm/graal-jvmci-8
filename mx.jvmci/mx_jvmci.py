@@ -29,6 +29,7 @@ from os.path import join, exists, dirname, basename
 from argparse import ArgumentParser, REMAINDER
 import xml.dom.minidom
 import json, textwrap
+from collections import OrderedDict
 
 import mx
 import mx_unittest
@@ -529,30 +530,6 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
                 for line in jvmCfgLines:
                     fp.write(line)
 
-            # patch 'release' file (append jvmci revision)
-            releaseFile = join(jdkDir, 'release')
-            if exists(releaseFile):
-                releaseFileLines = []
-                with open(releaseFile) as f:
-                    for line in f:
-                        releaseFileLines.append(line)
-
-                if mx.get_os() != 'windows':
-                    os.chmod(releaseFile, JDK_UNIX_PERMISSIONS_FILE)
-                with open(releaseFile, 'w') as fp:
-                    for line in releaseFileLines:
-                        if line.startswith("SOURCE="):
-                            try:
-                                sourceLine = line[0:-2]  # remove last char
-                                hgcfg = mx.HgConfig()
-                                hgcfg.check()
-                                revision = hgcfg.tip('.')[:12]  # take first 12 chars
-                                fp.write(sourceLine + ' jvmci:' + revision + '\"\n')
-                            except:
-                                fp.write(line)
-                        else:
-                            fp.write(line)
-
             # Install a copy of the disassembler library
             try:
                 hsdis([], copyToDir=vmLibDirInJdk(jdkDir))
@@ -569,6 +546,41 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
             dist = jdkDist.dist()
             if exists(dist.path):
                 _installDistInJdks(jdkDist)
+
+        # patch 'release' file (append jvmci revision)
+        releaseFile = join(jdkDir, 'release')
+        if exists(releaseFile):
+            releaseFileLines = []
+            with open(releaseFile) as f:
+                for line in f:
+                    releaseFileLines.append(line)
+
+            if mx.get_os() != 'windows':
+                os.chmod(releaseFile, JDK_UNIX_PERMISSIONS_FILE)
+            print("open", releaseFile)
+            with open(releaseFile, 'w') as fp:
+                for line in releaseFileLines:
+                    timmedLine = line.strip()
+                    if timmedLine.startswith('SOURCE="') and timmedLine.endswith('"'):
+                        try:
+                            versions = OrderedDict()
+                            for p in timmedLine[len('SOURCE="'):-len('"')].split(' '):
+                                if p:
+                                    idx = p.index(':')
+                                    versions[p[:idx]] = p[idx+1:]
+                            if _suite.vc:
+                                versions['jvmci'] = _suite.vc.parent(_suite.dir)[:12]
+                            else:
+                                versions['jvmci'] = "unknown"
+                            if 'hotspot' in versions:
+                                del versions['hotspot']
+                            fp.write('SOURCE=" ' + ' '.join((k + ":" + v for k, v in versions.iteritems())) + '"' + os.linesep)
+                            mx.logv("Updating " + releaseFile)
+                        except:
+                            mx.warn("Exception while updaing release file")
+                            fp.write(line)
+                    else:
+                        fp.write(line)
 
     if vmToCheck is not None:
         jvmCfg = getVmCfgInJdk(jdkDir)
