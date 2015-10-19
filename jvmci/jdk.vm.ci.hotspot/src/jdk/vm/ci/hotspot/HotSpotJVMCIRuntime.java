@@ -54,25 +54,15 @@ import jdk.vm.ci.service.Services;
 
 /**
  * HotSpot implementation of a JVMCI runtime.
+ *
+ * The initialization of this class is very fragile since it's initialized both through
+ * {@link JVMCI#initialize()} or through calling {@link HotSpotJVMCIRuntime#runtime()} and
+ * {@link HotSpotJVMCIRuntime#runtime()} is also called by {@link JVMCI#initialize()}. So this class
+ * can't have a static initializer and any required initialization must be done as part of
+ * {@link #runtime()}. This allows the initialization to funnel back through
+ * {@link JVMCI#initialize()} without deadlocking.
  */
 public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, HotSpotProxified {
-
-    /**
-     * The proper initialization of this class is complex because it's tangled up with the
-     * initialization of the JVMCI and really should only ever be triggered through
-     * {@link JVMCI#getRuntime}. However since {@link #runtime} can also be called directly it
-     * should also trigger proper initialization. To ensure proper ordering, the static initializer
-     * of this class initializes {@link JVMCI} and then access to
-     * {@link HotSpotJVMCIRuntime.DelayedInit#instance} triggers the final initialization of the
-     * {@link HotSpotJVMCIRuntime}.
-     */
-    private static void initializeJVMCI() {
-        JVMCI.initialize();
-    }
-
-    static {
-        initializeJVMCI();
-    }
 
     @SuppressWarnings("try")
     static class DelayedInit {
@@ -89,6 +79,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * Gets the singleton {@link HotSpotJVMCIRuntime} object.
      */
     public static HotSpotJVMCIRuntime runtime() {
+        JVMCI.initialize();
         return DelayedInit.instance;
     }
 
