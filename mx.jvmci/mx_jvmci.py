@@ -557,7 +557,6 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
 
             if mx.get_os() != 'windows':
                 os.chmod(releaseFile, JDK_UNIX_PERMISSIONS_FILE)
-            print("open", releaseFile)
             with open(releaseFile, 'w') as fp:
                 for line in releaseFileLines:
                     timmedLine = line.strip()
