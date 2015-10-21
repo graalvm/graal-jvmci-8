@@ -35,7 +35,7 @@ public interface Compiler {
     @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> PrintAfterCompilation = new OptionValue<>(false);
     @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> PrintBailout = new OptionValue<>(false);
     @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> ExitVMOnBailout = new OptionValue<>(false);
-    @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> ExitVMOnException = new OptionValue<>(true);
+    @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> ExitVMOnException = new OptionValue<>(false);
     @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> PrintStackTraceOnException = new OptionValue<>(false);
 
     /**
