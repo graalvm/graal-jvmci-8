@@ -109,7 +109,6 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "jdk.vm.ci.code",
-        "jdk.vm.ci.options"
       ],
       "checkstyle" : "jdk.vm.ci.service",
       "annotationProcessors" : ["JVMCI_OPTIONS_PROCESSOR"],
@@ -123,6 +122,7 @@ suite = {
       "dependencies" : [
         "mx:JUNIT",
         "jdk.vm.ci.common",
+        "jdk.vm.ci.options",
         "jdk.vm.ci.runtime",
       ],
       "checkstyle" : "jdk.vm.ci.service",
@@ -196,6 +196,7 @@ suite = {
       "dependencies" : [
         "jdk.vm.ci.hotspotvmconfig",
         "jdk.vm.ci.common",
+        "jdk.vm.ci.options",
         "jdk.vm.ci.runtime",
         "jdk.vm.ci.service",
       ],

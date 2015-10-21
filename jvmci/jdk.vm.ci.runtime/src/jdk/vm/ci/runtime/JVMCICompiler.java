@@ -23,20 +23,9 @@
 package jdk.vm.ci.runtime;
 
 import jdk.vm.ci.code.CompilationRequest;
-import jdk.vm.ci.options.Option;
-import jdk.vm.ci.options.OptionType;
-import jdk.vm.ci.options.OptionValue;
 
 public interface JVMCICompiler {
     int INVOCATION_ENTRY_BCI = -1;
-
-    @Option(help = "", type = OptionType.Debug) OptionValue<String> PrintFilter = new OptionValue<>(null);
-    @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> PrintCompilation = new OptionValue<>(false);
-    @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> PrintAfterCompilation = new OptionValue<>(false);
-    @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> PrintBailout = new OptionValue<>(false);
-    @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> ExitVMOnBailout = new OptionValue<>(false);
-    @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> ExitVMOnException = new OptionValue<>(false);
-    @Option(help = "", type = OptionType.Debug) OptionValue<Boolean> PrintStackTraceOnException = new OptionValue<>(false);
 
     /**
      * Services a compilation request. This object should compile the method to machine code and
