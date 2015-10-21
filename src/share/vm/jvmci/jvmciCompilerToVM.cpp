@@ -1196,7 +1196,6 @@ C2V_END
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
 
-#define SPECULATION_LOG       "Ljdk/vm/ci/meta/SpeculationLog;"
 #define STRING                "Ljava/lang/String;"
 #define OBJECT                "Ljava/lang/Object;"
 #define CLASS                 "Ljava/lang/Class;"
@@ -1210,6 +1209,7 @@ C2V_END
 #define HS_COMPILED_CODE      "Ljdk/vm/ci/hotspot/HotSpotCompiledCode;"
 #define HS_CONFIG             "Ljdk/vm/ci/hotspot/HotSpotVMConfig;"
 #define HS_STACK_FRAME_REF    "Ljdk/vm/ci/hotspot/HotSpotStackFrameReference;"
+#define HS_SPECULATION_LOG    "Ljdk/vm/ci/hotspot/HotSpotSpeculationLog;"
 #define METASPACE_METHOD_DATA "J"
 
 JNINativeMethod CompilerToVM::methods[] = {
@@ -1248,7 +1248,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getConstantPool",                              CC"(Ljava/lang/Object;J)"HS_CONSTANT_POOL,                                        FN_PTR(getConstantPool)},
   {CC"getResolvedJavaType",                          CC"(Ljava/lang/Object;JZ)"HS_RESOLVED_KLASS,                                      FN_PTR(getResolvedJavaType)},
   {CC"initializeConfiguration",                      CC"("HS_CONFIG")V",                                                               FN_PTR(initializeConfiguration)},
-  {CC"installCode",                                  CC"("TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE SPECULATION_LOG")I",      FN_PTR(installCode)},
+  {CC"installCode",                                  CC"("TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE HS_SPECULATION_LOG")I",   FN_PTR(installCode)},
   {CC"notifyCompilationStatistics",                  CC"(I"HS_RESOLVED_METHOD"ZIJJ"INSTALLED_CODE")V",                                 FN_PTR(notifyCompilationStatistics)},
   {CC"resetCompilationStatistics",                   CC"()V",                                                                          FN_PTR(resetCompilationStatistics)},
   {CC"disassembleCodeBlob",                          CC"("INSTALLED_CODE")"STRING,                                                     FN_PTR(disassembleCodeBlob)},

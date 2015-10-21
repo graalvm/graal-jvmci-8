@@ -37,7 +37,6 @@ import jdk.vm.ci.inittimer.InitTimer;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
-import jdk.vm.ci.meta.SpeculationLog;
 import sun.misc.Unsafe;
 
 /**
@@ -310,7 +309,7 @@ final class CompilerToVM {
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesFailed} or
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesInvalid}.
      */
-    native int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, SpeculationLog speculationLog);
+    native int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, HotSpotSpeculationLog speculationLog);
 
     /**
      * Notifies the VM of statistics for a completed compilation.

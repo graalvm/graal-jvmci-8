@@ -257,8 +257,8 @@ void jvmci_compute_offsets();
     oop_field(StackLockValue, slot, "Ljdk/vm/ci/meta/AllocatableValue;")                                                                                       \
     boolean_field(StackLockValue, eliminated)                                                                                                                  \
   end_class                                                                                                                                                    \
-  start_class(SpeculationLog)                                                                                                                                  \
-    oop_field(SpeculationLog, lastFailed, "Ljava/lang/Object;")                                                                                                \
+  start_class(HotSpotSpeculationLog)                                                                                                                           \
+    oop_field(HotSpotSpeculationLog, lastFailed, "Ljava/lang/Object;")                                                                                         \
   end_class                                                                                                                                                    \
   start_class(HotSpotStackFrameReference)                                                                                                                      \
     oop_field(HotSpotStackFrameReference, compilerToVM, "Ljdk/vm/ci/hotspot/CompilerToVM;")                                                                    \
