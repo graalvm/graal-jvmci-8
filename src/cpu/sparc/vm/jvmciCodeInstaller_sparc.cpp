@@ -186,14 +186,19 @@ VMReg CodeInstaller::get_hotspot_reg(jint jvmci_reg) {
   //   32..63: Thirty-two single precision float registers
   //   64..95: Thirty-two double precision float registers
   //   96..111: Sixteen quad precision float registers
-  if (jvmci_reg < RegisterImpl::number_of_registers) {
+  if (jvmci_reg < 32) {
     return as_Register(jvmci_reg)->as_VMReg();
   } else {
-    jint jvmciFloatRegisterNumber = jvmci_reg - RegisterImpl::number_of_registers;
-    jint floatRegisterNumber = MIN2(32, jvmciFloatRegisterNumber);
-    floatRegisterNumber += 2 * MAX2(0, MIN2(32, jvmciFloatRegisterNumber) - 32);
-    floatRegisterNumber += 4 * MAX2(0, MIN2(32, jvmciFloatRegisterNumber) - 32 - 32);
-    floatRegisterNumber = floatRegisterNumber % FloatRegisterImpl::number_of_registers;
+    jint floatRegisterNumber;
+    if(jvmci_reg < 64) { // Single precision
+      floatRegisterNumber = jvmci_reg - 32;
+    } else if(jvmci_reg < 96) {
+      floatRegisterNumber = 2 * (jvmci_reg - 64);
+    } else if(jvmci_reg < 112) {
+      floatRegisterNumber = 4 * (jvmci_reg - 96);
+    } else {
+      fatal("Unknown jvmci register");
+    }
     return as_FloatRegister(floatRegisterNumber)->as_VMReg();
   }
 }
