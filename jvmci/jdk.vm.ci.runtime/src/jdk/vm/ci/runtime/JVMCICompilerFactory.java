@@ -20,14 +20,12 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.vm.ci.compiler;
-
-import jdk.vm.ci.runtime.JVMCIRuntime;
+package jdk.vm.ci.runtime;
 
 /**
  * Factory for a JVMCI compiler.
  */
-public interface CompilerFactory {
+public interface JVMCICompilerFactory {
 
     /**
      * Get the name of this compiler. The compiler will be selected when the jvmci.compiler system
@@ -36,9 +34,9 @@ public interface CompilerFactory {
     String getCompilerName();
 
     /**
-     * Create a new instance of the {@link Compiler}.
+     * Create a new instance of the {@link JVMCICompiler}.
      */
-    Compiler createCompiler(JVMCIRuntime runtime);
+    JVMCICompiler createCompiler(JVMCIRuntime runtime);
 
     /**
      * In a tiered system it might be advantageous for startup to keep the JVMCI compiler from

@@ -142,7 +142,6 @@ JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.meta/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.code/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.runtime/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.common/src -type f 2> /dev/null)
-JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.compiler/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.amd64/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.sparc/src -type f 2> /dev/null)
 

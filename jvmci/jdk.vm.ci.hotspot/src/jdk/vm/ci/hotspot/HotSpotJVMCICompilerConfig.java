@@ -24,14 +24,14 @@ package jdk.vm.ci.hotspot;
 
 import jdk.vm.ci.code.CompilationRequest;
 import jdk.vm.ci.common.JVMCIError;
-import jdk.vm.ci.compiler.Compiler;
-import jdk.vm.ci.compiler.CompilerFactory;
+import jdk.vm.ci.runtime.JVMCICompiler;
+import jdk.vm.ci.runtime.JVMCICompilerFactory;
 import jdk.vm.ci.runtime.JVMCIRuntime;
 import jdk.vm.ci.service.Services;
 
 final class HotSpotJVMCICompilerConfig {
 
-    private static class DummyCompilerFactory implements CompilerFactory, Compiler {
+    private static class DummyCompilerFactory implements JVMCICompilerFactory, JVMCICompiler {
 
         public void compileMethod(CompilationRequest request) {
             throw new JVMCIError("no JVMCI compiler selected");
@@ -41,12 +41,12 @@ final class HotSpotJVMCICompilerConfig {
             return "<none>";
         }
 
-        public Compiler createCompiler(JVMCIRuntime runtime) {
+        public JVMCICompiler createCompiler(JVMCIRuntime runtime) {
             return this;
         }
     }
 
-    private static CompilerFactory compilerFactory;
+    private static JVMCICompilerFactory compilerFactory;
 
     /**
      * Selects the system compiler.
@@ -56,7 +56,7 @@ final class HotSpotJVMCICompilerConfig {
      */
     static Boolean selectCompiler(String compilerName) {
         assert compilerFactory == null;
-        for (CompilerFactory factory : Services.load(CompilerFactory.class)) {
+        for (JVMCICompilerFactory factory : Services.load(JVMCICompilerFactory.class)) {
             if (factory.getCompilerName().equals(compilerName)) {
                 compilerFactory = factory;
                 return Boolean.TRUE;
@@ -66,7 +66,7 @@ final class HotSpotJVMCICompilerConfig {
         throw new JVMCIError("JVMCI compiler '%s' not found", compilerName);
     }
 
-    static CompilerFactory getCompilerFactory() {
+    static JVMCICompilerFactory getCompilerFactory() {
         if (compilerFactory == null) {
             compilerFactory = new DummyCompilerFactory();
         }

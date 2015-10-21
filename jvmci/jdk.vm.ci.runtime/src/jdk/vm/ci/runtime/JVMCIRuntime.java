@@ -30,6 +30,11 @@ import jdk.vm.ci.code.Architecture;
 public interface JVMCIRuntime {
 
     /**
+     * Gets the default system compiler.
+     */
+    JVMCICompiler getCompiler();
+
+    /**
      * Gets the host JVMCI backend.
      */
     JVMCIBackend getHostJVMCIBackend();

@@ -40,7 +40,6 @@ import jdk.vm.ci.code.Architecture;
 import jdk.vm.ci.code.CompilationResult;
 import jdk.vm.ci.code.InstalledCode;
 import jdk.vm.ci.common.JVMCIError;
-import jdk.vm.ci.compiler.Compiler;
 import jdk.vm.ci.inittimer.InitTimer;
 import jdk.vm.ci.meta.JVMCIMetaAccessContext;
 import jdk.vm.ci.meta.JavaKind;
@@ -48,6 +47,7 @@ import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.runtime.JVMCI;
 import jdk.vm.ci.runtime.JVMCIBackend;
+import jdk.vm.ci.runtime.JVMCICompiler;
 import jdk.vm.ci.service.Services;
 
 //JaCoCo Exclude
@@ -105,7 +105,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     protected final HotSpotVMConfig config;
     private final JVMCIBackend hostBackend;
 
-    private volatile Compiler compiler;
+    private volatile JVMCICompiler compiler;
     protected final JVMCIMetaAccessContext metaAccessContext;
 
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
@@ -177,7 +177,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
         return metaAccessContext;
     }
 
-    public Compiler getCompiler() {
+    public JVMCICompiler getCompiler() {
         if (compiler == null) {
             synchronized (this) {
                 if (compiler == null) {

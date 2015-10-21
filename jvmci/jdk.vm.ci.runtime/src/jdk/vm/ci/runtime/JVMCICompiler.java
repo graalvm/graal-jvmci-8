@@ -20,14 +20,14 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.vm.ci.compiler;
+package jdk.vm.ci.runtime;
 
 import jdk.vm.ci.code.CompilationRequest;
 import jdk.vm.ci.options.Option;
 import jdk.vm.ci.options.OptionType;
 import jdk.vm.ci.options.OptionValue;
 
-public interface Compiler {
+public interface JVMCICompiler {
     int INVOCATION_ENTRY_BCI = -1;
 
     @Option(help = "", type = OptionType.Debug) OptionValue<String> PrintFilter = new OptionValue<>(null);
