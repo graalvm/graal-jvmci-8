@@ -479,8 +479,8 @@ C2V_VMENTRY(jint, getVtableIndexForInterfaceMethod, (JNIEnv *, jobject, jobject 
   if (!method->method_holder()->is_interface()) {
     THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Method %s is not held by an interface, this case should be handled in Java code", method->name_and_sig_as_C_string()));
   }
-  if (!InstanceKlass::cast(klass)->is_initialized()) {
-    THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Class %s must be initialized", klass->external_name()));
+  if (!InstanceKlass::cast(klass)->is_linked()) {
+    THROW_MSG_0(vmSymbols::java_lang_InternalError(), err_msg("Class %s must be linked", klass->external_name()));
   }
   return LinkResolver::vtable_index_of_interface_method(klass, method);
 C2V_END
