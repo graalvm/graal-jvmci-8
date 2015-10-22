@@ -372,13 +372,15 @@ void CodeInstaller::initialize_dependencies(oop compiled_code) {
       }
     }
   }
-  objArrayHandle methods = HotSpotCompiledCode::methods(compiled_code);
-  if (!methods.is_null()) {
-    int length = methods->length();
-    for (int i = 0; i < length; ++i) {
-      Handle method_handle = methods->obj_at(i);
-      methodHandle method = getMethodFromHotSpotMethod(method_handle());
-      _dependencies->assert_evol_method(method());
+  if (JvmtiExport::can_hotswap_or_post_breakpoint()) {
+    objArrayHandle methods = HotSpotCompiledCode::methods(compiled_code);
+    if (!methods.is_null()) {
+      int length = methods->length();
+      for (int i = 0; i < length; ++i) {
+        Handle method_handle = methods->obj_at(i);
+        methodHandle method = getMethodFromHotSpotMethod(method_handle());
+        _dependencies->assert_evol_method(method());
+      }
     }
   }
 }
