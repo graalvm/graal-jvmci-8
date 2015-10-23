@@ -199,9 +199,11 @@ public class LogParser extends DefaultHandler implements ErrorHandler, Constants
                 if (ble instanceof NMethod) {
                     NMethod nm = (NMethod) ble;
                     // Native wrappers for methods don't have a compilation and Graal methods don't either.
-                    if (c != null) {
-                        c.setNMethod(nm);
+                    if (c == null) {
+                        c = new Compilation(Integer.parseInt(nm.getId()));
+                        log.compiles.put(ble.getId(), c);
                     }
+                    c.setNMethod(nm);
                 } else {
                     if (c == null) {
                         // throw new InternalError("can't find compilation " + ble.getId() + " for " + ble);
@@ -306,9 +308,14 @@ public class LogParser extends DefaultHandler implements ErrorHandler, Constants
             compile.setBCount(search(atts, "backedge_count", "0"));
 
             String method = atts.getValue("method");
+            Method m = new Method();
             int space = method.indexOf(' ');
-            method = method.substring(0, space) + "::" +
-                    method.substring(space + 1, method.indexOf(' ', space + 1) + 1);
+            m.setHolder(method.substring(0, space));
+            m.setName(method.substring(space + 1, method.indexOf(' ', space + 1) + 1));
+            m.setReturnType(method.substring(method.lastIndexOf(')') + 1));
+            m.setArguments(method.substring(method.indexOf('(') + 1, method.lastIndexOf(')')));
+            m.setFlags("0");
+            compile.setMethod(m);
             String compiler = atts.getValue("compiler");
             if (compiler == null) {
                 compiler = "";
@@ -320,10 +327,11 @@ public class LogParser extends DefaultHandler implements ErrorHandler, Constants
             if (kind.equals("osr")) {
                 compile.setOsr(true);
                 compile.setOsr_bci(Integer.parseInt(search(atts, "osr_bci")));
+                compile.setMethod(m);
             } else if (kind.equals("c2i")) {
                 compile.setSpecial("--- adapter " + method);
             } else {
-                compile.setSpecial(compile.getId() + " " + method + " (0 bytes)");
+                compile.setMethod(m);
             }
             events.add(compile);
             compiles.put(makeId(atts), compile);
