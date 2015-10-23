@@ -53,6 +53,10 @@ class UncommonTrapEvent extends BasicLogEvent {
         stream.print(getJvms());
     }
 
+    public String formatTrap() {
+        return String.format("uncommon trap %s %s\n%s", getReason(), getAction(), getJvms());
+    }
+
     public String getReason() {
         return reason;
     }

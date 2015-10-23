@@ -50,11 +50,19 @@ public class Method implements Constants {
     }
 
     String format(int osr_bci) {
+        String bci = "";
         if (osr_bci >= 0) {
-            return getHolder().replace('/', '.') + "::" + getName() + " @ " + osr_bci + " (" + getBytes() + " bytes)";
-        } else {
-            return getHolder().replace('/', '.') + "::" + getName() + " (" + getBytes() + " bytes)";
+            bci = " @ " + osr_bci;
         }
+        return getHolder().replace('/', '.') + "::" + getName() + bci + " (" + getBytes() + " bytes)";
+    }
+
+    String formatLong(int osr_bci) {
+        String bci = "";
+        if (osr_bci >= 0) {
+            bci = " @ " + osr_bci;
+        }
+        return getReturnType() + " " + getHolder().replace('/', '.') + "::" + getName() + "(" + getArguments() + ")" + bci;
     }
 
     @Override

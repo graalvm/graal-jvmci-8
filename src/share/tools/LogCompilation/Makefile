@@ -62,7 +62,7 @@ all: logc.jar
 
 logc.jar: filelist manifest.mf
 	@mkdir -p $(OUTPUT_DIR)
-	$(JAVAC) -source 1.5 -deprecation -sourcepath $(SRC_DIR) -d $(OUTPUT_DIR) @filelist
+	$(JAVAC) -source 1.6 -deprecation -sourcepath $(SRC_DIR) -d $(OUTPUT_DIR) @filelist
 	$(JAR) cvfm logc.jar manifest.mf -C $(OUTPUT_DIR) com
 
 .PHONY: filelist

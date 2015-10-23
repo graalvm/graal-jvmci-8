@@ -41,6 +41,7 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
         System.out.println("  -c:   clean up malformed 1.5 xml");
         System.out.println("  -i:   print inlining decisions");
         System.out.println("  -S:   print compilation statistics");
+        System.out.println("  -R:   print method recompilation information");
         System.out.println("  -s:   sort events by start time");
         System.out.println("  -e:   sort events by elapsed time");
         System.out.println("  -n:   sort events by name and start");
@@ -52,6 +53,7 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
     public static void main(String[] args) throws Exception {
         Comparator<LogEvent> defaultSort = LogParser.sortByStart;
         boolean statistics = false;
+        boolean recompilation = false;
         boolean printInlining = false;
         boolean cleanup = false;
         boolean printEliminatedLocks = false;
@@ -73,6 +75,9 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
                 index++;
             } else if (args[index].equals("-S")) {
                 statistics = true;
+                index++;
+            } else if (args[index].equals("-R")) {
+                recompilation = true;
                 index++;
             } else if (args[index].equals("-h")) {
                 usage(0);
@@ -103,6 +108,8 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
                 printEliminatedLocks(events, System.out, defaultSort);
             } else if (statistics) {
                 printStatistics(events, System.out);
+            } else if (recompilation) {
+                printRecompilation(events, System.out);
             } else {
                 Collections.sort(events, defaultSort);
                 for (LogEvent c : events) {
@@ -196,6 +203,54 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
         }
     }
     
+    public static void printRecompilation(ArrayList<LogEvent> events, PrintStream out) {
+        LinkedHashMap<String, Map<String, List<String>>> traps = new LinkedHashMap<String, Map<String, List<String>>>();
+        for (LogEvent e : events) {
+            if (e instanceof UncommonTrapEvent) {
+                UncommonTrapEvent uc = (UncommonTrapEvent) e;
+                Map<String, List<String>> t = traps.get(uc.getCompilation().longMethodName());
+                if (t == null) {
+                    t = new LinkedHashMap<String, List<String>>();
+                    traps.put(uc.getCompilation().longMethodName(), t);
+                }
+                String msg = uc.formatTrap().trim();
+                List<String> i = t.get(msg);
+                if (i == null) {
+                    i = new ArrayList<String>();
+                    t.put(msg, i);
+                }
+                i.add(uc.getId());
+            }
+        }
+
+        List<List<String>> recompiles = new ArrayList<List<String>>();
+        Map<List<String>, String> reverseMapping = new HashMap<List<String>, String>();
+        for (Map.Entry<String, Map<String, List<String>>> entry : traps.entrySet()) {
+            for (Map.Entry<String, List<String>> trapEntry : entry.getValue().entrySet()) {
+                recompiles.add(trapEntry.getValue());
+                reverseMapping.put(trapEntry.getValue(), trapEntry.getKey());
+            }
+        }
+        recompiles.sort(new Comparator<List<String>>() {
+            public int compare(List<String> a, List<String> b) {
+                return intCompare(a.size(), b.size());
+            }
+        });
+        for (List<String> key : recompiles) {
+            if (key.size() > 1) {
+                out.print("Trap: ");
+                out.println(reverseMapping.get(key));
+                out.print("Compilations: ");
+                out.println(key);
+            }
+        }
+    }
+    
+
+    private static int intCompare(int o1, int o2) {
+        return (o1 > o2 ? -1 : (o1 == o2 ? 0 : 1));
+    }
+
     public static void printStatistics(ArrayList<LogEvent> events, PrintStream out) {
         long cacheSize = 0;
         long maxCacheSize = 0;

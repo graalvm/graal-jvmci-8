@@ -104,6 +104,15 @@ public class Compilation implements LogEvent {
         }
     }
 
+    public String longMethodName() {
+        if (getMethod() == null) {
+            return getSpecial();
+        } else {
+            int bc = isOsr() ? getOsr_bci() : -1;
+            return getMethod().decodeFlags(bc) + getMethod().formatLong(bc);
+        }
+    }
+
     public void printShort(PrintStream stream) {
         stream.println(shortName());
     }
