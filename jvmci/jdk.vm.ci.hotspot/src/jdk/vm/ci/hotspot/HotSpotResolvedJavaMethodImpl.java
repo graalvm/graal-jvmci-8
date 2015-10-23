@@ -29,9 +29,8 @@ import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -75,7 +74,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     private final HotSpotSignature signature;
     private HotSpotMethodData methodData;
     private byte[] code;
-    private Member toJavaCache;
+    private Executable toJavaCache;
 
     /**
      * Gets the holder of a HotSpot metaspace method native object.
@@ -458,31 +457,19 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     @Override
     public Annotation[][] getParameterAnnotations() {
-        if (isConstructor()) {
-            Constructor<?> javaConstructor = toJavaConstructor();
-            return javaConstructor == null ? null : javaConstructor.getParameterAnnotations();
-        }
-        Method javaMethod = toJava();
+        Executable javaMethod = toJava();
         return javaMethod == null ? null : javaMethod.getParameterAnnotations();
     }
 
     @Override
     public Annotation[] getAnnotations() {
-        if (isConstructor()) {
-            Constructor<?> javaConstructor = toJavaConstructor();
-            return javaConstructor == null ? new Annotation[0] : javaConstructor.getAnnotations();
-        }
-        Method javaMethod = toJava();
+        Executable javaMethod = toJava();
         return javaMethod == null ? new Annotation[0] : javaMethod.getAnnotations();
     }
 
     @Override
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-        if (isConstructor()) {
-            Constructor<?> javaConstructor = toJavaConstructor();
-            return javaConstructor == null ? null : javaConstructor.getAnnotation(annotationClass);
-        }
-        Method javaMethod = toJava();
+        Executable javaMethod = toJava();
         return javaMethod == null ? null : javaMethod.getAnnotation(annotationClass);
     }
 
@@ -497,11 +484,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     @Override
     public Type[] getGenericParameterTypes() {
-        if (isConstructor()) {
-            Constructor<?> javaConstructor = toJavaConstructor();
-            return javaConstructor == null ? null : javaConstructor.getGenericParameterTypes();
-        }
-        Method javaMethod = toJava();
+        Executable javaMethod = toJava();
         return javaMethod == null ? null : javaMethod.getGenericParameterTypes();
     }
 
@@ -517,25 +500,13 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         return result;
     }
 
-    private Method toJava() {
+    private Executable toJava() {
         if (toJavaCache != null) {
-            return (Method) toJavaCache;
+            return toJavaCache;
         }
         try {
-            Method result = holder.mirror().getDeclaredMethod(name, signatureToTypes());
-            toJavaCache = result;
-            return result;
-        } catch (NoSuchMethodException | NoClassDefFoundError e) {
-            return null;
-        }
-    }
-
-    private Constructor<?> toJavaConstructor() {
-        if (toJavaCache != null) {
-            return (Constructor<?>) toJavaCache;
-        }
-        try {
-            Constructor<?> result = holder.mirror().getDeclaredConstructor(signatureToTypes());
+            Class<?>[] parameterTypes = signatureToTypes();
+            Executable result = isConstructor() ? holder.mirror().getDeclaredConstructor(parameterTypes) : holder.mirror().getDeclaredMethod(name, parameterTypes);
             toJavaCache = result;
             return result;
         } catch (NoSuchMethodException | NoClassDefFoundError e) {
@@ -708,7 +679,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     @Override
     public JavaConstant invoke(JavaConstant receiver, JavaConstant[] arguments) {
         assert !isConstructor();
-        Method javaMethod = toJava();
+        Method javaMethod = (Method) toJava();
         javaMethod.setAccessible(true);
 
         Object[] objArguments = new Object[arguments.length];
