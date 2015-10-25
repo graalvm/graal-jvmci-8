@@ -1133,6 +1133,7 @@ def _unittest_config_participant(config):
             for jdkDist in jdkDeployedDists:
                 dist = jdkDist.dist()
                 excluded.update([d.output_dir() for d in dist.archived_deps() if d.isJavaProject()])
+                excluded.add(dist.path)
             cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
             vmArgs[cpIndex] = cp
 
