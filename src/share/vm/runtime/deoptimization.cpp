@@ -2119,7 +2119,7 @@ const char* Deoptimization::format_trap_state(char* buf, size_t buflen,
 //--------------------------------statics--------------------------------------
 Deoptimization::DeoptAction Deoptimization::_unloaded_action
   = Deoptimization::Action_reinterpret;
-const char* Deoptimization::_trap_reason_name[Reason_LIMIT] = {
+const char* Deoptimization::_trap_reason_name[] = {
   // Note:  Keep this in sync. with enum DeoptReason.
   "none",
   "null_check",
@@ -2140,7 +2140,7 @@ const char* Deoptimization::_trap_reason_name[Reason_LIMIT] = {
   "loop_limit_check",
   "speculate_class_check",
   "rtm_state_change",
-  "unstable_if"
+  "unstable_if",
 #if INCLUDE_JVMCI
   "aliasing",
   "transfer_to_interpreter",
@@ -2149,7 +2149,7 @@ const char* Deoptimization::_trap_reason_name[Reason_LIMIT] = {
   "jsr_mismatch"
 #endif
 };
-const char* Deoptimization::_trap_action_name[Action_LIMIT] = {
+const char* Deoptimization::_trap_action_name[] = {
   // Note:  Keep this in sync. with enum DeoptAction.
   "none",
   "maybe_recompile",
@@ -2159,6 +2159,9 @@ const char* Deoptimization::_trap_action_name[Action_LIMIT] = {
 };
 
 const char* Deoptimization::trap_reason_name(int reason) {
+  // Check that every reason has a name
+  STATIC_ASSERT(sizeof(_trap_reason_name)/sizeof(const char*) == Reason_LIMIT);
+
   if (reason == Reason_many)  return "many";
   if ((uint)reason < Reason_LIMIT)
     return _trap_reason_name[reason];
@@ -2167,6 +2170,9 @@ const char* Deoptimization::trap_reason_name(int reason) {
   return buf;
 }
 const char* Deoptimization::trap_action_name(int action) {
+  // Check that every action has a name
+  STATIC_ASSERT(sizeof(_trap_action_name)/sizeof(const char*) == Action_LIMIT);
+
   if ((uint)action < Action_LIMIT)
     return _trap_action_name[action];
   static char buf[20];
