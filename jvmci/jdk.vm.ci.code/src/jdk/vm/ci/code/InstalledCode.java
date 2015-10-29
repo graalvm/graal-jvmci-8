@@ -31,7 +31,7 @@ public class InstalledCode {
     /**
      * Raw address address of entity representing this installed code.
      */
-    private long address;
+    protected long address;
 
     /**
      * Raw address of entryPoint of this installed code.
@@ -41,18 +41,12 @@ public class InstalledCode {
     /**
      * Counts how often the address field was reassigned.
      */
-    private long version;
+    protected long version;
 
     protected final String name;
 
     public InstalledCode(String name) {
         this.name = name;
-    }
-
-    public final void setAddressAndEntryPoint(long address, long entryPoint) {
-        this.address = address;
-        this.entryPoint = entryPoint;
-        version++;
     }
 
     /**
