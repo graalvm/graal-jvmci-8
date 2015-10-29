@@ -69,9 +69,6 @@ BasicType JVMCIRuntime::kindToBasicType(jchar ch) {
     case 'd': return T_DOUBLE;
     case 'a': return T_OBJECT;
     case '-': return T_ILLEGAL;
-    default:
-      fatal(err_msg("unexpected Kind: %c", ch));
-      break;
   }
   return T_ILLEGAL;
 }

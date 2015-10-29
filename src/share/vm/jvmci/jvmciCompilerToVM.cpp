@@ -594,7 +594,7 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
 
   TraceTime install_time("installCode", JVMCICompiler::codeInstallTimer());
   CodeInstaller installer;
-  JVMCIEnv::CodeInstallResult result = installer.install(compiler, target_handle, compiled_code_handle, cb, installed_code_handle, speculation_log_handle);
+  JVMCIEnv::CodeInstallResult result = installer.install(compiler, target_handle, compiled_code_handle, cb, installed_code_handle, speculation_log_handle, CHECK_0);
 
   if (PrintCodeCacheOnCompilation) {
     stringStream s;
