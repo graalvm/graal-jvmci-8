@@ -116,7 +116,8 @@ class Deoptimization : AllStatic {
     Unpack_deopt                = 0, // normal deoptimization, use pc computed in unpack_vframe_on_stack
     Unpack_exception            = 1, // exception is pending
     Unpack_uncommon_trap        = 2, // redo last byte code (C2 only)
-    Unpack_reexecute            = 3  // reexecute bytecode (C1 only)
+    Unpack_reexecute            = 3, // reexecute bytecode (C1 only)
+    Unpack_LIMIT                = 4
   };
 
   // Checks all compiled methods. Invalid methods are deleted and
@@ -172,6 +173,7 @@ JVMCI_ONLY(public:)
     intptr_t  _initial_info;              // Platform dependent data for the sender frame (was FP on x86)
     int       _caller_actual_parameters;  // The number of actual arguments at the
                                           // interpreted caller of the deoptimized frame
+    int       _exec_mode;                 // exec_mode that can be changed during fetch_unroll_info
 
     // The following fields are used as temps during the unpacking phase
     // (which is tight on registers, especially on x86). They really ought
@@ -188,7 +190,8 @@ JVMCI_ONLY(public:)
                 int  number_of_frames,
                 intptr_t* frame_sizes,
                 address* frames_pcs,
-                BasicType return_type);
+                BasicType return_type,
+                int exec_mode);
     ~UnrollBlock();
 
     // Returns where a register is located.
@@ -198,6 +201,7 @@ JVMCI_ONLY(public:)
     intptr_t* frame_sizes()  const { return _frame_sizes; }
     int number_of_frames()  const { return _number_of_frames; }
     address*  frame_pcs()   const { return _frame_pcs ; }
+    int  exec_mode()   const { return _exec_mode ; }
 
     // Returns the total size of frames
     int size_of_frames() const;
@@ -219,6 +223,7 @@ JVMCI_ONLY(public:)
     static int initial_info_offset_in_bytes()              { return offset_of(UnrollBlock, _initial_info);              }
     static int unpack_kind_offset_in_bytes()               { return offset_of(UnrollBlock, _unpack_kind);               }
     static int sender_sp_temp_offset_in_bytes()            { return offset_of(UnrollBlock, _sender_sp_temp);            }
+    static int exec_mode_offset_in_bytes()                 { return offset_of(UnrollBlock, _exec_mode);                 }
 
     BasicType return_type() const { return _return_type; }
     void print();
@@ -230,7 +235,7 @@ JVMCI_ONLY(public:)
   // deoptimized frame.
   // @argument thread.     Thread where stub_frame resides.
   // @see OptoRuntime::deoptimization_fetch_unroll_info_C
-  static UnrollBlock* fetch_unroll_info(JavaThread* thread);
+  static UnrollBlock* fetch_unroll_info(JavaThread* thread, int exec_mode);
 
   //** Unpacks vframeArray onto execution stack
   // Called by assembly stub after execution has returned to
@@ -255,7 +260,7 @@ JVMCI_ONLY(public:)
 
   //** Performs an uncommon trap for compiled code.
   // The top most compiler frame is converted into interpreter frames
-  static UnrollBlock* uncommon_trap(JavaThread* thread, jint unloaded_class_index);
+  static UnrollBlock* uncommon_trap(JavaThread* thread, jint unloaded_class_index, jint exec_mode);
   // Helper routine that enters the VM and may block
   static void uncommon_trap_inner(JavaThread* thread, jint unloaded_class_index);
 
@@ -407,7 +412,7 @@ JVMCI_ONLY(public:)
   static void load_class_by_index(constantPoolHandle constant_pool, int index, TRAPS);
   static void load_class_by_index(constantPoolHandle constant_pool, int index);
 
-  static UnrollBlock* fetch_unroll_info_helper(JavaThread* thread);
+  static UnrollBlock* fetch_unroll_info_helper(JavaThread* thread, int exec_mode);
 
   static DeoptAction _unloaded_action; // == Action_reinterpret;
   static const char* _trap_reason_name[];
