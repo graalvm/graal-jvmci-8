@@ -606,8 +606,7 @@ def _updateInstalledJVMCIOptionsFile(jdkDir):
 
 def copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
     name = os.path.basename(src)
-    if not exists(dst):
-        os.makedirs(dst)
+    mx.ensure_dir_exists(dst)
     dstLib = join(dst, name)
     if mx.get_env('SYMLINK_GRAAL_JAR', None) == 'true':
         # Using symlinks is much faster than copying but may
@@ -627,7 +626,7 @@ def copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
 
 def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, obsoleteCheck):
 
-    oldServices = os.listdir(servicesDir) if exists(servicesDir) else os.makedirs(servicesDir)
+    oldServices = os.listdir(servicesDir) if exists(servicesDir) else mx.ensure_dir_exists(servicesDir)
 
     jvmciServices = {}
     for jar in jvmciJars:
@@ -1489,8 +1488,7 @@ def jmh(args):
     benchmarks = [b for b in benchmarksAndJsons if not b.startswith('{')]
     jmhArgJsons = [b for b in benchmarksAndJsons if b.startswith('{')]
     jmhOutDir = join(_suite.mxDir, 'jmh')
-    if not exists(jmhOutDir):
-        os.makedirs(jmhOutDir)
+    mx.ensure_dir_exists(jmhOutDir)
     jmhOut = join(jmhOutDir, 'jmh.out')
     jmhArgs = {'-rff' : jmhOut, '-v' : 'EXTRA' if mx._opts.verbose else 'NORMAL'}
 
