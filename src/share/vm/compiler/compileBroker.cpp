@@ -254,6 +254,15 @@ CompileTaskWrapper::~CompileTaskWrapper() {
     task->mark_complete();
     // Notify the waiting thread that the compilation has completed.
     task->lock()->notify_all();
+#ifdef COMPILERJVMCI
+    if (CompileBroker::compiler(task->comp_level())->is_jvmci()) {
+      // Blocking JVMCI compilations are performed with a timeout so as
+      // to avoid deadlock between an application thread and a JVMCI
+      // compiler thread (both of which execute Java code). In this case,
+      // the compiling thread recycles the CompileTask.
+      CompileTask::free(task);
+    }
+#endif
   } else {
     task->mark_complete();
 
@@ -1686,6 +1695,11 @@ CompileTask* CompileBroker::create_compile_task(CompileQueue* queue,
   return new_task;
 }
 
+// 1 second should be long enough to complete most JVMCI compilations
+// and not too long to stall a blocking JVMCI compilation that
+// is trying to acquire a lock held by the app thread that submitted the
+// compilation.
+static const long BLOCKING_JVMCI_COMPILATION_TIMEOUT = 1000;
 
 /**
  *  Wait for the compilation task to complete.
@@ -1705,6 +1719,16 @@ void CompileBroker::wait_for_completion(CompileTask* task) {
   {
     MutexLocker waiter(task->lock(), thread);
 
+#ifdef COMPILERJVMCI
+    if (compiler(task->comp_level())->is_jvmci()) {
+      // No need to check if compilation has completed - just
+      // rely on the time out. The JVMCI compiler thread will
+      // recycle the CompileTask.
+      task->lock()->wait(!Mutex::_no_safepoint_check_flag, BLOCKING_JVMCI_COMPILATION_TIMEOUT);
+      thread->set_blocked_on_compilation(false);
+      return;
+    }
+#endif
     while (!task->is_complete() && !is_compilation_disabled_forever()) {
       task->lock()->wait();
     }
