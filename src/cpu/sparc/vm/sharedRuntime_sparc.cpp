@@ -3665,7 +3665,7 @@ void SharedRuntime::generate_deopt_blob() {
 
   RegisterSaver::restore_result_registers(masm);
 
-  __ ld(O2UnrollBlock, Deoptimization::UnrollBlock::exec_mode_offset_in_bytes(), G4deopt_mode);
+  __ ld(O2UnrollBlock, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes(), G4deopt_mode);
   Label noException;
   __ cmp_and_br_short(G4deopt_mode, Deoptimization::Unpack_exception, Assembler::notEqual, Assembler::pt, noException);
 
@@ -3799,7 +3799,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
 
 #ifdef ASSERT
   { Label L;
-    __ ld(O2UnrollBlock, Deoptimization::UnrollBlock::exec_mode_offset_in_bytes(), O1);
+    __ ld(O2UnrollBlock, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes(), O1);
     __  cmp_and_br_short(O1, Deoptimization::Unpack_uncommon_trap, Assembler::equal, Assembler::pt, L);
     __ stop("SharedRuntime::generate_deopt_blob: expected Unpack_uncommon_trap");
     __ bind(L);

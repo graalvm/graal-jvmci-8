@@ -3514,7 +3514,7 @@ void SharedRuntime::generate_deopt_blob() {
   // Load UnrollBlock* into rdi
   __ mov(rdi, rax);
 
-  __ movl(r14, Address(rdi, Deoptimization::UnrollBlock::exec_mode_offset_in_bytes()));
+  __ movl(r14, Address(rdi, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()));
    Label noException;
   __ cmpl(r14, Deoptimization::Unpack_exception);   // Was exception pending?
   __ jcc(Assembler::notEqual, noException);
@@ -3749,7 +3749,7 @@ void SharedRuntime::generate_uncommon_trap_blob() {
 
 #ifdef ASSERT
   { Label L;
-    __ cmpptr(Address(rdi, Deoptimization::UnrollBlock::exec_mode_offset_in_bytes()),
+    __ cmpptr(Address(rdi, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes()),
             (int32_t)Deoptimization::Unpack_uncommon_trap);
     __ jcc(Assembler::equal, L);
     __ stop("SharedRuntime::generate_deopt_blob: expected Unpack_uncommon_trap");

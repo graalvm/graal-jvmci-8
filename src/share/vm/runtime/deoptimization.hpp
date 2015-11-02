@@ -173,14 +173,13 @@ JVMCI_ONLY(public:)
     intptr_t  _initial_info;              // Platform dependent data for the sender frame (was FP on x86)
     int       _caller_actual_parameters;  // The number of actual arguments at the
                                           // interpreted caller of the deoptimized frame
-    int       _exec_mode;                 // exec_mode that can be changed during fetch_unroll_info
+    int       _unpack_kind;               // exec_mode that can be changed during fetch_unroll_info
 
     // The following fields are used as temps during the unpacking phase
     // (which is tight on registers, especially on x86). They really ought
     // to be PD variables but that involves moving this class into its own
     // file to use the pd include mechanism. Maybe in a later cleanup ...
     intptr_t  _counter_temp;              // SHOULD BE PD VARIABLE (x86 frame count temp)
-    intptr_t  _unpack_kind;               // SHOULD BE PD VARIABLE (x86 unpack kind)
     intptr_t  _sender_sp_temp;            // SHOULD BE PD VARIABLE (x86 sender_sp)
    public:
     // Constructor
@@ -191,7 +190,7 @@ JVMCI_ONLY(public:)
                 intptr_t* frame_sizes,
                 address* frames_pcs,
                 BasicType return_type,
-                int exec_mode);
+                int unpack_kind);
     ~UnrollBlock();
 
     // Returns where a register is located.
@@ -201,7 +200,7 @@ JVMCI_ONLY(public:)
     intptr_t* frame_sizes()  const { return _frame_sizes; }
     int number_of_frames()  const { return _number_of_frames; }
     address*  frame_pcs()   const { return _frame_pcs ; }
-    int  exec_mode()   const { return _exec_mode ; }
+    int  unpack_kind()   const { return _unpack_kind; }
 
     // Returns the total size of frames
     int size_of_frames() const;
@@ -223,7 +222,6 @@ JVMCI_ONLY(public:)
     static int initial_info_offset_in_bytes()              { return offset_of(UnrollBlock, _initial_info);              }
     static int unpack_kind_offset_in_bytes()               { return offset_of(UnrollBlock, _unpack_kind);               }
     static int sender_sp_temp_offset_in_bytes()            { return offset_of(UnrollBlock, _sender_sp_temp);            }
-    static int exec_mode_offset_in_bytes()                 { return offset_of(UnrollBlock, _exec_mode);                 }
 
     BasicType return_type() const { return _return_type; }
     void print();

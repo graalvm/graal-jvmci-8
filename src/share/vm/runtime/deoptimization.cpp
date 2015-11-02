@@ -119,12 +119,11 @@ Deoptimization::UnrollBlock::UnrollBlock(int  size_of_deoptimized_frame,
   _initial_info              = 0;
   // PD (x86 only)
   _counter_temp              = 0;
-  _unpack_kind               = 0;
+  _unpack_kind               = exec_mode;
   _sender_sp_temp            = 0;
 
   _total_frame_sizes         = size_of_frames();
   assert(exec_mode >= 0 && exec_mode < Unpack_LIMIT, "Unexpected exec_mode");
-  _exec_mode                 = exec_mode;
 }
 
 
