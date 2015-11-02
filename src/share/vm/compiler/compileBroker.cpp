@@ -250,19 +250,36 @@ CompileTaskWrapper::~CompileTaskWrapper() {
   task->set_code_handle(NULL);
   thread->set_env(NULL);
   if (task->is_blocking()) {
-    MutexLocker notifier(task->lock(), thread);
-    task->mark_complete();
-    // Notify the waiting thread that the compilation has completed.
-    task->lock()->notify_all();
+    bool free_task = false;
+    {
+      MutexLocker notifier(task->lock(), thread);
+      task->mark_complete();
 #ifdef COMPILERJVMCI
-    if (CompileBroker::compiler(task->comp_level())->is_jvmci()) {
-      // Blocking JVMCI compilations are performed with a timeout so as
-      // to avoid deadlock between an application thread and a JVMCI
-      // compiler thread (both of which execute Java code). In this case,
-      // the compiling thread recycles the CompileTask.
+      if (CompileBroker::compiler(task->comp_level())->is_jvmci()) {
+        // Blocking JVMCI compilations are performed with a timeout so as
+        // to avoid deadlock between an application thread and a JVMCI
+        // compiler thread (both of which execute Java code).
+        if (task->has_waiter()) {
+          // Notify the waiting thread that the compilation has completed
+          // and let it free the CompileTask.
+          task->lock()->notify_all();
+        } else {
+          // The waiting thread timed out did not free the task.
+          free_task = true;
+        }
+      } else {
+        // Notify the waiting thread that the compilation has completed.
+        task->lock()->notify_all();
+      }
+#else
+      // Notify the waiting thread that the compilation has completed.
+      task->lock()->notify_all();
+#endif
+    }
+    if (free_task) {
+      // The task can only be freed once the task lock is released.
       CompileTask::free(task);
     }
-#endif
   } else {
     task->mark_complete();
 
@@ -333,6 +350,7 @@ void CompileTask::initialize(int compile_id,
   _method_holder = JNIHandles::make_global(method->method_holder()->klass_holder());
   _osr_bci = osr_bci;
   _is_blocking = is_blocking;
+  COMPILERJVMCI_PRESENT(_has_waiter = CompileBroker::compiler(comp_level)->is_jvmci();)
   _comp_level = comp_level;
   _num_inlined_bytecodes = 0;
 
@@ -1716,40 +1734,48 @@ void CompileBroker::wait_for_completion(CompileTask* task) {
   thread->set_blocked_on_compilation(true);
 
   methodHandle method(thread, task->method());
-  {
-    MutexLocker waiter(task->lock(), thread);
-
+  bool free_task = true;
 #ifdef COMPILERJVMCI
-    if (compiler(task->comp_level())->is_jvmci()) {
+  if (compiler(task->comp_level())->is_jvmci()) {
+    {
+      MutexLocker waiter(task->lock(), thread);
       // No need to check if compilation has completed - just
       // rely on the time out. The JVMCI compiler thread will
       // recycle the CompileTask.
       task->lock()->wait(!Mutex::_no_safepoint_check_flag, BLOCKING_JVMCI_COMPILATION_TIMEOUT);
-      thread->set_blocked_on_compilation(false);
-      return;
+      // If the compilation completes while has_waiter is true then
+      // this thread is responsible for freeing the task.  Otherwise
+      // the compiler thread will free the task.
+      task->clear_waiter();
+      free_task = task->is_complete();
     }
+  } else
 #endif
+  {
+    MutexLocker waiter(task->lock(), thread);
     while (!task->is_complete() && !is_compilation_disabled_forever()) {
       task->lock()->wait();
     }
   }
 
   thread->set_blocked_on_compilation(false);
-  if (is_compilation_disabled_forever()) {
+  if (free_task) {
+    if (is_compilation_disabled_forever()) {
+      CompileTask::free(task);
+      return;
+    }
+
+    // It is harmless to check this status without the lock, because
+    // completion is a stable property (until the task object is recycled).
+    assert(task->is_complete(), "Compilation should have completed");
+    assert(task->code_handle() == NULL, "must be reset");
+
+    // By convention, the waiter is responsible for recycling a
+    // blocking CompileTask. Since there is only one waiter ever
+    // waiting on a CompileTask, we know that no one else will
+    // be using this CompileTask; we can free it.
     CompileTask::free(task);
-    return;
   }
-
-  // It is harmless to check this status without the lock, because
-  // completion is a stable property (until the task object is recycled).
-  assert(task->is_complete(), "Compilation should have completed");
-  assert(task->code_handle() == NULL, "must be reset");
-
-  // By convention, the waiter is responsible for recycling a
-  // blocking CompileTask. Since there is only one waiter ever
-  // waiting on a CompileTask, we know that no one else will
-  // be using this CompileTask; we can free it.
-  CompileTask::free(task);
 }
 
 /**
