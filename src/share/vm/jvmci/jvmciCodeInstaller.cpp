@@ -973,7 +973,6 @@ void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, Handle si
     } else {
       JVMCI_ERROR(err_msg("data offset 0x%X points outside data section (size 0x%X)", data_offset, _constants_size));
     }
-    pd_patch_DataSectionReference(pc_offset, data_offset);
   } else {
     JVMCI_ERROR(err_msg("unknown data patch type: %s", reference->klass()->signature_name()));
   }
