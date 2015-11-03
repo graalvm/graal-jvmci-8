@@ -80,14 +80,14 @@ VMReg getVMRegFromLocation(Handle location, int total_frame_size, TRAPS) {
     if (offset % 4 == 0) {
       return vmReg->next(offset / 4);
     } else {
-      JVMCI_ERROR_NULL(err_msg("unaligned subregister offset %d in oop map", offset));
+      JVMCI_ERROR_NULL("unaligned subregister offset %d in oop map", offset);
     }
   } else {
     // stack slot
     if (offset % 4 == 0) {
       return VMRegImpl::stack2reg(offset / 4);
     } else {
-      JVMCI_ERROR_NULL(err_msg("unaligned stack offset %d in oop map", offset));
+      JVMCI_ERROR_NULL("unaligned stack offset %d in oop map", offset);
     }
   }
 }
@@ -118,7 +118,7 @@ OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
         VMReg baseReg = getVMRegFromLocation(baseLocation, _total_frame_size, CHECK_NULL);
         map->set_derived_oop(vmReg, baseReg);
       } else {
-        JVMCI_ERROR_NULL(err_msg("invalid derived oop size in ReferenceMap: %d", bytes));
+        JVMCI_ERROR_NULL("invalid derived oop size in ReferenceMap: %d", bytes);
       }
 #ifdef _LP64
     } else if (bytes == 8) {
@@ -132,7 +132,7 @@ OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
       map->set_oop(vmReg);
 #endif
     } else {
-      JVMCI_ERROR_NULL(err_msg("invalid oop size in ReferenceMap: %d", bytes));
+      JVMCI_ERROR_NULL("invalid oop size in ReferenceMap: %d", bytes);
     }
   }
 
@@ -174,7 +174,7 @@ Metadata* CodeInstaller::record_metadata_reference(Handle constant, TRAPS) {
     TRACE_jvmci_3("metadata[%d of %d] = %s", index, _oop_recorder->metadata_count(), method->name()->as_C_string());
     return method;
   } else {
-    JVMCI_ERROR_NULL(err_msg("unexpected metadata reference for constant of type %s", obj->klass()->signature_name()));
+    JVMCI_ERROR_NULL("unexpected metadata reference for constant of type %s", obj->klass()->signature_name());
   }
 }
 
@@ -184,7 +184,7 @@ narrowKlass CodeInstaller::record_narrow_metadata_reference(Handle constant, TRA
   assert(HotSpotMetaspaceConstantImpl::compressed(constant), err_msg("unexpected uncompressed pointer"));
 
   if (!obj->is_a(HotSpotResolvedObjectTypeImpl::klass())) {
-    JVMCI_ERROR_0(err_msg("unexpected compressed pointer of type %s", obj->klass()->signature_name()));
+    JVMCI_ERROR_0("unexpected compressed pointer of type %s", obj->klass()->signature_name());
   }
 
   Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(obj));
@@ -210,7 +210,7 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
   second = NULL;
   if (value == Value::ILLEGAL()) {
     if (type != T_ILLEGAL) {
-      JVMCI_ERROR_NULL(err_msg("unexpected illegal value, expected %s", basictype_to_str(type)));
+      JVMCI_ERROR_NULL("unexpected illegal value, expected %s", basictype_to_str(type));
     }
     return _illegal_value;
   } else if (value->is_a(RegisterValue::klass())) {
@@ -226,7 +226,7 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
       } else if (type == T_INT || type == T_FLOAT || type == T_SHORT || type == T_CHAR || type == T_BYTE || type == T_BOOLEAN) {
         locationType = Location::int_in_long;
       } else {
-        JVMCI_ERROR_NULL(err_msg("unexpected type %s in cpu register", basictype_to_str(type)));
+        JVMCI_ERROR_NULL("unexpected type %s in cpu register", basictype_to_str(type));
       }
       ScopeValue* value = new LocationValue(Location::new_reg_loc(locationType, hotspotRegister));
       if (type == T_LONG) {
@@ -241,7 +241,7 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
       } else if (type == T_DOUBLE) {
         locationType = Location::dbl;
       } else {
-        JVMCI_ERROR_NULL(err_msg("unexpected type %s in floating point register", basictype_to_str(type)));
+        JVMCI_ERROR_NULL("unexpected type %s in floating point register", basictype_to_str(type));
       }
       ScopeValue* value = new LocationValue(Location::new_reg_loc(locationType, hotspotRegister));
       if (type == T_DOUBLE) {
@@ -265,7 +265,7 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
     } else if (type == T_INT || type == T_FLOAT || type == T_SHORT || type == T_CHAR || type == T_BYTE || type == T_BOOLEAN) {
       locationType = Location::normal;
     } else {
-      JVMCI_ERROR_NULL(err_msg("unexpected type %s in stack slot", basictype_to_str(type)));
+      JVMCI_ERROR_NULL("unexpected type %s in stack slot", basictype_to_str(type));
     }
     ScopeValue* value = new LocationValue(Location::new_stk_loc(locationType, offset));
     if (type == T_DOUBLE || type == T_LONG) {
@@ -280,7 +280,7 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
       } else {
         BasicType constantType = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(PrimitiveConstant::kind(value)));
         if (type != constantType) {
-          JVMCI_ERROR_NULL(err_msg("primitive constant type doesn't match, expected %s but got %s", basictype_to_str(type), basictype_to_str(constantType)));
+          JVMCI_ERROR_NULL("primitive constant type doesn't match, expected %s but got %s", basictype_to_str(type), basictype_to_str(constantType));
         }
         if (type == T_INT || type == T_FLOAT) {
           jint prim = (jint)PrimitiveConstant::primitive(value);
@@ -296,14 +296,14 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
           second = _int_1_scope_value;
           return new ConstantLongValue(prim);
         } else {
-          JVMCI_ERROR_NULL(err_msg("unexpected primitive constant type %s", basictype_to_str(type)));
+          JVMCI_ERROR_NULL("unexpected primitive constant type %s", basictype_to_str(type));
         }
       }
     } else if (value->is_a(NullConstant::klass()) || value->is_a(HotSpotCompressedNullConstant::klass())) {
       if (type == T_OBJECT) {
         return _oop_null_scope_value;
       } else {
-        JVMCI_ERROR_NULL(err_msg("unexpected null constant, expected %s", basictype_to_str(type)));
+        JVMCI_ERROR_NULL("unexpected null constant, expected %s", basictype_to_str(type));
       }
     } else if (value->is_a(HotSpotObjectConstantImpl::klass())) {
       if (type == T_OBJECT) {
@@ -313,7 +313,7 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
         }
         return new ConstantOopWriteValue(JNIHandles::make_local(obj));
       } else {
-        JVMCI_ERROR_NULL(err_msg("unexpected object constant, expected %s", basictype_to_str(type)));
+        JVMCI_ERROR_NULL("unexpected object constant, expected %s", basictype_to_str(type));
       }
     }
   } else if (value->is_a(VirtualObject::klass())) {
@@ -325,13 +325,13 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
           return object;
         }
       }
-      JVMCI_ERROR_NULL(err_msg("unknown virtual object id %d", id));
+      JVMCI_ERROR_NULL("unknown virtual object id %d", id);
     } else {
-      JVMCI_ERROR_NULL(err_msg("unexpected virtual object, expected %s", basictype_to_str(type)));
+      JVMCI_ERROR_NULL("unexpected virtual object, expected %s", basictype_to_str(type));
     }
   }
 
-  JVMCI_ERROR_NULL(err_msg("unexpected value in scope: %s", value->klass()->signature_name()))
+  JVMCI_ERROR_NULL("unexpected value in scope: %s", value->klass()->signature_name())
 }
 
 void CodeInstaller::record_object_value(ObjectValue* sv, Handle value, GrowableArray<ScopeValue*>* objects, TRAPS) {
@@ -365,7 +365,7 @@ void CodeInstaller::record_object_value(ObjectValue* sv, Handle value, GrowableA
 
 MonitorValue* CodeInstaller::get_monitor_value(Handle value, GrowableArray<ScopeValue*>* objects, TRAPS) {
   if (!value->is_a(StackLockValue::klass())) {
-    JVMCI_ERROR_NULL(err_msg("Monitors must be of type StackLockValue, got %s", value->klass()->signature_name()));
+    JVMCI_ERROR_NULL("Monitors must be of type StackLockValue, got %s", value->klass()->signature_name());
   }
 
   ScopeValue* second = NULL;
@@ -407,7 +407,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code, TRAPS) {
         } else if (assumption->klass() == Assumptions_CallSiteTargetValue::klass()) {
           assumption_CallSiteTargetValue(assumption);
         } else {
-          JVMCI_ERROR(err_msg("unexpected Assumption subclass %s", assumption->klass()->signature_name()));
+          JVMCI_ERROR("unexpected Assumption subclass %s", assumption->klass()->signature_name());
         }
       }
     }
@@ -501,7 +501,7 @@ void CodeInstaller::initialize_fields(oop target, oop compiled_code, TRAPS) {
   // Pre-calculate the constants section size.  This is required for PC-relative addressing.
   _data_section_handle = JNIHandles::make_local(HotSpotCompiledCode::dataSection(compiled_code));
   if ((_constants->alignment() % HotSpotCompiledCode::dataSectionAlignment(compiled_code)) != 0) {
-    JVMCI_ERROR(err_msg("invalid data section alignment: %d", HotSpotCompiledCode::dataSectionAlignment(compiled_code)));
+    JVMCI_ERROR("invalid data section alignment: %d", HotSpotCompiledCode::dataSectionAlignment(compiled_code));
   }
   _constants_size = data_section()->length();
 
@@ -529,7 +529,7 @@ int CodeInstaller::estimate_stubs_size(TRAPS) {
       oop id_obj = CompilationResult_Mark::id(site);
       if (id_obj != NULL) {
         if (!java_lang_boxing_object::is_instance(id_obj, T_INT)) {
-          JVMCI_ERROR_0(err_msg("expected Integer id, got %s", id_obj->klass()->signature_name()));
+          JVMCI_ERROR_0("expected Integer id, got %s", id_obj->klass()->signature_name());
         }
         jint id = id_obj->int_field(java_lang_boxing_object::value_offset_in_bytes(T_INT));
         if (id == INVOKESTATIC || id == INVOKESPECIAL) {
@@ -585,7 +585,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
     Handle patch = data_section_patches()->obj_at(i);
     Handle reference = CompilationResult_DataPatch::reference(patch);
     if (!reference->is_a(CompilationResult_ConstantReference::klass())) {
-      JVMCI_ERROR_OK(err_msg("invalid patch in data section: %s", reference->klass()->signature_name()));
+      JVMCI_ERROR_OK("invalid patch in data section: %s", reference->klass()->signature_name());
     }
     Handle constant = CompilationResult_ConstantReference::constant(reference);
     address dest = _constants->start() + CompilationResult_Site::pcOffset(patch);
@@ -614,7 +614,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
         _constants->relocate(dest, oop_Relocation::spec(oop_index));
       }
     } else {
-      JVMCI_ERROR_OK(err_msg("invalid constant in data section: %s", constant->klass()->signature_name()));
+      JVMCI_ERROR_OK("invalid constant in data section: %s", constant->klass()->signature_name());
     }
   }
   jint last_pc_offset = -1;
@@ -634,7 +634,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
       } else if (InfopointReason::METHOD_START() == reason || InfopointReason::METHOD_END() == reason || InfopointReason::LINE_NUMBER() == reason) {
         site_Infopoint(buffer, pc_offset, site, CHECK_OK);
       } else {
-        JVMCI_ERROR_OK(err_msg("unknown infopoint reason at %i", pc_offset));
+        JVMCI_ERROR_OK("unknown infopoint reason at %i", pc_offset);
       }
     } else if (site->is_a(CompilationResult_DataPatch::klass())) {
       TRACE_jvmci_4("datapatch at %i", pc_offset);
@@ -643,7 +643,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
       TRACE_jvmci_4("mark at %i", pc_offset);
       site_Mark(buffer, pc_offset, site, CHECK_OK);
     } else {
-      JVMCI_ERROR_OK(err_msg("unexpected site subclass: %s", site->klass()->signature_name()));
+      JVMCI_ERROR_OK("unexpected site subclass: %s", site->klass()->signature_name());
     }
     last_pc_offset = pc_offset;
 
@@ -754,10 +754,10 @@ GrowableArray<ScopeValue*>* CodeInstaller::record_virtual_objects(Handle debug_i
     oop javaMirror = HotSpotResolvedObjectTypeImpl::javaClass(type);
     ObjectValue* sv = new ObjectValue(id, new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror)));
     if (id < 0 || id >= objects->length()) {
-      JVMCI_ERROR_NULL(err_msg("virtual object id %d out of bounds", id));
+      JVMCI_ERROR_NULL("virtual object id %d out of bounds", id);
     }
     if (objects->at(id) != NULL) {
-      JVMCI_ERROR_NULL(err_msg("duplicate virtual object id %d", id));
+      JVMCI_ERROR_NULL("duplicate virtual object id %d", id);
     }
     objects->at_put(id, sv);
   }
@@ -828,10 +828,10 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, GrowableArray<
     objArrayHandle slotKinds = BytecodeFrame::slotKinds(frame);
 
     if (local_count + expression_count + monitor_count != values->length()) {
-      JVMCI_ERROR(err_msg("unexpected values length %d in scope (%d locals, %d expressions, %d monitors)", values->length(), local_count, expression_count, monitor_count));
+      JVMCI_ERROR("unexpected values length %d in scope (%d locals, %d expressions, %d monitors)", values->length(), local_count, expression_count, monitor_count);
     }
     if (local_count + expression_count != slotKinds->length()) {
-      JVMCI_ERROR(err_msg("unexpected slotKinds length %d in scope (%d locals, %d expressions)", slotKinds->length(), local_count, expression_count));
+      JVMCI_ERROR("unexpected slotKinds length %d in scope (%d locals, %d expressions)", slotKinds->length(), local_count, expression_count);
     }
 
     GrowableArray<ScopeValue*>* locals = local_count > 0 ? new GrowableArray<ScopeValue*> (local_count) : NULL;
@@ -884,7 +884,7 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, GrowableArray<
 void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
   Handle debug_info = CompilationResult_Infopoint::debugInfo(site);
   if (debug_info.is_null()) {
-    JVMCI_ERROR(err_msg("debug info expected at safepoint at %i", pc_offset));
+    JVMCI_ERROR("debug info expected at safepoint at %i", pc_offset);
   }
 
   // address instruction = _instructions->start() + pc_offset;
@@ -898,7 +898,7 @@ void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, Handle si
 void CodeInstaller::site_Infopoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
   Handle debug_info = CompilationResult_Infopoint::debugInfo(site);
   if (debug_info.is_null()) {
-    JVMCI_ERROR(err_msg("debug info expected at infopoint at %i", pc_offset));
+    JVMCI_ERROR("debug info expected at infopoint at %i", pc_offset);
   }
 
   _debug_recorder->add_non_safepoint(pc_offset);
@@ -937,7 +937,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
     CodeInstaller::pd_relocate_ForeignCall(inst, foreign_call_destination, CHECK);
   } else { // method != NULL
     if (debug_info.is_null()) {
-      JVMCI_ERROR(err_msg("debug info expected at call at %i", pc_offset));
+      JVMCI_ERROR("debug info expected at call at %i", pc_offset);
     }
 
     TRACE_jvmci_3("method call");
@@ -964,17 +964,17 @@ void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, Handle si
     } else if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
       pd_patch_MetaspaceConstant(pc_offset, constant, CHECK);
     } else {
-      JVMCI_ERROR(err_msg("unknown constant type in data patch: %s", constant->klass()->signature_name()));
+      JVMCI_ERROR("unknown constant type in data patch: %s", constant->klass()->signature_name());
     }
   } else if (reference->is_a(CompilationResult_DataSectionReference::klass())) {
     int data_offset = CompilationResult_DataSectionReference::offset(reference);
     if (0 <= data_offset && data_offset < _constants_size) {
       pd_patch_DataSectionReference(pc_offset, data_offset);
     } else {
-      JVMCI_ERROR(err_msg("data offset 0x%X points outside data section (size 0x%X)", data_offset, _constants_size));
+      JVMCI_ERROR("data offset 0x%X points outside data section (size 0x%X)", data_offset, _constants_size);
     }
   } else {
-    JVMCI_ERROR(err_msg("unknown data patch type: %s", reference->klass()->signature_name()));
+    JVMCI_ERROR("unknown data patch type: %s", reference->klass()->signature_name());
   }
 }
 
@@ -983,7 +983,7 @@ void CodeInstaller::site_Mark(CodeBuffer& buffer, jint pc_offset, Handle site, T
 
   if (id_obj.not_null()) {
     if (!java_lang_boxing_object::is_instance(id_obj(), T_INT)) {
-      JVMCI_ERROR(err_msg("expected Integer id, got %s", id_obj->klass()->signature_name()));
+      JVMCI_ERROR("expected Integer id, got %s", id_obj->klass()->signature_name());
     }
     jint id = id_obj->int_field(java_lang_boxing_object::value_offset_in_bytes(T_INT));
 
@@ -1023,7 +1023,7 @@ void CodeInstaller::site_Mark(CodeBuffer& buffer, jint pc_offset, Handle site, T
       case CARD_TABLE_ADDRESS:
         break;
       default:
-        JVMCI_ERROR(err_msg("invalid mark id: %d", id));
+        JVMCI_ERROR("invalid mark id: %d", id);
         break;
     }
   }

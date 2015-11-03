@@ -220,7 +220,7 @@ void CodeInstaller::pd_relocate_poll(address pc, jint mark, TRAPS) {
       _instructions->relocate(pc, relocInfo::poll_return_type, Assembler::imm_operand);
       break;
     default:
-      JVMCI_ERROR(err_msg("invalid mark value: %d", mark));
+      JVMCI_ERROR("invalid mark value: %d", mark);
       break;
   }
 }
@@ -234,7 +234,7 @@ VMReg CodeInstaller::get_hotspot_reg(jint jvmci_reg, TRAPS) {
     if (floatRegisterNumber < XMMRegisterImpl::number_of_registers) {
       return as_XMMRegister(floatRegisterNumber)->as_VMReg();
     }
-    JVMCI_ERROR_NULL(err_msg("invalid register number: %d", jvmci_reg));
+    JVMCI_ERROR_NULL("invalid register number: %d", jvmci_reg);
   }
 }
 

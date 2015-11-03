@@ -27,10 +27,18 @@
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciEnv.hpp"
 
-#define JVMCI_ERROR(message)      THROW_MSG(vmSymbols::jdk_vm_ci_common_JVMCIError(), message)
-#define JVMCI_ERROR_0(message)    THROW_MSG_0(vmSymbols::jdk_vm_ci_common_JVMCIError(), message)
-#define JVMCI_ERROR_NULL(message) THROW_MSG_NULL(vmSymbols::jdk_vm_ci_common_JVMCIError(), message)
-#define JVMCI_ERROR_OK(message)   THROW_MSG_(vmSymbols::jdk_vm_ci_common_JVMCIError(), message, JVMCIEnv::ok)
+#define JVMCI_ERROR(...)       \
+  { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return; }
+
+#define JVMCI_ERROR_0(...)     \
+  { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return 0; }
+
+#define JVMCI_ERROR_NULL(...)  \
+  { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return NULL; }
+
+#define JVMCI_ERROR_OK(...)    \
+  { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return JVMCIEnv::ok; }
+
 #define CHECK_OK                  CHECK_(JVMCIEnv::ok)
 
 /*

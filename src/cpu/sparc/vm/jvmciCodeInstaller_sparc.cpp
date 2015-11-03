@@ -115,7 +115,7 @@ void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong forei
     jump->set_jump_destination((address) foreign_call_destination);
     _instructions->relocate(jump->instruction_address(), runtime_call_Relocation::spec());
   } else {
-    JVMCI_ERROR(err_msg("unknown call or jump instruction at " PTR_FORMAT, p2i(pc)));
+    JVMCI_ERROR("unknown call or jump instruction at " PTR_FORMAT, p2i(pc));
   }
   TRACE_jvmci_3("relocating (foreign call) at %p", inst);
 }
@@ -197,7 +197,7 @@ VMReg CodeInstaller::get_hotspot_reg(jint jvmci_reg, TRAPS) {
     } else if(jvmci_reg < 112) {
       floatRegisterNumber = 4 * (jvmci_reg - 96);
     } else {
-      JVMCI_ERROR_NULL(err_msg("invalid register number: %d", jvmci_reg));
+      JVMCI_ERROR_NULL("invalid register number: %d", jvmci_reg);
     }
     return as_FloatRegister(floatRegisterNumber)->as_VMReg();
   }
