@@ -226,7 +226,6 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
   assert(vf->is_compiled_frame(), "Wrong frame type");
   chunk->push(compiledVFrame::cast(vf));
 
-#ifdef INCLUDE_JVMCI
   ScopeDesc* trap_scope = chunk->at(0)->scope();
   Handle exceptionObject;
   if (trap_scope->rethrow_exception()) {
@@ -239,7 +238,6 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
     exceptionObject = StackValue::create_stack_value(&deoptee, &map, topOfStack)->get_obj();
     assert(exceptionObject() != NULL, "exception oop can not be null");
   }
-#endif
 
   bool realloc_failures = false;
 

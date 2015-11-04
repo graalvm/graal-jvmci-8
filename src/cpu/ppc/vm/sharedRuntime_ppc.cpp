@@ -3013,6 +3013,12 @@ void SharedRuntime::generate_uncommon_trap_blob() {
 
   // stack: (caller_of_deoptee, ...).
 
+#ifdef ASSERT
+  __ lwz(R22_tmp2, Deoptimization::UnrollBlock::unpack_kind_offset_in_bytes(), unroll_block_reg);
+  __ cmpdi(CCR0, R22_tmp2, Deoptimization::Unpack_uncommon_trap);
+  __ asm_assert_eq("SharedRuntime::generate_deopt_blob: expected Unpack_uncommon_trap", 0);
+#endif
+
   // Allocate new interpreter frame(s) and possibly a c2i adapter
   // frame.
   push_skeleton_frames(masm, false/*deopt*/,
