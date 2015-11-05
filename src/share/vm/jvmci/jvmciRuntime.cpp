@@ -57,7 +57,7 @@ bool JVMCIRuntime::_shutdown_called = false;
 static const char* OPTION_PREFIX = "jvmci.option.";
 static const size_t OPTION_PREFIX_LEN = strlen(OPTION_PREFIX);
 
-BasicType JVMCIRuntime::kindToBasicType(jchar ch) {
+BasicType JVMCIRuntime::kindToBasicType(jchar ch, TRAPS) {
   switch(ch) {
     case 'z': return T_BOOLEAN;
     case 'b': return T_BYTE;
@@ -69,8 +69,9 @@ BasicType JVMCIRuntime::kindToBasicType(jchar ch) {
     case 'd': return T_DOUBLE;
     case 'a': return T_OBJECT;
     case '-': return T_ILLEGAL;
+    default:
+      JVMCI_ERROR_(T_ILLEGAL, "unexpected Kind: %c", ch);
   }
-  return T_ILLEGAL;
 }
 
 // Simple helper to see if the caller of a runtime stub which

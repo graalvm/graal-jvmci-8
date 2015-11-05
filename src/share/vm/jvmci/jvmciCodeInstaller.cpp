@@ -278,7 +278,7 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
         jlong prim = PrimitiveConstant::primitive(value);
         return new ConstantLongValue(prim);
       } else {
-        BasicType constantType = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(PrimitiveConstant::kind(value)));
+        BasicType constantType = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(PrimitiveConstant::kind(value)), CHECK_NULL);
         if (type != constantType) {
           JVMCI_ERROR_NULL("primitive constant type doesn't match, expected %s but got %s", basictype_to_str(type), basictype_to_str(constantType));
         }
@@ -346,7 +346,7 @@ void CodeInstaller::record_object_value(ObjectValue* sv, Handle value, GrowableA
   for (jint i = 0; i < values->length(); i++) {
     ScopeValue* cur_second = NULL;
     Handle object = values->obj_at(i);
-    BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(slotKinds->obj_at(i)));
+    BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(slotKinds->obj_at(i)), CHECK);
     ScopeValue* value = get_scope_value(object, type, objects, cur_second, CHECK);
 
     if (isLongArray && cur_second == NULL) {
@@ -845,14 +845,14 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, GrowableArray<
       ScopeValue* second = NULL;
       Handle value = values->obj_at(i);
       if (i < local_count) {
-        BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(slotKinds->obj_at(i)));
+        BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(slotKinds->obj_at(i)), CHECK);
         ScopeValue* first = get_scope_value(value, type, objects, second, CHECK);
         if (second != NULL) {
           locals->append(second);
         }
         locals->append(first);
       } else if (i < local_count + expression_count) {
-        BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(slotKinds->obj_at(i)));
+        BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(slotKinds->obj_at(i)), CHECK);
         ScopeValue* first = get_scope_value(value, type, objects, second, CHECK);
         if (second != NULL) {
           expressions->append(second);
