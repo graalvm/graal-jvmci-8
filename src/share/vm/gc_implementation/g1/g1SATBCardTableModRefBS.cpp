@@ -256,15 +256,11 @@ G1SATBCardTableLoggingModRefBS::invalidate(MemRegion mr, bool whole_heap) {
   }
 }
 
-void G1SATBCardTableModRefBS::write_ref_nmethod_pre(oop* dst, nmethod* nm) {
+void G1SATBCardTableModRefBS::write_ref_nmethod_post(oop* dst, nmethod* nm) {
   oop obj = oopDesc::load_heap_oop(dst);
   if (obj != NULL) {
-    G1CollectedHeap* g1h = (G1CollectedHeap*)Universe::heap();
+    G1CollectedHeap* g1h = G1CollectedHeap::heap();
     HeapRegion* hr = g1h->heap_region_containing(obj);
-    assert(!hr->continuesHumongous(),
-           err_msg("trying to add code root "INTPTR_FORMAT" in continuation of humongous region "HR_FORMAT
-                   " starting at "HR_FORMAT,
-                   (intptr_t)nm, HR_FORMAT_PARAMS(hr), HR_FORMAT_PARAMS(hr->humongous_start_region())));
     hr->add_strong_code_root(nm);
   }
 }
@@ -295,15 +291,11 @@ public:
   bool value() const        { return _value;  }
 };
 
-void G1SATBCardTableModRefBS::write_ref_nmethod_post(oop* dst, nmethod* nm) {
+void G1SATBCardTableModRefBS::write_ref_nmethod_pre(oop* dst, nmethod* nm) {
   oop obj = oopDesc::load_heap_oop(dst);
   if (obj != NULL) {
-    G1CollectedHeap* g1h = (G1CollectedHeap*)Universe::heap();
+    G1CollectedHeap* g1h = G1CollectedHeap::heap();
     HeapRegion* hr = g1h->heap_region_containing(obj);
-    assert(!hr->continuesHumongous(),
-           err_msg("trying to remove code root "INTPTR_FORMAT" in continuation of humongous region "HR_FORMAT
-                   " starting at "HR_FORMAT,
-                   (intptr_t)nm, HR_FORMAT_PARAMS(hr), HR_FORMAT_PARAMS(hr->humongous_start_region())));
     G1EnsureLastRefToRegion ensure_last_ref(g1h, hr, dst);
     nm->oops_do(&ensure_last_ref);
     if (ensure_last_ref.value()) {
