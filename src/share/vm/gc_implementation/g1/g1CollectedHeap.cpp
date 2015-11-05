@@ -6889,6 +6889,7 @@ public:
     } else {
       ShouldNotReachHere();
     }
+    hr->rem_set()->verify();
     return false;
   }
 

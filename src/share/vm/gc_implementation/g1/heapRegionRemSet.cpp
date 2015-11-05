@@ -858,6 +858,22 @@ void HeapRegionRemSet::setup_remset_size() {
   guarantee(G1RSetSparseRegionEntries > 0 && G1RSetRegionEntries > 0 , "Sanity");
 }
 
+class VerifyNoZombies : public CodeBlobClosure {
+private:
+  HeapRegionRemSet* _rem_set;
+public:
+  VerifyNoZombies(HeapRegionRemSet* rem_set) : _rem_set(rem_set) {}
+  void do_code_blob(CodeBlob* blob) {
+    guarantee(blob->as_nmethod_or_null()->is_alive(), err_msg("zombie nmethod %d " INTPTR_FORMAT " " INTPTR_FORMAT " in remembered set",
+              blob->as_nmethod_or_null()->compile_id(), blob, _rem_set));
+  }
+};
+
+void HeapRegionRemSet::verify() {
+  VerifyNoZombies blk(this);
+  _code_roots.nmethods_do(&blk);
+}
+
 bool HeapRegionRemSet::claim_iter() {
   if (_iter_state != Unclaimed) return false;
   jint res = Atomic::cmpxchg(Claimed, (jint*)(&_iter_state), Unclaimed);

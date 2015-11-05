@@ -268,6 +268,8 @@ public:
   static uint num_par_rem_sets();
   static void setup_remset_size();
 
+  void verify();
+
   HeapRegion* hr() const {
     return _other_regions.hr();
   }
