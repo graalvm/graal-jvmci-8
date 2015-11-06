@@ -988,6 +988,10 @@ class HotSpotBuildTask(mx.NativeBuildTask):
         self._newestOutput = None
 
     def needsBuild(self, newestInput):
+        # Skip super (NativeBuildTask) because it always returns true
+        (superNeeds, superReason) = mx.ProjectBuildTask.needsBuild(self, newestInput)
+        if superNeeds:
+            return (superNeeds, superReason)
         newestOutput = self.newestOutput()
         for d in ['src', 'make', join('jvmci', 'jdk.vm.ci.hotspot', 'src_gen', 'hotspot')]:  # TODO should this be replaced by a dependency to the project?
             for root, dirnames, files in os.walk(join(_suite.dir, d)):
