@@ -426,7 +426,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code, TRAPS) {
 }
 
 // constructor used to create a method
-JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Handle target, Handle& compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log, TRAPS) {
+JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Handle target, Handle compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log, TRAPS) {
   CodeBuffer buffer("JVMCI Compiler CodeBuffer");
   jobject compiled_code_obj = JNIHandles::make_local(compiled_code());
   initialize_dependencies(JNIHandles::resolve(compiled_code_obj), CHECK_OK);
