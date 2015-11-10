@@ -1726,6 +1726,9 @@ class JVMCIArchiveParticipant:
             for service in contents.strip().split(os.linesep):
                 assert service
                 self.jvmciServices.setdefault(service, []).append(provider)
+                # Make provider available as a normal service as well to
+                # allow for deployment on JDK9 without having to recompile.
+                self.services.setdefault(service, []).append(provider)
             return True
         elif arcname.endswith('_OptionDescriptors.class'):
             # Need to create service files for the providers of the
