@@ -2139,7 +2139,8 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     EventCompilation event;
 
     JVMCIEnv env(task, system_dictionary_modification_counter);
-    jvmci->compile_method(target_handle, osr_bci, &env);
+    methodHandle method(thread, target_handle);
+    jvmci->compile_method(method, osr_bci, &env);
 
     post_compile(thread, task, event, task->code() != NULL, NULL);
   } else
