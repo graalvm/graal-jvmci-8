@@ -2946,7 +2946,8 @@ void SharedRuntime::generate_deopt_blob() {
 
   oop_maps->add_gc_map( __ pc()-start, map);
 
-  // Discard arg to fetch_unroll_info
+  // Discard args to fetch_unroll_info
+  __ pop(rcx);
   __ pop(rcx);
 
   __ get_thread(rcx);
