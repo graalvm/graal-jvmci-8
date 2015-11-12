@@ -24,7 +24,7 @@
 #ifndef SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP
 #define SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP
 
-void jvmci_compute_offsets();
+void jvmci_compute_offsets(TRAPS);
 
 #include "classfile/systemDictionary.hpp"
 #include "oops/instanceMirrorKlass.hpp"
@@ -372,6 +372,6 @@ COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD
 #undef STATIC_BOOLEAN_FIELD
 #undef EMPTY_CAST
 
-void compute_offset(int &dest_offset, Klass* klass, const char* name, const char* signature, bool static_field);
+void compute_offset(int &dest_offset, Klass* klass, const char* name, const char* signature, bool static_field, TRAPS);
 
 #endif // SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP
