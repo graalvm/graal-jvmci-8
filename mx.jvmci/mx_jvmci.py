@@ -1835,7 +1835,7 @@ class JVMCIJDKConfig(mx.JDKConfig):
 
         pfx = _vm_prefix.split() if _vm_prefix is not None else []
         cmd = pfx + [self.java] + ['-' + vm] + args
-        return mx.run(cmd, nonZeroIsFatal=nonZeroIsFatal, out=out, err=err, cwd=cwd)
+        return mx.run(cmd, nonZeroIsFatal=nonZeroIsFatal, out=out, err=err, cwd=cwd, timeout=timeout)
 
 """
 The dict of JVMCI JDKs indexed by vmbuild names.
