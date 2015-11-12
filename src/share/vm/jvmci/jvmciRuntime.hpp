@@ -29,11 +29,13 @@
 #include "runtime/arguments.hpp"
 #include "runtime/deoptimization.hpp"
 
+
+
 #define JVMCI_ERROR(...)       \
-  { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return; }
+  { JVMCIRuntime::fthrow_error(THREAD_AND_LOCATION, __VA_ARGS__); return; }
 
 #define JVMCI_ERROR_(ret, ...) \
-  { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return ret; }
+  { JVMCIRuntime::fthrow_error(THREAD_AND_LOCATION, __VA_ARGS__); return ret; }
 
 #define JVMCI_ERROR_0(...)    JVMCI_ERROR_(0, __VA_ARGS__)
 #define JVMCI_ERROR_NULL(...) JVMCI_ERROR_(NULL, __VA_ARGS__)
@@ -163,6 +165,13 @@ class JVMCIRuntime: public AllStatic {
   static objArrayHandle get_service_impls(KlassHandle serviceKlass, TRAPS);
 
   static void parse_lines(char* path, ParseClosure* closure, bool warnStatFailure);
+
+  /**
+   * Throws a JVMCIError with a formatted error message. Ideally we would use
+   * a variation of Exceptions::fthrow that takes a class loader argument but alas,
+   * no such variation exists.
+   */
+  static void fthrow_error(Thread* thread, const char* file, int line, const char* format, ...) ATTRIBUTE_PRINTF(4, 5);
 
   /**
    * Aborts the VM due to an unexpected exception.
