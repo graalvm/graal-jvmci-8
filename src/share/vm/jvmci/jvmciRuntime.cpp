@@ -802,13 +802,13 @@ JVM_ENTRY(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
 
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
 
+  jvmci_compute_offsets(thread);
+
   {
     ThreadToNativeFromVM trans(thread);
 
     ResourceMark rm;
     HandleMark hm;
-
-    jvmci_compute_offsets(thread);
 
     // Ensure _non_oop_bits is initialized
     Universe::non_oop_word();
