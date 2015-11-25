@@ -950,16 +950,4 @@ public class CompilationResult {
     public boolean hasUnsafeAccess() {
         return hasUnsafeAccess;
     }
-
-    public void reset() {
-        hasUnsafeAccess = false;
-        infopoints.clear();
-        dataPatches.clear();
-        exceptionHandlers.clear();
-        marks.clear();
-        dataSection.clear();
-        if (annotations != null) {
-            annotations.clear();
-        }
-    }
 }
