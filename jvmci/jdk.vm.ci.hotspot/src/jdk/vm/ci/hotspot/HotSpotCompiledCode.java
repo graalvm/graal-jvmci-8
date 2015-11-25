@@ -24,9 +24,12 @@ package jdk.vm.ci.hotspot;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import java.util.stream.Stream.Builder;
 
@@ -41,6 +44,7 @@ import jdk.vm.ci.code.CompilationResult.JumpTable;
 import jdk.vm.ci.code.CompilationResult.Mark;
 import jdk.vm.ci.code.CompilationResult.Site;
 import jdk.vm.ci.code.DataSection;
+import jdk.vm.ci.code.InfopointReason;
 import jdk.vm.ci.meta.Assumptions.Assumption;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 
@@ -152,14 +156,64 @@ public class HotSpotCompiledCode {
 
     static class SiteComparator implements Comparator<Site> {
 
+        /**
+         * Defines an order for sorting {@link Infopoint}s based on their
+         * {@linkplain Infopoint#reason reasons}. This is used to choose which infopoint to preserve
+         * when multiple infopoints collide on the same PC offset.
+         */
+        static final Map<InfopointReason, Integer> HOTSPOT_INFOPOINT_SORT_ORDER = new EnumMap<>(InfopointReason.class);
+        static {
+            int order = 0;
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.SAFEPOINT, ++order);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.CALL, ++order);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.IMPLICIT_EXCEPTION, ++order);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.METHOD_START, ++order);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.METHOD_END, ++order);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.BYTECODE_POSITION, ++order);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.SAFEPOINT, ++order);
+        }
+
+        /**
+         * Records whether any two {@link Infopoint}s had the same {@link Infopoint#pcOffset}.
+         */
+        boolean sawCollidingInfopoints;
+
         public int compare(Site s1, Site s2) {
-            if (s1.pcOffset == s2.pcOffset && (s1 instanceof Mark ^ s2 instanceof Mark)) {
-                return s1 instanceof Mark ? -1 : 1;
+            if (s1.pcOffset == s2.pcOffset) {
+                // Marks must come first since patching a call site
+                // may need to know the mark denoting the call type
+                // (see uses of CodeInstaller::_next_call_type).
+                boolean s1IsMark = s1 instanceof Mark;
+                boolean s2IsMark = s2 instanceof Mark;
+                if (s1IsMark != s2IsMark) {
+                    return s1IsMark ? -1 : 1;
+                }
+
+                // Infopoints must group together so put them after
+                // other Site types.
+                boolean s1IsInfopoint = s1 instanceof Infopoint;
+                boolean s2IsInfopoint = s2 instanceof Infopoint;
+                if (s1IsInfopoint != s2IsInfopoint) {
+                    return s1IsInfopoint ? 1 : -1;
+                }
+
+                if (s1IsInfopoint) {
+                    assert s2IsInfopoint;
+                    Infopoint s1Info = (Infopoint) s1;
+                    Infopoint s2Info = (Infopoint) s2;
+                    sawCollidingInfopoints = true;
+                    return HOTSPOT_INFOPOINT_SORT_ORDER.get(s1Info.reason) - HOTSPOT_INFOPOINT_SORT_ORDER.get(s2Info.reason);
+                }
             }
             return s1.pcOffset - s2.pcOffset;
         }
     }
 
+    /**
+     * HotSpot expects sites to be presented in ascending order of PC (see
+     * {@code DebugInformationRecorder::add_new_pc_offset}). In addition, it expects
+     * {@link Infopoint} PCs to be unique.
+     */
     private static Site[] getSortedSites(CompilationResult target) {
         List<?>[] lists = new List<?>[]{target.getInfopoints(), target.getDataPatches(), target.getMarks()};
         int count = 0;
@@ -173,7 +227,27 @@ public class HotSpotCompiledCode {
                 result[pos++] = (Site) elem;
             }
         }
-        Arrays.sort(result, new SiteComparator());
+        SiteComparator c = new SiteComparator();
+        Arrays.sort(result, c);
+        if (c.sawCollidingInfopoints) {
+            Infopoint lastInfopoint = null;
+            List<Site> copy = new ArrayList<>(count);
+            for (int i = 0; i < count; i++) {
+                if (result[i] instanceof Infopoint) {
+                    Infopoint info = (Infopoint) result[i];
+                    if (lastInfopoint == null || lastInfopoint.pcOffset != info.pcOffset) {
+                        lastInfopoint = info;
+                        copy.add(info);
+                    } else {
+                        // Omit this colliding infopoint
+                        assert lastInfopoint.reason.compareTo(info.reason) < 0;
+                    }
+                } else {
+                    copy.add(result[i]);
+                }
+            }
+            result = copy.toArray(new Site[copy.size()]);
+        }
         return result;
     }
 

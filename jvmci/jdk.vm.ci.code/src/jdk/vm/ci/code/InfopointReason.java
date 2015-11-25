@@ -26,21 +26,10 @@ package jdk.vm.ci.code;
  * A reason for infopoint insertion.
  */
 public enum InfopointReason {
-    UNKNOWN(false),
-    SAFEPOINT(false),
-    CALL(false),
-    IMPLICIT_EXCEPTION(false),
-    METHOD_START(true),
-    METHOD_END(true),
-    LINE_NUMBER(true);
-
-    private InfopointReason(boolean canBeOmitted) {
-        this.canBeOmitted = canBeOmitted;
-    }
-
-    private final boolean canBeOmitted;
-
-    public boolean canBeOmitted() {
-        return canBeOmitted;
-    }
+    SAFEPOINT,
+    CALL,
+    IMPLICIT_EXCEPTION,
+    METHOD_START,
+    METHOD_END,
+    BYTECODE_POSITION;
 }
