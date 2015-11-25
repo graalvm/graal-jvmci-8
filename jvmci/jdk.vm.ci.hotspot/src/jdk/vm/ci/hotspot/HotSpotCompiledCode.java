@@ -117,7 +117,7 @@ public class HotSpotCompiledCode {
         targetCodeSize = compResult.getTargetCodeSize();
 
         DataSection data = compResult.getDataSection();
-        data.finalizeLayout();
+        assert data.isFinalized() : "data section needs to be finalized before code installation";
         dataSection = new byte[data.getSectionSize()];
 
         ByteBuffer buffer = ByteBuffer.wrap(dataSection).order(ByteOrder.nativeOrder());
