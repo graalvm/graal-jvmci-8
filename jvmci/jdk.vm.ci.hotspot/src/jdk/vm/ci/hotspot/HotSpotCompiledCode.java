@@ -45,6 +45,7 @@ import jdk.vm.ci.code.CompilationResult.Mark;
 import jdk.vm.ci.code.CompilationResult.Site;
 import jdk.vm.ci.code.DataSection;
 import jdk.vm.ci.code.InfopointReason;
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.Assumptions.Assumption;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 
@@ -158,18 +159,30 @@ public class HotSpotCompiledCode {
         /**
          * Defines an order for sorting {@link Infopoint}s based on their
          * {@linkplain Infopoint#reason reasons}. This is used to choose which infopoint to preserve
-         * when multiple infopoints collide on the same PC offset.
+         * when multiple infopoints collide on the same PC offset. A negative order value implies a
+         * non-optional infopoint (i.e., must be preserved).
          */
         static final Map<InfopointReason, Integer> HOTSPOT_INFOPOINT_SORT_ORDER = new EnumMap<>(InfopointReason.class);
         static {
-            int order = 0;
-            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.SAFEPOINT, ++order);
-            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.CALL, ++order);
-            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.IMPLICIT_EXCEPTION, ++order);
-            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.METHOD_START, ++order);
-            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.METHOD_END, ++order);
-            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.BYTECODE_POSITION, ++order);
-            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.SAFEPOINT, ++order);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.SAFEPOINT, -4);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.CALL, -3);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.IMPLICIT_EXCEPTION, -2);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.METHOD_START, 2);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.METHOD_END, 3);
+            HOTSPOT_INFOPOINT_SORT_ORDER.put(InfopointReason.BYTECODE_POSITION, 4);
+        }
+
+        static int ord(Infopoint info) {
+            return HOTSPOT_INFOPOINT_SORT_ORDER.get(info.reason);
+        }
+
+        static int checkCollision(Infopoint i1, Infopoint i2) {
+            int o1 = ord(i1);
+            int o2 = ord(i2);
+            if (o1 < 0 && o2 < 0) {
+                throw new JVMCIError("Non optional infopoints cannot collide: %s and %s", i1, i2);
+            }
+            return o1 - o2;
         }
 
         /**
@@ -197,11 +210,8 @@ public class HotSpotCompiledCode {
                 }
 
                 if (s1IsInfopoint) {
-                    assert s2IsInfopoint;
-                    Infopoint s1Info = (Infopoint) s1;
-                    Infopoint s2Info = (Infopoint) s2;
                     sawCollidingInfopoints = true;
-                    return HOTSPOT_INFOPOINT_SORT_ORDER.get(s1Info.reason) - HOTSPOT_INFOPOINT_SORT_ORDER.get(s2Info.reason);
+                    return checkCollision((Infopoint) s1, (Infopoint) s2);
                 }
             }
             return s1.pcOffset - s2.pcOffset;
@@ -239,7 +249,7 @@ public class HotSpotCompiledCode {
                         copy.add(info);
                     } else {
                         // Omit this colliding infopoint
-                        assert lastInfopoint.reason.compareTo(info.reason) < 0;
+                        assert lastInfopoint.reason.compareTo(info.reason) <= 0;
                     }
                 } else {
                     copy.add(result[i]);
