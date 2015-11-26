@@ -93,6 +93,9 @@
                                                                             \
   develop(bool, TraceUncollectedSpeculations, false,                        \
           "Print message when a failed speculation was not collected")      \
+  product(intx, TraceClassLoadingStack, false,                              \
+          "Print stack when loading a class")                               \
+                                                                            \
 
 
 // Read default values for JVMCI globals
