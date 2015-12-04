@@ -29,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.FilerException;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
@@ -99,8 +100,27 @@ public class ServiceProviderProcessor extends AbstractProcessor {
             writer.println(interfaceName);
             writer.close();
         } catch (IOException e) {
-            processingEnv.getMessager().printMessage(Kind.ERROR, e.getMessage(), serviceProvider);
+            processingEnv.getMessager().printMessage(isBug367599(e) ? Kind.NOTE : Kind.ERROR, e.getMessage(), serviceProvider);
         }
+    }
+
+    /**
+     * Determines if a given exception is (most likely) caused by <a
+     * href="https://bugs.eclipse.org/bugs/show_bug.cgi?id=367599">Bug 367599</a>.
+     */
+    public static boolean isBug367599(Throwable t) {
+        if (t instanceof FilerException) {
+            for (StackTraceElement ste : t.getStackTrace()) {
+                if (ste.toString().contains("org.eclipse.jdt.internal.apt.pluggable.core.filer.IdeFilerImpl.create")) {
+                    // See: https://bugs.eclipse.org/bugs/show_bug.cgi?id=367599
+                    return true;
+                }
+            }
+        }
+        if (t.getCause() != null) {
+            return isBug367599(t.getCause());
+        }
+        return false;
     }
 
     @Override
