@@ -93,7 +93,7 @@
                                                                             \
   develop(bool, TraceUncollectedSpeculations, false,                        \
           "Print message when a failed speculation was not collected")      \
-  product(intx, TraceClassLoadingStack, false,                              \
+  product(bool, TraceClassLoadingStack, false,                              \
           "Print stack when loading a class")                               \
                                                                             \
 
