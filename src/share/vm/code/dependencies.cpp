@@ -788,6 +788,7 @@ void Dependencies::print_dependency(DepType dept, GrowableArray<DepArgument>* ar
     } else {
       ShouldNotReachHere(); // Provide impl for this type.
     }
+
     st->cr();
   }
   if (witness != NULL) {
