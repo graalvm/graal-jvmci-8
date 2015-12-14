@@ -779,12 +779,15 @@ void Dependencies::print_dependency(DepType dept, GrowableArray<DepArgument>* ar
       what = "object ";
     }
     st->print("  %s = %s", what, (put_star? "*": ""));
-    if (arg.is_klass())
+    if (arg.is_klass()) {
       st->print("%s", ((Klass*)arg.metadata_value())->external_name());
-    else if (arg.is_method())
+    } else if (arg.is_method()) {
       ((Method*)arg.metadata_value())->print_value_on(st);
-    else
+    } else if (arg.is_oop()) {
+      arg.oop_value()->print_value_on(st);
+    } else {
       ShouldNotReachHere(); // Provide impl for this type.
+    }
     st->cr();
   }
   if (witness != NULL) {
