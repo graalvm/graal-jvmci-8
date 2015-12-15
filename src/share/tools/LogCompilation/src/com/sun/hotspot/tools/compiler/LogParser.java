@@ -373,12 +373,12 @@ public class LogParser extends DefaultHandler implements ErrorHandler, Constants
             failureReason = search(atts, "reason");
         } else if (qname.equals("task_queued")) {
             String id = makeId(atts);
-            int level = Integer.parseInt(search(atts, "level"));
+            int level = Integer.parseInt(search(atts, "level", "4"));
             TaskEvent t = new TaskEvent(Double.parseDouble(search(atts, "stamp")), id, level, TaskEvent.Kind.Enqueue);
             events.add(t);
         } else if (qname.equals("task_dequeued")) {
             String id = makeId(atts);
-            int level = Integer.parseInt(search(atts, "level"));
+            int level = Integer.parseInt(search(atts, "level", "4"));
             TaskEvent t = new TaskEvent(Double.parseDouble(search(atts, "stamp")), id, level, TaskEvent.Kind.Dequeue);
             t.setComment(search(atts, "comment"));
             events.add(t);
@@ -445,7 +445,7 @@ public class LogParser extends DefaultHandler implements ErrorHandler, Constants
             nmethods.put(id, nm);
             events.add(nm);
 
-            int level = Integer.parseInt(search(atts, "level"));
+            int level = Integer.parseInt(search(atts, "level", "4"));
             if (level > 0) {
                 TaskEvent t = new TaskEvent(Double.parseDouble(search(atts, "stamp")), id, level, TaskEvent.Kind.Finish);
                 events.add(t);
