@@ -208,10 +208,10 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
         for (LogEvent e : events) {
             if (e instanceof UncommonTrapEvent) {
                 UncommonTrapEvent uc = (UncommonTrapEvent) e;
-                Map<String, List<String>> t = traps.get(uc.getCompilation().longMethodName());
+                Map<String, List<String>> t = traps.get(uc.getCompilation().getMethod().toString());
                 if (t == null) {
                     t = new LinkedHashMap<String, List<String>>();
-                    traps.put(uc.getCompilation().longMethodName(), t);
+                    traps.put(uc.getCompilation().getMethod().toString(), t);
                 }
                 String msg = uc.formatTrap().trim();
                 List<String> i = t.get(msg);
