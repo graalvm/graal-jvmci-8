@@ -94,72 +94,73 @@ public final class ImportAction extends SystemAction {
         JFileChooser fc = new JFileChooser();
         fc.setFileFilter(ImportAction.getFileFilter());
         fc.setCurrentDirectory(new File(Settings.get().get(Settings.DIRECTORY, Settings.DIRECTORY_DEFAULT)));
+        fc.setMultiSelectionEnabled(true);
 
         if (fc.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
-            final File file = fc.getSelectedFile();
-
-            File dir = file;
-            if (!dir.isDirectory()) {
-                dir = dir.getParentFile();
-            }
-
-            Settings.get().put(Settings.DIRECTORY, dir.getAbsolutePath());
-            try {
-                final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
-                final ProgressHandle handle = ProgressHandleFactory.createHandle("Opening file " + file.getName());
-                handle.start(WORKUNITS);
-                final long startTime = System.currentTimeMillis();
-                final long start = channel.size();
-                ParseMonitor monitor = new ParseMonitor() {
-                    @Override
-                    public void updateProgress() {
-                        try {
-                            int prog = (int) (WORKUNITS * (double) channel.position() / (double) start);
-                            handle.progress(prog);
-                        } catch (IOException ex) {
-                        }
-                    }
-                    @Override
-                    public void setState(String state) {
-                        updateProgress();
-                        handle.progress(state);
-                    }
-                };
-                final GraphParser parser;
-                final OutlineTopComponent component = OutlineTopComponent.findInstance();
-                if (file.getName().endsWith(".xml")) {
-                    parser = new Parser(channel, monitor, null);
-                } else if (file.getName().endsWith(".bgv")) {
-                    parser = new BinaryParser(channel, monitor, component.getDocument(), null);
-                } else {
-                    parser = null;
+            for (final File file : fc.getSelectedFiles()) {
+                File dir = file;
+                if (!dir.isDirectory()) {
+                    dir = dir.getParentFile();
                 }
-                RequestProcessor.getDefault().post(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            final GraphDocument document = parser.parse();
-                            if (document != null) {
-                                SwingUtilities.invokeLater(new Runnable(){
-                                    @Override
-                                    public void run() {
-                                        component.requestActive();
-                                        component.getDocument().addGraphDocument(document);
-                                    }
-                                });
+
+                Settings.get().put(Settings.DIRECTORY, dir.getAbsolutePath());
+                try {
+                    final FileChannel channel = FileChannel.open(file.toPath(), StandardOpenOption.READ);
+                    final ProgressHandle handle = ProgressHandleFactory.createHandle("Opening file " + file.getName());
+                    handle.start(WORKUNITS);
+                    final long startTime = System.currentTimeMillis();
+                    final long start = channel.size();
+                    ParseMonitor monitor = new ParseMonitor() {
+                            @Override
+                            public void updateProgress() {
+                                try {
+                                    int prog = (int) (WORKUNITS * (double) channel.position() / (double) start);
+                                    handle.progress(prog);
+                                } catch (IOException ex) {
+                                }
                             }
-                        } catch (IOException ex) {
-                            Exceptions.printStackTrace(ex);
-                        }
-                        handle.finish();
-                        long stop = System.currentTimeMillis();
-                        Logger.getLogger(getClass().getName()).log(Level.INFO, "Loaded in " + file + " in " + ((stop - startTime) / 1000.0) + " seconds");
+                            @Override
+                            public void setState(String state) {
+                                updateProgress();
+                                handle.progress(state);
+                            }
+                        };
+                    final GraphParser parser;
+                    final OutlineTopComponent component = OutlineTopComponent.findInstance();
+                    if (file.getName().endsWith(".xml")) {
+                        parser = new Parser(channel, monitor, null);
+                    } else if (file.getName().endsWith(".bgv")) {
+                        parser = new BinaryParser(channel, monitor, component.getDocument(), null);
+                    } else {
+                        parser = null;
                     }
-                });
-            } catch (FileNotFoundException ex) {
-                Exceptions.printStackTrace(ex);
-            } catch (IOException ex) {
-                Exceptions.printStackTrace(ex);
+                    RequestProcessor.getDefault().post(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    final GraphDocument document = parser.parse();
+                                    if (document != null) {
+                                        SwingUtilities.invokeLater(new Runnable(){
+                                                @Override
+                                                public void run() {
+                                                    component.requestActive();
+                                                    component.getDocument().addGraphDocument(document);
+                                                }
+                                            });
+                                    }
+                                } catch (IOException ex) {
+                                    Exceptions.printStackTrace(ex);
+                                }
+                                handle.finish();
+                                long stop = System.currentTimeMillis();
+                                Logger.getLogger(getClass().getName()).log(Level.INFO, "Loaded in " + file + " in " + ((stop - startTime) / 1000.0) + " seconds");
+                            }
+                        });
+                } catch (FileNotFoundException ex) {
+                    Exceptions.printStackTrace(ex);
+                } catch (IOException ex) {
+                    Exceptions.printStackTrace(ex);
+                }
             }
         }
     }
