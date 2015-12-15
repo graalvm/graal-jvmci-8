@@ -74,7 +74,7 @@ void compute_offset(int &dest_offset, Klass* klass, const char* name, const char
 #define STATIC_BOOLEAN_FIELD(klass, name) FIELD(klass, name, "Z", true)
 
 
-void jvmci_compute_offsets(TRAPS) {
+void JVMCIJavaClasses::compute_offsets(TRAPS) {
   COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, OOP_FIELD, OOP_FIELD, STATIC_OOP_FIELD, STATIC_OOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
 }
 

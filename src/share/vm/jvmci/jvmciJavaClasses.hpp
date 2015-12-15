@@ -24,10 +24,13 @@
 #ifndef SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP
 #define SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP
 
-void jvmci_compute_offsets(TRAPS);
-
 #include "classfile/systemDictionary.hpp"
 #include "oops/instanceMirrorKlass.hpp"
+
+class JVMCIJavaClasses : AllStatic {
+ public:
+  static void compute_offsets(TRAPS);
+};
 
 /* This macro defines the structure of the CompilationResult - classes.
  * It will generate classes with accessors similar to javaClasses.hpp, but with specializations for oops, Handles and jni handles.

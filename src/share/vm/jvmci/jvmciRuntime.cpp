@@ -802,7 +802,7 @@ JVM_ENTRY(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
 
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
 
-  jvmci_compute_offsets(thread);
+  JVMCIJavaClasses::compute_offsets(thread);
 
   {
     ThreadToNativeFromVM trans(thread);
@@ -945,7 +945,7 @@ void JVMCIRuntime::maybe_print_flags(TRAPS) {
       const char* name = p->key() + OPTION_PREFIX_LEN;
       if (strcmp(name, "PrintFlags") == 0 || strcmp(name, "ShowFlags") == 0) {
         JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-        jvmci_compute_offsets(THREAD);
+        JVMCIJavaClasses::compute_offsets(THREAD);
         HandleMark hm;
         ResourceMark rm;
         JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
