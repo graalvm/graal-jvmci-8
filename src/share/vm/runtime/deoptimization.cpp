@@ -1313,7 +1313,7 @@ void Deoptimization::deoptimize_single_frame(JavaThread* thread, frame fr, Deopt
     assert(nm != NULL, "only nmethods can deopt");
 
     ttyLocker ttyl;
-    xtty->begin_head("deoptimized thread='" UINTX_FORMAT "'", thread->osthread()->thread_id());
+    xtty->begin_head("deoptimized thread='" UINTX_FORMAT "' pc='" UINTX_FORMAT "'", thread->osthread()->thread_id(), fr.pc());
     nm->log_identity(xtty);
     xtty->end_head();
     for (ScopeDesc* sd = nm->scope_desc_at(fr.pc()); ; sd = sd->sender()) {
