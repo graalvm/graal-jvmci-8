@@ -215,7 +215,7 @@ public final class DataSection implements Iterable<Data> {
      *
      * This must be called exactly once.
      */
-    void close() {
+    public void close() {
         checkOpen();
         closed = true;
 
