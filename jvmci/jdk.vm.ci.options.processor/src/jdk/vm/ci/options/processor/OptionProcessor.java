@@ -79,6 +79,10 @@ public class OptionProcessor extends AbstractProcessor {
             processingEnv.getMessager().printMessage(Kind.ERROR, "Option field must be static", element);
             return;
         }
+        if (element.getModifiers().contains(Modifier.PRIVATE)) {
+            processingEnv.getMessager().printMessage(Kind.ERROR, "Option field cannot be private", element);
+            return;
+        }
 
         Option annotation = element.getAnnotation(Option.class);
         assert annotation != null;
@@ -106,6 +110,10 @@ public class OptionProcessor extends AbstractProcessor {
 
         if (!field.getModifiers().contains(Modifier.STATIC)) {
             processingEnv.getMessager().printMessage(Kind.ERROR, "Option field must be static", element);
+            return;
+        }
+        if (field.getModifiers().contains(Modifier.PRIVATE)) {
+            processingEnv.getMessager().printMessage(Kind.ERROR, "Option field cannot be private", element);
             return;
         }
 
@@ -187,7 +195,6 @@ public class OptionProcessor extends AbstractProcessor {
 
             String desc = OptionDescriptor.class.getSimpleName();
 
-            boolean needPrivateFieldAccessor = false;
             int i = 0;
             Collections.sort(info.options);
 
@@ -203,8 +210,7 @@ public class OptionProcessor extends AbstractProcessor {
                 String name = option.name;
                 String optionValue;
                 if (option.field.getModifiers().contains(Modifier.PRIVATE)) {
-                    needPrivateFieldAccessor = true;
-                    optionValue = "field(" + option.declaringClass + ".class, \"" + option.field.getSimpleName() + "\")";
+                    throw new InternalError();
                 } else {
                     optionValue = option.declaringClass + "." + option.field.getSimpleName();
                 }
@@ -230,8 +236,7 @@ public class OptionProcessor extends AbstractProcessor {
             for (OptionInfo option : info.options) {
                 String optionValue;
                 if (option.field.getModifiers().contains(Modifier.PRIVATE)) {
-                    needPrivateFieldAccessor = true;
-                    optionValue = "field(" + option.declaringClass + ".class, \"" + option.field.getSimpleName() + "\")";
+                    throw new InternalError();
                 } else {
                     optionValue = option.declaringClass + "." + option.field.getSimpleName();
                 }
@@ -248,17 +253,6 @@ public class OptionProcessor extends AbstractProcessor {
             out.println("        // CheckStyle: resume line length check");
             out.println("        return options.iterator();");
             out.println("    }");
-            if (needPrivateFieldAccessor) {
-                out.println("    private static " + OptionValue.class.getSimpleName() + "<?> field(Class<?> declaringClass, String fieldName) {");
-                out.println("        try {");
-                out.println("            java.lang.reflect.Field field = declaringClass.getDeclaredField(fieldName);");
-                out.println("            field.setAccessible(true);");
-                out.println("            return (" + OptionValue.class.getSimpleName() + "<?>) field.get(null);");
-                out.println("        } catch (Exception e) {");
-                out.println("            throw (InternalError) new InternalError().initCause(e);");
-                out.println("        }");
-                out.println("    }");
-            }
             out.println("}");
         }
     }
