@@ -37,4 +37,14 @@ public interface InputGraphProvider {
     InputGraph getGraph();
 
     void setSelectedNodes(Set<InputNode> nodes);
+    
+    /**
+     * @return an iterator walking forward through the {@link InputGraph}s following the {@link #getGraph()}
+     */
+    Iterable<InputGraph> searchForward();
+    
+    /**
+     * @return an iterator walking backward through the {@link InputGraph}s preceeding the {@link #getGraph()}
+     */
+    Iterable<InputGraph> searchBackward();
 }

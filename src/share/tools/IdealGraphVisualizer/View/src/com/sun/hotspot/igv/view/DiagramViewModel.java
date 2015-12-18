@@ -445,5 +445,48 @@ public class DiagramViewModel extends RangeSliderModel implements ChangedListene
     void close() {
         filterChain.getChangedEvent().removeListener(filterChainChangedListener);
         sequenceFilterChain.getChangedEvent().removeListener(filterChainChangedListener);
-}
+    }
+
+    Iterable<InputGraph> getGraphsForward() {
+        return new Iterable<InputGraph>() {
+
+            @Override
+            public Iterator<InputGraph> iterator() {
+                return new Iterator<InputGraph>() {
+                    int index = getFirstPosition();
+
+                    @Override
+                    public boolean hasNext() {
+                        return index + 1 < graphs.size();
+                    }
+
+                    @Override
+                    public InputGraph next() {
+                        return graphs.get(++index);
+                    }
+                };
+            }
+        };
+    }
+
+    Iterable<InputGraph> getGraphsBackward() {
+        return new Iterable<InputGraph>() {
+            @Override
+            public Iterator<InputGraph> iterator() {
+                return new Iterator<InputGraph>() {
+                    int index = getFirstPosition();
+
+                    @Override
+                    public boolean hasNext() {
+                        return index - 1 > 0;
+                    }
+
+                    @Override
+                    public InputGraph next() {
+                        return graphs.get(--index);
+                    }
+                };
+            }
+        };
+    }
 }
