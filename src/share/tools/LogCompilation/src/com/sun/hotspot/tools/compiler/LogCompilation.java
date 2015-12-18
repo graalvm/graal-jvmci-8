@@ -237,12 +237,10 @@ public class LogCompilation extends DefaultHandler implements ErrorHandler, Cons
             }
         });
         for (List<String> key : recompiles) {
-            if (key.size() > 1) {
-                out.print("Trap: ");
-                out.println(reverseMapping.get(key));
-                out.print("Compilations: ");
-                out.println(key);
-            }
+	    out.print("Trap: ");
+	    out.println(reverseMapping.get(key));
+	    out.print("Compilations: ");
+	    out.println(key);
         }
     }
     
