@@ -35,6 +35,7 @@ import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.MemoryAccessProvider;
 import jdk.vm.ci.meta.MethodHandleAccessProvider;
+import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.options.Option;
 import jdk.vm.ci.options.OptionType;
@@ -239,7 +240,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
 
     /**
      * Determines if a static field is constant for the purpose of
-     * {@link #readConstantFieldValue(JavaField, JavaConstant)}.
+     * {@link #readConstantFieldValue(ResolvedJavaField, JavaConstant)}.
      */
     protected boolean isStaticFieldConstant(HotSpotResolvedJavaField staticField) {
         if (staticField.isFinal() || staticField.isStable()) {
@@ -284,7 +285,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
      * The {@code value} field in {@link OptionValue} is considered constant if the type of
      * {@code receiver} is (assignable to) {@link StableOptionValue}.
      */
-    public JavaConstant readConstantFieldValue(JavaField field, JavaConstant receiver) {
+    public JavaConstant readConstantFieldValue(ResolvedJavaField field, JavaConstant receiver) {
         HotSpotResolvedJavaField hotspotField = (HotSpotResolvedJavaField) field;
 
         if (hotspotField.isStatic()) {
@@ -333,7 +334,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         return null;
     }
 
-    public JavaConstant readFieldValue(JavaField field, JavaConstant receiver) {
+    public JavaConstant readFieldValue(ResolvedJavaField field, JavaConstant receiver) {
         HotSpotResolvedJavaField hotspotField = (HotSpotResolvedJavaField) field;
         if (!hotspotField.isStable()) {
             return readNonStableFieldValue(field, receiver);
@@ -357,7 +358,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         return null;
     }
 
-    public JavaConstant readStableFieldValue(JavaField field, JavaConstant receiver, boolean isDefaultStable) {
+    public JavaConstant readStableFieldValue(ResolvedJavaField field, JavaConstant receiver, boolean isDefaultStable) {
         JavaConstant fieldValue = readNonStableFieldValue(field, receiver);
         if (fieldValue.isNonNull()) {
             JavaType declaredType = field.getType();
