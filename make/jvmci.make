@@ -44,17 +44,6 @@ define process_providers
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
-# Finds the *_OptionsDescriptors classes created by OptionProcessor (the processor for the @Option annotation)
-# and appends their names to services/jdk.vm.ci.options.OptionDescriptors.
-# Arguments:
-#  1: directory with contents of the JAR file
-define process_options
-    $(eval services := $(1)/META-INF/services)
-    $(QUIETLY) test -d $(services) || mkdir -p $(services)
-    $(eval optionDescriptors := $(1)/META-INF/services/jdk.vm.ci.options.OptionDescriptors)
-    $(QUIETLY) cd $(1) && for i in $$(find . -name '*_OptionDescriptors.class' 2>/dev/null); do echo $${i} | sed 's:\./\(.*\)\.class:\1:g' | tr '/' '.' >> $(abspath $(optionDescriptors)); done
-endef
-
 # Extracts META-INF/jvmci.services from a JAR file into a given directory
 # Arguments:
 #  1: JAR file to extract
@@ -78,7 +67,6 @@ define build_and_jar
     $(eval TMP := $(shell mkdir -p $(TARGET) && mktemp -d $(TARGET)/tmp_XXXXX))
     $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$^)
     $(QUIETLY) test "$(3)" = "" || cp -r $(3) $(TMP)
-    $(QUIETLY) $(call process_options,$(TMP))
     $(QUIETLY) $(call process_providers,$(TMP))
     $(QUIETLY) mkdir -p $(shell dirname $(4))
     $(QUIETLY) $(JAR) -0cf $(4) -C $(TMP) .
@@ -125,19 +113,7 @@ JVMCI_SERVICE_JAR = $(TARGET)/jvmci-service.jar
 
 EXPORTED_FILES += $(JVMCI_SERVICE_JAR)
 
-JVMCI_OPTIONS_SRC += $(shell find jvmci/jdk.vm.ci.inittimer/src -type f 2> /dev/null)
-JVMCI_OPTIONS_SRC += $(shell find jvmci/jdk.vm.ci.options/src -type f 2> /dev/null)
-
-JVMCI_OPTIONS_JAR = $(TARGET)/jvmci-options.jar
-
-EXPORTED_FILES += $(JVMCI_OPTIONS_JAR)
-
-JVMCI_OPTIONS_PROCESSOR_SRC += $(shell find jvmci/jdk.vm.ci.options.processor/src -type f 2> /dev/null)
-
-JVMCI_OPTIONS_PROCESSOR_JAR = $(TARGET)/jvmci-options-processor.jar
-
-JVMCI_OPTIONS_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-options.jar
-
+JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.inittimer/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.meta/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.code/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.runtime/src -type f 2> /dev/null)
@@ -147,7 +123,7 @@ JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.sparc/src -type f 2> /dev/null)
 
 JVMCI_API_JAR = $(TARGET)/jvmci-api.jar
 
-JVMCI_API_DEP_JARS = $(TARGET)/jvmci-options.jar $(TARGET)/jvmci-service.jar
+JVMCI_API_DEP_JARS = $(TARGET)/jvmci-service.jar
 
 EXPORTED_FILES += $(JVMCI_API_JAR)
 
@@ -167,7 +143,7 @@ JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC += $(shell find jvmci/jdk.vm.ci.hotspotvmcon
 
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/jvmci-hotspotvmconfig-processor.jar
 
-JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-options.jar $(TARGET)/jvmci-service.jar $(TARGET)/jvmci-api.jar $(TARGET)/jvmci-hotspotvmconfig.jar
+JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-service.jar $(TARGET)/jvmci-api.jar $(TARGET)/jvmci-hotspotvmconfig.jar
 
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot.amd64/src -type f 2> /dev/null)
@@ -178,26 +154,18 @@ endif
 
 JVMCI_HOTSPOT_JAR = $(TARGET)/jvmci-hotspot.jar
 
-JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/jvmci-hotspotvmconfig.jar $(TARGET)/jvmci-service.jar $(TARGET)/jvmci-options.jar $(TARGET)/jvmci-api.jar
+JVMCI_HOTSPOT_DEP_JARS = $(TARGET)/jvmci-hotspotvmconfig.jar $(TARGET)/jvmci-service.jar $(TARGET)/jvmci-api.jar
 
 EXPORTED_FILES += $(JVMCI_HOTSPOT_JAR)
 
-DISTRIBUTIONS = JVMCI_SERVICE JVMCI_OPTIONS JVMCI_OPTIONS_PROCESSOR JVMCI_API JVMCI_SERVICE_PROCESSOR JVMCI_HOTSPOTVMCONFIG JVMCI_HOTSPOTVMCONFIG_PROCESSOR JVMCI_HOTSPOT
+DISTRIBUTIONS = JVMCI_SERVICE JVMCI_API JVMCI_SERVICE_PROCESSOR JVMCI_HOTSPOTVMCONFIG JVMCI_HOTSPOTVMCONFIG_PROCESSOR JVMCI_HOTSPOT
 
 $(JVMCI_SERVICE_JAR): $(JVMCI_SERVICE_SRC)  
 	$(call build_and_jar,,$(subst  $(space),:,),,$(JVMCI_SERVICE_JAR))
 
 
-$(JVMCI_OPTIONS_JAR): $(JVMCI_OPTIONS_SRC)  
-	$(call build_and_jar,,$(subst  $(space),:,),,$(JVMCI_OPTIONS_JAR))
-
-
-$(JVMCI_OPTIONS_PROCESSOR_JAR): $(JVMCI_OPTIONS_PROCESSOR_SRC)  $(JVMCI_OPTIONS_PROCESSOR_DEP_JARS)
-	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_OPTIONS_PROCESSOR_DEP_JARS)),jvmci/jdk.vm.ci.options.processor/src/META-INF,$(JVMCI_OPTIONS_PROCESSOR_JAR))
-
-
-$(JVMCI_API_JAR): $(JVMCI_API_SRC) $(JVMCI_OPTIONS_PROCESSOR_JAR) $(JVMCI_API_DEP_JARS)
-	$(call build_and_jar,$(JVMCI_OPTIONS_PROCESSOR_JAR):$(subst  $(space),:,$(JVMCI_OPTIONS_PROCESSOR_DEP_JARS)),$(subst  $(space),:,$(JVMCI_API_DEP_JARS)),,$(JVMCI_API_JAR))
+$(JVMCI_API_JAR): $(JVMCI_API_SRC)  $(JVMCI_API_DEP_JARS)
+	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_API_DEP_JARS)),,$(JVMCI_API_JAR))
 
 
 $(JVMCI_SERVICE_PROCESSOR_JAR): $(JVMCI_SERVICE_PROCESSOR_SRC)  $(JVMCI_SERVICE_PROCESSOR_DEP_JARS)
@@ -212,9 +180,9 @@ $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR): $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_SRC)  
 	$(call build_and_jar,,$(subst  $(space),:,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS)),jvmci/jdk.vm.ci.hotspotvmconfig.processor/src/META-INF,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR))
 
 
-$(JVMCI_HOTSPOT_JAR): $(JVMCI_HOTSPOT_SRC) $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR) $(JVMCI_OPTIONS_PROCESSOR_JAR) $(JVMCI_SERVICE_PROCESSOR_JAR) $(JVMCI_HOTSPOT_DEP_JARS)
-	$(call build_and_jar,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR):$(JVMCI_OPTIONS_PROCESSOR_JAR):$(JVMCI_SERVICE_PROCESSOR_JAR):$(subst  $(space),:,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS)):$(subst  $(space),:,$(JVMCI_OPTIONS_PROCESSOR_DEP_JARS)):$(subst  $(space),:,$(JVMCI_SERVICE_PROCESSOR_DEP_JARS)),$(subst  $(space),:,$(JVMCI_HOTSPOT_DEP_JARS)),,$(JVMCI_HOTSPOT_JAR))
+$(JVMCI_HOTSPOT_JAR): $(JVMCI_HOTSPOT_SRC) $(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR) $(JVMCI_SERVICE_PROCESSOR_JAR) $(JVMCI_HOTSPOT_DEP_JARS)
+	$(call build_and_jar,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR):$(JVMCI_SERVICE_PROCESSOR_JAR):$(subst  $(space),:,$(JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS)):$(subst  $(space),:,$(JVMCI_SERVICE_PROCESSOR_DEP_JARS)),$(subst  $(space),:,$(JVMCI_HOTSPOT_DEP_JARS)),,$(JVMCI_HOTSPOT_JAR))
 
 
-default: $(JVMCI_SERVICE_JAR) $(JVMCI_API_JAR) $(JVMCI_HOTSPOT_JAR) $(JVMCI_HOTSPOTVMCONFIG_JAR) $(JVMCI_OPTIONS_JAR)
+default: $(JVMCI_SERVICE_JAR) $(JVMCI_API_JAR) $(JVMCI_HOTSPOT_JAR) $(JVMCI_HOTSPOTVMCONFIG_JAR)
 .PHONY: default

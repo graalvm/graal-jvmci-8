@@ -189,7 +189,6 @@ jdkDeployedDists = [
     JvmciJDKDeployedDist('JVMCI_API', partOfHotSpot=True),
     JvmciJDKDeployedDist('JVMCI_HOTSPOT', partOfHotSpot=True),
     JvmciJDKDeployedDist('JVMCI_HOTSPOTVMCONFIG', partOfHotSpot=True),
-    JvmciJDKDeployedDist('JVMCI_OPTIONS', partOfHotSpot=True),
     HotSpotVMJDKDeployedDist('JVM_<vmbuild>_<vm>'),
 ]
 
@@ -593,16 +592,6 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
             _handle_missing_VM(build, vmToCheck)
 
     return jdkDir
-
-def _updateInstalledJVMCIOptionsFile(jdkDir):
-    jvmciOptions = join(_suite.dir, 'jvmci.options')
-    jreLibDir = join(jdkDir, 'jre', 'lib')
-    if exists(jvmciOptions):
-        shutil.copy(jvmciOptions, join(jreLibDir, 'jvmci', 'options'))
-    else:
-        toDelete = join(jreLibDir, 'jvmci', 'options')
-        if exists(toDelete):
-            os.unlink(toDelete)
 
 def copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
     name = os.path.basename(src)
@@ -1117,9 +1106,7 @@ def updateJvmCfg(jdkDir, vm):
 mx_gate.add_jacoco_includes(['jdk.vm.ci.*'])
 
 def run_vm(args, vm=None, nonZeroIsFatal=True, out=None, err=None, cwd=None, timeout=None, vmbuild=None):
-    """
-    Runs a Java program by executing the java executable in a JVMCI JDK.
-    """
+    """run a Java program by executing the java executable in a JVMCI JDK"""
     jdkTag = mx.get_jdk_option().tag
     if jdkTag and jdkTag != _JVMCI_JDK_TAG:
         mx.abort('The "--jdk" option must have the tag "' + _JVMCI_JDK_TAG + '" when running a command requiring a JVMCI VM')
@@ -1730,12 +1717,6 @@ class JVMCIArchiveParticipant:
                 # allow for deployment on JDK9 without having to recompile.
                 self.services.setdefault(service, []).append(provider)
             return True
-        elif arcname.endswith('_OptionDescriptors.class'):
-            # Need to create service files for the providers of the
-            # jdk.vm.ci.options.Options service created by
-            # jdk.vm.ci.options.processor.OptionProcessor.
-            provider = arcname[:-len('.class'):].replace('/', '.')
-            self.services.setdefault('jdk.vm.ci.options.OptionDescriptors', []).append(provider)
         return False
 
     def __addsrc__(self, arcname, contents):
@@ -1783,21 +1764,6 @@ class JVMCIJDKConfig(mx.JDKConfig):
         if jacocoArgs:
             args = jacocoArgs + args
 
-        # Support for -G: options
-        def translateGOption(arg):
-            if arg.startswith('-G:+'):
-                if '=' in arg:
-                    mx.abort('Mixing + and = in -G: option specification: ' + arg)
-                arg = '-Djvmci.option.' + arg[len('-G:+'):] + '=true'
-            elif arg.startswith('-G:-'):
-                if '=' in arg:
-                    mx.abort('Mixing - and = in -G: option specification: ' + arg)
-                arg = '-Djvmci.option.' + arg[len('-G:+'):] + '=false'
-            elif arg.startswith('-G:'):
-                arg = '-Djvmci.option.' + arg[len('-G:'):]
-            return arg
-        args = map(translateGOption, args)
-
         args = ['-Xbootclasspath/p:' + dep.classpath_repr() for dep in _jvmci_bootclasspath_prepends] + args
 
         # Set the default JVMCI compiler
@@ -1826,8 +1792,6 @@ class JVMCIJDKConfig(mx.JDKConfig):
             cwd = _vm_cwd
         elif _vm_cwd is not None and _vm_cwd != cwd:
             mx.abort("conflicting working directories: do not set --vmcwd for this command")
-
-        _updateInstalledJVMCIOptionsFile(self.home)
 
         args = self.parseVmArgs(args, addDefaultArgs=addDefaultArgs)
         if _make_eclipse_launch:

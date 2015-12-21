@@ -3706,10 +3706,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
   if (jvmciCompiler != NULL) {
     JVMCIRuntime::save_compiler(jvmciCompiler);
   }
-  JVMCIRuntime::maybe_print_flags(THREAD);
-  if (HAS_PENDING_EXCEPTION) {
-    vm_exit_during_initialization(Handle(THREAD, PENDING_EXCEPTION));
-  }
 #endif
 
   // initialize compiler(s)

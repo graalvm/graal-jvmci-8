@@ -36,6 +36,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
+import sun.misc.VM;
 import jdk.vm.ci.code.Architecture;
 import jdk.vm.ci.code.CompilationResult;
 import jdk.vm.ci.code.InstalledCode;
@@ -81,6 +82,22 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
     public static HotSpotJVMCIRuntime runtime() {
         JVMCI.initialize();
         return DelayedInit.instance;
+    }
+
+    /**
+     * Gets a boolean value based on a {@linkplain VM#getSavedProperty(String) saved} system
+     * property.
+     *
+     * @param name the name of the system property to derive a boolean value from using
+     *            {@link Boolean#parseBoolean(String)}
+     * @param def the value to return if there is no system property corresponding to {@code name}
+     */
+    public static boolean getBooleanOption(String name, boolean def) {
+        String value = VM.getSavedProperty(name);
+        if (value == null) {
+            return def;
+        }
+        return Boolean.parseBoolean(value);
     }
 
     public static HotSpotJVMCIBackendFactory findFactory(String architecture) {

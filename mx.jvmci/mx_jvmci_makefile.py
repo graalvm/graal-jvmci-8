@@ -193,17 +193,6 @@ define process_providers
     $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
 endef
 
-# Finds the *_OptionsDescriptors classes created by OptionProcessor (the processor for the @Option annotation)
-# and appends their names to services/jdk.vm.ci.options.OptionDescriptors.
-# Arguments:
-#  1: directory with contents of the JAR file
-define process_options
-    $(eval services := $(1)/META-INF/services)
-    $(QUIETLY) test -d $(services) || mkdir -p $(services)
-    $(eval optionDescriptors := $(1)/META-INF/services/jdk.vm.ci.options.OptionDescriptors)
-    $(QUIETLY) cd $(1) && for i in $$(find . -name '*_OptionDescriptors.class' 2>/dev/null); do echo $${i} | sed 's:\\./\\(.*\\)\\.class:\\1:g' | tr '/' '.' >> $(abspath $(optionDescriptors)); done
-endef
-
 # Extracts META-INF/jvmci.services from a JAR file into a given directory
 # Arguments:
 #  1: JAR file to extract
@@ -227,7 +216,6 @@ define build_and_jar
     $(eval TMP := $(shell mkdir -p $(TARGET) && mktemp -d $(TARGET)/tmp_XXXXX))
     $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$^)
     $(QUIETLY) test "$(3)" = "" || cp -r $(3) $(TMP)
-    $(QUIETLY) $(call process_options,$(TMP))
     $(QUIETLY) $(call process_providers,$(TMP))
     $(QUIETLY) mkdir -p $(shell dirname $(4))
     $(QUIETLY) $(JAR) -0cf $(4) -C $(TMP) .
