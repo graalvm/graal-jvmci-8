@@ -118,6 +118,7 @@ JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.meta/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.code/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.runtime/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.common/src -type f 2> /dev/null)
+JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.aarch64/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.amd64/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.sparc/src -type f 2> /dev/null)
 
@@ -146,6 +147,7 @@ JVMCI_HOTSPOTVMCONFIG_PROCESSOR_JAR = $(TARGET)/jvmci-hotspotvmconfig-processor.
 JVMCI_HOTSPOTVMCONFIG_PROCESSOR_DEP_JARS = $(TARGET)/jvmci-service.jar $(TARGET)/jvmci-api.jar $(TARGET)/jvmci-hotspotvmconfig.jar
 
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot/src -type f 2> /dev/null)
+JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot.aarch64/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot.amd64/src -type f 2> /dev/null)
 JVMCI_HOTSPOT_SRC += $(shell find jvmci/jdk.vm.ci.hotspot.sparc/src -type f 2> /dev/null)
 ifeq ($(shell find $(ABS_BOOTDIR)/ -name 'jfr.jar'; echo $$?),'0')

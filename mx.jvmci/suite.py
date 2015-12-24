@@ -138,6 +138,15 @@ suite = {
 
     # ------------- JVMCI:HotSpot -------------
 
+    "jdk.vm.ci.aarch64" : {
+      "subDir" : "jvmci",
+      "sourceDirs" : ["src"],
+      "dependencies" : ["jdk.vm.ci.code"],
+      "checkstyle" : "jdk.vm.ci.service",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,AArch64",
+    },
+
     "jdk.vm.ci.amd64" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
@@ -189,6 +198,21 @@ suite = {
       "checkstyle" : "jdk.vm.ci.service",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,Codegen",
+    },
+
+    "jdk.vm.ci.hotspot.aarch64" : {
+      "subDir" : "jvmci",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "jdk.vm.ci.aarch64",
+        "jdk.vm.ci.hotspot",
+      ],
+      "checkstyle" : "jdk.vm.ci.service",
+      "annotationProcessors" : [
+        "JVMCI_SERVICE_PROCESSOR",
+      ],
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI,HotSpot,AArch64",
     },
 
     "jdk.vm.ci.hotspot.amd64" : {
@@ -315,6 +339,7 @@ suite = {
         "jdk.vm.ci.inittimer",
         "jdk.vm.ci.runtime",
         "jdk.vm.ci.common",
+        "jdk.vm.ci.aarch64",
         "jdk.vm.ci.amd64",
         "jdk.vm.ci.sparc",
       ],
@@ -333,6 +358,7 @@ suite = {
     "JVMCI_HOTSPOT" : {
       "subDir" : "jvmci",
       "dependencies" : [
+        "jdk.vm.ci.hotspot.aarch64",
         "jdk.vm.ci.hotspot.amd64",
         "jdk.vm.ci.hotspot.sparc",
         "jdk.vm.ci.hotspot.jfr",
