@@ -143,10 +143,10 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_sun_misc_Perf_registerNatives",                        NULL, FN_PTR(JVM_RegisterPerfMethods)         },
   { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 NULL, FN_PTR(JVM_RegisterWhiteBoxMethods)     },
 #if INCLUDE_JVMCI
-  { CC"Java_jdk_vm_ci_service_JVMCIClassLoaderFactory_init", NULL, FN_PTR(JVM_InitJVMCIClassLoader)     },
-  { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",      NULL, FN_PTR(JVM_GetJVMCIRuntime)          },
-  { CC"Java_jdk_vm_ci_service_Services_getServiceImpls",     NULL, FN_PTR(JVM_GetJVMCIServiceImpls)     },
-  { CC"Java_jdk_vm_ci_hotspot_CompilerToVM_registerNatives", NULL, FN_PTR(JVM_RegisterJVMCINatives)     },
+  { CC"Java_jdk_vm_ci_services_JVMCIClassLoaderFactory_init", NULL, FN_PTR(JVM_InitJVMCIClassLoader)     },
+  { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",       NULL, FN_PTR(JVM_GetJVMCIRuntime)          },
+  { CC"Java_jdk_vm_ci_services_Services_getServiceImpls",     NULL, FN_PTR(JVM_GetJVMCIServiceImpls)     },
+  { CC"Java_jdk_vm_ci_hotspot_CompilerToVM_registerNatives",  NULL, FN_PTR(JVM_RegisterJVMCINatives)     },
 #endif
 };
 

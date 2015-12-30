@@ -159,9 +159,7 @@ JAR=$(ABS_BOOTDIR)/bin/jar
 HS_COMMON_SRC=.
 
 # Directories, where the generated property-files reside within the JAR files
-PROVIDERS_INF=/META-INF/jvmci.providers
 SERVICES_INF=/META-INF/jvmci.services
-OPTIONS_INF=/META-INF/jvmci.options
 
 JARS = $(foreach dist,$(DISTRIBUTIONS),$($(dist)_JAR))
 
@@ -175,23 +173,6 @@ endif
 # Required to construct a whitespace for use with subst
 space :=
 space +=
-
-# Takes the provider files created by ServiceProviderProcessor (the processor
-# for the @ServiceProvider annotation) and merges them into a single file.
-# Arguments:
-#  1: directory with contents of the JAR file
-define process_providers
-    $(eval providers := $(1)/$(PROVIDERS_INF))
-    $(eval services := $(1)/$(SERVICES_INF))
-    $(QUIETLY) test -d $(services) || mkdir -p $(services)
-    $(QUIETLY) test ! -d $(providers) || (cd $(providers) && for i in $$(ls); do c=$$(cat $$i); echo $$i >> $(abspath $(services))/$$c; rm $$i; done)
-
-    @# Since all projects are built together with one javac call we cannot determine
-    @# which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
-    $(eval vmconfig := $(1)/hotspot/HotSpotVMConfig.inline.hpp)
-    $(eval vmconfigDest := $(HS_COMMON_SRC)/../mxbuild/jvmci/jdk.vm.ci.hotspot/src_gen/hotspot)
-    $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
-endef
 
 # Extracts META-INF/jvmci.services from a JAR file into a given directory
 # Arguments:
@@ -216,7 +197,13 @@ define build_and_jar
     $(eval TMP := $(shell mkdir -p $(TARGET) && mktemp -d $(TARGET)/tmp_XXXXX))
     $(QUIETLY) $(JAVAC) -d $(TMP) -processorpath :$(1) -bootclasspath $(JDK_BOOTCLASSPATH) -cp :$(2) $(filter %.java,$^)
     $(QUIETLY) test "$(3)" = "" || cp -r $(3) $(TMP)
-    $(QUIETLY) $(call process_providers,$(TMP))
+
+    @# Since all projects are built together with one javac call we cannot determine
+    @# which project contains HotSpotVMConfig.inline.hpp so we hardcode it.
+    $(eval vmconfig := $(TMP)/hotspot/HotSpotVMConfig.inline.hpp)
+    $(eval vmconfigDest := $(HS_COMMON_SRC)/../mxbuild/jvmci/jdk.vm.ci.hotspot/src_gen/hotspot)
+    $(QUIETLY) test ! -f $(vmconfig) || (mkdir -p $(vmconfigDest) && cp $(vmconfig) $(vmconfigDest))
+
     $(QUIETLY) mkdir -p $(shell dirname $(4))
     $(QUIETLY) $(JAR) -0cf $(4) -C $(TMP) .
     $(QUIETLY) rm -r $(TMP)

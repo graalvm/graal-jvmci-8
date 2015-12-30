@@ -20,7 +20,7 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.vm.ci.service;
+package jdk.vm.ci.services;
 
 import java.io.File;
 import java.net.MalformedURLException;

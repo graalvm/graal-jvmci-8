@@ -1190,7 +1190,7 @@ bool os::set_boot_path(char fileSep, char pathSep) {
         "%/lib/charsets.jar:"
         "%/lib/jfr.jar:"
 #if INCLUDE_JVMCI
-        "%/lib/jvmci-service.jar:"
+        "%/lib/jvmci-services.jar:"
 #endif
         "%/classes";
     char* sysclasspath = format_boot_path(classpath_format, home, home_len, fileSep, pathSep);

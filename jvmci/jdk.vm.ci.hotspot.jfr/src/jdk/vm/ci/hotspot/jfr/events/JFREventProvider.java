@@ -29,7 +29,6 @@ import java.net.URISyntaxException;
 import jdk.vm.ci.hotspot.events.EmptyEventProvider.EmptyCompilationEvent;
 import jdk.vm.ci.hotspot.events.EmptyEventProvider.EmptyCompilerFailureEvent;
 import jdk.vm.ci.hotspot.events.EventProvider;
-import jdk.vm.ci.service.ServiceProvider;
 
 /**
  * A JFR implementation for {@link EventProvider}. This implementation is used when Flight Recorder
@@ -38,7 +37,6 @@ import jdk.vm.ci.service.ServiceProvider;
  * Note: The use of fully qualified names for deprecated types is a workaround for <a
  * href="https://bugs.openjdk.java.net/browse/JDK-8032211">JDK-8032211</a>.
  */
-@ServiceProvider(EventProvider.class)
 @SuppressWarnings("deprecation")
 public final class JFREventProvider implements EventProvider {
 

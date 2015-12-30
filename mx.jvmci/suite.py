@@ -61,20 +61,11 @@ suite = {
 
     # ------------- JVMCI:Service -------------
 
-    "jdk.vm.ci.service" : {
+    "jdk.vm.ci.services" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
-    },
-
-    "jdk.vm.ci.service.processor" : {
-      "subDir" : "jvmci",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["jdk.vm.ci.service"],
-      "checkstyle" : "jdk.vm.ci.service",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,Codegen,HotSpot",
     },
 
     # ------------- JVMCI:API -------------
@@ -82,7 +73,7 @@ suite = {
     "jdk.vm.ci.common" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
     },
@@ -90,7 +81,7 @@ suite = {
     "jdk.vm.ci.meta" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
     },
@@ -99,7 +90,7 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : ["jdk.vm.ci.meta"],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
     },
@@ -110,7 +101,7 @@ suite = {
       "dependencies" : [
         "jdk.vm.ci.code",
       ],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
     },
@@ -123,7 +114,7 @@ suite = {
         "jdk.vm.ci.common",
         "jdk.vm.ci.runtime",
       ],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
     },
@@ -131,7 +122,7 @@ suite = {
     "jdk.vm.ci.inittimer" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",
     },
@@ -142,7 +133,7 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : ["jdk.vm.ci.code"],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,AArch64",
     },
@@ -151,7 +142,7 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : ["jdk.vm.ci.code"],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,AMD64",
     },
@@ -160,7 +151,7 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : ["jdk.vm.ci.code"],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,SPARC",
     },
@@ -173,12 +164,12 @@ suite = {
         "jdk.vm.ci.common",
         "jdk.vm.ci.inittimer",
         "jdk.vm.ci.runtime",
-        "jdk.vm.ci.service",
+        "jdk.vm.ci.services",
       ],
       "annotationProcessors" : [
         "JVMCI_HOTSPOTVMCONFIG_PROCESSOR",
       ],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",
     },
@@ -186,7 +177,7 @@ suite = {
     "jdk.vm.ci.hotspotvmconfig" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot",
     },
@@ -195,7 +186,7 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : ["jdk.vm.ci.hotspotvmconfig", "jdk.vm.ci.common"],
-      "checkstyle" : "jdk.vm.ci.service",
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,Codegen",
     },
@@ -207,10 +198,7 @@ suite = {
         "jdk.vm.ci.aarch64",
         "jdk.vm.ci.hotspot",
       ],
-      "checkstyle" : "jdk.vm.ci.service",
-      "annotationProcessors" : [
-        "JVMCI_SERVICE_PROCESSOR",
-      ],
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,AArch64",
     },
@@ -222,10 +210,7 @@ suite = {
         "jdk.vm.ci.amd64",
         "jdk.vm.ci.hotspot",
       ],
-      "checkstyle" : "jdk.vm.ci.service",
-      "annotationProcessors" : [
-        "JVMCI_SERVICE_PROCESSOR",
-      ],
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,AMD64",
     },
@@ -237,10 +222,7 @@ suite = {
         "jdk.vm.ci.sparc",
         "jdk.vm.ci.hotspot",
       ],
-      "checkstyle" : "jdk.vm.ci.service",
-      "annotationProcessors" : [
-        "JVMCI_SERVICE_PROCESSOR",
-      ],
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,SPARC",
     },
@@ -252,8 +234,7 @@ suite = {
         "jdk.vm.ci.hotspot",
         "JFR",
       ],
-      "checkstyle" : "jdk.vm.ci.service",
-      "annotationProcessors" : ["JVMCI_SERVICE_PROCESSOR"],
+      "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "profile" : "",
       "workingSets" : "JVMCI,HotSpot",
@@ -328,9 +309,9 @@ suite = {
       }
     },
 
-    "JVMCI_SERVICE" : {
+    "JVMCI_SERVICES" : {
       "subDir" : "jvmci",
-      "dependencies" : ["jdk.vm.ci.service"],
+      "dependencies" : ["jdk.vm.ci.services"],
     },
 
     "JVMCI_API" : {
@@ -344,7 +325,7 @@ suite = {
         "jdk.vm.ci.sparc",
       ],
       "distDependencies" : [
-        "JVMCI_SERVICE",
+        "JVMCI_SERVICES",
       ],
     },
 
@@ -365,7 +346,7 @@ suite = {
       ],
       "distDependencies" : [
         "JVMCI_HOTSPOTVMCONFIG",
-        "JVMCI_SERVICE",
+        "JVMCI_SERVICES",
         "JVMCI_API",
       ],
     },
@@ -387,14 +368,6 @@ suite = {
       "distDependencies" : [
         "JVMCI_API",
         "JVMCI_HOTSPOTVMCONFIG",
-      ],
-    },
-
-    "JVMCI_SERVICE_PROCESSOR" : {
-      "subDir" : "jvmci",
-      "dependencies" : ["jdk.vm.ci.service.processor"],
-      "distDependencies" : [
-        "JVMCI_SERVICE",
       ],
     },
   },

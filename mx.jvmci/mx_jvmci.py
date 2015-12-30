@@ -99,6 +99,11 @@ class JDKDeployedDist(object):
     def deploy(self, jdkDir):
         mx.nyi('deploy', self)
 
+    def post_parse_cmd_line(self):
+        def _install(d):
+            _installDistInJdks(self)
+        self.dist().add_update_listener(_install)
+
 class JarJDKDeployedDist(JDKDeployedDist):
     def __init__(self, name, partOfHotSpot=False):
         JDKDeployedDist.__init__(self, name)
@@ -144,6 +149,14 @@ class JvmciJDKDeployedDist(JarJDKDeployedDist):
         if self._compilers:
             _updateJVMCIProperties(jdkDir, self._compilers)
 
+    def post_parse_cmd_line(self):
+        super(JvmciJDKDeployedDist, self).post_parse_cmd_line()
+        self.set_archiveparticipant()
+
+    def set_archiveparticipant(self):
+        dist = self.dist()
+        dist.set_archiveparticipant(JVMCIArchiveParticipant(dist))
+
 def _exe(l):
     return mx.exe_suffix(l)
 
@@ -185,7 +198,7 @@ class HotSpotVMJDKDeployedDist(JDKDeployedDist):
 List of distributions that are deployed into a JDK by mx.
 """
 jdkDeployedDists = [
-    LibJDKDeployedDist('JVMCI_SERVICE', partOfHotSpot=True),
+    LibJDKDeployedDist('JVMCI_SERVICES', partOfHotSpot=True),
     JvmciJDKDeployedDist('JVMCI_API', partOfHotSpot=True),
     JvmciJDKDeployedDist('JVMCI_HOTSPOT', partOfHotSpot=True),
     JvmciJDKDeployedDist('JVMCI_HOTSPOTVMCONFIG', partOfHotSpot=True),
@@ -1708,15 +1721,6 @@ class JVMCIArchiveParticipant:
             service = arcname[len('META-INF/jvmci.services/'):]
             self.jvmciServices.setdefault(service, []).extend([provider for provider in contents.split('\n')])
             return True
-        if arcname.startswith('META-INF/jvmci.providers/'):
-            provider = arcname[len('META-INF/jvmci.providers/'):]
-            for service in contents.strip().split(os.linesep):
-                assert service
-                self.jvmciServices.setdefault(service, []).append(provider)
-                # Make provider available as a normal service as well to
-                # allow for deployment on JDK9 without having to recompile.
-                self.services.setdefault(service, []).append(provider)
-            return True
         return False
 
     def __addsrc__(self, arcname, contents):
@@ -1859,11 +1863,4 @@ def mx_post_parse_cmd_line(opts):
     mx.instantiateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=_vmbuild, vm=get_vm()))
 
     for jdkDist in jdkDeployedDists:
-        def _close(jdkDeployable):
-            def _install(dist):
-                _installDistInJdks(jdkDeployable)
-            return _install
-        dist = jdkDist.dist()
-        dist.add_update_listener(_close(jdkDist))
-        if isinstance(jdkDist, JvmciJDKDeployedDist):
-            dist.set_archiveparticipant(JVMCIArchiveParticipant(dist))
+        jdkDist.post_parse_cmd_line()
