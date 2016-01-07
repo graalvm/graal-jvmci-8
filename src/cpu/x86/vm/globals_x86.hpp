@@ -87,6 +87,8 @@ define_pd_global(uintx, TypeProfileLevel, 0);
 define_pd_global(uintx, TypeProfileLevel, 111);
 #endif
 
+define_pd_global(bool, PreserveFramePointer, false);
+
 #define ARCH_FLAGS(develop, product, diagnostic, experimental, notproduct) \
                                                                             \
   develop(bool, IEEEPrecision, true,                                        \

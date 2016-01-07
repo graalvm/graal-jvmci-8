@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005, 2014, Oracle and/or its affiliates. All rights reserved.
+# Copyright (c) 2005, 2015, Oracle and/or its affiliates. All rights reserved.
 # DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
 #
 # This code is free software; you can redistribute it and/or modify it
@@ -19,7 +19,7 @@
 # Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
 # or visit www.oracle.com if you need additional information or have any
 # questions.
-#
+#  
 #
 
 # Rules to build serviceability agent library, used by vm.make
@@ -73,20 +73,16 @@ else
     SAARCH = $(subst -march=i586,,$(ARCHFLAG))
 
     # This is needed to locate JavaNativeFoundation.framework
-    ifeq ($(SYSROOT_CFLAGS),)
-      # this will happen when building without spec.gmk, set SDKROOT to a valid SDK
-      # path if your system does not have headers installed in the system frameworks
-      ifeq ($(SDKROOT),)
-        SDKROOT = `xcodebuild -sdk macosx -version|grep '^Path: '|sed 's/Path: //'`
-      endif
-      SA_SYSROOT_FLAGS = -F"$(SDKROOT)/System/Library/Frameworks/JavaVM.framework/Frameworks"
-    else
-      # Just use SYSROOT_CFLAGS
-      SA_SYSROOT_FLAGS=$(SYSROOT_CFLAGS)
+    # JDK 8 doesn't have SYSROOT_CFLAGS, so we'll cobble it together here
+    SA_SYSROOT_FLAGS=
+    ifneq ($(SDKPATH),)
+      SA_SYSROOT_FLAGS += -isysroot "$(SDKPATH)" -iframework"$(SDKPATH)/System/Library/Frameworks"
     endif
+    # always needed, even if SDKPATH is empty
+    SA_SYSROOT_FLAGS += -F"$(SDKPATH)/System/Library/Frameworks/JavaVM.framework/Frameworks"
   else
     SASRCFILES = $(SASRCDIR)/StubDebuggerLocal.c
-    SALIBS =
+    SALIBS = 
     SAARCH = $(ARCHFLAG)
   endif
 endif
@@ -114,6 +110,9 @@ endif
 
 ifneq ($(OS_VENDOR), Darwin)
 SA_LFLAGS = $(MAPFLAG:FILENAME=$(SAMAPFILE))
+else
+# bring in minimum version argument or we'll fail on OSX 10.10
+SA_LFLAGS = $(LFLAGS)
 endif
 SA_LFLAGS += $(LDFLAGS_HASH_STYLE)
 
@@ -125,7 +124,7 @@ $(LIBSAPROC): $(SASRCFILES) $(SAMAPFILE)
 	  echo "ALT_BOOTDIR, BOOTDIR or JAVA_HOME needs to be defined to build SA"; \
 	  exit 1; \
 	fi
-	@echo $(LOG_INFO) Making SA debugger back-end...
+	@echo Making SA debugger back-end...
 	$(QUIETLY) $(CC) -D$(BUILDARCH) -D_GNU_SOURCE                   \
 	           $(SA_SYSROOT_FLAGS)                                  \
 	           $(SYMFLAG) $(SAARCH) $(SHARED_FLAG) $(PICFLAG)       \

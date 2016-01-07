@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -40,6 +40,7 @@
  * This file is currently collecting system-specific dregs for the
  * JNI conversion, which should be sorted out later.
  */
+
 #define __USE_LEGACY_PROTOTYPES__
 #include <dirent.h>             /* For DIR */
 #undef __USE_LEGACY_PROTOTYPES__

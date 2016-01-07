@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -358,6 +358,8 @@ class InstanceKlass: public Klass {
   Array<Method*>* methods() const          { return _methods; }
   void set_methods(Array<Method*>* a)      { _methods = a; }
   Method* method_with_idnum(int idnum);
+  Method* method_with_orig_idnum(int idnum);
+  Method* method_with_orig_idnum(int idnum, int version);
 
   // method ordering
   Array<int>* method_ordering() const     { return _method_ordering; }
@@ -658,6 +660,7 @@ class InstanceKlass: public Klass {
     return _previous_versions;
   }
 
+  InstanceKlass* get_klass_version(int version);
   static void purge_previous_versions(InstanceKlass* ik);
 
   // JVMTI: Support for caching a class file before it is modified by an agent that can do retransformation
@@ -805,6 +808,11 @@ class InstanceKlass: public Klass {
   bool implements_interface(Klass* k) const;
   bool is_same_or_direct_interface(Klass* k) const;
 
+#ifdef ASSERT
+  // check whether this class or one of its superclasses was redefined
+  bool has_redefined_this_or_super() const;
+#endif
+
   // Access to the implementor of an interface.
   Klass* implementor() const
   {
@@ -862,8 +870,8 @@ class InstanceKlass: public Klass {
 
   // Casting from Klass*
   static InstanceKlass* cast(Klass* k) {
-    assert(k->is_klass(), "must be");
-    assert(k->oop_is_instance(), "cast to InstanceKlass");
+    assert(k == NULL || k->is_klass(), "must be");
+    assert(k == NULL || k->oop_is_instance(), "cast to InstanceKlass");
     return (InstanceKlass*) k;
   }
 
@@ -959,8 +967,7 @@ class InstanceKlass: public Klass {
   Method* method_at_itable(Klass* holder, int index, TRAPS);
 
 #if INCLUDE_JVMTI
-  void adjust_default_methods(Method** old_methods, Method** new_methods,
-                              int methods_length, bool* trace_name_printed);
+  void adjust_default_methods(InstanceKlass* holder, bool* trace_name_printed);
 #endif // INCLUDE_JVMTI
 
   // Garbage collection
