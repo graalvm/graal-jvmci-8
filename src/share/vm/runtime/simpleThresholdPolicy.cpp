@@ -168,11 +168,7 @@ void SimpleThresholdPolicy::handle_counter_overflow(Method* method) {
 
 // Called with the queue locked and with at least one element
 CompileTask* SimpleThresholdPolicy::select_task(CompileQueue* compile_queue) {
-#ifdef COMPILERJVMCI
-  return select_task_blocking_aware(compile_queue);
-#else
-  return compile_queue->first();
-#endif
+  return select_task_helper(compile_queue);
 }
 
 void SimpleThresholdPolicy::reprofile(ScopeDesc* trap_scope, bool is_osr) {

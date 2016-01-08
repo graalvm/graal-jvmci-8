@@ -160,18 +160,25 @@ bool CompilationPolicy::is_compilation_enabled() {
   return !delay_compilation_during_startup() && CompileBroker::should_compile_new_jobs();
 }
 
+CompileTask* CompilationPolicy::select_task_helper(CompileQueue* compile_queue) {
 #ifdef COMPILERJVMCI
-CompileTask* CompilationPolicy::select_task_blocking_aware(CompileQueue* compile_queue) {
   if (!BackgroundCompilation) {
+    /*
+     * In blocking compilation mode, the CompileBroker will make
+     * compilations submitted by a JVMCI compiler thread non-blocking. These
+     * compilations should be scheduled after all blocking compilations
+     * to service non-compiler related compilations sooner and reduce the
+     * chance of such compilations timing out.
+     */
     for (CompileTask* task = compile_queue->first(); task != NULL; task = task->next()) {
       if (task->is_blocking()) {
         return task;
       }
     }
   }
+#endif
   return compile_queue->first();
 }
-#endif
 
 #ifndef PRODUCT
 void CompilationPolicy::print_time() {
@@ -353,11 +360,7 @@ void NonTieredCompPolicy::disable_compilation(Method* method) {
 }
 
 CompileTask* NonTieredCompPolicy::select_task(CompileQueue* compile_queue) {
-#ifdef COMPILERJVMCI
-  return select_task_blocking_aware(compile_queue);
-#else
-  return compile_queue->first();
-#endif
+  return select_task_helper(compile_queue);
 }
 
 bool NonTieredCompPolicy::is_mature(Method* method) {

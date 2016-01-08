@@ -58,21 +58,7 @@ public:
   static void set_policy(CompilationPolicy* policy) { _policy = policy; }
   static CompilationPolicy* policy()                { return _policy; }
 
-#ifdef COMPILERJVMCI
-  /**
-   * If in blocking compilation mode and the JVMCI compiler is in use,
-   * this method selects a blocking task (if any) before a non-blocking
-   * task. In blocking compilation mode, the CompileBroker will make
-   * compilations submitted by a JVMCI compiler thread non-blocking. These
-   * compilations should be scheduled after all blocking compilations
-   * to service non-compiler related compilations sooner and reduce the
-   * chance of such compilations timing out.
-   *
-   * @return the first non-blocking task in compile_queue if there is one otherwise
-   *         the first task in compile_queue
-   */
-  static CompileTask* select_task_blocking_aware(CompileQueue* compile_queue);
-#endif
+  static CompileTask* select_task_helper(CompileQueue* compile_queue);
 
   // Profiling
   elapsedTimer* accumulated_time() { return &_accumulated_time; }
