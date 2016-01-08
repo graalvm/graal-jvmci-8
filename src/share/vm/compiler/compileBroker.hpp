@@ -56,6 +56,8 @@ class CompileTask : public CHeapObj<mtCompiler> {
   bool         _is_blocking;
 #ifdef COMPILERJVMCI
   bool         _has_waiter;
+  // Compiler thread for a blocking JVMCI compilation
+  CompilerThread* _jvmci_compiler_thread;
 #endif
   int          _comp_level;
   int          _num_inlined_bytecodes;
@@ -91,6 +93,12 @@ class CompileTask : public CHeapObj<mtCompiler> {
 #ifdef COMPILERJVMCI
   bool         has_waiter() const                { return _has_waiter; }
   void         clear_waiter()                    { _has_waiter = false; }
+  CompilerThread* jvmci_compiler_thread() const  { return _jvmci_compiler_thread; }
+  void         set_jvmci_compiler_thread(CompilerThread* t) {
+    assert(is_blocking(), "must be");
+    assert((t == NULL) != (_jvmci_compiler_thread == NULL), "must be");
+    _jvmci_compiler_thread = t;
+  }
 #endif
 
   nmethodLocker* code_handle() const             { return _code_handle; }
@@ -363,6 +371,9 @@ class CompileBroker: AllStatic {
                                           const char*   comment,
                                           bool          blocking);
   static void wait_for_completion(CompileTask* task);
+#ifdef COMPILERJVMCI
+  static bool wait_for_jvmci_completion(CompileTask* task, JavaThread* thread);
+#endif
 
   static void invoke_compiler_on_method(CompileTask* task);
   static void post_compile(CompilerThread* thread, CompileTask* task, EventCompilation& event, bool success, ciEnv* ci_env);

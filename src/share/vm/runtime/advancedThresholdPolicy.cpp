@@ -161,6 +161,9 @@ bool AdvancedThresholdPolicy::is_method_profiled(Method* method) {
 
 // Called with the queue locked and with at least one element
 CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
+#ifdef COMPILERJVMCI
+  CompileTask *max_blocking_task = NULL;
+#endif
   CompileTask *max_task = NULL;
   Method* max_method = NULL;
   jlong t = os::javaTimeMillis();
@@ -191,8 +194,27 @@ CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
         max_method = method;
       }
     }
+#ifdef COMPILERJVMCI
+    if (task->is_blocking()) {
+      if (max_blocking_task == NULL || compare_methods(method, max_blocking_task->method())) {
+        max_blocking_task = task;
+      }
+    }
+#endif
     task = next_task;
   }
+
+#ifdef COMPILERJVMCI
+  if (max_blocking_task != NULL) {
+    // In blocking compilation mode, the CompileBroker will make
+    // compilations submitted by a JVMCI compiler thread non-blocking. These
+    // compilations should be scheduled after all blocking compilations
+    // to service non-compiler related compilations sooner and reduce the
+    // chance of such compilations timing out.
+    max_task = max_blocking_task;
+    max_method = max_task->method();
+  }
+#endif
 
   if (max_task->comp_level() == CompLevel_full_profile && TieredStopAtLevel > CompLevel_full_profile
       && is_method_profiled(max_method)) {

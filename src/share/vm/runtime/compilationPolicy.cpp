@@ -160,6 +160,19 @@ bool CompilationPolicy::is_compilation_enabled() {
   return !delay_compilation_during_startup() && CompileBroker::should_compile_new_jobs();
 }
 
+#ifdef COMPILERJVMCI
+CompileTask* CompilationPolicy::select_task_blocking_aware(CompileQueue* compile_queue) {
+  if (!BackgroundCompilation) {
+    for (CompileTask* task = compile_queue->first(); task != NULL; task = task->next()) {
+      if (task->is_blocking()) {
+        return task;
+      }
+    }
+  }
+  return compile_queue->first();
+}
+#endif
+
 #ifndef PRODUCT
 void CompilationPolicy::print_time() {
   tty->print_cr ("Accumulated compilationPolicy times:");
@@ -340,6 +353,7 @@ void NonTieredCompPolicy::disable_compilation(Method* method) {
 }
 
 CompileTask* NonTieredCompPolicy::select_task(CompileQueue* compile_queue) {
+  COMPILERJVMCI_PRESENT(return select_task_blocking_aware(compile_queue);)
   return compile_queue->first();
 }
 
