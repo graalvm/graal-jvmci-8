@@ -353,8 +353,11 @@ void NonTieredCompPolicy::disable_compilation(Method* method) {
 }
 
 CompileTask* NonTieredCompPolicy::select_task(CompileQueue* compile_queue) {
-  COMPILERJVMCI_PRESENT(return select_task_blocking_aware(compile_queue);)
+#ifdef COMPILERJVMCI
+  return select_task_blocking_aware(compile_queue);
+#else
   return compile_queue->first();
+#endif
 }
 
 bool NonTieredCompPolicy::is_mature(Method* method) {

@@ -1746,10 +1746,10 @@ bool CompileBroker::wait_for_jvmci_completion(CompileTask* task, JavaThread* thr
       if (state == _thread_blocked) {
         if (++consecutively_blocked == BLOCKING_JVMCI_COMPILATION_WAIT_TO_UNBLOCK_ATTEMPTS) {
           if (_compilation_log != NULL) {
-            _compilation_log->log_failure(thread, task, "compilation timed out", NULL);
+            _compilation_log->log_failure(thread, task, "wait for blocking compilation timed out", NULL);
           }
           if (PrintCompilation) {
-            task->print_compilation(tty, "compilation timed out");
+            task->print_compilation(tty, "wait for blocking compilation timed out");
           }
           break;
         }
