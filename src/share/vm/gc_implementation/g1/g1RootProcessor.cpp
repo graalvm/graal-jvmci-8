@@ -138,6 +138,13 @@ void G1RootProcessor::evacuate_roots(OopClosure* scan_non_heap_roots,
   OopClosure* const weak_roots = &buf_scan_non_heap_weak_roots;
   OopClosure* const strong_roots = &buf_scan_non_heap_roots;
 
+  bool trace_codecache = false;
+#if INCLUDE_JVMCI
+  bool during_im = _g1h->g1_policy()->during_initial_mark_pause();
+  // Without eager nmethod unloading, we need to treat all oops in code cache as strong during the initial mark
+  trace_codecache = during_im && !ClassUnloadingWithConcurrentMark;
+#endif
+
   // CodeBlobClosures are not interoperable with BufferingOopClosures
   G1CodeBlobClosure root_code_blobs(scan_non_heap_roots);
 
@@ -145,7 +152,7 @@ void G1RootProcessor::evacuate_roots(OopClosure* scan_non_heap_roots,
                      trace_metadata ? scan_strong_clds : NULL,
                      scan_strong_clds,
                      trace_metadata ? NULL : scan_weak_clds,
-                     &root_code_blobs,
+                     trace_codecache ? NULL : &root_code_blobs,
                      phase_times,
                      worker_i);
 
@@ -156,6 +163,12 @@ void G1RootProcessor::evacuate_roots(OopClosure* scan_non_heap_roots,
   }
 
   process_vm_roots(strong_roots, weak_roots, phase_times, worker_i);
+
+#if INCLUDE_JVMCI
+  if (trace_codecache && !_process_strong_tasks->is_task_claimed(G1RP_PS_CodeCache_oops_do)) {
+    CodeCache::blobs_do(&root_code_blobs);
+  }
+#endif
 
   {
     // Now the CM ref_processor roots.
