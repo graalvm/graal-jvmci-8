@@ -377,5 +377,15 @@ endif
 # done by verify_defs_make in jvmci.make
 EXPORT_LIST += $(CONDITIONAL_EXPORT_LIST)
 
+define jvmci-make
+	cd .. && pwd && \
+	$(MAKE) -f make/jvmci.make \
+		TARGET=build/jvmci.make \
+		HS_COMMON_SRC=$(HS_COMMON_SRC) \
+		ABS_BOOTDIR=$(ABS_BOOTDIR) \
+		SHARED_DIR=$(SHARED_DIR) \
+		MAKE_VERBOSE=$(MAKE_VERBOSE) $(1)
+endef
+
 .PHONY: $(HS_ALT_MAKE)/defs.make
 

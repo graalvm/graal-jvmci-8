@@ -307,15 +307,11 @@ generic_buildjvmci: $(HOTSPOT_SCRIPT) buildshared
 		$(MAKE) -f $(ABS_OS_MAKEFILE) \
 			$(MAKE_ARGS) $(VM_TARGET) 
 
+cleanshared:
+	$(call jvmci-make,clean)
 
 buildshared:
-	cd .. && \
-	$(MAKE) -f make/jvmci.make \
-		TARGET=build/jvmci.make \
-		HS_COMMON_SRC=$(HS_COMMON_SRC) \
-		ABS_BOOTDIR=$(ABS_BOOTDIR) \
-		SHARED_DIR=$(SHARED_DIR) \
-		MAKE_VERBOSE=$(MAKE_VERBOSE) export
+	$(call jvmci-make,export)
 
 # Export file rule
 generic_export: $(EXPORT_LIST)
@@ -671,7 +667,7 @@ $(EXPORT_SERVER_DIR)/Xusage.txt $(EXPORT_CLIENT_DIR)/Xusage.txt $(EXPORT_MINIMAL
 #
 # Clean rules
 #
-clobber clean: clean_build clean_export clean_jdk
+clobber clean: clean_build clean_export clean_jdk cleanshared
 clean_build:
 	$(RM) -r $(SHARED_DIR)
 	$(RM) -r $(C1_DIR)
