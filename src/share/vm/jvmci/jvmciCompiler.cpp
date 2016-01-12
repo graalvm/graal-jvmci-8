@@ -138,8 +138,8 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
   JavaCalls::call_static(&method_result, SystemDictionary::HotSpotResolvedJavaMethodImpl_klass(),
                          vmSymbols::fromMetaspace_name(), vmSymbols::method_fromMetaspace_signature(), &args, THREAD);
 
+  JavaValue result(T_OBJECT);
   if (!HAS_PENDING_EXCEPTION) {
-    JavaValue result(T_VOID);
     JavaCallArguments args;
     args.push_oop(receiver);
     args.push_oop((oop)method_result.get_jobject());
@@ -161,11 +161,38 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
     if (HAS_PENDING_EXCEPTION) {
       CLEAR_PENDING_EXCEPTION;
     }
-
-    // Something went wrong so disable compilation at this level
-    method->set_not_compilable(CompLevel_full_optimization);
+    if (PrintCompilation) {
+      env->task()->print_compilation(tty, "COMPILE SKIPPED: exception thrown");
+    }
   } else {
-    _methodsCompiled++;
+    oop request = (oop) result.get_jobject();
+    if (request != NULL) {
+      oop failure = CompilationRequestFailure::message(request);
+      const char* failure_reason = failure != NULL ? java_lang_String::as_utf8_string(failure) : "unknown reason";
+      
+      env->task()->set_failure_reason(failure_reason);
+      if (PrintCompilation) {
+        FormatBufferResource msg = CompilationRequestFailure::retry(request) ?
+          err_msg_res("COMPILE SKIPPED:  (not_retryable)", failure_reason) :
+          err_msg_res("COMPILE SKIPPED: %s",      failure_reason);
+        env->task()->print_compilation(tty, msg);
+      }
+      if (!CompilationRequestFailure::retry(request)) {
+        if (entry_bci == InvocationEntryBci) {
+          method->set_not_compilable(CompLevel_full_optimization);
+        } else {
+          method->set_not_osr_compilable(CompLevel_full_optimization);
+        }
+      }
+    } else {
+      if (env->task()->code() == NULL) {
+        if (PrintCompilation) {
+          env->task()->print_compilation(tty, "COMPILE SKIPPED: no nmethod produced");
+        }
+      } else {
+        _methodsCompiled++;
+      }
+    }
   }
 }
 

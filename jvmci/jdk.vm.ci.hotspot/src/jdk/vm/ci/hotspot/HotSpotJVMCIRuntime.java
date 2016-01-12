@@ -36,8 +36,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
 
-import sun.misc.VM;
 import jdk.vm.ci.code.Architecture;
+import jdk.vm.ci.code.CompilationRequestFailure;
 import jdk.vm.ci.code.CompilationResult;
 import jdk.vm.ci.code.InstalledCode;
 import jdk.vm.ci.common.JVMCIError;
@@ -50,6 +50,7 @@ import jdk.vm.ci.runtime.JVMCI;
 import jdk.vm.ci.runtime.JVMCIBackend;
 import jdk.vm.ci.runtime.JVMCICompiler;
 import jdk.vm.ci.services.Services;
+import sun.misc.VM;
 
 //JaCoCo Exclude
 
@@ -241,8 +242,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
      * Called from the VM.
      */
     @SuppressWarnings({"unused"})
-    private void compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
-        getCompiler().compileMethod(new HotSpotCompilationRequest(method, entryBCI, jvmciEnv, id));
+    private CompilationRequestFailure compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
+        return getCompiler().compileMethod(new HotSpotCompilationRequest(method, entryBCI, jvmciEnv, id));
     }
 
     /**

@@ -20,17 +20,33 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.vm.ci.runtime;
+package jdk.vm.ci.code;
 
-import jdk.vm.ci.code.CompilationRequest;
-import jdk.vm.ci.code.CompilationRequestFailure;
-
-public interface JVMCICompiler {
-    int INVOCATION_ENTRY_BCI = -1;
+/**
+ * Simple class to provide information about a compilation failure.
+ */
+public class CompilationRequestFailure {
 
     /**
-     * Services a compilation request. This object should compile the method to machine code and
-     * install it in the code cache if the compilation is successful.
+     * A user readable description of the failure.
      */
-    CompilationRequestFailure compileMethod(CompilationRequest request);
+    private final String message;
+
+    /**
+     * Whether this is a transient failure where retrying would help.
+     */
+    private final boolean retry;
+
+    public CompilationRequestFailure(String message, boolean retry) {
+        this.message = message;
+        this.retry = retry;
+    }
+
+    public String getMessgae() {
+        return message;
+    }
+
+    public boolean getRetry() {
+        return retry;
+    }
 }

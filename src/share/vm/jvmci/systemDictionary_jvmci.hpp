@@ -65,6 +65,7 @@
   do_klass(CompilationResult_Mark_klass,                 jdk_vm_ci_code_CompilationResult_Mark,                 Jvmci) \
   do_klass(CompilationResult_Infopoint_klass,            jdk_vm_ci_code_CompilationResult_Infopoint,            Jvmci) \
   do_klass(CompilationResult_Site_klass,                 jdk_vm_ci_code_CompilationResult_Site,                 Jvmci) \
+  do_klass(CompilationRequestFailure_klass,              jdk_vm_ci_code_CompilationRequestFailure,              Jvmci) \
   do_klass(InfopointReason_klass,                        jdk_vm_ci_code_InfopointReason,                        Jvmci) \
   do_klass(InstalledCode_klass,                          jdk_vm_ci_code_InstalledCode,                          Jvmci) \
   do_klass(code_Location_klass,                          jdk_vm_ci_code_Location,                               Jvmci) \
@@ -73,6 +74,7 @@
   do_klass(StackSlot_klass,                              jdk_vm_ci_code_StackSlot,                              Jvmci) \
   do_klass(StackLockValue_klass,                         jdk_vm_ci_code_StackLockValue,                         Jvmci) \
   do_klass(VirtualObject_klass,                          jdk_vm_ci_code_VirtualObject,                          Jvmci) \
+  do_klass(CompilationRequest_klass,                     jdk_vm_ci_code_CompilationRequest,                     Jvmci) \
   do_klass(JavaConstant_klass,                           jdk_vm_ci_meta_JavaConstant,                           Jvmci) \
   do_klass(PrimitiveConstant_klass,                      jdk_vm_ci_meta_PrimitiveConstant,                      Jvmci) \
   do_klass(RawConstant_klass,                            jdk_vm_ci_meta_RawConstant,                            Jvmci) \

@@ -536,7 +536,9 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
         // Record successful registration.
         // (Put nm into the task handle *before* publishing to the Java heap.)
         CompileTask* task = env == NULL ? NULL : env->task();
-        if (task != NULL)  task->set_code(nm);
+        if (task != NULL) {
+          task->set_code(nm);
+        }
 
         if (installed_code->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(installed_code())) {
           if (entry_bci == InvocationEntryBci) {
