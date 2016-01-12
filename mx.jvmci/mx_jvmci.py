@@ -1831,8 +1831,9 @@ class JVMCIJDKFactory(mx.JDKFactory):
     def description(self):
         return "JVMCI JDK"
 
+mx.addJDKFactory(_JVMCI_JDK_TAG, mx.JavaCompliance('8'), JVMCIJDKFactory())
+
 def mx_post_parse_cmd_line(opts):
-    mx.addJDKFactory(_JVMCI_JDK_TAG, mx.JavaCompliance('8'), JVMCIJDKFactory())
     mx.set_java_command_default_jdk_tag(_JVMCI_JDK_TAG)
 
     # Execute for the side-effect of checking that the
