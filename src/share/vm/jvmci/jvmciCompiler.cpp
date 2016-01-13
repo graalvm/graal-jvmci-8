@@ -173,7 +173,7 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
       env->task()->set_failure_reason(failure_reason);
       if (PrintCompilation) {
         FormatBufferResource msg = CompilationRequestFailure::retry(request) ?
-          err_msg_res("COMPILE SKIPPED:  (not_retryable)", failure_reason) :
+          err_msg_res("COMPILE SKIPPED: %s (not_retryable)", failure_reason) :
           err_msg_res("COMPILE SKIPPED: %s",      failure_reason);
         env->task()->print_compilation(tty, msg);
       }
