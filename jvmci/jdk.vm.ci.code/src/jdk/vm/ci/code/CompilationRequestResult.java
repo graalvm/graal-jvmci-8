@@ -23,30 +23,50 @@
 package jdk.vm.ci.code;
 
 /**
- * Simple class to provide information about a compilation failure.
+ * Simple class to provide information about the result of a compile request.
  */
-public class CompilationRequestFailure {
+public final class CompilationRequestResult {
 
     /**
      * A user readable description of the failure.
      */
-    private final String message;
+    private final String failureMessage;
 
     /**
      * Whether this is a transient failure where retrying would help.
      */
     private final boolean retry;
 
-    public CompilationRequestFailure(String message, boolean retry) {
-        this.message = message;
+    /**
+     * Number of bytecodes inlined into the compilation, exclusive of the bytecodes in the root
+     * method.
+     */
+    private final int inlinedBytecodes;
+
+    private CompilationRequestResult(String failureMessage, boolean retry, int inlinedBytecodes) {
+        assert retry == (failureMessage != null) : "must be a message if retryable";
+        this.failureMessage = failureMessage;
         this.retry = retry;
+        this.inlinedBytecodes = inlinedBytecodes;
     }
 
-    public String getMessgae() {
-        return message;
+    public static CompilationRequestResult success(int inlinedBytecodes) {
+        return new CompilationRequestResult(null, true, inlinedBytecodes);
+    }
+
+    public static CompilationRequestResult failure(String failureMessage, boolean retry) {
+        return new CompilationRequestResult(failureMessage, retry, 0);
+    }
+
+    public String getFailureMessgae() {
+        return failureMessage;
     }
 
     public boolean getRetry() {
         return retry;
+    }
+
+    public int getInlinedBytecodes() {
+        return inlinedBytecodes;
     }
 }

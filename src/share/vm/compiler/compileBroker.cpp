@@ -2152,10 +2152,10 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     DTRACE_METHOD_COMPILE_BEGIN_PROBE(method, compiler_name(task_level));
   }
 
-  // Allocate a new set of JNI handles.
-  push_jni_handle_block();
   Method* target_handle = task->method();
   int compilable = ciEnv::MethodCompilable;
+  const char* failure_reason = NULL;
+  const char* retry_message = NULL;
   AbstractCompiler *comp = compiler(task_level);
 
   int system_dictionary_modification_counter;
@@ -2175,10 +2175,19 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     jvmci->compile_method(method, osr_bci, &env);
 
     post_compile(thread, task, event, task->code() != NULL, NULL);
+
+    failure_reason = env.failure_reason();
+    if (!env.retryable()) {
+      retry_message = "not retryable";
+      compilable = ciEnv::MethodCompilable_not_at_tier;
+    }
+
   } else
 #endif // COMPILERJVMCI
   {
-
+    // Allocate a new set of JNI handles.
+    push_jni_handle_block();
+    
     NoHandleMark  nhm;
     ThreadToNativeFromVM ttn(thread);
 
@@ -2220,22 +2229,27 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     compilable = ci_env.compilable();
 
     if (ci_env.failing()) {
-      task->set_failure_reason(ci_env.failure_reason());
-      const char* retry_message = ci_env.retry_message();
-      if (_compilation_log != NULL) {
-        _compilation_log->log_failure(thread, task, ci_env.failure_reason(), retry_message);
-      }
-      if (PrintCompilation) {
-        FormatBufferResource msg = retry_message != NULL ?
-            err_msg_res("COMPILE SKIPPED: %s (%s)", ci_env.failure_reason(), retry_message) :
-            err_msg_res("COMPILE SKIPPED: %s",      ci_env.failure_reason());
-        task->print_compilation(tty, msg);
-      }
+      failure_reason = ci_env.failure_reason();
+      retry_message = ci_env.retry_message();
     }
 
     post_compile(thread, task, event, !ci_env.failing(), &ci_env);
+    
+    pop_jni_handle_block();
   }
-  pop_jni_handle_block();
+
+  if (failure_reason != NULL) {
+    if (_compilation_log != NULL) {
+      _compilation_log->log_failure(thread, task, failure_reason, retry_message);
+    }
+    if (PrintCompilation) {
+      FormatBufferResource msg = retry_message != NULL ?
+        err_msg_res("COMPILE SKIPPED: %s (%s)", failure_reason, retry_message) :
+        err_msg_res("COMPILE SKIPPED: %s",      failure_reason);
+      task->print_compilation(tty, msg);
+    }
+  }
+
 
   methodHandle method(thread, task->method());
 

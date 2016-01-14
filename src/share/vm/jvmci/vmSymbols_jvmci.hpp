@@ -70,7 +70,7 @@
   template(jdk_vm_ci_code_CompilationResult_Mark,                 "jdk/vm/ci/code/CompilationResult$Mark")                                \
   template(jdk_vm_ci_code_CompilationResult_Infopoint,            "jdk/vm/ci/code/CompilationResult$Infopoint")                           \
   template(jdk_vm_ci_code_CompilationResult_Site,                 "jdk/vm/ci/code/CompilationResult$Site")                                \
-  template(jdk_vm_ci_code_CompilationRequestFailure,              "jdk/vm/ci/code/CompilationRequestFailure")                             \
+  template(jdk_vm_ci_code_CompilationRequestResult,               "jdk/vm/ci/code/CompilationRequestResult")                              \
   template(jdk_vm_ci_code_InfopointReason,                        "jdk/vm/ci/code/InfopointReason")                                       \
   template(jdk_vm_ci_code_InstalledCode,                          "jdk/vm/ci/code/InstalledCode")                                         \
   template(jdk_vm_ci_code_BytecodeFrame,                          "jdk/vm/ci/code/BytecodeFrame")                                         \
@@ -87,7 +87,7 @@
   template(jdk_vm_ci_code_CompilationRequest,                     "jdk/vm/ci/code/CompilationRequest")                                    \
   template(jdk_vm_ci_common_JVMCIError,                           "jdk/vm/ci/common/JVMCIError")                                          \
   template(compileMethod_name,                                    "compileMethod")                                                        \
-  template(compileMethod_signature,                               "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;IJI)Ljdk/vm/ci/code/CompilationRequestFailure;") \
+  template(compileMethod_signature,                               "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;IJI)Ljdk/vm/ci/code/CompilationRequestResult;") \
   template(fromMetaspace_name,                                    "fromMetaspace")                                                        \
   template(method_fromMetaspace_signature,                        "(J)Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;")                     \
   template(constantPool_fromMetaspace_signature,                  "(J)Ljdk/vm/ci/hotspot/HotSpotConstantPool;")                           \

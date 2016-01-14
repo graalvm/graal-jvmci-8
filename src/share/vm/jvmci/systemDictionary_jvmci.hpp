@@ -65,7 +65,7 @@
   do_klass(CompilationResult_Mark_klass,                 jdk_vm_ci_code_CompilationResult_Mark,                 Jvmci) \
   do_klass(CompilationResult_Infopoint_klass,            jdk_vm_ci_code_CompilationResult_Infopoint,            Jvmci) \
   do_klass(CompilationResult_Site_klass,                 jdk_vm_ci_code_CompilationResult_Site,                 Jvmci) \
-  do_klass(CompilationRequestFailure_klass,              jdk_vm_ci_code_CompilationRequestFailure,              Jvmci) \
+  do_klass(CompilationRequestResult_klass,               jdk_vm_ci_code_CompilationRequestResult,               Jvmci) \
   do_klass(InfopointReason_klass,                        jdk_vm_ci_code_InfopointReason,                        Jvmci) \
   do_klass(InstalledCode_klass,                          jdk_vm_ci_code_InstalledCode,                          Jvmci) \
   do_klass(code_Location_klass,                          jdk_vm_ci_code_Location,                               Jvmci) \

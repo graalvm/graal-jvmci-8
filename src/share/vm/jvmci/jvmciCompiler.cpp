@@ -129,7 +129,6 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
   JVMCIJavaClasses::compute_offsets(THREAD);
   HandleMark hm;
-  ResourceMark rm;
   Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK_ABORT);
 
   JavaValue method_result(T_OBJECT);
@@ -161,36 +160,21 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
     if (HAS_PENDING_EXCEPTION) {
       CLEAR_PENDING_EXCEPTION;
     }
-    if (PrintCompilation) {
-      env->task()->print_compilation(tty, "COMPILE SKIPPED: exception thrown");
-    }
+    env->set_failure("exception throw", false);
   } else {
-    oop request = (oop) result.get_jobject();
-    if (request != NULL) {
-      oop failure = CompilationRequestFailure::message(request);
-      const char* failure_reason = failure != NULL ? java_lang_String::as_utf8_string(failure) : "unknown reason";
-      
-      env->task()->set_failure_reason(failure_reason);
-      if (PrintCompilation) {
-        FormatBufferResource msg = CompilationRequestFailure::retry(request) ?
-          err_msg_res("COMPILE SKIPPED: %s (not_retryable)", failure_reason) :
-          err_msg_res("COMPILE SKIPPED: %s",      failure_reason);
-        env->task()->print_compilation(tty, msg);
-      }
-      if (!CompilationRequestFailure::retry(request)) {
-        if (entry_bci == InvocationEntryBci) {
-          method->set_not_compilable(CompLevel_full_optimization);
-        } else {
-          method->set_not_osr_compilable(CompLevel_full_optimization);
-        }
-      }
-    } else {
-      if (env->task()->code() == NULL) {
-        if (PrintCompilation) {
-          env->task()->print_compilation(tty, "COMPILE SKIPPED: no nmethod produced");
-        }
+    oop result_object = (oop) result.get_jobject();
+    if (result_object != NULL) {
+      oop failure_message = CompilationRequestResult::failureMessage(result_object);
+      if (failure_message != NULL) {
+        const char* failure_reason = failure_message != NULL ? java_lang_String::as_utf8_string(failure_message) : "unknown reason";
+        env->set_failure(failure_reason, CompilationRequestResult::retry(result_object));
       } else {
-        _methodsCompiled++;
+        if (env->task()->code() == NULL) {
+          env->set_failure("no nmethod produced", true);
+        } else {
+          env->task()->set_num_inlined_bytecodes(CompilationRequestResult::inlinedBytecodes(result_object));
+          _methodsCompiled++;
+        }
       }
     }
   }

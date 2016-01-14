@@ -23,7 +23,7 @@
 package jdk.vm.ci.runtime;
 
 import jdk.vm.ci.code.CompilationRequest;
-import jdk.vm.ci.code.CompilationRequestFailure;
+import jdk.vm.ci.code.CompilationRequestResult;
 
 public interface JVMCICompiler {
     int INVOCATION_ENTRY_BCI = -1;
@@ -32,5 +32,5 @@ public interface JVMCICompiler {
      * Services a compilation request. This object should compile the method to machine code and
      * install it in the code cache if the compilation is successful.
      */
-    CompilationRequestFailure compileMethod(CompilationRequest request);
+    CompilationRequestResult compileMethod(CompilationRequest request);
 }

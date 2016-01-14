@@ -161,9 +161,10 @@ class JVMCIJavaClasses : AllStatic {
   start_class(CompilationResult_Mark)                                                                                                                          \
     oop_field(CompilationResult_Mark, id, "Ljava/lang/Object;")                                                                                                \
   end_class                                                                                                                                                    \
-  start_class(CompilationRequestFailure)                                                                                                                       \
-    oop_field(CompilationRequestFailure, message, "Ljava/lang/String;")                                                                                        \
-    boolean_field(CompilationRequestFailure, retry)                                                                                                            \
+  start_class(CompilationRequestResult)                                                                                                                        \
+    oop_field(CompilationRequestResult, failureMessage, "Ljava/lang/String;")                                                                                  \
+    boolean_field(CompilationRequestResult, retry)                                                                                                             \
+    int_field(CompilationRequestResult, inlinedBytecodes)                                                                                                      \
   end_class                                                                                                                                                    \
   start_class(DebugInfo)                                                                                                                                       \
     oop_field(DebugInfo, bytecodePosition, "Ljdk/vm/ci/code/BytecodePosition;")                                                                                \
