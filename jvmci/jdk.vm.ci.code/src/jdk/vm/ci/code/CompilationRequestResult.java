@@ -44,7 +44,6 @@ public final class CompilationRequestResult {
     private final int inlinedBytecodes;
 
     private CompilationRequestResult(String failureMessage, boolean retry, int inlinedBytecodes) {
-        assert retry == (failureMessage != null) : "must be a message if retryable";
         this.failureMessage = failureMessage;
         this.retry = retry;
         this.inlinedBytecodes = inlinedBytecodes;
