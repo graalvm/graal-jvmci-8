@@ -74,7 +74,6 @@
   do_klass(StackSlot_klass,                              jdk_vm_ci_code_StackSlot,                              Jvmci) \
   do_klass(StackLockValue_klass,                         jdk_vm_ci_code_StackLockValue,                         Jvmci) \
   do_klass(VirtualObject_klass,                          jdk_vm_ci_code_VirtualObject,                          Jvmci) \
-  do_klass(CompilationRequest_klass,                     jdk_vm_ci_code_CompilationRequest,                     Jvmci) \
   do_klass(JavaConstant_klass,                           jdk_vm_ci_meta_JavaConstant,                           Jvmci) \
   do_klass(PrimitiveConstant_klass,                      jdk_vm_ci_meta_PrimitiveConstant,                      Jvmci) \
   do_klass(RawConstant_klass,                            jdk_vm_ci_meta_RawConstant,                            Jvmci) \

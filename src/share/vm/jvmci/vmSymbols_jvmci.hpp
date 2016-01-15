@@ -84,7 +84,6 @@
   template(jdk_vm_ci_code_VirtualObject,                          "jdk/vm/ci/code/VirtualObject")                                         \
   template(jdk_vm_ci_code_RegisterSaveLayout,                     "jdk/vm/ci/code/RegisterSaveLayout")                                    \
   template(jdk_vm_ci_code_InvalidInstalledCodeException,          "jdk/vm/ci/code/InvalidInstalledCodeException")                         \
-  template(jdk_vm_ci_code_CompilationRequest,                     "jdk/vm/ci/code/CompilationRequest")                                    \
   template(jdk_vm_ci_common_JVMCIError,                           "jdk/vm/ci/common/JVMCIError")                                          \
   template(compileMethod_name,                                    "compileMethod")                                                        \
   template(compileMethod_signature,                               "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;IJI)Ljdk/vm/ci/code/CompilationRequestResult;") \
