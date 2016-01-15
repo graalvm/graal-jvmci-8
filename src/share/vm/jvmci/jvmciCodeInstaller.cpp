@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -390,7 +390,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code, TRAPS) {
   CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
   _oop_recorder = new OopRecorder(&_arena, true);
   _dependencies = new Dependencies(&_arena, _oop_recorder, compilerThread != NULL ? compilerThread->log() : NULL);
-  objArrayHandle assumptions = HotSpotCompiledCode::assumptions(compiled_code);
+  objArrayHandle assumptions = CompiledCode::assumptions(compiled_code);
   if (!assumptions.is_null()) {
     int length = assumptions->length();
     for (int i = 0; i < length; ++i) {
@@ -413,7 +413,7 @@ void CodeInstaller::initialize_dependencies(oop compiled_code, TRAPS) {
     }
   }
   if (JvmtiExport::can_hotswap_or_post_breakpoint()) {
-    objArrayHandle methods = HotSpotCompiledCode::methods(compiled_code);
+    objArrayHandle methods = CompiledCode::methods(compiled_code);
     if (!methods.is_null()) {
       int length = methods->length();
       for (int i = 0; i < length; ++i) {
@@ -440,12 +440,11 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Hand
   if (result != JVMCIEnv::ok) {
     return result;
   }
-  process_exception_handlers();
 
   int stack_slots = _total_frame_size / HeapWordSize; // conversion to words
 
   if (!compiled_code->is_a(HotSpotCompiledNmethod::klass())) {
-    oop stubName = HotSpotCompiledCode::name(compiled_code_obj);
+    oop stubName = CompiledCode::name(compiled_code_obj);
     char* name = strdup(java_lang_String::as_utf8_string(stubName));
     cb = RuntimeStub::new_runtime_stub(name,
                                        &buffer,
@@ -490,11 +489,10 @@ void CodeInstaller::initialize_fields(oop target, oop compiled_code, TRAPS) {
     // Only used in OopMap constructor for non-product builds
     _parameter_count = 0;
   }
-  _sites_handle = JNIHandles::make_local(HotSpotCompiledCode::sites(compiled_code));
-  _exception_handlers_handle = JNIHandles::make_local(HotSpotCompiledCode::exceptionHandlers(compiled_code));
+  _sites_handle = JNIHandles::make_local(CompiledCode::sites(compiled_code));
 
-  _code_handle = JNIHandles::make_local(HotSpotCompiledCode::targetCode(compiled_code));
-  _code_size = HotSpotCompiledCode::targetCodeSize(compiled_code);
+  _code_handle = JNIHandles::make_local(CompiledCode::targetCode(compiled_code));
+  _code_size = CompiledCode::targetCodeSize(compiled_code);
   _total_frame_size = HotSpotCompiledCode::totalFrameSize(compiled_code);
   _custom_stack_area_offset = HotSpotCompiledCode::customStackAreaOffset(compiled_code);
 
@@ -525,8 +523,8 @@ int CodeInstaller::estimate_stubs_size(TRAPS) {
   objArrayOop sites = this->sites();
   for (int i = 0; i < sites->length(); i++) {
     oop site = sites->obj_at(i);
-    if (site->is_a(CompilationResult_Mark::klass())) {
-      oop id_obj = CompilationResult_Mark::id(site);
+    if (site->is_a(site_Mark::klass())) {
+      oop id_obj = site_Mark::id(site);
       if (id_obj != NULL) {
         if (!java_lang_boxing_object::is_instance(id_obj, T_INT)) {
           JVMCI_ERROR_0("expected Integer id, got %s", id_obj->klass()->signature_name());
@@ -583,12 +581,12 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
 
   for (int i = 0; i < data_section_patches()->length(); i++) {
     Handle patch = data_section_patches()->obj_at(i);
-    Handle reference = CompilationResult_DataPatch::reference(patch);
-    if (!reference->is_a(CompilationResult_ConstantReference::klass())) {
+    Handle reference = site_DataPatch::reference(patch);
+    if (!reference->is_a(site_ConstantReference::klass())) {
       JVMCI_ERROR_OK("invalid patch in data section: %s", reference->klass()->signature_name());
     }
-    Handle constant = CompilationResult_ConstantReference::constant(reference);
-    address dest = _constants->start() + CompilationResult_Site::pcOffset(patch);
+    Handle constant = site_ConstantReference::constant(reference);
+    address dest = _constants->start() + site_Site::pcOffset(patch);
     if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
       if (HotSpotMetaspaceConstantImpl::compressed(constant)) {
 #ifdef _LP64
@@ -620,27 +618,30 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
   jint last_pc_offset = -1;
   for (int i = 0; i < sites->length(); i++) {
     Handle site = sites->obj_at(i);
-    jint pc_offset = CompilationResult_Site::pcOffset(site);
+    jint pc_offset = site_Site::pcOffset(site);
 
-    if (site->is_a(CompilationResult_Call::klass())) {
+    if (site->is_a(site_Call::klass())) {
       TRACE_jvmci_4("call at %i", pc_offset);
       site_Call(buffer, pc_offset, site, CHECK_OK);
-    } else if (site->is_a(CompilationResult_Infopoint::klass())) {
+    } else if (site->is_a(site_Infopoint::klass())) {
       // three reasons for infopoints denote actual safepoints
-      oop reason = CompilationResult_Infopoint::reason(site);
-      if (InfopointReason::SAFEPOINT() == reason || InfopointReason::CALL() == reason || InfopointReason::IMPLICIT_EXCEPTION() == reason) {
+      oop reason = site_Infopoint::reason(site);
+      if (site_InfopointReason::SAFEPOINT() == reason || site_InfopointReason::CALL() == reason || site_InfopointReason::IMPLICIT_EXCEPTION() == reason) {
         TRACE_jvmci_4("safepoint at %i", pc_offset);
         site_Safepoint(buffer, pc_offset, site, CHECK_OK);
       } else {
         TRACE_jvmci_4("infopoint at %i", pc_offset);
         site_Infopoint(buffer, pc_offset, site, CHECK_OK);
       }
-    } else if (site->is_a(CompilationResult_DataPatch::klass())) {
+    } else if (site->is_a(site_DataPatch::klass())) {
       TRACE_jvmci_4("datapatch at %i", pc_offset);
       site_DataPatch(buffer, pc_offset, site, CHECK_OK);
-    } else if (site->is_a(CompilationResult_Mark::klass())) {
+    } else if (site->is_a(site_Mark::klass())) {
       TRACE_jvmci_4("mark at %i", pc_offset);
       site_Mark(buffer, pc_offset, site, CHECK_OK);
+    } else if (site->is_a(site_ExceptionHandler::klass())) {
+      TRACE_jvmci_4("exceptionhandler at %i", pc_offset);
+      site_ExceptionHandler(pc_offset, site);
     } else {
       JVMCI_ERROR_OK("unexpected site subclass: %s", site->klass()->signature_name());
     }
@@ -706,21 +707,14 @@ void CodeInstaller::assumption_CallSiteTargetValue(Handle assumption) {
   _dependencies->assert_call_site_target_value(callSite(), methodHandle());
 }
 
-void CodeInstaller::process_exception_handlers() {
-  if (exception_handlers() != NULL) {
-    objArrayOop handlers = exception_handlers();
-    for (int i = 0; i < handlers->length(); i++) {
-      oop exc = handlers->obj_at(i);
-      jint pc_offset = CompilationResult_Site::pcOffset(exc);
-      jint handler_offset = CompilationResult_ExceptionHandler::handlerPos(exc);
+void CodeInstaller::site_ExceptionHandler(jint pc_offset, Handle exc) {
+  jint handler_offset = site_ExceptionHandler::handlerPos(exc);
 
-      // Subtable header
-      _exception_handler_table.add_entry(HandlerTableEntry(1, pc_offset, 0));
+  // Subtable header
+  _exception_handler_table.add_entry(HandlerTableEntry(1, pc_offset, 0));
 
-      // Subtable entry
-      _exception_handler_table.add_entry(HandlerTableEntry(-1, handler_offset, 0));
-    }
-  }
+  // Subtable entry
+  _exception_handler_table.add_entry(HandlerTableEntry(-1, handler_offset, 0));
 }
 
 // If deoptimization happens, the interpreter should reexecute these bytecodes.
@@ -889,7 +883,7 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
 }
 
 void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle debug_info = CompilationResult_Infopoint::debugInfo(site);
+  Handle debug_info = site_Infopoint::debugInfo(site);
   if (debug_info.is_null()) {
     JVMCI_ERROR("debug info expected at safepoint at %i", pc_offset);
   }
@@ -903,7 +897,7 @@ void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, Handle si
 }
 
 void CodeInstaller::site_Infopoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle debug_info = CompilationResult_Infopoint::debugInfo(site);
+  Handle debug_info = site_Infopoint::debugInfo(site);
   if (debug_info.is_null()) {
     JVMCI_ERROR("debug info expected at infopoint at %i", pc_offset);
   }
@@ -918,7 +912,7 @@ void CodeInstaller::site_Infopoint(CodeBuffer& buffer, jint pc_offset, Handle si
 }
 
 void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle target = CompilationResult_Call::target(site);
+  Handle target = site_Call::target(site);
   InstanceKlass* target_klass = InstanceKlass::cast(target->klass());
 
   Handle hotspot_method; // JavaMethod
@@ -930,7 +924,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
     hotspot_method = target;
   }
 
-  Handle debug_info = CompilationResult_Call::debugInfo(site);
+  Handle debug_info = site_Call::debugInfo(site);
 
   assert(hotspot_method.not_null() ^ foreign_call.not_null(), "Call site needs exactly one type");
 
@@ -967,9 +961,9 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
 }
 
 void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle reference = CompilationResult_DataPatch::reference(site);
-  if (reference->is_a(CompilationResult_ConstantReference::klass())) {
-    Handle constant = CompilationResult_ConstantReference::constant(reference);
+  Handle reference = site_DataPatch::reference(site);
+  if (reference->is_a(site_ConstantReference::klass())) {
+    Handle constant = site_ConstantReference::constant(reference);
     if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
       pd_patch_OopConstant(pc_offset, constant, CHECK);
     } else if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
@@ -977,8 +971,8 @@ void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, Handle si
     } else {
       JVMCI_ERROR("unknown constant type in data patch: %s", constant->klass()->signature_name());
     }
-  } else if (reference->is_a(CompilationResult_DataSectionReference::klass())) {
-    int data_offset = CompilationResult_DataSectionReference::offset(reference);
+  } else if (reference->is_a(site_DataSectionReference::klass())) {
+    int data_offset = site_DataSectionReference::offset(reference);
     if (0 <= data_offset && data_offset < _constants_size) {
       pd_patch_DataSectionReference(pc_offset, data_offset);
     } else {
@@ -990,7 +984,7 @@ void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, Handle si
 }
 
 void CodeInstaller::site_Mark(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle id_obj = CompilationResult_Mark::id(site);
+  Handle id_obj = site_Mark::id(site);
 
   if (id_obj.not_null()) {
     if (!java_lang_boxing_object::is_instance(id_obj(), T_INT)) {

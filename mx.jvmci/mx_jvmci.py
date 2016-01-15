@@ -1754,7 +1754,7 @@ def add_bootclasspath_prepend(dep):
     assert isinstance(dep, mx.ClasspathDependency)
     _jvmci_bootclasspath_prepends.append(dep)
 
-class JVMCIJDKConfig(mx.JDKConfig):
+class JVMCI8JDKConfig(mx.JDKConfig):
     def __init__(self, vmbuild):
         # Ignore the deployable distributions here - they are only deployed during building.
         # This significantly reduces the latency of the "mx java" command.
@@ -1818,11 +1818,11 @@ def get_jvmci_jdk(vmbuild=None):
         vmbuild = _vmbuild
     jdk = _jvmci_jdks.get(vmbuild)
     if jdk is None:
-        jdk = JVMCIJDKConfig(vmbuild)
+        jdk = JVMCI8JDKConfig(vmbuild)
         _jvmci_jdks[vmbuild] = jdk
     return jdk
 
-class JVMCIJDKFactory(mx.JDKFactory):
+class JVMCI8JDKFactory(mx.JDKFactory):
     def getJDKConfig(self):
         jdk = get_jvmci_jdk(_vmbuild)
         check_VM_exists(get_vm(), jdk.home)
@@ -1831,7 +1831,7 @@ class JVMCIJDKFactory(mx.JDKFactory):
     def description(self):
         return "JVMCI JDK"
 
-mx.addJDKFactory(_JVMCI_JDK_TAG, mx.JavaCompliance('8'), JVMCIJDKFactory())
+mx.addJDKFactory(_JVMCI_JDK_TAG, mx.JavaCompliance('8'), JVMCI8JDKFactory())
 
 def mx_post_parse_cmd_line(opts):
     mx.set_java_command_default_jdk_tag(_JVMCI_JDK_TAG)
