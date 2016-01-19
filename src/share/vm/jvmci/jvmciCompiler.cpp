@@ -166,7 +166,7 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
     if (result_object != NULL) {
       oop failure_message = CompilationRequestResult::failureMessage(result_object);
       if (failure_message != NULL) {
-        const char* failure_reason = failure_message != NULL ? java_lang_String::as_utf8_string(failure_message) : "unknown reason";
+        const char* failure_reason = java_lang_String::as_utf8_string(failure_message);
         env->set_failure(failure_reason, CompilationRequestResult::retry(result_object));
       } else {
         if (env->task()->code() == NULL) {
@@ -176,6 +176,8 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
           _methodsCompiled++;
         }
       }
+    } else {
+      assert(false, "JVMCICompiler.compileMethod should always return non-null");
     }
   }
 }
