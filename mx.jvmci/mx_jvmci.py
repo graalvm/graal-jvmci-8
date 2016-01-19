@@ -40,6 +40,8 @@ import mx_jvmci_makefile
 
 _suite = mx.suite('jvmci')
 
+JVMCI_VERSION = 8
+
 """ The VMs that can be built and run along with an optional description. Only VMs with a
     description are listed in the dialogue for setting the default VM (see get_vm()). """
 _vmChoices = {
