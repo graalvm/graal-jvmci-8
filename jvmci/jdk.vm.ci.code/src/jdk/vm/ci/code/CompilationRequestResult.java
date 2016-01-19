@@ -57,7 +57,7 @@ public final class CompilationRequestResult {
         return new CompilationRequestResult(failureMessage, retry, 0);
     }
 
-    public String getFailureMessgae() {
+    public String getFailureMessage() {
         return failureMessage;
     }
 
