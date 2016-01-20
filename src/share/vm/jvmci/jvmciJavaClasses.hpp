@@ -77,15 +77,13 @@ class JVMCIJavaClasses : AllStatic {
   start_class(HotSpotNmethod)                                                                                                                                  \
     boolean_field(HotSpotNmethod, isDefault)                                                                                                                   \
   end_class                                                                                                                                                    \
-  start_class(CompiledCode)                                                                                                                                    \
-    oop_field(CompiledCode, name, "Ljava/lang/String;")                                                                                                        \
-    typeArrayOop_field(CompiledCode, targetCode, "[B")                                                                                                         \
-    int_field(CompiledCode, targetCodeSize)                                                                                                                    \
-    objArrayOop_field(CompiledCode, sites, "[Ljdk/vm/ci/code/site/Site;")                                                                                      \
-    objArrayOop_field(CompiledCode, assumptions, "[Ljdk/vm/ci/meta/Assumptions$Assumption;")                                                                   \
-    objArrayOop_field(CompiledCode, methods, "[Ljdk/vm/ci/meta/ResolvedJavaMethod;")                                                                           \
-  end_class                                                                                                                                                    \
   start_class(HotSpotCompiledCode)                                                                                                                             \
+    oop_field(HotSpotCompiledCode, name, "Ljava/lang/String;")                                                                                                        \
+    typeArrayOop_field(HotSpotCompiledCode, targetCode, "[B")                                                                                                         \
+    int_field(HotSpotCompiledCode, targetCodeSize)                                                                                                                    \
+    objArrayOop_field(HotSpotCompiledCode, sites, "[Ljdk/vm/ci/code/site/Site;")                                                                                      \
+    objArrayOop_field(HotSpotCompiledCode, assumptions, "[Ljdk/vm/ci/meta/Assumptions$Assumption;")                                                                   \
+    objArrayOop_field(HotSpotCompiledCode, methods, "[Ljdk/vm/ci/meta/ResolvedJavaMethod;")                                                                           \
     objArrayOop_field(HotSpotCompiledCode, comments, "[Ljdk/vm/ci/hotspot/HotSpotCompiledCode$Comment;")                                                       \
     typeArrayOop_field(HotSpotCompiledCode, dataSection, "[B")                                                                                                 \
     int_field(HotSpotCompiledCode, dataSectionAlignment)                                                                                                       \

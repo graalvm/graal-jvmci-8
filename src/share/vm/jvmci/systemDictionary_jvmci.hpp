@@ -54,7 +54,6 @@
   do_klass(Architecture_klass,                           jdk_vm_ci_code_Architecture,                           Jvmci) \
   do_klass(TargetDescription_klass,                      jdk_vm_ci_code_TargetDescription,                      Jvmci) \
   do_klass(BytecodePosition_klass,                       jdk_vm_ci_code_BytecodePosition,                       Jvmci) \
-  do_klass(CompiledCode_klass,                           jdk_vm_ci_code_CompiledCode,                           Jvmci) \
   do_klass(DebugInfo_klass,                              jdk_vm_ci_code_DebugInfo,                              Jvmci) \
   do_klass(RegisterSaveLayout_klass,                     jdk_vm_ci_code_RegisterSaveLayout,                     Jvmci) \
   do_klass(BytecodeFrame_klass,                          jdk_vm_ci_code_BytecodeFrame,                          Jvmci) \

@@ -22,82 +22,8 @@
  */
 package jdk.vm.ci.code;
 
-import jdk.vm.ci.code.site.Infopoint;
-import jdk.vm.ci.code.site.Site;
-import jdk.vm.ci.meta.Assumptions.Assumption;
-import jdk.vm.ci.meta.ResolvedJavaMethod;
-
 /**
- * Abstract base class that represents the output from compiling a method.
+ * The output from compiling a method.
  */
-public abstract class CompiledCode {
-
-    /**
-     * The name of this compilation unit.
-     */
-    protected final String name;
-
-    /**
-     * The buffer containing the emitted machine code.
-     */
-    protected final byte[] targetCode;
-
-    /**
-     * The leading number of bytes in {@link #targetCode} containing the emitted machine code.
-     */
-    protected final int targetCodeSize;
-
-    /**
-     * A list of code annotations describing special sites in {@link #targetCode}.
-     */
-    protected final Site[] sites;
-
-    /**
-     * A list of {@link Assumption} this code relies on.
-     */
-    protected final Assumption[] assumptions;
-
-    /**
-     * The list of the methods whose bytecodes were used as input to the compilation. If
-     * {@code null}, then the compilation did not record method dependencies. Otherwise, the first
-     * element of this array is the root method of the compilation.
-     */
-    protected final ResolvedJavaMethod[] methods;
-
-    public CompiledCode(String name, byte[] targetCode, int targetCodeSize, Site[] sites, Assumption[] assumptions, ResolvedJavaMethod[] methods) {
-        this.name = name;
-        this.targetCode = targetCode;
-        this.targetCodeSize = targetCodeSize;
-        this.sites = sites;
-        this.assumptions = assumptions;
-        this.methods = methods;
-
-        assert validateFrames();
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public String toString() {
-        return name;
-    }
-
-    /**
-     * Ensure that all the frames passed into the VM are properly formatted with an empty or illegal
-     * slot following double word slots.
-     */
-    private boolean validateFrames() {
-        for (Site site : sites) {
-            if (site instanceof Infopoint) {
-                Infopoint info = (Infopoint) site;
-                if (info.debugInfo != null) {
-                    BytecodeFrame frame = info.debugInfo.frame();
-                    assert frame == null || frame.validateFormat();
-                }
-            }
-        }
-        return true;
-    }
+public interface CompiledCode {
 }

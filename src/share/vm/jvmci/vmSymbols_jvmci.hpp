@@ -64,7 +64,6 @@
   template(jdk_vm_ci_code_BytecodeFrame,                          "jdk/vm/ci/code/BytecodeFrame")                                         \
   template(jdk_vm_ci_code_BytecodePosition,                       "jdk/vm/ci/code/BytecodePosition")                                      \
   template(jdk_vm_ci_code_CompilationRequestResult,               "jdk/vm/ci/code/CompilationRequestResult")                              \
-  template(jdk_vm_ci_code_CompiledCode,                           "jdk/vm/ci/code/CompiledCode")                                          \
   template(jdk_vm_ci_code_DebugInfo,                              "jdk/vm/ci/code/DebugInfo")                                             \
   template(jdk_vm_ci_code_InstalledCode,                          "jdk/vm/ci/code/InstalledCode")                                         \
   template(jdk_vm_ci_code_Location,                               "jdk/vm/ci/code/Location")                                              \

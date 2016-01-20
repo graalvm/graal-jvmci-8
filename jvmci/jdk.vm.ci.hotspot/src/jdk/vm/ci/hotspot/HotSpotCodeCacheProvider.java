@@ -111,9 +111,9 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         if (installedCode == null) {
             if (method == null) {
                 // Must be a stub
-                resultInstalledCode = new HotSpotRuntimeStub(compiledCode.getName());
+                resultInstalledCode = new HotSpotRuntimeStub(((HotSpotCompiledCode) compiledCode).getName());
             } else {
-                resultInstalledCode = new HotSpotNmethod((HotSpotResolvedJavaMethod) method, compiledCode.getName(), isDefault);
+                resultInstalledCode = new HotSpotNmethod((HotSpotResolvedJavaMethod) method, ((HotSpotCompiledCode) compiledCode).getName(), isDefault);
             }
         } else {
             resultInstalledCode = installedCode;
@@ -135,7 +135,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
                 }
                 throw new BailoutException(result != config.codeInstallResultDependenciesFailed, msg);
             } else {
-                throw new BailoutException("Error installing %s: %s", compiledCode.getName(), resultDesc);
+                throw new BailoutException("Error installing %s: %s", ((HotSpotCompiledCode) compiledCode).getName(), resultDesc);
             }
         }
         return logOrDump(resultInstalledCode, compiledCode);
