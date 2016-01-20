@@ -68,13 +68,39 @@ public class HotSpotCompiledCode implements CompiledCode {
      */
     protected final ResolvedJavaMethod[] methods;
 
+    /**
+     * A list of comments that will be included in code dumps.
+     */
     protected final Comment[] comments;
 
+    /**
+     * The data section containing constants for the emitted machine code.
+     */
     protected final byte[] dataSection;
+
+    /**
+     * The minimum alignment of the data section.
+     */
     protected final int dataSectionAlignment;
+
+    /**
+     * A list of relocations in the {@link #dataSection}.
+     */
     protected final DataPatch[] dataSectionPatches;
 
+    /**
+     * A flag determining whether this code is immutable and position independent.
+     */
+    protected final boolean isImmutablePIC;
+
+    /**
+     * The total size of the stack frame of this compiled method.
+     */
     protected final int totalFrameSize;
+
+    /**
+     * Offset in bytes for the custom stack area (relative to sp).
+     */
     protected final int customStackAreaOffset;
 
     public static class Comment {
@@ -89,7 +115,7 @@ public class HotSpotCompiledCode implements CompiledCode {
     }
 
     public HotSpotCompiledCode(String name, byte[] targetCode, int targetCodeSize, Site[] sites, Assumption[] assumptions, ResolvedJavaMethod[] methods, Comment[] comments, byte[] dataSection,
-                    int dataSectionAlignment, DataPatch[] dataSectionPatches, int totalFrameSize, int customStackAreaOffset) {
+                    int dataSectionAlignment, DataPatch[] dataSectionPatches, boolean isImmutablePIC, int totalFrameSize, int customStackAreaOffset) {
         this.name = name;
         this.targetCode = targetCode;
         this.targetCodeSize = targetCodeSize;
@@ -101,6 +127,7 @@ public class HotSpotCompiledCode implements CompiledCode {
         this.dataSection = dataSection;
         this.dataSectionAlignment = dataSectionAlignment;
         this.dataSectionPatches = dataSectionPatches;
+        this.isImmutablePIC = isImmutablePIC;
         this.totalFrameSize = totalFrameSize;
         this.customStackAreaOffset = customStackAreaOffset;
 
