@@ -105,6 +105,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         return allocatable.clone();
     }
 
+    @Override
     public Register[] filterAllocatableRegisters(PlatformKind kind, Register[] registers) {
         ArrayList<Register> list = new ArrayList<>();
         for (Register reg : registers) {
@@ -199,16 +200,19 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
     @Override
     public CallingConvention getCallingConvention(Type type, JavaType returnType, JavaType[] parameterTypes, TargetDescription target) {
+        HotSpotCallingConventionType hotspotType = (HotSpotCallingConventionType) type;
         if (type == HotSpotCallingConventionType.JavaCall || type == HotSpotCallingConventionType.NativeCall) {
-            return callingConvention(cpuCallerParameterRegisters, returnType, parameterTypes, (HotSpotCallingConventionType) type, target);
+            return callingConvention(cpuCallerParameterRegisters, returnType, parameterTypes, hotspotType, target);
         }
         if (type == HotSpotCallingConventionType.JavaCallee) {
-            return callingConvention(cpuCalleeParameterRegisters, returnType, parameterTypes, (HotSpotCallingConventionType) type, target);
+            return callingConvention(cpuCalleeParameterRegisters, returnType, parameterTypes, hotspotType, target);
         }
         throw JVMCIError.shouldNotReachHere();
     }
 
+    @Override
     public Register[] getCallingConventionRegisters(Type type, JavaKind kind) {
+        HotSpotCallingConventionType hotspotType = (HotSpotCallingConventionType) type;
         switch (kind) {
             case Boolean:
             case Byte:
@@ -217,7 +221,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
             case Int:
             case Long:
             case Object:
-                return type == HotSpotCallingConventionType.JavaCallee ? cpuCalleeParameterRegisters : cpuCallerParameterRegisters;
+                return hotspotType == HotSpotCallingConventionType.JavaCallee ? cpuCalleeParameterRegisters : cpuCallerParameterRegisters;
             case Double:
             case Float:
                 return fpuFloatParameterRegisters;
@@ -303,7 +307,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         return getReturnRegister(kind, HotSpotCallingConventionType.JavaCallee);
     }
 
-    private static Register getReturnRegister(JavaKind kind, Type type) {
+    private static Register getReturnRegister(JavaKind kind, HotSpotCallingConventionType type) {
         switch (kind) {
             case Boolean:
             case Byte:

@@ -97,6 +97,7 @@ public class AArch64HotSpotRegisterConfig implements RegisterConfig {
         return allocatable.clone();
     }
 
+    @Override
     public Register[] filterAllocatableRegisters(PlatformKind kind, Register[] registers) {
         ArrayList<Register> list = new ArrayList<>();
         for (Register reg : registers) {
@@ -193,15 +194,18 @@ public class AArch64HotSpotRegisterConfig implements RegisterConfig {
 
     @Override
     public CallingConvention getCallingConvention(Type type, JavaType returnType, JavaType[] parameterTypes, TargetDescription target) {
+        HotSpotCallingConventionType hotspotType = (HotSpotCallingConventionType) type;
         if (type == HotSpotCallingConventionType.NativeCall) {
-            return callingConvention(nativeGeneralParameterRegisters, returnType, parameterTypes, (HotSpotCallingConventionType) type, target);
+            return callingConvention(nativeGeneralParameterRegisters, returnType, parameterTypes, hotspotType, target);
         }
         // On x64, parameter locations are the same whether viewed
         // from the caller or callee perspective
-        return callingConvention(javaGeneralParameterRegisters, returnType, parameterTypes, (HotSpotCallingConventionType) type, target);
+        return callingConvention(javaGeneralParameterRegisters, returnType, parameterTypes, hotspotType, target);
     }
 
+    @Override
     public Register[] getCallingConventionRegisters(Type type, JavaKind kind) {
+        HotSpotCallingConventionType hotspotType = (HotSpotCallingConventionType) type;
         switch (kind) {
             case Boolean:
             case Byte:
@@ -210,7 +214,7 @@ public class AArch64HotSpotRegisterConfig implements RegisterConfig {
             case Int:
             case Long:
             case Object:
-                return type == HotSpotCallingConventionType.NativeCall ? nativeGeneralParameterRegisters : javaGeneralParameterRegisters;
+                return hotspotType == HotSpotCallingConventionType.NativeCall ? nativeGeneralParameterRegisters : javaGeneralParameterRegisters;
             case Float:
             case Double:
                 return simdParameterRegisters;
