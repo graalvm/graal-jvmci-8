@@ -55,13 +55,11 @@ import jdk.vm.ci.hotspotvmconfig.HotSpotVMType;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMValue;
 
 @SupportedAnnotationTypes({
-    // @formatter:off
-    "jdk.vm.ci.hotspotvmconfig.HotSpotVMConstant",
-    "jdk.vm.ci.hotspotvmconfig.HotSpotVMFlag",
-    "jdk.vm.ci.hotspotvmconfig.HotSpotVMField",
-    "jdk.vm.ci.hotspotvmconfig.HotSpotVMType",
-    "jdk.vm.ci.hotspotvmconfig.HotSpotVMValue"})
-    // @formatter:on
+                "jdk.vm.ci.hotspotvmconfig.HotSpotVMConstant",
+                "jdk.vm.ci.hotspotvmconfig.HotSpotVMFlag",
+                "jdk.vm.ci.hotspotvmconfig.HotSpotVMField",
+                "jdk.vm.ci.hotspotvmconfig.HotSpotVMType",
+                "jdk.vm.ci.hotspotvmconfig.HotSpotVMValue"})
 public class HotSpotVMConfigProcessor extends AbstractProcessor {
 
     public HotSpotVMConfigProcessor() {
