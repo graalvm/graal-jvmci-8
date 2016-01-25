@@ -2152,6 +2152,8 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     DTRACE_METHOD_COMPILE_BEGIN_PROBE(method, compiler_name(task_level));
   }
 
+  // Allocate a new set of JNI handles.
+  push_jni_handle_block();
   Method* target_handle = task->method();
   int compilable = ciEnv::MethodCompilable;
   const char* failure_reason = NULL;
@@ -2185,9 +2187,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   } else
 #endif // COMPILERJVMCI
   {
-    // Allocate a new set of JNI handles.
-    push_jni_handle_block();
-    
     NoHandleMark  nhm;
     ThreadToNativeFromVM ttn(thread);
 
@@ -2234,9 +2233,10 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     }
 
     post_compile(thread, task, event, !ci_env.failing(), &ci_env);
-    
-    pop_jni_handle_block();
   }
+  // Remove the JNI handle block after the ciEnv destructor has run in
+  // the previous block.
+  pop_jni_handle_block();
 
   if (failure_reason != NULL) {
     if (_compilation_log != NULL) {
