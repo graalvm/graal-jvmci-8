@@ -72,6 +72,9 @@ else
     #objc compiler blows up on -march=i586, perhaps it should not be included in the macosx intel 32-bit C++ compiles?
     SAARCH = $(subst -march=i586,,$(ARCHFLAG))
 
+    ifeq ($(SDKPATH),)
+      SDKPATH = $(shell xcrun --show-sdk-path)
+    endif
     # This is needed to locate JavaNativeFoundation.framework
     # JDK 8 doesn't have SYSROOT_CFLAGS, so we'll cobble it together here
     SA_SYSROOT_FLAGS=
