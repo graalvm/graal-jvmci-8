@@ -1510,6 +1510,7 @@ void JavaThread::initialize() {
   _thread_stat = new ThreadStatistics();
   _blocked_on_compilation = false;
   _jni_active_critical = 0;
+  _pending_jni_exception_check_fn = NULL;
   _do_not_unlock_if_synchronized = false;
   _cached_monitor_info = NULL;
   _parker = Parker::Allocate(this) ;
@@ -3372,6 +3373,9 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   extern void JDK_Version_init();
 
+  // Preinitialize version info.
+  VM_Version::early_initialize();
+
   // Check version
   if (!is_supported_jni_version(args->version)) return JNI_EVERSION;
 
@@ -3767,9 +3771,6 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
           WatcherThread::start();
       }
   }
-
-  // Give os specific code one last chance to start
-  os::init_3();
 
   create_vm_timer.end();
 #ifdef ASSERT

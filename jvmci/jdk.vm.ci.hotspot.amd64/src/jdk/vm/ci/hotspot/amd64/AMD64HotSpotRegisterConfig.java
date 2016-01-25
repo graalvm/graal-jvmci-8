@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import jdk.vm.ci.code.Architecture;
@@ -91,6 +92,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
         return allocatable.clone();
     }
 
+    @Override
     public Register[] filterAllocatableRegisters(PlatformKind kind, Register[] registers) {
         ArrayList<Register> list = new ArrayList<>();
         for (Register reg : registers) {
@@ -118,14 +120,17 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
      */
     private final boolean needsNativeStackHomeSpace;
 
+    private static final Register[] reservedRegisters = {rsp, r15};
+
     private static Register[] initAllocatable(Architecture arch, boolean reserveForHeapBase) {
         Register[] allRegisters = arch.getAvailableValueRegisters();
-        Register[] registers = new Register[allRegisters.length - (reserveForHeapBase ? 3 : 2)];
+        Register[] registers = new Register[allRegisters.length - reservedRegisters.length - (reserveForHeapBase ? 1 : 0)];
+        List<Register> reservedRegistersList = Arrays.asList(reservedRegisters);
 
         int idx = 0;
         for (Register reg : allRegisters) {
-            if (reg.equals(rsp) || reg.equals(r15)) {
-                // skip stack pointer and thread register
+            if (reservedRegistersList.contains(reg)) {
+                // skip reserved registers
                 continue;
             }
             if (reserveForHeapBase && reg.equals(r12)) {
@@ -176,6 +181,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
         return callerSaved;
     }
 
+    @Override
     public Register[] getCalleeSaveRegisters() {
         return null;
     }
@@ -192,15 +198,18 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
 
     @Override
     public CallingConvention getCallingConvention(Type type, JavaType returnType, JavaType[] parameterTypes, TargetDescription target) {
+        HotSpotCallingConventionType hotspotType = (HotSpotCallingConventionType) type;
         if (type == HotSpotCallingConventionType.NativeCall) {
-            return callingConvention(nativeGeneralParameterRegisters, returnType, parameterTypes, (HotSpotCallingConventionType) type, target);
+            return callingConvention(nativeGeneralParameterRegisters, returnType, parameterTypes, hotspotType, target);
         }
         // On x64, parameter locations are the same whether viewed
         // from the caller or callee perspective
-        return callingConvention(javaGeneralParameterRegisters, returnType, parameterTypes, (HotSpotCallingConventionType) type, target);
+        return callingConvention(javaGeneralParameterRegisters, returnType, parameterTypes, hotspotType, target);
     }
 
+    @Override
     public Register[] getCallingConventionRegisters(Type type, JavaKind kind) {
+        HotSpotCallingConventionType hotspotType = (HotSpotCallingConventionType) type;
         switch (kind) {
             case Boolean:
             case Byte:
@@ -209,7 +218,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
             case Int:
             case Long:
             case Object:
-                return type == HotSpotCallingConventionType.NativeCall ? nativeGeneralParameterRegisters : javaGeneralParameterRegisters;
+                return hotspotType == HotSpotCallingConventionType.NativeCall ? nativeGeneralParameterRegisters : javaGeneralParameterRegisters;
             case Float:
             case Double:
                 return xmmParameterRegisters;

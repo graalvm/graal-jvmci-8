@@ -589,8 +589,8 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
                                 del versions['hotspot']
                             fp.write('SOURCE=" ' + ' '.join((k + ":" + v for k, v in versions.iteritems())) + '"' + os.linesep)
                             mx.logv("Updating " + releaseFile)
-                        except:
-                            mx.warn("Exception while updaing release file")
+                        except BaseException as e:
+                            mx.warn("Exception " + str(e) + " while updaing release file")
                             fp.write(line)
                     else:
                         fp.write(line)

@@ -1783,6 +1783,10 @@ ClassFileParser::AnnotationCollector::annotation_index(ClassLoaderData* loader_d
     if (_location != _in_method)  break;  // only allow for methods
     if (!privileged)              break;  // only allow in privileged code
     return _method_DontInline;
+  case vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_InjectedProfile_signature):
+    if (_location != _in_method)  break;  // only allow for methods
+    if (!privileged)              break;  // only allow in privileged code
+    return _method_InjectedProfile;
   case vmSymbols::VM_SYMBOL_ENUM_NAME(java_lang_invoke_LambdaForm_Compiled_signature):
     if (_location != _in_method)  break;  // only allow for methods
     if (!privileged)              break;  // only allow in privileged code
@@ -1830,6 +1834,8 @@ void ClassFileParser::MethodAnnotationCollector::apply_to(methodHandle m) {
     m->set_force_inline(true);
   if (has_annotation(_method_DontInline))
     m->set_dont_inline(true);
+  if (has_annotation(_method_InjectedProfile))
+    m->set_has_injected_profile(true);
   if (has_annotation(_method_LambdaForm_Compiled) && m->intrinsic_id() == vmIntrinsics::_none)
     m->set_intrinsic_id(vmIntrinsics::_compiledLambdaForm);
   if (has_annotation(_method_LambdaForm_Hidden))
@@ -4426,9 +4432,15 @@ void ClassFileParser::set_precomputed_flags(instanceKlassHandle k) {
   Method* m = k->lookup_method(vmSymbols::finalize_method_name(),
                                  vmSymbols::void_method_signature());
   if (m != NULL && !m->is_empty_method()) {
-    f = true;
+      f = true;
   }
-  assert(f == k->has_finalizer(), "inconsistent has_finalizer");
+
+  // Spec doesn't prevent agent from redefinition of empty finalizer.
+  // Despite the fact that it's generally bad idea and redefined finalizer
+  // will not work as expected we shouldn't abort vm in this case
+  if (!k->has_redefined_this_or_super()) {
+    assert(f == k->has_finalizer(), "inconsistent has_finalizer");
+  }
 #endif
 
   // Check if this klass supports the java.lang.Cloneable interface
