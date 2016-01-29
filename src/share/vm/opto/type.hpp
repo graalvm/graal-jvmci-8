@@ -159,11 +159,6 @@ private:
   // Table for efficient dualing of base types
   static const TYPES dual_type[lastype];
 
-#ifdef ASSERT
-  // One type is interface, the other is oop
-  virtual bool interface_vs_oop_helper(const Type *t) const;
-#endif
-
   const Type *meet_helper(const Type *t, bool include_speculative) const;
 
 protected:
@@ -177,6 +172,12 @@ protected:
   const Type *join_helper(const Type *t, bool include_speculative) const {
     return dual()->meet_helper(t->dual(), include_speculative)->dual();
   }
+
+#ifdef ASSERT
+  // One type is interface, the other is oop.  Override to perform subtype specific
+  // interface_vs_oop checking.
+  virtual bool interface_vs_oop_helper(const Type *t) const;
+#endif
 
 public:
 
@@ -681,7 +682,7 @@ public:
   virtual const Type* remove_speculative() const;
 #ifdef ASSERT
   // One type is interface, the other is oop
-  virtual bool interface_vs_oop(const Type *t) const;
+  virtual bool interface_vs_oop_helper(const Type *t) const;
 #endif
 #ifndef PRODUCT
   virtual void dump2( Dict &d, uint, outputStream *st  ) const; // Specialized per-Type dumping
@@ -1167,7 +1168,7 @@ public:
   // sharpen the type of an int which is used as an array size
 #ifdef ASSERT
   // One type is interface, the other is oop
-  virtual bool interface_vs_oop(const Type *t) const;
+  virtual bool interface_vs_oop_helper(const Type *t) const;
 #endif
 #ifndef PRODUCT
   virtual void dump2( Dict &d, uint depth, outputStream *st ) const; // Specialized per-Type dumping

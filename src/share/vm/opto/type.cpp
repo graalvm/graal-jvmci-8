@@ -1981,12 +1981,12 @@ const Type* TypeAry::remove_speculative() const {
 
 //----------------------interface_vs_oop---------------------------------------
 #ifdef ASSERT
-bool TypeAry::interface_vs_oop(const Type *t) const {
+bool TypeAry::interface_vs_oop_helper(const Type *t) const {
   const TypeAry* t_ary = t->is_ary();
   if (t_ary) {
     return _elem->interface_vs_oop(t_ary->_elem);
   }
-  return false;
+  return Type::interface_vs_oop_helper(t);
 }
 #endif
 
@@ -4060,12 +4060,12 @@ const Type *TypeAryPtr::xdual() const {
 
 //----------------------interface_vs_oop---------------------------------------
 #ifdef ASSERT
-bool TypeAryPtr::interface_vs_oop(const Type *t) const {
+bool TypeAryPtr::interface_vs_oop_helper(const Type *t) const {
   const TypeAryPtr* t_aryptr = t->isa_aryptr();
   if (t_aryptr) {
     return _ary->interface_vs_oop(t_aryptr->_ary);
   }
-  return false;
+  return Type::interface_vs_oop_helper(t);
 }
 #endif
 
