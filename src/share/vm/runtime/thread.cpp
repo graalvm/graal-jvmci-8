@@ -3714,7 +3714,10 @@ jint Threads::create_vm(JavaVMInitArgs* args, bool* canTryAgain) {
 
   // initialize compiler(s)
 #if defined(COMPILER1) || defined(COMPILER2) || defined(SHARK) || defined(COMPILERJVMCI)
-  CompileBroker::compilation_init();
+  CompileBroker::compilation_init(THREAD);
+  if (HAS_PENDING_EXCEPTION) {
+    vm_exit_during_initialization(Handle(THREAD, PENDING_EXCEPTION));
+  }
 #endif
 
   if (EnableInvokeDynamic) {
