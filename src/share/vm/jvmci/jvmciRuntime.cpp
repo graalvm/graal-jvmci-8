@@ -763,8 +763,6 @@ JVM_ENTRY(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
 
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
 
-  JVMCIJavaClasses::compute_offsets(thread);
-
   {
     ThreadToNativeFromVM trans(thread);
 
@@ -820,6 +818,8 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
     klass->initialize(CHECK_ABORT);
     _FactoryKlass = klass();
     assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
+
+    JVMCIJavaClasses::compute_offsets(THREAD);
   }
 }
 
@@ -978,10 +978,12 @@ void JVMCIRuntime::fthrow_error(Thread* thread, const char* file, int line, cons
 }
 
 Klass* JVMCIRuntime::resolve_or_null(Symbol* name, TRAPS) {
+  assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
   return SystemDictionary::resolve_or_null(name, SystemDictionary::jvmci_loader(), Handle(), CHECK_NULL);
 }
 
 Klass* JVMCIRuntime::resolve_or_fail(Symbol* name, TRAPS) {
+  assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
   return SystemDictionary::resolve_or_fail(name, SystemDictionary::jvmci_loader(), Handle(), true, CHECK_NULL);
 }
 

@@ -51,6 +51,7 @@
 #endif
 #if INCLUDE_JVMCI
 #include "jvmci/jvmciCompiler.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 #ifdef COMPILERJVMCI
 #include "jvmci/jvmciRuntime.hpp"
 #include "runtime/vframe.hpp"
@@ -930,7 +931,7 @@ CompilerCounters::CompilerCounters(const char* thread_name, int instance, TRAPS)
 // CompileBroker::compilation_init
 //
 // Initialize the Compilation object
-void CompileBroker::compilation_init() {
+void CompileBroker::compilation_init(TRAPS) {
   _last_method_compiled[0] = '\0';
 
   // No need to initialize compilation system if we do not use it.
@@ -958,6 +959,17 @@ void CompileBroker::compilation_init() {
   if (FLAG_IS_DEFAULT(JVMCIHostThreads)) {
   } else {
     c1_count = JVMCIHostThreads;
+  }
+  if (!UseInterpreter || !BackgroundCompilation) {
+    // Force initialization of JVMCI compiler otherwise JVMCI
+    // compilations will not block until JVMCI is initialized
+    JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
+    ResourceMark rm;
+    TempNewSymbol getCompiler = SymbolTable::new_symbol("getCompiler", CHECK);
+    TempNewSymbol sig = SymbolTable::new_symbol("()Ljdk/vm/ci/runtime/JVMCICompiler;", CHECK);
+    Handle jvmciRuntime = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
+    JavaValue result(T_OBJECT);
+    JavaCalls::call_virtual(&result, jvmciRuntime, HotSpotJVMCIRuntime::klass(), getCompiler, sig, CHECK);
   }
 #endif // COMPILERJVMCI
 
@@ -1733,7 +1745,8 @@ static const int BLOCKING_JVMCI_COMPILATION_WAIT_TO_UNBLOCK_ATTEMPTS = 5;
 bool CompileBroker::wait_for_jvmci_completion(CompileTask* task, JavaThread* thread) {
   MutexLocker waiter(task->lock(), thread);
   int consecutively_blocked = 0;
-  while (task->lock()->wait(!Mutex::_no_safepoint_check_flag, BLOCKING_JVMCI_COMPILATION_WAIT_TIMESLICE)) {
+  while (!task->is_complete() && !is_compilation_disabled_forever() &&
+         task->lock()->wait(!Mutex::_no_safepoint_check_flag, BLOCKING_JVMCI_COMPILATION_WAIT_TIMESLICE)) {
     CompilerThread* jvmci_compiler_thread = task->jvmci_compiler_thread();
     if (jvmci_compiler_thread != NULL) {
       JavaThreadState state;

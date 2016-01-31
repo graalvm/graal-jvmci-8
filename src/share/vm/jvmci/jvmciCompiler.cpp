@@ -127,7 +127,6 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
   }
 
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-  JVMCIJavaClasses::compute_offsets(THREAD);
   HandleMark hm;
   Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK_ABORT);
 

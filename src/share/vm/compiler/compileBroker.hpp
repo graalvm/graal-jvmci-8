@@ -415,7 +415,7 @@ class CompileBroker: AllStatic {
     CompileQueue *q = compile_queue(comp_level);
     return q != NULL ? q->size() : 0;
   }
-  static void compilation_init();
+  static void compilation_init(TRAPS);
   static void init_compiler_thread_log();
   static nmethod* compile_method(methodHandle method,
                                  int osr_bci,
