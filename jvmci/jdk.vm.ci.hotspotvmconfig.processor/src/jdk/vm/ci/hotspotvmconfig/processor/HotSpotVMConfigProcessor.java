@@ -54,12 +54,8 @@ import jdk.vm.ci.hotspotvmconfig.HotSpotVMFlag;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMType;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMValue;
 
-@SupportedAnnotationTypes({
-                "jdk.vm.ci.hotspotvmconfig.HotSpotVMConstant",
-                "jdk.vm.ci.hotspotvmconfig.HotSpotVMFlag",
-                "jdk.vm.ci.hotspotvmconfig.HotSpotVMField",
-                "jdk.vm.ci.hotspotvmconfig.HotSpotVMType",
-                "jdk.vm.ci.hotspotvmconfig.HotSpotVMValue"})
+@SupportedAnnotationTypes({"jdk.vm.ci.hotspotvmconfig.HotSpotVMConstant", "jdk.vm.ci.hotspotvmconfig.HotSpotVMFlag", "jdk.vm.ci.hotspotvmconfig.HotSpotVMField",
+                "jdk.vm.ci.hotspotvmconfig.HotSpotVMType", "jdk.vm.ci.hotspotvmconfig.HotSpotVMValue"})
 public class HotSpotVMConfigProcessor extends AbstractProcessor {
 
     public HotSpotVMConfigProcessor() {
@@ -266,7 +262,7 @@ public class HotSpotVMConfigProcessor extends AbstractProcessor {
         private boolean optional;
         final VariableElement field;
 
-        public VMConfigField(VariableElement field, HotSpotVMField value) {
+        VMConfigField(VariableElement field, HotSpotVMField value) {
             this.field = field;
             define = archDefines(value.archs());
             String type = field.asType().toString();
@@ -287,14 +283,14 @@ public class HotSpotVMConfigProcessor extends AbstractProcessor {
             }
         }
 
-        public VMConfigField(VariableElement field, HotSpotVMType value) {
+        VMConfigField(VariableElement field, HotSpotVMType value) {
             this.field = field;
             define = null; // ((HotSpotVMType) annotation).archs();
             String type = field.asType().toString();
             setter = String.format("set_%s(\"%s\", sizeof(%s));", type, field.getSimpleName(), value.name());
         }
 
-        public VMConfigField(VariableElement field, HotSpotVMValue value) {
+        VMConfigField(VariableElement field, HotSpotVMValue value) {
             this.field = field;
             String[] defines = value.defines();
             int length = defines.length;
@@ -314,14 +310,14 @@ public class HotSpotVMConfigProcessor extends AbstractProcessor {
             }
         }
 
-        public VMConfigField(VariableElement field, HotSpotVMConstant value) {
+        VMConfigField(VariableElement field, HotSpotVMConstant value) {
             this.field = field;
             define = archDefines(value.archs());
             String type = field.asType().toString();
             setter = String.format("set_%s(\"%s\", %s);", type, field.getSimpleName(), value.name());
         }
 
-        public VMConfigField(VariableElement field, HotSpotVMFlag value) {
+        VMConfigField(VariableElement field, HotSpotVMFlag value) {
             this.field = field;
             define = archDefines(value.archs());
             optional = value.optional();

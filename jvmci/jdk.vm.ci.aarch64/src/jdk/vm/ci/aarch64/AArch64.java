@@ -157,7 +157,7 @@ public class AArch64 extends Architecture {
      * Basic set of CPU features mirroring what is returned from the cpuid instruction. See:
      * {@code VM_Version::cpuFeatureFlags}.
      */
-    public static enum CPUFeature {
+    public enum CPUFeature {
         FP,
         ASIMD,
         EVTSTRM,
@@ -175,7 +175,7 @@ public class AArch64 extends Architecture {
     /**
      * Set of flags to control code emission.
      */
-    public static enum Flag {
+    public enum Flag {
         UseBarriersForVolatile,
         UseCRC32,
         UseNeon

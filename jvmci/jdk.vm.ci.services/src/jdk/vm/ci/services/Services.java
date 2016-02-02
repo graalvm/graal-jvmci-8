@@ -69,8 +69,8 @@ public final class Services {
     /**
      * Gets an {@link Iterable} of the JVMCI providers available for a given service.
      *
-     * @throws SecurityException if a security manager is present and it denies
-     *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
+     * @throws SecurityException if a security manager is present and it denies <tt>
+     *             {@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings("unchecked")
     public static <S> Iterable<S> load(Class<S> service) {
@@ -91,8 +91,8 @@ public final class Services {
      * @param service the service whose provider is being requested
      * @param required specifies if an {@link InternalError} should be thrown if no provider of
      *            {@code service} is available
-     * @throws SecurityException if a security manager is present and it denies
-     *             <tt>{@link RuntimePermission}("jvmciServices")</tt>
+     * @throws SecurityException if a security manager is present and it denies <tt>
+     *             {@link RuntimePermission}("jvmciServices")</tt>
      */
     @SuppressWarnings({"unchecked"})
     public static <S> S loadSingle(Class<S> service, boolean required) {

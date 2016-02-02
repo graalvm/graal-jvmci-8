@@ -305,7 +305,7 @@ public class HotSpotVMConfig {
 
         private long address;
 
-        public VMFields(long address) {
+        VMFields(long address) {
             this.address = address;
         }
 
@@ -416,7 +416,7 @@ public class HotSpotVMConfig {
 
         private long address;
 
-        public VMTypes(long address) {
+        VMTypes(long address) {
             this.address = address;
         }
 
@@ -519,7 +519,7 @@ public class HotSpotVMConfig {
 
         private long address;
 
-        public VMIntConstants(long address) {
+        VMIntConstants(long address) {
             this.address = address;
         }
 
@@ -578,7 +578,7 @@ public class HotSpotVMConfig {
 
         private long address;
 
-        public VMLongConstants(long address) {
+        VMLongConstants(long address) {
             this.address = address;
         }
 
@@ -633,7 +633,7 @@ public class HotSpotVMConfig {
         private long nameOffset;
         private long addrOffset;
 
-        public Flags(HashMap<String, VMFields.Field> vmStructs, HashMap<String, VMTypes.Type> vmTypes) {
+        Flags(HashMap<String, VMFields.Field> vmStructs, HashMap<String, VMTypes.Type> vmTypes) {
             address = vmStructs.get("Flag::flags").getValue();
             entrySize = vmTypes.get("Flag").getSize();
             typeOffset = vmStructs.get("Flag::_type").getOffset();
@@ -981,7 +981,8 @@ public class HotSpotVMConfig {
      * this field is {@value #INVALID_RTLD_DEFAULT_HANDLE}, then this capability is not supported on
      * the current platform.
      */
-    @HotSpotVMValue(expression = "RTLD_DEFAULT", defines = {"TARGET_OS_FAMILY_bsd", "TARGET_OS_FAMILY_linux"}, get = HotSpotVMValue.Type.ADDRESS) @Stable public long rtldDefault = INVALID_RTLD_DEFAULT_HANDLE;
+    @HotSpotVMValue(expression = "RTLD_DEFAULT", defines = {"TARGET_OS_FAMILY_bsd",
+                    "TARGET_OS_FAMILY_linux"}, get = HotSpotVMValue.Type.ADDRESS) @Stable public long rtldDefault = INVALID_RTLD_DEFAULT_HANDLE;
 
     /**
      * This field is used to pass exception objects into and out of the runtime system during
