@@ -80,8 +80,12 @@ public:
   // Print compilation timers and statistics
   virtual void print_timers();
 
-  // Print compilation statistics
-  void reset_compilation_stats();
+  /**
+   * Get the number of methods that have been successfully compiled.
+   * This is an approximation as updating the counter is not atomic.
+   */
+  int approx_num_methods_compiled() { return _methodsCompiled; }
+
 #endif // COMPILERJVMCI
 
   // Print compilation timers and statistics
