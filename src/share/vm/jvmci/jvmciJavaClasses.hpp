@@ -89,7 +89,7 @@ class JVMCIJavaClasses : AllStatic {
     int_field(HotSpotCompiledCode, dataSectionAlignment)                                                                                                       \
     objArrayOop_field(HotSpotCompiledCode, dataSectionPatches, "[Ljdk/vm/ci/code/site/DataPatch;")                                                             \
     int_field(HotSpotCompiledCode, totalFrameSize)                                                                                                             \
-    int_field(HotSpotCompiledCode, customStackAreaOffset)                                                                                                      \
+    oop_field(HotSpotCompiledCode, deoptRescueSlot, "Ljdk/vm/ci/code/StackSlot;")                                                                              \
   end_class                                                                                                                                                    \
   start_class(HotSpotCompiledCode_Comment)                                                                                                                     \
     oop_field(HotSpotCompiledCode_Comment, text, "Ljava/lang/String;")                                                                                         \
