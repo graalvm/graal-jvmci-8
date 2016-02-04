@@ -37,7 +37,7 @@ elapsedTimer JVMCICompiler::_codeInstallTimer;
 JVMCICompiler::JVMCICompiler() : AbstractCompiler(jvmci) {
 #ifdef COMPILERJVMCI
   _bootstrapping = false;
-  _methodsCompiled = 0;
+  _methods_compiled = 0;
 #endif
   assert(_instance == NULL, "only one instance allowed");
   _instance = this;
@@ -103,7 +103,7 @@ void JVMCICompiler::bootstrap() {
     } while (first_round && qsize == 0);
     first_round = false;
     if (PrintBootstrap) {
-      while (z < (_methodsCompiled / 100)) {
+      while (z < (_methods_compiled / 100)) {
         ++z;
         tty->print_raw(".");
       }
@@ -111,7 +111,7 @@ void JVMCICompiler::bootstrap() {
   } while (qsize != 0);
 
   if (PrintBootstrap) {
-    tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methodsCompiled);
+    tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methods_compiled);
   }
   _bootstrapping = false;
 }
@@ -172,7 +172,7 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
           env->set_failure("no nmethod produced", true);
         } else {
           env->task()->set_num_inlined_bytecodes(CompilationRequestResult::inlinedBytecodes(result_object));
-          _methodsCompiled++;
+          Atomic::inc(&_methods_compiled);
         }
       }
     } else {

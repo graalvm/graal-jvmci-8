@@ -50,7 +50,6 @@
 #include "c1/c1_Compiler.hpp"
 #endif
 #if INCLUDE_JVMCI
-#include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 #ifdef COMPILERJVMCI
 #include "jvmci/jvmciRuntime.hpp"
@@ -1741,12 +1740,10 @@ static const int JVMCI_COMPILATION_PROGRESS_WAIT_ATTEMPTS = 5;
  *
  * @return true if this thread needs to free/recycle the task
  */
-bool CompileBroker::wait_for_jvmci_completion(AbstractCompiler* comp, CompileTask* task, JavaThread* thread) {
+bool CompileBroker::wait_for_jvmci_completion(JVMCICompiler* jvmci, CompileTask* task, JavaThread* thread) {
   MutexLocker waiter(task->lock(), thread);
-  assert(comp->is_jvmci(), "must be");
-  JVMCICompiler* jvmci = (JVMCICompiler*) comp;
   int progress_wait_attempts = 0;
-  int methods_compiled = jvmci->approx_num_methods_compiled();
+  int methods_compiled = jvmci->methods_compiled();
   while (!task->is_complete() && !is_compilation_disabled_forever() &&
          task->lock()->wait(!Mutex::_no_safepoint_check_flag, JVMCI_COMPILATION_PROGRESS_WAIT_TIMESLICE)) {
     CompilerThread* jvmci_compiler_thread = task->jvmci_compiler_thread();
@@ -1760,7 +1757,7 @@ bool CompileBroker::wait_for_jvmci_completion(AbstractCompiler* comp, CompileTas
       // that all JVMCI compiler threads are blocked on. We use the counter for
       // successful JVMCI compilations to determine whether JVMCI compilation
       // is still making progress through the JVMCI compiler queue.
-      progress = jvmci->approx_num_methods_compiled() != methods_compiled;
+      progress = jvmci->methods_compiled() != methods_compiled;
     }
 
     if (!progress) {
@@ -1773,7 +1770,7 @@ bool CompileBroker::wait_for_jvmci_completion(AbstractCompiler* comp, CompileTas
     } else {
       progress_wait_attempts = 0;
       if (jvmci_compiler_thread == NULL) {
-        methods_compiled = jvmci->approx_num_methods_compiled();
+        methods_compiled = jvmci->methods_compiled();
       }
     }
   }
@@ -1801,7 +1798,7 @@ void CompileBroker::wait_for_completion(CompileTask* task) {
 #ifdef COMPILERJVMCI
   AbstractCompiler* comp = compiler(task->comp_level());
   if (comp->is_jvmci()) {
-    free_task = wait_for_jvmci_completion(comp, task, thread);
+    free_task = wait_for_jvmci_completion((JVMCICompiler*) comp, task, thread);
   } else
 #endif
   {
