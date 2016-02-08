@@ -67,7 +67,7 @@ public final class InitTimer implements AutoCloseable {
     /**
      * Specifies if initialization timing is enabled.
      */
-    private static final boolean ENABLED = Boolean.getBoolean("jvmci.inittimer") || Boolean.getBoolean("jvmci.runtime.TimeInit");
+    private static final boolean ENABLED = Boolean.getBoolean("jvmci.InitTimer");
 
     public static final AtomicInteger nesting = ENABLED ? new AtomicInteger() : null;
     public static final String SPACES = "                                            ";
