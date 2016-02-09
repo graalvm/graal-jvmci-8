@@ -1679,7 +1679,7 @@ def jol(args):
 def deploy_binary(args):
     for vmbuild in ['product', 'fastdebug']:
         for vm in ['jvmci', 'server']:
-            if vmbuild != _vmbuild and vm != get_vm():
+            if vmbuild != _vmbuild or vm != get_vm():
                 mx.instantiateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=vmbuild, vm=vm))
     mx.deploy_binary(args)
 
