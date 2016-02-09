@@ -1676,12 +1676,20 @@ def jol(args):
 
     run_vm(['-javaagent:' + joljar, '-cp', os.pathsep.join([mx.classpath(), joljar]), "org.openjdk.jol.MainObjectInternals"] + candidates)
 
+def deploy_binary(args):
+    for vmbuild in ['product', 'fastdebug']:
+        for vm in ['jvmci', 'server']:
+            if vmbuild != _vmbuild and vm != get_vm():
+                mx.instantiateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=vmbuild, vm=vm))
+    mx.deploy_binary(args)
+
 mx.update_commands(_suite, {
     'build': [build, ''],
     'buildjmh': [buildjmh, '[-options]'],
     'buildvars': [buildvars, ''],
     'buildvms': [buildvms, '[-options]'],
     'c1visualizer' : [c1visualizer, ''],
+    'deploy-binary' : [deploy_binary, ''],
     'export': [export, '[-options] [zipfile]'],
     'hsdis': [hsdis, '[att]'],
     'hcfdis': [hcfdis, ''],
