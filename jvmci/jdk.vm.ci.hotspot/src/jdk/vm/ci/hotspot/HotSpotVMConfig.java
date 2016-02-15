@@ -731,6 +731,7 @@ public class HotSpotVMConfig {
     @HotSpotVMFlag(name = "DontCompileHugeMethods") @Stable public boolean dontCompileHugeMethods;
     @HotSpotVMFlag(name = "HugeMethodLimit") @Stable public int hugeMethodLimit;
     @HotSpotVMFlag(name = "PrintInlining") @Stable public boolean printInlining;
+    @HotSpotVMFlag(name = "Inline") @Stable public boolean inline;
     @HotSpotVMFlag(name = "JVMCIUseFastLocking") @Stable public boolean useFastLocking;
     @HotSpotVMFlag(name = "ForceUnreachable") @Stable public boolean forceUnreachable;
     @HotSpotVMFlag(name = "FoldStableValues") @Stable public boolean foldStableValues;
