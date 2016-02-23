@@ -56,6 +56,8 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
      */
     boolean isDontInline();
 
+    boolean hasReservedStackAccess();
+
     /**
      * Manually adds a DontInline annotation to this method.
      */
