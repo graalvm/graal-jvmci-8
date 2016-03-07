@@ -179,6 +179,12 @@ C2V_VMENTRY(jobject, getResolvedJavaMethodAtSlot, (JNIEnv *, jobject, jclass hol
   return JNIHandles::make_local(THREAD, result);
 }
 
+C2V_VMENTRY(jint, getResolvedJavaFieldFlagsAtSlot, (JNIEnv *, jobject, jclass holder_handle, jint slot))
+  oop java_class = JNIHandles::resolve(holder_handle);
+  Klass* holder = java_lang_Class::as_Klass(java_class);
+  return InstanceKlass::cast(holder)->field_access_flags(slot);
+}
+
 C2V_VMENTRY(jobject, getResolvedJavaMethod, (JNIEnv *, jobject, jobject base, jlong offset))
   methodHandle method;
   oop base_object = JNIHandles::resolve(base);
@@ -1247,6 +1253,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getClassInitializer",                          CC"("HS_RESOLVED_KLASS")"HS_RESOLVED_METHOD,                                      FN_PTR(getClassInitializer)},
   {CC"hasFinalizableSubclass",                       CC"("HS_RESOLVED_KLASS")Z",                                                       FN_PTR(hasFinalizableSubclass)},
   {CC"getMaxCallTargetOffset",                       CC"(J)J",                                                                         FN_PTR(getMaxCallTargetOffset)},
+  {CC"getResolvedJavaFieldFlagsAtSlot",              CC"("CLASS"I)I"                 ,                                                 FN_PTR(getResolvedJavaFieldFlagsAtSlot)},
   {CC"getResolvedJavaMethodAtSlot",                  CC"("CLASS"I)"HS_RESOLVED_METHOD,                                                 FN_PTR(getResolvedJavaMethodAtSlot)},
   {CC"getResolvedJavaMethod",                        CC"(Ljava/lang/Object;J)"HS_RESOLVED_METHOD,                                      FN_PTR(getResolvedJavaMethod)},
   {CC"getConstantPool",                              CC"(Ljava/lang/Object;J)"HS_CONSTANT_POOL,                                        FN_PTR(getConstantPool)},
