@@ -285,7 +285,14 @@ C2V_END
 
 C2V_VMENTRY(jboolean, canInlineMethod,(JNIEnv *, jobject, jobject jvmci_method))
   methodHandle method = CompilerToVM::asMethod(jvmci_method);
-  return !method->is_not_compilable() && !CompilerOracle::should_not_inline(method) && !method->dont_inline();
+#ifdef COMPILER_JVMCI
+  bool is_compilable = !method->is_not_compilable(CompLevel_full_optimization);
+#else
+  // In hosted mode ignore the not_compilable flags since they are never set by
+  // the JVMCI compiler.
+  bool is_compilable = true;
+#endif
+  return is_compilable && !CompilerOracle::should_not_inline(method) && !method->dont_inline();
 C2V_END
 
 C2V_VMENTRY(jboolean, shouldInlineMethod,(JNIEnv *, jobject, jobject jvmci_method))
