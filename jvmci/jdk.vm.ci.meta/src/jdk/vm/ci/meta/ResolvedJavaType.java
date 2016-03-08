@@ -138,14 +138,6 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider {
     boolean isInstance(JavaConstant obj);
 
     /**
-     * Returns this type if it is an exact type otherwise returns null. This type is exact if it is
-     * void, primitive, final, or an array of a final or primitive type.
-     *
-     * @return this type if it is exact; {@code null} otherwise
-     */
-    ResolvedJavaType asExactType();
-
-    /**
      * Gets the super class of this type. If this type represents either the {@code Object} class,
      * an interface, a primitive type, or void, then null is returned. If this object represents an
      * array class then the type object representing the {@code Object} class is returned.

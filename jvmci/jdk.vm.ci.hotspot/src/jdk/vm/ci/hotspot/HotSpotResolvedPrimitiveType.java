@@ -85,11 +85,6 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     }
 
     @Override
-    public ResolvedJavaType asExactType() {
-        return this;
-    }
-
-    @Override
     public ResolvedJavaType getSuperclass() {
         return null;
     }

@@ -299,11 +299,6 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     }
 
     @Override
-    public HotSpotResolvedObjectType asExactType() {
-        return isLeaf() ? this : null;
-    }
-
-    @Override
     public AssumptionResult<Boolean> hasFinalizableSubclass() {
         assert !isArray();
         if (!compilerToVM().hasFinalizableSubclass(this)) {
