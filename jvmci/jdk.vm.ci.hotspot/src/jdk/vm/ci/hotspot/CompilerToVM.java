@@ -27,7 +27,6 @@ import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.vm.ci.inittimer.InitTimer.timer;
 
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import jdk.vm.ci.code.BytecodeFrame;
@@ -355,12 +354,6 @@ final class CompilerToVM {
      * {@link Method#slot} or {@link Constructor#slot}).
      */
     native HotSpotResolvedJavaMethodImpl getResolvedJavaMethodAtSlot(Class<?> holder, int slot);
-
-    /**
-     * Gets the flags (including VM internal flags) for the field identified by {@code holder} and
-     * slot number {@code slot} (i.e. {@link Field#slot}).
-     */
-    native int getResolvedJavaFieldFlagsAtSlot(Class<?> holder, int slot);
 
     /**
      * Gets the maximum absolute offset of a PC relative call to {@code address} from any position

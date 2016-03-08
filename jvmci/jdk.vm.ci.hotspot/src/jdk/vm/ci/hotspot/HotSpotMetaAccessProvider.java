@@ -85,11 +85,6 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
     private Field reflectionMethodSlot = getReflectionSlotField(Method.class);
 
     /**
-     * {@link Field} object of {@link Field#slot}.
-     */
-    private Field reflectionFieldSlot = getReflectionSlotField(Field.class);
-
-    /**
      * {@link Field} object of {@link Constructor#slot}.
      */
     private Field reflectionConstructorSlot = getReflectionSlotField(Constructor.class);
@@ -116,25 +111,22 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider, HotSpotPro
     }
 
     public ResolvedJavaField lookupJavaField(Field reflectionField) {
-        try {
-            String name = reflectionField.getName();
-            Class<?> fieldHolder = reflectionField.getDeclaringClass();
-            Class<?> fieldType = reflectionField.getType();
-            final int slot = reflectionFieldSlot.getInt(reflectionField);
+        String name = reflectionField.getName();
+        Class<?> fieldHolder = reflectionField.getDeclaringClass();
+        Class<?> fieldType = reflectionField.getType();
+        // java.lang.reflect.Field's modifiers should be enough here since VM internal modifier bits
+        // are not used (yet).
+        final int modifiers = reflectionField.getModifiers();
+        final long offset = Modifier.isStatic(modifiers) ? UNSAFE.staticFieldOffset(reflectionField) : UNSAFE.objectFieldOffset(reflectionField);
 
-            HotSpotResolvedObjectType holder = fromObjectClass(fieldHolder);
-            final int flags = runtime.getCompilerToVM().getResolvedJavaFieldFlagsAtSlot(fieldHolder, slot);
-            final long offset = Modifier.isStatic(flags) ? UNSAFE.staticFieldOffset(reflectionField) : UNSAFE.objectFieldOffset(reflectionField);
-            JavaType type = runtime.fromClass(fieldType);
+        HotSpotResolvedObjectType holder = fromObjectClass(fieldHolder);
+        JavaType type = runtime.fromClass(fieldType);
 
-            if (offset != -1) {
-                HotSpotResolvedObjectType resolved = holder;
-                return resolved.createField(name, type, offset, flags);
-            } else {
-                throw new JVMCIError("unresolved field %s", reflectionField);
-            }
-        } catch (IllegalArgumentException | IllegalAccessException e) {
-            throw new JVMCIError(e);
+        if (offset != -1) {
+            HotSpotResolvedObjectType resolved = holder;
+            return resolved.createField(name, type, offset, modifiers);
+        } else {
+            throw new JVMCIError("unresolved field %s", reflectionField);
         }
     }
 
