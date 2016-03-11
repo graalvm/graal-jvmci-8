@@ -57,6 +57,7 @@ ProjectCreatorIncludesPRIVATE=\
         -relativeInclude src\os_cpu\windows_$(Platform_arch)\vm \
         -relativeInclude src\cpu\$(Platform_arch)\vm \
         -relativeInclude mxbuild\jvmci\jdk.vm.ci.hotspot\src_gen\hotspot \
+        -relativeInclude $(MX_ALT_OUTPUT_ROOT)\jvmci\jvmci\jdk.vm.ci.hotspot\src_gen\hotspot \
         -absoluteInclude $(HOTSPOTBUILDSPACE)/%f/generated \
         -relativeSrcInclude src \
         -absoluteSrcInclude $(HOTSPOTBUILDSPACE) \
@@ -153,6 +154,7 @@ ProjectCreatorIDEOptionsIgnoreCompiler1=\
 ProjectCreatorIDEOptionsIgnoreJVMCI=\
  -ignorePath_TARGET src/share/vm/jvmci \
  -ignorePath_TARGET mxbuild/jvmci/jdk.vm.ci.hotspot/src_gen/hotspot \
+ -ignorePath_TARGET $(MX_ALT_OUTPUT_ROOT)/jvmci/jdk.vm.ci.hotspot/src_gen/hotspot \
  -ignorePath_TARGET vm/jvmci
 
 ProjectCreatorIDEOptionsIgnoreCompiler2=\

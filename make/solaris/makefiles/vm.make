@@ -212,6 +212,7 @@ ifneq ($(INCLUDE_JVMCI), true)
 else
   JVMCI_SPECIFIC_FILES   :=
   Src_Dirs_I += $(HS_COMMON_SRC)/../mxbuild/jvmci/jdk.vm.ci.hotspot/src_gen/hotspot
+  Src_Dirs_I += $(MX_ALT_OUTPUT_ROOT)/jvmci/jvmci/jdk.vm.ci.hotspot/src_gen/hotspot
 endif
 
 # Always exclude these.

@@ -36,7 +36,7 @@ public abstract class SourceStackTrace extends BailoutException {
             private static final long serialVersionUID = 6279381376051787907L;
 
             @Override
-            public final synchronized Throwable fillInStackTrace() {
+            public synchronized Throwable fillInStackTrace() {
                 assert elements != null;
                 setStackTrace(elements);
                 return this;
