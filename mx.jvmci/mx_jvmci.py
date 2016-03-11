@@ -687,14 +687,14 @@ def _updateJVMCIProperties(jdkDir, compilers):
     if exists(jvmciProperties):
         with open(jvmciProperties) as fp:
             for line in fp:
-                if line.startswith('jvmci.compiler='):
+                if line.startswith('jvmci.Compiler='):
                     compiler = line.strip().split('=')[1]
                     if compiler not in compilers:
                         lines.append(line.strip())
                 else:
                     lines.append(line.strip())
     for compiler in compilers:
-        lines.append("jvmci.compiler=" + compiler)
+        lines.append("jvmci.Compiler=" + compiler)
     createFile(lines)
 
 def _installDistInJdks(deployableDist):
@@ -1828,7 +1828,7 @@ class JVMCI8JDKConfig(mx.JDKConfig):
             if isinstance(jdkDist, JvmciJDKDeployedDist):
                 if jdkDist._compilers:
                     jvmciCompiler = jdkDist._compilers[-1]
-                    args = ['-Djvmci.compiler=' + jvmciCompiler] + args
+                    args = ['-Djvmci.Compiler=' + jvmciCompiler] + args
                     break
 
         if '-version' in args:

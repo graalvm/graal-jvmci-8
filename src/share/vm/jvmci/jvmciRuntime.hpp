@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -71,7 +71,6 @@ class JVMCIRuntime: public AllStatic {
  private:
   static jobject _HotSpotJVMCIRuntime_instance;
   static bool _HotSpotJVMCIRuntime_initialized;
-  static const char* _compiler;
 
   static int _trivial_prefixes_count;
   static char** _trivial_prefixes;
@@ -86,24 +85,14 @@ class JVMCIRuntime: public AllStatic {
   static Handle create_Service(const char* name, TRAPS);
 
  public:
-
-  /**
-   * Parses *.properties files in jre/lib/jvmci/ and adds the properties to plist.
-   */
-  static void init_system_properties(SystemProperty** plist);
-
-  /**
-   * Saves the value of the "jvmci.compiler" system property for processing
-   * when JVMCI is initialized.
-   */
-  static void save_compiler(const char* compiler);
-
   /**
    * Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
    */
   static void ensure_jvmci_class_loader_is_initialized();
 
-  static bool is_HotSpotJVMCIRuntime_initialized() { return _HotSpotJVMCIRuntime_initialized; }
+  static bool is_HotSpotJVMCIRuntime_initialized() {
+    return _HotSpotJVMCIRuntime_initialized;
+  }
 
   /**
    * Gets the singleton HotSpotJVMCIRuntime instance, initializing it if necessary
