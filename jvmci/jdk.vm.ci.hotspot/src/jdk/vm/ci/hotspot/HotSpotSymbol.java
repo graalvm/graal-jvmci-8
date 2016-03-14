@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,12 +24,40 @@ package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
+
+import jdk.vm.ci.meta.Constant;
 import sun.misc.Unsafe;
 
 /**
  * Class to access the C++ {@code vmSymbols} table.
  */
-final class HotSpotVmSymbols {
+public final class HotSpotSymbol implements MetaspaceWrapperObject {
+
+    private final String symbol;
+    private final long pointer;
+
+    HotSpotSymbol(String symbol, long pointer) {
+        this.symbol = symbol;
+        this.pointer = pointer;
+    }
+
+    public String getSymbol() {
+        return symbol;
+    }
+
+    public Constant asConstant() {
+        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(this, false);
+    }
+
+    @Override
+    public long getMetaspacePointer() {
+        return pointer;
+    }
+
+    @Override
+    public String toString() {
+        return "Symbol<" + symbol + ">";
+    }
 
     /**
      * Returns the symbol in the {@code vmSymbols} table at position {@code index} as {@link String}

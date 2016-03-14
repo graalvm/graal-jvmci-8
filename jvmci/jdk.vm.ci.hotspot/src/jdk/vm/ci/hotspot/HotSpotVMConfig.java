@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -864,6 +864,7 @@ public class HotSpotVMConfig {
     @HotSpotVMField(name = "Klass::_modifier_flags", type = "jint", get = HotSpotVMField.Type.OFFSET) @Stable public int klassModifierFlagsOffset;
     @HotSpotVMField(name = "Klass::_access_flags", type = "AccessFlags", get = HotSpotVMField.Type.OFFSET) @Stable public int klassAccessFlagsOffset;
     @HotSpotVMField(name = "Klass::_layout_helper", type = "jint", get = HotSpotVMField.Type.OFFSET) @Stable public int klassLayoutHelperOffset;
+    @HotSpotVMField(name = "Klass::_name", type = "Symbol*", get = HotSpotVMField.Type.OFFSET) @Stable public int klassNameOffset;
 
     @HotSpotVMConstant(name = "Klass::_lh_neutral_value") @Stable public int klassLayoutHelperNeutralValue;
     @HotSpotVMConstant(name = "Klass::_lh_instance_slow_path_bit") @Stable public int klassLayoutHelperInstanceSlowPathBit;
@@ -1418,6 +1419,7 @@ public class HotSpotVMConfig {
     @HotSpotVMValue(expression = "JVMCIRuntime::monitorexit", get = HotSpotVMValue.Type.ADDRESS) @Stable public long monitorexitAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::create_null_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long createNullPointerExceptionAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::create_out_of_bounds_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long createOutOfBoundsExceptionAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::throw_and_post_jvmti_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long throwAndPostJvmtiExceptionAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::log_primitive", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logPrimitiveAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::log_object", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logObjectAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::log_printf", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logPrintfAddress;

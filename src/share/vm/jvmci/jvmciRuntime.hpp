@@ -205,6 +205,7 @@ class JVMCIRuntime: public AllStatic {
   static void monitorexit (JavaThread* thread, oopDesc* obj, BasicLock* lock);
   static void create_null_exception(JavaThread* thread);
   static void create_out_of_bounds_exception(JavaThread* thread, jint index);
+  static void throw_and_post_jvmti_exception(JavaThread* thread, Symbol* name, const char* message);
   static void vm_error(JavaThread* thread, jlong where, jlong format, jlong value);
   static oopDesc* load_and_clear_exception(JavaThread* thread);
   static void log_printf(JavaThread* thread, oopDesc* format, jlong v1, jlong v2, jlong v3);

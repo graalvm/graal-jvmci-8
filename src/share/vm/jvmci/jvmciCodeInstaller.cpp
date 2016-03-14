@@ -159,7 +159,7 @@ OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
   return map;
 }
 
-Metadata* CodeInstaller::record_metadata_reference(Handle constant, TRAPS) {
+MetaspaceObj* CodeInstaller::record_metadata_reference(Handle constant, TRAPS) {
   oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
   if (obj->is_a(HotSpotResolvedObjectTypeImpl::klass())) {
     Klass* klass = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(obj));
@@ -173,6 +173,11 @@ Metadata* CodeInstaller::record_metadata_reference(Handle constant, TRAPS) {
     int index = _oop_recorder->find_index(method);
     TRACE_jvmci_3("metadata[%d of %d] = %s", index, _oop_recorder->metadata_count(), method->name()->as_C_string());
     return method;
+  } else if (obj->is_a(HotSpotSymbol::klass())) {
+    Symbol* symbol = (Symbol*) (address) HotSpotSymbol::pointer(obj);
+    assert(!HotSpotMetaspaceConstantImpl::compressed(constant), err_msg("unexpected compressed symbol pointer %s @ " INTPTR_FORMAT, symbol->as_C_string(), p2i(symbol)));
+    TRACE_jvmci_3("symbol = %s", symbol->as_C_string());
+    return (MetaspaceObj*) symbol;
   } else {
     JVMCI_ERROR_NULL("unexpected metadata reference for constant of type %s", obj->klass()->signature_name());
   }
@@ -607,7 +612,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
         JVMCI_ERROR_OK("unexpected compressed Klass* in 32-bit mode");
 #endif
       } else {
-        *((Metadata**) dest) = record_metadata_reference(constant, CHECK_OK);
+        *((MetaspaceObj**) dest) = record_metadata_reference(constant, CHECK_OK);
       }
     } else if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
       Handle obj = HotSpotObjectConstantImpl::object(constant);
