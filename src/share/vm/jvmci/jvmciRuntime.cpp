@@ -350,20 +350,6 @@ address JVMCIRuntime::exception_handler_for_pc(JavaThread* thread) {
   return continuation;
 }
 
-JRT_ENTRY(void, JVMCIRuntime::create_null_exception(JavaThread* thread))
-  SharedRuntime::throw_and_post_jvmti_exception(thread, vmSymbols::java_lang_NullPointerException());
-  thread->set_vm_result(PENDING_EXCEPTION);
-  CLEAR_PENDING_EXCEPTION;
-JRT_END
-
-JRT_ENTRY(void, JVMCIRuntime::create_out_of_bounds_exception(JavaThread* thread, jint index))
-  char message[jintAsStringSize];
-  sprintf(message, "%d", index);
-  SharedRuntime::throw_and_post_jvmti_exception(thread, vmSymbols::java_lang_ArrayIndexOutOfBoundsException(), message);
-  thread->set_vm_result(PENDING_EXCEPTION);
-  CLEAR_PENDING_EXCEPTION;
-JRT_END
-
 JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc* obj, BasicLock* lock))
   IF_TRACE_jvmci_3 {
     char type[O_BUFLEN];

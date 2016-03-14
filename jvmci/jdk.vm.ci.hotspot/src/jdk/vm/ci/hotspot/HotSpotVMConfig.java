@@ -1417,8 +1417,6 @@ public class HotSpotVMConfig {
     @HotSpotVMValue(expression = "JVMCIRuntime::exception_handler_for_pc", signature = "(JavaThread*)", get = HotSpotVMValue.Type.ADDRESS) @Stable public long exceptionHandlerForPcAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::monitorenter", get = HotSpotVMValue.Type.ADDRESS) @Stable public long monitorenterAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::monitorexit", get = HotSpotVMValue.Type.ADDRESS) @Stable public long monitorexitAddress;
-    @HotSpotVMValue(expression = "JVMCIRuntime::create_null_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long createNullPointerExceptionAddress;
-    @HotSpotVMValue(expression = "JVMCIRuntime::create_out_of_bounds_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long createOutOfBoundsExceptionAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::throw_and_post_jvmti_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long throwAndPostJvmtiExceptionAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::log_primitive", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logPrimitiveAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::log_object", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logObjectAddress;
