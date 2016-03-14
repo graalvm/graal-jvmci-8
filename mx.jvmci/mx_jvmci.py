@@ -1333,8 +1333,8 @@ def _igvBuildEnv():
 
 def igv(args):
     """run the Ideal Graph Visualizer"""
-    logFile = '.ideal_graph_visualizer.log'
-    with open(join(_suite.dir, logFile), 'w') as fp:
+    logFile = join(_suite.dir, '.ideal_graph_visualizer.log')
+    with open(logFile, 'w') as fp:
         mx.logv('[Ideal Graph Visualizer log is in ' + fp.name + ']')
         nbplatform = join(_suite.dir, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'nbplatform')
 
@@ -1361,7 +1361,7 @@ def igv(args):
         # make the jar for Batik 1.7 available.
         env['IGV_BATIK_JAR'] = mx.library('BATIK').get_path(True)
         if mx.run(['ant', '-f', mx._cygpathU2W(join(_suite.dir, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml')), '-l', mx._cygpathU2W(fp.name), 'run'], env=env, nonZeroIsFatal=False):
-            mx.abort("IGV ant build & launch failed. Check '" + logFile + "'. You can also try to delete 'src/share/tools/IdealGraphVisualizer/nbplatform'.")
+            mx.abort("IGV ant build & launch failed. Check '" + logFile + "'. You can also try to delete " + join(_suite.dir, 'src/share/tools/IdealGraphVisualizer/nbplatform') + ".")
 
 def c1visualizer(args):
     """run the Cl Compiler Visualizer"""
