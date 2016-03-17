@@ -398,3 +398,5 @@ ifndef USE_SUNCC
 endif
 
 -include $(HS_ALT_MAKE)/linux/makefiles/gcc.make
+
+.PHONY: $(HS_ALT_MAKE)/linux/makefiles/gcc.make
