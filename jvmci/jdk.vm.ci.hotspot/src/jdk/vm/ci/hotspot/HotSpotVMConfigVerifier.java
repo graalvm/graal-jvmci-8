@@ -30,6 +30,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.security.AccessControlException;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -43,13 +44,13 @@ import jdk.internal.org.objectweb.asm.Type;
 import sun.misc.Unsafe;
 
 /**
- * A {@link ClassVisitor} that verifies {@link HotSpotVMConfig} does not access {@link Unsafe} from
- * any of its non-static, non-constructor methods. This ensures that a deserialized
- * {@link HotSpotVMConfig} object does not perform any unsafe reads on addresses that are only valid
- * in the context in which the object was serialized. Note that this does not catch cases where a
- * client uses an address stored in a {@link HotSpotVMConfig} field.
+ * A verifier that checks that {@link HotSpotVMConfig} does not access {@link Unsafe} from any of
+ * its non-static, non-constructor methods. This ensures that a deserialized {@link HotSpotVMConfig}
+ * object does not perform any unsafe reads on addresses that are only valid in the context in which
+ * the object was serialized. Note that this does not catch cases where a client uses an address
+ * stored in a {@link HotSpotVMConfig} field.
  */
-final class HotSpotVMConfigVerifier extends ClassVisitor {
+final class HotSpotVMConfigVerifier {
 
     public static boolean check() {
         Class<?> cls = HotSpotVMConfig.class;
@@ -57,23 +58,19 @@ final class HotSpotVMConfigVerifier extends ClassVisitor {
         try {
             InputStream classfile = cls.getResourceAsStream(classFilePath);
             ClassReader cr = new ClassReader(Objects.requireNonNull(classfile, "Could not find class file for " + cls.getName()));
-            ClassVisitor cv = new HotSpotVMConfigVerifier();
+            ClassVisitor cv = new Verifier();
             cr.accept(cv, 0);
+            return true;
+        } catch (AccessControlException e) {
+            /*
+             * When running with a security manager and +UseJVMCIClassLoader the ASM classes might
+             * not be accessible.
+             */
             return true;
         } catch (IOException e) {
             throw new JVMCIError(e);
         }
     }
-
-    /**
-     * Source file context for error reporting.
-     */
-    String sourceFile = null;
-
-    /**
-     * Line number for error reporting.
-     */
-    int lineNo = -1;
 
     private static Class<?> resolve(String name) {
         try {
@@ -83,82 +80,95 @@ final class HotSpotVMConfigVerifier extends ClassVisitor {
         }
     }
 
-    HotSpotVMConfigVerifier() {
-        super(Opcodes.ASM5);
-    }
+    private static class Verifier extends ClassVisitor {
 
-    @Override
-    public void visitSource(String source, String debug) {
-        this.sourceFile = source;
-    }
+        /**
+         * Source file context for error reporting.
+         */
+        String sourceFile = null;
 
-    void verify(boolean condition, String message) {
-        if (!condition) {
-            error(message);
+        /**
+         * Line number for error reporting.
+         */
+        int lineNo = -1;
+
+        Verifier() {
+            super(Opcodes.ASM5);
         }
-    }
 
-    void error(String message) {
-        String errorMessage = format("%s:%d: %s is not allowed in the context of compilation replay. The unsafe access should be moved into the %s constructor and the result cached in a field",
-                        sourceFile, lineNo, message, HotSpotVMConfig.class.getSimpleName());
-        throw new JVMCIError(errorMessage);
+        @Override
+        public void visitSource(String source, String debug) {
+            this.sourceFile = source;
+        }
 
-    }
+        void verify(boolean condition, String message) {
+            if (!condition) {
+                error(message);
+            }
+        }
 
-    @Override
-    public MethodVisitor visitMethod(int access, String name, String d, String signature, String[] exceptions) {
-        if (!Modifier.isStatic(access) && Modifier.isPublic(access) && !name.equals("<init>")) {
-            return new MethodVisitor(Opcodes.ASM5) {
+        void error(String message) {
+            String errorMessage = format("%s:%d: %s is not allowed in the context of compilation replay. The unsafe access should be moved into the %s constructor and the result cached in a field",
+                            sourceFile, lineNo, message, HotSpotVMConfig.class.getSimpleName());
+            throw new JVMCIError(errorMessage);
 
-                @Override
-                public void visitLineNumber(int line, Label start) {
-                    lineNo = line;
-                }
+        }
 
-                private Executable resolveMethod(String owner, String methodName, String methodDesc) {
-                    Class<?> declaringClass = resolve(owner);
-                    while (declaringClass != null) {
-                        if (methodName.equals("<init>")) {
-                            for (Constructor<?> c : declaringClass.getDeclaredConstructors()) {
-                                if (methodDesc.equals(Type.getConstructorDescriptor(c))) {
-                                    return c;
+        @Override
+        public MethodVisitor visitMethod(int access, String name, String d, String signature, String[] exceptions) {
+            if (!Modifier.isStatic(access) && Modifier.isPublic(access) && !name.equals("<init>")) {
+                return new MethodVisitor(Opcodes.ASM5) {
+
+                    @Override
+                    public void visitLineNumber(int line, Label start) {
+                        lineNo = line;
+                    }
+
+                    private Executable resolveMethod(String owner, String methodName, String methodDesc) {
+                        Class<?> declaringClass = resolve(owner);
+                        while (declaringClass != null) {
+                            if (methodName.equals("<init>")) {
+                                for (Constructor<?> c : declaringClass.getDeclaredConstructors()) {
+                                    if (methodDesc.equals(Type.getConstructorDescriptor(c))) {
+                                        return c;
+                                    }
                                 }
-                            }
-                        } else {
-                            Type[] argumentTypes = Type.getArgumentTypes(methodDesc);
-                            for (Method m : declaringClass.getDeclaredMethods()) {
-                                if (m.getName().equals(methodName)) {
-                                    if (Arrays.equals(argumentTypes, Type.getArgumentTypes(m))) {
-                                        if (Type.getReturnType(methodDesc).equals(Type.getReturnType(m))) {
-                                            return m;
+                            } else {
+                                Type[] argumentTypes = Type.getArgumentTypes(methodDesc);
+                                for (Method m : declaringClass.getDeclaredMethods()) {
+                                    if (m.getName().equals(methodName)) {
+                                        if (Arrays.equals(argumentTypes, Type.getArgumentTypes(m))) {
+                                            if (Type.getReturnType(methodDesc).equals(Type.getReturnType(m))) {
+                                                return m;
+                                            }
                                         }
                                     }
                                 }
                             }
+                            declaringClass = declaringClass.getSuperclass();
                         }
-                        declaringClass = declaringClass.getSuperclass();
+                        throw new NoSuchMethodError(owner + "." + methodName + methodDesc);
                     }
-                    throw new NoSuchMethodError(owner + "." + methodName + methodDesc);
-                }
 
-                /**
-                 * Checks whether a given method is allowed to be called.
-                 */
-                private boolean checkInvokeTarget(Executable method) {
-                    if (method.getDeclaringClass().equals(Unsafe.class)) {
-                        return false;
+                    /**
+                     * Checks whether a given method is allowed to be called.
+                     */
+                    private boolean checkInvokeTarget(Executable method) {
+                        if (method.getDeclaringClass().equals(Unsafe.class)) {
+                            return false;
+                        }
+                        return true;
                     }
-                    return true;
-                }
 
-                @Override
-                public void visitMethodInsn(int opcode, String owner, String methodName, String methodDesc, boolean itf) {
-                    Executable callee = resolveMethod(owner, methodName, methodDesc);
-                    verify(checkInvokeTarget(callee), "invocation of " + callee);
-                }
-            };
-        } else {
-            return null;
+                    @Override
+                    public void visitMethodInsn(int opcode, String owner, String methodName, String methodDesc, boolean itf) {
+                        Executable callee = resolveMethod(owner, methodName, methodDesc);
+                        verify(checkInvokeTarget(callee), "invocation of " + callee);
+                    }
+                };
+            } else {
+                return null;
+            }
         }
     }
 }
