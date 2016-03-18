@@ -86,6 +86,11 @@ class JVMCIRuntime: public AllStatic {
 
  public:
   /**
+   * Parses *.properties files in jre/lib/jvmci/ and adds the properties to plist.
+   */
+  static void init_system_properties(SystemProperty** plist);
+
+  /**
    * Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
    */
   static void ensure_jvmci_class_loader_is_initialized();

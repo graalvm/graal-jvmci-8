@@ -804,6 +804,66 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
   }
 }
 
+/**
+ * Closure for parsing a line from a *.properties file in jre/lib/jvmci/properties.
+ * The line must match the regular expression "[^=]+=.*". That is one or more
+ * characters other than '=' followed by '=' followed by zero or more characters.
+ * Everything before the '=' is the property name and everything after '=' is the value.
+ * Lines that start with '#' are treated as comments and ignored.
+ * No special processing of whitespace or any escape characters is performed.
+ * The last definition of a property "wins" (i.e., it overrides all earlier
+ * definitions of the property).
+ */
+class JVMCIPropertiesFileClosure : public ParseClosure {
+  SystemProperty** _plist;
+public:
+  JVMCIPropertiesFileClosure(SystemProperty** plist) : _plist(plist) {}
+  void do_line(char* line) {
+    if (line[0] == '#') {
+      // skip comment
+      return;
+    }
+    size_t len = strlen(line);
+    char* sep = strchr(line, '=');
+    if (sep == NULL) {
+      warn_and_abort("invalid format: could not find '=' character");
+      return;
+    }
+    if (sep == line) {
+      warn_and_abort("invalid format: name cannot be empty");
+      return;
+    }
+    *sep = '\0';
+    const char* name = line;
+    char* value = sep + 1;
+    Arguments::PropertyList_unique_add(_plist, name, value);
+  }
+};
+
+void JVMCIRuntime::init_system_properties(SystemProperty** plist) {
+  char jvmciDir[JVM_MAXPATHLEN];
+  const char* fileSep = os::file_separator();
+  jio_snprintf(jvmciDir, sizeof(jvmciDir), "%s%slib%sjvmci",
+               Arguments::get_java_home(), fileSep, fileSep, fileSep);
+  DIR* dir = os::opendir(jvmciDir);
+  if (dir != NULL) {
+    struct dirent *entry;
+    char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(jvmciDir), mtInternal);
+    JVMCIPropertiesFileClosure closure(plist);
+    const unsigned suffix_len = (unsigned)strlen(".properties");
+    while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL && !closure.is_aborted()) {
+      const char* name = entry->d_name;
+      if (strlen(name) > suffix_len && strcmp(name + strlen(name) - suffix_len, ".properties") == 0) {
+        char propertiesFilePath[JVM_MAXPATHLEN];
+        jio_snprintf(propertiesFilePath, sizeof(propertiesFilePath), "%s%s%s",jvmciDir, fileSep, name);
+        JVMCIRuntime::parse_lines(propertiesFilePath, &closure, false);
+      }
+    }
+    FREE_C_HEAP_ARRAY(char, dbuf, mtInternal);
+    os::closedir(dir);
+  }
+}
+
 #define CHECK_WARN_ABORT_(message) THREAD); \
   if (HAS_PENDING_EXCEPTION) { \
     warning(message); \
