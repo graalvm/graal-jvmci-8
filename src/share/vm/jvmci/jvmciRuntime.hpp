@@ -155,11 +155,6 @@ class JVMCIRuntime: public AllStatic {
    */
   static void abort_on_pending_exception(Handle exception, const char* message, bool dump_core = false);
 
-  /**
-   * Calls Throwable.printStackTrace() on a given exception.
-   */
-  static void call_printStackTrace(Handle exception, Thread* thread);
-
 #define CHECK_ABORT THREAD); \
   if (HAS_PENDING_EXCEPTION) { \
     char buf[256]; \

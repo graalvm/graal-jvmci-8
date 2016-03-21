@@ -913,23 +913,14 @@ bool JVMCIRuntime::treat_as_trivial(Method* method) {
   return false;
 }
 
-void JVMCIRuntime::call_printStackTrace(Handle exception, Thread* thread) {
-  assert(exception->is_a(SystemDictionary::Throwable_klass()), "Throwable instance expected");
-  JavaValue result(T_VOID);
-  JavaCalls::call_virtual(&result,
-                          exception,
-                          KlassHandle(thread,
-                          SystemDictionary::Throwable_klass()),
-                          vmSymbols::printStackTrace_name(),
-                          vmSymbols::void_method_signature(),
-                          thread);
-}
-
 void JVMCIRuntime::abort_on_pending_exception(Handle exception, const char* message, bool dump_core) {
   Thread* THREAD = Thread::current();
   CLEAR_PENDING_EXCEPTION;
   tty->print_raw_cr(message);
-  call_printStackTrace(exception, THREAD);
+
+  java_lang_Throwable::print(exception, tty);
+  tty->cr();
+  java_lang_Throwable::print_stack_trace(exception(), tty);
 
   // Give other aborting threads to also print their stack traces.
   // This can be very useful when debugging class initialization

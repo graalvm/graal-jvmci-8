@@ -155,10 +155,10 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
     Handle throwable = PENDING_EXCEPTION;
     CLEAR_PENDING_EXCEPTION;
 
-    JVMCIRuntime::call_printStackTrace(throwable, THREAD);
-    if (HAS_PENDING_EXCEPTION) {
-      CLEAR_PENDING_EXCEPTION;
-    }
+    java_lang_Throwable::print(throwable, tty);
+    tty->cr();
+    java_lang_Throwable::print_stack_trace(throwable(), tty);
+
     env->set_failure("exception throw", false);
   } else {
     oop result_object = (oop) result.get_jobject();
