@@ -77,7 +77,7 @@ void CodeInstaller::pd_patch_MetaspaceConstant(int pc_offset, Handle constant, T
 #endif
   } else {
     NativeMovConstReg* move = nativeMovConstReg_at(pc);
-    MetaspaceObj* reference = record_metadata_reference(constant, CHECK);
+    void* reference = record_metadata_reference(constant, CHECK);
     move->set_data((intptr_t)reference);
     TRACE_jvmci_3("relocating (metaspace constant) at %p/%p", pc, reference);
   }
