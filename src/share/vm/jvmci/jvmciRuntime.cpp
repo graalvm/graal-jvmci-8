@@ -415,6 +415,17 @@ JRT_ENTRY(void, JVMCIRuntime::throw_and_post_jvmti_exception(JavaThread* thread,
   SharedRuntime::throw_and_post_jvmti_exception(thread, name, message);
 JRT_END
 
+JRT_ENTRY(void, JVMCIRuntime::throw_klass_external_name_exception(JavaThread* thread, Symbol* exception, Klass* klass))
+  ResourceMark rm(thread);
+  SharedRuntime::throw_and_post_jvmti_exception(thread, exception, klass->external_name());
+JRT_END
+
+JRT_ENTRY(void, JVMCIRuntime::throw_class_cast_exception(JavaThread* thread, Symbol* exception, Klass* objKlass, Klass* targetKlass, const char* desc))
+  ResourceMark rm(thread);
+  const char* message = SharedRuntime::generate_class_cast_message(objKlass->external_name(), targetKlass->external_name(), desc);
+  SharedRuntime::throw_and_post_jvmti_exception(thread, exception, message);
+JRT_END
+
 JRT_LEAF(void, JVMCIRuntime::log_object(JavaThread* thread, oopDesc* obj, bool as_string, bool newline))
   ttyLocker ttyl;
 

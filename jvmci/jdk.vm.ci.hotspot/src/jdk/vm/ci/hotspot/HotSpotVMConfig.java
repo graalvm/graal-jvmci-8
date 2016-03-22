@@ -1418,6 +1418,8 @@ public class HotSpotVMConfig {
     @HotSpotVMValue(expression = "JVMCIRuntime::monitorenter", get = HotSpotVMValue.Type.ADDRESS) @Stable public long monitorenterAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::monitorexit", get = HotSpotVMValue.Type.ADDRESS) @Stable public long monitorexitAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::throw_and_post_jvmti_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long throwAndPostJvmtiExceptionAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::throw_klass_external_name_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long throwKlassExternalNameExceptionAddress;
+    @HotSpotVMValue(expression = "JVMCIRuntime::throw_class_cast_exception", get = HotSpotVMValue.Type.ADDRESS) @Stable public long throwClassCastExceptionAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::log_primitive", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logPrimitiveAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::log_object", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logObjectAddress;
     @HotSpotVMValue(expression = "JVMCIRuntime::log_printf", get = HotSpotVMValue.Type.ADDRESS) @Stable public long logPrintfAddress;
