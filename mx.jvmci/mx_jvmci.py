@@ -1129,36 +1129,90 @@ def updateJvmCfg(jdkDir, vm):
     if not exists(jvmCfg):
         mx.abort(jvmCfg + ' does not exist')
 
-    prefix = '-' + vm + ' '
-    vmKnown = prefix + 'KNOWN\n'
+    def getVMEntry(vm):
+        """Return the set of lines that should be in jvm.cfg for this vm configuration"""
+        known = '-' + vm + ' ' + 'KNOWN\n'
+        cfgLines = []
+        cfgLines.append(known)
+        for alias, aliased in _vmAliases.iteritems():
+            if vm == aliased:
+                cfgLines.append('-' + alias + ' ALIASED_TO -' + aliased + '\n')
+        return known, cfgLines
+
+    # Compute the cfg entries for the currently selected VM and the default VM,
+    # if a default VM has been set.
+    vmKnown, vmLines = getVMEntry(vm)
+    defaultVMLines = []
+    defaultVM = mx.get_env('DEFAULT_VM')
+    if defaultVM:
+        if defaultVM == vm:
+            defaultVM = None
+        else:
+            defaultVMPath = join(vmLibDirInJdk(jdkDir), defaultVM, _lib('jvm'))
+            if not exists(defaultVMPath):
+                mx.log('Warning: The default VM is "' + defaultVM + '" but it hasn\'t been built yet so "-' + vm + '" will be the default.')
+                defaultVM = None
+            else:
+                defaultVMKnown, defaultVMLines = getVMEntry(defaultVM)
+
+    # The default VM should always be set as the default, so read the existing jvm.cfg
+    # and strip out any lines that mention the vm or the defaultVM, splitting the file
+    # into a possible comment prefix and all the rest of the lines from the jvm.cfg.
+    # Note that this will enforce the defaultVM even if the default hasn't been built.
+    prefix = []
+    suffix = []
     lines = []
-    found = False
+    outOfOrder = False
+    foundVm = False
+    foundDefaultVM = defaultVM == None
     with open(jvmCfg) as f:
         for line in f:
-            if line.strip() == vmKnown.strip():
-                found = True
             lines.append(line)
+            if line.strip() == vmKnown.strip():
+                foundVm = True
+                continue
+            if line.endswith(' ALIASED_TO -' + vm + '\n'):
+                continue
+            if defaultVM and line.strip() == defaultVMKnown.strip():
+                foundDefaultVM = True
+                outOfOrder = foundVm
+                continue
+            if defaultVM and line.endswith(' ALIASED_TO -' + defaultVM + '\n'):
+                continue
+            if line.startswith('#') and len(suffix) == 0:
+                prefix.append(line)
+            else:
+                suffix.append(line)
 
-    if not found:
-        mx.log('Prepending "' + prefix + 'KNOWN" to ' + jvmCfg)
+
+    # Build the new jvm.cfg out of the comment prefix, the entries for any default VM,
+    # the entries for the currently selected VM followed by the remaining lines.
+    allLines = prefix + defaultVMLines + vmLines + suffix
+
+    if allLines != lines:
+        # The computed jvm.cfg is different from what's on disk so try to explain
+        # what effect the newly written one will have.
+        if outOfOrder:
+            # Both vm and defaultVM were already in the jvm.cfg but in a different order
+            # so vm was the default.  The new jvm.cfg sets defaultVM as the default.
+            mx.log('Resetting "' + defaultVM + '" as default in ' + jvmCfg)
+        else:
+            if defaultVM:
+                if not foundDefaultVM:
+                    # The defaultVM was missing so it's being set to the default.
+                    mx.log('Setting default JVM to "-' + defaultVM + '" in ' + jvmCfg)
+                if not foundVm:
+                    # vm wasn't found so it's added but is not the default.
+                    mx.log('Adding JVM "-' + vm + '" in ' + jvmCfg)
+            else:
+                # No defaultVM was specified or it was the same as vm, so
+                # vm will be the default.
+                mx.log('Setting default JVM to "-' + vm + '" in ' + jvmCfg)
+
         if mx.get_os() != 'windows':
             os.chmod(jvmCfg, JDK_UNIX_PERMISSIONS_FILE)
         with open(jvmCfg, 'w') as f:
-            written = False
-            for line in lines:
-                if line.startswith('#'):
-                    f.write(line)
-                    continue
-                if not written:
-                    f.write(vmKnown)
-                    for alias, aliased in _vmAliases.iteritems():
-                        if vm == aliased:
-                            f.write('-' + alias + ' ALIASED_TO -' + aliased + '\n')
-                    written = True
-                if line.startswith(prefix):
-                    line = vmKnown
-                    if written:
-                        continue
+            for line in allLines:
                 f.write(line)
 
 mx_gate.add_jacoco_includes(['jdk.vm.ci.*'])
