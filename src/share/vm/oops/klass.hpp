@@ -352,11 +352,11 @@ protected:
   }
   static bool layout_helper_is_typeArray(jint lh) {
     // _lh_array_tag_type_value == (lh >> _lh_array_tag_shift);
-    return (juint)lh >= (juint)(_lh_array_tag_type_value << _lh_array_tag_shift);
+    return (juint)lh >= (juint)((unsigned)_lh_array_tag_type_value << _lh_array_tag_shift);
   }
   static bool layout_helper_is_objArray(jint lh) {
     // _lh_array_tag_obj_value == (lh >> _lh_array_tag_shift);
-    return (jint)lh < (jint)(_lh_array_tag_type_value << _lh_array_tag_shift);
+    return (jint)lh < (jint)((unsigned)_lh_array_tag_type_value << _lh_array_tag_shift);
   }
   static int layout_helper_header_size(jint lh) {
     assert(lh < (jint)_lh_neutral_value, "must be array");
