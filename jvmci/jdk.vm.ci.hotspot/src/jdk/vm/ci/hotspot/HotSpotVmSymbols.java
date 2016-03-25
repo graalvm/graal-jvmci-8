@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,36 +22,27 @@
  */
 package jdk.vm.ci.hotspot;
 
-import jdk.vm.ci.meta.Constant;
+import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
+import sun.misc.Unsafe;
 
 /**
  * Class to access the C++ {@code vmSymbols} table.
  */
-public final class HotSpotSymbol implements MetaspaceWrapperObject {
+final class HotSpotVmSymbols {
 
-    private final String symbol;
-    private final long pointer;
-
-    HotSpotSymbol(String symbol, long pointer) {
-        this.symbol = symbol;
-        this.pointer = pointer;
-    }
-
-    public String getSymbol() {
-        return symbol;
-    }
-
-    public Constant asConstant() {
-        return HotSpotMetaspaceConstantImpl.forMetaspaceObject(this, false);
-    }
-
-    @Override
-    public long getMetaspacePointer() {
-        return pointer;
-    }
-
-    @Override
-    public String toString() {
-        return "Symbol<" + symbol + ">";
+    /**
+     * Returns the symbol in the {@code vmSymbols} table at position {@code index} as {@link String}
+     * .
+     *
+     * @param index position in the symbol table
+     * @return the symbol at position id
+     */
+    static String symbolAt(int index) {
+        HotSpotJVMCIRuntimeProvider runtime = runtime();
+        HotSpotVMConfig config = runtime.getConfig();
+        assert config.vmSymbolsFirstSID <= index && index < config.vmSymbolsSIDLimit : "index " + index + " is out of bounds";
+        assert config.symbolPointerSize == Unsafe.ADDRESS_SIZE : "the following address read is broken";
+        return runtime.getCompilerToVM().getSymbol(UNSAFE.getAddress(config.vmSymbolsSymbols + index * config.symbolPointerSize));
     }
 }

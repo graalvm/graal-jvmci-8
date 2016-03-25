@@ -593,7 +593,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
          */
         public String getName() {
             final int nameIndex = getNameIndex();
-            return isInternal() ? HotSpotSymbol.symbolAt(nameIndex) : getConstantPool().lookupUtf8(nameIndex);
+            return isInternal() ? HotSpotVmSymbols.symbolAt(nameIndex) : getConstantPool().lookupUtf8(nameIndex);
         }
 
         /**
@@ -602,7 +602,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
          */
         public String getSignature() {
             final int signatureIndex = getSignatureIndex();
-            return isInternal() ? HotSpotSymbol.symbolAt(signatureIndex) : getConstantPool().lookupUtf8(signatureIndex);
+            return isInternal() ? HotSpotVmSymbols.symbolAt(signatureIndex) : getConstantPool().lookupUtf8(signatureIndex);
         }
 
         public JavaType getType() {
