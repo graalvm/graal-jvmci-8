@@ -221,7 +221,7 @@ class JVMCIRuntime: public AllStatic {
   static void throw_and_post_jvmti_exception(JavaThread* thread, Symbol* exception, const char* message);
   // helper methods to throw exception with complex messages
   static void throw_klass_external_name_exception(JavaThread* thread, Symbol* exception, Klass* klass);
-  static void throw_class_cast_exception(JavaThread* thread, Symbol* exception, Klass* objKlass, Klass* targetKlass, const char* desc);
+  static void throw_class_cast_exception(JavaThread* thread, Symbol* exception, Klass* caster_klass, Klass* target_klass);
 
   // Test only function
   static int test_deoptimize_call_int(JavaThread* thread, int value);

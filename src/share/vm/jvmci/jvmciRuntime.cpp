@@ -420,9 +420,9 @@ JRT_ENTRY(void, JVMCIRuntime::throw_klass_external_name_exception(JavaThread* th
   SharedRuntime::throw_and_post_jvmti_exception(thread, exception, klass->external_name());
 JRT_END
 
-JRT_ENTRY(void, JVMCIRuntime::throw_class_cast_exception(JavaThread* thread, Symbol* exception, Klass* objKlass, Klass* targetKlass, const char* desc))
+JRT_ENTRY(void, JVMCIRuntime::throw_class_cast_exception(JavaThread* thread, Symbol* exception, Klass* caster_klass, Klass* target_klass))
   ResourceMark rm(thread);
-  const char* message = SharedRuntime::generate_class_cast_message(objKlass->external_name(), targetKlass->external_name(), desc);
+  const char* message = SharedRuntime::generate_class_cast_message(caster_klass->external_name(), target_klass->external_name());
   SharedRuntime::throw_and_post_jvmti_exception(thread, exception, message);
 JRT_END
 
