@@ -171,7 +171,19 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     public AssumptionResult<ResolvedJavaType> findLeafConcreteSubtype() {
         HotSpotVMConfig config = config();
         if (isArray()) {
-            return getElementalType().isLeaf() ? new AssumptionResult<>(this) : null;
+            ResolvedJavaType elementalType = getElementalType();
+            AssumptionResult<ResolvedJavaType> elementType = elementalType.findLeafConcreteSubtype();
+            if (elementType != null && elementType.getResult().equals(elementalType)) {
+                /*
+                 * If the elementType is leaf then the array is leaf under the same assumptions but
+                 * only if the element type is exactly the leaf type. The element type can be
+                 * abstract even if there is only one implementor of the abstract type.
+                 */
+                AssumptionResult<ResolvedJavaType> result = new AssumptionResult<>(this);
+                result.add(elementType);
+                return result;
+            }
+            return null;
         } else if (isInterface()) {
             HotSpotResolvedObjectTypeImpl implementor = getSingleImplementor();
             /*
