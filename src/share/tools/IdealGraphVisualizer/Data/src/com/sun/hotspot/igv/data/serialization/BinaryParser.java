@@ -648,6 +648,7 @@ public class BinaryParser implements GraphParser {
         int bci = readInt();
         Group group = new Group(parent);
         group.getProperties().setProperty("name", name);
+        parseProperties(group.getProperties());
         if (method != null) {
             InputMethod inMethod = new InputMethod(group, method.name, shortName, bci);
             inMethod.setBytecodes("TODO");
@@ -686,8 +687,18 @@ public class BinaryParser implements GraphParser {
         return graph;
     }
 
+    private void parseProperties(Properties properties) throws IOException {
+        int propCount = readShort();
+        for (int j = 0; j < propCount; j++) {
+            String key = readPoolObject(String.class);
+            Object value = readPropertyObject();
+            properties.setProperty(key, value != null ? value.toString() : "null");
+        }
+    }
+
     private InputGraph parseGraph(String title) throws IOException {
         InputGraph graph = new InputGraph(title);
+        parseProperties(graph.getProperties());
         parseNodes(graph);
         parseBlocks(graph);
         graph.ensureNodesInBlocks();
