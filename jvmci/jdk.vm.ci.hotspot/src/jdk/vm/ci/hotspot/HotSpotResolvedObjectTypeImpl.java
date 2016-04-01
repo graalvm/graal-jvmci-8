@@ -169,6 +169,10 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
 
     @Override
     public AssumptionResult<ResolvedJavaType> findLeafConcreteSubtype() {
+        if (isLeaf()) {
+            // No assumptions are required.
+            return new AssumptionResult<>(this);
+        }
         HotSpotVMConfig config = config();
         if (isArray()) {
             ResolvedJavaType elementalType = getElementalType();
@@ -206,8 +210,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
                 }
                 return null;
             }
-
-            return new AssumptionResult<>(implementor, new LeafType(implementor), new ConcreteSubtype(this, implementor));
+            return concreteSubtype(implementor);
         } else {
             HotSpotResolvedObjectTypeImpl type = this;
             while (type.isAbstract()) {
@@ -221,11 +224,19 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
                 return null;
             }
             if (this.isAbstract()) {
-                return new AssumptionResult<>(type, new LeafType(type), new ConcreteSubtype(this, type));
+                return concreteSubtype(type);
             } else {
                 assert this.equals(type);
                 return new AssumptionResult<>(type, new LeafType(type));
             }
+        }
+    }
+
+    private AssumptionResult<ResolvedJavaType> concreteSubtype(HotSpotResolvedObjectTypeImpl type) {
+        if (type.isLeaf()) {
+            return new AssumptionResult<>(type, new ConcreteSubtype(this, type));
+        } else {
+            return new AssumptionResult<>(type, new LeafType(type), new ConcreteSubtype(this, type));
         }
     }
 

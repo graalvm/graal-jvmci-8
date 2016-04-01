@@ -295,6 +295,7 @@ public class TestResolvedJavaType extends TypeUniverse {
             } else {
                 assertTrue(leafConcreteSubtype.getResult().equals(expected));
             }
+            assertTrue(!type.isLeaf() || leafConcreteSubtype.isAssumptionFree());
         }
 
         if (!type.isArray()) {
