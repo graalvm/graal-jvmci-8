@@ -480,7 +480,7 @@ def _handle_missing_VM(bld, vm=None):
             with VM(vm, bld):
                 build([])
             return
-    mx.abort('You need to run "mx --vm ' + vm + ' --vmbuild ' + bld + ' build" to build the selected VM')
+    mx.abort('You need to run "mx --vm=' + vm + ' --vmbuild=' + bld + ' build" to build the selected VM')
 
 def check_VM_exists(vm, jdkDir, build=None):
     if not build:
@@ -1111,7 +1111,7 @@ def build(args, vm=None):
             if len(result.remainder) != 0:
                 firstBuildTarget = result.remainder[0]
                 mx.abort('To specify the ' + firstBuildTarget + ' VM build target, you need to use the global "--vmbuild" option. For example:\n' +
-                         '    mx --vmbuild ' + firstBuildTarget + ' build')
+                         '    mx --vmbuild=' + firstBuildTarget + ' build')
             return result
 
     # Call mx.build to compile the Java sources
@@ -1289,7 +1289,7 @@ def buildvms(args):
                 mx.log('BEGIN: ' + vm + '-' + vmbuild + '\t(see: ' + logFile + ')')
                 verbose = ['-v'] if mx._opts.verbose else []
                 # Run as subprocess so that output can be directed to a file
-                cmd = [sys.executable, '-u', mx.__file__] + verbose + ['--vm', vm, '--vmbuild', vmbuild, 'build']
+                cmd = [sys.executable, '-u', mx.__file__] + verbose + ['--vm=' + vm, '--vmbuild=' + vmbuild, 'build']
                 mx.logv("executing command: " + str(cmd))
                 subprocess.check_call(cmd, cwd=_suite.dir, stdout=log, stderr=subprocess.STDOUT)
                 duration = datetime.timedelta(seconds=time.time() - start)
@@ -1585,6 +1585,12 @@ mx.add_argument('--ecl', action='store_true', dest='make_eclipse_launch', help='
 mx.add_argument('--vmprefix', action='store', dest='vm_prefix', help='prefix for running the VM (e.g. "/usr/bin/gdb --args")', metavar='<prefix>')
 mx.add_argument('--gdb', action='store_const', const='/usr/bin/gdb --args', dest='vm_prefix', help='alias for --vmprefix "/usr/bin/gdb --args"')
 mx.add_argument('--lldb', action='store_const', const='lldb --', dest='vm_prefix', help='alias for --vmprefix "lldb --"')
+
+# The mx builders are run inside the directory of their associated suite,
+# not the primary suite, so they might not see the env file of the primary
+# suite. Capture DEFAULT_VM in case it was only defined in the primary
+# suite.
+mx.add_ide_envvar('DEFAULT_VM')
 
 class JVMCIArchiveParticipant:
     def __init__(self, dist):
