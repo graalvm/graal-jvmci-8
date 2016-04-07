@@ -82,6 +82,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
         return HotSpotObjectConstantImpl.forObject(reason);
     }
 
+    @Override
     public synchronized boolean hasSpeculations() {
         return speculations != null && !speculations.isEmpty();
     }
