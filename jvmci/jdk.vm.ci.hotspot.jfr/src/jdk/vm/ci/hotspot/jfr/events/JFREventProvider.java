@@ -34,8 +34,8 @@ import jdk.vm.ci.hotspot.events.EventProvider;
  * A JFR implementation for {@link EventProvider}. This implementation is used when Flight Recorder
  * is turned on.
  *
- * Note: The use of fully qualified names for deprecated types is a workaround for <a
- * href="https://bugs.openjdk.java.net/browse/JDK-8032211">JDK-8032211</a>.
+ * Note: The use of fully qualified names for deprecated types is a workaround for
+ * <a href="https://bugs.openjdk.java.net/browse/JDK-8032211">JDK-8032211</a>.
  */
 @SuppressWarnings("deprecation")
 public final class JFREventProvider implements EventProvider {

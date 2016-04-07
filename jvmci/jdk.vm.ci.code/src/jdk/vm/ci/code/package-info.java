@@ -25,4 +25,3 @@
  * can be used to install code.
  */
 package jdk.vm.ci.code;
-

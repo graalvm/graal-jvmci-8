@@ -24,4 +24,3 @@
  * {@link jdk.vm.ci.meta.MetaAccessProvider} interface.
  */
 package jdk.vm.ci.meta;
-
