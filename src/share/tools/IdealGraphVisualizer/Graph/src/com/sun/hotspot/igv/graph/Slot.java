@@ -28,6 +28,7 @@ import com.sun.hotspot.igv.data.Properties;
 import com.sun.hotspot.igv.data.Source;
 import com.sun.hotspot.igv.layout.Port;
 import com.sun.hotspot.igv.layout.Vertex;
+import com.sun.hotspot.igv.util.StringUtils;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
@@ -141,7 +142,7 @@ public abstract class Slot implements Port, Source.Provider, Properties.Provider
 		sb.append(text);
 
 		for (InputNode n : getSource().getSourceNodes()) {
-			sb.append("Node (ID=" + n.getId() + "): " + n.getProperties().get("name"));
+			sb.append(StringUtils.escapeHTML("Node (ID=" + n.getId() + "): " + n.getProperties().get("name")));
 			sb.append("<br>");
 		}
 

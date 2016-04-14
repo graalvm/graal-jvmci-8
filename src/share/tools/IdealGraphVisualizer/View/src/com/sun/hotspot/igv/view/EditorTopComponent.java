@@ -289,7 +289,10 @@ public final class EditorTopComponent extends TopComponent implements PropertyCh
             quicksearch = (Component) quicksearch.getClass().getConstructor(KeyStroke.class).newInstance(new Object[]{null});
         } catch (ReflectiveOperationException | IllegalArgumentException | SecurityException e) {
         }
-        quicksearch.setMinimumSize(quicksearch.getPreferredSize()); // necessary for GTK LAF
+        Dimension preferredSize = quicksearch.getPreferredSize();
+        preferredSize = new Dimension((int) preferredSize.getWidth() * 2, (int) preferredSize.getHeight());
+        quicksearch.setMinimumSize(preferredSize); // necessary for GTK LAF
+        quicksearch.setPreferredSize(preferredSize);
         toolBar.add(quicksearch);
 
         centerPanel = new JPanel();

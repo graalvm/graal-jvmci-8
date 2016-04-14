@@ -27,6 +27,7 @@ import com.sun.hotspot.igv.graph.Connection;
 import com.sun.hotspot.igv.graph.Figure;
 import com.sun.hotspot.igv.graph.InputSlot;
 import com.sun.hotspot.igv.graph.OutputSlot;
+import com.sun.hotspot.igv.util.StringUtils;
 import com.sun.hotspot.igv.view.DiagramScene;
 import java.awt.*;
 import java.awt.geom.Line2D;
@@ -148,7 +149,7 @@ public class LineWidget extends Widget implements PopupMenuProvider {
     private String generateToolTipText(List<Connection> conn) {
         StringBuilder sb = new StringBuilder();
         for (Connection c : conn) {
-            sb.append(c.getToolTipText());
+            sb.append(StringUtils.escapeHTML(c.getToolTipText()));
             sb.append("<br>");
         }
         return sb.toString();
