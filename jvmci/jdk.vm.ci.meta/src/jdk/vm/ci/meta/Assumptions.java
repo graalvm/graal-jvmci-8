@@ -44,8 +44,8 @@ public final class Assumptions implements Iterable<Assumptions.Assumption> {
 
     /**
      * A class for providing information that is only valid in association with a set of
-     * {@link Assumption}s. It is permissible for AssumptionResults to have no any assumptions at
-     * all. For instance, if {@link ResolvedJavaType#isLeaf()} returns true for a type
+     * {@link Assumption}s. It is permissible for AssumptionResults to have no assumptions at all.
+     * For instance, if {@link ResolvedJavaType#isLeaf()} returns true for a type
      * {@link ResolvedJavaType#findLeafConcreteSubtype()} can return an AssumptionResult with no
      * assumptions since the leaf information is statically true.
      *
