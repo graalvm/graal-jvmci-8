@@ -31,6 +31,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.charset.Charset;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -67,6 +68,8 @@ public class BinaryParser implements GraphParser {
     private static final int PROPERTY_SUBGRAPH = 0x08;
     
     private static final String NO_BLOCK = "noBlock";
+
+    private static final Charset utf8 = Charset.forName("UTF-8");
     
     private final GroupCallback callback;
     private final List<Object> constantPool;
@@ -335,12 +338,7 @@ public class BinaryParser implements GraphParser {
     }
 
     private String readString() throws IOException {
-        int len = readInt();
-        ensureAvailable(len * 2);
-        char[] chars = new char[len];
-        buffer.asCharBuffer().get(chars);
-        buffer.position(buffer.position() + len * 2);
-        return new String(chars).intern();
+        return new String(readBytes(), utf8).intern();
     }
 
     private byte[] readBytes() throws IOException {
@@ -348,12 +346,17 @@ public class BinaryParser implements GraphParser {
         if (len < 0) {
             return null;
         }
-        ensureAvailable(len);
-        byte[] data = new byte[len];
-        buffer.get(data);
-        return data;
+        byte[] b = new byte[len];
+        int bytesRead = 0;
+        while (bytesRead < b.length) {
+            int toRead = Math.min(b.length - bytesRead, buffer.capacity());
+            ensureAvailable(toRead);
+            buffer.get(b, bytesRead, toRead);
+            bytesRead += toRead;
+        }
+        return b;
     }
-    
+
     private String readIntsToString() throws IOException {
         int len = readInt();
         if (len < 0) {
