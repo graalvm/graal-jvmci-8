@@ -142,6 +142,10 @@ endif   # AIX
 endif	# Linux
 endif	# SunOS
 
+ifneq ($(ATT_SYNTAX),)
+CFLAGS += -DATT_SYNTAX
+endif
+
 LIBARCH		= $(ARCH)
 ifdef		LP64
 LIBARCH64/sparc	= sparcv9
@@ -163,10 +167,15 @@ BINUTILSDIR	= $(shell cd $(BINUTILS);pwd)
 endif
 
 CPPFLAGS	+= -I$(BINUTILSDIR)/include -I$(BINUTILSDIR)/bfd -I$(TARGET_DIR)/bfd
-CPPFLAGS	+= -DLIBARCH_$(LIBARCH) -DLIBARCH=\"$(LIBARCH)\" -DLIB_EXT=\"$(LIB_EXT)\"
+CPPFLAGS	+= -DLIBARCH_$(LIBARCH) -DLIBARCH=\"$(LIBARCH)\" -DLIB_EXT=\"$(LIB_EXT)\" -DBINUTILS="\"$(BINUTILS)\""
 
 TARGET_DIR	= build/$(OS)-$(JDKARCH)
-TARGET		= $(TARGET_DIR)/hsdis-$(LIBARCH)$(LIB_EXT)
+TARGET_LIBRARY  = hsdis-$(LIBARCH)$(LIB_EXT)
+ifeq ($(ALT_TARGET_DIR),)
+TARGET		= $(TARGET_DIR)/$(TARGET_LIBRARY)
+else
+TARGET		= $(ALT_TARGET_DIR)/$(TARGET_LIBRARY)
+endif
 
 SOURCE		= hsdis.c
 
@@ -202,6 +211,13 @@ $(DEMO_TARGET): $(DEMO_SOURCE) $(TARGET) $(TARGET_DIR)
 
 $(TARGET_DIR):
 	[ -d $@ ] || mkdir -p $@
+
+variants: att intel
+	make $(MAKEFLAGS) ALT_TARGET_DIR=intel 
+	make $(MAKEFLAGS) ALT_TARGET_DIR=att ATT_SYNTAX=1 all
+
+att intel:
+	mkdir $@
 
 clean:
 	rm -rf $(TARGET_DIR)
