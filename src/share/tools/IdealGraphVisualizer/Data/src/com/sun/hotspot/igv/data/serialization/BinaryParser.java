@@ -302,6 +302,9 @@ public class BinaryParser implements GraphParser {
     }
     
     private void ensureAvailable(int i) throws IOException {
+        if (i > buffer.capacity()) {
+            throw new IllegalArgumentException(String.format("Can not request %d bytes: buffer capacity is %d", i, buffer.capacity()));
+        }
         while (buffer.remaining() < i) {
             fill();
         }
