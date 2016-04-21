@@ -511,7 +511,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
             fieldCache.put(id, result);
         } else {
             assert result.getName().equals(fieldName);
-            // assert result.getType().equals(type);
+            assert result.getType().equals(type);
             assert result.offset() == offset;
             assert result.getModifiers() == flags;
         }
