@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -81,7 +81,6 @@ public class InputGraph extends Properties.Entity implements FolderElement {
     }
     
     public Map<InputNode, List<InputEdge>> findAllOutgoingEdges() {
-        
         Map<InputNode, List<InputEdge>> result = new HashMap<>(getNodes().size());
         for(InputNode n : this.getNodes()) {
             result.put(n, new ArrayList<InputEdge>());
@@ -104,7 +103,6 @@ public class InputGraph extends Properties.Entity implements FolderElement {
     }
     
     public Map<InputNode, List<InputEdge>> findAllIngoingEdges() {
-        
         Map<InputNode, List<InputEdge>> result = new HashMap<>(getNodes().size());
         for(InputNode n : this.getNodes()) {
             result.put(n, new ArrayList<InputEdge>());
