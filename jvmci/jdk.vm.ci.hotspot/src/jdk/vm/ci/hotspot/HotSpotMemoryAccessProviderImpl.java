@@ -194,6 +194,10 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider, Ho
 
     @Override
     public JavaConstant readObjectConstant(Constant base, long displacement) {
+        if (base instanceof HotSpotObjectConstantImpl) {
+            Object o = readRawObject(base, displacement, runtime.getConfig().useCompressedOops);
+            return HotSpotObjectConstantImpl.forObject(o);
+        }
         if (!isValidObjectFieldDisplacement(base, displacement)) {
             return null;
         }
