@@ -108,7 +108,7 @@ public class PropertyTest {
         final Property p4 = new Property("name", "value");
         assertEquals(p, p4);
         assertEquals(p.hashCode(), p4.hashCode());
-    
+
         final Property p5 = new Property("value", "name");
         assertFalse(p.equals(p5));
         assertTrue(p.hashCode() != p5.hashCode());

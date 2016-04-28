@@ -39,7 +39,7 @@ public class GraphViewerImplementation implements GraphViewer {
 
     @Override
     public void view(InputGraph graph, boolean clone) {
-        
+
         if (!clone) {
             WindowManager manager = WindowManager.getDefault();
             for (Mode m : manager.getModes()) {
@@ -55,7 +55,7 @@ public class GraphViewerImplementation implements GraphViewer {
                 }
             }
         }
-        
+
         Diagram diagram = Diagram.createDiagram(graph, Settings.get().get(Settings.NODE_TEXT, Settings.NODE_TEXT_DEFAULT));
         EditorTopComponent tc = new EditorTopComponent(diagram);
         tc.open();

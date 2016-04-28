@@ -190,7 +190,7 @@ public class XMLParser implements ContentHandler {
 
     @Override
     public void setDocumentLocator(Locator locator) {
-        
+
     }
 
     @Override

@@ -73,7 +73,7 @@ public class DiagramViewModel extends RangeSliderModel implements ChangedListene
         result.setData(this);
         return result;
     }
-    
+
     public Group getGroup() {
         return group;
     }
@@ -121,7 +121,7 @@ public class DiagramViewModel extends RangeSliderModel implements ChangedListene
             viewChangedEvent.fire();
         }
     }
-    
+
     public boolean getShowBlocks() {
         return showBlocks;
     }

@@ -62,7 +62,7 @@ public class GraalEdgeColorFilter extends AbstractFilter {
                     if (type == "Association" && "EndNode".equals(c.getOutputSlot().getFigure().getProperties().get("class"))) {
                         type = "Successor";
                     }
-                    
+
                     if (type != null) {
                         Color typeColor = usageColor.get(type);
                         if (typeColor == null) {
@@ -86,11 +86,11 @@ public class GraalEdgeColorFilter extends AbstractFilter {
     public void setUsageColor(String type, Color usageColor) {
         this.usageColor.put(type, usageColor);
     }
-    
+
     public Color getOtherUsageColor() {
         return otherUsageColor;
     }
-    
+
     public void setOtherUsageColor(Color otherUsageColor) {
         this.otherUsageColor = otherUsageColor;
     }

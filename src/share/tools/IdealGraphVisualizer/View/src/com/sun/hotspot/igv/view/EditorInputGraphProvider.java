@@ -36,11 +36,11 @@ import java.util.Set;
 public class EditorInputGraphProvider implements InputGraphProvider {
 
     private EditorTopComponent editor;
-    
+
     public EditorInputGraphProvider(EditorTopComponent editor) {
         this.editor = editor;
     }
-    
+
     @Override
     public InputGraph getGraph() {
         return editor.getDiagramModel().getGraphToView();

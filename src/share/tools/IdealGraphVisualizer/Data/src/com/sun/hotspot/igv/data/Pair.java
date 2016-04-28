@@ -71,7 +71,7 @@ public class Pair<L, R> {
         if (r != null) {
             b2 = r.equals(obj.r);
         }
-        
+
         return b1 && b2;
     }
 

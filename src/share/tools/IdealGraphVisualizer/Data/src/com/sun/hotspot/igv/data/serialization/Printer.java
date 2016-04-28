@@ -175,7 +175,7 @@ public class Printer {
         writer.startTag(Parser.CONTROL_FLOW_ELEMENT);
         for (InputBlock b : graph.getBlocks()) {
             writer.startTag(Parser.BLOCK_ELEMENT, new Properties(Parser.BLOCK_NAME_PROPERTY, b.getName()));
-            
+
             if (b.getSuccessors().size() > 0) {
                 writer.startTag(Parser.SUCCESSORS_ELEMENT);
                 for (InputBlock s : b.getSuccessors()) {
@@ -191,7 +191,7 @@ public class Printer {
                 }
                 writer.endTag();
             }
-            
+
             writer.endTag();
         }
 
@@ -223,7 +223,7 @@ public class Printer {
             b.append(code.getName());
             b.append("\n");
         }
-        
+
         b.append("]]>");
         w.write(b.toString());
         w.endTag();

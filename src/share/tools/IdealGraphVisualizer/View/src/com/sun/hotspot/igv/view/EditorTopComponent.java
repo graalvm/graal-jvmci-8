@@ -181,7 +181,7 @@ public final class EditorTopComponent extends TopComponent implements PropertyCh
             ZoomOutAction.get(ZoomOutAction.class),
         };
 
-        
+
         Action[] actionsWithSelection = new Action[]{
             ExtractAction.get(ExtractAction.class),
             ShowAllAction.get(HideAction.class),
@@ -235,7 +235,7 @@ public final class EditorTopComponent extends TopComponent implements PropertyCh
         toolBar.addSeparator();
         toolBar.add(ShowAllAction.get(ZoomInAction.class));
         toolBar.add(ShowAllAction.get(ZoomOutAction.class));
-        
+
         blockLayoutAction = new EnableBlockLayoutAction();
         JToggleButton button = new JToggleButton(blockLayoutAction);
         button.setSelected(false);

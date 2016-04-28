@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * Filter that colors nodes using a customizable color gradient, based on how
  * a numeric property is located in a specified interval.
- * 
+ *
  * @author Peter Hofer
  */
 public class GradientColorFilter extends AbstractFilter {

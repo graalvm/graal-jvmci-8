@@ -87,18 +87,18 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     private DiagramViewModel modelCopy;
     private WidgetAction zoomAction;
     private boolean rebuilding;
-    
+
     /**
      * The alpha level of partially visible figures.
      */
     public static final float ALPHA = 0.4f;
-    
+
     /**
      * The offset of the graph to the border of the window showing it.
      */
     public static final int BORDER_SIZE = 20;
-    
-    
+
+
     public static final int UNDOREDO_LIMIT = 100;
     public static final int SCROLL_UNIT_INCREMENT = 80;
     public static final int SCROLL_BLOCK_INCREMENT = 400;
@@ -107,7 +107,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     public static final float ZOOM_INCREMENT = 1.5f;
     public static final int SLOT_OFFSET = 8;
     public static final int ANIMATION_LIMIT = 40;
-    
+
     private PopupMenuProvider popupMenuProvider = new PopupMenuProvider() {
 
         @Override
@@ -430,7 +430,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
         this.getActions().addAction(zoomAction);
         this.getView().addMouseWheelListener(mouseWheelListener);
         this.getActions().addAction(ActionFactory.createPopupMenuAction(popupMenuProvider));
-        
+
         this.getActions().addAction(ActionFactory.createWheelPanAction());
 
         LayerWidget selectLayer = new LayerWidget(this);
@@ -456,7 +456,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     public Component getComponent() {
         return scrollPane;
     }
-    
+
     public boolean isAllVisible() {
         return getModel().getHiddenNodes().isEmpty();
     }
@@ -505,7 +505,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
     private void update() {
         mainLayer.removeChildren();
         blockLayer.removeChildren();
-        
+
         rebuilding = true;
 
         Collection<Object> objects = new ArrayList<>(this.getObjects());
@@ -514,7 +514,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
         }
 
         Diagram d = getModel().getDiagramToView();
-        
+
         if (d.getGraph().getBlocks().isEmpty()) {
             Scheduler s = Lookup.getDefault().lookup(Scheduler.class);
             d.getGraph().clearBlocks();
@@ -548,7 +548,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
                 sw.getActions().addAction(selectAction);
             }
         }
-        
+
         if (getModel().getShowBlocks()) {
             for (InputBlock bn : d.getGraph().getBlocks()) {
                 BlockWidget w = new BlockWidget(this, d, bn);
@@ -557,11 +557,11 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
                 blockLayer.addChild(w);
             }
         }
-        
+
         rebuilding = false;
         this.smallUpdate(true);
     }
-    
+
     public boolean isRebuilding() {
         return rebuilding;
     }
@@ -618,7 +618,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
             manager.setMaxLayerLength(10);
             manager.doLayout(new LayoutGraph(edges, figures));
         }
-        
+
         relayoutWithoutLayout(oldVisibleWidgets);
     }
     private Set<Pair<Point, Point>> lineCache = new HashSet<>();
@@ -652,7 +652,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
                 }
             }
         }
-        
+
         if (getModel().getShowBlocks()) {
             for (Block b : diagram.getBlocks()) {
                 BlockWidget w = getWidget(b.getInputBlock());
@@ -719,14 +719,14 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
                 }
             }
         }
-        
+
         if (getModel().getShowBlocks()) {
             for (Block b : diagram.getBlocks()) {
                 BlockWidget w = getWidget(b.getInputBlock());
                 if (w != null && w.isVisible()) {
                     Point location = new Point(b.getBounds().x + offx2, b.getBounds().y + offy2);
                     Rectangle r = new Rectangle(location.x, location.y, b.getBounds().width, b.getBounds().height);
-                    
+
                     if ((visibleFigureCount <= ANIMATION_LIMIT && oldVisibleWidgets != null && oldVisibleWidgets.contains(w))) {
                         animator.animatePreferredBounds(w, r);
                     } else {
@@ -1032,7 +1032,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
                 oldVisibleWidgets.add(w);
             }
         }
-        
+
         if (getModel().getShowBlocks()) {
             for (InputBlock b : diagram.getGraph().getBlocks()) {
                 BlockWidget w = getWidget(b);
@@ -1092,7 +1092,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
                 }
             }
         }
-        
+
         if (getModel().getShowBlocks()) {
             for (InputBlock b : diagram.getGraph().getBlocks()) {
 
@@ -1154,7 +1154,7 @@ public class DiagramScene extends ObjectScene implements DiagramViewer {
 
     public JPopupMenu createPopupMenu() {
         JPopupMenu menu = new JPopupMenu();
-        
+
         Action[] currentActions = actionsWithSelection;
         if (this.getSelectedObjects().isEmpty()) {
             currentActions = actions;

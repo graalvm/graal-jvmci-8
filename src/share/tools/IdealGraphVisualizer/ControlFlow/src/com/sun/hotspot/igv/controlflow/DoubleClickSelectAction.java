@@ -31,7 +31,7 @@ import org.netbeans.api.visual.widget.Widget;
 
 /**
  * Selection action that acts on double-click only. Does not support aiming.
- * 
+ *
  * @author Peter Hofer
  */
 public class DoubleClickSelectAction extends WidgetAction.LockedAdapter {

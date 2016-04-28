@@ -57,7 +57,7 @@ import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
 /**
- * 
+ *
  * @author Thomas Wuerthinger
  */
 public final class FilterTopComponent extends TopComponent implements LookupListener, ExplorerManager.Provider {

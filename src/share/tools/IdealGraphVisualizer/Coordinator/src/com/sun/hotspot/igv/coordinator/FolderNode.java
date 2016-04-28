@@ -69,7 +69,7 @@ public class FolderNode extends AbstractNode {
         public void addNotify() {
             this.setKeys(folder.getElements());
         }
-        
+
         @Override
         public void changed(Object source) {
             addNotify();

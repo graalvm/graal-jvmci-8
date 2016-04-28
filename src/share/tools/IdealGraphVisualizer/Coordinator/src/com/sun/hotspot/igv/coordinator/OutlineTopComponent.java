@@ -50,7 +50,7 @@ import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
 /**
- * 
+ *
  * @author Thomas Wuerthinger
  */
 public final class OutlineTopComponent extends TopComponent implements ExplorerManager.Provider, LookupListener {
@@ -98,7 +98,7 @@ public final class OutlineTopComponent extends TopComponent implements ExplorerM
 
         toolbar.add(((NodeAction) RemoveAction.get(RemoveAction.class)).createContextAwareInstance(this.getLookup()));
         toolbar.add(RemoveAllAction.get(RemoveAllAction.class));
-        
+
         toolbar.add(GarbageCollectAction.get(GarbageCollectAction.class).getToolbarPresenter());
 
         for (Toolbar tb : ToolbarPool.getDefault().getToolbars()) {
@@ -117,7 +117,7 @@ public final class OutlineTopComponent extends TopComponent implements ExplorerM
                 }
             }
         };
-        
+
         server = new Server(getDocument(), callback, false);
         binaryServer = new Server(getDocument(), callback, true);
     }

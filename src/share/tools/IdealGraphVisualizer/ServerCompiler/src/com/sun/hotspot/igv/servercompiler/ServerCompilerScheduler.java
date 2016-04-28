@@ -215,7 +215,7 @@ public class ServerCompilerScheduler implements Scheduler {
                         noBlock = graph.addBlock("(no block)");
                         blocks.add(noBlock);
                     }
-                    
+
                     graph.setBlock(n, noBlock);
                 }
                 assert graph.getBlock(n) != null;

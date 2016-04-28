@@ -39,7 +39,7 @@ public class FilterChain implements ChangedEventProvider<FilterChain> {
 
     private List<Filter> filters;
     private transient ChangedEvent<FilterChain> changedEvent;
-    
+
     private ChangedListener<Filter> changedListener = new ChangedListener<Filter>() {
         @Override
         public void changed(Filter source) {

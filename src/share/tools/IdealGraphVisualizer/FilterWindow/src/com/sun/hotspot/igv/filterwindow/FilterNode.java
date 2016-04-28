@@ -76,7 +76,7 @@ public class FilterNode extends CheckNode implements LookupListener, ChangedList
 
         FilterTopComponent.findInstance().getFilterSettingsChangedEvent().addListener(this);
         resultChanged(null);
-        
+
         setShortDescription("Double-click to open filter");
     }
 

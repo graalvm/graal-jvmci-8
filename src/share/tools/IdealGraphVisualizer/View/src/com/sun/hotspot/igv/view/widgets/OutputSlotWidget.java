@@ -56,6 +56,6 @@ public class OutputSlotWidget extends SlotWidget {
         List<OutputSlot> slots = getSlot().getFigure().getOutputSlots();
         assert slots.contains(getSlot());
         return calculateWidth(slots.size());
-        
+
     }
 }

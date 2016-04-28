@@ -64,11 +64,11 @@ public class BytecodeNode extends AbstractNode {
             }
             displayName += " (" + nodes.size() + " nodes)";
         }
-        
+
         if (bytecode.getComment() != null) {
             displayName += " // " + bytecode.getComment();
         }
-        
+
         this.setDisplayName(displayName);
     }
 

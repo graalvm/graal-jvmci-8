@@ -74,14 +74,14 @@ public class Group extends Properties.Entity implements ChangedEventProvider<Gro
     public int getGraphsCount() {
         return elements.size();
     }
-    
+
     @Override
     public void addElement(FolderElement element) {
         elements.add(element);
         if (element instanceof InputGraph) {
             graphs.add((InputGraph) element);
         } else {
-            
+
         }
         element.setParent(this);
         changedEvent.fire();
@@ -116,7 +116,7 @@ public class Group extends Properties.Entity implements ChangedEventProvider<Gro
 
     public String getType() {
         return getProperties().get("type");
-        
+
     }
 
     InputGraph getPrev(InputGraph graph) {

@@ -76,7 +76,7 @@ public class HierarchicalGraphLayout<N, E> extends GraphLayout<N, E> {
         public void setControlPoints(List<Point> list) {
         // Do nothing for now
         }
-        
+
         public boolean isVIP() {
             return false;
         }
@@ -142,7 +142,7 @@ public class HierarchicalGraphLayout<N, E> extends GraphLayout<N, E> {
     }
 
     protected void performGraphLayout(UniversalGraph<N, E> graph) {
-        
+
         Set<LinkWrapper> links = new LinkedHashSet<LinkWrapper>();
         Set<VertexWrapper> vertices = new LinkedHashSet<VertexWrapper>();
         Map<N, VertexWrapper> vertexMap = new HashMap<N, VertexWrapper>();

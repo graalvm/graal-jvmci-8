@@ -43,7 +43,7 @@ public class BlockConnectionWidget extends ConnectionWidget implements Link {
     private static final Stroke BOLD_STROKE = new BasicStroke(2.5f);
     private static final Stroke DASHED_STROKE = new BasicStroke(1.0f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 10.0f, new float[]{5, 5}, 0);
     private static final Stroke BOLD_DASHED_STROKE = new BasicStroke(2.5f, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_MITER, 10.0f, new float[]{5, 5}, 0);
-    
+
     private BlockWidget from;
     private BlockWidget to;
     private Port inputSlot;
@@ -113,7 +113,7 @@ public class BlockConnectionWidget extends ConnectionWidget implements Link {
     public String toString() {
         return "Connection[ " + from.toString() + " - " + to.toString() + "]";
     }
-    
+
     @Override
     public boolean isVIP() {
         return isBold;

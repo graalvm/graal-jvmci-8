@@ -39,7 +39,7 @@ public class InputEdge {
         NEW,
         DELETED
     }
-    
+
     public static final Comparator<InputEdge> OUTGOING_COMPARATOR = new Comparator<InputEdge>(){
 
         @Override
@@ -50,8 +50,7 @@ public class InputEdge {
                 return o1.getFromIndex() - o2.getFromIndex();
             }
     };
-    
-    
+
     public static final Comparator<InputEdge> INGOING_COMPARATOR = new Comparator<InputEdge>(){
 
         @Override
@@ -128,7 +127,7 @@ public class InputEdge {
     public char getToIndex() {
         return toIndex;
     }
-    
+
     public char getFromIndex() {
         return fromIndex;
     }
@@ -148,7 +147,7 @@ public class InputEdge {
     public String getLabel() {
         return label;
     }
-    
+
     public String getType() {
         return type;
     }

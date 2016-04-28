@@ -80,7 +80,7 @@ public class GraphNode extends AbstractNode {
 
         // Action for cloning to the current graph
         content.add(new GraphCloneCookie(viewer, graph));
-        
+
         this.addNodeListener(new NodeAdapter() {
             @Override
             public void childrenRemoved(NodeMemberEvent ev) {

@@ -106,15 +106,15 @@ public class Util {
     }
 
     public static void assertGraphEquals(InputGraph a, InputGraph b) {
-        
+
         if(!a.getNodesAsSet().equals(b.getNodesAsSet())) {
             fail();
         }
-        
+
         if (!a.getEdges().equals(b.getEdges())) {
             fail();
         }
-        
+
         if (a.getBlocks().equals(b.getBlocks())) {
             fail();
         }

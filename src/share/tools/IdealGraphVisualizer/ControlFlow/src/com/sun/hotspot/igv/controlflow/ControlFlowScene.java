@@ -79,7 +79,7 @@ public class ControlFlowScene extends GraphScene<InputBlock, InputBlockEdge> imp
 
         edgeLayer = new LayerWidget(this);
         this.addChild(edgeLayer);
-        
+
         selectLayer = new LayerWidget(this);
         this.addChild(selectLayer);
 

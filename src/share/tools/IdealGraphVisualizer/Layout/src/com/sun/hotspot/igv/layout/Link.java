@@ -35,7 +35,7 @@ public interface Link {
     public Port getFrom();
 
     public Port getTo();
-    
+
     public boolean isVIP();
 
     public List<Point> getControlPoints();

@@ -31,7 +31,7 @@ import java.awt.Color;
 import java.util.List;
 
 public class GraalColoringFilter extends AbstractFilter {
-    
+
     private String colorName;
 
     public GraalColoringFilter(String colorName) {

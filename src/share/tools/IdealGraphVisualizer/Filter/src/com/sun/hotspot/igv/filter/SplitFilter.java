@@ -46,13 +46,13 @@ public class SplitFilter extends AbstractFilter {
     public String getName() {
         return name;
     }
-    
+
     @Override
     public void apply(Diagram d) {
         List<Figure> list = selector.selected(d);
 
         for (Figure f : list) {
-            
+
             for (InputSlot is : f.getInputSlots()) {
                 for (Connection c : is.getConnections()) {
                     OutputSlot os = c.getOutputSlot();

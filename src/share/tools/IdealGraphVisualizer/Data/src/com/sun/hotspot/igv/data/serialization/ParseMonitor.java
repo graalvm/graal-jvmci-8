@@ -29,5 +29,5 @@ public interface ParseMonitor {
     public void updateProgress();
 
     public void setState(String state);
-    
+
 }

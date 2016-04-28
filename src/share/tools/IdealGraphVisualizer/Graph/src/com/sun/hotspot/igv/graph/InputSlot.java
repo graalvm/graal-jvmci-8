@@ -27,7 +27,7 @@ import java.awt.Point;
 import java.util.List;
 
 /**
- * 
+ *
  * @author Thomas Wuerthinger
  */
 public class InputSlot extends Slot {

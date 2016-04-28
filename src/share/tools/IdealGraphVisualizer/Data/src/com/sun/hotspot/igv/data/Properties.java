@@ -242,7 +242,7 @@ public class Properties implements Serializable, Iterable<Property> {
 
         private String name;
         private Pattern valuePattern;
-        
+
         public RegexpPropertyMatcher(String name, String value) {
             this(name, value, 0);
         }

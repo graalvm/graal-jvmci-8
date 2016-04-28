@@ -35,7 +35,7 @@ public abstract class Event<L> {
     private List<L> listener;
     private boolean fireEvents;
     private boolean eventWasFired;
-    
+
     public Event() {
         listener = new ArrayList<>();
         fireEvents = true;
@@ -77,6 +77,6 @@ public abstract class Event<L> {
             fire();
         }
     }
-    
+
     protected abstract void fire(L l);
 }

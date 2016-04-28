@@ -239,20 +239,20 @@ public class LineWidget extends Widget implements PopupMenuProvider {
 
     private void setHighlighted(boolean b) {
         this.highlighted = b;
-	Set<Object> highlightedObjects = new HashSet<>(scene.getHighlightedObjects());
-	Set<Object> highlightedObjectsChange = new HashSet<>();
+        Set<Object> highlightedObjects = new HashSet<>(scene.getHighlightedObjects());
+        Set<Object> highlightedObjectsChange = new HashSet<>();
         for (Connection c : connections) {
-		highlightedObjectsChange.add(c.getInputSlot().getFigure());
-		highlightedObjectsChange.add(c.getInputSlot());
-		highlightedObjectsChange.add(c.getOutputSlot().getFigure());
-		highlightedObjectsChange.add(c.getOutputSlot());
+            highlightedObjectsChange.add(c.getInputSlot().getFigure());
+            highlightedObjectsChange.add(c.getInputSlot());
+            highlightedObjectsChange.add(c.getOutputSlot().getFigure());
+            highlightedObjectsChange.add(c.getOutputSlot());
         }
-	if(b) {
-		highlightedObjects.addAll(highlightedObjectsChange);
-	} else {
-		highlightedObjects.removeAll(highlightedObjectsChange);
-	}
-	scene.setHighlightedObjects(highlightedObjects);
+        if(b) {
+            highlightedObjects.addAll(highlightedObjectsChange);
+        } else {
+            highlightedObjects.removeAll(highlightedObjectsChange);
+        }
+        scene.setHighlightedObjects(highlightedObjects);
         this.revalidate(true);
     }
 

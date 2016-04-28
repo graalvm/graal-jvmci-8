@@ -69,7 +69,7 @@ public class InputGraphTest {
 
         emptyGraph = new InputGraph("emptyGraph");
         group.addElement(emptyGraph);
-        
+
         referenceGraph = new InputGraph("referenceGraph");
         group.addElement(referenceGraph);
         referenceGraph.addNode(N1);

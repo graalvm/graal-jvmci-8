@@ -40,7 +40,7 @@ import org.openide.windows.TopComponent;
 import org.openide.windows.WindowManager;
 
 /**
- * 
+ *
  * @author Thomas Wuerthinger
  */
 final class ControlFlowTopComponent extends TopComponent implements LookupListener {

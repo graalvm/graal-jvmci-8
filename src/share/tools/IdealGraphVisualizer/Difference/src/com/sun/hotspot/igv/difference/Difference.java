@@ -207,7 +207,7 @@ public class Difference {
             InputNode nodeTo = inputNodeMap.get(a.getNode(to));
             char fromIndex = e.getFromIndex();
             char toIndex = e.getToIndex();
-            
+
             if (nodeFrom == null || nodeTo == null) {
                 System.out.println("Unexpected edge : " + from + " -> " + to);
             } else {

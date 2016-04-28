@@ -61,11 +61,11 @@ import org.netbeans.api.visual.widget.Widget;
  */
 public class CustomizablePanAction extends WidgetAction.LockedAdapter {
     private boolean enabled = true;
-    
+
     private Scene scene;
     private JScrollPane scrollPane;
     private Point lastLocation;
-    
+
     private final int modifiersExMask;
     private final int modifiersEx;
 
@@ -78,12 +78,12 @@ public class CustomizablePanAction extends WidgetAction.LockedAdapter {
     protected boolean isLocked() {
         return scrollPane != null;
     }
-    
+
     public void setEnabled(boolean enabled) {
         if (this.enabled != enabled) {
             if (isLocked())
                 throw new IllegalStateException();
-            
+
             this.enabled = enabled;
         }
     }

@@ -42,7 +42,7 @@ import junit.framework.TestCase;
 public class PropertiesTest extends TestCase {
 
 
-    
+
     public PropertiesTest(String testName) {
         super(testName);
     }
@@ -64,7 +64,7 @@ public class PropertiesTest extends TestCase {
         Properties a = new Properties();
         assertFalse(a.equals(null));
         assertTrue(a.equals(a));
-        
+
         Properties b = new Properties();
         assertTrue(a.equals(b));
         assertTrue(a.hashCode() == b.hashCode());
@@ -99,11 +99,11 @@ public class PropertiesTest extends TestCase {
      * Test of selectSingle method, of class Properties.
      */
     public void testSelectSingle() {
-        
+
         final boolean[] called = new boolean[1];
         final String v = "2";
         final String n = "p2";
-        
+
         PropertyMatcher matcher = new PropertyMatcher() {
 
             @Override
@@ -198,14 +198,14 @@ public class PropertiesTest extends TestCase {
         b.add(c);
 
         assertTrue(a.equals(b));
-        
+
         b.setProperty("p3", null);
         assertTrue(a.equals(b));
-    
+
         Properties empty = new Properties();
         b.add(empty);
         assertTrue(a.equals(b));
-        
+
         empty.add(b);
         assertTrue(a.equals(empty));
     }
@@ -344,7 +344,7 @@ public class PropertiesTest extends TestCase {
         assertFalse(matcher2.match(" C"));
         assertFalse(matcher2.match("c"));
         assertFalse(matcher2.match("asdfC"));
-        
+
         try {
             matcher2.match(null);
             fail();
@@ -364,7 +364,7 @@ public class PropertiesTest extends TestCase {
             new RegexpPropertyMatcher("p1", null);
             fail();
         } catch(IllegalArgumentException e) {}
-        
+
         final InvertPropertyMatcher matcher3 = new InvertPropertyMatcher(matcher);
         assertTrue(matcher3.getName().equals("p1"));
         assertFalse(matcher3.match("1"));
@@ -388,7 +388,7 @@ public class PropertiesTest extends TestCase {
         p3.setProperty("p2", "2");
         p3.setProperty("p1", "1");
         assertEquals(p3.toString(), "[p1=1, p2=2]");
-        
+
         p3.setProperty("p0", "0");
         assertEquals(p3.toString(), "[p0=0, p1=1, p2=2]");
 

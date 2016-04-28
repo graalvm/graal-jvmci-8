@@ -1707,7 +1707,7 @@ public class HierarchicalLayoutManager implements LayoutManager {
             if (l1.isVIP() && !l2.isVIP()) {
                 return -1;
             }
-            
+
             if (!l1.isVIP() && l2.isVIP()) {
                 return 1;
             }

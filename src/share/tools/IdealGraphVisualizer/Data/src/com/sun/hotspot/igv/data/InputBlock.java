@@ -51,7 +51,7 @@ public class InputBlock {
         if (o == null || (!(o instanceof InputBlock))) {
             return false;
         }
-        
+
         final InputBlock b = (InputBlock)o;
         final boolean result = b.nodes.equals(nodes) && b.name.equals(name) && b.successors.size() == successors.size();
         if (!result) {

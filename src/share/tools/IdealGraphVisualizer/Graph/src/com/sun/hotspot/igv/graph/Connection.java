@@ -107,7 +107,7 @@ public class Connection implements Source.Provider, Link {
     public String getLabel() {
         return label;
     }
-    
+
     public String getType() {
         return type;
     }
