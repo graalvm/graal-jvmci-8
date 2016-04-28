@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,12 +20,20 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.vm.ci.runtime;
+package jdk.vm.ci.hotspot.services;
+
+import jdk.vm.ci.code.CompiledCode;
+import jdk.vm.ci.code.InstalledCode;
+import jdk.vm.ci.hotspot.HotSpotCodeCacheProvider;
+import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime;
+import jdk.vm.ci.meta.JVMCIMetaAccessContext;
+import jdk.vm.ci.meta.ResolvedJavaType;
 
 /**
- * Service-provider class for creating JVMCI compilers.
+ * Service-provider class for responding to VM events and for creating
+ * {@link JVMCIMetaAccessContext}s.
  */
-public abstract class JVMCICompilerFactory {
+public abstract class HotSpotVMEventListener {
 
     private static Void checkPermission() {
         SecurityManager sm = System.getSecurityManager();
@@ -35,7 +43,7 @@ public abstract class JVMCICompilerFactory {
     }
 
     @SuppressWarnings("unused")
-    private JVMCICompilerFactory(Void ignore) {
+    HotSpotVMEventListener(Void ignore) {
     }
 
     /**
@@ -44,38 +52,35 @@ public abstract class JVMCICompilerFactory {
      * @throws SecurityException if a security manager has been installed and it denies
      *             {@code RuntimePermission("jvmci")}
      */
-    protected JVMCICompilerFactory() {
+    protected HotSpotVMEventListener() {
         this(checkPermission());
     }
 
     /**
-     * Get the name of this compiler. The name is used by JVMCI to determine which factory to use.
+     * Notifies this client that the VM is shutting down.
      */
-    public abstract String getCompilerName();
-
-    /**
-     * Notifies this object that it has been selected to {@linkplain #createCompiler(JVMCIRuntime)
-     * create} a compiler and it should now perform any heavy weight initialization that it deferred
-     * during construction.
-     */
-    public void onSelection() {
+    public void notifyShutdown() {
     }
 
     /**
-     * Create a new instance of a {@link JVMCICompiler}.
+     * Notify on successful install into the code cache.
+     *
+     * @param hotSpotCodeCacheProvider
+     * @param installedCode
+     * @param compiledCode
      */
-    public abstract JVMCICompiler createCompiler(JVMCIRuntime runtime);
+    public void notifyInstall(HotSpotCodeCacheProvider hotSpotCodeCacheProvider, InstalledCode installedCode, CompiledCode compiledCode) {
+    }
 
     /**
-     * In a tiered system it might be advantageous for startup to keep the JVMCI compiler from
-     * compiling itself so provide a hook to request that certain packages are compiled only by an
-     * optimizing first tier. The prefixes should class or package names using / as the separator,
-     * i.e. jdk/vm/ci for instance.
+     * Create a custom {@link JVMCIMetaAccessContext} to be used for managing the lifetime of loaded
+     * metadata. It a custom one isn't created then the default implementation will be a single
+     * context with globally shared instances of {@link ResolvedJavaType} that are never released.
      *
-     * @return 0 or more Strings identifying packages that should by compiled by the first tier
-     *         only.
+     * @param runtime the runtime instance that will use the returned context
+     * @return a custom context or null
      */
-    public String[] getTrivialPrefixes() {
+    public JVMCIMetaAccessContext createMetaAccessContext(HotSpotJVMCIRuntime runtime) {
         return null;
     }
 }

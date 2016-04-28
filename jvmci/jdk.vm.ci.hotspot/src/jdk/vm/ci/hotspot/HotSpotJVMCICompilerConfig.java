@@ -27,8 +27,8 @@ import jdk.vm.ci.code.CompilationRequestResult;
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.runtime.JVMCICompiler;
-import jdk.vm.ci.runtime.JVMCICompilerFactory;
 import jdk.vm.ci.runtime.JVMCIRuntime;
+import jdk.vm.ci.runtime.services.JVMCICompilerFactory;
 import jdk.vm.ci.services.Services;
 
 final class HotSpotJVMCICompilerConfig {
