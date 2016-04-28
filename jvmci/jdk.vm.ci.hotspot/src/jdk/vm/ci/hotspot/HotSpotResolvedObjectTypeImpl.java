@@ -909,4 +909,9 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     public boolean isTrustedInterfaceType() {
         return TrustedInterface.class.isAssignableFrom(mirror());
     }
+
+    @Override
+    public boolean isAllocationCloneable() {
+        return (getAccessFlags() & config().jvmAccIsCloneable) != 0;
+    }
 }

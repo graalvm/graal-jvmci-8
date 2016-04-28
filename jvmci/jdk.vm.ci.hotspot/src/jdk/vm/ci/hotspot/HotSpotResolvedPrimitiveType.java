@@ -268,4 +268,9 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     public boolean isTrustedInterfaceType() {
         return false;
     }
+
+    @Override
+    public boolean isAllocationCloneable() {
+        return false;
+    }
 }

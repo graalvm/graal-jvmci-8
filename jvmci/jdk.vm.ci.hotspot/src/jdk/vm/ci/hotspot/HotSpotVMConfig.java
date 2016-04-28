@@ -942,6 +942,7 @@ public class HotSpotVMConfig {
     @HotSpotVMConstant(name = "JVM_ACC_FIELD_STABLE") @Stable public int jvmAccFieldStable;
     @HotSpotVMConstant(name = "JVM_ACC_FIELD_HAS_GENERIC_SIGNATURE") @Stable public int jvmAccFieldHasGenericSignature;
     @HotSpotVMConstant(name = "JVM_ACC_WRITTEN_FLAGS") @Stable public int jvmAccWrittenFlags;
+    @HotSpotVMConstant(name = "JVM_ACC_IS_CLONEABLE") @Stable public int jvmAccIsCloneable;
 
     @HotSpotVMField(name = "Thread::_tlab", type = "ThreadLocalAllocBuffer", get = HotSpotVMField.Type.OFFSET) @Stable public int threadTlabOffset;
 
