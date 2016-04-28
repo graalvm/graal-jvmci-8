@@ -37,8 +37,9 @@ public abstract class HotSpotVMEventListener {
 
     private static Void checkPermission() {
         SecurityManager sm = System.getSecurityManager();
-        if (sm != null)
+        if (sm != null) {
             sm.checkPermission(new RuntimePermission("jvmci"));
+        }
         return null;
     }
 

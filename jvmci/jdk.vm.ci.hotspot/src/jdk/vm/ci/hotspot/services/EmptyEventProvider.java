@@ -28,7 +28,7 @@ package jdk.vm.ci.hotspot.services;
  */
 final class EmptyEventProvider extends EventProvider {
 
-    public EmptyEventProvider() {
+    EmptyEventProvider() {
         super(null);
     }
 
