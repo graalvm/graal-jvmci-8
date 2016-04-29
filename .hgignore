@@ -41,6 +41,9 @@ output\.cfg$
 ^scratch/
 ^test-output/
 scratch/
+savedDeps/
+src_gen/
+currentAnnotationProcessors/
 bin/
 ^local/
 ^src/share/tools/hsdis/build/

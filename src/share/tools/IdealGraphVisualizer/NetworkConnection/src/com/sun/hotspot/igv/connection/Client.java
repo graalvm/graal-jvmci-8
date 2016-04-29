@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -54,6 +54,8 @@ public class Client implements Runnable {
             if (binary) {
                 new BinaryParser(channel, null, rootDocument, callback).parse();
             } else {
+                // signal readiness to client VM (old protocol)
+                channel.socket().getOutputStream().write('y');
                 new Parser(channel, null, callback).parse();
             }
         } catch (IOException ex) {

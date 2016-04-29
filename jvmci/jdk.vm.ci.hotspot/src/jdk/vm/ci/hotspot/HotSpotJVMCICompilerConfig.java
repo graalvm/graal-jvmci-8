@@ -27,22 +27,24 @@ import jdk.vm.ci.code.CompilationRequestResult;
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.runtime.JVMCICompiler;
-import jdk.vm.ci.runtime.JVMCICompilerFactory;
 import jdk.vm.ci.runtime.JVMCIRuntime;
+import jdk.vm.ci.runtime.services.JVMCICompilerFactory;
 import jdk.vm.ci.services.Services;
 
 final class HotSpotJVMCICompilerConfig {
 
-    private static class DummyCompilerFactory implements JVMCICompilerFactory, JVMCICompiler {
+    private static class DummyCompilerFactory extends JVMCICompilerFactory implements JVMCICompiler {
 
         public CompilationRequestResult compileMethod(CompilationRequest request) {
             throw new JVMCIError("no JVMCI compiler selected");
         }
 
+        @Override
         public String getCompilerName() {
             return "<none>";
         }
 
+        @Override
         public JVMCICompiler createCompiler(JVMCIRuntime runtime) {
             return this;
         }
@@ -65,6 +67,7 @@ final class HotSpotJVMCICompilerConfig {
             if (compilerName != null) {
                 for (JVMCICompilerFactory f : Services.load(JVMCICompilerFactory.class)) {
                     if (f.getCompilerName().equals(compilerName)) {
+                        f.onSelection();
                         factory = f;
                     }
                 }

@@ -39,6 +39,6 @@ public interface Vertex extends Comparable<Vertex> {
     public void setPosition(Point p);
 
     public boolean isRoot();
-    
+
     public Cluster getCluster();
 }

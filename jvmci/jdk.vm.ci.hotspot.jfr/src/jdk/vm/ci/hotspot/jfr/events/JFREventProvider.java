@@ -26,9 +26,7 @@ import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 
 import java.net.URISyntaxException;
 
-import jdk.vm.ci.hotspot.events.EmptyEventProvider.EmptyCompilationEvent;
-import jdk.vm.ci.hotspot.events.EmptyEventProvider.EmptyCompilerFailureEvent;
-import jdk.vm.ci.hotspot.events.EventProvider;
+import jdk.vm.ci.hotspot.services.EventProvider;
 
 /**
  * A JFR implementation for {@link EventProvider}. This implementation is used when Flight Recorder
@@ -38,7 +36,7 @@ import jdk.vm.ci.hotspot.events.EventProvider;
  * <a href="https://bugs.openjdk.java.net/browse/JDK-8032211">JDK-8032211</a>.
  */
 @SuppressWarnings("deprecation")
-public final class JFREventProvider implements EventProvider {
+public final class JFREventProvider extends EventProvider {
 
     private final boolean enabled;
 
@@ -89,11 +87,12 @@ public final class JFREventProvider implements EventProvider {
         }
     }
 
+    @Override
     public CompilationEvent newCompilationEvent() {
         if (enabled) {
             return new JFRCompilationEvent();
         }
-        return new EmptyCompilationEvent();
+        return EventProvider.createEmptyCompilationEvent();
     }
 
     /**
@@ -145,11 +144,12 @@ public final class JFREventProvider implements EventProvider {
         }
     }
 
+    @Override
     public CompilerFailureEvent newCompilerFailureEvent() {
         if (enabled) {
             return new JFRCompilerFailureEvent();
         }
-        return new EmptyCompilerFailureEvent();
+        return EventProvider.createEmptyCompilerFailureEvent();
     }
 
     /**

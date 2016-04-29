@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,23 +20,55 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.vm.ci.runtime;
+package jdk.vm.ci.runtime.services;
+
+import jdk.vm.ci.runtime.JVMCICompiler;
+import jdk.vm.ci.runtime.JVMCIRuntime;
 
 /**
- * Factory for a JVMCI compiler.
+ * Service-provider class for creating JVMCI compilers.
  */
-public interface JVMCICompilerFactory {
+public abstract class JVMCICompilerFactory {
+
+    private static Void checkPermission() {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new RuntimePermission("jvmci"));
+        }
+        return null;
+    }
+
+    @SuppressWarnings("unused")
+    private JVMCICompilerFactory(Void ignore) {
+    }
 
     /**
-     * Get the name of this compiler. The compiler will be selected when the jvmci.compiler system
-     * property is equal to this name.
+     * Initializes a new instance of this class.
+     *
+     * @throws SecurityException if a security manager has been installed and it denies
+     *             {@code RuntimePermission("jvmci")}
      */
-    String getCompilerName();
+    protected JVMCICompilerFactory() {
+        this(checkPermission());
+    }
 
     /**
-     * Create a new instance of the {@link JVMCICompiler}.
+     * Get the name of this compiler. The name is used by JVMCI to determine which factory to use.
      */
-    JVMCICompiler createCompiler(JVMCIRuntime runtime);
+    public abstract String getCompilerName();
+
+    /**
+     * Notifies this object that it has been selected to {@linkplain #createCompiler(JVMCIRuntime)
+     * create} a compiler and it should now perform any heavy weight initialization that it deferred
+     * during construction.
+     */
+    public void onSelection() {
+    }
+
+    /**
+     * Create a new instance of a {@link JVMCICompiler}.
+     */
+    public abstract JVMCICompiler createCompiler(JVMCIRuntime runtime);
 
     /**
      * In a tiered system it might be advantageous for startup to keep the JVMCI compiler from
@@ -47,7 +79,7 @@ public interface JVMCICompilerFactory {
      * @return 0 or more Strings identifying packages that should by compiled by the first tier
      *         only.
      */
-    default String[] getTrivialPrefixes() {
+    public String[] getTrivialPrefixes() {
         return null;
     }
 }

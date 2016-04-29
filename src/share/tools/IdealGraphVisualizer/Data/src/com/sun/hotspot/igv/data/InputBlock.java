@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -51,7 +51,7 @@ public class InputBlock {
         if (o == null || (!(o instanceof InputBlock))) {
             return false;
         }
-        
+
         final InputBlock b = (InputBlock)o;
         final boolean result = b.nodes.equals(nodes) && b.name.equals(name) && b.successors.size() == successors.size();
         if (!result) {

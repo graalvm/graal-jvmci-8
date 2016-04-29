@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -61,7 +61,7 @@ public class BatikSVG {
                 if (batikJar == null) {
                     return null;
                 }
-		// Load batik in it's own class loader since some it's support jars interfere with the JDK
+                // Load batik in it's own class loader since some it's support jars interfere with the JDK
                 URL url = new File(batikJar).toURI().toURL();
                 ClassLoader cl = new URLClassLoader(new URL[] { url });
                 Class<?> classGenericDOMImplementation = cl.loadClass("org.apache.batik.dom.GenericDOMImplementation");

@@ -246,7 +246,7 @@ public class FigureWidget extends Widget implements Properties.Provider, PopupMe
     public JPopupMenu getPopupMenu(Widget widget, Point point) {
         JPopupMenu menu = diagramScene.createPopupMenu();
         menu.addSeparator();
-        
+
         build(menu, getFigure(), this, false, diagramScene);
         menu.addSeparator();
         build(menu, getFigure(), this, true, diagramScene);

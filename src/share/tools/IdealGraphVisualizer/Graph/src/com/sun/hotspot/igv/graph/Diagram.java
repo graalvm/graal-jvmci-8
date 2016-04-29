@@ -58,7 +58,7 @@ public class Diagram {
     public Font getBoldFont() {
         return boldFont;
     }
-    
+
     private Diagram() {
         figures = new ArrayList<>();
         blocks = new LinkedHashMap<>(8);
@@ -67,7 +67,7 @@ public class Diagram {
         this.slotFont = new Font("Arial", Font.PLAIN, 10);
         this.boldFont = this.font.deriveFont(Font.BOLD);
     }
-    
+
     public Block getBlock(InputBlock b) {
         assert blocks.containsKey(b);
         return blocks.get(b);
@@ -76,7 +76,7 @@ public class Diagram {
     public String getNodeText() {
         return nodeText;
     }
-    
+
     public void updateBlocks() {
         blocks.clear();
         for (InputBlock b : graph.getBlocks()) {
@@ -88,7 +88,7 @@ public class Diagram {
     public Diagram getNext() {
         return Diagram.createDiagram(graph.getNext(), nodeText);
     }
-    
+
     public Collection<Block> getBlocks() {
         return Collections.unmodifiableCollection(blocks.values());
     }
@@ -113,20 +113,20 @@ public class Diagram {
         assert outputSlot.getFigure().getDiagram() == this;
         return new Connection(inputSlot, outputSlot, label, type);
     }
-    
+
     public Map<InputNode, Set<Figure>> calcSourceToFigureRelation() {
         Map<InputNode, Set<Figure>> map = new HashMap<>();
-        
+
         for(InputNode node : this.getGraph().getNodes()) {
             map.put(node, new HashSet<Figure>());
         }
-        
+
         for(Figure f : this.getFigures()) {
             for(InputNode node : f.getSource().getSourceNodes()) {
                 map.get(node).add(f);
             }
         }
-        
+
         return map;
     }
 
@@ -138,7 +138,7 @@ public class Diagram {
         Diagram d = new Diagram();
         d.graph = graph;
         d.nodeText = nodeText;
-        
+
         d.updateBlocks();
 
         Collection<InputNode> nodes = graph.getNodes();
@@ -157,7 +157,7 @@ public class Diagram {
             int to = e.getTo();
             Figure fromFigure = figureHash.get(from);
             Figure toFigure = figureHash.get(to);
-            
+
             if(fromFigure == null || toFigure == null) continue;
             assert fromFigure != null && toFigure != null;
 

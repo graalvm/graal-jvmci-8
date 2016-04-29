@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -207,7 +207,7 @@ public class Difference {
             InputNode nodeTo = inputNodeMap.get(a.getNode(to));
             char fromIndex = e.getFromIndex();
             char toIndex = e.getToIndex();
-            
+
             if (nodeFrom == null || nodeTo == null) {
                 System.out.println("Unexpected edge : " + from + " -> " + to);
             } else {

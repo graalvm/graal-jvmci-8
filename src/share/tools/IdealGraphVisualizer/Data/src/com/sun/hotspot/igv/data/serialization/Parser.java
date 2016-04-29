@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -546,7 +546,7 @@ public class Parser implements GraphParser {
     private XMLReader createReader() throws SAXException {
         try {
             SAXParserFactory pfactory = SAXParserFactory.newInstance();
-            pfactory.setValidating(false);
+            pfactory.setValidating(true);
             pfactory.setNamespaceAware(true);
 
             // Enable schema validation

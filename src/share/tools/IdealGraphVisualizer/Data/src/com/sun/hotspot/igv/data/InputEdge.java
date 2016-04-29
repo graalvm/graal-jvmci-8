@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ public class InputEdge {
         NEW,
         DELETED
     }
-    
+
     public static final Comparator<InputEdge> OUTGOING_COMPARATOR = new Comparator<InputEdge>(){
 
         @Override
@@ -50,8 +50,7 @@ public class InputEdge {
                 return o1.getFromIndex() - o2.getFromIndex();
             }
     };
-    
-    
+
     public static final Comparator<InputEdge> INGOING_COMPARATOR = new Comparator<InputEdge>(){
 
         @Override
@@ -128,7 +127,7 @@ public class InputEdge {
     public char getToIndex() {
         return toIndex;
     }
-    
+
     public char getFromIndex() {
         return fromIndex;
     }
@@ -148,7 +147,7 @@ public class InputEdge {
     public String getLabel() {
         return label;
     }
-    
+
     public String getType() {
         return type;
     }

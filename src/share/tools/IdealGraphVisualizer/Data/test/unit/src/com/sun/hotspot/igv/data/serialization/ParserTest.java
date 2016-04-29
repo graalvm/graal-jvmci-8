@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -128,7 +128,7 @@ public class ParserTest {
 
         graph.addEdge(new InputEdge((char)0, (char)0, 1, 2));
         test(doc);
-        
+
         graph.addEdge(new InputEdge((char)0, (char)0, 2, 3));
         test(doc);
 
@@ -160,58 +160,58 @@ public class ParserTest {
         Util.assertGraphDocumentEquals(doc, new GraphDocument());
     }
 
-	@Test
-	public void testSimpleExport() {
-		GraphDocument document = new GraphDocument();
-		Group g = new Group(document);
-		document.addElement(g);
-        
-		InputGraph graph = new InputGraph("TestGraph");
-                g.addElement(graph);
-		graph.getProperties().setProperty("testName", "testValue");
+    @Test
+    public void testSimpleExport() {
+        GraphDocument document = new GraphDocument();
+        Group g = new Group(document);
+        document.addElement(g);
 
-		InputNode n1 = new InputNode(0);
-		InputNode n2 = new InputNode(1);
-		InputEdge e1 = new InputEdge((char)0, 0, 1);
-		InputEdge e2 = new InputEdge((char)1, 0, 1);
-		graph.addNode(n1);
-		graph.addNode(n2);
-		graph.addEdge(e1);
-		graph.addEdge(e2);
-        
+        InputGraph graph = new InputGraph("TestGraph");
+                g.addElement(graph);
+        graph.getProperties().setProperty("testName", "testValue");
+
+        InputNode n1 = new InputNode(0);
+        InputNode n2 = new InputNode(1);
+        InputEdge e1 = new InputEdge((char)0, 0, 1);
+        InputEdge e2 = new InputEdge((char)1, 0, 1);
+        graph.addNode(n1);
+        graph.addNode(n2);
+        graph.addEdge(e1);
+        graph.addEdge(e2);
+
         test(document);
-	}
+    }
 
-	@Test
-	public void testComplexExport() {
+    @Test
+    public void testComplexExport() {
 
-		GraphDocument document = new GraphDocument();
-		Group g = new Group(document);
-		document.addElement(g);
+        GraphDocument document = new GraphDocument();
+        Group g = new Group(document);
+        document.addElement(g);
 
-		InputGraph graph = new InputGraph("TestGraph");
+        InputGraph graph = new InputGraph("TestGraph");
                 g.addElement(graph);
-		graph.getProperties().setProperty("testName", "testValue");
+        graph.getProperties().setProperty("testName", "testValue");
 
-		InputNode n1 = new InputNode(0);
-		InputNode n2 = new InputNode(1);
-		InputEdge e1 = new InputEdge((char)0, 0, 0);
-		InputEdge e2 = new InputEdge((char)1, 1, 1);
-		graph.addNode(n1);
-		graph.addNode(n2);
-		graph.addEdge(e1);
-		graph.addEdge(e2);
+        InputNode n1 = new InputNode(0);
+        InputNode n2 = new InputNode(1);
+        InputEdge e1 = new InputEdge((char)0, 0, 0);
+        InputEdge e2 = new InputEdge((char)1, 1, 1);
+        graph.addNode(n1);
+        graph.addNode(n2);
+        graph.addEdge(e1);
+        graph.addEdge(e2);
 
-		InputGraph graph2 = new InputGraph("TestGraph2");
+        InputGraph graph2 = new InputGraph("TestGraph2");
                 g.addElement(graph2);
-		graph2.addNode(n1);
-		InputNode n3 = new InputNode(2);
-		graph2.addNode(n3);
-		InputEdge e3 = new InputEdge((char)0, 0, 2);
-		graph2.addEdge(e3);
+        graph2.addNode(n1);
+        InputNode n3 = new InputNode(2);
+        graph2.addNode(n3);
+        InputEdge e3 = new InputEdge((char)0, 0, 2);
+        graph2.addEdge(e3);
 
         test(document);
-	}
+    }
 
 
     /**

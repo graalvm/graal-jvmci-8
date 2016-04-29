@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,7 +39,7 @@ public class GraphViewerImplementation implements GraphViewer {
 
     @Override
     public void view(InputGraph graph, boolean clone) {
-        
+
         if (!clone) {
             WindowManager manager = WindowManager.getDefault();
             for (Mode m : manager.getModes()) {
@@ -55,7 +55,7 @@ public class GraphViewerImplementation implements GraphViewer {
                 }
             }
         }
-        
+
         Diagram diagram = Diagram.createDiagram(graph, Settings.get().get(Settings.NODE_TEXT, Settings.NODE_TEXT_DEFAULT));
         EditorTopComponent tc = new EditorTopComponent(diagram);
         tc.open();

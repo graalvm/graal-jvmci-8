@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,27 +30,27 @@ package com.sun.hotspot.igv.data;
  */
 public abstract class ControllableChangedListener<T> implements ChangedListener<T>{
 
-	private boolean enabled;
+    private boolean enabled;
 
-	
-	public ControllableChangedListener() {
-		enabled = true;
-	}
 
-	public boolean isEnabled() {
-		return enabled;
-	}
+    public ControllableChangedListener() {
+        enabled = true;
+    }
 
-	public void setEnabled(boolean b) {
-		enabled = b;
-	}
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean b) {
+        enabled = b;
+    }
 
     @Override
-	public void changed(T source) {
-		if(enabled) {
-			filteredChanged(source);
-		}
-	}
+    public void changed(T source) {
+        if(enabled) {
+            filteredChanged(source);
+        }
+    }
 
-	public abstract void filteredChanged(T source);
+    public abstract void filteredChanged(T source);
 }

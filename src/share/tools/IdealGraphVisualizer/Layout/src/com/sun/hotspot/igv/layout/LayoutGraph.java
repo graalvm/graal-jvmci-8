@@ -144,7 +144,7 @@ public class LayoutGraph {
 
     // Returns a set of vertices with the following properties:
     // - All Vertices in the set startingRoots are elements of the set.
-    // - When starting a DFS at every vertex in the set, every vertex of the 
+    // - When starting a DFS at every vertex in the set, every vertex of the
     //   whole graph is visited.
     public Set<Vertex> findRootVertices(Set<Vertex> startingRoots) {
 
@@ -183,7 +183,7 @@ public class LayoutGraph {
     public Set<Vertex> findRootVertices() {
         return findRootVertices(new HashSet<Vertex>());
     }
-    
+
     public SortedSet<Cluster> getClusters() {
 
         SortedSet<Cluster> clusters = new TreeSet<Cluster>();

@@ -546,7 +546,11 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
 
             # Install a copy of the disassembler library
             try:
-                hsdis([], copyToDir=vmLibDirInJdk(jdkDir))
+                hsdis_args = []
+                syntax = mx.get_env('HSDIS_SYNTAX')
+                if syntax:
+                    hsdis_args = [syntax]
+                hsdis(hsdis_args, copyToDir=vmLibDirInJdk(jdkDir))
             except SystemExit:
                 pass
     else:
@@ -1451,36 +1455,39 @@ def hsdis(args, copyToDir=None):
 
     This is needed to support HotSpot's assembly dumping features.
     By default it downloads the Intel syntax version, use the 'att' argument to install AT&T syntax."""
-    flavor = 'intel'
-    if 'att' in args:
-        flavor = 'att'
-    if mx.get_arch() == "sparcv9":
-        flavor = "sparcv9"
-        osSuffix = mx.get_os() + '-'
-    else:
-        osSuffix = ''
-    lib = mx.add_lib_suffix('hsdis-' + osSuffix + mx.get_arch())
-    path = join(_suite.get_output_root(), lib)
+    flavor = None
+    if mx.get_arch() == "amd64":
+        flavor = 'intel'
+        if 'att' in args:
+            flavor = 'att'
+
+    libpattern = mx.add_lib_suffix('hsdis-' + mx.get_arch() + '-' + mx.get_os() + '-%s')
 
     sha1s = {
-        'att/hsdis-amd64.dll' : 'bcbd535a9568b5075ab41e96205e26a2bac64f72',
-        'att/hsdis-amd64.so' : '58919ba085d4ef7a513f25bae75e7e54ee73c049',
-        'intel/hsdis-amd64.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
-        'intel/hsdis-amd64.so' : '844ed9ffed64fe9599638f29a8450c50140e3192',
-        'intel/hsdis-amd64.dylib' : 'fdb13ef0d7d23d93dacaae9c98837bea0d4fc5a2',
-        'sparcv9/hsdis-solaris-sparcv9.so': '970640a9af0bd63641f9063c11275b371a59ee60',
-        'sparcv9/hsdis-linux-sparcv9.so': '0c375986d727651dee1819308fbbc0de4927d5d9',
+        'att/hsdis-amd64-windows-%s.dll' : 'bcbd535a9568b5075ab41e96205e26a2bac64f72',
+        'att/hsdis-amd64-linux-%s.so' : '36a0b8e30fc370727920cc089f104bfb9cd508a0',
+        'att/hsdis-amd64-darwin-%s.dylib' : 'c1865e9a58ca773fdc1c5eea0a4dfda213420ffb',
+        'intel/hsdis-amd64-windows-%s.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
+        'intel/hsdis-amd64-linux-%s.so' : '0d031013db9a80d6c88330c42c983fbfa7053193',
+        'intel/hsdis-amd64-darwin-%s.dylib' : '67f6d23cbebd8998450a88b5bef362171f66f11a',
+        'hsdis-sparcv9-solaris-%s.so': '970640a9af0bd63641f9063c11275b371a59ee60',
+        'hsdis-sparcv9-linux-%s.so': '0c375986d727651dee1819308fbbc0de4927d5d9',
     }
 
-    flavoredLib = flavor + "/" + lib
+    if flavor:
+        flavoredLib = flavor + "/" + libpattern
+    else:
+        flavoredLib = libpattern
     if flavoredLib not in sha1s:
-        mx.logv("hsdis not supported on this plattform or architecture")
+        mx.warn("hsdis with flavor '{}' not supported on this plattform or architecture".format(flavor))
         return
 
+    sha1 = sha1s[flavoredLib]
+    lib = flavoredLib % (sha1)
+    path = join(_suite.get_output_root(), lib)
     if not exists(path):
-        sha1 = sha1s[flavoredLib]
         sha1path = path + '.sha1'
-        mx.download_file_with_sha1('hsdis', path, ['https://lafo.ssw.uni-linz.ac.at/pub/hsdis/' + flavoredLib], sha1, sha1path, True, True, sources=False)
+        mx.download_file_with_sha1('hsdis', path, ['https://lafo.ssw.uni-linz.ac.at/pub/hsdis/' + lib], sha1, sha1path, True, True, sources=False)
     if copyToDir is not None and exists(copyToDir):
         destFileName = mx.add_lib_suffix('hsdis-' + mx.get_arch())
         shutil.copy(path, copyToDir + os.sep + destFileName)

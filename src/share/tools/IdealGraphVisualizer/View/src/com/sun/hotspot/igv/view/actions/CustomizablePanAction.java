@@ -1,7 +1,7 @@
 /*
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS HEADER.
  *
- * Copyright 1997-2010 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
  *
  * Oracle and Java are registered trademarks of Oracle and/or its affiliates.
  * Other names may be trademarks of their respective owners.
@@ -61,11 +61,11 @@ import org.netbeans.api.visual.widget.Widget;
  */
 public class CustomizablePanAction extends WidgetAction.LockedAdapter {
     private boolean enabled = true;
-    
+
     private Scene scene;
     private JScrollPane scrollPane;
     private Point lastLocation;
-    
+
     private final int modifiersExMask;
     private final int modifiersEx;
 
@@ -78,12 +78,12 @@ public class CustomizablePanAction extends WidgetAction.LockedAdapter {
     protected boolean isLocked() {
         return scrollPane != null;
     }
-    
+
     public void setEnabled(boolean enabled) {
         if (this.enabled != enabled) {
             if (isLocked())
                 throw new IllegalStateException();
-            
+
             this.enabled = enabled;
         }
     }

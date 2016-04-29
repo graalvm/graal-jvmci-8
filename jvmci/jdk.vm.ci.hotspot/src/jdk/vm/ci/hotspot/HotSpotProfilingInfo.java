@@ -30,9 +30,6 @@ import jdk.vm.ci.meta.TriState;
 
 public final class HotSpotProfilingInfo implements ProfilingInfo, HotSpotProxified {
 
-    // private static final DebugMetric metricInsufficentSpace =
-    // Debug.metric("InsufficientSpaceForProfilingData");
-
     private final HotSpotMethodData methodData;
     private final HotSpotResolvedJavaMethod method;
 
@@ -162,7 +159,6 @@ public final class HotSpotProfilingInfo implements ProfilingInfo, HotSpotProxifi
 
             if (!methodData.isWithin(currentPosition)) {
                 exceptionPossiblyNotRecorded = true;
-                // metricInsufficentSpace.increment();
             }
         }
 

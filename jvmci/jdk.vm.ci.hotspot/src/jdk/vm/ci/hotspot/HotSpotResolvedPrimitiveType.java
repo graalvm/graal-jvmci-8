@@ -263,4 +263,9 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     public ResolvedJavaMethod getClassInitializer() {
         return null;
     }
+
+    @Override
+    public boolean isAllocationCloneable() {
+        return false;
+    }
 }

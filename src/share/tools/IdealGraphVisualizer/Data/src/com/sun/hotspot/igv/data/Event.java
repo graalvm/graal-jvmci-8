@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -35,7 +35,7 @@ public abstract class Event<L> {
     private List<L> listener;
     private boolean fireEvents;
     private boolean eventWasFired;
-    
+
     public Event() {
         listener = new ArrayList<>();
         fireEvents = true;
@@ -77,6 +77,6 @@ public abstract class Event<L> {
             fire();
         }
     }
-    
+
     protected abstract void fire(L l);
 }

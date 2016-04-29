@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2007, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -108,7 +108,7 @@ public class PropertyTest {
         final Property p4 = new Property("name", "value");
         assertEquals(p, p4);
         assertEquals(p.hashCode(), p4.hashCode());
-    
+
         final Property p5 = new Property("value", "name");
         assertFalse(p.equals(p5));
         assertTrue(p.hashCode() != p5.hashCode());

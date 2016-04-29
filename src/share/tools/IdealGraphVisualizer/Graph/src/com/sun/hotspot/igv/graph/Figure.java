@@ -69,7 +69,7 @@ public class Figure extends Properties.Entity implements Source.Provider, Vertex
         }
         return heightCash;
     }
-    
+
     public static <T> List<T> getAllBefore(List<T> inputList, T tIn) {
         List<T> result = new ArrayList<>();
         for(T t : inputList) {
@@ -80,7 +80,7 @@ public class Figure extends Properties.Entity implements Source.Provider, Vertex
         }
         return result;
     }
-    
+
     public static int getSlotsWidth(Collection<? extends Slot> slots) {
         int result = Figure.SLOT_OFFSET;
         for(Slot s : slots) {
@@ -249,7 +249,7 @@ public class Figure extends Properties.Entity implements Source.Provider, Vertex
     public List<InputSlot> getInputSlots() {
         return Collections.unmodifiableList(inputSlots);
     }
-    
+
     public Set<Slot> getSlots() {
         Set<Slot> result = new HashSet<>();
         result.addAll(getInputSlots());
@@ -326,8 +326,8 @@ public class Figure extends Properties.Entity implements Source.Provider, Vertex
         if (VERTICAL_LAYOUT) {
             int width = Math.max(getWidth(), Figure.SLOT_WIDTH * (Math.max(inputSlots.size(), outputSlots.size()) + 1));
             int height = getHeight() + 2 * Figure.SLOT_WIDTH - 2 * Figure.OVERLAPPING;
-            
-            
+
+
             return new Dimension(width, height);
         } else {
             int width = getWidth() + 2 * Figure.SLOT_WIDTH - 2*Figure.OVERLAPPING;
@@ -340,7 +340,7 @@ public class Figure extends Properties.Entity implements Source.Provider, Vertex
     public String toString() {
         return idString;
     }
-    
+
     public Cluster getCluster() {
         if (getSource().getSourceNodes().size() == 0) {
             assert false : "Should never reach here, every figure must have at least one source node!";
@@ -356,7 +356,7 @@ public class Figure extends Properties.Entity implements Source.Provider, Vertex
 
     @Override
     public boolean isRoot() {
-  
+
         List<InputNode> sourceNodes = source.getSourceNodes();
         if (sourceNodes.size() > 0 && sourceNodes.get(0).getProperties().get("name") != null) {
             return source.getSourceNodes().get(0).getProperties().get("name").equals("Root");

@@ -65,7 +65,7 @@ public class ClusterOutgoingConnection implements Link {
     public List<Point> getControlPoints() {
         return intermediatePoints;
     }
-    
+
     public boolean isVIP() {
         return false;
     }

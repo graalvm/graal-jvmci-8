@@ -70,13 +70,13 @@ public final class Services {
      * Gets an {@link Iterable} of the JVMCI providers available for a given service.
      *
      * @throws SecurityException if a security manager is present and it denies <tt>
-     *             {@link RuntimePermission}("jvmciServices")</tt>
+     *             {@link RuntimePermission}("jvmci")</tt>
      */
     @SuppressWarnings("unchecked")
     public static <S> Iterable<S> load(Class<S> service) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            sm.checkPermission(new RuntimePermission("jvmciServices"));
+            sm.checkPermission(new RuntimePermission("jvmci"));
         }
         try {
             return (Iterable<S>) cache.get(service);
@@ -92,13 +92,13 @@ public final class Services {
      * @param required specifies if an {@link InternalError} should be thrown if no provider of
      *            {@code service} is available
      * @throws SecurityException if a security manager is present and it denies <tt>
-     *             {@link RuntimePermission}("jvmciServices")</tt>
+     *             {@link RuntimePermission}("jvmci")</tt>
      */
     @SuppressWarnings({"unchecked"})
     public static <S> S loadSingle(Class<S> service, boolean required) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            sm.checkPermission(new RuntimePermission("jvmciServices"));
+            sm.checkPermission(new RuntimePermission("jvmci"));
         }
         Iterable<S> providers;
         try {

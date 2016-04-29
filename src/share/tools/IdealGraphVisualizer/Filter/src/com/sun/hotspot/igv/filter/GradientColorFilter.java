@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -33,7 +33,7 @@ import java.util.List;
 /**
  * Filter that colors nodes using a customizable color gradient, based on how
  * a numeric property is located in a specified interval.
- * 
+ *
  * @author Peter Hofer
  */
 public class GradientColorFilter extends AbstractFilter {

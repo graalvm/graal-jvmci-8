@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -115,6 +115,10 @@ public class InputMethod extends Properties.Entity {
         String[] strings = text.split("\n");
         int oldBci = -1;
         for (String s : strings) {
+            if (s.startsWith(" ")) {
+                // indented lines are extra textual information
+                continue;
+            }
             s = s.trim();
             if (s.length() != 0) {
                 final Matcher matcher = instruction.matcher(s);

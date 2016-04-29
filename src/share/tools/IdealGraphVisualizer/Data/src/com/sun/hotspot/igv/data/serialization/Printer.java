@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2015, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -175,7 +175,7 @@ public class Printer {
         writer.startTag(Parser.CONTROL_FLOW_ELEMENT);
         for (InputBlock b : graph.getBlocks()) {
             writer.startTag(Parser.BLOCK_ELEMENT, new Properties(Parser.BLOCK_NAME_PROPERTY, b.getName()));
-            
+
             if (b.getSuccessors().size() > 0) {
                 writer.startTag(Parser.SUCCESSORS_ELEMENT);
                 for (InputBlock s : b.getSuccessors()) {
@@ -191,7 +191,7 @@ public class Printer {
                 }
                 writer.endTag();
             }
-            
+
             writer.endTag();
         }
 
@@ -223,7 +223,7 @@ public class Printer {
             b.append(code.getName());
             b.append("\n");
         }
-        
+
         b.append("]]>");
         w.write(b.toString());
         w.endTag();
