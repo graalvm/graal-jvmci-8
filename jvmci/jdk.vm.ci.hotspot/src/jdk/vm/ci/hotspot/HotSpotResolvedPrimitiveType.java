@@ -263,9 +263,4 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     public ResolvedJavaMethod getClassInitializer() {
         return null;
     }
-
-    @Override
-    public boolean isTrustedInterfaceType() {
-        return false;
-    }
 }

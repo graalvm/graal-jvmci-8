@@ -29,7 +29,7 @@ import java.util.UnknownFormatConversionException;
  * Represents a reference to a Java method, either resolved or unresolved. Methods, like fields and
  * types, are resolved through {@link ConstantPool constant pools}.
  */
-public interface JavaMethod extends TrustedInterface {
+public interface JavaMethod {
 
     /**
      * Returns the name of this method.

@@ -54,6 +54,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Test;
+
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.Assumptions.AssumptionResult;
 import jdk.vm.ci.meta.JavaConstant;
@@ -62,10 +64,6 @@ import jdk.vm.ci.meta.ModifiersProvider;
 import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
-import jdk.vm.ci.meta.TrustedInterface;
-
-import org.junit.Test;
-
 import sun.reflect.ConstantPool;
 
 /**
@@ -823,16 +821,6 @@ public class TestResolvedJavaType extends TypeUniverse {
                 if (type.isLocal() || type.isMember()) {
                     assertTrue(pathString.indexOf('$') > 0);
                 }
-            }
-        }
-    }
-
-    @Test
-    public void isTrustedInterfaceTypeTest() {
-        for (Class<?> c : classes) {
-            ResolvedJavaType type = metaAccess.lookupJavaType(c);
-            if (TrustedInterface.class.isAssignableFrom(c)) {
-                assertTrue(type.isTrustedInterfaceType());
             }
         }
     }

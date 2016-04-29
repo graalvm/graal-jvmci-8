@@ -47,16 +47,14 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import org.junit.Test;
+
 import jdk.vm.ci.meta.ConstantReflectionProvider;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.MetaAccessProvider;
 import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaType;
-import jdk.vm.ci.meta.TrustedInterface;
 import jdk.vm.ci.runtime.JVMCI;
-
-import org.junit.Test;
-
 import sun.misc.Unsafe;
 
 //JaCoCo Exclude
@@ -116,7 +114,7 @@ public class TypeUniverse {
                         byte[].class, short[].class, char[].class, int[].class, float[].class, long[].class, double[].class, Object[].class, Class[].class, List[].class, boolean[][].class,
                         byte[][].class, short[][].class, char[][].class, int[][].class, float[][].class, long[][].class, double[][].class, Object[][].class, Class[][].class, List[][].class,
                         ClassLoader.class, String.class, Serializable.class, Cloneable.class, Test.class, TestMetaAccessProvider.class, List.class, Collection.class, Map.class, Queue.class,
-                        HashMap.class, LinkedHashMap.class, IdentityHashMap.class, AbstractCollection.class, AbstractList.class, ArrayList.class, TrustedInterface.class, InnerClass.class,
+                        HashMap.class, LinkedHashMap.class, IdentityHashMap.class, AbstractCollection.class, AbstractList.class, ArrayList.class, InnerClass.class,
                         InnerStaticClass.class, InnerStaticFinalClass.class, PrivateInnerClass.class, ProtectedInnerClass.class};
         for (Class<?> c : initialClasses) {
             addClass(c);

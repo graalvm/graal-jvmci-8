@@ -54,7 +54,6 @@ import jdk.vm.ci.meta.ModifiersProvider;
 import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
-import jdk.vm.ci.meta.TrustedInterface;
 
 /**
  * Implementation of {@link JavaType} for resolved non-primitive HotSpot classes.
@@ -903,10 +902,5 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     @Override
     public String toString() {
         return "HotSpotType<" + getName() + ", resolved>";
-    }
-
-    @Override
-    public boolean isTrustedInterfaceType() {
-        return TrustedInterface.class.isAssignableFrom(mirror());
     }
 }
