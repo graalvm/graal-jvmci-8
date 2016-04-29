@@ -411,19 +411,22 @@ JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
   }
 JRT_END
 
-JRT_ENTRY(void, JVMCIRuntime::throw_and_post_jvmti_exception(JavaThread* thread, Symbol* name, const char* message))
-  SharedRuntime::throw_and_post_jvmti_exception(thread, name, message);
+JRT_ENTRY(void, JVMCIRuntime::throw_and_post_jvmti_exception(JavaThread* thread, const char* exception, const char* message))
+  Symbol* symbol = SymbolTable::lookup(exception, strlen(exception), thread);
+  SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, message);
 JRT_END
 
-JRT_ENTRY(void, JVMCIRuntime::throw_klass_external_name_exception(JavaThread* thread, Symbol* exception, Klass* klass))
+JRT_ENTRY(void, JVMCIRuntime::throw_klass_external_name_exception(JavaThread* thread, const char* exception, Klass* klass))
   ResourceMark rm(thread);
-  SharedRuntime::throw_and_post_jvmti_exception(thread, exception, klass->external_name());
+  Symbol* symbol = SymbolTable::lookup(exception, strlen(exception), thread);
+  SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, klass->external_name());
 JRT_END
 
-JRT_ENTRY(void, JVMCIRuntime::throw_class_cast_exception(JavaThread* thread, Symbol* exception, Klass* caster_klass, Klass* target_klass))
+JRT_ENTRY(void, JVMCIRuntime::throw_class_cast_exception(JavaThread* thread, const char* exception, Klass* caster_klass, Klass* target_klass))
   ResourceMark rm(thread);
   const char* message = SharedRuntime::generate_class_cast_message(caster_klass->external_name(), target_klass->external_name());
-  SharedRuntime::throw_and_post_jvmti_exception(thread, exception, message);
+  Symbol* symbol = SymbolTable::lookup(exception, strlen(exception), thread);
+  SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, message);
 JRT_END
 
 JRT_LEAF(void, JVMCIRuntime::log_object(JavaThread* thread, oopDesc* obj, bool as_string, bool newline))
