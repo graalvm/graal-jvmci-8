@@ -341,11 +341,15 @@ public class BinaryParser implements GraphParser {
     }
 
     private String readString() throws IOException {
-        return new String(readBytes(), utf8).intern();
+        return new String(readElements(2), utf8).intern();
     }
 
     private byte[] readBytes() throws IOException {
-        int len = readInt();
+        return readElements(1);
+    }
+    
+    private byte[] readElements(int elementSize) throws IOException {
+        int len = readInt() * elementSize;
         if (len < 0) {
             return null;
         }
