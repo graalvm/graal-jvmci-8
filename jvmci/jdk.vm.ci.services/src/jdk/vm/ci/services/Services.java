@@ -67,6 +67,21 @@ public final class Services {
     };
 
     /**
+     * Performs any required security checks and dynamic reconfiguration to allow the module of a
+     * given class to access the classes in the JVMCI module.
+     *
+     * Note: This API exists to provide backwards compatibility for JVMCI clients compiled against a
+     * JDK release earlier than 9.
+     *
+     * @param requestor a class requesting access to the JVMCI module for its module
+     * @throws SecurityException if a security manager is present and it denies
+     *             {@code RuntimePermission("jvmci")}
+     */
+    public static void exportJVMCITo(Class<?> requestor) {
+        // There are no modules in JVMCI-8.
+    }
+
+    /**
      * Gets an {@link Iterable} of the JVMCI providers available for a given service.
      *
      * @throws SecurityException if a security manager is present and it denies <tt>
