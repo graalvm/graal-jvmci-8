@@ -919,6 +919,18 @@ void JVMCIRuntime::shutdown() {
   }
 }
 
+void JVMCIRuntime::bootstrapFinished() {
+  if (_HotSpotJVMCIRuntime_instance != NULL) {
+    JavaThread* THREAD = JavaThread::current();
+    HandleMark hm(THREAD);
+    Handle receiver = get_HotSpotJVMCIRuntime(CHECK_ABORT);
+    JavaValue result(T_VOID);
+    JavaCallArguments args;
+    args.push_oop(receiver);
+    JavaCalls::call_special(&result, receiver->klass(), vmSymbols::bootstrapFinished_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
+  }
+}
+
 bool JVMCIRuntime::treat_as_trivial(Method* method) {
   if (_HotSpotJVMCIRuntime_initialized) {
     oop loader = method->method_holder()->class_loader();

@@ -35,6 +35,11 @@ private:
   bool _bootstrapping;
 
   /**
+   * True if we have seen the a bootstrap compilation request.
+   */
+  volatile bool _bootstrap_compilation_request_seen;
+
+  /**
    * Number of methods successfully compiled by a call to
    * JVMCICompiler::compile_method().
    */

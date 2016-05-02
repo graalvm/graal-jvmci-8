@@ -37,6 +37,7 @@ elapsedTimer JVMCICompiler::_codeInstallTimer;
 JVMCICompiler::JVMCICompiler() : AbstractCompiler(jvmci) {
 #ifdef COMPILERJVMCI
   _bootstrapping = false;
+  _bootstrap_compilation_request_seen =  false;
   _methods_compiled = 0;
 #endif
   assert(_instance == NULL, "only one instance allowed");
@@ -100,7 +101,7 @@ void JVMCICompiler::bootstrap() {
     do {
       os::sleep(THREAD, 100, true);
       qsize = CompileBroker::queue_size(CompLevel_full_optimization);
-    } while (first_round && qsize == 0);
+    } while (!_bootstrap_compilation_request_seen && first_round && qsize == 0);
     first_round = false;
     if (PrintBootstrap) {
       while (z < (_methods_compiled / 100)) {
@@ -114,6 +115,7 @@ void JVMCICompiler::bootstrap() {
     tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methods_compiled);
   }
   _bootstrapping = false;
+  JVMCIRuntime::bootstrapFinished();
 }
 
 void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JVMCIEnv* env) {
@@ -178,6 +180,9 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
     } else {
       assert(false, "JVMCICompiler.compileMethod should always return non-null");
     }
+  }
+  if (_bootstrapping) {
+    _bootstrap_compilation_request_seen = true;
   }
 }
 
