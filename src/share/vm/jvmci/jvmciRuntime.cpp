@@ -412,27 +412,21 @@ JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
 JRT_END
 
 JRT_ENTRY(void, JVMCIRuntime::throw_and_post_jvmti_exception(JavaThread* thread, const char* exception, const char* message))
-  TempNewSymbol symbol = SymbolTable::new_symbol(exception, thread);
-  if (!HAS_PENDING_EXCEPTION) {
-    SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, message);
-  }
+  TempNewSymbol symbol = SymbolTable::new_symbol(exception, CHECK);
+  SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, message);
 JRT_END
 
 JRT_ENTRY(void, JVMCIRuntime::throw_klass_external_name_exception(JavaThread* thread, const char* exception, Klass* klass))
   ResourceMark rm(thread);
-  TempNewSymbol symbol = SymbolTable::new_symbol(exception, thread);
-  if (!HAS_PENDING_EXCEPTION) {
-    SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, klass->external_name());
-  }
+  TempNewSymbol symbol = SymbolTable::new_symbol(exception, CHECK);
+  SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, klass->external_name());
 JRT_END
 
 JRT_ENTRY(void, JVMCIRuntime::throw_class_cast_exception(JavaThread* thread, const char* exception, Klass* caster_klass, Klass* target_klass))
   ResourceMark rm(thread);
   const char* message = SharedRuntime::generate_class_cast_message(caster_klass->external_name(), target_klass->external_name());
-  TempNewSymbol symbol = SymbolTable::lookup(exception, strlen(exception), thread);
-  if (!HAS_PENDING_EXCEPTION) {
-    SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, message);
-  }
+  TempNewSymbol symbol = SymbolTable::new_symbol(exception, CHECK);
+  SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, message);
 JRT_END
 
 JRT_LEAF(void, JVMCIRuntime::log_object(JavaThread* thread, oopDesc* obj, bool as_string, bool newline))
