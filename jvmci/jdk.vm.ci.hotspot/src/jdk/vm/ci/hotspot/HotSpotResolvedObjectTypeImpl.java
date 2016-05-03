@@ -905,7 +905,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     }
 
     @Override
-    public boolean isAllocationCloneable() {
+    public boolean isCloneableWithAllocation() {
         return (getAccessFlags() & config().jvmAccIsCloneable) != 0;
     }
 }

@@ -265,7 +265,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     }
 
     @Override
-    public boolean isAllocationCloneable() {
+    public boolean isCloneableWithAllocation() {
         return false;
     }
 }

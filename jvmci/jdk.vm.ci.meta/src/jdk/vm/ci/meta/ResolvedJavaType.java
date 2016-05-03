@@ -358,5 +358,5 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider {
      * {@link #getInstanceFields(boolean)}. Some types may require special handling by the platform
      * so they would to go through the normal {@link Object#clone} path.
      */
-    boolean isAllocationCloneable();
+    boolean isCloneableWithAllocation();
 }
