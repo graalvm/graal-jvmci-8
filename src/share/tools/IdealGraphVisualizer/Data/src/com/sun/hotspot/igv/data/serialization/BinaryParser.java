@@ -70,6 +70,7 @@ public class BinaryParser implements GraphParser {
     private static final String NO_BLOCK = "noBlock";
 
     private static final Charset utf8 = Charset.forName("UTF-8");
+    private static final Charset utf16 = Charset.forName("UTF-16");
     
     private final GroupCallback callback;
     private final List<Object> constantPool;
@@ -82,6 +83,37 @@ public class BinaryParser implements GraphParser {
 
     private MessageDigest digest;
     
+    private Charset stringCharset;
+    
+    private int majorVersion;
+    private int minorVersion;
+    
+    static final int CURRENT_MAJOR_VERSION = 1;
+    static final int CURRENT_MINOR_VERSION = 0;
+    static final String CURRENT_VERSION = versionPair(CURRENT_MAJOR_VERSION, CURRENT_MINOR_VERSION);
+        
+    static class VersionMismatchException extends RuntimeException {
+        VersionMismatchException(String message) {
+            super(message);
+        }
+    }
+    
+    static final byte[] magicBytes = { 'B', 'I', 'G', 'V' };
+    
+    private static String versionPair(int major, int minor) {
+        return major + "." + minor;
+    }
+    
+    private void setVersion(int newMajorVersion, int newMinorVersion) {
+        if (newMajorVersion > CURRENT_MAJOR_VERSION || (newMajorVersion == CURRENT_MAJOR_VERSION && newMinorVersion > CURRENT_MINOR_VERSION)) {
+            throw new VersionMismatchException("File format version " + versionPair(newMajorVersion, newMinorVersion) + " unsupported.  Current version is " + CURRENT_VERSION);
+        }
+
+        majorVersion = newMajorVersion;
+        minorVersion = newMinorVersion;
+        stringCharset = utf8;
+    }
+
     private enum Length {
         S,
         M,
@@ -341,7 +373,27 @@ public class BinaryParser implements GraphParser {
     }
 
     private String readString() throws IOException {
-        return new String(readBytes(), utf8).intern();
+        if (stringCharset == utf8) {
+                return new String(readBytes(), utf8).intern();
+        } else if (stringCharset == utf16) {
+                int len = readInt();
+                byte[] b = readBytes(len * 2);
+                return new String(b, utf16).intern();
+        }
+        int len = readInt();
+        // Backwards compatibility
+        if (len == 0) {
+            return "";
+        }
+        byte[] b = peekBytes(1);
+        if (b[0] == '\0') {
+            // Assume UTF16 encoding
+            stringCharset = utf16;
+            return new String(readBytes(len * 2), utf16).intern();
+        } else {
+            setVersion(1, 0);
+            return new String(readBytes(len), utf8).intern();
+        }
     }
 
     private byte[] readBytes() throws IOException {
@@ -349,6 +401,10 @@ public class BinaryParser implements GraphParser {
         if (len < 0) {
             return null;
         }
+        return readBytes(len);
+    }        
+     
+    private byte[] readBytes(int len) throws IOException {   
         byte[] b = new byte[len];
         int bytesRead = 0;
         while (bytesRead < b.length) {
@@ -357,6 +413,15 @@ public class BinaryParser implements GraphParser {
             buffer.get(b, bytesRead, toRead);
             bytesRead += toRead;
         }
+        return b;
+    }
+    
+    private byte[] peekBytes(int len) throws IOException {
+        ensureAvailable(len);
+        byte[] b = new byte[len];
+        buffer.mark();
+        buffer.get(b);
+        buffer.reset();
         return b;
     }
 
@@ -587,6 +652,13 @@ public class BinaryParser implements GraphParser {
             monitor.setState("Starting parsing");
         }
         try {
+            // Check for a version specification
+            byte[] magic = peekBytes(magicBytes.length);
+            if (Arrays.equals(magicBytes, magic)) {
+                // Consume the bytes for real
+                readBytes(magicBytes.length);
+                setVersion(readByte(), readByte());
+            }
             while(true) {
                 parseRoot();
             }
