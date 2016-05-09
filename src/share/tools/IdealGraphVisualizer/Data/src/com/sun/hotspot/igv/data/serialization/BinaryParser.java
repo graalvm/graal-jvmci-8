@@ -98,7 +98,7 @@ public class BinaryParser implements GraphParser {
         }
     }
     
-    static final byte[] magicBytes = { 'B', 'I', 'G', 'V' };
+    static final byte[] MAGIC_BYTES = { 'B', 'I', 'G', 'V' };
     
     private static String versionPair(int major, int minor) {
         return major + "." + minor;
@@ -653,10 +653,10 @@ public class BinaryParser implements GraphParser {
         }
         try {
             // Check for a version specification
-            byte[] magic = peekBytes(magicBytes.length);
-            if (Arrays.equals(magicBytes, magic)) {
+            byte[] magic = peekBytes(MAGIC_BYTES.length);
+            if (Arrays.equals(MAGIC_BYTES, magic)) {
                 // Consume the bytes for real
-                readBytes(magicBytes.length);
+                readBytes(MAGIC_BYTES.length);
                 setVersion(readByte(), readByte());
             }
             while(true) {
