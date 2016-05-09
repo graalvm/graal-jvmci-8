@@ -100,6 +100,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "jdk.vm.ci.code",
+        "jdk.vm.ci.services",
       ],
       "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
@@ -164,7 +165,6 @@ suite = {
         "jdk.vm.ci.common",
         "jdk.vm.ci.inittimer",
         "jdk.vm.ci.runtime",
-        "jdk.vm.ci.services",
       ],
       "annotationProcessors" : [
         "JVMCI_HOTSPOTVMCONFIG_PROCESSOR",

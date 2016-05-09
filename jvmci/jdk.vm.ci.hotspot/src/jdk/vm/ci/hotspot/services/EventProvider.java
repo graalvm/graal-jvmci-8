@@ -24,6 +24,7 @@ package jdk.vm.ci.hotspot.services;
 
 import jdk.vm.ci.hotspot.services.EmptyEventProvider.EmptyCompilationEvent;
 import jdk.vm.ci.hotspot.services.EmptyEventProvider.EmptyCompilerFailureEvent;
+import jdk.vm.ci.services.JVMCIPermission;
 
 /**
  * Service-provider class for logging compiler related events.
@@ -33,7 +34,7 @@ public abstract class EventProvider {
     private static Void checkPermission() {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            sm.checkPermission(new RuntimePermission("jvmci"));
+            sm.checkPermission(new JVMCIPermission());
         }
         return null;
     }
@@ -46,7 +47,7 @@ public abstract class EventProvider {
      * Initializes a new instance of this class.
      *
      * @throws SecurityException if a security manager has been installed and it denies
-     *             {@code RuntimePermission("jvmci")}
+     *             {@link JVMCIPermission}
      */
     protected EventProvider() {
         this(checkPermission());

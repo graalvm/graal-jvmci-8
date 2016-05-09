@@ -28,6 +28,7 @@ import jdk.vm.ci.hotspot.HotSpotCodeCacheProvider;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime;
 import jdk.vm.ci.meta.JVMCIMetaAccessContext;
 import jdk.vm.ci.meta.ResolvedJavaType;
+import jdk.vm.ci.services.JVMCIPermission;
 
 /**
  * Service-provider class for responding to VM events and for creating
@@ -38,7 +39,7 @@ public abstract class HotSpotVMEventListener {
     private static Void checkPermission() {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            sm.checkPermission(new RuntimePermission("jvmci"));
+            sm.checkPermission(new JVMCIPermission());
         }
         return null;
     }
@@ -51,7 +52,7 @@ public abstract class HotSpotVMEventListener {
      * Initializes a new instance of this class.
      *
      * @throws SecurityException if a security manager has been installed and it denies
-     *             {@code RuntimePermission("jvmci")}
+     *             {@link JVMCIPermission}
      */
     protected HotSpotVMEventListener() {
         this(checkPermission());

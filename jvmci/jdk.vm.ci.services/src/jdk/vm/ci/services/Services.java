@@ -75,7 +75,7 @@ public final class Services {
      *
      * @param requestor a class requesting access to the JVMCI module for its module
      * @throws SecurityException if a security manager is present and it denies
-     *             {@code RuntimePermission("jvmci")}
+     *             {@link JVMCIPermission}
      */
     public static void exportJVMCITo(Class<?> requestor) {
         // There are no modules in JVMCI-8.
@@ -91,7 +91,7 @@ public final class Services {
     public static <S> Iterable<S> load(Class<S> service) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            sm.checkPermission(new RuntimePermission("jvmci"));
+            sm.checkPermission(new JVMCIPermission());
         }
         try {
             return (Iterable<S>) cache.get(service);
@@ -113,7 +113,7 @@ public final class Services {
     public static <S> S loadSingle(Class<S> service, boolean required) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
-            sm.checkPermission(new RuntimePermission("jvmci"));
+            sm.checkPermission(new JVMCIPermission());
         }
         Iterable<S> providers;
         try {
