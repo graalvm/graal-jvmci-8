@@ -479,7 +479,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     @Override
     public Annotation[] getDeclaredAnnotations() {
         Executable javaMethod = toJava();
-        return javaMethod == null ? null : javaMethod.getDeclaredAnnotations();
+        return javaMethod == null ? new Annotation[0] : javaMethod.getDeclaredAnnotations();
     }
 
     @Override
