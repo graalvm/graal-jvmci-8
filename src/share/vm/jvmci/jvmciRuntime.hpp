@@ -68,12 +68,24 @@ protected:
 };
 
 class JVMCIRuntime: public AllStatic {
+ public:
+  // Constants describing whether JVMCI wants to be able to adjust the compilation
+  // level selected for a method by the VM compilation policy and if so, based on
+  // what information about the method being schedule for compilation.
+  enum CompLevelAdjustment {
+     none = 0,             // no adjustment
+     by_holder = 1,        // adjust based on declaring class of method
+     by_full_signature = 2 // adjust based on declaring class, name and signature of method
+   };
+
  private:
   static jobject _HotSpotJVMCIRuntime_instance;
   static bool _HotSpotJVMCIRuntime_initialized;
 
   static int _trivial_prefixes_count;
   static char** _trivial_prefixes;
+
+  static CompLevelAdjustment _comp_level_adjustment;
 
   static bool _shutdown_called;
 
@@ -83,6 +95,8 @@ class JVMCIRuntime: public AllStatic {
    * @param name the name of a service provider class
    */
   static Handle create_Service(const char* name, TRAPS);
+
+  static CompLevel adjust_comp_level_inner(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread);
 
  public:
   /**
@@ -134,6 +148,18 @@ class JVMCIRuntime: public AllStatic {
   }
 
   static bool treat_as_trivial(Method* method);
+
+  /**
+   * Lets JVMCI modify the compilation level currently selected for a method by
+   * the VM compilation policy.
+   *
+   * @param method the method being scheduled for compilation
+   * @param is_osr specifies if the compilation is an OSR compilation
+   * @param level the compilation level currently selected by the VM compilation policy
+   * @param thread the current thread
+   * @return the compilation level to use for the compilation
+   */
+  static CompLevel adjust_comp_level(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread);
 
   /**
    * Given an interface representing a JVMCI service, gets an array of objects, one per

@@ -32,7 +32,7 @@ class JVMCIJavaClasses : AllStatic {
   static void compute_offsets(TRAPS);
 };
 
-/* This macro defines the structure of the CompilationResult - classes.
+/* This macro defines the structure of the JVMCI classes accessed from VM code.
  * It will generate classes with accessors similar to javaClasses.hpp, but with specializations for oops, Handles and jni handles.
  *
  * The public interface of these classes will look like this:
@@ -280,6 +280,7 @@ class JVMCIJavaClasses : AllStatic {
   end_class                                                                                                                                                    \
   start_class(HotSpotJVMCIRuntime)                                                                                                                             \
     objArrayOop_field(HotSpotJVMCIRuntime, trivialPrefixes, "[Ljava/lang/String;")                                                                             \
+    int_field(HotSpotJVMCIRuntime, compilationLevelAdjustment)                                                                                                 \
   end_class                                                                                                                                                    \
   /* end*/
 

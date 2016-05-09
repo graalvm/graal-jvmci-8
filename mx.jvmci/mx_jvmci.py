@@ -594,7 +594,7 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
                             fp.write('SOURCE=" ' + ' '.join((k + ":" + v for k, v in versions.iteritems())) + '"' + os.linesep)
                             mx.logv("Updating " + releaseFile)
                         except BaseException as e:
-                            mx.warn("Exception " + str(e) + " while updaing release file")
+                            mx.warn("Exception " + str(e) + " while updating release file")
                             fp.write(line)
                     else:
                         fp.write(line)

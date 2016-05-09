@@ -49,6 +49,7 @@ jobject JVMCIRuntime::_HotSpotJVMCIRuntime_instance = NULL;
 bool JVMCIRuntime::_HotSpotJVMCIRuntime_initialized = false;
 int JVMCIRuntime::_trivial_prefixes_count = 0;
 char** JVMCIRuntime::_trivial_prefixes = NULL;
+JVMCIRuntime::CompLevelAdjustment JVMCIRuntime::_comp_level_adjustment = JVMCIRuntime::none;
 bool JVMCIRuntime::_shutdown_called = false;
 
 BasicType JVMCIRuntime::kindToBasicType(jchar ch, TRAPS) {
@@ -662,6 +663,11 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
       _trivial_prefixes = prefixes;
       _trivial_prefixes_count = trivial_prefixes->length();
     }
+    int adjustment = HotSpotJVMCIRuntime::compilationLevelAdjustment(result);
+    assert(adjustment >= JVMCIRuntime::none &&
+           adjustment <= JVMCIRuntime::by_full_signature,
+           "compilation level adjustment out of bounds");
+    _comp_level_adjustment = (CompLevelAdjustment) adjustment;
     _HotSpotJVMCIRuntime_initialized = true;
     _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result());
   }
@@ -925,6 +931,88 @@ bool JVMCIRuntime::treat_as_trivial(Method* method) {
     }
   }
   return false;
+}
+
+CompLevel JVMCIRuntime::adjust_comp_level(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread) {
+  if (!thread->adjusting_comp_level()) {
+    thread->set_adjusting_comp_level(true);
+    level = adjust_comp_level_inner(method, is_osr, level, thread);
+    thread->set_adjusting_comp_level(false);
+  }
+  return level;
+}
+
+CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread) {
+#ifdef COMPILERJVMCI
+  JVMCICompiler* compiler = JVMCICompiler::instance(thread);
+  if (compiler != NULL && compiler->is_bootstrapping()) {
+    return level;
+  }
+#endif
+  if (!is_HotSpotJVMCIRuntime_initialized() || !_comp_level_adjustment) {
+    // JVMCI cannot participate in compilation scheduling until
+    // JVMCI is initialized and indicates it wants to participate.
+    return level;
+  }
+
+#define CHECK_RETURN THREAD); \
+if (HAS_PENDING_EXCEPTION) { \
+  Handle exception(THREAD, PENDING_EXCEPTION); \
+  CLEAR_PENDING_EXCEPTION; \
+\
+  java_lang_Throwable::print(exception, tty); \
+  tty->cr(); \
+  java_lang_Throwable::print_stack_trace(exception(), tty); \
+  if (HAS_PENDING_EXCEPTION) { \
+    CLEAR_PENDING_EXCEPTION; \
+  } \
+  return level; \
+} \
+(void)(0
+
+  Thread* THREAD = thread;
+  HandleMark hm;
+  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK_RETURN);
+  Handle name;
+  Handle sig;
+  if (_comp_level_adjustment == JVMCIRuntime::by_full_signature) {
+    name = java_lang_String::create_from_symbol(method->name(), CHECK_RETURN);
+    sig = java_lang_String::create_from_symbol(method->signature(), CHECK_RETURN);
+  } else {
+    name = Handle();
+    sig = Handle();
+  }
+
+  JavaValue result(T_INT);
+  JavaCallArguments args;
+  args.push_oop(receiver);
+  args.push_oop(method->method_holder()->java_mirror());
+  args.push_oop(name());
+  args.push_oop(sig());
+  args.push_int(is_osr);
+  args.push_int(level);
+  JavaCalls::call_special(&result, receiver->klass(), vmSymbols::adjustCompilationLevel_name(),
+                          vmSymbols::adjustCompilationLevel_signature(), &args, CHECK_RETURN);
+
+  // An uncaught exception was thrown. Generally these
+  // should be handled by the Java code in some useful way but if they leak
+  // through to here report them instead of dying or silently ignoring them.
+  if (HAS_PENDING_EXCEPTION) {
+    Handle throwable = PENDING_EXCEPTION;
+    CLEAR_PENDING_EXCEPTION;
+
+    java_lang_Throwable::print(throwable, tty);
+    tty->cr();
+    java_lang_Throwable::print_stack_trace(throwable(), tty);
+    return level;
+  }
+  int comp_level = result.get_jint();
+  if (comp_level < CompLevel_none || comp_level > CompLevel_full_optimization) {
+    assert(false, "compilation level out of bounds");
+    return level;
+  }
+  return (CompLevel) comp_level;
+#undef CHECK_RETURN
 }
 
 void JVMCIRuntime::abort_on_pending_exception(Handle exception, const char* message, bool dump_core) {

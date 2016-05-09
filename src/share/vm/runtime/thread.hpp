@@ -919,16 +919,19 @@ class JavaThread: public Thread {
   // Communicates the DeoptReason and DeoptAction of the uncommon trap
   int       _pending_deoptimization;
 
-  // An object that JVMCI compiled code can use to further describe and
-  // uniquely identify the  speculative optimization guarded by the uncommon trap
-  oop       _pending_failed_speculation;
-
   // Specifies whether the uncommon trap is to bci 0 of a synchronized method
   // before the monitor has been acquired.
   bool      _pending_monitorenter;
 
   // Specifies if the DeoptReason for the last uncommon trap was Reason_transfer_to_interpreter
   bool      _pending_transfer_to_interpreter;
+
+  // Guard for re-entrant call to JVMCIRuntime::adjust_comp_level
+  bool      _adjusting_comp_level;
+
+  // An object that JVMCI compiled code can use to further describe and
+  // uniquely identify the  speculative optimization guarded by the uncommon trap
+  oop       _pending_failed_speculation;
 
   // These fields are mutually exclusive in terms of live ranges.
   union {
@@ -1325,6 +1328,8 @@ class JavaThread: public Thread {
 #if INCLUDE_JVMCI
   int  pending_deoptimization() const             { return _pending_deoptimization; }
   oop  pending_failed_speculation() const         { return _pending_failed_speculation; }
+  bool adjusting_comp_level() const               { return _adjusting_comp_level; }
+  void set_adjusting_comp_level(bool b)           { _adjusting_comp_level = b; }
   bool has_pending_monitorenter() const           { return _pending_monitorenter; }
   void set_pending_monitorenter(bool b)           { _pending_monitorenter = b; }
   void set_pending_deoptimization(int reason)     { _pending_deoptimization = reason; }

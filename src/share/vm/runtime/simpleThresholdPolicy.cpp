@@ -29,6 +29,9 @@
 #include "runtime/simpleThresholdPolicy.hpp"
 #include "runtime/simpleThresholdPolicy.inline.hpp"
 #include "code/scopeDesc.hpp"
+#ifdef COMPILERJVMCI
+#include "jvmci/jvmciRuntime.hpp"
+#endif
 
 
 void SimpleThresholdPolicy::print_counters(const char* prefix, methodHandle mh) {
@@ -340,7 +343,7 @@ CompLevel SimpleThresholdPolicy::common(Predicate p, Method* method, CompLevel c
 }
 
 // Determine if a method should be compiled with a normal entry point at a different level.
-CompLevel SimpleThresholdPolicy::call_event(Method* method,  CompLevel cur_level) {
+CompLevel SimpleThresholdPolicy::call_event(Method* method,  CompLevel cur_level, JavaThread* thread) {
   CompLevel osr_level = MIN2((CompLevel) method->highest_osr_comp_level(),
                              common(&SimpleThresholdPolicy::loop_predicate, method, cur_level));
   CompLevel next_level = common(&SimpleThresholdPolicy::call_predicate, method, cur_level);
@@ -357,12 +360,12 @@ CompLevel SimpleThresholdPolicy::call_event(Method* method,  CompLevel cur_level
   } else {
     next_level = MAX2(osr_level, next_level);
   }
-
+  COMPILERJVMCI_PRESENT(next_level = JVMCIRuntime::adjust_comp_level(method, false, next_level, thread);)
   return next_level;
 }
 
 // Determine if we should do an OSR compilation of a given method.
-CompLevel SimpleThresholdPolicy::loop_event(Method* method, CompLevel cur_level) {
+CompLevel SimpleThresholdPolicy::loop_event(Method* method, CompLevel cur_level, JavaThread* thread) {
   CompLevel next_level = common(&SimpleThresholdPolicy::loop_predicate, method, cur_level);
   if (cur_level == CompLevel_none) {
     // If there is a live OSR method that means that we deopted to the interpreter
@@ -372,6 +375,7 @@ CompLevel SimpleThresholdPolicy::loop_event(Method* method, CompLevel cur_level)
       return osr_level;
     }
   }
+  COMPILERJVMCI_PRESENT(next_level = JVMCIRuntime::adjust_comp_level(method, true, next_level, thread);)
   return next_level;
 }
 
@@ -380,7 +384,7 @@ CompLevel SimpleThresholdPolicy::loop_event(Method* method, CompLevel cur_level)
 void SimpleThresholdPolicy::method_invocation_event(methodHandle mh, methodHandle imh,
                                               CompLevel level, nmethod* nm, JavaThread* thread) {
   if (is_compilation_enabled() && !CompileBroker::compilation_is_in_queue(mh)) {
-    CompLevel next_level = call_event(mh(), level);
+    CompLevel next_level = call_event(mh(), level, thread);
     if (next_level != level) {
       compile(mh, InvocationEntryBci, next_level, thread);
     }
@@ -396,8 +400,8 @@ void SimpleThresholdPolicy::method_back_branch_event(methodHandle mh, methodHand
     // Use loop event as an opportunity to also check there's been
     // enough calls.
     CompLevel cur_level = comp_level(mh());
-    CompLevel next_level = call_event(mh(), cur_level);
-    CompLevel next_osr_level = loop_event(mh(), level);
+    CompLevel next_level = call_event(mh(), cur_level, thread);
+    CompLevel next_osr_level = loop_event(mh(), level, thread);
 
     next_level = MAX2(next_level,
                       next_osr_level < CompLevel_full_optimization ? next_osr_level : cur_level);

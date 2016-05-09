@@ -2650,7 +2650,7 @@ class StubGenerator: public StubCodeGenerator {
     {
       BLOCK_COMMENT("assert primitive array {");
       Label L;
-      __ cmpl(rax_lh, (Klass::_lh_array_tag_type_value << Klass::_lh_array_tag_shift));
+      __ cmpl(rax_lh, ((unsigned)Klass::_lh_array_tag_type_value << Klass::_lh_array_tag_shift));
       __ jcc(Assembler::greaterEqual, L);
       __ stop("must be a primitive array");
       __ bind(L);

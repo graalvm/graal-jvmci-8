@@ -1264,7 +1264,15 @@ public class HotSpotVMConfig {
     @HotSpotVMField(name = "nmethod::_verified_entry_point", type = "address", get = HotSpotVMField.Type.OFFSET) @Stable public int nmethodEntryOffset;
     @HotSpotVMField(name = "nmethod::_comp_level", type = "int", get = HotSpotVMField.Type.OFFSET) @Stable public int nmethodCompLevelOffset;
 
+    @HotSpotVMConstant(name = "CompLevel_none") @Stable public int compilationLevelNone;
+    @HotSpotVMConstant(name = "CompLevel_simple") @Stable public int compilationLevelSimple;
+    @HotSpotVMConstant(name = "CompLevel_limited_profile") @Stable public int compilationLevelLimitedProfile;
+    @HotSpotVMConstant(name = "CompLevel_full_profile") @Stable public int compilationLevelFullProfile;
     @HotSpotVMConstant(name = "CompLevel_full_optimization") @Stable public int compilationLevelFullOptimization;
+
+    @HotSpotVMConstant(name = "JVMCIRuntime::none") @Stable public int compLevelAdjustmentNone;
+    @HotSpotVMConstant(name = "JVMCIRuntime::by_holder") @Stable public int compLevelAdjustmentByHolder;
+    @HotSpotVMConstant(name = "JVMCIRuntime::by_full_signature") @Stable public int compLevelAdjustmentByFullSignature;
 
     @HotSpotVMType(name = "BasicLock", get = HotSpotVMType.Type.SIZE) @Stable public int basicLockSize;
     @HotSpotVMField(name = "BasicLock::_displaced_header", type = "markOop", get = HotSpotVMField.Type.OFFSET) @Stable public int basicLockDisplacedHeaderOffset;

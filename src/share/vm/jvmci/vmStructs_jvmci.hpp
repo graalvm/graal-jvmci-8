@@ -55,6 +55,9 @@
   declare_constant(JVMCIEnv::dependencies_invalid)                                                \
   declare_constant(JVMCIEnv::cache_full)                                                          \
   declare_constant(JVMCIEnv::code_too_large)                                                      \
+  declare_constant(JVMCIRuntime::none)                                                            \
+  declare_constant(JVMCIRuntime::by_holder)                                                       \
+  declare_constant(JVMCIRuntime::by_full_signature)                                               \
                                                                                                   \
   declare_preprocessor_constant("JVM_ACC_SYNTHETIC", JVM_ACC_SYNTHETIC)                           \
   declare_preprocessor_constant("JVM_RECOGNIZED_FIELD_MODIFIERS", JVM_RECOGNIZED_FIELD_MODIFIERS) \
