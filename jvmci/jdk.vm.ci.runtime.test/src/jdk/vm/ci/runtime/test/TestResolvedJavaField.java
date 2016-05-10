@@ -44,7 +44,6 @@ import java.util.Set;
 
 import org.junit.Test;
 
-import jdk.vm.ci.meta.LocationIdentity;
 import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 
@@ -92,14 +91,6 @@ public class TestResolvedJavaField extends FieldUniverse {
                     assertEquals(expected, actual);
                 }
             }
-        }
-    }
-
-    @Test
-    public void getLocationIdentityTest() {
-        for (Map.Entry<Field, ResolvedJavaField> e : fields.entrySet()) {
-            LocationIdentity identity = e.getValue().getLocationIdentity();
-            assertTrue(identity != null);
         }
     }
 
