@@ -28,7 +28,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Modifier;
 
-import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.Assumptions.AssumptionResult;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaKind;
@@ -95,7 +94,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
 
     @Override
     public ResolvedJavaType getSingleImplementor() {
-        throw new JVMCIError("Cannot call getSingleImplementor() on a non-interface type: %s", this);
+        throw new InternalError("Cannot call getSingleImplementor() on a non-interface type: " + this);
     }
 
     @Override
@@ -225,7 +224,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
 
     @Override
     public String getSourceFileName() {
-        throw JVMCIError.unimplemented();
+        throw new InternalError("should not reach here");
     }
 
     @Override

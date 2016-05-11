@@ -25,7 +25,7 @@ package jdk.vm.ci.hotspot;
 import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.vm.ci.hotspot.HotSpotResolvedObjectTypeImpl.fromObjectClass;
-import jdk.vm.ci.common.JVMCIError;
+
 import jdk.vm.ci.meta.ConstantReflectionProvider;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.MethodHandleAccessProvider;
@@ -92,7 +92,7 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
                 lambdaFormCompileToBytecodeMethod = findMethodInClass("java.lang.invoke.LambdaForm", "compileToBytecode");
                 memberNameVmtargetField = (HotSpotResolvedJavaField) findFieldInClass("java.lang.invoke.MemberName", "vmtarget");
             } catch (Throwable ex) {
-                throw new JVMCIError(ex);
+                throw new InternalError(ex);
             }
         }
     }

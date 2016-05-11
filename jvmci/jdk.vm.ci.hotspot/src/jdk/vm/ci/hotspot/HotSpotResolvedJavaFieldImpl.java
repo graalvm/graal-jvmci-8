@@ -28,7 +28,6 @@ import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
-import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.LocationIdentity;
@@ -300,7 +299,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField, HotSpotP
                 MetaAccessProvider metaAccess = runtime().getHostJVMCIBackend().getMetaAccess();
                 STRING_VALUE_FIELD = metaAccess.lookupJavaField(String.class.getDeclaredField("value"));
             } catch (SecurityException | NoSuchFieldException e) {
-                throw new JVMCIError(e);
+                throw new InternalError(e);
             }
         }
     }

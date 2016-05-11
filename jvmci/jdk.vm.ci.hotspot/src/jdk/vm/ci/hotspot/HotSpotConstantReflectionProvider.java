@@ -24,7 +24,6 @@ package jdk.vm.ci.hotspot;
 
 import java.lang.reflect.Array;
 
-import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.Constant;
 import jdk.vm.ci.meta.ConstantReflectionProvider;
 import jdk.vm.ci.meta.JavaConstant;
@@ -198,7 +197,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         if (type instanceof HotSpotResolvedObjectType) {
             return ((HotSpotResolvedObjectType) type).klass();
         } else {
-            throw JVMCIError.unimplemented();
+            throw new InternalError("should not reach here");
         }
     }
 }

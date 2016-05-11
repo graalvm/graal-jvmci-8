@@ -24,7 +24,6 @@ package jdk.vm.ci.hotspot;
 
 import jdk.vm.ci.code.CompilationRequest;
 import jdk.vm.ci.code.CompilationRequestResult;
-import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.runtime.JVMCICompiler;
 import jdk.vm.ci.runtime.JVMCIRuntime;
@@ -36,7 +35,7 @@ final class HotSpotJVMCICompilerConfig {
     private static class DummyCompilerFactory extends JVMCICompilerFactory implements JVMCICompiler {
 
         public CompilationRequestResult compileMethod(CompilationRequest request) {
-            throw new JVMCIError("no JVMCI compiler selected");
+            throw new InternalError("no JVMCI compiler selected");
         }
 
         @Override
@@ -72,7 +71,7 @@ final class HotSpotJVMCICompilerConfig {
                     }
                 }
                 if (factory == null) {
-                    throw new JVMCIError("JVMCI compiler '%s' not found", compilerName);
+                    throw new InternalError("JVMCI compiler '" + compilerName + "' not found");
                 }
             } else {
                 factory = new DummyCompilerFactory();

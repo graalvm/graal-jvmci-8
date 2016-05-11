@@ -56,7 +56,6 @@ import jdk.vm.ci.code.RegisterAttributes;
 import jdk.vm.ci.code.RegisterConfig;
 import jdk.vm.ci.code.StackSlot;
 import jdk.vm.ci.code.TargetDescription;
-import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotCallingConventionType;
 import jdk.vm.ci.hotspot.HotSpotVMConfig;
 import jdk.vm.ci.meta.AllocatableValue;
@@ -223,7 +222,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
             case Double:
                 return xmmParameterRegisters;
             default:
-                throw JVMCIError.shouldNotReachHere();
+                throw new InternalError("should not reach here");
         }
     }
 
@@ -258,7 +257,7 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
                     }
                     break;
                 default:
-                    throw JVMCIError.shouldNotReachHere();
+                    throw new InternalError("should not reach here");
             }
 
             if (locations[i] == null) {

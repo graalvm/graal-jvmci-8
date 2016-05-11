@@ -29,7 +29,6 @@ import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.invoke.MethodHandle;
 
-import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.ConstantPool;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaField;
@@ -158,7 +157,7 @@ final class HotSpotConstantPool implements ConstantPool, HotSpotProxified, Metas
                 if (res != null) {
                     return res;
                 }
-                throw new JVMCIError("Unknown JVM_CONSTANT tag %s", tag);
+                throw new InternalError("Unknown JVM_CONSTANT tag " + tag);
             }
         }
 
@@ -508,7 +507,7 @@ final class HotSpotConstantPool implements ConstantPool, HotSpotProxified, Metas
                 Object obj = compilerToVM().resolveConstantInPool(this, cpi);
                 return HotSpotObjectConstantImpl.forObject(obj);
             default:
-                throw new JVMCIError("Unknown constant pool tag %s", tag);
+                throw new InternalError("Unknown constant pool tag " + tag);
         }
     }
 
@@ -655,7 +654,7 @@ final class HotSpotConstantPool implements ConstantPool, HotSpotProxified, Metas
                 break;
             }
             default:
-                throw JVMCIError.shouldNotReachHere("Unexpected opcode " + opcode);
+                throw new InternalError("Unexpected opcode " + opcode);
         }
 
         final JVM_CONSTANT tag = getTagAt(index);
