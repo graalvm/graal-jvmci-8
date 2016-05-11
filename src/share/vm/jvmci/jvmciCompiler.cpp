@@ -37,7 +37,7 @@ elapsedTimer JVMCICompiler::_codeInstallTimer;
 JVMCICompiler::JVMCICompiler() : AbstractCompiler(jvmci) {
 #ifdef COMPILERJVMCI
   _bootstrapping = false;
-  _bootstrap_compilation_request_seen = false;
+  _bootstrap_compilation_request_handled = false;
   _methods_compiled = 0;
 #endif
   assert(_instance == NULL, "only one instance allowed");
@@ -60,7 +60,7 @@ void JVMCICompiler::initialize() {
 }
 
 #ifdef COMPILERJVMCI
-void JVMCICompiler::bootstrap() {
+void JVMCICompiler::bootstrap(TRAPS) {
   if (Arguments::mode() == Arguments::_int) {
     // Nothing to do in -Xint mode
     return;
@@ -71,7 +71,6 @@ void JVMCICompiler::bootstrap() {
   FlagSetting ctwOff(CompileTheWorld, false);
 #endif
 
-  JavaThread* THREAD = JavaThread::current();
   _bootstrapping = true;
   // Allow bootstrap to perform JVMCI compilations of itself
   ResourceMark rm;
@@ -101,7 +100,7 @@ void JVMCICompiler::bootstrap() {
     do {
       os::sleep(THREAD, 100, true);
       qsize = CompileBroker::queue_size(CompLevel_full_optimization);
-    } while (!_bootstrap_compilation_request_seen && first_round && qsize == 0);
+    } while (!_bootstrap_compilation_request_handled && first_round && qsize == 0);
     first_round = false;
     if (PrintBootstrap) {
       while (z < (_methods_compiled / 100)) {
@@ -115,7 +114,7 @@ void JVMCICompiler::bootstrap() {
     tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methods_compiled);
   }
   _bootstrapping = false;
-  JVMCIRuntime::bootstrap_finished(THREAD);
+  JVMCIRuntime::bootstrap_finished(CHECK);
 }
 
 void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JVMCIEnv* env) {
@@ -182,7 +181,7 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
     }
   }
   if (_bootstrapping) {
-    _bootstrap_compilation_request_seen = true;
+    _bootstrap_compilation_request_handled = true;
   }
 }
 

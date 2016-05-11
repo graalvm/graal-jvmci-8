@@ -37,7 +37,7 @@ private:
   /**
    * True if we have seen a bootstrap compilation request.
    */
-  volatile bool _bootstrap_compilation_request_seen;
+  volatile bool _bootstrap_compilation_request_handled;
 
   /**
    * Number of methods successfully compiled by a call to
@@ -77,7 +77,7 @@ public:
    * Initialize the compile queue with the methods in java.lang.Object and
    * then wait until the queue is empty.
    */
-  void bootstrap();
+  void bootstrap(TRAPS);
 
   bool is_bootstrapping() const { return _bootstrapping; }
 
