@@ -919,9 +919,8 @@ void JVMCIRuntime::shutdown() {
   }
 }
 
-void JVMCIRuntime::bootstrapFinished() {
+void JVMCIRuntime::bootstrap_finished(TRAPS) {
   if (_HotSpotJVMCIRuntime_instance != NULL) {
-    JavaThread* THREAD = JavaThread::current();
     HandleMark hm(THREAD);
     Handle receiver = get_HotSpotJVMCIRuntime(CHECK_ABORT);
     JavaValue result(T_VOID);

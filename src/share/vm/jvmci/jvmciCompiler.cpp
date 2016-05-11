@@ -37,7 +37,7 @@ elapsedTimer JVMCICompiler::_codeInstallTimer;
 JVMCICompiler::JVMCICompiler() : AbstractCompiler(jvmci) {
 #ifdef COMPILERJVMCI
   _bootstrapping = false;
-  _bootstrap_compilation_request_seen =  false;
+  _bootstrap_compilation_request_seen = false;
   _methods_compiled = 0;
 #endif
   assert(_instance == NULL, "only one instance allowed");
@@ -115,7 +115,7 @@ void JVMCICompiler::bootstrap() {
     tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methods_compiled);
   }
   _bootstrapping = false;
-  JVMCIRuntime::bootstrapFinished();
+  JVMCIRuntime::bootstrap_finished(THREAD);
 }
 
 void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JVMCIEnv* env) {

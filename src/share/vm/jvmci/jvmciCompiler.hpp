@@ -35,7 +35,7 @@ private:
   bool _bootstrapping;
 
   /**
-   * True if we have seen the a bootstrap compilation request.
+   * True if we have seen a bootstrap compilation request.
    */
   volatile bool _bootstrap_compilation_request_seen;
 

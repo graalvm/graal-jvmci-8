@@ -5210,6 +5210,10 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
       JavaThread* THREAD = thread;
       JVMCICompiler* compiler = JVMCICompiler::instance(CATCH);
       compiler->bootstrap();
+      if (HAS_PENDING_EXCEPTION) {
+        HandleMark hm;
+        vm_exit_during_initialization(Handle(THREAD, PENDING_EXCEPTION));
+      }
     }
 #endif
 
