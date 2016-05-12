@@ -47,6 +47,7 @@ import javax.tools.Diagnostic.Kind;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMConstant;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMField;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMFlag;
@@ -278,7 +279,7 @@ public class HotSpotVMConfigProcessor extends AbstractProcessor {
                     setter = String.format("set_%s(\"%s\", (%s) (intptr_t) %s);", type, field.getSimpleName(), type, name);
                     break;
                 default:
-                    throw new InternalError("unexpected type: " + value.get());
+                    throw new JVMCIError("unexpected type: " + value.get());
             }
         }
 
@@ -341,7 +342,7 @@ public class HotSpotVMConfigProcessor extends AbstractProcessor {
                 case "sparc":
                     return "defined(SPARC)";
                 default:
-                    throw new InternalError("unexpected arch: " + arch);
+                    throw new JVMCIError("unexpected arch: " + arch);
             }
         }
 

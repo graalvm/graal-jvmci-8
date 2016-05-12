@@ -1043,6 +1043,19 @@ void JVMCIRuntime::abort_on_pending_exception(Handle exception, const char* mess
   vm_abort(dump_core);
 }
 
+void JVMCIRuntime::fthrow_error(Thread* thread, const char* file, int line, const char* format, ...) {
+  const int max_msg_size = 1024;
+  va_list ap;
+  va_start(ap, format);
+  char msg[max_msg_size];
+  vsnprintf(msg, max_msg_size, format, ap);
+  msg[max_msg_size-1] = '\0';
+  va_end(ap);
+  Handle h_loader = Handle(thread, SystemDictionary::jvmci_loader());
+  Handle h_protection_domain = Handle();
+  Exceptions::_throw_msg(thread, file, line, vmSymbols::jdk_vm_ci_common_JVMCIError(), msg, h_loader, h_protection_domain);
+}
+
 Klass* JVMCIRuntime::resolve_or_null(Symbol* name, TRAPS) {
   assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
   return SystemDictionary::resolve_or_null(name, SystemDictionary::jvmci_loader(), Handle(), CHECK_NULL);

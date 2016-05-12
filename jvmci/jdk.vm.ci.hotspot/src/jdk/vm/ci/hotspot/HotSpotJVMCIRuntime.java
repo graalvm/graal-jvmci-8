@@ -41,6 +41,7 @@ import jdk.vm.ci.code.Architecture;
 import jdk.vm.ci.code.CompilationRequestResult;
 import jdk.vm.ci.code.CompiledCode;
 import jdk.vm.ci.code.InstalledCode;
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.services.HotSpotJVMCICompilerFactory;
 import jdk.vm.ci.hotspot.services.HotSpotVMEventListener;
 import jdk.vm.ci.inittimer.InitTimer;
@@ -138,7 +139,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
                     } else if (type == String.class) {
                         this.value = propertyValue;
                     } else {
-                        throw new InternalError("Unexpected option type " + type);
+                        throw new JVMCIError("Unexpected option type " + type);
                     }
                     this.isDefault = false;
                 }
@@ -188,7 +189,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider, H
             }
         }
 
-        throw new InternalError(String.format("No JVMCI runtime available for the %s architecture", architecture));
+        throw new JVMCIError("No JVMCI runtime available for the %s architecture", architecture);
     }
 
     /**

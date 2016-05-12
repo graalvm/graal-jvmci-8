@@ -55,6 +55,7 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.Assumptions.AssumptionResult;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaKind;
@@ -428,13 +429,13 @@ public class TestResolvedJavaType extends TypeUniverse {
         assertEquals(aSai2, iSai2.getSingleImplementor());
     }
 
-    @Test(expected = InternalError.class)
+    @Test(expected = JVMCIError.class)
     public void getSingleImplementorTestClassReceiver() {
         ResolvedJavaType base = metaAccess.lookupJavaType(Base.class);
         base.getSingleImplementor();
     }
 
-    @Test(expected = InternalError.class)
+    @Test(expected = JVMCIError.class)
     public void getSingleImplementorTestPrimitiveReceiver() {
         ResolvedJavaType primitive = metaAccess.lookupJavaType(int.class);
         primitive.getSingleImplementor();

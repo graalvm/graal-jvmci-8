@@ -25,6 +25,7 @@ package jdk.vm.ci.hotspot;
 import java.util.ArrayList;
 import java.util.List;
 
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaType;
@@ -104,7 +105,7 @@ public class HotSpotSignature implements Signature {
             case 'Z':
                 break;
             default:
-                throw new InternalError(String.format("Invalid character at index %d in signature: %s", cur, signature));
+                throw new JVMCIError("Invalid character at index %d in signature: %s", cur, signature);
         }
         return cur;
     }

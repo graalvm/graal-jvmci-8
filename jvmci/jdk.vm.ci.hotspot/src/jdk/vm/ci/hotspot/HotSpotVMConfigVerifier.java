@@ -34,6 +34,7 @@ import java.security.AccessControlException;
 import java.util.Arrays;
 import java.util.Objects;
 
+import jdk.vm.ci.common.JVMCIError;
 import jdk.internal.org.objectweb.asm.ClassReader;
 import jdk.internal.org.objectweb.asm.ClassVisitor;
 import jdk.internal.org.objectweb.asm.Label;
@@ -67,7 +68,7 @@ final class HotSpotVMConfigVerifier {
              */
             return true;
         } catch (IOException e) {
-            throw new InternalError(e);
+            throw new JVMCIError(e);
         }
     }
 
@@ -75,7 +76,7 @@ final class HotSpotVMConfigVerifier {
         try {
             return Class.forName(name.replace('/', '.'));
         } catch (ClassNotFoundException e) {
-            throw new InternalError(e);
+            throw new JVMCIError(e);
         }
     }
 
@@ -109,7 +110,7 @@ final class HotSpotVMConfigVerifier {
         void error(String message) {
             String errorMessage = format("%s:%d: %s is not allowed in the context of compilation replay. The unsafe access should be moved into the %s constructor and the result cached in a field",
                             sourceFile, lineNo, message, HotSpotVMConfig.class.getSimpleName());
-            throw new InternalError(errorMessage);
+            throw new JVMCIError(errorMessage);
 
         }
 

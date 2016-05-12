@@ -24,6 +24,7 @@ package jdk.vm.ci.hotspot;
 
 import java.io.OutputStream;
 
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.JVMCIMetaAccessContext;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
@@ -97,7 +98,7 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
             case Object:
                 return Unsafe.ARRAY_OBJECT_BASE_OFFSET;
             default:
-                throw new InternalError(kind.toString());
+                throw new JVMCIError("%s", kind);
         }
     }
 
@@ -127,7 +128,7 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
             case Object:
                 return Unsafe.ARRAY_OBJECT_INDEX_SCALE;
             default:
-                throw new InternalError(kind.toString());
+                throw new JVMCIError("%s", kind);
         }
     }
 }

@@ -78,6 +78,7 @@ import jdk.vm.ci.code.RegisterAttributes;
 import jdk.vm.ci.code.RegisterConfig;
 import jdk.vm.ci.code.StackSlot;
 import jdk.vm.ci.code.TargetDescription;
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotCallingConventionType;
 import jdk.vm.ci.hotspot.HotSpotVMConfig;
 import jdk.vm.ci.meta.AllocatableValue;
@@ -210,7 +211,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         if (type == HotSpotCallingConventionType.JavaCallee) {
             return callingConvention(cpuCalleeParameterRegisters, returnType, parameterTypes, hotspotType, target);
         }
-        throw new InternalError("should not reach here");
+        throw JVMCIError.shouldNotReachHere();
     }
 
     @Override
@@ -229,7 +230,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
             case Float:
                 return fpuFloatParameterRegisters;
             default:
-                throw new InternalError("should not reach here: unknown JavaKind " + kind);
+                throw JVMCIError.shouldNotReachHere("Unknown JavaKind " + kind);
         }
     }
 
@@ -274,7 +275,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
                     }
                     break;
                 default:
-                    throw new InternalError("should not reach here");
+                    throw JVMCIError.shouldNotReachHere();
             }
 
             if (locations[i] == null) {

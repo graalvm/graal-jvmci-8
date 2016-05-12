@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.Assumptions.AssumptionResult;
 import jdk.vm.ci.meta.Assumptions.ConcreteMethod;
 import jdk.vm.ci.meta.Assumptions.ConcreteSubtype;
@@ -278,7 +279,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     @Override
     public HotSpotResolvedObjectTypeImpl getSingleImplementor() {
         if (!isInterface()) {
-            throw new InternalError("Cannot call getSingleImplementor() on a non-interface type: " + this);
+            throw new JVMCIError("Cannot call getSingleImplementor() on a non-interface type: %s", this);
         }
         return compilerToVM().getImplementor(this);
     }

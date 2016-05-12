@@ -36,6 +36,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.meta.Constant;
 import jdk.vm.ci.meta.ConstantPool;
@@ -614,7 +615,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
      */
     public int vtableEntryOffset(ResolvedJavaType resolved) {
         if (!isInVirtualMethodTable(resolved)) {
-            throw new InternalError(String.format("%s does not have a vtable entry in type %s", this, resolved));
+            throw new JVMCIError("%s does not have a vtable entry in type %s", this, resolved);
         }
         HotSpotVMConfig config = config();
         final int vtableIndex = getVtableIndex((HotSpotResolvedObjectTypeImpl) resolved);

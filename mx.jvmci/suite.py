@@ -70,6 +70,14 @@ suite = {
 
     # ------------- JVMCI:API -------------
 
+    "jdk.vm.ci.common" : {
+      "subDir" : "jvmci",
+      "sourceDirs" : ["src"],
+      "checkstyle" : "jdk.vm.ci.services",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,JVMCI",
+    },
+
     "jdk.vm.ci.meta" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
@@ -104,6 +112,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "mx:JUNIT",
+        "jdk.vm.ci.common",
         "jdk.vm.ci.runtime",
       ],
       "checkstyle" : "jdk.vm.ci.services",
@@ -153,6 +162,7 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "jdk.vm.ci.hotspotvmconfig",
+        "jdk.vm.ci.common",
         "jdk.vm.ci.inittimer",
         "jdk.vm.ci.runtime",
       ],
@@ -175,7 +185,7 @@ suite = {
     "jdk.vm.ci.hotspotvmconfig.processor" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
-      "dependencies" : ["jdk.vm.ci.hotspotvmconfig"],
+      "dependencies" : ["jdk.vm.ci.hotspotvmconfig", "jdk.vm.ci.common"],
       "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,Codegen",
@@ -309,6 +319,7 @@ suite = {
       "dependencies" : [
         "jdk.vm.ci.inittimer",
         "jdk.vm.ci.runtime",
+        "jdk.vm.ci.common",
         "jdk.vm.ci.aarch64",
         "jdk.vm.ci.amd64",
         "jdk.vm.ci.sparc",

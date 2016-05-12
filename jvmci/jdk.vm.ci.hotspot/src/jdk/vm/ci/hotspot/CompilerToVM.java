@@ -33,6 +33,7 @@ import jdk.vm.ci.code.BytecodeFrame;
 import jdk.vm.ci.code.InstalledCode;
 import jdk.vm.ci.code.InvalidInstalledCodeException;
 import jdk.vm.ci.code.TargetDescription;
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMField;
 import jdk.vm.ci.inittimer.InitTimer;
 import jdk.vm.ci.meta.JavaType;
@@ -309,8 +310,8 @@ final class CompilerToVM {
      *         {@link HotSpotVMConfig#codeInstallResultCodeTooLarge},
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesFailed} or
      *         {@link HotSpotVMConfig#codeInstallResultDependenciesInvalid}.
-     * @throws InternalError if there is something wrong with the compiled code or the associated
-     *             metadata
+     * @throws JVMCIError if there is something wrong with the compiled code or the associated
+     *             metadata.
      */
     native int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, HotSpotSpeculationLog speculationLog);
 
