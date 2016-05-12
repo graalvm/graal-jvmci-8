@@ -104,8 +104,8 @@ public final class JFREventProvider extends EventProvider {
     @com.oracle.jrockit.jfr.EventDefinition(name = "Compilation", path = "vm/compiler/compilation")
     public static class JFRCompilationEvent extends com.oracle.jrockit.jfr.DurationEvent implements CompilationEvent {
 
-        /*
-         * FIXME method should be a Method* but we can't express that in Java.
+        /**
+         * Should be a {@code Method*} but we can't express that in Java.
          */
         @com.oracle.jrockit.jfr.ValueDefinition(name = "Java Method") public String method;
         @com.oracle.jrockit.jfr.ValueDefinition(name = "Compilation ID", relationKey = "COMP_ID") public int compileId;

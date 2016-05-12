@@ -106,14 +106,6 @@ public interface RegisterConfig {
     RegisterAttributes[] getAttributesMap();
 
     /**
-     * Gets the register corresponding to a runtime-defined role.
-     *
-     * @param id the identifier of a runtime-defined register role
-     * @return the register playing the role specified by {@code id}
-     */
-    Register getRegisterForRole(int id);
-
-    /**
      * Determines if all {@link #getAllocatableRegisters() allocatable} registers are
      * {@link #getCallerSaveRegisters() caller saved}.
      */

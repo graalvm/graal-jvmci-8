@@ -56,6 +56,11 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
      */
     boolean isDontInline();
 
+    /**
+     * Returns true if this method has a {@code ReservedStackAccess} annotation.
+     *
+     * @return true if ReservedStackAccess annotation present, false otherwise
+     */
     boolean hasReservedStackAccess();
 
     /**

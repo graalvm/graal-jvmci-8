@@ -120,14 +120,6 @@ suite = {
       "workingSets" : "API,JVMCI",
     },
 
-    "jdk.vm.ci.inittimer" : {
-      "subDir" : "jvmci",
-      "sourceDirs" : ["src"],
-      "checkstyle" : "jdk.vm.ci.services",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI",
-    },
-
     # ------------- JVMCI:HotSpot -------------
 
     "jdk.vm.ci.aarch64" : {
@@ -163,7 +155,6 @@ suite = {
       "dependencies" : [
         "jdk.vm.ci.hotspotvmconfig",
         "jdk.vm.ci.common",
-        "jdk.vm.ci.inittimer",
         "jdk.vm.ci.runtime",
       ],
       "annotationProcessors" : [
@@ -317,7 +308,6 @@ suite = {
     "JVMCI_API" : {
       "subDir" : "jvmci",
       "dependencies" : [
-        "jdk.vm.ci.inittimer",
         "jdk.vm.ci.runtime",
         "jdk.vm.ci.common",
         "jdk.vm.ci.aarch64",

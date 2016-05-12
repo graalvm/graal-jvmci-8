@@ -37,7 +37,7 @@ import jdk.vm.ci.meta.ResolvedJavaType;
 /**
  * HotSpot implementation of {@link ConstantReflectionProvider}.
  */
-public class HotSpotConstantReflectionProvider implements ConstantReflectionProvider, HotSpotProxified {
+public class HotSpotConstantReflectionProvider implements ConstantReflectionProvider {
 
     protected final HotSpotJVMCIRuntimeProvider runtime;
     protected final HotSpotMethodHandleAccessProvider methodHandleAccess;
@@ -131,7 +131,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
 
     @Override
     public JavaConstant boxPrimitive(JavaConstant source) {
-        if (!source.getJavaKind().isPrimitive() || !isBoxCached(source)) {
+        if (source == null || !source.getJavaKind().isPrimitive() || !isBoxCached(source)) {
             return null;
         }
         return HotSpotObjectConstantImpl.forObject(source.asBoxedPrimitive());
@@ -139,7 +139,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
 
     @Override
     public JavaConstant unboxPrimitive(JavaConstant source) {
-        if (!source.getJavaKind().isObject()) {
+        if (source == null || !source.getJavaKind().isObject()) {
             return null;
         }
         if (source.isNull()) {

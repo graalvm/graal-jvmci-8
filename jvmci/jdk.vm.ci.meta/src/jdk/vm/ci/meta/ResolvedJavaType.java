@@ -62,13 +62,6 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
     boolean isInstanceClass();
 
     /**
-     * Checks whether this type is an array class.
-     *
-     * @return {@code true} if this type is an array class
-     */
-    boolean isArray();
-
-    /**
      * Checks whether this type is primitive.
      *
      * @return {@code true} if this type is primitive

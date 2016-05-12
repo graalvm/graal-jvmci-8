@@ -22,7 +22,6 @@
  */
 package jdk.vm.ci.hotspot;
 
-import static jdk.vm.ci.common.UnsafeUtil.readCString;
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
@@ -37,8 +36,7 @@ import jdk.vm.ci.hotspotvmconfig.HotSpotVMField;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMFlag;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMType;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMValue;
-
-//JaCoCo Exclude
+import sun.misc.Unsafe;
 
 /**
  * Used to access native configuration details.
@@ -113,6 +111,27 @@ public class HotSpotVMConfig {
 
         assert check();
         assert HotSpotVMConfigVerifier.check();
+    }
+
+    /**
+     * Reads a {@code '\0'} terminated C string from native memory and converts it to a
+     * {@link String}.
+     *
+     * @return a Java string
+     */
+    static String readCString(Unsafe unsafe, long address) {
+        if (address == 0) {
+            return null;
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0;; i++) {
+            char c = (char) unsafe.getByte(address + i);
+            if (c == 0) {
+                break;
+            }
+            sb.append(c);
+        }
+        return sb.toString();
     }
 
     /**

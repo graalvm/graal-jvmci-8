@@ -100,7 +100,6 @@ JVMCI_SERVICES_JAR = $(TARGET)/jvmci-services.jar
 
 EXPORTED_FILES += $(JVMCI_SERVICES_JAR)
 
-JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.inittimer/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.meta/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.code/src -type f 2> /dev/null)
 JVMCI_API_SRC += $(shell find jvmci/jdk.vm.ci.runtime/src -type f 2> /dev/null)

@@ -57,8 +57,6 @@ import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.runtime.JVMCI;
 import sun.misc.Unsafe;
 
-//JaCoCo Exclude
-
 /**
  * Context for type related tests.
  */

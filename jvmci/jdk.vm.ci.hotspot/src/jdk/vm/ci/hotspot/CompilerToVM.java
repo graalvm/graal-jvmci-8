@@ -23,8 +23,8 @@
 
 package jdk.vm.ci.hotspot;
 
+import static jdk.vm.ci.common.InitTimer.timer;
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
-import static jdk.vm.ci.inittimer.InitTimer.timer;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -33,9 +33,9 @@ import jdk.vm.ci.code.BytecodeFrame;
 import jdk.vm.ci.code.InstalledCode;
 import jdk.vm.ci.code.InvalidInstalledCodeException;
 import jdk.vm.ci.code.TargetDescription;
+import jdk.vm.ci.common.InitTimer;
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspotvmconfig.HotSpotVMField;
-import jdk.vm.ci.inittimer.InitTimer;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
@@ -79,7 +79,7 @@ final class CompilerToVM {
     native byte[] getBytecode(HotSpotResolvedJavaMethodImpl method);
 
     /**
-     * Gets the number of entries in {@code method}'s exception handler table or 0 if it has not
+     * Gets the number of entries in {@code method}'s exception handler table or 0 if it has no
      * exception handler table.
      */
     native int getExceptionTableLength(HotSpotResolvedJavaMethodImpl method);
@@ -435,7 +435,7 @@ final class CompilerToVM {
     native Object readUncompressedOop(long address);
 
     /**
-     * Determines if {@code method} should not be inlined or compiled.
+     * Specifies that {@code method} should not be inlined or compiled.
      */
     native void doNotInlineOrCompile(HotSpotResolvedJavaMethodImpl method);
 
@@ -487,10 +487,10 @@ final class CompilerToVM {
     native HotSpotStackFrameReference getNextStackFrame(HotSpotStackFrameReference frame, ResolvedJavaMethod[] methods, int initialSkip);
 
     /**
-     * Materializes all virtual objects within {@code stackFrame} updates its locals.
+     * Materializes all virtual objects within {@code stackFrame} and updates its locals.
      *
      * @param invalidate if {@code true}, the compiled method for the stack frame will be
-     *            invalidated.
+     *            invalidated
      */
     native void materializeVirtualObjects(HotSpotStackFrameReference stackFrame, boolean invalidate);
 
@@ -507,7 +507,6 @@ final class CompilerToVM {
     /**
      * Determines if debug info should also be emitted at non-safepoint locations.
      */
-
     native boolean shouldDebugNonSafepoints();
 
     /**

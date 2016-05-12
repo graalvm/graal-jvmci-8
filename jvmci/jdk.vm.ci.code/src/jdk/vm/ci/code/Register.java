@@ -47,7 +47,7 @@ public final class Register implements Comparable<Register> {
 
     /**
      * The identifier for this register that is unique across all the registers in a
-     * {@link Architecture}. A valid register has {@code number > 0}.
+     * {@link Architecture}. A valid register has {@code number >= 0}.
      */
     public final int number;
 
@@ -164,38 +164,6 @@ public final class Register implements Comparable<Register> {
      */
     public boolean isValid() {
         return number >= 0;
-    }
-
-    /**
-     * Gets the maximum register {@linkplain #number number} in a given set of registers.
-     *
-     * @param registers the set of registers to process
-     * @return the maximum register number for any register in {@code registers}
-     */
-    public static int maxRegisterNumber(Register[] registers) {
-        int max = Integer.MIN_VALUE;
-        for (Register r : registers) {
-            if (r.number > max) {
-                max = r.number;
-            }
-        }
-        return max;
-    }
-
-    /**
-     * Gets the maximum register {@linkplain #encoding encoding} in a given set of registers.
-     *
-     * @param registers the set of registers to process
-     * @return the maximum register encoding for any register in {@code registers}
-     */
-    public static int maxRegisterEncoding(Register[] registers) {
-        int max = Integer.MIN_VALUE;
-        for (Register r : registers) {
-            if (r.encoding > max) {
-                max = r.encoding;
-            }
-        }
-        return max;
     }
 
     @Override

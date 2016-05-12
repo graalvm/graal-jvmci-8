@@ -28,7 +28,7 @@ import jdk.vm.ci.meta.JavaTypeProfile;
 import jdk.vm.ci.meta.ProfilingInfo;
 import jdk.vm.ci.meta.TriState;
 
-public final class HotSpotProfilingInfo implements ProfilingInfo, HotSpotProxified {
+public final class HotSpotProfilingInfo implements ProfilingInfo {
 
     private final HotSpotMethodData methodData;
     private final HotSpotResolvedJavaMethod method;

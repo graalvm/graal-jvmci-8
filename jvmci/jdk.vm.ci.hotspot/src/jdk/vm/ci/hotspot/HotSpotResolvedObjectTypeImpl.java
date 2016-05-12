@@ -56,7 +56,7 @@ import jdk.vm.ci.meta.ResolvedJavaType;
 /**
  * Implementation of {@link JavaType} for resolved non-primitive HotSpot classes.
  */
-final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implements HotSpotResolvedObjectType, HotSpotProxified, MetaspaceWrapperObject {
+final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implements HotSpotResolvedObjectType, MetaspaceWrapperObject {
 
     /**
      * The Java class this type represents.
