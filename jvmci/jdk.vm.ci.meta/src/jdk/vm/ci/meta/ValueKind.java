@@ -78,7 +78,7 @@ public abstract class ValueKind<K extends ValueKind<K>> {
     }
 
     /**
-     * Create a new {@link ValueKind} with a different {@link PlatformKind}. Subclasses should
+     * Create a new {@link ValueKind} with a different {@link PlatformKind}. Subclasses must
      * override this to preserve the additional information added by the compiler.
      */
     public abstract K changeType(PlatformKind newPlatformKind);
