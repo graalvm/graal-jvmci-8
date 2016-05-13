@@ -343,10 +343,24 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
      * Called from the VM.
      */
     @SuppressWarnings({"unused"})
-    private CompilationRequestResult compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
+    private HotSpotCompilationRequestResult compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
         CompilationRequestResult result = getCompiler().compileMethod(new HotSpotCompilationRequest(method, entryBCI, jvmciEnv, id));
         assert result != null : "compileMethod must always return something";
-        return result;
+        HotSpotCompilationRequestResult hsResult;
+        if (result instanceof HotSpotCompilationRequestResult) {
+            hsResult = (HotSpotCompilationRequestResult) result;
+        } else {
+            Object failure = result.getFailure();
+            if (failure != null) {
+                boolean retry = false; // Be conservative with unknown compiler
+                hsResult = HotSpotCompilationRequestResult.failure(failure.toString(), retry);
+            } else {
+                int inlinedBytecodes = -1;
+                hsResult = HotSpotCompilationRequestResult.success(inlinedBytecodes);
+            }
+        }
+
+        return hsResult;
     }
 
     /**

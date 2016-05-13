@@ -160,10 +160,10 @@ class JVMCIJavaClasses : AllStatic {
   start_class(site_Mark)                                                                                                                                       \
     oop_field(site_Mark, id, "Ljava/lang/Object;")                                                                                                             \
   end_class                                                                                                                                                    \
-  start_class(CompilationRequestResult)                                                                                                                        \
-    oop_field(CompilationRequestResult, failureMessage, "Ljava/lang/String;")                                                                                  \
-    boolean_field(CompilationRequestResult, retry)                                                                                                             \
-    int_field(CompilationRequestResult, inlinedBytecodes)                                                                                                      \
+  start_class(HotSpotCompilationRequestResult)                                                                                                                 \
+    oop_field(HotSpotCompilationRequestResult, failureMessage, "Ljava/lang/String;")                                                                           \
+    boolean_field(HotSpotCompilationRequestResult, retry)                                                                                                      \
+    int_field(HotSpotCompilationRequestResult, inlinedBytecodes)                                                                                               \
   end_class                                                                                                                                                    \
   start_class(DebugInfo)                                                                                                                                       \
     oop_field(DebugInfo, bytecodePosition, "Ljdk/vm/ci/code/BytecodePosition;")                                                                                \
