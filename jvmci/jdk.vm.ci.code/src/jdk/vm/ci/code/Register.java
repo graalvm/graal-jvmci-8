@@ -38,14 +38,6 @@ public final class Register implements Comparable<Register> {
     public static final Register None = new Register(-1, -1, "noreg", SPECIAL);
 
     /**
-     * Frame pointer of the current method. All spill slots and outgoing stack-based arguments are
-     * addressed relative to this register.
-     */
-    public static final Register Frame = new Register(-2, -2, "framereg", SPECIAL);
-
-    public static final Register CallerFrame = new Register(-3, -3, "callerframereg", SPECIAL);
-
-    /**
      * The identifier for this register that is unique across all the registers in a
      * {@link Architecture}. A valid register has {@code number >= 0}.
      */

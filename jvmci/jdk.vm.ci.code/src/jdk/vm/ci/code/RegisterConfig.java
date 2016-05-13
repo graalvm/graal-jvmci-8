@@ -46,7 +46,8 @@ public interface RegisterConfig {
     }
 
     /**
-     * Gets the register to which {@link Register#Frame} and {@link Register#CallerFrame} are bound.
+     * Gets the register used as the frame pointer. Spill slots and outgoing stack-based arguments
+     * are addressed relative to this register.
      */
     Register getFrameRegister();
 
