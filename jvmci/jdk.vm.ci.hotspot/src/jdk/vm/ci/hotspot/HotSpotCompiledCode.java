@@ -75,7 +75,7 @@ public class HotSpotCompiledCode implements CompiledCode {
     protected final Comment[] comments;
 
     /**
-     * The data section containing constants for the emitted machine code.
+     * The data section containing serialized constants for the emitted machine code.
      */
     protected final byte[] dataSection;
 

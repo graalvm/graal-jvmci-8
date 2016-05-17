@@ -152,7 +152,7 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
     @Override
     public JavaConstant readUnsafeConstant(JavaKind kind, JavaConstant baseConstant, long displacement) {
         if (kind == null) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("null JavaKind");
         }
         if (kind == JavaKind.Object) {
             Object o = readRawObject(baseConstant, displacement, runtime.getConfig().useCompressedOops);
@@ -198,9 +198,7 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
             Object o = readRawObject(base, displacement, runtime.getConfig().useCompressedOops);
             return HotSpotObjectConstantImpl.forObject(o);
         }
-        if (!isValidObjectFieldDisplacement(base, displacement)) {
-            return null;
-        }
+        assert isValidObjectFieldDisplacement(base, displacement);
         return HotSpotObjectConstantImpl.forObject(readRawObject(base, displacement, false));
     }
 
