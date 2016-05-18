@@ -54,8 +54,6 @@ public class Client implements Runnable {
             if (binary) {
                 new BinaryParser(channel, null, rootDocument, callback).parse();
             } else {
-                // signal readiness to client VM (old protocol)
-                channel.socket().getOutputStream().write('y');
                 new Parser(channel, null, callback).parse();
             }
         } catch (IOException ex) {

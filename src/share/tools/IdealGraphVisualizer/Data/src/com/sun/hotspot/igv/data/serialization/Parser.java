@@ -546,7 +546,8 @@ public class Parser implements GraphParser {
     private XMLReader createReader() throws SAXException {
         try {
             SAXParserFactory pfactory = SAXParserFactory.newInstance();
-            pfactory.setValidating(true);
+            // Don't bother enabling validation since we don't have an error handler.
+            pfactory.setValidating(false);
             pfactory.setNamespaceAware(true);
 
             // Enable schema validation
