@@ -59,7 +59,9 @@ public interface MemoryAccessProvider {
      *
      * @param base the base address from which the value is read
      * @param displacement the displacement within the object in bytes
-     * @return the read value encapsulated in a {@link Constant} object
+     * @return the read value encapsulated in a {@link Constant} object or {@code null} if the
+     *         address computed from {@code base} and {@code displacement} does not denote a
+     *         location holding an {@code Object} value
      */
     JavaConstant readObjectConstant(Constant base, long displacement);
 }

@@ -198,7 +198,9 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
             Object o = readRawObject(base, displacement, runtime.getConfig().useCompressedOops);
             return HotSpotObjectConstantImpl.forObject(o);
         }
-        assert isValidObjectFieldDisplacement(base, displacement);
+        if (!isValidObjectFieldDisplacement(base, displacement)) {
+            return null;
+        }
         return HotSpotObjectConstantImpl.forObject(readRawObject(base, displacement, false));
     }
 
