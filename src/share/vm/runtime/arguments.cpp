@@ -2513,6 +2513,11 @@ bool Arguments::check_vm_args_consistency() {
   // Check the minimum number of compiler threads
   status &=verify_min_value(CICompilerCount, min_number_of_compiler_threads, "CICompilerCount");
 
+#if (INCLUDE_JVMCI && defined(COMPILERJVMCI))
+  // Check the minimum number of JVMCI compiler threads
+  status &=verify_min_value(JVMCIThreads, 1, "JVMCIThreads");
+#endif
+
   return status;
 }
 
