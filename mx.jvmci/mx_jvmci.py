@@ -280,6 +280,9 @@ def dealiased_vm(vm):
         return _vmAliases[vm]
     return vm
 
+def get_jvmci_mode():
+    return _jvmciMode.jvmciMode
+
 def get_jvmci_mode_args():
     return _jvmciMode.vmArgs
 
