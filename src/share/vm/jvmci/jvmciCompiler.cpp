@@ -35,19 +35,16 @@ JVMCICompiler* JVMCICompiler::_instance = NULL;
 elapsedTimer JVMCICompiler::_codeInstallTimer;
 
 JVMCICompiler::JVMCICompiler() : AbstractCompiler(jvmci) {
-#ifdef COMPILERJVMCI
   _bootstrapping = false;
   _bootstrap_compilation_request_handled = false;
   _methods_compiled = 0;
-#endif
   assert(_instance == NULL, "only one instance allowed");
   _instance = this;
 }
 
 // Initialization
 void JVMCICompiler::initialize() {
-#ifdef COMPILERJVMCI
-  if (!UseCompiler || !should_perform_init()) {
+  if (!UseCompiler || !UseJVMCICompiler || !should_perform_init()) {
     return;
   }
 
@@ -56,10 +53,8 @@ void JVMCICompiler::initialize() {
   // JVMCI is considered as application code so we need to
   // stop the VM deferring compilation now.
   CompilationPolicy::completed_vm_startup();
-#endif // COMPILERJVMCI
 }
 
-#ifdef COMPILERJVMCI
 void JVMCICompiler::bootstrap(TRAPS) {
   if (Arguments::mode() == Arguments::_int) {
     // Nothing to do in -Xint mode
@@ -202,8 +197,6 @@ bool JVMCICompiler::is_trivial(Method* method) {
 void JVMCICompiler::print_timers() {
   print_compilation_timers();
 }
-
-#endif // COMPILERJVMCI
 
 // Print compilation timers and statistics
 void JVMCICompiler::print_compilation_timers() {

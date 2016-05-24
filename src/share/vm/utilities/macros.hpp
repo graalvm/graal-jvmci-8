@@ -180,7 +180,7 @@
 
 // COMPILER1 variant
 #ifdef COMPILER1
-#if defined(COMPILER2) || defined(COMPILERJVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
   #define TIERED
 #endif
 #define COMPILER1_PRESENT(code) code
@@ -197,20 +197,15 @@
 #define NOT_COMPILER2(code) code
 #endif // COMPILER2
 
-#ifdef COMPILERJVMCI
-#define COMPILERJVMCI_PRESENT(code) code
-#define NOT_COMPILERJVMCI(code)
-#else // COMPILERJVMCI
-#define COMPILERJVMCI_PRESENT(code)
-#define NOT_COMPILERJVMCI(code) code
-#endif // COMPILERJVMCI
-
-#if defined(COMPILERJVMCI) && !INCLUDE_JVMCI
-#error "COMPILERJVMCI needs INCLUDE_JVMCI=1"
-#endif
-
-#if defined(COMPILERJVMCI) && defined(COMPILER2)
-#error "COMPILERJVMCI is mutually exclusive with COMPILER2"
+// COMPILER2 or JVMCI
+#if defined(COMPILER2) || INCLUDE_JVMCI
+#define COMPILER2_OR_JVMCI 1
+#define COMPILER2_OR_JVMCI_PRESENT(code) code
+#define NOT_COMPILER2_OR_JVMCI(code)
+#else
+#define COMPILER2_OR_JVMCI 0
+#define COMPILER2_OR_JVMCI_PRESENT(code)
+#define NOT_COMPILER2_OR_JVMCI(code) code
 #endif
 
 #ifdef TIERED

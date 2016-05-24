@@ -320,7 +320,6 @@ static DoNothingClosure do_nothing;
 static void add_derived_oop(oop* base, oop* derived) {
 #ifndef TIERED
   COMPILER1_PRESENT(ShouldNotReachHere();)
-  COMPILERJVMCI_PRESENT(ShouldNotReachHere();)
 #endif // TIERED
 #if defined(COMPILER2) || INCLUDE_JVMCI
   DerivedPointerTable::add(derived, base);
@@ -382,7 +381,6 @@ void OopMapSet::all_do(const frame *fr, const RegisterMap *reg_map,
     if (!oms.is_done()) {
 #ifndef TIERED
       COMPILER1_PRESENT(ShouldNotReachHere();)
-      COMPILERJVMCI_PRESENT(ShouldNotReachHere();)
 #endif // !TIERED
       // Protect the operation on the derived pointers.  This
       // protects the addition of derived pointers to the shared
@@ -512,7 +510,6 @@ void OopMapSet::update_register_map(const frame *fr, RegisterMap *reg_map) {
 bool OopMap::has_derived_pointer() const {
 #ifndef TIERED
   COMPILER1_PRESENT(return false);
-  COMPILERJVMCI_PRESENT(return false);
 #endif // !TIERED
 #if defined(COMPILER2) || INCLUDE_JVMCI
   OopMapStream oms((OopMap*)this,OopMapValue::derived_oop_value);

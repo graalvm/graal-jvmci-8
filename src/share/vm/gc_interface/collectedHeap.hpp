@@ -95,7 +95,7 @@ class CollectedHeap : public CHeapObj<mtInternal> {
   GCHeapLog* _gc_heap_log;
 
   // Used in support of ReduceInitialCardMarks; only consulted if COMPILER2
-  // or COMPILERJVMCI is being used
+  // or INCLUDE_JVMCI is being used
   bool _defer_initial_card_mark;
 
  protected:

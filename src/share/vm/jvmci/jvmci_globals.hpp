@@ -46,23 +46,29 @@
 //
 #define JVMCI_FLAGS(develop, develop_pd, product, product_pd, notproduct)   \
                                                                             \
+  product(bool, EnableJVMCI, true,                                          \
+          "Enable JVMCI")                                                   \
+                                                                            \
+  product(bool, UseJVMCICompiler, false,                                    \
+          "Use JVMCI as the default compiler")                              \
+                                                                            \
   product(bool, UseJVMCIClassLoader, true,                                  \
           "Load JVMCI classes with separate class loader")                  \
                                                                             \
   product(ccstr, JVMCIServicesDir, NULL,                                    \
           "Alternate directory to use for JVMCI services")                  \
                                                                             \
-  COMPILERJVMCI_PRESENT(product(bool, BootstrapJVMCI, false,                \
-          "Bootstrap JVMCI before running Java main method"))               \
+  product(bool, BootstrapJVMCI, false,                                      \
+          "Bootstrap JVMCI before running Java main method")                \
                                                                             \
-  COMPILERJVMCI_PRESENT(product(bool, PrintBootstrap, true,                 \
-          "Print JVMCI bootstrap progress and summary"))                    \
+  product(bool, PrintBootstrap, true,                                       \
+          "Print JVMCI bootstrap progress and summary")                     \
                                                                             \
-  COMPILERJVMCI_PRESENT(product(intx, JVMCIThreads, 1,                      \
-          "Force number of JVMCI compiler threads to use"))                 \
+  product(intx, JVMCIThreads, 1,                                            \
+          "Force number of JVMCI compiler threads to use")                  \
                                                                             \
-  COMPILERJVMCI_PRESENT(product(intx, JVMCIHostThreads, 1,                  \
-          "Force number of compiler threads for JVMCI host compiler"))      \
+  product(intx, JVMCIHostThreads, 1,                                        \
+          "Force number of compiler threads for JVMCI host compiler")       \
                                                                             \
   JVMCI_ONLY(product(bool, CodeInstallSafepointChecks, true,                \
           "Perform explicit safepoint checks while installing code"))       \

@@ -129,7 +129,7 @@
 # include "c1_globals_bsd.hpp"
 #endif
 #endif
-#ifdef COMPILERJVMCI 
+#if INCLUDE_JVMCI
 #ifdef TARGET_ARCH_x86
 # include "jvmci_globals_x86.hpp"
 #endif
@@ -142,7 +142,7 @@
 #ifdef TARGET_ARCH_ppc
 # include "jvmci_globals_ppc.hpp"
 #endif
-#endif // COMPILERJVMCI
+#endif // INCLUDE_JVMCI
 #ifdef COMPILER2
 #ifdef TARGET_ARCH_x86
 # include "c2_globals_x86.hpp"
@@ -178,7 +178,7 @@
 #endif
 #endif
 
-#if !defined(COMPILER1) && !defined(COMPILER2) && !defined(SHARK) && !defined(COMPILERJVMCI)
+#if !defined(COMPILER1) && !defined(COMPILER2) && !defined(SHARK) && !INCLUDE_JVMCI
 define_pd_global(bool, BackgroundCompilation,        false);
 define_pd_global(bool, UseTLAB,                      false);
 define_pd_global(bool, CICompileOSR,                 false);
@@ -210,7 +210,7 @@ define_pd_global(uint64_t,MaxRAM,                    1ULL*G);
 #define CI_COMPILER_COUNT 0
 #else
 
-#if defined(COMPILER2) || defined(COMPILERJVMCI)
+#if defined(COMPILER2) || INCLUDE_JVMCI
 #define CI_COMPILER_COUNT 2
 #else
 #define CI_COMPILER_COUNT 1

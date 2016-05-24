@@ -188,8 +188,8 @@ bool CompilationPolicy::is_compilation_enabled() {
 }
 
 CompileTask* CompilationPolicy::select_task_helper(CompileQueue* compile_queue) {
-#ifdef COMPILERJVMCI
-  if (!BackgroundCompilation) {
+#if INCLUDE_JVMCI
+  if (UseJVMCICompiler && !BackgroundCompilation) {
     /*
      * In blocking compilation mode, the CompileBroker will make
      * compilations submitted by a JVMCI compiler thread non-blocking. These
@@ -247,7 +247,7 @@ void NonTieredCompPolicy::initialize() {
 // - if neither is defined - always return zero.
 int NonTieredCompPolicy::compiler_count(CompLevel comp_level) {
   assert(!TieredCompilation, "This policy should not be used with TieredCompilation");
-#if defined(COMPILER2) || defined(COMPILERJVMCI)
+#ifdef COMPILER2
   if (is_c2_compile(comp_level)) {
     return _compiler_count;
   } else {

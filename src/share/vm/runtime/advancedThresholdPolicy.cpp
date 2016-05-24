@@ -25,7 +25,7 @@
 #include "precompiled.hpp"
 #include "runtime/advancedThresholdPolicy.hpp"
 #include "runtime/simpleThresholdPolicy.inline.hpp"
-#ifdef COMPILERJVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciRuntime.hpp"
 #endif
 
@@ -164,9 +164,7 @@ bool AdvancedThresholdPolicy::is_method_profiled(Method* method) {
 
 // Called with the queue locked and with at least one element
 CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
-#ifdef COMPILERJVMCI
   CompileTask *max_blocking_task = NULL;
-#endif
   CompileTask *max_task = NULL;
   Method* max_method = NULL;
   jlong t = os::javaTimeMillis();
@@ -197,17 +195,14 @@ CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
         max_method = method;
       }
     }
-#ifdef COMPILERJVMCI
     if (task->is_blocking()) {
       if (max_blocking_task == NULL || compare_methods(method, max_blocking_task->method())) {
         max_blocking_task = task;
       }
     }
-#endif
     task = next_task;
   }
 
-#ifdef COMPILERJVMCI
   if (max_blocking_task != NULL) {
     // In blocking compilation mode, the CompileBroker will make
     // compilations submitted by a JVMCI compiler thread non-blocking. These
@@ -217,7 +212,6 @@ CompileTask* AdvancedThresholdPolicy::select_task(CompileQueue* compile_queue) {
     max_task = max_blocking_task;
     max_method = max_task->method();
   }
-#endif
 
   if (max_task->comp_level() == CompLevel_full_profile && TieredStopAtLevel > CompLevel_full_profile
       && is_method_profiled(max_method)) {
@@ -374,11 +368,14 @@ CompLevel AdvancedThresholdPolicy::common(Predicate p, Method* method, CompLevel
       if (common(p, method, CompLevel_full_profile, disable_feedback) == CompLevel_full_optimization) {
         next_level = CompLevel_full_optimization;
       } else if ((this->*p)(i, b, cur_level)) {
-#ifdef COMPILERJVMCI
-        // Since JVMCI takes a while to warm up, its queue inevitably backs up during
-        // early VM execution.
-        next_level = CompLevel_full_profile;
-#else
+#if INCLUDE_JVMCI
+        if (UseJVMCICompiler) {
+          // Since JVMCI takes a while to warm up, its queue inevitably backs up during
+          // early VM execution.
+          next_level = CompLevel_full_profile;
+          break;
+        }
+#endif
         // C1-generated fully profiled code is about 30% slower than the limited profile
         // code that has only invocation and backedge counters. The observation is that
         // if C2 queue is large enough we can spend too much time in the fully profiled code
@@ -392,7 +389,6 @@ CompLevel AdvancedThresholdPolicy::common(Predicate p, Method* method, CompLevel
         } else {
           next_level = CompLevel_full_profile;
         }
-#endif
       }
       break;
     case CompLevel_limited_profile:
@@ -453,7 +449,11 @@ CompLevel AdvancedThresholdPolicy::call_event(Method* method, CompLevel cur_leve
   } else {
     next_level = MAX2(osr_level, next_level);
   }
-  COMPILERJVMCI_PRESENT(next_level = JVMCIRuntime::adjust_comp_level(method, false, next_level, thread);)
+#if INCLUDE_JVMCI
+  if (UseJVMCICompiler) {
+    next_level = JVMCIRuntime::adjust_comp_level(method, false, next_level, thread);
+  }
+#endif
   return next_level;
 }
 
@@ -468,7 +468,11 @@ CompLevel AdvancedThresholdPolicy::loop_event(Method* method, CompLevel cur_leve
       return osr_level;
     }
   }
-  COMPILERJVMCI_PRESENT(next_level = JVMCIRuntime::adjust_comp_level(method, true, next_level, thread);)
+#if INCLUDE_JVMCI
+  if (UseJVMCICompiler) {
+    next_level = JVMCIRuntime::adjust_comp_level(method, true, next_level, thread);
+  }
+#endif
   return next_level;
 }
 

@@ -31,7 +31,6 @@ class JVMCICompiler : public AbstractCompiler {
 
 private:
 
-#ifdef COMPILERJVMCI
   bool _bootstrapping;
 
   /**
@@ -44,8 +43,6 @@ private:
    * JVMCICompiler::compile_method().
    */
   volatile int  _methods_compiled;
-
-#endif
 
   static JVMCICompiler* _instance;
  
@@ -71,8 +68,6 @@ public:
   // Initialization
   virtual void initialize();
 
-#ifdef COMPILERJVMCI
-
   /**
    * Initialize the compile queue with the methods in java.lang.Object and
    * then wait until the queue is empty.
@@ -96,8 +91,6 @@ public:
    * a call to JVMCICompiler::compile_method().
    */
   int methods_compiled() { return _methods_compiled; }
-
-#endif // COMPILERJVMCI
 
   // Print compilation timers and statistics
   static void print_compilation_timers();

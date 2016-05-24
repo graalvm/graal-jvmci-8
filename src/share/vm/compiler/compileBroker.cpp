@@ -51,10 +51,8 @@
 #endif
 #if INCLUDE_JVMCI
 #include "jvmci/jvmciJavaClasses.hpp"
-#ifdef COMPILERJVMCI
 #include "jvmci/jvmciRuntime.hpp"
 #include "runtime/vframe.hpp"
-#endif
 #endif
 #ifdef COMPILER2
 #include "opto/c2compiler.hpp"
@@ -237,7 +235,7 @@ void compileBroker_init() {
 CompileTaskWrapper::CompileTaskWrapper(CompileTask* task) {
   CompilerThread* thread = CompilerThread::current();
   thread->set_task(task);
-#ifdef COMPILERJVMCI
+#if INCLUDE_JVMCI
   if (task->is_blocking() && CompileBroker::compiler(task->comp_level())->is_jvmci()) {
     task->set_jvmci_compiler_thread(thread);
   }
@@ -259,7 +257,7 @@ CompileTaskWrapper::~CompileTaskWrapper() {
     {
       MutexLocker notifier(task->lock(), thread);
       task->mark_complete();
-#ifdef COMPILERJVMCI
+#if INCLUDE_JVMCI
       if (CompileBroker::compiler(task->comp_level())->is_jvmci()) {
         if (!task->has_waiter()) {
           // The waiting thread timed out and thus did not free the task.
@@ -305,7 +303,7 @@ CompileTask* CompileTask::allocate() {
   } else {
     task = new CompileTask();
     DEBUG_ONLY(_num_allocated_tasks++;)
-    NOT_COMPILERJVMCI(assert (_num_allocated_tasks < 10000, "Leaking compilation tasks?");)
+    NOT_JVMCI(assert (_num_allocated_tasks < 10000, "Leaking compilation tasks?");)
     task->set_next(NULL);
     task->set_is_free(true);
   }
@@ -347,8 +345,10 @@ void CompileTask::initialize(int compile_id,
   _method_holder = JNIHandles::make_global(method->method_holder()->klass_holder());
   _osr_bci = osr_bci;
   _is_blocking = is_blocking;
-  COMPILERJVMCI_PRESENT(_has_waiter = CompileBroker::compiler(comp_level)->is_jvmci();)
-  COMPILERJVMCI_PRESENT(_jvmci_compiler_thread = NULL;)
+#if INCLUDE_JVMCI
+  _has_waiter = CompileBroker::compiler(comp_level)->is_jvmci();
+  _jvmci_compiler_thread = NULL;
+#endif
   _comp_level = comp_level;
   _num_inlined_bytecodes = 0;
 
@@ -943,34 +943,38 @@ void CompileBroker::compilation_init(TRAPS) {
   int c2_count = CompilationPolicy::policy()->compiler_count(CompLevel_full_optimization);
 #if INCLUDE_JVMCI
   JVMCICompiler* jvmci = new JVMCICompiler();
-#endif
-
-#if defined(COMPILERJVMCI)
-  _compilers[1] = jvmci;
-  if (FLAG_IS_DEFAULT(JVMCIThreads)) {
-    if (BootstrapJVMCI) {
-      // JVMCI will bootstrap so give it more threads
-      c2_count = MIN2(32, os::active_processor_count());
+  if (UseJVMCICompiler) {
+    _compilers[1] = jvmci;
+    if (FLAG_IS_DEFAULT(JVMCIThreads)) {
+      if (BootstrapJVMCI) {
+        // JVMCI will bootstrap so give it more threads
+        c2_count = MIN2(32, os::active_processor_count());
+      }
+    } else {
+      c2_count = JVMCIThreads;
     }
-  } else {
-    c2_count = JVMCIThreads;
+    if (FLAG_IS_DEFAULT(JVMCIHostThreads)) {
+    } else {
+      c1_count = JVMCIHostThreads;
+    }
+    if (!UseInterpreter || !BackgroundCompilation) {
+      // Force initialization of JVMCI compiler otherwise JVMCI
+      // compilations will not block until JVMCI is initialized
+      JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
+      ResourceMark rm;
+      TempNewSymbol getCompiler = SymbolTable::new_symbol("getCompiler", CHECK);
+      TempNewSymbol sig = SymbolTable::new_symbol("()Ljdk/vm/ci/runtime/JVMCICompiler;", CHECK);
+      Handle jvmciRuntime = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
+      JavaValue result(T_OBJECT);
+      JavaCalls::call_virtual(&result, jvmciRuntime, HotSpotJVMCIRuntime::klass(), getCompiler, sig, CHECK);
+    }
   }
-  if (FLAG_IS_DEFAULT(JVMCIHostThreads)) {
-  } else {
-    c1_count = JVMCIHostThreads;
+#ifndef COMPILER2
+  else {
+    c2_count = 0;
   }
-  if (!UseInterpreter || !BackgroundCompilation) {
-    // Force initialization of JVMCI compiler otherwise JVMCI
-    // compilations will not block until JVMCI is initialized
-    JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-    ResourceMark rm;
-    TempNewSymbol getCompiler = SymbolTable::new_symbol("getCompiler", CHECK);
-    TempNewSymbol sig = SymbolTable::new_symbol("()Ljdk/vm/ci/runtime/JVMCICompiler;", CHECK);
-    Handle jvmciRuntime = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
-    JavaValue result(T_OBJECT);
-    JavaCalls::call_virtual(&result, jvmciRuntime, HotSpotJVMCIRuntime::klass(), getCompiler, sig, CHECK);
-  }
-#endif // COMPILERJVMCI
+#endif
+#endif // INCLUDE_JVMCI
 
 #ifdef COMPILER1
   if (c1_count > 0) {
@@ -979,8 +983,10 @@ void CompileBroker::compilation_init(TRAPS) {
 #endif // COMPILER1
 
 #ifdef COMPILER2
-  if (c2_count > 0) {
-    _compilers[1] = new C2Compiler();
+  if (true JVMCI_ONLY( && !UseJVMCICompiler)) {
+    if (c2_count > 0) {
+      _compilers[1] = new C2Compiler();
+    }
   }
 #endif // COMPILER2
 
@@ -1178,9 +1184,9 @@ CompilerThread* CompileBroker::make_compiler_thread(const char* name, CompileQue
 
 void CompileBroker::init_compiler_threads(int c1_compiler_count, int c2_compiler_count) {
   EXCEPTION_MARK;
-#if !defined(ZERO) && !defined(SHARK) && !defined(COMPILERJVMCI)
-  assert(c2_compiler_count > 0 || c1_compiler_count > 0, "No compilers?");
-#endif // !ZERO && !SHARK && !COMPILERJVMCI
+#if !defined(ZERO) && !defined(SHARK)
+  assert(c2_compiler_count > 0 || c1_compiler_count > 0 JVMCI_ONLY(|| UseJVMCICompiler), "No compilers?");
+#endif // !ZERO && !SHARK
   // Initialize the compilation queue
   if (c2_compiler_count > 0) {
     _c2_compile_queue  = new CompileQueue("C2 CompileQueue",  MethodCompileQueue_lock);
@@ -1358,8 +1364,8 @@ void CompileBroker::compile_method_base(methodHandle method,
     // Should this thread wait for completion of the compile?
     blocking = is_compile_blocking();
 
-#ifdef COMPILERJVMCI
-    if (blocking) {
+#if INCLUDE_JVMCI
+    if (UseJVMCICompiler && blocking) {
       // Don't allow blocking compiles for requests triggered by JVMCI.
       if (thread->is_Compiler_thread()) {
         blocking = false;
@@ -1722,7 +1728,7 @@ CompileTask* CompileBroker::create_compile_task(CompileQueue* queue,
   return new_task;
 }
 
-#ifdef COMPILERJVMCI
+#if INCLUDE_JVMCI
 // The number of milliseconds to wait before checking if
 // JVMCI compilation has made progress.
 static const long JVMCI_COMPILATION_PROGRESS_WAIT_TIMESLICE = 500;
@@ -1795,7 +1801,7 @@ void CompileBroker::wait_for_completion(CompileTask* task) {
 
   methodHandle method(thread, task->method());
   bool free_task = true;
-#ifdef COMPILERJVMCI
+#if INCLUDE_JVMCI
   AbstractCompiler* comp = compiler(task->comp_level());
   if (comp->is_jvmci()) {
     free_task = wait_for_jvmci_completion((JVMCICompiler*) comp, task, thread);
@@ -2183,7 +2189,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     MutexLocker locker(Compile_lock, thread);
     system_dictionary_modification_counter = SystemDictionary::number_of_modifications();
   }
-#ifdef COMPILERJVMCI
+#if INCLUDE_JVMCI
   if (comp != NULL && comp->is_jvmci()) {
     JVMCICompiler* jvmci = (JVMCICompiler*) comp;
 
@@ -2203,7 +2209,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     }
 
   } else
-#endif // COMPILERJVMCI
+#endif // INCLUDE_JVMCI
   {
     NoHandleMark  nhm;
     ThreadToNativeFromVM ttn(thread);
@@ -2650,10 +2656,10 @@ void CompileBroker::print_times(bool per_compiler, bool aggregate) {
   total_compilation.add(osr_compilation);
   total_compilation.add(standard_compilation);
 
-#ifndef COMPILERJVMCI
-  // In hosted mode, print the JVMCI compiler specific counters manually.
-  JVMCICompiler::print_compilation_timers();
-#endif
+  if (!UseJVMCICompiler) {
+    // In hosted mode, print the JVMCI compiler specific counters manually.
+    JVMCICompiler::print_compilation_timers();
+  }
 #else
   elapsedTimer standard_compilation = CompileBroker::_t_standard_compilation;
   elapsedTimer osr_compilation = CompileBroker::_t_osr_compilation;

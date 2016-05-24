@@ -31,7 +31,7 @@
 // Sets the default values for platform dependent flags used by the JVMCI compiler.
 // (see jvmci_globals.hpp)
 
-#ifdef COMPILERJVMCI
+#ifndef COMPILER2
 define_pd_global(bool, BackgroundCompilation,        true );
 define_pd_global(bool, UseTLAB,                      true );
 define_pd_global(bool, ResizeTLAB,                   true );
@@ -58,7 +58,7 @@ define_pd_global(uintx,CodeCacheMinBlockLength,      4);
 define_pd_global(uintx, CodeCacheMinimumUseSpace,    400*K);
 define_pd_global(intx, TypeProfileWidth,             8);
 define_pd_global(intx, MethodProfileWidth,           0);
-#endif // COMPILERJVMCI
+#endif
 
 define_pd_global(intx, MaxVectorSize,                8);
 

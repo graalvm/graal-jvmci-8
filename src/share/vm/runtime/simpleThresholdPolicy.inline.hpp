@@ -58,10 +58,12 @@ bool SimpleThresholdPolicy::is_trivial(Method* method) {
       method->is_constant_getter()) {
     return true;
   }
-#ifdef COMPILERJVMCI
-  if (TieredCompilation && CompileBroker::compiler(CompLevel_full_optimization) != NULL &&
-      CompileBroker::compiler(CompLevel_full_optimization)->is_trivial(method)) {
-    return true;
+#if INCLUDE_JVMCI
+  if (UseJVMCICompiler) {
+    if (TieredCompilation && CompileBroker::compiler(CompLevel_full_optimization) != NULL &&
+        CompileBroker::compiler(CompLevel_full_optimization)->is_trivial(method)) {
+      return true;
+    }
   }
 #endif
   if (method->has_loops() || method->code_size() >= 15) {

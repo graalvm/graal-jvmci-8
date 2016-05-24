@@ -112,11 +112,7 @@ void Abstract_VM_Version::initialize() {
 
 #ifndef VMTYPE
   #ifdef TIERED
-    #ifdef COMPILERJVMCI
-      #define VMTYPE "JVMCI"
-    #else // COMPILERJVMCI
-      #define VMTYPE "Server"
-    #endif // COMPILERJVMCI
+    #define VMTYPE "Server"
   #else // TIERED
     #ifdef ZERO
       #ifdef SHARK
@@ -126,8 +122,7 @@ void Abstract_VM_Version::initialize() {
       #endif // SHARK
     #else // ZERO
       #define VMTYPE COMPILER1_PRESENT("Client")   \
-                     COMPILER2_PRESENT("Server")   \
-                     COMPILERJVMCI_PRESENT("JVMCI")
+                     COMPILER2_PRESENT("Server")
     #endif // ZERO
   #endif // TIERED
 #endif

@@ -954,12 +954,10 @@ CompLevel JVMCIRuntime::adjust_comp_level(methodHandle method, bool is_osr, Comp
 }
 
 CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread) {
-#ifdef COMPILERJVMCI
   JVMCICompiler* compiler = JVMCICompiler::instance(thread);
   if (compiler != NULL && compiler->is_bootstrapping()) {
     return level;
   }
-#endif
   if (!is_HotSpotJVMCIRuntime_initialized() || !_comp_level_adjustment) {
     // JVMCI cannot participate in compilation scheduling until
     // JVMCI is initialized and indicates it wants to participate.

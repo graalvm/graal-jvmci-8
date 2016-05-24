@@ -3379,9 +3379,11 @@ void SharedRuntime::generate_deopt_blob() {
   __ jmp(cont);
 
   int reexecute_offset = __ pc() - start;
-#if defined(COMPILERJVMCI) && !defined(COMPILER1)
-  // JVMCI does not use this kind of deoptimization
-  __ should_not_reach_here();
+#if INCLUDE_JVMCI && !defined(COMPILER1)
+  if (UseJVMCICompiler) {
+    // JVMCI does not use this kind of deoptimization
+    __ should_not_reach_here();
+  }
 #endif
 
   // Reexecute case

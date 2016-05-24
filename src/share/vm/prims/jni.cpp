@@ -5204,15 +5204,17 @@ _JNI_IMPORT_OR_EXPORT_ jint JNICALL JNI_CreateJavaVM(JavaVM **vm, void **penv, v
     *vm = (JavaVM *)(&main_vm);
     *(JNIEnv**)penv = thread->jni_environment();
 
-#ifdef COMPILERJVMCI
-    // JVMCI is initialized on a CompilerThread
-    if (BootstrapJVMCI) {
-      JavaThread* THREAD = thread;
-      JVMCICompiler* compiler = JVMCICompiler::instance(CATCH);
-      compiler->bootstrap(THREAD);
-      if (HAS_PENDING_EXCEPTION) {
-        HandleMark hm;
-        vm_exit_during_initialization(Handle(THREAD, PENDING_EXCEPTION));
+#if INCLUDE_JVMCI
+    if (UseJVMCICompiler) {
+      // JVMCI is initialized on a CompilerThread
+      if (BootstrapJVMCI) {
+        JavaThread* THREAD = thread;
+        JVMCICompiler* compiler = JVMCICompiler::instance(CATCH);
+        compiler->bootstrap(THREAD);
+        if (HAS_PENDING_EXCEPTION) {
+          HandleMark hm;
+          vm_exit_during_initialization(Handle(THREAD, PENDING_EXCEPTION));
+        }
       }
     }
 #endif

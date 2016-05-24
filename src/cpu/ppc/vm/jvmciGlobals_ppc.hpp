@@ -31,8 +31,8 @@
 // Sets the default values for platform dependent flags used by the JVMCI compiler.
 // (see jvmciGlobals.hpp)
 
-#ifdef COMPILERJVMCI
+#if INCLUDE_JVMCI
 #error Unimplemented
-#endif // COMPILERJVMCI
+#endif // INCLUDE_JVMCI
 
 #endif // CPU_PPC_VM_JVMCIGLOBALS_PPC_HPP

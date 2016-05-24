@@ -315,10 +315,6 @@ JVMCI_ONLY(public:)
   }
   static int make_trap_request(DeoptReason reason, DeoptAction action,
                                int index = -1) {
-#if defined(COMPILERJVMCI) && !defined(COMPILER1) && !defined(COMPILER2)
-    assert(index == -1, "JVMCI does not use index");
-#endif
-
     assert((1 << _reason_bits) >= Reason_LIMIT, "enough bits");
     assert((1 << _action_bits) >= Action_LIMIT, "enough bits");
     int trap_request;

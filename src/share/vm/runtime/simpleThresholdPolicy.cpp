@@ -29,7 +29,7 @@
 #include "runtime/simpleThresholdPolicy.hpp"
 #include "runtime/simpleThresholdPolicy.inline.hpp"
 #include "code/scopeDesc.hpp"
-#ifdef COMPILERJVMCI
+#if INCLUDE_JVMCI
 #include "jvmci/jvmciRuntime.hpp"
 #endif
 
@@ -360,7 +360,11 @@ CompLevel SimpleThresholdPolicy::call_event(Method* method,  CompLevel cur_level
   } else {
     next_level = MAX2(osr_level, next_level);
   }
-  COMPILERJVMCI_PRESENT(next_level = JVMCIRuntime::adjust_comp_level(method, false, next_level, thread);)
+#if INCLUDE_JVMCI
+  if (UseJVMCICompiler) {
+    next_level = JVMCIRuntime::adjust_comp_level(method, false, next_level, thread);
+  }
+#endif
   return next_level;
 }
 
@@ -375,7 +379,11 @@ CompLevel SimpleThresholdPolicy::loop_event(Method* method, CompLevel cur_level,
       return osr_level;
     }
   }
-  COMPILERJVMCI_PRESENT(next_level = JVMCIRuntime::adjust_comp_level(method, true, next_level, thread);)
+#if INCLUDE_JVMCI
+  if (UseJVMCICompiler) {
+    next_level = JVMCIRuntime::adjust_comp_level(method, true, next_level, thread);
+  }
+#endif
   return next_level;
 }
 

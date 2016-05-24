@@ -283,7 +283,7 @@ void print_statistics() {
   }
 #endif // ASSERT
 #else
-#ifdef INCLUDE_JVMCI
+#if INCLUDE_JVMCI
 #ifndef COMPILER1
   if ((TraceDeoptimization || LogVMOutput || LogCompilation) && UseCompiler) {
     FlagSetting fs(DisplayVMOutput, DisplayVMOutput && TraceDeoptimization);

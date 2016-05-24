@@ -1168,7 +1168,7 @@ void Arguments::set_tiered_flags() {
  *    the minimum number of compiler threads is 2.
  */
 int Arguments::get_min_number_of_compiler_threads() {
-#if !defined(COMPILER1) && !defined(COMPILER2) && !defined(SHARK) && !defined(COMPILERJVMCI)
+#if !defined(COMPILER1) && !defined(COMPILER2) && !defined(SHARK) && !INCLUDE_JVMCI
   return 0;   // case 1
 #else
   if (!TieredCompilation || (TieredStopAtLevel < CompLevel_full_optimization)) {
@@ -2444,9 +2444,15 @@ bool Arguments::check_vm_args_consistency() {
 #endif
   }
 #if INCLUDE_JVMCI
+  if (!EnableJVMCI) {
+    warning("ignoring flag -EnableJVMCI, JVMCI can not be disabled in this VM");
+  }
+  if (BootstrapJVMCI && !UseJVMCICompiler) {
+    warning("BootstrapJVMCI has no effect if UseJVMCICompiler is disabled");
+  }
   if (!ScavengeRootsInCode) {
-      warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
-      ScavengeRootsInCode = 1;
+    warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
+    ScavengeRootsInCode = 1;
   }
 #endif
 
@@ -2513,9 +2519,11 @@ bool Arguments::check_vm_args_consistency() {
   // Check the minimum number of compiler threads
   status &=verify_min_value(CICompilerCount, min_number_of_compiler_threads, "CICompilerCount");
 
-#if (INCLUDE_JVMCI && defined(COMPILERJVMCI))
-  // Check the minimum number of JVMCI compiler threads
-  status &=verify_min_value(JVMCIThreads, 1, "JVMCIThreads");
+#if INCLUDE_JVMCI
+  if (UseJVMCICompiler) {
+    // Check the minimum number of JVMCI compiler threads
+    status &=verify_min_value(JVMCIThreads, 1, "JVMCIThreads");
+  }
 #endif
 
   return status;
@@ -3633,7 +3641,7 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
     FLAG_SET_ERGO(uintx, InitialTenuringThreshold, MaxTenuringThreshold);
   }
 
-#if !defined(COMPILER2) && !defined(COMPILERJVMCI)
+#if !defined(COMPILER2) && !INCLUDE_JVMCI
   // Don't degrade server performance for footprint
   if (FLAG_IS_DEFAULT(UseLargePages) &&
       MaxHeapSize < LargePageHeapSizeThreshold) {

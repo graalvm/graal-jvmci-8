@@ -45,17 +45,23 @@ JVMCI_VERSION = 8
 """ The VMs that can be built and run along with an optional description. Only VMs with a
     description are listed in the dialogue for setting the default VM (see get_vm()). """
 _vmChoices = {
-    'jvmci' : 'VM triggered compilation is performed with a tiered system (C1 + Graal) and Graal is available for hosted compilation.',
-    'server' : 'Normal compilation is performed with a tiered system (C1 + C2) and Graal is available for hosted compilation.',
+    'server' : 'Normal compilation is performed with a tiered system (C1 + C2 or Graal) and Graal is available for hosted compilation.',
     'client' : None,  # VM compilation with client compiler, hosted compilation with Graal
     'server-nojvmci' : None,  # all compilation with tiered system (i.e., client + server), JVMCI omitted
     'client-nojvmci' : None,  # all compilation with client compiler, JVMCI omitted
     'original' : None,  # default VM copied from bootstrap JDK
 }
 
+_jvmciModes = {
+    'hosted' : ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI'],
+    'jit' : ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:+UseJVMCICompiler'],
+    'disabled' : ['-XX:+UnlockExperimentalVMOptions', '-XX:-EnableJVMCI']
+}
+
 # Aliases for legacy VM names
 _vmAliases = {
-    'graal' : 'jvmci',
+    'jvmci' : 'server',
+    'graal' : 'server',
     'server-nograal' : 'server-nojvmci',
     'client-nograal' : 'client-nograal',
 }
@@ -66,6 +72,25 @@ _JVMCI_JDK_TAG = 'jvmci'
     This can be set via the global '--vm' option or the DEFAULT_VM environment variable.
     It can also be temporarily set by using of a VM context manager object in a 'with' statement. """
 _vm = None
+
+class JVMCIMode:
+    def __init__(self, jvmciMode):
+        self.jvmciMode = jvmciMode
+        self.vmArgs = _jvmciModes[jvmciMode]
+
+    def __enter__(self):
+        global _jvmciMode
+        self.previousMode = _jvmciMode
+        _jvmciMode = self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        global _jvmciMode
+        _jvmciMode = self.previousMode
+
+""" The JVMCI mode that will be used by the 'vm' command. This can be set with the global '-M' option.
+    It can also be temporarily set using the JVMCIMode context manager object in a 'with' statement.
+    Defaults to 'hosted'. """
+_jvmciMode = JVMCIMode('hosted')
 
 """ The VM builds that will be run by the 'vm' command - default is first in list """
 _vmbuildChoices = ['product', 'fastdebug', 'debug', 'optimized']
@@ -248,8 +273,15 @@ def dealiased_vm(vm):
     If 'vm' is an alias, returns the aliased name otherwise returns 'vm'.
     """
     if vm and vm in _vmAliases:
+        if vm == 'jvmci' or vm == 'graal':
+            mx.log('"--vm ' + vm + '" is deprecated, using "--vm server -Mjit" instead')
+            global _jvmciMode
+            _jvmciMode = JVMCIMode('jit')
         return _vmAliases[vm]
     return vm
+
+def get_jvmci_mode_args():
+    return _jvmciMode.vmArgs
 
 def get_vm():
     """
@@ -267,13 +299,16 @@ def get_vm():
                     mx.log('Please update the DEFAULT_VM value in ' + envPath + ' to replace "' + vm + '" with "' + _vmAliases[vm] + '"')
         vm = _vmAliases[vm]
     if vm is None:
-        if not mx.is_interactive():
-            mx.abort('Need to specify VM with --vm option or DEFAULT_VM environment variable')
-        mx.log('Please select the VM to be executed from the following: ')
         items = [k for k in _vmChoices.keys() if _vmChoices[k] is not None]
-        descriptions = [_vmChoices[k] for k in _vmChoices.keys() if _vmChoices[k] is not None]
-        vm = mx.select_items(items, descriptions, allowMultiple=False)
-        mx.ask_persist_env('DEFAULT_VM', vm)
+        if len(items) > 1:
+            if not mx.is_interactive():
+                mx.abort('Need to specify VM with --vm option or DEFAULT_VM environment variable')
+            mx.log('Please select the VM to be executed from the following: ')
+            descriptions = [_vmChoices[k] for k in _vmChoices.keys() if _vmChoices[k] is not None]
+            vm = mx.select_items(items, descriptions, allowMultiple=False)
+            mx.ask_persist_env('DEFAULT_VM', vm)
+        else:
+            vm = items[0]
     _vm = vm
     return vm
 
@@ -286,10 +321,16 @@ used by all VM executions within the scope of the 'with' statement. For example:
 """
 class VM:
     def __init__(self, vm=None, build=None):
-        assert vm is None or vm in _vmChoices.keys()
         assert build is None or build in _vmbuildChoices
-        self.vm = vm if vm else _vm
         self.build = build if build else _vmbuild
+        if vm == 'jvmci':
+            mx.log('WARNING: jvmci VM is deprecated, using server VM with -Mjit instead')
+            self.vm = 'server'
+            self.jvmciMode = JVMCIMode('jit')
+        else:
+            assert vm is None or vm in _vmChoices.keys()
+            self.vm = vm if vm else _vm
+            self.jvmciMode = None
 
     def __enter__(self):
         global _vm, _vmbuild
@@ -298,12 +339,16 @@ class VM:
         mx.reInstantiateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.previousVm, vmbuild=self.previousBuild), dict(vm=self.vm, vmbuild=self.build))
         _vm = self.vm
         _vmbuild = self.build
+        if self.jvmciMode is not None:
+            self.jvmciMode.__enter__()
 
     def __exit__(self, exc_type, exc_value, traceback):
         global _vm, _vmbuild
         mx.reInstantiateDistribution('JVM_<vmbuild>_<vm>', dict(vm=self.vm, vmbuild=self.build), dict(vm=self.previousVm, vmbuild=self.previousBuild))
         _vm = self.previousVm
         _vmbuild = self.previousBuild
+        if self.jvmciMode is not None:
+            self.jvmciMode.__exit__(exc_type, exc_value, traceback)
 
 def chmodRecursive(dirname, chmodFlagsDir):
     if mx.get_os() == 'windows':
@@ -930,11 +975,9 @@ class HotSpotBuildTask(mx.NativeBuildTask):
 
         if self.vm.startswith('server'):
             buildSuffix = ''
-        elif self.vm.startswith('client'):
-            buildSuffix = '1'
         else:
-            assert self.vm == 'jvmci', self.vm
-            buildSuffix = 'jvmci'
+            assert self.vm.startswith('client'), self.vm
+            buildSuffix = '1'
 
         if isWindows:
             t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "jvmciCompile.log"))
@@ -1303,8 +1346,6 @@ def buildvms(args):
                     build([])
             if not args.no_check:
                 vmargs = ['-version']
-                if vm == 'jvmci':
-                    vmargs.insert(0, '-XX:-BootstrapJVMCI')
                 run_vm(vmargs, vm=vm, vmbuild=vmbuild)
     allDuration = datetime.timedelta(seconds=time.time() - allStart)
     mx.log('TOTAL TIME:   ' + '[' + str(allDuration) + ']')
@@ -1318,18 +1359,19 @@ def _jvmci_gate_runner(args, tasks):
                 if mx_jvmci_makefile.build_makefile(['-o', jvmciMake]) != 0:
                     t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
 
-    # Build server-hosted-jvmci now so we can run the unit tests
-    with Task('BuildHotSpotJVMCIHosted: product', tasks) as t:
+    # Build server-jvmci now so we can run the unit tests
+    with Task('BuildHotSpotJVMCI: product', tasks) as t:
         if t: buildvms(['--vms', 'server', '--builds', 'product'])
 
     # Run unit tests on server-hosted-jvmci
     with VM('server', 'product'):
-        with Task('JVMCI UnitTests: hosted-product', tasks) as t:
-            if t: unittest(['--suite', 'jvmci', '--enable-timing', '--verbose', '--fail-fast'])
+        with JVMCIMode('hosted'):
+            with Task('JVMCI UnitTests: hosted-product', tasks) as t:
+                if t: unittest(['--suite', 'jvmci', '--enable-timing', '--verbose', '--fail-fast'])
 
-    # Build the other VM flavors
-    with Task('BuildHotSpotJVMCIOthers: fastdebug,product', tasks) as t:
-        if t: buildvms(['--vms', 'jvmci,server', '--builds', 'fastdebug,product'])
+    # Build the fastdebug VM
+    with Task('BuildHotSpotJVMCI: fastdebug', tasks) as t:
+        if t: buildvms(['--vms', 'server', '--builds', 'fastdebug'])
 
     with Task('CleanAndBuildIdealGraphVisualizer', tasks, disableJacoco=True) as t:
         if t and platform.processor() != 'sparc':
@@ -1557,7 +1599,7 @@ def jol(args):
 
 def deploy_binary(args):
     for vmbuild in ['product', 'fastdebug']:
-        for vm in ['jvmci', 'server']:
+        for vm in ['server']:
             if vmbuild != _vmbuild or vm != get_vm():
                 mx.instantiateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=vmbuild, vm=vm))
     mx.deploy_binary(args)
@@ -1586,6 +1628,7 @@ mx.add_argument('--installed-jdks', help='the base directory in which the JDKs c
                 'The VM selected by --vm and --vmbuild options is under this directory (i.e., ' +
                 join('<path>', '<jdk-version>', '<vmbuild>', 'jre', 'lib', '<vm>', mx.add_lib_prefix(mx.add_lib_suffix('jvm'))) + ')', default=None, metavar='<path>')
 
+mx.add_argument('-M', '--jvmci-mode', action='store', dest='jvmci_mode', choices=_jvmciModes.keys(), help='the JVMCI mode to use (default: ' + _jvmciMode.jvmciMode + ')')
 mx.add_argument('--vm', action='store', dest='vm', choices=_vmChoices.keys() + _vmAliases.keys(), help='the VM type to build/run')
 mx.add_argument('--vmbuild', action='store', dest='vmbuild', choices=_vmbuildChoices, help='the VM build to build/run (default: ' + _vmbuildChoices[0] + ')')
 mx.add_argument('--ecl', action='store_true', dest='make_eclipse_launch', help='create launch configuration for running VM execution(s) in Eclipse')
@@ -1694,6 +1737,8 @@ class JVMCI8JDKConfig(mx.JDKConfig):
             mx.make_eclipse_launch(_suite, args, _suite.name + '-' + build, name=None, deps=mx.dependencies())
 
         pfx = _vm_prefix.split() if _vm_prefix is not None else []
+        if not vm.endswith('nojvmci'):
+            args = get_jvmci_mode_args() + args
         cmd = pfx + [self.java] + ['-' + vm] + args
         return mx.run(cmd, nonZeroIsFatal=nonZeroIsFatal, out=out, err=err, cwd=cwd, timeout=timeout)
 
@@ -1738,6 +1783,9 @@ def mx_post_parse_cmd_line(opts):
         _vm = dealiased_vm(opts.vm)
         if jdkTag and jdkTag != _JVMCI_JDK_TAG:
             mx.warn('Ignoring "--vm" option as "--jdk" tag is not "' + _JVMCI_JDK_TAG + '"')
+    if opts.jvmci_mode is not None:
+        global _jvmciMode
+        _jvmciMode = JVMCIMode(opts.jvmci_mode)
     if hasattr(opts, 'vmbuild') and opts.vmbuild is not None:
         global _vmbuild
         _vmbuild = opts.vmbuild

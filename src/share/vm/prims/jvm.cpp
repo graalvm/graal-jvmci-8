@@ -383,7 +383,7 @@ JVM_ENTRY(jobject, JVM_InitProperties(JNIEnv *env, jobject properties))
     const char* compiler_name = "HotSpot " CSIZE "Client Compiler";
 #elif defined(COMPILER2)
     const char* compiler_name = "HotSpot " CSIZE "Server Compiler";
-#elif defined(COMPILERJVMCI)
+#elif defined(INCLUDE_JVMCI)
     const char* compiler_name = "HotSpot " CSIZE "JVMCI Compiler";
 #else
     const char* compiler_name = "";

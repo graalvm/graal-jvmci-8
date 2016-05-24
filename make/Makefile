@@ -95,7 +95,6 @@ CORE_VM_TARGETS=productcore fastdebugcore optimizedcore debugcore
 ZERO_VM_TARGETS=productzero fastdebugzero optimizedzero debugzero
 SHARK_VM_TARGETS=productshark fastdebugshark optimizedshark debugshark
 MINIMAL1_VM_TARGETS=productminimal1 fastdebugminimal1 debugminimal1
-JVMCI_VM_TARGETS=productjvmci fastdebugjvmci optimizedjvmci debugjvmci
 
 COMMON_VM_PRODUCT_TARGETS=product product1 docs export_product
 COMMON_VM_FASTDEBUG_TARGETS=fastdebug fastdebug1 docs export_fastdebug
@@ -150,12 +149,6 @@ all_fastdebugcore: fastdebugcore docs export_fastdebug
 all_debugcore:     debugcore docs export_debug
 all_optimizedcore: optimizedcore docs export_optimized
 
-alljvmci:           all_productjvmci all_fastdebugjvmci
-all_productjvmci:   productjvmci docs export_product
-all_fastdebugjvmci: fastdebugjvmci docs export_fastdebug
-all_debugjvmci:     debugjvmci docs export_debug
-all_optimizedjvmci: optimizedjvmci docs export_optimized
-
 # Do everything
 world:         all create_jdk
 
@@ -204,10 +197,6 @@ $(SHARK_VM_TARGETS):
 $(MINIMAL1_VM_TARGETS):
 	$(CD) $(GAMMADIR)/make; \
 	$(MAKE) BUILD_DIR=$(MINIMAL1_DIR) BUILD_FLAVOR=$(@:%minimal1=%) VM_TARGET=$@ generic_buildminimal1 $(ALT_OUT)
-
-$(JVMCI_VM_TARGETS):
-	$(CD) $(GAMMADIR)/make; \
-	$(MAKE) BUILD_DIR=$(JVMCI_DIR) BUILD_FLAVOR=$(@:%jvmci=%) VM_TARGET=$@ INCLUDE_JVMCI=true generic_buildjvmci $(ALT_OUT)
 
 # Install hotspot script in build directory
 HOTSPOT_SCRIPT=$(BUILD_DIR)/$(BUILD_FLAVOR)/hotspot

@@ -519,7 +519,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
   assert(CodeCache::find_blob_unsafe(frame_pcs[0]) != NULL, "bad pc");
 #endif // SHARK
 
-#ifdef INCLUDE_JVMCI
+#if INCLUDE_JVMCI
   if (exceptionObject() != NULL) {
     thread->set_exception_oop(exceptionObject());
     exec_mode = Unpack_exception;

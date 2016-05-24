@@ -1917,7 +1917,7 @@ class CompilerThread : public JavaThread {
 
   bool is_Compiler_thread() const                { return true; }
 
-#ifdef COMPILERJVMCI
+#if INCLUDE_JVMCI
   virtual bool can_call_java() const;
 #else
   virtual bool can_call_java() const             { return false; }
