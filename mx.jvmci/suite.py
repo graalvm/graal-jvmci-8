@@ -1,5 +1,5 @@
 suite = {
-  "mxversion" : "5.17.0",
+  "mxversion" : "5.27.0",
   "name" : "jvmci",
   "url" : "http://openjdk.java.net/projects/graal",
   "developer" : {
@@ -233,6 +233,9 @@ suite = {
 
     "hotspot" : {
       "native" : True,
+      "dependencies" : [
+        "jdk.vm.ci.hotspot",
+      ],
       "class" : "HotSpotProject",
       "output" : "build<nojvmci>",
       # vs-<arch>/<buildname>/generated/jvmtifiles/jvmti.h
