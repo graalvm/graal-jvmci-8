@@ -491,7 +491,16 @@ void before_exit(JavaThread * thread) {
   }
 
 #if INCLUDE_JVMCI
-  JVMCIRuntime::shutdown();
+  // We are not using CATCH here because we want the exit to continue normally.
+  Thread* THREAD = thread;
+  JVMCIRuntime::shutdown(THREAD);
+  if (HAS_PENDING_EXCEPTION) {
+    Handle exception(THREAD, PENDING_EXCEPTION);
+    CLEAR_PENDING_EXCEPTION;
+    java_lang_Throwable::print(exception, tty);
+    tty->cr();
+    java_lang_Throwable::print_stack_trace(exception(), tty);
+  }
 #endif
 
   // The only difference between this and Win32's _onexit procs is that

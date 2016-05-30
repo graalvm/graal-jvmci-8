@@ -70,6 +70,10 @@ Method* getMethodFromHotSpotMethod(oop hotspot_method) {
 }
 
 VMReg getVMRegFromLocation(Handle location, int total_frame_size, TRAPS) {
+  if (location.is_null()) {
+    THROW_NULL(vmSymbols::java_lang_NullPointerException());
+  }
+
   Handle reg = code_Location::reg(location);
   jint offset = code_Location::offset(location);
 
@@ -95,6 +99,12 @@ VMReg getVMRegFromLocation(Handle location, int total_frame_size, TRAPS) {
 // creates a HotSpot oop map out of the byte arrays provided by DebugInfo
 OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
   Handle reference_map = DebugInfo::referenceMap(debug_info);
+  if (reference_map.is_null()) {
+    THROW_NULL(vmSymbols::java_lang_NullPointerException());
+  }
+  if (!reference_map->is_a(HotSpotReferenceMap::klass())) {
+    JVMCI_ERROR_NULL("unknown reference map: %s", reference_map->klass()->signature_name());
+  }
   if (HotSpotReferenceMap::maxRegisterSize(reference_map) > 16) {
     _has_wide_vector = true;
   }
@@ -102,6 +112,12 @@ OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
   objArrayHandle objects = HotSpotReferenceMap::objects(reference_map);
   objArrayHandle derivedBase = HotSpotReferenceMap::derivedBase(reference_map);
   typeArrayHandle sizeInBytes = HotSpotReferenceMap::sizeInBytes(reference_map);
+  if (objects.is_null() || derivedBase.is_null() || sizeInBytes.is_null()) {
+    THROW_NULL(vmSymbols::java_lang_NullPointerException());
+  }
+  if (objects->length() != derivedBase->length() || objects->length() != sizeInBytes->length()) {
+    JVMCI_ERROR_NULL("arrays in reference map have different sizes: %d %d %d", objects->length(), derivedBase->length(), sizeInBytes->length());
+  }
   for (int i = 0; i < objects->length(); i++) {
     Handle location = objects->obj_at(i);
     Handle baseLocation = derivedBase->obj_at(i);
@@ -163,8 +179,8 @@ void* CodeInstaller::record_metadata_reference(Handle constant, TRAPS) {
   /*
    * This method needs to return a raw (untyped) pointer, since the value of a pointer to the base
    * class is in general not equal to the pointer of the subclass. When patching metaspace pointers,
-   * the compiler expects a direct pointer to the subclass (Klass*, Method* or Symbol*), not a
-   * pointer to the base class (Metadata* or MetaspaceObj*).
+   * the compiler expects a direct pointer to the subclass (Klass* or Method*), not a pointer to the
+   * base class (Metadata* or MetaspaceObj*).
    */
   oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
   if (obj->is_a(HotSpotResolvedObjectTypeImpl::klass())) {
@@ -203,7 +219,7 @@ narrowKlass CodeInstaller::record_narrow_metadata_reference(Handle constant, TRA
 Location::Type CodeInstaller::get_oop_type(Handle value) {
   Handle valueKind = Value::valueKind(value);
   Handle platformKind = ValueKind::platformKind(valueKind);
-  
+
   if (platformKind == word_kind()) {
     return Location::oop;
   } else {
@@ -213,7 +229,9 @@ Location::Type CodeInstaller::get_oop_type(Handle value) {
 
 ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, TRAPS) {
   second = NULL;
-  if (value == Value::ILLEGAL()) {
+  if (value.is_null()) {
+    THROW_NULL(vmSymbols::java_lang_NullPointerException());
+  } else if (value == Value::ILLEGAL()) {
     if (type != T_ILLEGAL) {
       JVMCI_ERROR_NULL("unexpected illegal value, expected %s", basictype_to_str(type));
     }
@@ -283,7 +301,7 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
         jlong prim = PrimitiveConstant::primitive(value);
         return new ConstantLongValue(prim);
       } else {
-        BasicType constantType = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(PrimitiveConstant::kind(value)), CHECK_NULL);
+        BasicType constantType = JVMCIRuntime::kindToBasicType(PrimitiveConstant::kind(value), CHECK_NULL);
         if (type != constantType) {
           JVMCI_ERROR_NULL("primitive constant type doesn't match, expected %s but got %s", basictype_to_str(type), basictype_to_str(constantType));
         }
@@ -351,7 +369,7 @@ void CodeInstaller::record_object_value(ObjectValue* sv, Handle value, GrowableA
   for (jint i = 0; i < values->length(); i++) {
     ScopeValue* cur_second = NULL;
     Handle object = values->obj_at(i);
-    BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(slotKinds->obj_at(i)), CHECK);
+    BasicType type = JVMCIRuntime::kindToBasicType(slotKinds->obj_at(i), CHECK);
     ScopeValue* value = get_scope_value(object, type, objects, cur_second, CHECK);
 
     if (isLongArray && cur_second == NULL) {
@@ -369,6 +387,9 @@ void CodeInstaller::record_object_value(ObjectValue* sv, Handle value, GrowableA
 }
 
 MonitorValue* CodeInstaller::get_monitor_value(Handle value, GrowableArray<ScopeValue*>* objects, TRAPS) {
+  if (value.is_null()) {
+    THROW_NULL(vmSymbols::java_lang_NullPointerException());
+  }
   if (!value->is_a(StackLockValue::klass())) {
     JVMCI_ERROR_NULL("Monitors must be of type StackLockValue, got %s", value->klass()->signature_name());
   }
@@ -540,7 +561,7 @@ int CodeInstaller::estimate_stubs_size(TRAPS) {
   objArrayOop sites = this->sites();
   for (int i = 0; i < sites->length(); i++) {
     oop site = sites->obj_at(i);
-    if (site->is_a(site_Mark::klass())) {
+    if (site != NULL && site->is_a(site_Mark::klass())) {
       oop id_obj = site_Mark::id(site);
       if (id_obj != NULL) {
         if (!java_lang_boxing_object::is_instance(id_obj, T_INT)) {
@@ -598,11 +619,20 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
 
   for (int i = 0; i < data_section_patches()->length(); i++) {
     Handle patch = data_section_patches()->obj_at(i);
+    if (patch.is_null()) {
+      THROW_(vmSymbols::java_lang_NullPointerException(), JVMCIEnv::ok);
+    }
     Handle reference = site_DataPatch::reference(patch);
+    if (reference.is_null()) {
+      THROW_(vmSymbols::java_lang_NullPointerException(), JVMCIEnv::ok);
+    }
     if (!reference->is_a(site_ConstantReference::klass())) {
       JVMCI_ERROR_OK("invalid patch in data section: %s", reference->klass()->signature_name());
     }
     Handle constant = site_ConstantReference::constant(reference);
+    if (constant.is_null()) {
+      THROW_(vmSymbols::java_lang_NullPointerException(), JVMCIEnv::ok);
+    }
     address dest = _constants->start() + site_Site::pcOffset(patch);
     if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
       if (HotSpotMetaspaceConstantImpl::compressed(constant)) {
@@ -635,6 +665,10 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
   jint last_pc_offset = -1;
   for (int i = 0; i < sites->length(); i++) {
     Handle site = sites->obj_at(i);
+    if (site.is_null()) {
+      THROW_(vmSymbols::java_lang_NullPointerException(), JVMCIEnv::ok);
+    }
+
     jint pc_offset = site_Site::pcOffset(site);
 
     if (site->is_a(site_Call::klass())) {
@@ -848,6 +882,9 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
     objArrayHandle values = BytecodeFrame::values(frame);
     objArrayHandle slotKinds = BytecodeFrame::slotKinds(frame);
 
+    if (values.is_null() || slotKinds.is_null()) {
+      THROW(vmSymbols::java_lang_NullPointerException());
+    }
     if (local_count + expression_count + monitor_count != values->length()) {
       JVMCI_ERROR("unexpected values length %d in scope (%d locals, %d expressions, %d monitors)", values->length(), local_count, expression_count, monitor_count);
     }
@@ -866,14 +903,14 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
       ScopeValue* second = NULL;
       Handle value = values->obj_at(i);
       if (i < local_count) {
-        BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(slotKinds->obj_at(i)), CHECK);
+        BasicType type = JVMCIRuntime::kindToBasicType(slotKinds->obj_at(i), CHECK);
         ScopeValue* first = get_scope_value(value, type, objects, second, CHECK);
         if (second != NULL) {
           locals->append(second);
         }
         locals->append(first);
       } else if (i < local_count + expression_count) {
-        BasicType type = JVMCIRuntime::kindToBasicType(JavaKind::typeChar(slotKinds->obj_at(i)), CHECK);
+        BasicType type = JVMCIRuntime::kindToBasicType(slotKinds->obj_at(i), CHECK);
         ScopeValue* first = get_scope_value(value, type, objects, second, CHECK);
         if (second != NULL) {
           expressions->append(second);
@@ -982,9 +1019,13 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
 
 void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
   Handle reference = site_DataPatch::reference(site);
-  if (reference->is_a(site_ConstantReference::klass())) {
+  if (reference.is_null()) {
+    THROW(vmSymbols::java_lang_NullPointerException());
+  } else if (reference->is_a(site_ConstantReference::klass())) {
     Handle constant = site_ConstantReference::constant(reference);
-    if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
+    if (constant.is_null()) {
+      THROW(vmSymbols::java_lang_NullPointerException());
+    } else if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
       pd_patch_OopConstant(pc_offset, constant, CHECK);
     } else if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
       pd_patch_MetaspaceConstant(pc_offset, constant, CHECK);

@@ -36,7 +36,6 @@ import mx_unittest
 from mx_unittest import unittest
 from mx_gate import Task
 import mx_gate
-import mx_jvmci_makefile
 
 _suite = mx.suite('jvmci')
 
@@ -132,9 +131,8 @@ class JDKDeployedDist(object):
         self.dist().add_update_listener(_install)
 
 class JarJDKDeployedDist(JDKDeployedDist):
-    def __init__(self, name, partOfHotSpot=False):
+    def __init__(self, name):
         JDKDeployedDist.__init__(self, name)
-        self.partOfHotSpot = partOfHotSpot
 
     def targetDir(self):
         mx.nyi('targetDir', self)
@@ -144,45 +142,32 @@ class JarJDKDeployedDist(JDKDeployedDist):
         dist = self.dist()
         mx.logv('Deploying {} to {}'.format(dist.name, targetDir))
         copyToJdk(dist.path, targetDir)
+        if exists(dist.sourcesPath):
+            copyToJdk(dist.sourcesPath, targetDir)
 
     def deploy(self, jdkDir):
         self._copyToJdk(jdkDir, self.targetDir())
 
 class ExtJDKDeployedDist(JarJDKDeployedDist):
-    def __init__(self, name, partOfHotSpot=False):
-        JarJDKDeployedDist.__init__(self, name, partOfHotSpot)
+    def __init__(self, name):
+        JarJDKDeployedDist.__init__(self, name)
 
     def targetDir(self):
         return join('jre', 'lib', 'ext')
 
 class LibJDKDeployedDist(JarJDKDeployedDist):
-    def __init__(self, name, partOfHotSpot=False):
-        JarJDKDeployedDist.__init__(self, name, partOfHotSpot)
+    def __init__(self, name):
+        JarJDKDeployedDist.__init__(self, name)
 
     def targetDir(self):
         return join('jre', 'lib')
 
 class JvmciJDKDeployedDist(JarJDKDeployedDist):
-    def __init__(self, name, partOfHotSpot=False, compilers=False):
-        JarJDKDeployedDist.__init__(self, name, partOfHotSpot)
-        self._compilers = compilers
+    def __init__(self, name):
+        JarJDKDeployedDist.__init__(self, name)
 
     def targetDir(self):
         return join('jre', 'lib', 'jvmci')
-
-    def deploy(self, jdkDir):
-        JarJDKDeployedDist.deploy(self, jdkDir)
-        _updateJVMCIFiles(jdkDir)
-        if self._compilers:
-            _updateJVMCIProperties(jdkDir, self._compilers)
-
-    def post_parse_cmd_line(self):
-        super(JvmciJDKDeployedDist, self).post_parse_cmd_line()
-        self.set_archiveparticipant()
-
-    def set_archiveparticipant(self):
-        dist = self.dist()
-        dist.set_archiveparticipant(JVMCIArchiveParticipant(dist))
 
 def _exe(l):
     return mx.exe_suffix(l)
@@ -225,10 +210,10 @@ class HotSpotVMJDKDeployedDist(JDKDeployedDist):
 List of distributions that are deployed into a JDK by mx.
 """
 jdkDeployedDists = [
-    LibJDKDeployedDist('JVMCI_SERVICES', partOfHotSpot=True),
-    JvmciJDKDeployedDist('JVMCI_API', partOfHotSpot=True),
-    JvmciJDKDeployedDist('JVMCI_HOTSPOT', partOfHotSpot=True),
-    JvmciJDKDeployedDist('JVMCI_HOTSPOTVMCONFIG', partOfHotSpot=True),
+    LibJDKDeployedDist('JVMCI_SERVICES'),
+    JvmciJDKDeployedDist('JVMCI_API'),
+    JvmciJDKDeployedDist('JVMCI_HOTSPOT'),
+    JvmciJDKDeployedDist('JVMCI_HOTSPOTVMCONFIG'),
     HotSpotVMJDKDeployedDist('JVM_<vmbuild>_<vm>'),
 ]
 
@@ -680,75 +665,6 @@ def copyToJdk(src, dst, permissions=JDK_UNIX_PERMISSIONS_FILE):
         shutil.move(tmp, dstLib)
         os.chmod(dstLib, permissions)
 
-def _extractJVMCIFiles(jdkJars, jvmciJars, servicesDir, obsoleteCheck):
-
-    oldServices = os.listdir(servicesDir) if exists(servicesDir) else mx.ensure_dir_exists(servicesDir)
-
-    jvmciServices = {}
-    for jar in jvmciJars:
-        if os.path.isfile(jar):
-            with zipfile.ZipFile(jar) as zf:
-                for member in zf.namelist():
-                    if member.startswith('META-INF/jvmci.services/') and member != 'META-INF/jvmci.services/':
-                        service = basename(member)
-                        assert service != "", member
-                        with zf.open(member) as serviceFile:
-                            providers = jvmciServices.setdefault(service, [])
-                            for line in serviceFile.readlines():
-                                line = line.strip()
-                                if line and line not in providers:
-                                    providers.append(line)
-    for service, providers in jvmciServices.iteritems():
-        if not obsoleteCheck:
-            fd, tmp = tempfile.mkstemp(prefix=service)
-            f = os.fdopen(fd, 'w+')
-            for provider in providers:
-                f.write(provider + os.linesep)
-            target = join(servicesDir, service)
-            f.close()
-            shutil.move(tmp, target)
-            if mx.get_os() != 'windows':
-                os.chmod(target, JDK_UNIX_PERMISSIONS_FILE)
-        if oldServices and service in oldServices:
-            oldServices.remove(service)
-
-    if obsoleteCheck and mx.is_interactive() and oldServices:
-        if mx.ask_yes_no('These files in ' + servicesDir + ' look obsolete:\n  ' + '\n  '.join(oldServices) + '\nDelete them', 'n'):
-            for f in oldServices:
-                path = join(servicesDir, f)
-                os.remove(path)
-                mx.log('Deleted ' + path)
-
-def _updateJVMCIFiles(jdkDir, obsoleteCheck=False):
-    jreJVMCIDir = join(jdkDir, 'jre', 'lib', 'jvmci')
-    jvmciJars = [join(jreJVMCIDir, e) for e in os.listdir(jreJVMCIDir) if e.endswith('.jar')]
-    jreJVMCIServicesDir = join(jreJVMCIDir, 'services')
-    _extractJVMCIFiles(_getJdkDeployedJars(jdkDir), jvmciJars, jreJVMCIServicesDir, obsoleteCheck)
-
-def _updateJVMCIProperties(jdkDir, compilers):
-    jvmciProperties = join(jdkDir, 'jre', 'lib', 'jvmci', 'jvmci.properties')
-    def createFile(lines):
-        with open(jvmciProperties, 'w') as fp:
-            header = "# the last definition of a property wins (i.e., it overwrites any earlier definitions)"
-            if header not in lines:
-                print >> fp, header
-            for line in lines:
-                print >> fp, line
-
-    lines = []
-    if exists(jvmciProperties):
-        with open(jvmciProperties) as fp:
-            for line in fp:
-                if line.startswith('jvmci.Compiler='):
-                    compiler = line.strip().split('=')[1]
-                    if compiler not in compilers:
-                        lines.append(line.strip())
-                else:
-                    lines.append(line.strip())
-    for compiler in compilers:
-        lines.append("jvmci.Compiler=" + compiler)
-    createFile(lines)
-
 def _installDistInJdks(deployableDist):
     """
     Installs the jar(s) for a given Distribution into all existing JVMCI JDKs
@@ -769,13 +685,6 @@ def _vmbuildFromJdkDir(jdkDir):
     assert vmbuild in _vmbuildChoices, 'The vmbuild derived from ' + jdkDir + ' is unknown: ' + vmbuild
     return vmbuild
 
-def _check_for_obsolete_jvmci_files():
-    jdks = _jdksDir()
-    if exists(jdks):
-        for e in os.listdir(jdks):
-            jdkDir = join(jdks, e)
-            _updateJVMCIFiles(jdkDir, obsoleteCheck=True)
-
 def _getJdkDeployedJars(jdkDir):
     """
     Gets jar paths for all deployed distributions in the context of
@@ -788,7 +697,6 @@ def _getJdkDeployedJars(jdkDir):
         jar = basename(dist.dist().path)
         jars.append(join(dist.targetDir(), jar))
     return jars
-
 
 # run a command in the windows SDK Debug Shell
 def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):
@@ -1299,7 +1207,6 @@ def _unittest_vm_launcher(vmArgs, mainClass, mainClassArgs):
     run_vm(vmArgs + [mainClass] + mainClassArgs)
 
 mx_unittest.add_config_participant(_unittest_config_participant)
-mx_unittest.set_vm_launcher('JVMCI VM launcher', _unittest_vm_launcher)
 
 def shortunittest(args):
     """alias for 'unittest --whitelist test/whitelist_shortunittest.txt'"""
@@ -1355,13 +1262,6 @@ def buildvms(args):
 
 
 def _jvmci_gate_runner(args, tasks):
-    if mx.get_arch() != 'sparcv9':
-        with Task('Check jvmci.make in sync with suite.py', tasks) as t:
-            if t:
-                jvmciMake = join(_suite.dir, 'make', 'jvmci.make')
-                if mx_jvmci_makefile.build_makefile(['-o', jvmciMake]) != 0:
-                    t.abort('Rerun "mx makefile -o ' + jvmciMake + ' and check-in the modified ' + jvmciMake)
-
     # Build server-jvmci now so we can run the unit tests
     with Task('BuildHotSpotJVMCI: product', tasks) as t:
         if t: buildvms(['--vms', 'server', '--builds', 'product'])
@@ -1386,8 +1286,6 @@ def _jvmci_gate_runner(args, tasks):
         with Task('BuildHotSpotVarieties', tasks, disableJacoco=True) as t:
             if t:
                 buildvms(['--vms', 'client,server', '--builds', 'fastdebug,product'])
-                if mx.get_os() not in ['windows', 'cygwin']:
-                    buildvms(['--vms', 'server-nojvmci', '--builds', 'product,optimized'])
 
 mx_gate.add_gate_runner(_suite, _jvmci_gate_runner)
 mx_gate.add_gate_argument('-g', '--only-build-jvmci', action='store_false', dest='buildNonJVMCI', help='only build the JVMCI VM')
@@ -1598,7 +1496,7 @@ def jol(args):
         # mx.findclass can be mistaken, don't give up yet
         candidates = args
 
-    run_vm(['-javaagent:' + joljar, '-cp', os.pathsep.join([mx.classpath(), joljar]), "org.openjdk.jol.MainObjectInternals"] + candidates)
+    run_vm(['-javaagent:' + joljar, '-cp', os.pathsep.join([mx.classpath(jdk=get_jvmci_jdk()), joljar]), "org.openjdk.jol.MainObjectInternals"] + candidates)
 
 def deploy_binary(args):
     for vmbuild in ['product', 'fastdebug']:
@@ -1623,7 +1521,6 @@ mx.update_commands(_suite, {
     'deoptalot' : [deoptalot, '[n]'],
     'longtests' : [longtests, ''],
     'jol' : [jol, ''],
-    'makefile' : [mx_jvmci_makefile.build_makefile, 'build makefiles for JDK build', None, {'keepUnsatisfiedDependencies': True}],
 })
 
 mx.add_argument('--vmcwd', dest='vm_cwd', help='current directory will be changed to <path> before the VM is executed', default=None, metavar='<path>')
@@ -1644,31 +1541,6 @@ mx.add_argument('--lldb', action='store_const', const='lldb --', dest='vm_prefix
 # suite. Capture DEFAULT_VM in case it was only defined in the primary
 # suite.
 mx.add_ide_envvar('DEFAULT_VM')
-
-class JVMCIArchiveParticipant:
-    def __init__(self, dist):
-        self.dist = dist
-        self.jvmciServices = {}
-
-    def __opened__(self, arc, srcArc, services):
-        self.services = services
-        self.arc = arc
-
-    def __add__(self, arcname, contents):
-        if arcname.startswith('META-INF/jvmci.services/'):
-            service = arcname[len('META-INF/jvmci.services/'):]
-            self.jvmciServices.setdefault(service, []).extend([provider for provider in contents.split('\n')])
-            return True
-        return False
-
-    def __addsrc__(self, arcname, contents):
-        return False
-
-    def __closing__(self):
-        for service, providers in self.jvmciServices.iteritems():
-            arcname = 'META-INF/jvmci.services/' + service
-            # Convert providers to a set before printing to remove duplicates
-            self.arc.zf.writestr(arcname, '\n'.join(frozenset(providers))+ '\n')
 
 _jvmci_bootstrap_jdk = None
 
@@ -1707,14 +1579,6 @@ class JVMCI8JDKConfig(mx.JDKConfig):
             args = jacocoArgs + args
 
         args = ['-Xbootclasspath/p:' + dep.classpath_repr() for dep in _jvmci_bootclasspath_prepends] + args
-
-        # Set the default JVMCI compiler
-        for jdkDist in reversed(jdkDeployedDists):
-            if isinstance(jdkDist, JvmciJDKDeployedDist):
-                if jdkDist._compilers:
-                    jvmciCompiler = jdkDist._compilers[-1]
-                    args = ['-Djvmci.Compiler=' + jvmciCompiler] + args
-                    break
 
         if '-version' in args:
             ignoredArgs = args[args.index('-version') + 1:]
@@ -1761,6 +1625,8 @@ def get_jvmci_jdk(vmbuild=None):
         jdk = JVMCI8JDKConfig(vmbuild)
         _jvmci_jdks[vmbuild] = jdk
     return jdk
+
+mx_unittest.set_vm_launcher('JVMCI VM launcher', _unittest_vm_launcher, get_jvmci_jdk)
 
 class JVMCI8JDKFactory(mx.JDKFactory):
     def getJDKConfig(self):

@@ -29,8 +29,6 @@
 #include "runtime/arguments.hpp"
 #include "runtime/deoptimization.hpp"
 
-
-
 #define JVMCI_ERROR(...)       \
   { JVMCIRuntime::fthrow_error(THREAD_AND_LOCATION, __VA_ARGS__); return; }
 
@@ -42,31 +40,6 @@
 #define JVMCI_ERROR_OK(...)   JVMCI_ERROR_(JVMCIEnv::ok, __VA_ARGS__)
 #define CHECK_OK              CHECK_(JVMCIEnv::ok)
 
-class ParseClosure : public StackObj {
-  int _lineNo;
-  char* _filename;
-  bool _abort;
-protected:
-  void abort() { _abort = true; }
-  void warn_and_abort(const char* message) {
-    warn(message);
-    abort();
-  }
-  void warn(const char* message) {
-    warning("Error at line %d while parsing %s: %s", _lineNo, _filename == NULL ? "?" : _filename, message);
-  }
- public:
-  ParseClosure() : _lineNo(0), _filename(NULL), _abort(false) {}
-  void parse_line(char* line) {
-    _lineNo++;
-    do_line(line);
-  }
-  virtual void do_line(char* line) = 0;
-  int lineNo() { return _lineNo; }
-  bool is_aborted() { return _abort; }
-  void set_filename(char* path) {_filename = path; _lineNo = 0;}
-};
-
 class JVMCIRuntime: public AllStatic {
  public:
   // Constants describing whether JVMCI wants to be able to adjust the compilation
@@ -76,7 +49,7 @@ class JVMCIRuntime: public AllStatic {
      none = 0,             // no adjustment
      by_holder = 1,        // adjust based on declaring class of method
      by_full_signature = 2 // adjust based on declaring class, name and signature of method
-   };
+  };
 
  private:
   static jobject _HotSpotJVMCIRuntime_instance;
@@ -89,20 +62,9 @@ class JVMCIRuntime: public AllStatic {
 
   static bool _shutdown_called;
 
-  /**
-   * Instantiates a service object, calls its default constructor and returns it.
-   *
-   * @param name the name of a service provider class
-   */
-  static Handle create_Service(const char* name, TRAPS);
-
   static CompLevel adjust_comp_level_inner(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread);
 
  public:
-  /**
-   * Parses *.properties files in jre/lib/jvmci/ and adds the properties to plist.
-   */
-  static void init_system_properties(SystemProperty** plist);
 
   /**
    * Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
@@ -141,7 +103,7 @@ class JVMCIRuntime: public AllStatic {
 
   static void metadata_do(void f(Metadata*));
 
-  static void shutdown();
+  static void shutdown(TRAPS);
 
   static void bootstrap_finished(TRAPS);
 
@@ -162,14 +124,6 @@ class JVMCIRuntime: public AllStatic {
    * @return the compilation level to use for the compilation
    */
   static CompLevel adjust_comp_level(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread);
-
-  /**
-   * Given an interface representing a JVMCI service, gets an array of objects, one per
-   * known implementation of the service.
-   */
-  static objArrayHandle get_service_impls(KlassHandle serviceKlass, TRAPS);
-
-  static void parse_lines(char* path, ParseClosure* closure, bool warnStatFailure);
 
   /**
    * Throws a JVMCIError with a formatted error message. Ideally we would use
@@ -216,7 +170,7 @@ class JVMCIRuntime: public AllStatic {
    */
   static Klass* load_required_class(Symbol* name);
 
-  static BasicType kindToBasicType(jchar ch, TRAPS);
+  static BasicType kindToBasicType(Handle kind, TRAPS);
 
   // The following routines are all called from compiled JVMCI code
 

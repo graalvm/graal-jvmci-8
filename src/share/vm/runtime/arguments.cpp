@@ -44,9 +44,6 @@
 #include "utilities/macros.hpp"
 #include "utilities/stringUtils.hpp"
 #include "utilities/taskqueue.hpp"
-#if INCLUDE_JVMCI
-#include "jvmci/jvmciRuntime.hpp"
-#endif
 #ifdef TARGET_OS_FAMILY_linux
 # include "os_linux.inline.hpp"
 #endif
@@ -212,10 +209,6 @@ void Arguments::init_system_properties() {
 
   // Set OS specific system properties values
   os::init_system_properties_values();
-
-#if INCLUDE_JVMCI
-  JVMCIRuntime::init_system_properties(&_system_properties);
-#endif
 }
 
 
@@ -2445,14 +2438,25 @@ bool Arguments::check_vm_args_consistency() {
   }
 #if INCLUDE_JVMCI
   if (!EnableJVMCI) {
-    warning("ignoring flag -EnableJVMCI, JVMCI can not be disabled in this VM");
-  }
-  if (BootstrapJVMCI && !UseJVMCICompiler) {
-    warning("BootstrapJVMCI has no effect if UseJVMCICompiler is disabled");
-  }
-  if (!ScavengeRootsInCode) {
-    warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
-    ScavengeRootsInCode = 1;
+#define JVMCI_CHECK3(type, name, doc)        JVMCI_CHECK_FLAG(name)
+#define JVMCI_CHECK4(type, name, value, doc) JVMCI_CHECK_FLAG(name)
+#define JVMCI_CHECK_FLAG(FLAG)                         \
+    if (!FLAG_IS_DEFAULT(FLAG)) {                                   \
+      jio_fprintf(defaultStream::error_stream(), "EnableJVMCI must be enabled to use VM option '%s'\n", #FLAG); \
+      status = false; \
+    }
+    JVMCI_FLAGS(JVMCI_CHECK4, JVMCI_CHECK3, JVMCI_CHECK4, JVMCI_CHECK3, JVMCI_CHECK4)
+#undef JVMCI_CHECK3
+#undef JVMCI_CHECK4
+#undef JVMCI_CHECK_FLAG
+  } else {
+    if (BootstrapJVMCI && !UseJVMCICompiler) {
+      warning("BootstrapJVMCI has no effect if UseJVMCICompiler is disabled");
+    }
+    if (!ScavengeRootsInCode) {
+      warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
+      ScavengeRootsInCode = 1;
+    }
   }
 #endif
 
@@ -3611,7 +3615,11 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
       FREE_C_HEAP_ARRAY(char, dbuf, mtInternal);
       os::closedir(dir);
     }
-
+    const char* path = Arguments::get_property("jvmci.class.path.append");
+    if (path != NULL) {
+      scp_p->add_suffix(path);
+      scp_assembly_required = true;
+    }
   }
 #endif
 

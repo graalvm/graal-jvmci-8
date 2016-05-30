@@ -55,9 +55,6 @@
   product(bool, UseJVMCIClassLoader, true,                                  \
           "Load JVMCI classes with separate class loader")                  \
                                                                             \
-  product(ccstr, JVMCIServicesDir, NULL,                                    \
-          "Alternate directory to use for JVMCI services")                  \
-                                                                            \
   product(bool, BootstrapJVMCI, false,                                      \
           "Bootstrap JVMCI before running Java main method")                \
                                                                             \
@@ -98,10 +95,7 @@
           "Maximum size of a compiled method.")                             \
                                                                             \
   develop(bool, TraceUncollectedSpeculations, false,                        \
-          "Print message when a failed speculation was not collected")      \
-  product(bool, TraceClassLoadingStack, false,                              \
-          "Print stack when loading a class")                               \
-                                                                            \
+          "Print message when a failed speculation was not collected")
 
 
 // Read default values for JVMCI globals

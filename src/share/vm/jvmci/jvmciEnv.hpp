@@ -109,7 +109,7 @@ private:
   bool  _jvmti_can_post_on_exceptions;
 
   // Implementation methods for loading and constant pool access.
-  static KlassHandle get_klass_by_name_impl(KlassHandle accessing_klass,
+  static KlassHandle get_klass_by_name_impl(KlassHandle& accessing_klass,
                                   const constantPoolHandle& cpool,
                                   Symbol* klass_name,
                                   bool require_local);

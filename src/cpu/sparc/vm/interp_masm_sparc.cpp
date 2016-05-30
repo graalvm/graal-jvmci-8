@@ -1682,22 +1682,20 @@ void InterpreterMacroAssembler::record_klass_in_profile_helper(Register receiver
       increment_mdp_data_at(in_bytes(CounterData::count_offset()), scratch);
     }
 #if INCLUDE_JVMCI
-    else {
+    else if (EnableJVMCI) {
       increment_mdp_data_at(in_bytes(ReceiverTypeData::nonprofiled_receiver_count_offset()), scratch);
     }
 #endif
   } else {
-    bool use_non_profiled_counter = !is_virtual_call || IS_JVMCI_DEFINED;
     int non_profiled_offset = -1;
-    if (use_non_profiled_counter) {
-       non_profiled_offset = in_bytes(CounterData::count_offset());
-#if INCLUDE_JVMCI
-      if (!is_virtual_call) {
-        non_profiled_offset = in_bytes(ReceiverTypeData::nonprofiled_receiver_count_offset());
-      }
-#endif
-      assert(non_profiled_offset >= 0, "must be");
+    if (is_virtual_call) {
+      non_profiled_offset = in_bytes(CounterData::count_offset());
     }
+#if INCLUDE_JVMCI
+    else if (EnableJVMCI) {
+      non_profiled_offset = in_bytes(ReceiverTypeData::nonprofiled_receiver_count_offset());
+    }
+#endif
 
     record_item_in_profile_helper(receiver, scratch, 0, done, TypeProfileWidth,
       &VirtualCallData::receiver_offset, &VirtualCallData::receiver_count_offset, non_profiled_offset);

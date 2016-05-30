@@ -1855,17 +1855,16 @@ bool SystemDictionary::initialize_wk_klass(WKID id, int init_opt, TRAPS) {
   int  sid  = (info >> CEIL_LG_OPTION_LIMIT);
   Symbol* symbol = vmSymbols::symbol_at((vmSymbols::SID)sid);
   Klass**    klassp = &_well_known_klasses[id];
-  bool must_load = (init_opt < SystemDictionary::Opt);
   if ((*klassp) == NULL) {
 #if INCLUDE_JVMCI
-    bool is_jvmci = init_opt == SystemDictionary::Jvmci;
-    assert(is_jvmci == (id >= (int)FIRST_JVMCI_WKID && id <= (int)LAST_JVMCI_WKID),
-        "JVMCI WKIDs must be contiguous and separate from non-JVMCI WKIDs");
-    if (is_jvmci) {
+    if (EnableJVMCI && init_opt == SystemDictionary::Jvmci) {
+      assert(id >= (int)FIRST_JVMCI_WKID && id <= (int)LAST_JVMCI_WKID,
+          "JVMCI WKIDs must be contiguous and separate from non-JVMCI WKIDs");
       (*klassp) = resolve_or_fail(symbol, _jvmci_loader, Handle(), true, CHECK_0); // load required JVMCI class
-    } else
+      return ((*klassp) != NULL);
+    }
 #endif
-    if (must_load) {
+    if (init_opt < SystemDictionary::Opt) {
       (*klassp) = resolve_or_fail(symbol, true, CHECK_0); // load required class
     } else {
       (*klassp) = resolve_or_null(symbol,       CHECK_0); // load optional klass

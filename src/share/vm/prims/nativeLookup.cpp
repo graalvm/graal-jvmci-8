@@ -130,7 +130,7 @@ extern "C" {
   void     JNICALL JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader);
   void     JNICALL JVM_RegisterJVMCINatives(JNIEnv *env, jclass compilerToVMClass);
   jobject  JNICALL JVM_GetJVMCIRuntime(JNIEnv *env, jclass c);
-  jobject  JNICALL JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass serviceClass);
+  jobject  JNICALL JVM_GetJVMCIClassLoader(JNIEnv *env, jclass c);
 #endif
 }
 
@@ -145,7 +145,7 @@ static JNINativeMethod lookup_special_native_methods[] = {
 #if INCLUDE_JVMCI
   { CC"Java_jdk_vm_ci_services_JVMCIClassLoaderFactory_init", NULL, FN_PTR(JVM_InitJVMCIClassLoader)     },
   { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",       NULL, FN_PTR(JVM_GetJVMCIRuntime)          },
-  { CC"Java_jdk_vm_ci_services_Services_getServiceImpls",     NULL, FN_PTR(JVM_GetJVMCIServiceImpls)     },
+  { CC"Java_jdk_vm_ci_services_Services_getJVMCIClassLoader", NULL, FN_PTR(JVM_GetJVMCIClassLoader)      },
   { CC"Java_jdk_vm_ci_hotspot_CompilerToVM_registerNatives",  NULL, FN_PTR(JVM_RegisterJVMCINatives)     },
 #endif
 };

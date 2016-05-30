@@ -275,7 +275,7 @@ C2V_END
 C2V_VMENTRY(jobject, getImplementor, (JNIEnv *, jobject, jobject jvmci_type))
   InstanceKlass* klass = (InstanceKlass*) CompilerToVM::asKlass(jvmci_type);
   oop implementor = CompilerToVM::get_jvmci_type(klass->implementor(), CHECK_NULL);
-  return JNIHandles::make_local(THREAD, implementor); 
+  return JNIHandles::make_local(THREAD, implementor);
 C2V_END
 
 C2V_VMENTRY(jboolean, methodIsIgnoredBySecurityStackWalk,(JNIEnv *, jobject, jobject jvmci_method))
@@ -285,13 +285,9 @@ C2V_END
 
 C2V_VMENTRY(jboolean, canInlineMethod,(JNIEnv *, jobject, jobject jvmci_method))
   methodHandle method = CompilerToVM::asMethod(jvmci_method);
-#ifdef COMPILER_JVMCI
-  bool is_compilable = !method->is_not_compilable(CompLevel_full_optimization);
-#else
   // In hosted mode ignore the not_compilable flags since they are never set by
   // the JVMCI compiler.
-  bool is_compilable = true;
-#endif
+  bool is_compilable = UseJVMCICompiler ? !method->is_not_compilable(CompLevel_full_optimization) : true;
   return is_compilable && !CompilerOracle::should_not_inline(method) && !method->dont_inline();
 C2V_END
 

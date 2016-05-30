@@ -52,7 +52,11 @@ char** JVMCIRuntime::_trivial_prefixes = NULL;
 JVMCIRuntime::CompLevelAdjustment JVMCIRuntime::_comp_level_adjustment = JVMCIRuntime::none;
 bool JVMCIRuntime::_shutdown_called = false;
 
-BasicType JVMCIRuntime::kindToBasicType(jchar ch, TRAPS) {
+BasicType JVMCIRuntime::kindToBasicType(Handle kind, TRAPS) {
+  if (kind.is_null()) {
+    THROW_(vmSymbols::java_lang_NullPointerException(), T_ILLEGAL);
+  }
+  jchar ch = JavaKind::typeChar(kind);
   switch(ch) {
     case 'Z': return T_BOOLEAN;
     case 'B': return T_BYTE;
@@ -96,6 +100,7 @@ static void deopt_caller() {
 JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance(JavaThread* thread, Klass* klass))
   JRT_BLOCK;
   assert(klass->is_klass(), "not a class");
+  Handle holder(THREAD, klass->klass_holder()); // keep the klass alive
   instanceKlassHandle h(thread, klass);
   h->check_valid_for_instantiation(true, CHECK);
   // make sure klass is initialized
@@ -121,6 +126,7 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array(JavaThread* thread, Klass* array_k
     BasicType elt_type = TypeArrayKlass::cast(array_klass)->element_type();
     obj = oopFactory::new_typeArray(elt_type, length, CHECK);
   } else {
+    Handle holder(THREAD, array_klass->klass_holder()); // keep the klass alive
     Klass* elem_klass = ObjArrayKlass::cast(array_klass)->element_klass();
     obj = oopFactory::new_objArray(elem_klass, length, CHECK);
   }
@@ -164,6 +170,7 @@ void JVMCIRuntime::new_store_pre_barrier(JavaThread* thread) {
 JRT_ENTRY(void, JVMCIRuntime::new_multi_array(JavaThread* thread, Klass* klass, int rank, jint* dims))
   assert(klass->is_klass(), "not a class");
   assert(rank >= 1, "rank must be nonzero");
+  Handle holder(THREAD, klass->klass_holder()); // keep the klass alive
   oop obj = ArrayKlass::cast(klass)->multi_allocate(rank, dims, CHECK);
   thread->set_vm_result(obj);
 JRT_END
@@ -605,17 +612,19 @@ JVM_END
 
 // private static JVMCIRuntime JVMCI.initializeRuntime()
 JVM_ENTRY(jobject, JVM_GetJVMCIRuntime(JNIEnv *env, jclass c))
+  if (!EnableJVMCI) {
+    THROW_MSG_NULL(vmSymbols::java_lang_InternalError(), "JVMCI is not enabled")
+  }
   JVMCIRuntime::initialize_HotSpotJVMCIRuntime(CHECK_NULL);
   return JVMCIRuntime::get_HotSpotJVMCIRuntime_jobject(CHECK_NULL);
 JVM_END
 
-// private static Object[] Services.getServiceImpls(String serviceClass)
-JVM_ENTRY(jobject, JVM_GetJVMCIServiceImpls(JNIEnv *env, jclass c, jclass serviceClass))
-  HandleMark hm;
-  ResourceMark rm;
-  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-  KlassHandle serviceKlass(THREAD, java_lang_Class::as_Klass(JNIHandles::resolve_non_null(serviceClass)));
-  return JNIHandles::make_local(THREAD, JVMCIRuntime::get_service_impls(serviceKlass, THREAD)());
+// private static ClassLoader Services.getJVMCIClassLoader()
+JVM_ENTRY(jobject, JVM_GetJVMCIClassLoader(JNIEnv *env, jclass c))
+  if (!EnableJVMCI) {
+    THROW_MSG_NULL(vmSymbols::java_lang_InternalError(), "JVMCI is not enabled")
+  }
+  return JNIHandles::make_local(THREAD, SystemDictionary::jvmci_loader());
 JVM_END
 
 Handle JVMCIRuntime::callStatic(const char* className, const char* methodName, const char* signature, JavaCallArguments* args, TRAPS) {
@@ -752,6 +761,10 @@ void JVMCIRuntime::metadata_do(void f(Metadata*)) {
 
 // private static void CompilerToVM.registerNatives()
 JVM_ENTRY(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
+  if (!EnableJVMCI) {
+    THROW_MSG(vmSymbols::java_lang_InternalError(), "JVMCI is not enabled");
+  }
+
 #ifdef _LP64
 #ifndef TARGET_ARCH_sparc
   uintptr_t heap_end = (uintptr_t) Universe::heap()->reserved_region().end();
@@ -824,66 +837,6 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
   }
 }
 
-/**
- * Closure for parsing a line from a *.properties file in jre/lib/jvmci/properties.
- * The line must match the regular expression "[^=]+=.*". That is one or more
- * characters other than '=' followed by '=' followed by zero or more characters.
- * Everything before the '=' is the property name and everything after '=' is the value.
- * Lines that start with '#' are treated as comments and ignored.
- * No special processing of whitespace or any escape characters is performed.
- * The last definition of a property "wins" (i.e., it overrides all earlier
- * definitions of the property).
- */
-class JVMCIPropertiesFileClosure : public ParseClosure {
-  SystemProperty** _plist;
-public:
-  JVMCIPropertiesFileClosure(SystemProperty** plist) : _plist(plist) {}
-  void do_line(char* line) {
-    if (line[0] == '#') {
-      // skip comment
-      return;
-    }
-    size_t len = strlen(line);
-    char* sep = strchr(line, '=');
-    if (sep == NULL) {
-      warn_and_abort("invalid format: could not find '=' character");
-      return;
-    }
-    if (sep == line) {
-      warn_and_abort("invalid format: name cannot be empty");
-      return;
-    }
-    *sep = '\0';
-    const char* name = line;
-    char* value = sep + 1;
-    Arguments::PropertyList_unique_add(_plist, name, value);
-  }
-};
-
-void JVMCIRuntime::init_system_properties(SystemProperty** plist) {
-  char jvmciDir[JVM_MAXPATHLEN];
-  const char* fileSep = os::file_separator();
-  jio_snprintf(jvmciDir, sizeof(jvmciDir), "%s%slib%sjvmci",
-               Arguments::get_java_home(), fileSep, fileSep, fileSep);
-  DIR* dir = os::opendir(jvmciDir);
-  if (dir != NULL) {
-    struct dirent *entry;
-    char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(jvmciDir), mtInternal);
-    JVMCIPropertiesFileClosure closure(plist);
-    const unsigned suffix_len = (unsigned)strlen(".properties");
-    while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL && !closure.is_aborted()) {
-      const char* name = entry->d_name;
-      if (strlen(name) > suffix_len && strcmp(name + strlen(name) - suffix_len, ".properties") == 0) {
-        char propertiesFilePath[JVM_MAXPATHLEN];
-        jio_snprintf(propertiesFilePath, sizeof(propertiesFilePath), "%s%s%s",jvmciDir, fileSep, name);
-        JVMCIRuntime::parse_lines(propertiesFilePath, &closure, false);
-      }
-    }
-    FREE_C_HEAP_ARRAY(char, dbuf, mtInternal);
-    os::closedir(dir);
-  }
-}
-
 #define CHECK_WARN_ABORT_(message) THREAD); \
   if (HAS_PENDING_EXCEPTION) { \
     warning(message); \
@@ -894,28 +847,15 @@ void JVMCIRuntime::init_system_properties(SystemProperty** plist) {
   } \
   (void)(0
 
-Handle JVMCIRuntime::create_Service(const char* name, TRAPS) {
-  TempNewSymbol kname = SymbolTable::new_symbol(name, CHECK_NH);
-  Klass* k = resolve_or_fail(kname, CHECK_NH);
-  instanceKlassHandle klass(THREAD, k);
-  klass->initialize(CHECK_NH);
-  klass->check_valid_for_instantiation(true, CHECK_NH);
-  JavaValue result(T_VOID);
-  instanceHandle service = klass->allocate_instance_handle(CHECK_NH);
-  JavaCalls::call_special(&result, service, klass, vmSymbols::object_initializer_name(), vmSymbols::void_method_signature(), THREAD);
-  return service;
-}
-
-void JVMCIRuntime::shutdown() {
+void JVMCIRuntime::shutdown(TRAPS) {
   if (_HotSpotJVMCIRuntime_instance != NULL) {
     _shutdown_called = true;
-    JavaThread* THREAD = JavaThread::current();
     HandleMark hm(THREAD);
-    Handle receiver = get_HotSpotJVMCIRuntime(CHECK_ABORT);
+    Handle receiver = get_HotSpotJVMCIRuntime(CHECK);
     JavaValue result(T_VOID);
     JavaCallArguments args;
     args.push_oop(receiver);
-    JavaCalls::call_special(&result, receiver->klass(), vmSymbols::shutdown_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
+    JavaCalls::call_special(&result, receiver->klass(), vmSymbols::shutdown_method_name(), vmSymbols::void_method_signature(), &args, CHECK);
   }
 }
 
@@ -978,6 +918,7 @@ if (HAS_PENDING_EXCEPTION) { \
   return level; \
 } \
 (void)(0
+
 
   Thread* THREAD = thread;
   HandleMark hm;
@@ -1071,120 +1012,4 @@ Klass* JVMCIRuntime::load_required_class(Symbol* name) {
     vm_abort(false);
   }
   return klass;
-}
-
-void JVMCIRuntime::parse_lines(char* path, ParseClosure* closure, bool warnStatFailure) {
-  struct stat st;
-  if (::stat(path, &st) == 0 && (st.st_mode & S_IFREG) == S_IFREG) { // exists & is regular file
-    int file_handle = ::open(path, os::default_file_open_flags(), 0);
-    if (file_handle != -1) {
-      char* buffer = NEW_C_HEAP_ARRAY(char, st.st_size + 1, mtInternal);
-      int num_read;
-      num_read = (int) ::read(file_handle, (char*) buffer, st.st_size);
-      if (num_read == -1) {
-        warning("Error reading file %s due to %s", path, strerror(errno));
-      } else if (num_read != st.st_size) {
-        warning("Only read %d of " SIZE_FORMAT " bytes from %s", num_read, (size_t) st.st_size, path);
-      }
-      ::close(file_handle);
-      closure->set_filename(path);
-      if (num_read == st.st_size) {
-        buffer[num_read] = '\0';
-
-        char* line = buffer;
-        while (line - buffer < num_read && !closure->is_aborted()) {
-          // find line end (\r, \n or \r\n)
-          char* nextline = NULL;
-          char* cr = strchr(line, '\r');
-          char* lf = strchr(line, '\n');
-          if (cr != NULL && lf != NULL) {
-            char* min = MIN2(cr, lf);
-            *min = '\0';
-            if (lf == cr + 1) {
-              nextline = lf + 1;
-            } else {
-              nextline = min + 1;
-            }
-          } else if (cr != NULL) {
-            *cr = '\0';
-            nextline = cr + 1;
-          } else if (lf != NULL) {
-            *lf = '\0';
-            nextline = lf + 1;
-          }
-          // trim left
-          while (*line == ' ' || *line == '\t') line++;
-          char* end = line + strlen(line);
-          // trim right
-          while (end > line && (*(end -1) == ' ' || *(end -1) == '\t')) end--;
-          *end = '\0';
-          // skip comments and empty lines
-          if (*line != '#' && strlen(line) > 0) {
-            closure->parse_line(line);
-          }
-          if (nextline != NULL) {
-            line = nextline;
-          } else {
-            // File without newline at the end
-            break;
-          }
-        }
-      }
-      FREE_C_HEAP_ARRAY(char, buffer, mtInternal);
-    } else {
-      warning("Error opening file %s due to %s", path, strerror(errno));
-    }
-  } else if (warnStatFailure) {
-    warning("Could not stat file %s due to %s", path, strerror(errno));
-  }
-}
-
-class ServiceParseClosure : public ParseClosure {
-  GrowableArray<char*> _implNames;
-public:
-  ServiceParseClosure() : _implNames() {}
-  void do_line(char* line) {
-    size_t lineLen = strlen(line);
-    char* implName = NEW_RESOURCE_ARRAY(char, lineLen + 1);
-    // Turn all '.'s into '/'s
-    for (size_t index = 0; index < lineLen; ++index) {
-      if (line[index] == '.') {
-        implName[index] = '/';
-      } else {
-        implName[index] = line[index];
-      }
-    }
-    implName[lineLen] = '\0';
-    _implNames.append(implName);
-  }
-  GrowableArray<char*>* implNames() {return &_implNames;}
-};
-
-
-objArrayHandle JVMCIRuntime::get_service_impls(KlassHandle serviceKlass, TRAPS) {
-  const char* home = Arguments::get_java_home();
-  const char* serviceName = serviceKlass->external_name();
-  char* path;
-  char sep = os::file_separator()[0];
-  if (JVMCIServicesDir == NULL) {
-    size_t path_len = strlen(home) + strlen("/lib/jvmci/services/") + strlen(serviceName) + 1;
-    path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
-    sprintf(path, "%s%clib%cjvmci%cservices%c%s", home, sep, sep, sep, sep, serviceName);
-  } else {
-    size_t path_len = strlen(JVMCIServicesDir) + strlen(serviceName) + 1;
-    path = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, path_len);
-    sprintf(path, "%s%c%s", JVMCIServicesDir, sep, serviceName);
-  }
-  ServiceParseClosure closure;
-  parse_lines(path, &closure, false);
-
-  GrowableArray<char*>* implNames = closure.implNames();
-  objArrayOop servicesOop = oopFactory::new_objArray(serviceKlass(), implNames->length(), CHECK_(objArrayHandle()));
-  objArrayHandle services(THREAD, servicesOop);
-  for (int i = 0; i < implNames->length(); ++i) {
-    char* implName = implNames->at(i);
-    Handle service = create_Service(implName, CHECK_(objArrayHandle()));
-    services->obj_at_put(i, service());
-  }
-  return services;
 }

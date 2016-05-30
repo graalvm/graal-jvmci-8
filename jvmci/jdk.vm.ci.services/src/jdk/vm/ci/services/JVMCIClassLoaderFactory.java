@@ -29,9 +29,12 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
+import sun.misc.VM;
+
 /**
  * Utility called from the VM to create and register a separate class loader for loading JVMCI
- * classes (i.e., those in found in lib/jvmci/*.jar).
+ * classes (i.e., those in found in lib/jvmci/*.jar) as well as those available on the class path in
+ * the {@code "jvmci.class.path.append"} system property.
  */
 class JVMCIClassLoaderFactory {
 
@@ -77,6 +80,18 @@ class JVMCIClassLoaderFactory {
                 if (file.isDirectory()) {
                     continue;
                 }
+                try {
+                    urls.add(file.toURI().toURL());
+                } catch (MalformedURLException e) {
+                    throw new InternalError(e);
+                }
+            }
+        }
+
+        String append = VM.getSavedProperty("jvmci.class.path.append");
+        if (append != null) {
+            for (String entry : append.split(File.pathSeparator)) {
+                File file = new File(entry);
                 try {
                     urls.add(file.toURI().toURL());
                 } catch (MalformedURLException e) {

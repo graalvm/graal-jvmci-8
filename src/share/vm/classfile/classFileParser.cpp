@@ -4222,12 +4222,7 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
                    InstanceKlass::cast(class_loader->klass())->external_name());
       }
     }
-#if INCLUDE_JVMCI
-    if (TraceClassLoadingStack) {
-      // useful when investigating why a class is loaded
-      JavaThread::current()->print_stack_on(tty);
-    }
-#endif
+
     if (TraceClassResolution) {
       ResourceMark rm;
       // print out the superclass.

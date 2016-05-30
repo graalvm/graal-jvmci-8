@@ -992,17 +992,19 @@ void AdapterGenerator::gen_i2c_adapter(int total_args_passed,
   // Jump to the compiled code just as if compiled code was doing it.
   __ ld_ptr(G5_method, in_bytes(Method::from_compiled_offset()), G3);
 #if INCLUDE_JVMCI
-  // check if this call should be routed towards a specific entry point
-  __ ld_ptr(Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())), G1);
-  __ cmp(G0, G1);
-  Label no_alternative_target;
-  __ br(Assembler::equal, false, Assembler::pn, no_alternative_target);
-  __ delayed()->nop();
+  if (EnableJVMCI) {
+    // check if this call should be routed towards a specific entry point
+    __ ld_ptr(Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())), G1);
+    __ cmp(G0, G1);
+    Label no_alternative_target;
+    __ br(Assembler::equal, false, Assembler::pn, no_alternative_target);
+    __ delayed()->nop();
 
-  __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset()), G3);
-  __ st_ptr(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())));
+    __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset()), G3);
+    __ st_ptr(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_alternate_call_target_offset())));
 
-  __ bind(no_alternative_target);
+    __ bind(no_alternative_target);
+  }
 #endif
 
   // 6243940 We might end up in handle_wrong_method if
@@ -3469,7 +3471,9 @@ void SharedRuntime::generate_deopt_blob() {
   }
 #endif
 #if INCLUDE_JVMCI
-  pad += 512; // Increase the buffer size when compiling for JVMCI
+  if (EnableJVMCI) {
+    pad += 512; // Increase the buffer size when compiling for JVMCI
+  }
 #endif
 #ifdef _LP64
   CodeBuffer buffer("deopt_blob", 2100+pad, 512);
@@ -3539,36 +3543,42 @@ void SharedRuntime::generate_deopt_blob() {
 
 
 #if INCLUDE_JVMCI
-  masm->block_comment("BEGIN implicit_exception_uncommon_trap");
-  int implicit_exception_uncommon_trap_offset = __ offset() - start;
-  __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset()), O7);
-  __ st_ptr(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset())));
-  __ add(O7, -8, O7);
-
-  int uncommon_trap_offset = __ offset() - start;
-
-  // Save everything in sight.
-  (void) RegisterSaver::save_live_registers(masm, 0, &frame_size_words);
-  __ set_last_Java_frame(SP, NULL);
-
-  __ ld(G2_thread, in_bytes(JavaThread::pending_deoptimization_offset()), O1);
-  __ sub(G0, 1, L1);
-  __ st(L1, G2_thread, in_bytes(JavaThread::pending_deoptimization_offset()));
-
-  __ mov((int32_t)Deoptimization::Unpack_reexecute, L0deopt_mode);
-  __ mov(G2_thread, O0);
-  __ mov(L0deopt_mode, O2);
-  __ call(CAST_FROM_FN_PTR(address, Deoptimization::uncommon_trap));
-  __ delayed()->nop();
-  oop_maps->add_gc_map( __ offset()-start, map->deep_copy());
-  __ get_thread();
-  __ add(O7, 8, O7);
-  __ reset_last_Java_frame();
-
   Label after_fetch_unroll_info_call;
-  __ ba(after_fetch_unroll_info_call);
-  __ delayed()->nop(); // Delay slot
-  masm->block_comment("END implicit_exception_uncommon_trap");
+  int implicit_exception_uncommon_trap_offset = 0;
+  int uncommon_trap_offset = 0;
+
+  if (EnableJVMCI) {
+    masm->block_comment("BEGIN implicit_exception_uncommon_trap");
+    implicit_exception_uncommon_trap_offset = __ offset() - start;
+    __ ld_ptr(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset()), O7);
+    __ st_ptr(G0, Address(G2_thread, in_bytes(JavaThread::jvmci_implicit_exception_pc_offset())));
+    __ add(O7, -8, O7);
+
+    uncommon_trap_offset = __ offset() - start;
+
+    // Save everything in sight.
+    (void) RegisterSaver::save_live_registers(masm, 0, &frame_size_words);
+    __ set_last_Java_frame(SP, NULL);
+
+    __ ld(G2_thread, in_bytes(JavaThread::pending_deoptimization_offset()), O1);
+    __ sub(G0, 1, L1);
+    __ st(L1, G2_thread, in_bytes(JavaThread::pending_deoptimization_offset()));
+
+    __ mov((int32_t)Deoptimization::Unpack_reexecute, L0deopt_mode);
+    __ mov(G2_thread, O0);
+    __ mov(L0deopt_mode, O2);
+    __ call(CAST_FROM_FN_PTR(address, Deoptimization::uncommon_trap));
+    __ delayed()->nop();
+    oop_maps->add_gc_map( __ offset()-start, map->deep_copy());
+    __ get_thread();
+    __ add(O7, 8, O7);
+    __ reset_last_Java_frame();
+
+    after_fetch_unroll_info_call;
+    __ ba(after_fetch_unroll_info_call);
+    __ delayed()->nop(); // Delay slot
+    masm->block_comment("END implicit_exception_uncommon_trap");
+  } // EnableJVMCI
 #endif // INCLUDE_JVMCI
 
   int exception_offset = __ offset() - start;
@@ -3656,7 +3666,9 @@ void SharedRuntime::generate_deopt_blob() {
   __ reset_last_Java_frame();
 
 #if INCLUDE_JVMCI
-  __ bind(after_fetch_unroll_info_call);
+  if (EnableJVMCI) {
+    __ bind(after_fetch_unroll_info_call);
+  }
 #endif
   // NOTE: we know that only O0/O1 will be reloaded by restore_result_registers
   // so this move will survive
@@ -3725,8 +3737,10 @@ void SharedRuntime::generate_deopt_blob() {
   _deopt_blob = DeoptimizationBlob::create(&buffer, oop_maps, 0, exception_offset, reexecute_offset, frame_size_words);
   _deopt_blob->set_unpack_with_exception_in_tls_offset(exception_in_tls_offset);
 #if INCLUDE_JVMCI
-  _deopt_blob->set_uncommon_trap_offset(uncommon_trap_offset);
-  _deopt_blob->set_implicit_exception_uncommon_trap_offset(implicit_exception_uncommon_trap_offset);
+  if (EnableJVMCI) {
+    _deopt_blob->set_uncommon_trap_offset(uncommon_trap_offset);
+    _deopt_blob->set_implicit_exception_uncommon_trap_offset(implicit_exception_uncommon_trap_offset);
+  }
 #endif
 }
 

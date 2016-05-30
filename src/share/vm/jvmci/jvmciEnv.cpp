@@ -83,7 +83,7 @@ bool JVMCIEnv::check_klass_accessibility(KlassHandle accessing_klass, KlassHandl
 }
 
 // ------------------------------------------------------------------
-KlassHandle JVMCIEnv::get_klass_by_name_impl(KlassHandle accessing_klass,
+KlassHandle JVMCIEnv::get_klass_by_name_impl(KlassHandle& accessing_klass,
                                           const constantPoolHandle& cpool,
                                           Symbol* sym,
                                           bool require_local) {

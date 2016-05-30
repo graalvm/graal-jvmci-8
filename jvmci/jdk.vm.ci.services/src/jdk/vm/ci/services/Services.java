@@ -22,10 +22,11 @@
  */
 package jdk.vm.ci.services;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.List;
+import java.util.ServiceLoader;
 
 import sun.reflect.Reflection;
 
@@ -51,7 +52,11 @@ public final class Services {
         @Override
         protected List<?> computeValue(Class<?> type) {
             try {
-                return Arrays.asList(getServiceImpls(type));
+                List<Object> impls = new ArrayList<>();
+                for (Object impl : ServiceLoader.load(type, getJVMCIClassLoader())) {
+                    impls.add(impl);
+                }
+                return impls;
             } catch (NoClassDefFoundError e) {
                 if (SuppressNoClassDefFoundError) {
                     return Collections.emptyList();
@@ -142,9 +147,9 @@ public final class Services {
     }
 
     static {
-        Reflection.registerMethodsToFilter(Services.class, "getServiceImpls");
+        Reflection.registerMethodsToFilter(Services.class, "getJVMCIClassLoader");
         Reflection.registerFieldsToFilter(Services.class, "cache");
     }
 
-    private static native <S> S[] getServiceImpls(Class<?> service);
+    private static native ClassLoader getJVMCIClassLoader();
 }

@@ -1,5 +1,5 @@
 suite = {
-  "mxversion" : "5.27.0",
+  "mxversion" : "5.28.3",
   "name" : "jvmci",
   "url" : "http://openjdk.java.net/projects/graal",
   "developer" : {
@@ -300,7 +300,7 @@ suite = {
             "path" : "build/<vmbuild>/solaris/sparcv9/<vm>/jvm.tar",
           }
         },
-      }
+      },
     },
 
     "JVMCI_SERVICES" : {

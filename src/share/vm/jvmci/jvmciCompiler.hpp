@@ -28,9 +28,7 @@
 #include "jvmci/jvmciEnv.hpp"
 
 class JVMCICompiler : public AbstractCompiler {
-
 private:
-
   bool _bootstrapping;
 
   /**
@@ -42,17 +40,21 @@ private:
    * Number of methods successfully compiled by a call to
    * JVMCICompiler::compile_method().
    */
-  volatile int  _methods_compiled;
+  volatile int _methods_compiled;
 
   static JVMCICompiler* _instance;
- 
+
   static elapsedTimer _codeInstallTimer;
 
 public:
-
   JVMCICompiler();
 
-  static JVMCICompiler* instance(TRAPS) { return _instance; }
+  static JVMCICompiler* instance(TRAPS) {
+    if (!EnableJVMCI) {
+      THROW_MSG_NULL(vmSymbols::java_lang_InternalError(), "JVMCI is not enabled")
+    }
+    return _instance;
+  }
 
   virtual const char* name() { return "JVMCI"; }
 

@@ -942,31 +942,35 @@ void CompileBroker::compilation_init(TRAPS) {
   int c1_count = CompilationPolicy::policy()->compiler_count(CompLevel_simple);
   int c2_count = CompilationPolicy::policy()->compiler_count(CompLevel_full_optimization);
 #if INCLUDE_JVMCI
-  JVMCICompiler* jvmci = new JVMCICompiler();
-  if (UseJVMCICompiler) {
-    _compilers[1] = jvmci;
-    if (FLAG_IS_DEFAULT(JVMCIThreads)) {
-      if (BootstrapJVMCI) {
-        // JVMCI will bootstrap so give it more threads
-        c2_count = MIN2(32, os::active_processor_count());
+  if (EnableJVMCI) {
+    JVMCICompiler* jvmci = new JVMCICompiler();
+    if (UseJVMCICompiler) {
+      _compilers[1] = jvmci;
+      if (FLAG_IS_DEFAULT(JVMCIThreads)) {
+        if (BootstrapJVMCI) {
+          // JVMCI will bootstrap so give it more threads
+          c2_count = MIN2(32, os::active_processor_count());
+        }
+      } else {
+        c2_count = JVMCIThreads;
+      }
+      if (FLAG_IS_DEFAULT(JVMCIHostThreads)) {
+      } else {
+        c1_count = JVMCIHostThreads;
+      }
+      if (!UseInterpreter || !BackgroundCompilation) {
+        // Force initialization of JVMCI compiler otherwise JVMCI
+        // compilations will not block until JVMCI is initialized
+        JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
+        ResourceMark rm;
+        TempNewSymbol getCompiler = SymbolTable::new_symbol("getCompiler", CHECK);
+        TempNewSymbol sig = SymbolTable::new_symbol("()Ljdk/vm/ci/runtime/JVMCICompiler;", CHECK);
+        Handle jvmciRuntime = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
+        JavaValue result(T_OBJECT);
+        JavaCalls::call_virtual(&result, jvmciRuntime, HotSpotJVMCIRuntime::klass(), getCompiler, sig, CHECK);
       }
     } else {
-      c2_count = JVMCIThreads;
-    }
-    if (FLAG_IS_DEFAULT(JVMCIHostThreads)) {
-    } else {
-      c1_count = JVMCIHostThreads;
-    }
-    if (!UseInterpreter || !BackgroundCompilation) {
-      // Force initialization of JVMCI compiler otherwise JVMCI
-      // compilations will not block until JVMCI is initialized
-      JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-      ResourceMark rm;
-      TempNewSymbol getCompiler = SymbolTable::new_symbol("getCompiler", CHECK);
-      TempNewSymbol sig = SymbolTable::new_symbol("()Ljdk/vm/ci/runtime/JVMCICompiler;", CHECK);
-      Handle jvmciRuntime = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
-      JavaValue result(T_OBJECT);
-      JavaCalls::call_virtual(&result, jvmciRuntime, HotSpotJVMCIRuntime::klass(), getCompiler, sig, CHECK);
+      c2_count = 0;
     }
   }
 #ifndef COMPILER2
