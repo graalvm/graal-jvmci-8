@@ -969,8 +969,10 @@ void CompileBroker::compilation_init(TRAPS) {
         JavaValue result(T_OBJECT);
         JavaCalls::call_virtual(&result, jvmciRuntime, HotSpotJVMCIRuntime::klass(), getCompiler, sig, CHECK);
       }
+#ifndef COMPILER2
     } else {
       c2_count = 0;
+#endif
     }
   }
 #ifndef COMPILER2
