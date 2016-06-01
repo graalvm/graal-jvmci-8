@@ -914,13 +914,13 @@ void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_ma
     case T_CHAR:
       assert(value->type() == T_INT, "Agreement.");
       val = value->get_int();
-      obj->char_field_put(index, (jchar)*((jint*)&val));
+      obj->char_at_put(index, (jchar)*((jint*)&val));
       break;
 
     case T_BYTE:
       assert(value->type() == T_INT, "Agreement.");
       val = value->get_int();
-      obj->byte_field_put(index, (jbyte)*((jint*)&val));
+      obj->byte_at_put(index, (jbyte)*((jint*)&val));
       break;
 
     case T_BOOLEAN:
