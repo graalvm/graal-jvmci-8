@@ -624,6 +624,7 @@ JVM_ENTRY(jobject, JVM_GetJVMCIClassLoader(JNIEnv *env, jclass c))
   if (!EnableJVMCI) {
     THROW_MSG_NULL(vmSymbols::java_lang_InternalError(), "JVMCI is not enabled")
   }
+  JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
   return JNIHandles::make_local(THREAD, SystemDictionary::jvmci_loader());
 JVM_END
 
