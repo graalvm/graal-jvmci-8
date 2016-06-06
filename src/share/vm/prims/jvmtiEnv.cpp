@@ -226,6 +226,7 @@ JvmtiEnv::RetransformClasses(jint class_count, const jclass* classes) {
                             NEW_RESOURCE_ARRAY(jvmtiClassDefinition, class_count);
   NULL_CHECK(class_definitions, JVMTI_ERROR_OUT_OF_MEMORY);
 
+  int redef_index = 0;
   for (index = 0; index < class_count; index++) {
     HandleMark hm(current_thread);
 
@@ -253,6 +254,11 @@ JvmtiEnv::RetransformClasses(jint class_count, const jclass* classes) {
       return JVMTI_ERROR_UNMODIFIABLE_CLASS;
     }
 
+    if (klass->oop_is_instance() && InstanceKlass::cast(klass())->is_anonymous()) {
+      // return JVMTI_ERROR_UNMODIFIABLE_CLASS;
+      continue;
+    }
+
     instanceKlassHandle ikh(current_thread, k_oop);
     if (ikh->get_cached_class_file_bytes() == NULL) {
       // Not cached, we need to reconstitute the class file from the
@@ -267,19 +273,24 @@ JvmtiEnv::RetransformClasses(jint class_count, const jclass* classes) {
         return reconstituter.get_error();
       }
 
-      class_definitions[index].class_byte_count = (jint)reconstituter.class_file_size();
-      class_definitions[index].class_bytes      = (unsigned char*)
+      class_definitions[redef_index].class_byte_count = (jint)reconstituter.class_file_size();
+      class_definitions[redef_index].class_bytes      = (unsigned char*)
                                                        reconstituter.class_file_bytes();
     } else {
       // it is cached, get it from the cache
-      class_definitions[index].class_byte_count = ikh->get_cached_class_file_len();
-      class_definitions[index].class_bytes      = ikh->get_cached_class_file_bytes();
+      class_definitions[redef_index].class_byte_count = ikh->get_cached_class_file_len();
+      class_definitions[redef_index].class_bytes      = ikh->get_cached_class_file_bytes();
     }
-    class_definitions[index].klass              = jcls;
+    class_definitions[redef_index].klass              = jcls;
+    redef_index++;
   }
-  VM_RedefineClasses op(class_count, class_definitions, jvmti_class_load_kind_retransform);
-  VMThread::execute(&op);
-  return (op.check_error());
+  if (redef_index > 0) {
+    VM_RedefineClasses op(redef_index, class_definitions, jvmti_class_load_kind_retransform);
+    VMThread::execute(&op);
+    return (op.check_error());
+  } else {
+    return JVMTI_ERROR_NONE;
+  }
 } /* end RetransformClasses */
 
 
