@@ -132,8 +132,18 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return UNSAFE.getInt(javaClass, (long) config().klassOffset) & 0xFFFFFFFFL;
     }
 
+    @Override
     public long getMetaspacePointer() {
         return getMetaspaceKlass();
+    }
+
+    /**
+     * The Klass* for this object is kept alive by the direct reference to {@link #javaClass} so no
+     * extra work is required.
+     */
+    @Override
+    public boolean isRegistered() {
+        return true;
     }
 
     @Override
