@@ -2441,7 +2441,7 @@ bool Arguments::check_vm_args_consistency() {
 #define JVMCI_CHECK3(type, name, doc)        JVMCI_CHECK_FLAG(name)
 #define JVMCI_CHECK4(type, name, value, doc) JVMCI_CHECK_FLAG(name)
 #define JVMCI_CHECK_FLAG(FLAG)                         \
-    if (!FLAG_IS_DEFAULT(FLAG)) {                                   \
+    if (strcmp(#FLAG, "EnableJVMCI") && !FLAG_IS_DEFAULT(FLAG)) {                                   \
       jio_fprintf(defaultStream::error_stream(), "EnableJVMCI must be enabled to use VM option '%s'\n", #FLAG); \
       status = false; \
     }
