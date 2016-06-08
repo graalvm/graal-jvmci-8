@@ -196,9 +196,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
      */
     @SuppressWarnings("unused")
     private static HotSpotConstantPool fromMetaspace(long metaspaceConstantPool) {
-        HotSpotConstantPool cp = new HotSpotConstantPool(metaspaceConstantPool);
-        runtime().metaAccessContext.add(cp);
-        return cp;
+        return new HotSpotConstantPool(metaspaceConstantPool);
     }
 
     private HotSpotConstantPool(long metaspaceConstantPool) {
