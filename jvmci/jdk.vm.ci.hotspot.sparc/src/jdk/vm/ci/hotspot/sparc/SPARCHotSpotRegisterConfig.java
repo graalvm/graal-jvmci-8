@@ -160,10 +160,9 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     private final Register[] callerSaveRegisters;
 
     /**
-     * Registers saved by the callee. This lists all L and I registers which are saved in the
-     * register window.
+     * This lists all L and I registers which are saved in the register window.
      */
-    private final Register[] calleeSaveRegisters = {
+    private final Register[] windowSaveRegisters = {
                     l0, l1, l2, l3, l4, l5, l6, l7,
                     i0, i1, i2, i3, i4, i5, i6, i7};
     // @formatter:on
@@ -202,7 +201,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         this.allocatable = allocatable.clone();
         HashSet<Register> callerSaveSet = new HashSet<>();
         Collections.addAll(callerSaveSet, target.arch.getAvailableValueRegisters());
-        for (Register cs : calleeSaveRegisters) {
+        for (Register cs : windowSaveRegisters) {
             callerSaveSet.remove(cs);
         }
         this.callerSaveRegisters = callerSaveSet.toArray(new Register[callerSaveSet.size()]);
@@ -214,8 +213,9 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         return callerSaveRegisters;
     }
 
+    @Override
     public Register[] getCalleeSaveRegisters() {
-        return calleeSaveRegisters;
+        return null;
     }
 
     @Override
