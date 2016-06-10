@@ -51,6 +51,7 @@ int JVMCIRuntime::_trivial_prefixes_count = 0;
 char** JVMCIRuntime::_trivial_prefixes = NULL;
 JVMCIRuntime::CompLevelAdjustment JVMCIRuntime::_comp_level_adjustment = JVMCIRuntime::none;
 bool JVMCIRuntime::_shutdown_called = false;
+int JVMCIRuntime::max_oop_map_stack_offset = (OopMapValue::register_mask - VMRegImpl::stack2reg(0)->value()) * VMRegImpl::stack_slot_size;
 
 BasicType JVMCIRuntime::kindToBasicType(jchar ch, TRAPS) {
   switch(ch) {
@@ -645,6 +646,10 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
     assert(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
            "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
 #endif
+
+    int max_oop_map_stack_index = max_oop_map_stack_offset / VMRegImpl::stack_slot_size;
+    assert(OopMapValue::legal_vm_reg_name(VMRegImpl::stack2reg(max_oop_map_stack_index)), "should be valid");
+    assert(!OopMapValue::legal_vm_reg_name(VMRegImpl::stack2reg(max_oop_map_stack_index + 1)), "should be invalid");
 
     Handle result = callStatic("jdk/vm/ci/hotspot/HotSpotJVMCIRuntime",
                                "runtime",

@@ -78,6 +78,8 @@ class JVMCIRuntime: public AllStatic {
      by_full_signature = 2 // adjust based on declaring class, name and signature of method
    };
 
+  static int max_oop_map_stack_offset;
+
  private:
   static jobject _HotSpotJVMCIRuntime_instance;
   static bool _HotSpotJVMCIRuntime_initialized;

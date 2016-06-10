@@ -73,8 +73,6 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
 
     private final Register[] allocatable;
 
-    private final int maxFrameSize;
-
     /**
      * The caller saved registers always include all parameter registers.
      */
@@ -83,10 +81,6 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
     private final boolean allAllocatableAreCallerSaved;
 
     private final RegisterAttributes[] attributesMap;
-
-    public int getMaximumFrameSize() {
-        return maxFrameSize;
-    }
 
     @Override
     public Register[] getAllocatableRegisters() {
@@ -153,7 +147,6 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
 
     public AMD64HotSpotRegisterConfig(TargetDescription target, HotSpotVMConfig config, Register[] allocatable) {
         this.target = target;
-        this.maxFrameSize = config.maxFrameSize;
 
         if (config.windowsOs) {
             javaGeneralParameterRegisters = new Register[]{rdx, r8, r9, rdi, rsi, rcx};
