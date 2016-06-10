@@ -81,7 +81,7 @@ public class HotSpotVMConfig {
         return getClass().getSimpleName();
     }
 
-    public HotSpotVMConfig(CompilerToVM compilerToVm) {
+    HotSpotVMConfig(CompilerToVM compilerToVm) {
         compilerToVm.initializeConfiguration(this);
         assert verifyInitialization();
 
