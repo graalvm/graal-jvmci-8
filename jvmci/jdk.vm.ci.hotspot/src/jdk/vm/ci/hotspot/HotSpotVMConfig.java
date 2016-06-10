@@ -71,11 +71,6 @@ public class HotSpotVMConfig {
         return runtime().getConfig();
     }
 
-    /**
-     * Maximum allowed size of allocated area for a frame.
-     */
-    public final int maxFrameSize = 16 * 1024;
-
     @Override
     public String toString() {
         return getClass().getSimpleName();
@@ -1292,6 +1287,12 @@ public class HotSpotVMConfig {
     @HotSpotVMConstant(name = "JVMCIRuntime::none") @Stable public int compLevelAdjustmentNone;
     @HotSpotVMConstant(name = "JVMCIRuntime::by_holder") @Stable public int compLevelAdjustmentByHolder;
     @HotSpotVMConstant(name = "JVMCIRuntime::by_full_signature") @Stable public int compLevelAdjustmentByFullSignature;
+
+    /**
+     * This is the largest stack offset encodeable in an OopMapValue. Offsets larger than this will
+     * throw an exception during code installation.
+     */
+    @HotSpotVMValue(expression = "JVMCIRuntime::max_oop_map_stack_offset") @Stable public int maxOopMapStackOffset;
 
     @HotSpotVMType(name = "BasicLock", get = HotSpotVMType.Type.SIZE) @Stable public int basicLockSize;
     @HotSpotVMField(name = "BasicLock::_displaced_header", type = "markOop", get = HotSpotVMField.Type.OFFSET) @Stable public int basicLockDisplacedHeaderOffset;

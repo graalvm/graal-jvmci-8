@@ -81,8 +81,6 @@ public class AArch64HotSpotRegisterConfig implements RegisterConfig {
 
     private final Register[] allocatable;
 
-    private final int maxFrameSize;
-
     /**
      * The caller saved registers always include all parameter registers.
      */
@@ -91,10 +89,6 @@ public class AArch64HotSpotRegisterConfig implements RegisterConfig {
     private final boolean allAllocatableAreCallerSaved;
 
     private final RegisterAttributes[] attributesMap;
-
-    public int getMaximumFrameSize() {
-        return maxFrameSize;
-    }
 
     @Override
     public Register[] getAllocatableRegisters() {
@@ -161,13 +155,12 @@ public class AArch64HotSpotRegisterConfig implements RegisterConfig {
     }
 
     public AArch64HotSpotRegisterConfig(TargetDescription target, HotSpotVMConfig config) {
-        this(target, config, initAllocatable(target.arch, config.useCompressedOops));
+        this(target, initAllocatable(target.arch, config.useCompressedOops));
         assert callerSaved.length >= allocatable.length;
     }
 
-    public AArch64HotSpotRegisterConfig(TargetDescription target, HotSpotVMConfig config, Register[] allocatable) {
+    public AArch64HotSpotRegisterConfig(TargetDescription target, Register[] allocatable) {
         this.target = target;
-        this.maxFrameSize = config.maxFrameSize;
 
         this.allocatable = allocatable.clone();
         Set<Register> callerSaveSet = new HashSet<>();
