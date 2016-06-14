@@ -3003,6 +3003,23 @@ typedef TwoOopHashtable<Symbol*, mtClass>     SymbolTwoOopHashtable;
 # define GENERATE_C2_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY(name, value)
 #endif /* COMPILER1 */
 
+//--------------------------------------------------------------------------------
+// VMAddressEntry macros
+//
+
+#define GENERATE_VM_ADDRESS_ENTRY(name) \
+  { QUOTE(name), (void*) (name) },
+
+#define GENERATE_PREPROCESSOR_VM_ADDRESS_ENTRY(name, value) \
+  { name, (void*) (value) },
+
+#define GENERATE_VM_FUNCTION_ENTRY(name) \
+  { QUOTE(name), CAST_FROM_FN_PTR(void*, &(name)) },
+
+// This macro generates the sentinel value indicating the end of the list
+#define GENERATE_VM_ADDRESS_LAST_ENTRY() \
+ { NULL, NULL }
+
 //
 // Instantiation of VMStructEntries, VMTypeEntries and VMIntConstantEntries
 //
@@ -3179,6 +3196,20 @@ VMLongConstantEntry VMStructs::localHotSpotVMLongConstants[] = {
                            GENERATE_C2_PREPROCESSOR_VM_LONG_CONSTANT_ENTRY)
 
   GENERATE_VM_LONG_CONSTANT_LAST_ENTRY()
+};
+
+VMAddressEntry VMStructs::localHotSpotVMAddresses[] = {
+#if INCLUDE_JVMCI
+    VM_ADDRESSES_JVMCI(GENERATE_VM_ADDRESS_ENTRY,
+                 GENERATE_PREPROCESSOR_VM_ADDRESS_ENTRY,
+                 GENERATE_VM_FUNCTION_ENTRY)
+
+    VM_ADDRESSES_JVMCI_OS(GENERATE_VM_ADDRESS_ENTRY,
+                 GENERATE_PREPROCESSOR_VM_ADDRESS_ENTRY,
+                 GENERATE_VM_FUNCTION_ENTRY)
+#endif
+
+  GENERATE_VM_ADDRESS_LAST_ENTRY()
 };
 
 // This is used both to check the types of referenced fields and, in
@@ -3500,10 +3531,25 @@ void VMStructs::test() {
 }
 #endif
 
-
 #if INCLUDE_JVMCI
-// Emit initialization code for HotSpotVMConfig.  It's placed here so
-// it can take advantage of the relaxed access checking enjoyed by
-// VMStructs.
-#include "HotSpotVMConfig.inline.hpp"
+int VMStructs::localHotSpotVMStructs_count() {
+  // Ignore sentinel entry at the end
+  return (sizeof(localHotSpotVMStructs) / sizeof(VMStructEntry)) - 1;
+}
+int VMStructs::localHotSpotVMTypes_count() {
+  // Ignore sentinel entry at the end
+  return (sizeof(localHotSpotVMTypes) / sizeof(VMTypeEntry)) - 1;
+}
+int VMStructs::localHotSpotVMIntConstants_count() {
+  // Ignore sentinel entry at the end
+  return (sizeof(localHotSpotVMIntConstants) / sizeof(VMIntConstantEntry)) - 1;
+}
+int VMStructs::localHotSpotVMLongConstants_count() {
+  // Ignore sentinel entry at the end
+  return (sizeof(localHotSpotVMLongConstants) / sizeof(VMLongConstantEntry)) - 1;
+}
+int VMStructs::localHotSpotVMAddresses_count() {
+  // Ignore sentinel entry at the end
+  return (sizeof(localHotSpotVMAddresses) / sizeof(VMAddressEntry)) - 1;
+}
 #endif

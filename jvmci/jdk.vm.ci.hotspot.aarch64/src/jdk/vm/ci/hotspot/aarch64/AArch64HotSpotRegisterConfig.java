@@ -67,7 +67,6 @@ import jdk.vm.ci.code.TargetDescription;
 import jdk.vm.ci.code.ValueKindFactory;
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotCallingConventionType;
-import jdk.vm.ci.hotspot.HotSpotVMConfig;
 import jdk.vm.ci.meta.AllocatableValue;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
@@ -154,8 +153,8 @@ public class AArch64HotSpotRegisterConfig implements RegisterConfig {
         return registers;
     }
 
-    public AArch64HotSpotRegisterConfig(TargetDescription target, HotSpotVMConfig config) {
-        this(target, initAllocatable(target.arch, config.useCompressedOops));
+    public AArch64HotSpotRegisterConfig(TargetDescription target, boolean useCompressedOops) {
+        this(target, initAllocatable(target.arch, useCompressedOops));
         assert callerSaved.length >= allocatable.length;
     }
 

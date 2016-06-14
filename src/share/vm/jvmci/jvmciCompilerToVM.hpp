@@ -29,7 +29,59 @@
 #include "jvmci/jvmciJavaClasses.hpp"
 
 class CompilerToVM {
-public:
+ public:
+   class Data {
+     friend class VMStructs;
+
+    private:
+     static int Klass_vtable_start_offset;
+     static int Klass_vtable_length_offset;
+
+     static int Method_extra_stack_entries;
+
+     static address SharedRuntime_ic_miss_stub;
+     static address SharedRuntime_handle_wrong_method_stub;
+     static address SharedRuntime_deopt_blob_unpack;
+     static address SharedRuntime_deopt_blob_uncommon_trap;
+
+     static size_t ThreadLocalAllocBuffer_alignment_reserve;
+
+     static CollectedHeap* Universe_collectedHeap;
+     static int Universe_base_vtable_size;
+     static address Universe_narrow_oop_base;
+     static int Universe_narrow_oop_shift;
+     static address Universe_narrow_klass_base;
+     static int Universe_narrow_klass_shift;
+     static uintptr_t Universe_verify_oop_mask;
+     static uintptr_t Universe_verify_oop_bits;
+     static void* Universe_non_oop_bits;
+
+     static bool _supports_inline_contig_alloc;
+     static HeapWord** _heap_end_addr;
+     static HeapWord** _heap_top_addr;
+
+     static jbyte* cardtable_start_address;
+     static int cardtable_shift;
+     static int g1_young_card;
+     static int dirty_card;
+
+     static int vm_page_size;
+
+     static address CodeCache_low_bound;
+     static address CodeCache_high_bound;
+
+     static address dsin;
+     static address dcos;
+     static address dtan;
+     static address dexp;
+     static address dlog;
+     static address dlog10;
+     static address dpow;
+
+    public:
+     static void initialize(TRAPS);
+   };
+
   /**
    * Tag bits used by lookupKlassInPool to distinguish the types in Java.
    */

@@ -36,6 +36,8 @@ import sun.misc.Unsafe;
  */
 public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
 
+    HotSpotVMConfigStore getConfigStore();
+
     HotSpotVMConfig getConfig();
 
     CompilerToVM getCompilerToVM();

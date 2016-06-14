@@ -81,7 +81,6 @@ import jdk.vm.ci.code.TargetDescription;
 import jdk.vm.ci.code.ValueKindFactory;
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotCallingConventionType;
-import jdk.vm.ci.hotspot.HotSpotVMConfig;
 import jdk.vm.ci.meta.AllocatableValue;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
@@ -134,7 +133,8 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     private final Register[] callerSaveRegisters;
 
     /**
-     * This lists all L and I registers which are saved in the register window.
+     * Registers saved by the callee. This lists all L and I registers which are saved in the
+     * register window.
      */
     private final Register[] windowSaveRegisters = {
                     l0, l1, l2, l3, l4, l5, l6, l7,
@@ -166,14 +166,14 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         return registers;
     }
 
-    public SPARCHotSpotRegisterConfig(TargetDescription target, HotSpotVMConfig config) {
-        this(target, initAllocatable(target.arch, config.useCompressedOops), config);
+    public SPARCHotSpotRegisterConfig(TargetDescription target, boolean useCompressedOops, boolean linuxOs) {
+        this(target, initAllocatable(target.arch, useCompressedOops), linuxOs);
     }
 
-    public SPARCHotSpotRegisterConfig(TargetDescription target, Register[] allocatable, HotSpotVMConfig config) {
+    public SPARCHotSpotRegisterConfig(TargetDescription target, Register[] allocatable, boolean linuxOs) {
         this.target = target;
         this.allocatable = allocatable.clone();
-        this.addNativeRegisterArgumentSlots = config.linuxOs;
+        this.addNativeRegisterArgumentSlots = linuxOs;
         HashSet<Register> callerSaveSet = new HashSet<>();
         Collections.addAll(callerSaveSet, target.arch.getAvailableValueRegisters());
         for (Register cs : windowSaveRegisters) {
@@ -188,9 +188,8 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         return callerSaveRegisters;
     }
 
-    @Override
     public Register[] getCalleeSaveRegisters() {
-        return null;
+        return windowSaveRegisters;
     }
 
     @Override

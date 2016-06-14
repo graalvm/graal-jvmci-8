@@ -35,7 +35,6 @@ import jdk.vm.ci.code.InvalidInstalledCodeException;
 import jdk.vm.ci.code.TargetDescription;
 import jdk.vm.ci.common.InitTimer;
 import jdk.vm.ci.common.JVMCIError;
-import jdk.vm.ci.hotspotvmconfig.HotSpotVMField;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
@@ -321,9 +320,22 @@ final class CompilerToVM {
     native void resetCompilationStatistics();
 
     /**
-     * Initializes the fields of {@code config}.
+     * Reads the database of VM info. The return value encodes the info in a nested object array
+     * that is described by the pseudo Java object {@code info} below:
+     *
+     * <pre>
+     *     info = [
+     *         VMField[] vmFields,
+     *         [String name, Long size, ...] vmTypeSizes,
+     *         [String name, Long value, ...] vmConstants,
+     *         [String name, Long value, ...] vmAddresses,
+     *         VMFlag[] vmFlags
+     *     ]
+     * </pre>
+     *
+     * @return VM info as encoded above
      */
-    native void initializeConfiguration(HotSpotVMConfig config);
+    native Object[] readConfiguration();
 
     /**
      * Resolves the implementation of {@code method} for virtual dispatches on objects of dynamic
@@ -421,10 +433,9 @@ final class CompilerToVM {
     native long getLocalVariableTableStart(HotSpotResolvedJavaMethodImpl method);
 
     /**
-     * Reads an object pointer within a VM data structure. That is, any {@link HotSpotVMField} whose
-     * {@link HotSpotVMField#type() type} is {@code "oop"} (e.g.,
-     * {@code ArrayKlass::_component_mirror}, {@code Klass::_java_mirror},
-     * {@code JavaThread::_threadObj}).
+     * Reads an object pointer within a VM data structure. That is, any {@link VMField} whose
+     * {@link VMField#type type} is {@code "oop"} (e.g., {@code ArrayKlass::_component_mirror},
+     * {@code Klass::_java_mirror}, {@code JavaThread::_threadObj}).
      *
      * Note that {@link Unsafe#getObject(Object, long)} cannot be used for this since it does a
      * {@code narrowOop} read if the VM is using compressed oops whereas oops within VM data

@@ -153,33 +153,12 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "jdk.vm.ci.hotspotvmconfig",
         "jdk.vm.ci.common",
         "jdk.vm.ci.runtime",
-      ],
-      "annotationProcessors" : [
-        "JVMCI_HOTSPOTVMCONFIG_PROCESSOR",
       ],
       "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",
-    },
-
-    "jdk.vm.ci.hotspotvmconfig" : {
-      "subDir" : "jvmci",
-      "sourceDirs" : ["src"],
-      "checkstyle" : "jdk.vm.ci.services",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,HotSpot",
-    },
-
-    "jdk.vm.ci.hotspotvmconfig.processor" : {
-      "subDir" : "jvmci",
-      "sourceDirs" : ["src"],
-      "dependencies" : ["jdk.vm.ci.hotspotvmconfig", "jdk.vm.ci.common"],
-      "checkstyle" : "jdk.vm.ci.services",
-      "javaCompliance" : "1.8",
-      "workingSets" : "JVMCI,HotSpot,Codegen",
     },
 
     "jdk.vm.ci.hotspot.aarch64" : {
@@ -322,13 +301,6 @@ suite = {
       ],
     },
 
-    "JVMCI_HOTSPOTVMCONFIG" : {
-      "subDir" : "jvmci",
-      "dependencies" : [
-        "jdk.vm.ci.hotspotvmconfig",
-      ],
-    },
-
     "JVMCI_HOTSPOT" : {
       "subDir" : "jvmci",
       "dependencies" : [
@@ -338,7 +310,6 @@ suite = {
         "jdk.vm.ci.hotspot.jfr",
       ],
       "distDependencies" : [
-        "JVMCI_HOTSPOTVMCONFIG",
         "JVMCI_SERVICES",
         "JVMCI_API",
       ],
@@ -353,15 +324,6 @@ suite = {
         "JVMCI_API",
       ],
       "exclude" : ["mx:JUNIT"],
-    },
-
-    "JVMCI_HOTSPOTVMCONFIG_PROCESSOR" : {
-      "subDir" : "jvmci",
-      "dependencies" : ["jdk.vm.ci.hotspotvmconfig.processor"],
-      "distDependencies" : [
-        "JVMCI_API",
-        "JVMCI_HOTSPOTVMCONFIG",
-      ],
     },
   },
 }

@@ -42,6 +42,7 @@
 #include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciCodeInstaller.hpp"
 #include "gc_implementation/g1/heapRegion.hpp"
+#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #include "runtime/javaCalls.hpp"
 #include "runtime/deoptimization.hpp"
 #include "runtime/vframe.hpp"
@@ -82,8 +83,255 @@ oop CompilerToVM::get_jvmci_type(KlassHandle klass, TRAPS) {
   return NULL;
 }
 
-C2V_VMENTRY(void, initializeConfiguration, (JNIEnv *, jobject, jobject config))
-  VMStructs::initHotSpotVMConfig(JNIHandles::resolve(config));
+int CompilerToVM::Data::Klass_vtable_start_offset;
+int CompilerToVM::Data::Klass_vtable_length_offset;
+
+int CompilerToVM::Data::Method_extra_stack_entries;
+
+address CompilerToVM::Data::SharedRuntime_ic_miss_stub;
+address CompilerToVM::Data::SharedRuntime_handle_wrong_method_stub;
+address CompilerToVM::Data::SharedRuntime_deopt_blob_unpack;
+address CompilerToVM::Data::SharedRuntime_deopt_blob_uncommon_trap;
+
+size_t CompilerToVM::Data::ThreadLocalAllocBuffer_alignment_reserve;
+
+CollectedHeap* CompilerToVM::Data::Universe_collectedHeap;
+int CompilerToVM::Data::Universe_base_vtable_size;
+address CompilerToVM::Data::Universe_narrow_oop_base;
+int CompilerToVM::Data::Universe_narrow_oop_shift;
+address CompilerToVM::Data::Universe_narrow_klass_base;
+int CompilerToVM::Data::Universe_narrow_klass_shift;
+void* CompilerToVM::Data::Universe_non_oop_bits;
+uintptr_t CompilerToVM::Data::Universe_verify_oop_mask;
+uintptr_t CompilerToVM::Data::Universe_verify_oop_bits;
+
+bool       CompilerToVM::Data::_supports_inline_contig_alloc;
+HeapWord** CompilerToVM::Data::_heap_end_addr;
+HeapWord** CompilerToVM::Data::_heap_top_addr;
+
+jbyte* CompilerToVM::Data::cardtable_start_address;
+int CompilerToVM::Data::cardtable_shift;
+int CompilerToVM::Data::g1_young_card;
+int CompilerToVM::Data::dirty_card;
+
+int CompilerToVM::Data::vm_page_size;
+
+address CompilerToVM::Data::CodeCache_low_bound;
+address CompilerToVM::Data::CodeCache_high_bound;
+
+address CompilerToVM::Data::dsin;
+address CompilerToVM::Data::dcos;
+address CompilerToVM::Data::dtan;
+address CompilerToVM::Data::dexp;
+address CompilerToVM::Data::dlog;
+address CompilerToVM::Data::dlog10;
+address CompilerToVM::Data::dpow;
+
+void CompilerToVM::Data::initialize(TRAPS) {
+  Klass_vtable_start_offset = InstanceKlass::vtable_start_offset() * HeapWordSize;
+  Klass_vtable_length_offset = InstanceKlass::vtable_length_offset() * HeapWordSize;
+
+  Method_extra_stack_entries = Method::extra_stack_entries();
+
+  SharedRuntime_ic_miss_stub = SharedRuntime::get_ic_miss_stub();
+  SharedRuntime_handle_wrong_method_stub = SharedRuntime::get_handle_wrong_method_stub();
+  SharedRuntime_deopt_blob_unpack = SharedRuntime::deopt_blob()->unpack();
+  SharedRuntime_deopt_blob_uncommon_trap = SharedRuntime::deopt_blob()->uncommon_trap();
+
+  ThreadLocalAllocBuffer_alignment_reserve = ThreadLocalAllocBuffer::alignment_reserve();
+
+  Universe_collectedHeap = Universe::heap();
+  Universe_base_vtable_size = Universe::base_vtable_size();
+  Universe_narrow_oop_base = Universe::narrow_oop_base();
+  Universe_narrow_oop_shift = Universe::narrow_oop_shift();
+  Universe_narrow_klass_base = Universe::narrow_klass_base();
+  Universe_narrow_klass_shift = Universe::narrow_klass_shift();
+  Universe_non_oop_bits = Universe::non_oop_word();
+  Universe_verify_oop_mask = Universe::verify_oop_mask();
+  Universe_verify_oop_bits = Universe::verify_oop_bits();
+
+  _supports_inline_contig_alloc = Universe::heap()->supports_inline_contig_alloc();
+  _heap_end_addr = _supports_inline_contig_alloc ? Universe::heap()->end_addr() : (HeapWord**) -1;
+  _heap_top_addr = _supports_inline_contig_alloc ? Universe::heap()->top_addr() : (HeapWord**) -1;
+
+  g1_young_card = G1SATBCardTableModRefBS::g1_young_card_val();
+  dirty_card = CardTableModRefBS::dirty_card_val();
+
+  CodeCache_low_bound = CodeCache::low_bound();
+  CodeCache_high_bound = CodeCache::high_bound();
+
+  BarrierSet* bs = Universe::heap()->barrier_set();
+  switch (bs->kind()) {
+  case BarrierSet::CardTableModRef:
+  case BarrierSet::CardTableExtension:
+  case BarrierSet::G1SATBCT:
+  case BarrierSet::G1SATBCTLogging: {
+    jbyte* base = ((CardTableModRefBS*) bs)->byte_map_base;
+    assert(base != 0, "unexpected byte_map_base");
+    cardtable_start_address = base;
+    cardtable_shift = CardTableModRefBS::card_shift;
+    break;
+  }
+  case BarrierSet::ModRef:
+    cardtable_start_address = 0;
+    cardtable_shift = 0;
+    // No post barriers
+    break;
+  default:
+    JVMCI_ERROR("Unsupported BarrierSet kind %d", bs->kind());
+    break;
+  }
+
+  vm_page_size = os::vm_page_size();
+
+#define SET_TRIGFUNC(name)                                      \
+  name = CAST_FROM_FN_PTR(address, SharedRuntime::name);      \
+
+  SET_TRIGFUNC(dsin);
+  SET_TRIGFUNC(dcos);
+  SET_TRIGFUNC(dtan);
+  SET_TRIGFUNC(dexp);
+  SET_TRIGFUNC(dlog10);
+  SET_TRIGFUNC(dlog);
+  SET_TRIGFUNC(dpow);
+
+#undef SET_TRIGFUNC
+}
+
+C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
+#define BOXED_LONG(name, value) oop name; do { jvalue p; p.j = (jlong) (value); name = java_lang_boxing_object::create(T_LONG, &p, CHECK_NULL);} while(0)
+#define BOXED_DOUBLE(name, value) oop name; do { jvalue p; p.d = (jdouble) (value); name = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL);} while(0)
+  ResourceMark rm;
+  HandleMark hm;
+
+  CompilerToVM::Data::initialize(CHECK_NULL);
+
+  VMField::klass()->initialize(thread);
+  VMFlag::klass()->initialize(thread);
+
+  int len = VMStructs::localHotSpotVMStructs_count();
+  objArrayHandle vmFields = oopFactory::new_objArray(VMField::klass(), len, CHECK_NULL);
+  for (int i = 0; i < len ; i++) {
+    VMStructEntry vmField = VMStructs::localHotSpotVMStructs[i];
+    instanceHandle vmFieldObj = InstanceKlass::cast(VMField::klass())->allocate_instance_handle(CHECK_NULL);
+    int name_buf_len = strlen(vmField.typeName) + strlen(vmField.fieldName) + 2 /* "::" */;
+    char* name_buf = NEW_RESOURCE_ARRAY(char, name_buf_len + 1);
+    sprintf(name_buf, "%s::%s", vmField.typeName, vmField.fieldName);
+    Handle name = java_lang_String::create_from_str(name_buf, CHECK_NULL);
+    Handle type = java_lang_String::create_from_str(vmField.typeString, CHECK_NULL);
+    VMField::set_name(vmFieldObj, name());
+    VMField::set_type(vmFieldObj, type());
+    VMField::set_offset(vmFieldObj, vmField.offset);
+    VMField::set_address(vmFieldObj, (jlong) vmField.address);
+    if (vmField.isStatic && vmField.typeString != NULL) {
+      if (strcmp(vmField.typeString, "bool") == 0) {
+        BOXED_LONG(value, *(jbyte*) vmField.address);
+        VMField::set_value(vmFieldObj, value);
+      } else if (strcmp(vmField.typeString, "int") == 0 ||
+                 strcmp(vmField.typeString, "jint") == 0) {
+        BOXED_LONG(value, *(jint*) vmField.address);
+        VMField::set_value(vmFieldObj, value);
+      } else if (strcmp(vmField.typeString, "uint64_t") == 0) {
+        BOXED_LONG(value, *(uint64_t*) vmField.address);
+        VMField::set_value(vmFieldObj, value);
+      } else if (strcmp(vmField.typeString, "address") == 0 ||
+                 strcmp(vmField.typeString, "intptr_t") == 0 ||
+                 strcmp(vmField.typeString, "uintptr_t") == 0 ||
+                 strcmp(vmField.typeString, "size_t") == 0 ||
+                 // All foo* types are addresses.
+                 vmField.typeString[strlen(vmField.typeString) - 1] == '*') {
+        BOXED_LONG(value, *((address*) vmField.address));
+        VMField::set_value(vmFieldObj, value);
+      }
+    }
+    vmFields->obj_at_put(i, vmFieldObj());
+  }
+
+  len = VMStructs::localHotSpotVMTypes_count();
+  objArrayHandle vmTypes = oopFactory::new_objArray(SystemDictionary::Object_klass(), len * 2, CHECK_NULL);
+  for (int i = 0; i < len ; i++) {
+    VMTypeEntry vmType = VMStructs::localHotSpotVMTypes[i];
+    Handle name = java_lang_String::create_from_str(vmType.typeName, CHECK_NULL);
+    BOXED_LONG(size, vmType.size);
+    vmTypes->obj_at_put(i * 2, name());
+    vmTypes->obj_at_put(i * 2 + 1, size);
+  }
+
+  int ints_len = VMStructs::localHotSpotVMIntConstants_count();
+  int longs_len = VMStructs::localHotSpotVMLongConstants_count();
+  len = ints_len + longs_len;
+  objArrayHandle vmConstants = oopFactory::new_objArray(SystemDictionary::Object_klass(), len * 2, CHECK_NULL);
+  int insert = 0;
+  for (int i = 0; i < ints_len ; i++) {
+    VMIntConstantEntry c = VMStructs::localHotSpotVMIntConstants[i];
+    Handle name = java_lang_String::create_from_str(c.name, CHECK_NULL);
+    BOXED_LONG(value, c.value);
+    vmConstants->obj_at_put(insert++, name());
+    vmConstants->obj_at_put(insert++, value);
+  }
+  for (int i = 0; i < longs_len ; i++) {
+    VMLongConstantEntry c = VMStructs::localHotSpotVMLongConstants[i];
+    Handle name = java_lang_String::create_from_str(c.name, CHECK_NULL);
+    BOXED_LONG(value, c.value);
+    vmConstants->obj_at_put(insert++, name());
+    vmConstants->obj_at_put(insert++, value);
+  }
+  assert(insert == len * 2, "must be");
+
+  len = VMStructs::localHotSpotVMAddresses_count();
+  objArrayHandle vmAddresses = oopFactory::new_objArray(SystemDictionary::Object_klass(), len * 2, CHECK_NULL);
+  for (int i = 0; i < len ; i++) {
+    VMAddressEntry a = VMStructs::localHotSpotVMAddresses[i];
+    Handle name = java_lang_String::create_from_str(a.name, CHECK_NULL);
+    BOXED_LONG(value, a.value);
+    vmAddresses->obj_at_put(i * 2, name());
+    vmAddresses->obj_at_put(i * 2 + 1, value);
+  }
+
+  // The last entry is the null entry.
+  len = Flag::numFlags - 1;
+  objArrayHandle vmFlags = oopFactory::new_objArray(VMFlag::klass(), len, CHECK_NULL);
+  for (int i = 0; i < len; i++) {
+    Flag* flag = &Flag::flags[i];
+    instanceHandle vmFlagObj = InstanceKlass::cast(VMFlag::klass())->allocate_instance_handle(CHECK_NULL);
+    Handle name = java_lang_String::create_from_str(flag->_name, CHECK_NULL);
+    Handle type = java_lang_String::create_from_str(flag->_type, CHECK_NULL);
+    VMFlag::set_name(vmFlagObj, name());
+    VMFlag::set_type(vmFlagObj, type());
+    if (flag->is_bool()) {
+      BOXED_LONG(value, flag->get_bool());
+      VMFlag::set_value(vmFlagObj, value);
+    } else if (flag->is_ccstr()) {
+      Handle value = java_lang_String::create_from_str(flag->get_ccstr(), CHECK_NULL);
+      VMFlag::set_value(vmFlagObj, value());
+    } else if (flag->is_intx()) {
+      BOXED_LONG(value, flag->get_intx());
+      VMFlag::set_value(vmFlagObj, value);
+    } else if (flag->is_uint64_t()) {
+      BOXED_LONG(value, flag->get_uint64_t());
+      VMFlag::set_value(vmFlagObj, value);
+    } else if (flag->is_uintx()) {
+      BOXED_LONG(value, flag->get_uintx());
+      VMFlag::set_value(vmFlagObj, value);
+    } else if (flag->is_double()) {
+      BOXED_DOUBLE(value, flag->get_double());
+      VMFlag::set_value(vmFlagObj, value);
+    } else {
+      JVMCI_ERROR_NULL("VM flag %s has unsupported type %s", flag->_name, flag->_type);
+    }
+    vmFlags->obj_at_put(i, vmFlagObj());
+  }
+
+  objArrayOop data = oopFactory::new_objArray(SystemDictionary::Object_klass(), 5, CHECK_NULL);
+  data->obj_at_put(0, vmFields());
+  data->obj_at_put(1, vmTypes());
+  data->obj_at_put(2, vmConstants());
+  data->obj_at_put(3, vmAddresses());
+  data->obj_at_put(4, vmFlags());
+
+  return (jobjectArray) JNIHandles::make_local(THREAD, data);
+#undef BOXED_LONG
+#undef BOXED_DOUBLE
 C2V_END
 
 C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jobject jvmci_method))
@@ -1178,7 +1426,6 @@ C2V_END
 #define HS_RESOLVED_KLASS     "Ljdk/vm/ci/hotspot/HotSpotResolvedObjectTypeImpl;"
 #define HS_CONSTANT_POOL      "Ljdk/vm/ci/hotspot/HotSpotConstantPool;"
 #define HS_COMPILED_CODE      "Ljdk/vm/ci/hotspot/HotSpotCompiledCode;"
-#define HS_CONFIG             "Ljdk/vm/ci/hotspot/HotSpotVMConfig;"
 #define HS_STACK_FRAME_REF    "Ljdk/vm/ci/hotspot/HotSpotStackFrameReference;"
 #define HS_SPECULATION_LOG    "Ljdk/vm/ci/hotspot/HotSpotSpeculationLog;"
 #define METASPACE_METHOD_DATA "J"
@@ -1218,7 +1465,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getResolvedJavaMethod",                        CC"(Ljava/lang/Object;J)"HS_RESOLVED_METHOD,                                      FN_PTR(getResolvedJavaMethod)},
   {CC"getConstantPool",                              CC"(Ljava/lang/Object;J)"HS_CONSTANT_POOL,                                        FN_PTR(getConstantPool)},
   {CC"getResolvedJavaType",                          CC"(Ljava/lang/Object;JZ)"HS_RESOLVED_KLASS,                                      FN_PTR(getResolvedJavaType)},
-  {CC"initializeConfiguration",                      CC"("HS_CONFIG")V",                                                               FN_PTR(initializeConfiguration)},
+  {CC"readConfiguration",                            CC"()[Ljava/lang/Object;",                                                        FN_PTR(readConfiguration)},
   {CC"installCode",                                  CC"("TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE HS_SPECULATION_LOG")I",   FN_PTR(installCode)},
   {CC"resetCompilationStatistics",                   CC"()V",                                                                          FN_PTR(resetCompilationStatistics)},
   {CC"disassembleCodeBlob",                          CC"("INSTALLED_CODE")"STRING,                                                     FN_PTR(disassembleCodeBlob)},

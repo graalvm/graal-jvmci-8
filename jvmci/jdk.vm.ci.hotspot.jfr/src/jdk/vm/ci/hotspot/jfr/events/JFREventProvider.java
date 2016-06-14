@@ -22,10 +22,10 @@
  */
 package jdk.vm.ci.hotspot.jfr.events;
 
-import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
-
 import java.net.URISyntaxException;
 
+import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime;
+import jdk.vm.ci.hotspot.HotSpotVMConfigAccess;
 import jdk.vm.ci.hotspot.services.EventProvider;
 
 /**
@@ -46,7 +46,8 @@ public final class JFREventProvider extends EventProvider {
     @SuppressWarnings("unused") private final com.oracle.jrockit.jfr.Producer producer;
 
     public JFREventProvider() {
-        enabled = config().flightRecorder;
+        HotSpotVMConfigAccess config = new HotSpotVMConfigAccess(HotSpotJVMCIRuntime.runtime().getConfigStore());
+        enabled = config.getFlag("FightRecorder", Boolean.class, false);
         com.oracle.jrockit.jfr.Producer p = null;
         if (enabled) {
             try {

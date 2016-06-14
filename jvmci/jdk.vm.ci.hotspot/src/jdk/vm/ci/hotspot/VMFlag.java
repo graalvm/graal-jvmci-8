@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,32 +20,36 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.vm.ci.hotspotvmconfig;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package jdk.vm.ci.hotspot;
 
 /**
- * Refers to a C++ constant in the VM.
+ * Describes a VM flag exposed via {@link HotSpotVMConfigAccess}.
  */
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface HotSpotVMConstant {
+public final class VMFlag {
 
     /**
-     * Returns the name of the constant.
-     *
-     * @return name of constant
+     * The name of the flag.
      */
-    String name();
+    public final String name;
 
     /**
-     * List of architectures where this constant is required. Names are derived from
-     * {@link HotSpotVMConfig#getHostArchitectureName()}. An empty list implies that the constant is
-     * required on all architectures.
+     * The C++ type of the flag.
      */
-    @SuppressWarnings("javadoc")
-    String[] archs() default {};
+    public final String type;
+
+    /**
+     * The flag's value.
+     */
+    public final Object value;
+
+    VMFlag(String name, String type, Object value) {
+        this.name = name;
+        this.type = type;
+        this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("Flag[type=%s, name=%s, value=%s]", type, name, value);
+    }
 }

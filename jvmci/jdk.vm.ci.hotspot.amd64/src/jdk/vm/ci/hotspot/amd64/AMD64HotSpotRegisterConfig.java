@@ -59,7 +59,6 @@ import jdk.vm.ci.code.TargetDescription;
 import jdk.vm.ci.code.ValueKindFactory;
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotCallingConventionType;
-import jdk.vm.ci.hotspot.HotSpotVMConfig;
 import jdk.vm.ci.meta.AllocatableValue;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
@@ -140,15 +139,15 @@ public class AMD64HotSpotRegisterConfig implements RegisterConfig {
         return registers;
     }
 
-    public AMD64HotSpotRegisterConfig(TargetDescription target, HotSpotVMConfig config) {
-        this(target, config, initAllocatable(target.arch, config.useCompressedOops));
+    public AMD64HotSpotRegisterConfig(TargetDescription target, boolean useCompressedOops, boolean windowsOs) {
+        this(target, initAllocatable(target.arch, useCompressedOops), windowsOs);
         assert callerSaved.length >= allocatable.length;
     }
 
-    public AMD64HotSpotRegisterConfig(TargetDescription target, HotSpotVMConfig config, Register[] allocatable) {
+    public AMD64HotSpotRegisterConfig(TargetDescription target, Register[] allocatable, boolean windowsOs) {
         this.target = target;
 
-        if (config.windowsOs) {
+        if (windowsOs) {
             javaGeneralParameterRegisters = new Register[]{rdx, r8, r9, rdi, rsi, rcx};
             nativeGeneralParameterRegisters = new Register[]{rcx, rdx, r8, r9};
             this.needsNativeStackHomeSpace = true;

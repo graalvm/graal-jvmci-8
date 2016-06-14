@@ -497,10 +497,10 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         HotSpotVMConfig config = config();
         if (isInterface() || isArray()) {
             /* Everything has the core vtable of java.lang.Object */
-            return config.baseVtableLength;
+            return config.baseVtableLength();
         }
-        int result = UNSAFE.getInt(getMetaspaceKlass() + config.instanceKlassVtableLengthOffset) / (config.vtableEntrySize / config.heapWordSize);
-        assert result >= config.baseVtableLength : UNSAFE.getInt(getMetaspaceKlass() + config.instanceKlassVtableLengthOffset) + " " + config.vtableEntrySize;
+        int result = UNSAFE.getInt(getMetaspaceKlass() + config.klassVtableLengthOffset) / (config.vtableEntrySize / config.heapWordSize);
+        assert result >= config.baseVtableLength() : UNSAFE.getInt(getMetaspaceKlass() + config.klassVtableLengthOffset) + " " + config.vtableEntrySize;
         return result;
     }
 

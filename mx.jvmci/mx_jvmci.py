@@ -213,7 +213,6 @@ jdkDeployedDists = [
     LibJDKDeployedDist('JVMCI_SERVICES'),
     JvmciJDKDeployedDist('JVMCI_API'),
     JvmciJDKDeployedDist('JVMCI_HOTSPOT'),
-    JvmciJDKDeployedDist('JVMCI_HOTSPOTVMCONFIG'),
     HotSpotVMJDKDeployedDist('JVM_<vmbuild>_<vm>'),
 ]
 
