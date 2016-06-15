@@ -372,19 +372,6 @@ EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/jvmticmlr.h
 EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/jni.h
 EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/$(JDK_INCLUDE_SUBDIR)/jni_md.h
 EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/jmm.h
-EXPORT_LIST += $(EXPORT_JRE_LIB_DIR)/jvmci-services.jar
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-api.jar
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_DIR)/jvmci-hotspot.jar
-
-EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory
-
-ifneq ("$(wildcard $(SHARED_DIR)/services/jdk.vm.ci.hotspot.events.EventProvider)","")
-CONDITIONAL_EXPORT_LIST += $(EXPORT_JRE_LIB_JVMCI_SERVICES_DIR)/jdk.vm.ci.hotspot.events.EventProvider
-endif
-
-# The use of CONDITIONAL_EXPORT_LIST is for the checking
-# done by verify_defs_make in jvmci.make
-EXPORT_LIST += $(CONDITIONAL_EXPORT_LIST)
 
 .PHONY: $(HS_ALT_MAKE)/defs.make
 
