@@ -41,7 +41,7 @@ public class SPARCHotSpotVMConfig extends HotSpotVMConfigAccess {
     public final boolean useCompressedOops = getFlag("UseCompressedOops", Boolean.class);
 
     // CPU capabilities
-    public final long vmVersionFeatures = getFieldValue("Abstract_VM_Version::_features", Long.class, "uint64_t");
+    public final int vmVersionFeatures = getFieldValue("VM_Version::_features", Integer.class, "int");
 
     // SPARC specific values
     public final int sparcVis3Instructions = getConstant("VM_Version::vis3_instructions_m", Integer.class);
