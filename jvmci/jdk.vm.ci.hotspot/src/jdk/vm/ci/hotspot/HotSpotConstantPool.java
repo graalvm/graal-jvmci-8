@@ -589,7 +589,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
     }
 
     @Override
-    public JavaField lookupField(int cpi, int opcode) {
+    public JavaField lookupField(int cpi, ResolvedJavaMethod method, int opcode) {
         final int index = rawIndexToConstantPoolIndex(cpi, opcode);
         final int nameAndTypeIndex = getNameAndTypeRefIndexAt(index);
         final int nameIndex = getNameRefIndexAt(nameAndTypeIndex);
