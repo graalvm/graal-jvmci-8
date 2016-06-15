@@ -150,6 +150,8 @@
   declare_function(SharedRuntime::register_finalizer)                     \
   declare_function(SharedRuntime::exception_handler_for_return_address)   \
   declare_function(SharedRuntime::OSR_migration_end)                      \
+  declare_function(SharedRuntime::frem)                                   \
+  declare_function(SharedRuntime::drem)                                   \
                                                                           \
   declare_function(os::dll_load)                                          \
   declare_function(os::dll_lookup)                                        \
