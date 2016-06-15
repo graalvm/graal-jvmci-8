@@ -36,14 +36,6 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     @SuppressWarnings("try")
     HotSpotVMConfig(HotSpotVMConfigStore store) {
         super(store);
-
-        assert check();
-        assert HotSpotVMConfigVerifier.check();
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName();
     }
 
     /**
@@ -385,10 +377,4 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int arrayDataArrayLenOffset = getConstant("ArrayData::array_len_off_set", Integer.class);
     final int arrayDataArrayStartOffset = getConstant("ArrayData::array_start_off_set", Integer.class);
     final int multiBranchDataPerCaseCellCount = getConstant("MultiBranchData::per_case_cell_count", Integer.class);
-
-    boolean check() {
-        assert (layoutHelperArrayTagObjectValue & (1 << (Integer.SIZE - 1))) != 0 : "object array must have first bit set";
-        assert (layoutHelperArrayTagTypeValue & (1 << (Integer.SIZE - 1))) != 0 : "type array must have first bit set";
-        return true;
-    }
 }

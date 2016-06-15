@@ -26,48 +26,44 @@ import jdk.vm.ci.hotspot.HotSpotVMConfigAccess;
 import jdk.vm.ci.hotspot.HotSpotVMConfigStore;
 
 /**
- * Used to access native configuration details.
- *
- * All non-static, public fields in this class are so that they can be compiled as constants.
+ * Used to access SPARC specific native configuration details.
  */
-public class SPARCHotSpotVMConfig extends HotSpotVMConfigAccess {
+class SPARCHotSpotVMConfig extends HotSpotVMConfigAccess {
 
-    public SPARCHotSpotVMConfig(HotSpotVMConfigStore config) {
+    SPARCHotSpotVMConfig(HotSpotVMConfigStore config) {
         super(config);
     }
 
-    public final boolean linuxOs = System.getProperty("os.name", "").startsWith("Linux");
-
-    public final boolean useCompressedOops = getFlag("UseCompressedOops", Boolean.class);
+    final boolean useCompressedOops = getFlag("UseCompressedOops", Boolean.class);
 
     // CPU capabilities
-    public final int vmVersionFeatures = getFieldValue("VM_Version::_features", Integer.class, "int");
+    final int vmVersionFeatures = getFieldValue("VM_Version::_features", Integer.class, "int");
 
     // SPARC specific values
-    public final int sparcVis3Instructions = getConstant("VM_Version::vis3_instructions_m", Integer.class);
-    public final int sparcVis2Instructions = getConstant("VM_Version::vis2_instructions_m", Integer.class);
-    public final int sparcVis1Instructions = getConstant("VM_Version::vis1_instructions_m", Integer.class);
-    public final int sparcCbcondInstructions = getConstant("VM_Version::cbcond_instructions_m", Integer.class);
-    public final int sparcV8Instructions = getConstant("VM_Version::v8_instructions_m", Integer.class);
-    public final int sparcHardwareMul32 = getConstant("VM_Version::hardware_mul32_m", Integer.class);
-    public final int sparcHardwareDiv32 = getConstant("VM_Version::hardware_div32_m", Integer.class);
-    public final int sparcHardwareFsmuld = getConstant("VM_Version::hardware_fsmuld_m", Integer.class);
-    public final int sparcHardwarePopc = getConstant("VM_Version::hardware_popc_m", Integer.class);
-    public final int sparcV9Instructions = getConstant("VM_Version::v9_instructions_m", Integer.class);
-    public final int sparcSun4v = getConstant("VM_Version::sun4v_m", Integer.class);
-    public final int sparcBlkInitInstructions = getConstant("VM_Version::blk_init_instructions_m", Integer.class);
-    public final int sparcFmafInstructions = getConstant("VM_Version::fmaf_instructions_m", Integer.class);
-    public final int sparcFmauInstructions = getConstant("VM_Version::fmau_instructions_m", Integer.class);
-    public final int sparcSparc64Family = getConstant("VM_Version::sparc64_family_m", Integer.class);
-    public final int sparcMFamily = getConstant("VM_Version::M_family_m", Integer.class);
-    public final int sparcTFamily = getConstant("VM_Version::T_family_m", Integer.class);
-    public final int sparcT1Model = getConstant("VM_Version::T1_model_m", Integer.class);
-    public final int sparcSparc5Instructions = getConstant("VM_Version::sparc5_instructions_m", Integer.class);
-    public final int sparcAesInstructions = getConstant("VM_Version::aes_instructions_m", Integer.class);
-    public final int sparcSha1Instruction = getConstant("VM_Version::sha1_instruction_m", Integer.class);
-    public final int sparcSha256Instruction = getConstant("VM_Version::sha256_instruction_m", Integer.class);
-    public final int sparcSha512Instruction = getConstant("VM_Version::sha512_instruction_m", Integer.class);
+    final int sparcVis3Instructions = getConstant("VM_Version::vis3_instructions_m", Integer.class);
+    final int sparcVis2Instructions = getConstant("VM_Version::vis2_instructions_m", Integer.class);
+    final int sparcVis1Instructions = getConstant("VM_Version::vis1_instructions_m", Integer.class);
+    final int sparcCbcondInstructions = getConstant("VM_Version::cbcond_instructions_m", Integer.class);
+    final int sparcV8Instructions = getConstant("VM_Version::v8_instructions_m", Integer.class);
+    final int sparcHardwareMul32 = getConstant("VM_Version::hardware_mul32_m", Integer.class);
+    final int sparcHardwareDiv32 = getConstant("VM_Version::hardware_div32_m", Integer.class);
+    final int sparcHardwareFsmuld = getConstant("VM_Version::hardware_fsmuld_m", Integer.class);
+    final int sparcHardwarePopc = getConstant("VM_Version::hardware_popc_m", Integer.class);
+    final int sparcV9Instructions = getConstant("VM_Version::v9_instructions_m", Integer.class);
+    final int sparcSun4v = getConstant("VM_Version::sun4v_m", Integer.class);
+    final int sparcBlkInitInstructions = getConstant("VM_Version::blk_init_instructions_m", Integer.class);
+    final int sparcFmafInstructions = getConstant("VM_Version::fmaf_instructions_m", Integer.class);
+    final int sparcFmauInstructions = getConstant("VM_Version::fmau_instructions_m", Integer.class);
+    final int sparcSparc64Family = getConstant("VM_Version::sparc64_family_m", Integer.class);
+    final int sparcMFamily = getConstant("VM_Version::M_family_m", Integer.class);
+    final int sparcTFamily = getConstant("VM_Version::T_family_m", Integer.class);
+    final int sparcT1Model = getConstant("VM_Version::T1_model_m", Integer.class);
+    final int sparcSparc5Instructions = getConstant("VM_Version::sparc5_instructions_m", Integer.class);
+    final int sparcAesInstructions = getConstant("VM_Version::aes_instructions_m", Integer.class);
+    final int sparcSha1Instruction = getConstant("VM_Version::sha1_instruction_m", Integer.class);
+    final int sparcSha256Instruction = getConstant("VM_Version::sha256_instruction_m", Integer.class);
+    final int sparcSha512Instruction = getConstant("VM_Version::sha512_instruction_m", Integer.class);
 
-    public final boolean useBlockZeroing = getFlag("UseBlockZeroing", Boolean.class);
-    public final int blockZeroingLowLimit = getFlag("BlockZeroingLowLimit", Integer.class);
+    final boolean useBlockZeroing = getFlag("UseBlockZeroing", Boolean.class);
+    final int blockZeroingLowLimit = getFlag("BlockZeroingLowLimit", Integer.class);
 }

@@ -26,22 +26,20 @@ import jdk.vm.ci.hotspot.HotSpotVMConfigAccess;
 import jdk.vm.ci.hotspot.HotSpotVMConfigStore;
 
 /**
- * Used to access native configuration details.
- *
- * All non-static, public fields in this class are so that they can be compiled as constants.
+ * Used to access AArch64 specific native configuration details.
  */
-public class AArch64HotSpotVMConfig extends HotSpotVMConfigAccess {
+class AArch64HotSpotVMConfig extends HotSpotVMConfigAccess {
 
-    public AArch64HotSpotVMConfig(HotSpotVMConfigStore config) {
+    AArch64HotSpotVMConfig(HotSpotVMConfigStore config) {
         super(config);
     }
 
     /**
      * Maximum allowed size of allocated area for a frame.
      */
-    public final int maxFrameSize = 16 * 1024;
+    final int maxFrameSize = 16 * 1024;
 
-    public final boolean linuxOs = System.getProperty("os.name", "").startsWith("Linux");
+    final boolean linuxOs = System.getProperty("os.name", "").startsWith("Linux");
 
-    public final boolean useCompressedOops = getFlag("UseCompressedOops", Boolean.class);
+    final boolean useCompressedOops = getFlag("UseCompressedOops", Boolean.class);
 }

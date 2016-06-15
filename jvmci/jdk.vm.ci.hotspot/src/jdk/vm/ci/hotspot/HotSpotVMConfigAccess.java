@@ -324,9 +324,4 @@ public class HotSpotVMConfigAccess {
     public HotSpotVMConfigAccess(HotSpotVMConfigStore store) {
         this.store = store;
     }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName();
-    }
 }
