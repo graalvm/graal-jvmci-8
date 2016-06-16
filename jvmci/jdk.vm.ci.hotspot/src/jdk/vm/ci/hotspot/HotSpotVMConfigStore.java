@@ -122,7 +122,7 @@ public final class HotSpotVMConfigStore {
         vmFlags     = new HashMap<>(vmFlagsInfo.length);
         // @formatter:on
 
-        try (InitTimer t = timer("HotSpotVMConfigAccess<init> fill maps")) {
+        try (InitTimer t = timer("HotSpotVMConfigStore<init> fill maps")) {
             for (VMField vmField : vmFieldsInfo) {
                 vmFields.put(vmField.name, vmField);
             }
