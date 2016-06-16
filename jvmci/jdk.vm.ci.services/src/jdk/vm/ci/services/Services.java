@@ -40,34 +40,26 @@ public final class Services {
     private Services() {
     }
 
-    private static final String SUPPRESS_PROPERTY_NAME = "jvmci.service.suppressNoClassDefFoundError";
-
-    /**
-     * Determines whether to suppress the {@link NoClassDefFoundError} raised if a service provider
-     * class specified in a {@code <jre>/jvmci/services/*} file is missing.
-     */
-    private static final boolean SuppressNoClassDefFoundError = Boolean.getBoolean(SUPPRESS_PROPERTY_NAME);
+    private static boolean jvmciEnabled = true;
 
     private static final ClassValue<List<?>> cache = new ClassValue<List<?>>() {
         @Override
         protected List<?> computeValue(Class<?> type) {
-            try {
-                List<Object> impls = new ArrayList<>();
-                for (Object impl : ServiceLoader.load(type, getJVMCIClassLoader())) {
-                    impls.add(impl);
-                }
-                return impls;
-            } catch (NoClassDefFoundError e) {
-                if (SuppressNoClassDefFoundError) {
-                    return Collections.emptyList();
-                } else {
-                    NoClassDefFoundError newEx = new NoClassDefFoundError(e.getMessage() + "  (suppress with -D" + SUPPRESS_PROPERTY_NAME + "=true)");
-                    if (e.getCause() != null) {
-                        newEx.initCause(e.getCause());
+            List<Object> impls = new ArrayList<>();
+            if (jvmciEnabled) {
+                try {
+                    for (Object impl : ServiceLoader.load(type, getJVMCIClassLoader())) {
+                        impls.add(impl);
                     }
-                    throw newEx;
+                } catch (InternalError e) {
+                    if (e.getMessage().equals("JVMCI is not enabled")) {
+                        jvmciEnabled = false;
+                    } else {
+                        throw e;
+                    }
                 }
             }
+            return impls;
         }
     };
 
@@ -151,5 +143,11 @@ public final class Services {
         Reflection.registerFieldsToFilter(Services.class, "cache");
     }
 
+    /**
+     * Gets the JVMCI class loader.
+     *
+     * @throws InternalError with the {@linkplain Throwable#getMessage() message}
+     *             {@code "JVMCI is not enabled"} iff JVMCI is not enabled
+     */
     private static native ClassLoader getJVMCIClassLoader();
 }

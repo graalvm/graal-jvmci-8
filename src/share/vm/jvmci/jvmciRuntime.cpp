@@ -623,6 +623,9 @@ JVM_END
 // private static ClassLoader Services.getJVMCIClassLoader()
 JVM_ENTRY(jobject, JVM_GetJVMCIClassLoader(JNIEnv *env, jclass c))
   if (!EnableJVMCI) {
+    // This message must not change - it is used by the Java code to
+    // distinguish an InternalError due to -EnableJVMCI from other
+    // InternalErrors that may be raised below.
     THROW_MSG_NULL(vmSymbols::java_lang_InternalError(), "JVMCI is not enabled")
   }
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
