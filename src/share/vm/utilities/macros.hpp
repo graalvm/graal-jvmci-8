@@ -180,7 +180,7 @@
 
 // COMPILER1 variant
 #ifdef COMPILER1
-#if defined(COMPILER2) || INCLUDE_JVMCI
+#if defined(COMPILER2)
   #define TIERED
 #endif
 #define COMPILER1_PRESENT(code) code
