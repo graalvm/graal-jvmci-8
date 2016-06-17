@@ -31,7 +31,7 @@
 // Sets the default values for platform dependent flags used by the JVMCI compiler.
 // (see jvmci_globals.hpp)
 
-#ifndef COMPILER2
+#if !defined(COMPILER2) && !defined(COMPILER1)
 define_pd_global(bool, BackgroundCompilation,        true );
 define_pd_global(bool, UseTLAB,                      true );
 define_pd_global(bool, ResizeTLAB,                   true );
