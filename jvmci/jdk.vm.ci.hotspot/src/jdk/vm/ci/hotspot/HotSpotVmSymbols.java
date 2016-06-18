@@ -32,8 +32,8 @@ import sun.misc.Unsafe;
 final class HotSpotVmSymbols {
 
     /**
-     * Returns the symbol in the {@code vmSymbols} table at position {@code index} as {@link String}
-     * .
+     * Returns the symbol in the {@code vmSymbols} table at position {@code index} as a
+     * {@link String}.
      *
      * @param index position in the symbol table
      * @return the symbol at position id
@@ -43,6 +43,7 @@ final class HotSpotVmSymbols {
         HotSpotVMConfig config = runtime.getConfig();
         assert config.vmSymbolsFirstSID <= index && index < config.vmSymbolsSIDLimit : "index " + index + " is out of bounds";
         assert config.symbolPointerSize == Unsafe.ADDRESS_SIZE : "the following address read is broken";
-        return runtime.getCompilerToVM().getSymbol(UNSAFE.getAddress(config.vmSymbolsSymbols + index * config.symbolPointerSize));
+        int offset = index * config.symbolPointerSize;
+        return runtime.getCompilerToVM().getSymbol(UNSAFE.getAddress(config.vmSymbolsSymbols + offset));
     }
 }

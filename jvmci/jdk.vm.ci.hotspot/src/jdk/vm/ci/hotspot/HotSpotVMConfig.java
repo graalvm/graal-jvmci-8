@@ -44,13 +44,10 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
      */
     String getHostArchitectureName() {
         String arch = System.getProperty("os.arch");
-        switch (arch) {
-            case "x86_64":
-                arch = "amd64";
-                break;
-            case "sparcv9":
-                arch = "sparc";
-                break;
+        if (arch.equals("x86_64")) {
+            arch = "amd64";
+        } else if (arch.equals("sparcv9")) {
+            arch = "sparc";
         }
         return arch;
     }

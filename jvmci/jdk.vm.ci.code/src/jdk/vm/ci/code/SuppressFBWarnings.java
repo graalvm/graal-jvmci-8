@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,21 +20,21 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.vm.ci.hotspot.aarch64;
-
-import jdk.vm.ci.hotspot.HotSpotVMConfigAccess;
-import jdk.vm.ci.hotspot.HotSpotVMConfigStore;
+package jdk.vm.ci.code;
 
 /**
- * Used to access AArch64 specific native configuration details.
+ * Used to suppress <a href="http://findbugs.sourceforge.net">FindBugs</a> warnings.
  */
-class AArch64HotSpotVMConfig extends HotSpotVMConfigAccess {
+@interface SuppressFBWarnings {
+    /**
+     * The set of FindBugs
+     * <a href="http://findbugs.sourceforge.net/bugDescriptions.html">warnings</a> that are to be
+     * suppressed in annotated element. The value can be a bug category, kind or pattern.
+     */
+    String[] value();
 
-    AArch64HotSpotVMConfig(HotSpotVMConfigStore config) {
-        super(config);
-    }
-
-    final boolean linuxOs = System.getProperty("os.name", "").startsWith("Linux");
-
-    final boolean useCompressedOops = getFlag("UseCompressedOops", Boolean.class);
+    /**
+     * Reason why the warning is suppressed.
+     */
+    String justification();
 }

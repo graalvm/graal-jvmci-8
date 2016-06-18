@@ -69,8 +69,8 @@ class JVMCIClassLoaderFactory {
         File javaHome = new File(System.getProperty("java.home"));
         File lib = new File(javaHome, "lib");
         File jvmci = new File(lib, "jvmci");
-        if (!jvmci.exists()) {
-            throw new InternalError(jvmci + " does not exist");
+        if (!jvmci.isDirectory()) {
+            throw new InternalError(jvmci + " does not exist or is not a directory");
         }
 
         List<URL> urls = new ArrayList<>();

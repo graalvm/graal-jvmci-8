@@ -23,6 +23,8 @@
 package jdk.vm.ci.code;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * A collection of register attributes. The specific attribute values for a register may be local to
@@ -53,13 +55,14 @@ public class RegisterAttributes {
      * @return an array whose length is the max register number in {@code registers} plus 1. An
      *         element at index i holds the attributes of the register whose number is i.
      */
-    public static RegisterAttributes[] createMap(RegisterConfig registerConfig, Register[] registers) {
-        RegisterAttributes[] map = new RegisterAttributes[registers.length];
+    public static RegisterAttributes[] createMap(RegisterConfig registerConfig, RegisterArray registers) {
+        RegisterAttributes[] map = new RegisterAttributes[registers.size()];
+        List<Register> callerSaveRegisters = registerConfig.getCallerSaveRegisters().asList();
+        List<Register> calleeSaveRegisters = registerConfig.getCalleeSaveRegisters() == null ? Collections.emptyList() : registerConfig.getCalleeSaveRegisters().asList();
+        List<Register> allocatableRegisters = registerConfig.getAllocatableRegisters().asList();
         for (Register reg : registers) {
             if (reg != null) {
-                Register[] csr = registerConfig.getCalleeSaveRegisters();
-                RegisterAttributes attr = new RegisterAttributes(Arrays.asList(registerConfig.getCallerSaveRegisters()).contains(reg), csr == null ? false : Arrays.asList(csr).contains(reg),
-                                Arrays.asList(registerConfig.getAllocatableRegisters()).contains(reg));
+                RegisterAttributes attr = new RegisterAttributes(callerSaveRegisters.contains(reg), calleeSaveRegisters.contains(reg), allocatableRegisters.contains(reg));
                 if (map.length <= reg.number) {
                     map = Arrays.copyOf(map, reg.number + 1);
                 }
@@ -75,14 +78,14 @@ public class RegisterAttributes {
     }
 
     /**
-     * @return Denotes a register that is available for use by a register allocator.
+     * @return if a register that is available for use by a register allocator.
      */
     public boolean isAllocatable() {
         return allocatable;
     }
 
     /**
-     * @return Denotes a register whose value preservation (if required) across a call is the
+     * @return if a register whose value preservation (if required) across a call is the
      *         responsibility of the callee.
      */
     public boolean isCalleeSave() {
@@ -90,7 +93,7 @@ public class RegisterAttributes {
     }
 
     /**
-     * @return Denotes a register whose value preservation (if required) across a call is the
+     * @return if a register whose value preservation (if required) across a call is the
      *         responsibility of the caller.
      */
     public boolean isCallerSave() {

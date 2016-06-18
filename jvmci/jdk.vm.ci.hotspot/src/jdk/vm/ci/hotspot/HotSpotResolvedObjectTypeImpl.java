@@ -592,7 +592,8 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
             // Get Klass::_fields
             final long metaspaceFields = UNSAFE.getAddress(getMetaspaceKlass() + config.instanceKlassFieldsOffset);
             assert config.fieldInfoFieldSlots == 6 : "revisit the field parsing code";
-            metaspaceData = metaspaceFields + config.arrayU2DataOffset + config.fieldInfoFieldSlots * Short.BYTES * index;
+            int offset = config.fieldInfoFieldSlots * Short.BYTES * index;
+            metaspaceData = metaspaceFields + config.arrayU2DataOffset + offset;
         }
 
         private int getAccessFlags() {
@@ -620,7 +621,8 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
          * on top an array of Java shorts.
          */
         private int readFieldSlot(int index) {
-            return UNSAFE.getChar(metaspaceData + Short.BYTES * index);
+            int offset = Short.BYTES * index;
+            return UNSAFE.getChar(metaspaceData + offset);
         }
 
         /**
@@ -659,6 +661,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         }
     }
 
+    @SuppressFBWarnings(value = "SE_COMPARATOR_SHOULD_BE_SERIALIZABLE", justification = "comparator is only used transiently")
     private static class OffsetComparator implements java.util.Comparator<HotSpotResolvedJavaField> {
         @Override
         public int compare(HotSpotResolvedJavaField o1, HotSpotResolvedJavaField o2) {

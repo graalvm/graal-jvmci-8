@@ -89,8 +89,6 @@ import static jdk.vm.ci.sparc.SPARC.o5;
 import static jdk.vm.ci.sparc.SPARC.sp;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -98,6 +96,7 @@ import jdk.vm.ci.code.Architecture;
 import jdk.vm.ci.code.CallingConvention;
 import jdk.vm.ci.code.CallingConvention.Type;
 import jdk.vm.ci.code.Register;
+import jdk.vm.ci.code.RegisterArray;
 import jdk.vm.ci.code.RegisterAttributes;
 import jdk.vm.ci.code.RegisterConfig;
 import jdk.vm.ci.code.StackSlot;
@@ -116,25 +115,24 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
     private final TargetDescription target;
 
-    private final Register[] allocatable;
+    private final RegisterArray allocatable;
 
     private final RegisterAttributes[] attributesMap;
 
     @Override
-    public Register[] getAllocatableRegisters() {
-        return allocatable.clone();
+    public RegisterArray getAllocatableRegisters() {
+        return allocatable;
     }
 
     @Override
-    public Register[] filterAllocatableRegisters(PlatformKind kind, Register[] registers) {
+    public RegisterArray filterAllocatableRegisters(PlatformKind kind, RegisterArray registers) {
         ArrayList<Register> list = new ArrayList<>();
         for (Register reg : registers) {
             if (target.arch.canStoreValue(reg.getRegisterCategory(), kind)) {
                 list.add(reg);
             }
         }
-        Register[] ret = list.toArray(new Register[list.size()]);
-        return ret;
+        return new RegisterArray(list);
     }
 
     @Override
@@ -142,37 +140,37 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         return attributesMap.clone();
     }
 
-    private final Register[] cpuCallerParameterRegisters = {o0, o1, o2, o3, o4, o5};
-    private final Register[] cpuCalleeParameterRegisters = {i0, i1, i2, i3, i4, i5};
+    private final RegisterArray cpuCallerParameterRegisters = new RegisterArray(o0, o1, o2, o3, o4, o5);
+    private final RegisterArray cpuCalleeParameterRegisters = new RegisterArray(i0, i1, i2, i3, i4, i5);
 
-    private final Register[] fpuFloatJavaParameterRegisters = {f0, f1, f2, f3, f4, f5, f6, f7};
-    private final Register[] fpuDoubleJavaParameterRegisters = {d0, null, d2, null, d4, null, d6, null};
+    private final RegisterArray fpuFloatJavaParameterRegisters = new RegisterArray(f0, f1, f2, f3, f4, f5, f6, f7);
+    private final RegisterArray fpuDoubleJavaParameterRegisters = new RegisterArray(d0, null, d2, null, d4, null, d6, null);
 
     // @formatter:off
-    private final Register[] fpuFloatNativeParameterRegisters = {
+    private final RegisterArray fpuFloatNativeParameterRegisters = new RegisterArray(
                     f1,   f3,  f5,  f7,  f9, f11, f13, f15,
-                    f17, f19, f21, f23, f25, f27, f29, f31};
+                    f17, f19, f21, f23, f25, f27, f29, f31);
 
-    private final Register[] fpuDoubleNativeParameterRegisters = {
+    private final RegisterArray fpuDoubleNativeParameterRegisters = new RegisterArray(
                      d0,  d2,  d4,  d6,  d8, d10, d12, d14,
-                    d16, d18, d20, d22, d24, d26, d28, d30};
+                    d16, d18, d20, d22, d24, d26, d28, d30);
 
-    private final Register[] callerSaveRegisters;
+    private final RegisterArray callerSaveRegisters;
 
     /**
      * This lists all L and I registers which are saved in the register window.
      */
-    private final Register[] windowSaveRegisters = {
+    private final RegisterArray windowSaveRegisters = new RegisterArray(
                     l0, l1, l2, l3, l4, l5, l6, l7,
-                    i0, i1, i2, i3, i4, i5, i6, i7};
+                    i0, i1, i2, i3, i4, i5, i6, i7);
     // @formatter:on
 
-    private static final Register[] reservedRegisters = {sp, g0, g2};
+    private static final RegisterArray reservedRegisters = new RegisterArray(sp, g0, g2);
 
-    private static Register[] initAllocatable(Architecture arch, boolean reserveForHeapBase) {
-        Register[] allRegisters = arch.getAvailableValueRegisters();
-        Register[] registers = new Register[allRegisters.length - reservedRegisters.length - (reserveForHeapBase ? 1 : 0)];
-        List<Register> reservedRegistersList = Arrays.asList(reservedRegisters);
+    private static RegisterArray initAllocatable(Architecture arch, boolean reserveForHeapBase) {
+        RegisterArray allRegisters = arch.getAvailableValueRegisters();
+        Register[] registers = new Register[allRegisters.size() - reservedRegisters.size() - (reserveForHeapBase ? 1 : 0)];
+        List<Register> reservedRegistersList = reservedRegisters.asList();
 
         int idx = 0;
         for (Register reg : allRegisters) {
@@ -189,32 +187,32 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         }
 
         assert idx == registers.length;
-        return registers;
+        return new RegisterArray(registers);
     }
 
     public SPARCHotSpotRegisterConfig(TargetDescription target, boolean useCompressedOops) {
         this(target, initAllocatable(target.arch, useCompressedOops));
     }
 
-    public SPARCHotSpotRegisterConfig(TargetDescription target, Register[] allocatable) {
+    public SPARCHotSpotRegisterConfig(TargetDescription target, RegisterArray allocatable) {
         this.target = target;
-        this.allocatable = allocatable.clone();
+        this.allocatable = allocatable;
         HashSet<Register> callerSaveSet = new HashSet<>();
-        Collections.addAll(callerSaveSet, target.arch.getAvailableValueRegisters());
+        target.arch.getAvailableValueRegisters().addTo(callerSaveSet);
         for (Register cs : windowSaveRegisters) {
             callerSaveSet.remove(cs);
         }
-        this.callerSaveRegisters = callerSaveSet.toArray(new Register[callerSaveSet.size()]);
+        this.callerSaveRegisters = new RegisterArray(callerSaveSet);
         attributesMap = RegisterAttributes.createMap(this, SPARC.allRegisters);
     }
 
     @Override
-    public Register[] getCallerSaveRegisters() {
+    public RegisterArray getCallerSaveRegisters() {
         return callerSaveRegisters;
     }
 
     @Override
-    public Register[] getCalleeSaveRegisters() {
+    public RegisterArray getCalleeSaveRegisters() {
         return null;
     }
 
@@ -236,7 +234,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     }
 
     @Override
-    public Register[] getCallingConventionRegisters(Type type, JavaKind kind) {
+    public RegisterArray getCallingConventionRegisters(Type type, JavaKind kind) {
         HotSpotCallingConventionType hotspotType = (HotSpotCallingConventionType) type;
         switch (kind) {
             case Boolean:
@@ -255,7 +253,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         }
     }
 
-    private CallingConvention callingConvention(Register[] generalParameterRegisters, JavaType returnType, JavaType[] parameterTypes, HotSpotCallingConventionType type,
+    private CallingConvention callingConvention(RegisterArray generalParameterRegisters, JavaType returnType, JavaType[] parameterTypes, HotSpotCallingConventionType type,
                     ValueKindFactory<?> valueKindFactory) {
         AllocatableValue[] locations = new AllocatableValue[parameterTypes.length];
 
@@ -267,7 +265,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
         for (int i = 0; i < parameterTypes.length; i++) {
             final JavaKind kind = parameterTypes[i].getJavaKind().getStackKind();
             if (isNative) {
-                Register[] registerSet;
+                RegisterArray registerSet;
                 switch (kind) {
                     case Byte:
                     case Boolean:
@@ -287,8 +285,8 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
                     default:
                         throw JVMCIError.shouldNotReachHere();
                 }
-                if (i < registerSet.length) {
-                    locations[i] = registerSet[i].asValue(valueKindFactory.getValueKind(kind));
+                if (i < registerSet.size()) {
+                    locations[i] = registerSet.get(i).asValue(valueKindFactory.getValueKind(kind));
                     currentStackOffset += target.arch.getWordSize();
                 }
             } else {
@@ -300,25 +298,25 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
                     case Int:
                     case Long:
                     case Object:
-                        if (currentGeneral < generalParameterRegisters.length) {
-                            Register register = generalParameterRegisters[currentGeneral++];
+                        if (currentGeneral < generalParameterRegisters.size()) {
+                            Register register = generalParameterRegisters.get(currentGeneral++);
                             locations[i] = register.asValue(valueKindFactory.getValueKind(kind));
                         }
                         break;
                     case Double:
-                        if (currentFloating < fpuFloatJavaParameterRegisters.length) {
+                        if (currentFloating < fpuFloatJavaParameterRegisters.size()) {
                             if (currentFloating % 2 != 0) {
                                 // Make register number even to be a double reg
                                 currentFloating++;
                             }
-                            Register register = fpuDoubleJavaParameterRegisters[currentFloating];
+                            Register register = fpuDoubleJavaParameterRegisters.get(currentFloating);
                             currentFloating += 2; // Only every second is a double register
                             locations[i] = register.asValue(valueKindFactory.getValueKind(kind));
                         }
                         break;
                     case Float:
-                        if (currentFloating < fpuFloatJavaParameterRegisters.length) {
-                            Register register = fpuFloatJavaParameterRegisters[currentFloating++];
+                        if (currentFloating < fpuFloatJavaParameterRegisters.size()) {
+                            Register register = fpuFloatJavaParameterRegisters.get(currentFloating++);
                             locations[i] = register.asValue(valueKindFactory.getValueKind(kind));
                         }
                         break;
@@ -383,6 +381,6 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
 
     @Override
     public String toString() {
-        return String.format("Allocatable: " + Arrays.toString(getAllocatableRegisters()) + "%n" + "CallerSave:  " + Arrays.toString(getCallerSaveRegisters()) + "%n");
+        return String.format("Allocatable: " + getAllocatableRegisters() + "%n" + "CallerSave:  " + getCallerSaveRegisters() + "%n");
     }
 }
