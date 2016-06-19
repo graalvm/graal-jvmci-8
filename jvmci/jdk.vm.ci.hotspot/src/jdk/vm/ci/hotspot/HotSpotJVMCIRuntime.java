@@ -91,7 +91,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         // Note: The following one is not used (see InitTimer.ENABLED). It is added here
         // so that -Djvmci.PrintFlags=true shows the option.
         InitTimer(boolean.class, false, "Specifies if initialization timing is enabled."),
-        PrintConfig(boolean.class, false, "Prints available VM configuration info."),
+        PrintConfig(boolean.class, false, "Prints VM configuration available via JVMCI and exits."),
         PrintFlags(boolean.class, false, "Prints all JVMCI flags and exits."),
         ShowFlags(boolean.class, false, "Prints all JVMCI flags and continues."),
         TraceMethodDataFilter(String.class, null, "");
@@ -255,6 +255,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
 
         if (Option.PrintConfig.getBoolean()) {
             printConfig(configStore, compilerToVm);
+            System.exit(0);
         }
 
         compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory();
