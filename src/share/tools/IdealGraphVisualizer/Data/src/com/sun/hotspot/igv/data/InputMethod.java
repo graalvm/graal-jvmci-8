@@ -26,6 +26,8 @@ package com.sun.hotspot.igv.data;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -146,7 +148,7 @@ public class InputMethod extends Properties.Entity {
                         }
                     }
                 } else {
-                    System.out.println("no match: " + s);
+                    Logger.getLogger(getClass().getName()).log(Level.INFO, "Unparseable bytecode: " + s);
                 }
             }
         }

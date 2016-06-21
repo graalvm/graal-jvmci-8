@@ -53,10 +53,10 @@ public class BinaryParser implements GraphParser {
     private static final int POOL_NODE_CLASS = 0x06;
     private static final int POOL_FIELD = 0x07;
     private static final int POOL_SIGNATURE = 0x08;
-    
+
     private static final int KLASS = 0x00;
     private static final int ENUM_KLASS = 0x01;
-    
+
     private static final int PROPERTY_POOL = 0x00;
     private static final int PROPERTY_INT = 0x01;
     private static final int PROPERTY_LONG = 0x02;
@@ -66,12 +66,12 @@ public class BinaryParser implements GraphParser {
     private static final int PROPERTY_FALSE = 0x06;
     private static final int PROPERTY_ARRAY = 0x07;
     private static final int PROPERTY_SUBGRAPH = 0x08;
-    
+
     private static final String NO_BLOCK = "noBlock";
 
     private static final Charset utf8 = Charset.forName("UTF-8");
     private static final Charset utf16 = Charset.forName("UTF-16");
-    
+
     private final GroupCallback callback;
     private final List<Object> constantPool;
     private final ByteBuffer buffer;
@@ -82,28 +82,28 @@ public class BinaryParser implements GraphParser {
     private final ParseMonitor monitor;
 
     private MessageDigest digest;
-    
+
     private Charset stringCharset;
-    
+
     private int majorVersion;
     private int minorVersion;
-    
+
     static final int CURRENT_MAJOR_VERSION = 1;
     static final int CURRENT_MINOR_VERSION = 0;
     static final String CURRENT_VERSION = versionPair(CURRENT_MAJOR_VERSION, CURRENT_MINOR_VERSION);
-        
+
     static class VersionMismatchException extends RuntimeException {
         VersionMismatchException(String message) {
             super(message);
         }
     }
-    
+
     static final byte[] MAGIC_BYTES = { 'B', 'I', 'G', 'V' };
-    
+
     private static String versionPair(int major, int minor) {
         return major + "." + minor;
     }
-    
+
     private void setVersion(int newMajorVersion, int newMinorVersion) {
         if (newMajorVersion > CURRENT_MAJOR_VERSION || (newMajorVersion == CURRENT_MAJOR_VERSION && newMinorVersion > CURRENT_MINOR_VERSION)) {
             throw new VersionMismatchException("File format version " + versionPair(newMajorVersion, newMinorVersion) + " unsupported.  Current version is " + CURRENT_VERSION);
@@ -119,11 +119,11 @@ public class BinaryParser implements GraphParser {
         M,
         L
     }
-    
+
     private interface LengthToString {
         String toString(Length l);
     }
-    
+
     private static abstract class Member implements LengthToString {
         public final Klass holder;
         public final int accessFlags;
@@ -134,7 +134,7 @@ public class BinaryParser implements GraphParser {
             this.name = name;
         }
     }
-    
+
     private static class Method extends Member {
         public final Signature signature;
         public final byte[] code;
@@ -169,7 +169,7 @@ public class BinaryParser implements GraphParser {
             }
         }
     }
-    
+
     private static class Signature {
         public final String returnType;
         public final String[] argTypes;
@@ -178,7 +178,7 @@ public class BinaryParser implements GraphParser {
             this.argTypes = argTypes;
         }
     }
-    
+
     private static class Field extends Member {
         public final String type;
         public Field(String type, Klass holder, String name, int accessFlags) {
@@ -202,7 +202,7 @@ public class BinaryParser implements GraphParser {
             }
         }
     }
-    
+
     private static class Klass implements LengthToString {
         public final String name;
         public final String simpleName;
@@ -232,7 +232,7 @@ public class BinaryParser implements GraphParser {
             }
         }
     }
-    
+
     private static class EnumKlass extends Klass {
         public final String[] values;
         public EnumKlass(String name, String[] values) {
@@ -240,7 +240,7 @@ public class BinaryParser implements GraphParser {
             this.values = values;
         }
     }
-    
+
     private static class Port {
         public final boolean isList;
         public final String name;
@@ -249,7 +249,7 @@ public class BinaryParser implements GraphParser {
             this.name = name;
         }
     }
-    
+
     private static class TypedPort extends Port {
         public final EnumValue type;
         private TypedPort(boolean isList, String name, EnumValue type) {
@@ -257,7 +257,7 @@ public class BinaryParser implements GraphParser {
             this.type = type;
         }
     }
-    
+
     private static class NodeClass {
         public final String className;
         public final String nameTemplate;
@@ -274,7 +274,7 @@ public class BinaryParser implements GraphParser {
             return className;
         }
     }
-    
+
     private static class EnumValue implements LengthToString {
         public EnumKlass enumKlass;
         public int ordinal;
@@ -314,7 +314,7 @@ public class BinaryParser implements GraphParser {
         } catch (NoSuchAlgorithmException e) {
         }
     }
-    
+
     private void fill() throws IOException {
         // All the data between lastPosition and position has been
         // used so add it to the digest.
@@ -332,7 +332,7 @@ public class BinaryParser implements GraphParser {
         buffer.flip();
         lastPosition = buffer.position();
     }
-    
+
     private void ensureAvailable(int i) throws IOException {
         if (i > buffer.capacity()) {
             throw new IllegalArgumentException(String.format("Can not request %d bytes: buffer capacity is %d", i, buffer.capacity()));
@@ -341,7 +341,7 @@ public class BinaryParser implements GraphParser {
             fill();
         }
     }
-    
+
     private int readByte() throws IOException {
         ensureAvailable(1);
         return ((int)buffer.get()) & 0xff;
@@ -351,22 +351,22 @@ public class BinaryParser implements GraphParser {
         ensureAvailable(4);
         return buffer.getInt();
     }
-    
+
     private char readShort() throws IOException {
         ensureAvailable(2);
         return buffer.getChar();
     }
-    
+
     private long readLong() throws IOException {
         ensureAvailable(8);
         return buffer.getLong();
     }
-    
+
     private double readDouble() throws IOException {
         ensureAvailable(8);
         return buffer.getDouble();
     }
-    
+
     private float readFloat() throws IOException {
         ensureAvailable(4);
         return buffer.getFloat();
@@ -402,9 +402,9 @@ public class BinaryParser implements GraphParser {
             return null;
         }
         return readBytes(len);
-    }        
-     
-    private byte[] readBytes(int len) throws IOException {   
+    }
+
+    private byte[] readBytes(int len) throws IOException {
         byte[] b = new byte[len];
         int bytesRead = 0;
         while (bytesRead < b.length) {
@@ -415,7 +415,7 @@ public class BinaryParser implements GraphParser {
         }
         return b;
     }
-    
+
     private byte[] peekBytes(int len) throws IOException {
         ensureAvailable(len);
         byte[] b = new byte[len];
@@ -441,7 +441,7 @@ public class BinaryParser implements GraphParser {
         sb.append(']');
         return sb.toString().intern();
     }
-    
+
     private String readDoublesToString() throws IOException {
         int len = readInt();
         if (len < 0) {
@@ -458,7 +458,7 @@ public class BinaryParser implements GraphParser {
         sb.append(']');
         return sb.toString().intern();
     }
-    
+
     private String readPoolObjectsToString() throws IOException {
         int len = readInt();
         if (len < 0) {
@@ -474,7 +474,7 @@ public class BinaryParser implements GraphParser {
         sb.append(']');
         return sb.toString().intern();
     }
-    
+
     private <T> T readPoolObject(Class<T> klass) throws IOException {
         int type = readByte();
         if (type == POOL_NULL) {
@@ -491,7 +491,7 @@ public class BinaryParser implements GraphParser {
         Object obj = constantPool.get(index);
         return (T) obj;
     }
-    
+
     private boolean assertObjectType(Class<?> klass, int type) {
         switch(type) {
             case POOL_CLASS:
@@ -605,7 +605,7 @@ public class BinaryParser implements GraphParser {
         constantPool.set(index, obj);
         return obj;
     }
-    
+
     private Object readPropertyObject() throws IOException {
         int type = readByte();
         switch (type) {
@@ -663,7 +663,7 @@ public class BinaryParser implements GraphParser {
                 parseRoot();
             }
         } catch (EOFException e) {
-            
+
         }
         if (monitor != null) {
             monitor.setState("Finished parsing");
@@ -729,14 +729,15 @@ public class BinaryParser implements GraphParser {
         parseProperties(group.getProperties());
         if (method != null) {
             InputMethod inMethod = new InputMethod(group, method.name, shortName, bci);
-            inMethod.setBytecodes("TODO");
+            // TODO
+            inMethod.setBytecodes("");
             group.setMethod(inMethod);
         }
         return group;
     }
 
     int lastPosition = 0;
-    
+
     private InputGraph parseGraph() throws IOException {
         if (monitor != null) {
             monitor.updateProgress();
@@ -753,7 +754,7 @@ public class BinaryParser implements GraphParser {
         digest.update(remaining);
         assert position == buffer.position();
         lastPosition = buffer.position();
-        
+
         byte[] d = digest.digest();
         byte[] hash = hashStack.peek();
         if (hash != null && Arrays.equals(hash, d)) {
@@ -785,7 +786,7 @@ public class BinaryParser implements GraphParser {
         }
         return graph;
     }
-    
+
     private void parseBlocks(InputGraph graph) throws IOException {
         int blockCount = readInt();
         List<Edge> edges = new LinkedList<>();
@@ -875,7 +876,7 @@ public class BinaryParser implements GraphParser {
                         portNum++;
                     }
                 }
-                
+
             }
             portNum = 0;
             for (Port p : nodeClass.sux) {
@@ -913,9 +914,9 @@ public class BinaryParser implements GraphParser {
             graph.addNode(node);
             props.clear();
         }
-        
+
         Set<InputNode> nodesWithSuccessor = new HashSet<>();
-        
+
         for (Edge e : succEdges) {
             assert !e.input;
             char fromIndex = e.num;
@@ -930,9 +931,9 @@ public class BinaryParser implements GraphParser {
             graph.addEdge(InputEdge.createImmutable(fromIndex, toIndex, e.from, e.to, e.label, e.type));
         }
     }
-    
+
     static final Pattern templatePattern = Pattern.compile("\\{(p|i)#([a-zA-Z0-9$_]+)(/(l|m|s))?\\}");
-    
+
     private String createName(List<Edge> edges, Map<String, Object> properties, String template) {
         Matcher m = templatePattern.matcher(template);
         StringBuffer sb = new StringBuffer();
@@ -987,7 +988,7 @@ public class BinaryParser implements GraphParser {
         m.appendTail(sb);
         return sb.toString().intern();
     }
-    
+
     private static class Edge {
         final int from;
         final int to;
