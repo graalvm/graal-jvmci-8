@@ -96,9 +96,9 @@ VMReg getVMRegFromLocation(Handle location, int total_frame_size, TRAPS) {
         // here.  This test should also be equivalent legal_vm_reg_name but JVMCI
         // clients can use max_oop_map_stack_stack_offset to detect this problem
         // directly.  The asserts just ensure that the tests are in agreement.
-        assert(offset > JVMCIRuntime::max_oop_map_stack_offset, "illegal VMReg");
+        assert(offset > CompilerToVM::Data::max_oop_map_stack_offset(), "illegal VMReg");
         JVMCI_ERROR_NULL("stack offset %d is too large to be encoded in OopMap (max %d)",
-                         offset, JVMCIRuntime::max_oop_map_stack_offset);
+                         offset, CompilerToVM::Data::max_oop_map_stack_offset());
       }
       assert(OopMapValue::legal_vm_reg_name(vmReg), "illegal VMReg");
       return vmReg;

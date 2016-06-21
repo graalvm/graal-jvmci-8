@@ -57,6 +57,8 @@
   static_field(CompilerToVM::Data,             _heap_end_addr,                         HeapWord**)                                   \
   static_field(CompilerToVM::Data,             _heap_top_addr,                         HeapWord**)                                   \
                                                                                                                                      \
+  static_field(CompilerToVM::Data,             _max_oop_map_stack_offset,              int)                                          \
+                                                                                                                                     \
   static_field(CompilerToVM::Data,             cardtable_start_address,                jbyte*)                                       \
   static_field(CompilerToVM::Data,             cardtable_shift,                        int)                                          \
   static_field(CompilerToVM::Data,             g1_young_card,                          int)                                          \
@@ -82,7 +84,6 @@
   nonstatic_field(MethodData,                  _jvmci_ir_size,                         int)                                          \
   nonstatic_field(JVMCIEnv,                    _task,                                  CompileTask*)                                 \
   nonstatic_field(JVMCIEnv,                    _jvmti_can_hotswap_or_post_breakpoint,  bool)                                         \
-  static_field(JVMCIRuntime,                   max_oop_map_stack_offset,               int)                                          \
 
 #define VM_TYPES_JVMCI(declare_type, declare_toplevel_type)                   \
   declare_toplevel_type(narrowKlass)                                          \
