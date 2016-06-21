@@ -82,4 +82,12 @@ public abstract class ValueKind<K extends ValueKind<K>> {
      * override this to preserve the additional information added by the compiler.
      */
     public abstract K changeType(PlatformKind newPlatformKind);
+
+    /**
+     * Returns a String representation of the kind, which will be included at the end of
+     * {@link Value#toString()} implementation.
+     */
+    public String getKindSuffix() {
+        return toString();
+    }
 }
