@@ -67,8 +67,8 @@
   product(intx, JVMCIHostThreads, 1,                                        \
           "Force number of compiler threads for JVMCI host compiler")       \
                                                                             \
-  JVMCI_ONLY(product(bool, CodeInstallSafepointChecks, true,                \
-          "Perform explicit safepoint checks while installing code"))       \
+  product(bool, CodeInstallSafepointChecks, true,                           \
+          "Perform explicit safepoint checks while installing code")        \
                                                                             \
   NOT_COMPILER2(product_pd(intx, MaxVectorSize,                             \
           "Max vector size in bytes, "                                      \

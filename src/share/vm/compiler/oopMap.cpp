@@ -318,9 +318,9 @@ class DoNothingClosure: public OopClosure {
 static DoNothingClosure do_nothing;
 
 static void add_derived_oop(oop* base, oop* derived) {
-#ifndef TIERED
+#if !defined(TIERED) && !defined(INCLUDE_JVMCI)
   COMPILER1_PRESENT(ShouldNotReachHere();)
-#endif // TIERED
+#endif // !defined(TIERED) && !defined(INCLUDE_JVMCI)
 #if defined(COMPILER2) || INCLUDE_JVMCI
   DerivedPointerTable::add(derived, base);
 #endif // COMPILER2 || JVMCI
@@ -508,7 +508,7 @@ void OopMapSet::update_register_map(const frame *fr, RegisterMap *reg_map) {
 #ifndef PRODUCT
 
 bool OopMap::has_derived_pointer() const {
-#ifndef TIERED
+#if !defined(TIERED) && !defined(INCLUDE_JVMCI)
   COMPILER1_PRESENT(return false);
 #endif // !TIERED
 #if defined(COMPILER2) || INCLUDE_JVMCI

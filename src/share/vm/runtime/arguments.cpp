@@ -2450,6 +2450,21 @@ bool Arguments::check_vm_args_consistency() {
 #undef JVMCI_CHECK4
 #undef JVMCI_CHECK_FLAG
   } else {
+#ifndef TIERED
+    // JVMCI is only usable as a jit compiler if the VM supports tiered compilation.
+#define JVMCI_CHECK_FLAG(FLAG)                         \
+    if (!FLAG_IS_DEFAULT(FLAG)) {                                   \
+      jio_fprintf(defaultStream::error_stream(), "VM option '%s' cannot be set in non-tiered VM\n", #FLAG); \
+      status = false; \
+    }
+    JVMCI_CHECK_FLAG(UseJVMCICompiler)
+    JVMCI_CHECK_FLAG(BootstrapJVMCI)
+    JVMCI_CHECK_FLAG(PrintBootstrap)
+    JVMCI_CHECK_FLAG(JVMCIThreads)
+    JVMCI_CHECK_FLAG(JVMCIHostThreads)
+    JVMCI_CHECK_FLAG(JVMCICountersExcludeCompiler)
+#undef JVMCI_CHECK_FLAG
+#endif
     if (BootstrapJVMCI && !UseJVMCICompiler) {
       warning("BootstrapJVMCI has no effect if UseJVMCICompiler is disabled");
     }
