@@ -27,8 +27,6 @@ import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Map;
-import java.util.WeakHashMap;
 
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.ResolvedJavaType;
@@ -147,7 +145,12 @@ public class HotSpotJVMCIMetaAccessContext {
         }
     }
 
-    private final Map<Class<?>, WeakReference<ResolvedJavaType>> typeMap = new WeakHashMap<>();
+    private final ClassValue<ResolvedJavaType> resolvedJavaType = new ClassValue<ResolvedJavaType>() {
+        @Override
+        protected ResolvedJavaType computeValue(Class<?> type) {
+            return createClass(type);
+        }
+    };
 
     /**
      * Gets the JVMCI mirror for a {@link Class} object.
@@ -155,13 +158,7 @@ public class HotSpotJVMCIMetaAccessContext {
      * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
      */
     public synchronized ResolvedJavaType fromClass(Class<?> javaClass) {
-        WeakReference<ResolvedJavaType> typeRef = typeMap.get(javaClass);
-        ResolvedJavaType type = typeRef != null ? typeRef.get() : null;
-        if (type == null) {
-            type = createClass(javaClass);
-            typeMap.put(javaClass, new WeakReference<>(type));
-        }
-        return type;
+        return resolvedJavaType.get(javaClass);
     }
 
     /**
