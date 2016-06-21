@@ -22,6 +22,10 @@
  */
 package jdk.vm.ci.hotspot;
 
+import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
+
+import sun.misc.Unsafe;
+
 /**
  * Used to access native configuration details.
  */
@@ -223,6 +227,21 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final long vmSymbolsSymbols = getFieldAddress("vmSymbols::_symbols[0]", "Symbol*");
     final int vmSymbolsFirstSID = getConstant("vmSymbols::FIRST_SID", Integer.class);
     final int vmSymbolsSIDLimit = getConstant("vmSymbols::SID_LIMIT", Integer.class);
+
+    /**
+     * Returns the symbol in the {@code vmSymbols} table at position {@code index} as a
+     * {@link String}.
+     *
+     * @param index position in the symbol table
+     * @return the symbol at position id
+     */
+    String symbolAt(int index) {
+        HotSpotJVMCIRuntime runtime = HotSpotJVMCIRuntime.runtime();
+        assert vmSymbolsFirstSID <= index && index < vmSymbolsSIDLimit : "index " + index + " is out of bounds";
+        assert symbolPointerSize == Unsafe.ADDRESS_SIZE : "the following address read is broken";
+        int offset = index * symbolPointerSize;
+        return runtime.getCompilerToVM().getSymbol(UNSAFE.getAddress(vmSymbolsSymbols + offset));
+    }
 
     final int klassHasFinalizerFlag = getConstant("JVM_ACC_HAS_FINALIZER", Integer.class);
 

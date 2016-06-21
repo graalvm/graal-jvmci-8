@@ -66,10 +66,10 @@ public final class BytecodeFrame extends BytecodePosition {
      * Note that the number of locals and the number of stack slots may be smaller than the maximum
      * number of locals and stack slots as specified in the compiled method.
      *
-     * This field is intentional exposed as a mutable array that a compiler may modify (e.g. during
-     * register allocation).
+     * This field is intentionally exposed as a mutable array that a compiler may modify (e.g.
+     * during register allocation).
      */
-    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "field is intentional mutable")//
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "field is intentionally mutable")//
     public final JavaValue[] values;
 
     /**

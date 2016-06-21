@@ -78,23 +78,24 @@ public class RegisterAttributes {
     }
 
     /**
-     * @return if a register that is available for use by a register allocator.
+     * @return {@code true} if a register is available for use by a register allocator otherwise
+     *         {@code false}
      */
     public boolean isAllocatable() {
         return allocatable;
     }
 
     /**
-     * @return if a register whose value preservation (if required) across a call is the
-     *         responsibility of the callee.
+     * @return {@code true} if a register whose value preservation (if required) across a call is
+     *         the responsibility of the callee otherwise {@code false}
      */
     public boolean isCalleeSave() {
         return calleeSave;
     }
 
     /**
-     * @return if a register whose value preservation (if required) across a call is the
-     *         responsibility of the caller.
+     * @return {@code true} if a register whose value preservation (if required) across a call is
+     *         the responsibility of the caller otherwise {@code false}
      */
     public boolean isCallerSave() {
         return callerSave;
