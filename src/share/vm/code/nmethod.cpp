@@ -2622,7 +2622,7 @@ void nmethod::copy_scopes_data(u_char* buffer, int size) {
 bool nmethod::is_deopt_entry(address pc) {
   return pc == deopt_handler_begin()
 #if INCLUDE_JVMCI
-    || pc == (deopt_handler_begin() + NativeCall::instruction_size)
+    || (is_compiled_by_jvmci() && pc == (deopt_handler_begin() + NativeCall::instruction_size))
 #endif
     ;
 }
