@@ -58,48 +58,22 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
 
     private final Integer amd64RequiredInt = osArch.equals("amd64") ? null : 0;
 
-    final boolean windowsOs = System.getProperty("os.name", "").startsWith("Windows");
-    final boolean linuxOs = System.getProperty("os.name", "").startsWith("Linux");
-
     // Compressed Oops related values.
     final boolean useCompressedOops = getFlag("UseCompressedOops", Boolean.class);
-    final boolean useCompressedClassPointers = getFlag("UseCompressedClassPointers", Boolean.class);
-
-    final int objectAlignment = getFlag("ObjectAlignmentInBytes", Integer.class);
 
     final int prototypeMarkWordOffset = getFieldOffset("Klass::_prototype_header", Integer.class, "markOop");
     final int subklassOffset = getFieldOffset("Klass::_subklass", Integer.class, "Klass*");
     final int nextSiblingOffset = getFieldOffset("Klass::_next_sibling", Integer.class, "Klass*");
     final int superCheckOffsetOffset = getFieldOffset("Klass::_super_check_offset", Integer.class, "juint");
     final int secondarySuperCacheOffset = getFieldOffset("Klass::_secondary_super_cache", Integer.class, "Klass*");
-    final int secondarySupersOffset = getFieldOffset("Klass::_secondary_supers", Integer.class, "Array<Klass*>*");
 
     final int classMirrorOffset = getFieldOffset("Klass::_java_mirror", Integer.class, "oop");
 
-    final int klassSuperKlassOffset = getFieldOffset("Klass::_super", Integer.class, "Klass*");
-    final int klassModifierFlagsOffset = getFieldOffset("Klass::_modifier_flags", Integer.class, "jint");
     final int klassAccessFlagsOffset = getFieldOffset("Klass::_access_flags", Integer.class, "AccessFlags");
     final int klassLayoutHelperOffset = getFieldOffset("Klass::_layout_helper", Integer.class, "jint");
-    final int klassNameOffset = getFieldOffset("Klass::_name", Integer.class, "Symbol*");
 
     final int klassLayoutHelperNeutralValue = getConstant("Klass::_lh_neutral_value", Integer.class);
     final int klassLayoutHelperInstanceSlowPathBit = getConstant("Klass::_lh_instance_slow_path_bit", Integer.class);
-    final int layoutHelperLog2ElementSizeShift = getConstant("Klass::_lh_log2_element_size_shift", Integer.class);
-    final int layoutHelperLog2ElementSizeMask = getConstant("Klass::_lh_log2_element_size_mask", Integer.class);
-    final int layoutHelperElementTypeShift = getConstant("Klass::_lh_element_type_shift", Integer.class);
-    final int layoutHelperElementTypeMask = getConstant("Klass::_lh_element_type_mask", Integer.class);
-    final int layoutHelperHeaderSizeShift = getConstant("Klass::_lh_header_size_shift", Integer.class);
-    final int layoutHelperHeaderSizeMask = getConstant("Klass::_lh_header_size_mask", Integer.class);
-    final int layoutHelperArrayTagShift = getConstant("Klass::_lh_array_tag_shift", Integer.class);
-    final int layoutHelperArrayTagTypeValue = getConstant("Klass::_lh_array_tag_type_value", Integer.class);
-    final int layoutHelperArrayTagObjectValue = getConstant("Klass::_lh_array_tag_obj_value", Integer.class);
-
-    /**
-     * This filters out the bit that differentiates a type array from an object array.
-     */
-    int layoutHelperElementTypePrimitiveInPlace() {
-        return (layoutHelperArrayTagTypeValue & ~layoutHelperArrayTagObjectValue) << layoutHelperArrayTagShift;
-    }
 
     final int arrayKlassComponentMirrorOffset = getFieldOffset("ArrayKlass::_component_mirror", Integer.class, "oop");
 
@@ -109,8 +83,6 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int arrayU1LengthOffset = getFieldOffset("Array<int>::_length", Integer.class, "int");
     final int arrayU1DataOffset = getFieldOffset("Array<u1>::_data", Integer.class);
     final int arrayU2DataOffset = getFieldOffset("Array<u2>::_data", Integer.class);
-    final int metaspaceArrayLengthOffset = getFieldOffset("Array<Klass*>::_length", Integer.class, "int");
-    final int metaspaceArrayBaseOffset = getFieldOffset("Array<Klass*>::_data[0]", Integer.class, "Klass*");
 
     final int instanceKlassSourceFileNameIndexOffset = getFieldOffset("InstanceKlass::_source_file_name_index", Integer.class, "u2");
     final int instanceKlassInitStateOffset = getFieldOffset("InstanceKlass::_init_state", Integer.class, "u1");
@@ -120,12 +92,9 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int instanceKlassStateLinked = getConstant("InstanceKlass::linked", Integer.class);
     final int instanceKlassStateFullyInitialized = getConstant("InstanceKlass::fully_initialized", Integer.class);
 
-    final int arrayClassElementOffset = getFieldOffset("ObjArrayKlass::_element_klass", Integer.class, "Klass*");
-
     final int fieldInfoAccessFlagsOffset = getConstant("FieldInfo::access_flags_offset", Integer.class);
     final int fieldInfoNameIndexOffset = getConstant("FieldInfo::name_index_offset", Integer.class);
     final int fieldInfoSignatureIndexOffset = getConstant("FieldInfo::signature_index_offset", Integer.class);
-    final int fieldInfoInitvalIndexOffset = getConstant("FieldInfo::initval_index_offset", Integer.class);
     final int fieldInfoLowPackedOffset = getConstant("FieldInfo::low_packed_offset", Integer.class);
     final int fieldInfoHighPackedOffset = getConstant("FieldInfo::high_packed_offset", Integer.class);
     final int fieldInfoFieldSlots = getConstant("FieldInfo::field_slots", Integer.class);
@@ -135,7 +104,6 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int jvmAccFieldInternal = getConstant("JVM_ACC_FIELD_INTERNAL", Integer.class);
     final int jvmAccFieldStable = getConstant("JVM_ACC_FIELD_STABLE", Integer.class);
     final int jvmAccFieldHasGenericSignature = getConstant("JVM_ACC_FIELD_HAS_GENERIC_SIGNATURE", Integer.class);
-    final int jvmAccWrittenFlags = getConstant("JVM_ACC_WRITTEN_FLAGS", Integer.class);
     final int jvmAccIsCloneable = getConstant("JVM_ACC_IS_CLONEABLE", Integer.class);
 
     final int runtimeCallStackSize = getConstant("frame::arg_reg_save_area_bytes", Integer.class, amd64RequiredInt);
@@ -185,7 +153,6 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int localVariableTableElementLengthOffset = getFieldOffset("LocalVariableTableElement::length", Integer.class, "u2");
     final int localVariableTableElementNameCpIndexOffset = getFieldOffset("LocalVariableTableElement::name_cp_index", Integer.class, "u2");
     final int localVariableTableElementDescriptorCpIndexOffset = getFieldOffset("LocalVariableTableElement::descriptor_cp_index", Integer.class, "u2");
-    final int localVariableTableElementSignatureCpIndexOffset = getFieldOffset("LocalVariableTableElement::signature_cp_index", Integer.class, "u2");
     final int localVariableTableElementSlotOffset = getFieldOffset("LocalVariableTableElement::slot", Integer.class, "u2");
 
     final int constantPoolSize = getTypeSize("ConstantPool");
@@ -221,8 +188,6 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int heapWordSize = getConstant("HeapWordSize", Integer.class);
 
     final int symbolPointerSize = getTypeSize("Symbol*");
-    final int symbolLengthOffset = getFieldOffset("Symbol::_length", Integer.class, "unsigned short");
-    final int symbolBodyOffset = getFieldOffset("Symbol::_body[0]", Integer.class, "jbyte");
 
     final long vmSymbolsSymbols = getFieldAddress("vmSymbols::_symbols[0]", "Symbol*");
     final int vmSymbolsFirstSID = getConstant("vmSymbols::FIRST_SID", Integer.class);
@@ -280,19 +245,12 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int compLevelAdjustmentByFullSignature = getConstant("JVMCIRuntime::by_full_signature", Integer.class);
 
     /**
-     * This is the largest stack offset encodeable in an OopMapValue. Offsets larger than this will
-     * throw an exception during code installation.
-     */
-    final int maxOopMapStackOffset = getFieldValue("JVMCIRuntime::max_oop_map_stack_offset", Integer.class, "int");
-
-    /**
      * The DataLayout header size is the same as the cell size.
      */
     final int dataLayoutHeaderSize = getConstant("DataLayout::cell_size", Integer.class);
     final int dataLayoutTagOffset = getFieldOffset("DataLayout::_header._struct._tag", Integer.class, "u1");
     final int dataLayoutFlagsOffset = getFieldOffset("DataLayout::_header._struct._flags", Integer.class, "u1");
     final int dataLayoutBCIOffset = getFieldOffset("DataLayout::_header._struct._bci", Integer.class, "u2");
-    final int dataLayoutCellsOffset = getFieldOffset("DataLayout::_cells[0]", Integer.class, "intptr_t");
     final int dataLayoutCellSize = getConstant("DataLayout::cell_size", Integer.class);
 
     final int dataLayoutNoTag = getConstant("DataLayout::no_tag", Integer.class);
@@ -376,9 +334,6 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
         assert false : codeInstallResult;
         return "unknown";
     }
-
-    final int compilerToVMKlassTag = getConstant("CompilerToVM::KLASS_TAG", Integer.class);
-    final int compilerToVMSymbolTag = getConstant("CompilerToVM::SYMBOL_TAG", Integer.class);
 
     final int bitDataExceptionSeenFlag = getConstant("BitData::exception_seen_flag", Integer.class);
     final int bitDataNullSeenFlag = getConstant("BitData::null_seen_flag", Integer.class);

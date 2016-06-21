@@ -423,7 +423,6 @@ final class CompilerToVM {
      * <li>{@link HotSpotVMConfig#localVariableTableElementLengthOffset}</li>
      * <li>{@link HotSpotVMConfig#localVariableTableElementNameCpIndexOffset}</li>
      * <li>{@link HotSpotVMConfig#localVariableTableElementDescriptorCpIndexOffset}</li>
-     * <li>{@link HotSpotVMConfig#localVariableTableElementSignatureCpIndexOffset}
      * <li>{@link HotSpotVMConfig#localVariableTableElementSlotOffset}
      * <li>{@link HotSpotVMConfig#localVariableTableElementStartBciOffset}
      * </ul>
