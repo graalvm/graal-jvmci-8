@@ -111,13 +111,7 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
         }
     }
 
-    private boolean verifyReadRawObject(Object expected, Constant base, long displacement, boolean compressed) {
-        if (compressed == runtime.getConfig().useCompressedOops) {
-            Object obj = asObject(base);
-            if (obj != null) {
-                assert expected == UNSAFE.getObject(obj, displacement) : "readUnsafeOop doesn't agree with unsafe.getObject";
-            }
-        }
+    private boolean verifyReadRawObject(Object expected, Constant base, long displacement) {
         if (base instanceof HotSpotMetaspaceConstant) {
             MetaspaceWrapperObject metaspaceObject = HotSpotMetaspaceConstantImpl.getMetaspaceObject(base);
             if (metaspaceObject instanceof HotSpotResolvedObjectTypeImpl) {
@@ -140,11 +134,11 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
             assert !compressed;
             displacement += asRawPointer(baseConstant);
             ret = runtime.getCompilerToVM().readUncompressedOop(displacement);
+            assert verifyReadRawObject(ret, baseConstant, initialDisplacement);
         } else {
             assert runtime.getConfig().useCompressedOops == compressed;
             ret = UNSAFE.getObject(base, displacement);
         }
-        assert verifyReadRawObject(ret, baseConstant, initialDisplacement, compressed);
         return ret;
     }
 
