@@ -559,9 +559,12 @@ address Assembler::locate_operand(address inst, WhichOperand which) {
     case 0x55: // andnps
     case 0x56: // orps
     case 0x57: // xorps
+    case 0x58: // addpd
+    case 0x59: // mulpd
     case 0x6E: // movd
     case 0x7E: // movd
     case 0xAE: // ldmxcsr, stmxcsr, fxrstor, fxsave, clflush
+    case 0xFE: // paddd
       debug_only(has_disp32 = true);
       break;
 
@@ -695,6 +698,30 @@ address Assembler::locate_operand(address inst, WhichOperand which) {
       case VEX_OPCODE_0F_3A:
         tail_size = 1;
         break;
+    }
+    ip++; // skip opcode
+    debug_only(has_disp32 = true); // has both kinds of operands!
+    break;
+
+  case 0x62: // EVEX_4bytes
+    assert((UseAVX > 0), "shouldn't have EVEX prefix");
+    assert(ip == inst+1, "no prefixes allowed");
+    // no EVEX collisions, all instructions that have 0x62 opcodes
+    // have EVEX versions and are subopcodes of 0x66
+    ip++; // skip P0 and exmaine W in P1
+    is_64bit = ((VEX_W & *ip) == VEX_W);
+    ip++; // move to P2
+    ip++; // skip P2, move to opcode
+    // To find the end of instruction (which == end_pc_operand).
+    switch (0xFF & *ip) {
+    case 0x22: // pinsrd r, r/a, #8
+    case 0x61: // pcmpestri r, r/a, #8
+    case 0x70: // pshufd r, r/a, #8
+    case 0x73: // psrldq r, #8
+      tail_size = 1;  // the imm8
+      break;
+    default:
+      break;
     }
     ip++; // skip opcode
     debug_only(has_disp32 = true); // has both kinds of operands!
