@@ -99,7 +99,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         /**
          * The prefix for system properties that are JVMCI options.
          */
-        private static final String JVMCI_OPTION_PROPERTY_PREFIX = "jvmci.";
+        static final String JVMCI_OPTION_PROPERTY_PREFIX = "jvmci.";
 
         /**
          * Marker for uninitialized flags.
