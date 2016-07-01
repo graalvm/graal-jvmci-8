@@ -55,7 +55,7 @@ final class HotSpotMethodData {
     final long metaspaceMethodData;
     @SuppressWarnings("unused") private final HotSpotResolvedJavaMethodImpl method;
 
-    public HotSpotMethodData(long metaspaceMethodData, HotSpotResolvedJavaMethodImpl method) {
+    HotSpotMethodData(long metaspaceMethodData, HotSpotResolvedJavaMethodImpl method) {
         this.metaspaceMethodData = metaspaceMethodData;
         this.method = method;
     }
@@ -822,10 +822,10 @@ final class HotSpotMethodData {
     private static boolean checkAccessorTags() {
         int expectedTag = 0;
         for (HotSpotMethodDataAccessor accessor : PROFILE_DATA_ACCESSORS) {
-            if (expectedTag ==0 ) {
+            if (expectedTag == 0) {
                 assert accessor == null;
             } else {
-                assert accessor.tag == expectedTag: expectedTag + " != " + accessor.tag + " " + accessor;
+                assert accessor.tag == expectedTag : expectedTag + " != " + accessor.tag + " " + accessor;
             }
             expectedTag++;
         }
