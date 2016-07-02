@@ -22,10 +22,6 @@
  */
 package jdk.vm.ci.hotspot;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-
 import jdk.vm.ci.code.CompilationRequest;
 import jdk.vm.ci.code.CompilationRequestResult;
 import jdk.vm.ci.common.JVMCIError;
@@ -33,7 +29,6 @@ import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.runtime.JVMCICompiler;
 import jdk.vm.ci.runtime.JVMCIRuntime;
 import jdk.vm.ci.runtime.services.JVMCICompilerFactory;
-import jdk.vm.ci.runtime.services.JVMCICompilerFactory.AutoSelectionPrecedence;
 import jdk.vm.ci.services.Services;
 
 final class HotSpotJVMCICompilerConfig {
@@ -61,54 +56,6 @@ final class HotSpotJVMCICompilerConfig {
     private static JVMCICompilerFactory compilerFactory;
 
     /**
-     * Comparator that sorts available {@link JVMCICompilerFactory} objects according to their
-     * {@link JVMCICompilerFactory#getAutoSelectionRelationTo(JVMCICompilerFactory) relative}
-     * auto-selection preferences. Factories with higher preferences are sorted earlier. If a
-     */
-    static class FactoryComparator implements Comparator<JVMCICompilerFactory> {
-
-        /**
-         * Compares two compiler factories and returns -1 if {@code o1} should be auto-selected over
-         * {@code o2}, -1 if {@code o1} should be auto-selected over {@code o2} or 0 if
-         * {@code o1 == o2 || o1.getClass() == o2.getClass()}.
-         *
-         * @throws JVMCIError there is no auto-selection preference relation between {@code o1} and
-         *             {@code o2}
-         */
-        public int compare(JVMCICompilerFactory o1, JVMCICompilerFactory o2) {
-            if (o1 == o2 || o1.getClass() == o2.getClass()) {
-                return 0;
-            }
-            AutoSelectionPrecedence o1Precedence = o1.getAutoSelectionRelationTo(o2);
-            AutoSelectionPrecedence o2Precedence = o2.getAutoSelectionRelationTo(o1);
-            switch (o1Precedence) {
-                case HIGHER: {
-                    assert o2Precedence != o1Precedence : "auto selection precedence of " + o1 + " and " + o2 + " cannot both be " + o1Precedence;
-                    return -1;
-                }
-                case LOWER: {
-                    assert o2Precedence != o1Precedence : "auto selection precedence of " + o1 + " and " + o2 + " cannot both be " + o1Precedence;
-                    return 1;
-                }
-                case UNRELATED: {
-                    switch (o2Precedence) {
-                        case HIGHER: {
-                            return 1;
-                        }
-                        case LOWER: {
-                            return -1;
-                        }
-                        default:
-                            break;
-                    }
-                }
-            }
-            // No auto-selection preference relation between o1 and o2
-            throw new JVMCIError("JVMCI compiler must be specified with the '%s' system property", Option.JVMCI_OPTION_PROPERTY_PREFIX + Option.Compiler);
-        }
-    }
-
-    /**
      * Gets the selected system compiler factory.
      *
      * @return the selected system compiler factory
@@ -127,24 +74,21 @@ final class HotSpotJVMCICompilerConfig {
                     throw new JVMCIError("JVMCI compiler '%s' not found", compilerName);
                 }
             } else {
-                // Auto selection
-                ArrayList<JVMCICompilerFactory> factories = new ArrayList<>();
+                // Auto select a single available compiler
                 for (JVMCICompilerFactory f : Services.load(JVMCICompilerFactory.class)) {
-                    factories.add(f);
-                }
-                if (!factories.isEmpty()) {
-                    if (factories.size() == 1) {
-                        factory = factories.get(0);
+                    if (factory == null) {
+                        factory = f;
                     } else {
-                        Collections.sort(factories, new FactoryComparator());
-                        factory = factories.get(0);
+                        // Multiple factories seen - cancel auto selection
+                        factory = null;
+                        break;
                     }
-                } else {
+                }
+                if (factory == null) {
                     factory = new DummyCompilerFactory();
                 }
-                factory.onSelection();
             }
-            assert factory != null;
+            factory.onSelection();
             compilerFactory = factory;
         }
         return compilerFactory;

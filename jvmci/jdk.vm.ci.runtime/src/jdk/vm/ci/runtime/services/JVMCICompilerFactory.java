@@ -54,29 +54,6 @@ public abstract class JVMCICompilerFactory {
     }
 
     /**
-     * Constants denoting the relative precedence between two factories in terms of
-     * {@linkplain JVMCICompilerFactory#getAutoSelectionRelationTo(JVMCICompilerFactory) auto
-     * selecting} which factory to use.
-     */
-    public enum AutoSelectionPrecedence {
-        UNRELATED,
-        HIGHER,
-        LOWER;
-    }
-
-    /**
-     * Gets the precedence of factory relative to another factory in terms of selecting which
-     * factory to use in absence of information (such as a system property) specifying a specific
-     * factory.
-     *
-     * @param other a factory guaranteed to have a different concrete type than this factory
-     * @return the precedence of selecting this factory over {@code other}
-     */
-    public AutoSelectionPrecedence getAutoSelectionRelationTo(JVMCICompilerFactory other) {
-        return AutoSelectionPrecedence.UNRELATED;
-    }
-
-    /**
      * Get the name of this compiler. The name is used by JVMCI to determine which factory to use.
      */
     public abstract String getCompilerName();
