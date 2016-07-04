@@ -33,6 +33,11 @@ import jdk.vm.ci.services.Services;
 
 final class HotSpotJVMCICompilerConfig {
 
+    /**
+     * This factory allows JVMCI initialization to succeed but raises an error if the VM asks JVMCI
+     * to perform a compilation. This allows the reflective parts of the JVMCI API to be used
+     * without requiring a compiler implementation to be available.
+     */
     private static class DummyCompilerFactory extends JVMCICompilerFactory implements JVMCICompiler {
 
         public CompilationRequestResult compileMethod(CompilationRequest request) {
