@@ -88,6 +88,7 @@
 #define VM_TYPES_JVMCI(declare_type, declare_toplevel_type)                   \
   declare_toplevel_type(narrowKlass)                                          \
   declare_toplevel_type(JVMCIEnv)                                             \
+  declare_toplevel_type(CompilerToVM::Data)                                   \
 
 #define VM_INT_CONSTANTS_JVMCI(declare_constant, declare_preprocessor_constant)                   \
   declare_constant(Deoptimization::Reason_unreached0)                                             \
