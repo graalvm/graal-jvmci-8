@@ -62,14 +62,14 @@ public class LineNumberTable {
     /**
      * Gets a copy of the array of line numbers that was passed to this object's constructor.
      */
-    public int[] getLineNumbersCopy() {
+    public int[] getLineNumbers() {
         return lineNumbers.clone();
     }
 
     /**
      * Gets a copy of the array of bytecode indexes that was passed to this object's constructor.
      */
-    public int[] getBcisCopy() {
+    public int[] getBcis() {
         return bcis.clone();
     }
 }

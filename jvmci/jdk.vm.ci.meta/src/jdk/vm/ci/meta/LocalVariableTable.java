@@ -69,7 +69,7 @@ public class LocalVariableTable {
     /**
      * Gets a copy of the array of {@link Local}s that was passed to this object's constructor.
      */
-    public Local[] getLocalsCopy() {
+    public Local[] getLocals() {
         return locals.clone();
     }
 
