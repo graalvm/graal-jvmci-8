@@ -109,5 +109,4 @@ public class Infopoint extends Site implements Comparable<Infopoint> {
             }
         }
     }
-
 }

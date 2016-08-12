@@ -103,8 +103,8 @@ public final class BytecodeFrame extends BytecodePosition {
     public final boolean rethrowException;
 
     /**
-     * Specifies if this objects represents a frame state in the middle of executing a call. If
-     * true, the arguments to the call have been popped from the stack and the return value (for a
+     * Specifies if this object represents a frame state in the middle of executing a call. If true,
+     * the arguments to the call have been popped from the stack and the return value (for a
      * non-void call) has not yet been pushed.
      */
     public final boolean duringCall;

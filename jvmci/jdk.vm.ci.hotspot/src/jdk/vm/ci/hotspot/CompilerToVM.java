@@ -445,7 +445,7 @@ final class CompilerToVM {
     native Object readUncompressedOop(long address);
 
     /**
-     * Specifies that {@code method} should not be inlined or compiled.
+     * Determines if {@code method} should not be inlined or compiled.
      */
     native void doNotInlineOrCompile(HotSpotResolvedJavaMethodImpl method);
 

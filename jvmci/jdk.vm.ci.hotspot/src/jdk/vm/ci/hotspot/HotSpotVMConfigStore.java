@@ -106,7 +106,7 @@ public final class HotSpotVMConfigStore {
         try (InitTimer t = timer("CompilerToVm readConfiguration")) {
             data = compilerToVm.readConfiguration();
         }
-        assert data.length == 5;
+        assert data.length == 5 : data.length;
 
         // @formatter:off
         VMField[] vmFieldsInfo    = (VMField[]) data[0];
@@ -149,10 +149,5 @@ public final class HotSpotVMConfigStore {
                 vmFlags.put(vmFlag.name, vmFlag);
             }
         }
-    }
-
-    @Override
-    public String toString() {
-        return getClass().getSimpleName();
     }
 }

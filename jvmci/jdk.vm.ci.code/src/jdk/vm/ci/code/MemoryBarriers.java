@@ -39,7 +39,7 @@ package jdk.vm.ci.code;
  * JMM's ReadAfterWrite.java test fails in -Xint mode without some kind of
  * memory barrier (i.e., it's not sufficient that the interpreter does not
  * reorder volatile references, the hardware also must not reorder them).
- * 
+ *
  * According to the new Java Memory Model (JMM):
  * (1) All volatiles are serialized wrt to each other.
  * ALSO reads &amp; writes act as acquire &amp; release, so:
@@ -50,7 +50,7 @@ package jdk.vm.ci.code;
  * that happen BEFORE the write float down to after the write.  It's OK for
  * non-volatile memory refs that happen after the volatile write to float up
  * before it.
- * 
+ *
  * We only put in barriers around volatile refs (they are expensive), not
  * _between_ memory refs (which would require us to track the flavor of the
  * previous memory refs).  Requirements (2) and (3) require some barriers

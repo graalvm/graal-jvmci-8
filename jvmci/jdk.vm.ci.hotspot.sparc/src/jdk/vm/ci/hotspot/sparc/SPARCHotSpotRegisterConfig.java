@@ -197,8 +197,7 @@ public class SPARCHotSpotRegisterConfig implements RegisterConfig {
     public SPARCHotSpotRegisterConfig(TargetDescription target, RegisterArray allocatable) {
         this.target = target;
         this.allocatable = allocatable;
-        HashSet<Register> callerSaveSet = new HashSet<>();
-        target.arch.getAvailableValueRegisters().addTo(callerSaveSet);
+        HashSet<Register> callerSaveSet = new HashSet<>(target.arch.getAvailableValueRegisters().asList());
         for (Register cs : windowSaveRegisters) {
             callerSaveSet.remove(cs);
         }
