@@ -27,8 +27,10 @@ import static jdk.vm.ci.common.InitTimer.timer;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -99,7 +101,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         /**
          * The prefix for system properties that are JVMCI options.
          */
-        static final String JVMCI_OPTION_PROPERTY_PREFIX = "jvmci.";
+        private static final String JVMCI_OPTION_PROPERTY_PREFIX = "jvmci.";
 
         /**
          * Marker for uninitialized flags.
@@ -212,7 +214,22 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
 
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
 
-    private final Iterable<HotSpotVMEventListener> vmEventListeners;
+    private volatile List<HotSpotVMEventListener> vmEventListeners;
+
+    private Iterable<HotSpotVMEventListener> getVmEventListeners() {
+        if (vmEventListeners == null) {
+            synchronized (this) {
+                if (vmEventListeners == null) {
+                    List<HotSpotVMEventListener> listeners = new ArrayList<>();
+                    for (HotSpotVMEventListener vmEventListener : Services.load(HotSpotVMEventListener.class)) {
+                        listeners.add(vmEventListener);
+                    }
+                    vmEventListeners = listeners;
+                }
+            }
+        }
+        return vmEventListeners;
+    }
 
     /**
      * Stores the result of {@link HotSpotJVMCICompilerFactory#getTrivialPrefixes()} so that it can
@@ -241,7 +258,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
             hostBackend = registerBackend(factory.createJVMCIBackend(this, null));
         }
 
-        vmEventListeners = Services.load(HotSpotVMEventListener.class);
         metaAccessContext = new HotSpotJVMCIMetaAccessContext();
 
         boolean printFlags = Option.PrintFlags.getBoolean();
@@ -416,7 +432,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
      */
     @SuppressWarnings({"unused"})
     private void shutdown() throws Exception {
-        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
+        for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
             vmEventListener.notifyShutdown();
         }
     }
@@ -428,7 +444,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
      */
     @SuppressWarnings({"unused"})
     private void bootstrapFinished() throws Exception {
-        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
+        for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
             vmEventListener.notifyBootstrapFinished();
         }
     }
@@ -441,7 +457,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
      * @param compiledCode
      */
     void notifyInstall(HotSpotCodeCacheProvider hotSpotCodeCacheProvider, InstalledCode installedCode, CompiledCode compiledCode) {
-        for (HotSpotVMEventListener vmEventListener : vmEventListeners) {
+        for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
             vmEventListener.notifyInstall(hotSpotCodeCacheProvider, installedCode, compiledCode);
         }
     }
@@ -479,6 +495,9 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         TreeMap<String, Long> typeSizes = new TreeMap<>(store.getTypeSizes());
         for (Map.Entry<String, Long> e : typeSizes.entrySet()) {
             printConfigLine(vm, "[vmconfig:type size] %s = %d%n", e.getKey(), e.getValue());
+        }
+        for (VMIntrinsicMethod e : store.getIntrinsics()) {
+            printConfigLine(vm, "[vmconfig:intrinsic] %d = %s.%s %s%n", e.id, e.declaringClass, e.name, e.descriptor);
         }
     }
 
