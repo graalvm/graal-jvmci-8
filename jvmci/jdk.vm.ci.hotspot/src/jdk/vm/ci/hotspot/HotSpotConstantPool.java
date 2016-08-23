@@ -716,18 +716,16 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
 
     }
 
-    // Lazily initialized.
-    private static String[] signaturePolymorphicHolders;
+    static class Lazy {
+        static final String[] signaturePolymorphicHolders = compilerToVM().getSignaturePolymorphicHolders();
+    }
 
     /**
      * Determines if {@code type} contains signature polymorphic methods.
      */
     private static boolean isSignaturePolymorphicHolder(final HotSpotResolvedObjectTypeImpl type) {
         String name = type.getName();
-        if (signaturePolymorphicHolders == null) {
-            signaturePolymorphicHolders = compilerToVM().getSignaturePolymorphicHolders();
-        }
-        for (String holder : signaturePolymorphicHolders) {
+        for (String holder : Lazy.signaturePolymorphicHolders) {
             if (name.equals(holder)) {
                 return true;
             }
