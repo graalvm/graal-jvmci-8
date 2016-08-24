@@ -111,9 +111,6 @@
   declare_preprocessor_constant("JVM_ACC_SYNTHETIC", JVM_ACC_SYNTHETIC)                           \
   declare_preprocessor_constant("JVM_RECOGNIZED_FIELD_MODIFIERS", JVM_RECOGNIZED_FIELD_MODIFIERS) \
                                                                                                   \
-  declare_constant(CompilerToVM::KLASS_TAG)                                                       \
-  declare_constant(CompilerToVM::SYMBOL_TAG)                                                      \
-                                                                                                  \
   declare_constant(BitData::exception_seen_flag)                                                  \
   declare_constant(BitData::null_seen_flag)                                                       \
   declare_constant(CounterData::count_off)                                                        \

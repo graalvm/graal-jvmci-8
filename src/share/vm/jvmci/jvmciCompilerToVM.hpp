@@ -88,23 +88,10 @@ class CompilerToVM {
     }
    };
 
-  /**
-   * Tag bits used by lookupKlassInPool to distinguish the types in Java.
-   */
-  enum Tags {
-    KLASS_TAG = 0x0,
-    SYMBOL_TAG = 0x1
-  };
-
-  static intptr_t tag_pointer(Klass* klass) {
-    return ((intptr_t) klass) | KLASS_TAG;
-  }
-
-  static intptr_t tag_pointer(Symbol* symbol) {
-    return ((intptr_t) symbol) | SYMBOL_TAG;
-  }
-
   static JNINativeMethod methods[];
+
+  static objArrayHandle initialize_intrinsics(TRAPS);
+
   static int methods_count();
 
   static inline Method* asMethod(jobject jvmci_method) {

@@ -204,6 +204,40 @@ void CompilerToVM::Data::initialize(TRAPS) {
 #undef SET_TRIGFUNC
 }
 
+objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
+  objArrayHandle vmIntrinsics = oopFactory::new_objArray(VMIntrinsicMethod::klass(), (vmIntrinsics::ID_LIMIT - 1), CHECK_(objArrayHandle()));
+  int index = 0;
+  // The intrinsics for a class are usually adjacent to each other.
+  // When they are, the string for the class name can be reused.
+  vmSymbols::SID kls_sid = vmSymbols::NO_SID;
+  Handle kls_str;
+#define SID_ENUM(n) vmSymbols::VM_SYMBOL_ENUM_NAME(n)
+#define VM_SYMBOL_TO_STRING(s) \
+  java_lang_String::create_from_symbol(vmSymbols::symbol_at(SID_ENUM(s)), CHECK_(objArrayHandle()))
+#define VM_INTRINSIC_INFO(id, kls, name, sig, ignore_fcode) {             \
+    instanceHandle vmIntrinsicMethod = InstanceKlass::cast(VMIntrinsicMethod::klass())->allocate_instance_handle(CHECK_(objArrayHandle())); \
+    if (kls_sid != SID_ENUM(kls)) {                                       \
+      kls_str = VM_SYMBOL_TO_STRING(kls);                                 \
+      kls_sid = SID_ENUM(kls);                                            \
+    }                                                                     \
+    Handle name_str = VM_SYMBOL_TO_STRING(name);                          \
+    Handle sig_str = VM_SYMBOL_TO_STRING(sig);                            \
+    VMIntrinsicMethod::set_declaringClass(vmIntrinsicMethod, kls_str());  \
+    VMIntrinsicMethod::set_name(vmIntrinsicMethod, name_str());           \
+    VMIntrinsicMethod::set_descriptor(vmIntrinsicMethod, sig_str());      \
+    VMIntrinsicMethod::set_id(vmIntrinsicMethod, vmIntrinsics::id);       \
+    vmIntrinsics->obj_at_put(index++, vmIntrinsicMethod());               \
+  }
+
+  VM_INTRINSICS_DO(VM_INTRINSIC_INFO, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_ALIAS_IGNORE)
+#undef SID_ENUM
+#undef VM_SYMBOL_TO_STRING
+#undef VM_INTRINSIC_INFO
+  assert(index == vmIntrinsics::ID_LIMIT - 1, "must be");
+
+  return vmIntrinsics;
+}
+
 C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
 #define BOXED_INT(name, value) oop name; do { jvalue p; p.j = (jint) (value); name = java_lang_boxing_object::create(T_INT, &p, CHECK_NULL);} while(0)
 #define BOXED_LONG(name, value) oop name; do { jvalue p; p.j = (jlong) (value); name = java_lang_boxing_object::create(T_LONG, &p, CHECK_NULL);} while(0)
@@ -330,34 +364,7 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
     vmFlags->obj_at_put(i, vmFlagObj());
   }
 
-  objArrayHandle vmIntrinsics = oopFactory::new_objArray(VMIntrinsicMethod::klass(), (vmIntrinsics::ID_LIMIT - 1), CHECK_NULL);
-  int index = 0;
-  // The intrinsics for a class are usually adjacent to each other.
-  // When they are, the string for the class name can be reused.
-  vmSymbols::SID kls_sid = vmSymbols::NO_SID;
-  Handle kls_str;
-#define SID_ENUM(n) vmSymbols::VM_SYMBOL_ENUM_NAME(n)
-#define VM_SYMBOL_TO_STRING(s) \
-  java_lang_String::create_from_symbol(vmSymbols::symbol_at(SID_ENUM(s)), THREAD)
-#define VM_INTRINSIC_INFO(id, kls, name, sig, ignore_fcode) {             \
-    instanceHandle vmIntrinsicMethod = InstanceKlass::cast(VMIntrinsicMethod::klass())->allocate_instance_handle(CHECK_NULL); \
-    if (kls_sid != SID_ENUM(kls)) {                                       \
-      kls_str = VM_SYMBOL_TO_STRING(kls);                                 \
-      kls_sid = SID_ENUM(kls);                                            \
-    }                                                                     \
-    Handle name_str = VM_SYMBOL_TO_STRING(name);                          \
-    Handle sig_str = VM_SYMBOL_TO_STRING(sig);                            \
-    VMIntrinsicMethod::set_declaringClass(vmIntrinsicMethod, kls_str());  \
-    VMIntrinsicMethod::set_name(vmIntrinsicMethod, name_str());           \
-    VMIntrinsicMethod::set_descriptor(vmIntrinsicMethod, sig_str());      \
-    VMIntrinsicMethod::set_id(vmIntrinsicMethod, vmIntrinsics::id);       \
-      vmIntrinsics->obj_at_put(index++, vmIntrinsicMethod());             \
-  }
-
-  VM_INTRINSICS_DO(VM_INTRINSIC_INFO, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_SYMBOL_IGNORE, VM_ALIAS_IGNORE)
-#undef VM_INTRINSIC_SYMBOL
-#undef VM_INTRINSIC_INFO
-  assert(index == vmIntrinsics::ID_LIMIT - 1, "must be");
+  objArrayHandle vmIntrinsics = CompilerToVM::initialize_intrinsics(CHECK_NULL);
 
   objArrayOop data = oopFactory::new_objArray(SystemDictionary::Object_klass(), 6, CHECK_NULL);
   data->obj_at_put(0, vmFields());
@@ -1503,6 +1510,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"resolveInvokeDynamicInPool",                   CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeDynamicInPool)},
   {CC"resolveInvokeHandleInPool",                    CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeHandleInPool)},
   {CC"resolveMethod",                                CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD HS_RESOLVED_KLASS")"HS_RESOLVED_METHOD, FN_PTR(resolveMethod)},
+  {CC "getSignaturePolymorphicHolders",              CC "()[" STRING,                                                                  FN_PTR(getSignaturePolymorphicHolders)},
   {CC"getVtableIndexForInterfaceMethod",             CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD")I",                                    FN_PTR(getVtableIndexForInterfaceMethod)},
   {CC"getClassInitializer",                          CC"("HS_RESOLVED_KLASS")"HS_RESOLVED_METHOD,                                      FN_PTR(getClassInitializer)},
   {CC"hasFinalizableSubclass",                       CC"("HS_RESOLVED_KLASS")Z",                                                       FN_PTR(hasFinalizableSubclass)},
