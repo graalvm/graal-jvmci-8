@@ -216,6 +216,11 @@ ifeq ($(USE_CLANG),)
   ifeq "$(shell expr \( $(CC_VER_MAJOR) \> 4 \) \| \( \( $(CC_VER_MAJOR) = 4 \) \& \( $(CC_VER_MINOR) \>= 3 \) \))" "0"
     WARNING_FLAGS += -Wconversion
   endif
+  # Since GCC 6 gnu++98 is not the default language anymore and the compiler is more aggressive
+  ifeq "$(shell expr \( $(CC_VER_MAJOR) \>= 6 \))" "1"
+    CFLAGS += -std=gnu++98 -fno-delete-null-pointer-checks -fno-lifetime-dse
+    WARNINGS_ARE_ERRORS += -Wno-deprecated-declarations
+  endif
 endif
 
 CFLAGS_WARN/DEFAULT = $(WARNINGS_ARE_ERRORS) $(WARNING_FLAGS)
