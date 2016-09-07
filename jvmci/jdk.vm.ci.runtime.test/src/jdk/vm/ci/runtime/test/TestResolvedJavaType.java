@@ -59,7 +59,6 @@ import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.Assumptions.AssumptionResult;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaKind;
-import jdk.vm.ci.meta.ModifiersProvider;
 import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
@@ -123,8 +122,9 @@ public class TestResolvedJavaType extends TypeUniverse {
     public void getModifiersTest() {
         for (Class<?> c : classes) {
             ResolvedJavaType type = metaAccess.lookupJavaType(c);
-            int expected = c.getModifiers() & ModifiersProvider.jvmClassModifiers();
-            int actual = type.getModifiers() & ModifiersProvider.jvmClassModifiers();
+            int mask = Modifier.classModifiers() & ~Modifier.STATIC;
+            int expected = c.getModifiers() & mask;
+            int actual = type.getModifiers() & mask;
             Class<?> elementalType = c;
             while (elementalType.isArray()) {
                 elementalType = elementalType.getComponentType();

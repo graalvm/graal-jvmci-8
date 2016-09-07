@@ -108,8 +108,11 @@
   declare_constant(JVMCIRuntime::by_holder)                                                       \
   declare_constant(JVMCIRuntime::by_full_signature)                                               \
                                                                                                   \
+  declare_preprocessor_constant("JVM_ACC_VARARGS", JVM_ACC_VARARGS)                               \
+  declare_preprocessor_constant("JVM_ACC_BRIDGE", JVM_ACC_BRIDGE)                                 \
+  declare_preprocessor_constant("JVM_ACC_ANNOTATION", JVM_ACC_ANNOTATION)                         \
+  declare_preprocessor_constant("JVM_ACC_ENUM", JVM_ACC_ENUM)                                     \
   declare_preprocessor_constant("JVM_ACC_SYNTHETIC", JVM_ACC_SYNTHETIC)                           \
-  declare_preprocessor_constant("JVM_RECOGNIZED_FIELD_MODIFIERS", JVM_RECOGNIZED_FIELD_MODIFIERS) \
                                                                                                   \
   declare_constant(BitData::exception_seen_flag)                                                  \
   declare_constant(BitData::null_seen_flag)                                                       \
