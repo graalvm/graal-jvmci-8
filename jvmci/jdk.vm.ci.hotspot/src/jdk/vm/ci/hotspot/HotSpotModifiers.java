@@ -42,7 +42,7 @@ import java.lang.reflect.Modifier;
  * The modifiers not public in {@link Modifier} that need to be retrieved from
  * {@link HotSpotVMConfig}.
  */
-interface HotSpotModifiers {
+public interface HotSpotModifiers {
 
     // @formatter:off
     int ANNOTATION = config().jvmAccAnnotation;
