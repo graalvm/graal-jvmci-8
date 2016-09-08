@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -39,28 +39,28 @@ import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 import java.lang.reflect.Modifier;
 
 /**
- * The modifiers not public in {@link Modifier} that need to be retrieved from
+ * The non-public modifiers in {@link Modifier} that need to be retrieved from
  * {@link HotSpotVMConfig}.
  */
-public interface HotSpotModifiers {
+public class HotSpotModifiers {
 
     // @formatter:off
-    int ANNOTATION = config().jvmAccAnnotation;
-    int ENUM       = config().jvmAccEnum;
-    int VARARGS    = config().jvmAccVarargs;
-    int BRIDGE     = config().jvmAccBridge;
-    int SYNTHETIC  = config().jvmAccSynthetic;
+    public static final int ANNOTATION = config().jvmAccAnnotation;
+    public static final int ENUM       = config().jvmAccEnum;
+    public static final int VARARGS    = config().jvmAccVarargs;
+    public static final int BRIDGE     = config().jvmAccBridge;
+    public static final int SYNTHETIC  = config().jvmAccSynthetic;
     // @formatter:on
 
-    static int jvmClassModifiers() {
+    public static int jvmClassModifiers() {
         return PUBLIC | FINAL | INTERFACE | ABSTRACT | ANNOTATION | ENUM | SYNTHETIC;
     }
 
-    static int jvmMethodModifiers() {
+    public static int jvmMethodModifiers() {
         return PUBLIC | PRIVATE | PROTECTED | STATIC | FINAL | SYNCHRONIZED | BRIDGE | VARARGS | NATIVE | ABSTRACT | STRICT | SYNTHETIC;
     }
 
-    static int jvmFieldModifiers() {
+    public static int jvmFieldModifiers() {
         return PUBLIC | PRIVATE | PROTECTED | STATIC | FINAL | VOLATILE | TRANSIENT | ENUM | SYNTHETIC;
     }
 }
