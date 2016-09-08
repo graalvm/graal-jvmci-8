@@ -124,7 +124,7 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
 
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
   HandleMark hm;
-  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK_ABORT);
+  Handle receiver = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK_EXIT);
 
   JavaValue method_result(T_OBJECT);
   JavaCallArguments args;

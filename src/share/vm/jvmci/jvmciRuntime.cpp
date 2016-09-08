@@ -641,7 +641,7 @@ Handle JVMCIRuntime::callStatic(const char* className, const char* methodName, c
   guarantee(!_HotSpotJVMCIRuntime_initialized, "cannot reinitialize HotSpotJVMCIRuntime");
 
   TempNewSymbol name = SymbolTable::new_symbol(className, CHECK_(Handle()));
-  KlassHandle klass = load_required_class(name);
+  KlassHandle klass = resolve_or_fail(name, CHECK_(Handle()));
   TempNewSymbol runtime = SymbolTable::new_symbol(methodName, CHECK_(Handle()));
   TempNewSymbol sig = SymbolTable::new_symbol(signature, CHECK_(Handle()));
   JavaValue result(T_OBJECT);
@@ -660,7 +660,8 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
 #ifdef ASSERT
     // This should only be called in the context of the JVMCI class being initialized
     TempNewSymbol name = SymbolTable::new_symbol("jdk/vm/ci/runtime/JVMCI", CHECK);
-    instanceKlassHandle klass = InstanceKlass::cast(load_required_class(name));
+    Klass* k = resolve_or_fail(name, CHECK);
+    instanceKlassHandle klass = InstanceKlass::cast(k);
     assert(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
            "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
 #endif
@@ -798,9 +799,6 @@ JVM_ENTRY(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
 
     env->RegisterNatives(c2vmClass, CompilerToVM::methods, CompilerToVM::methods_count());
   }
-  if (HAS_PENDING_EXCEPTION) {
-    JVMCIRuntime::abort_on_pending_exception(PENDING_EXCEPTION, "Could not register natives");
-  }
 JVM_END
 
 void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
@@ -812,24 +810,12 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
   static Klass* _FactoryKlass = NULL;
   if (_FactoryKlass == NULL) {
     Thread* THREAD = Thread::current();
-    TempNewSymbol name = SymbolTable::new_symbol("jdk/vm/ci/services/JVMCIClassLoaderFactory", CHECK_ABORT);
-    KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, THREAD);
-    if (HAS_PENDING_EXCEPTION) {
-      static volatile int seen_error = 0;
-      if (!seen_error && Atomic::cmpxchg(1, &seen_error, 0) == 0) {
-        // Only report the failure on the first thread that hits it
-        abort_on_pending_exception(PENDING_EXCEPTION, "JVMCI classes are not available");
-      } else {
-        CLEAR_PENDING_EXCEPTION;
-        // Give first thread time to report the error.
-        os::sleep(THREAD, 100, false);
-        vm_abort(false);
-      }
-    }
+    TempNewSymbol name = SymbolTable::new_symbol("jdk/vm/ci/services/JVMCIClassLoaderFactory", CHECK_EXIT);
+    KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, CHECK_EXIT);
 
     // We cannot use jvmciJavaClasses for this because we are currently in the
     // process of initializing that mechanism.
-    TempNewSymbol field_name = SymbolTable::new_symbol("useJVMCIClassLoader", CHECK_ABORT);
+    TempNewSymbol field_name = SymbolTable::new_symbol("useJVMCIClassLoader", CHECK_EXIT);
     fieldDescriptor field_desc;
     if (klass->find_field(field_name, vmSymbols::bool_signature(), &field_desc) == NULL) {
       ResourceMark rm;
@@ -839,23 +825,13 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
     InstanceKlass* ik = InstanceKlass::cast(klass());
     address addr = ik->static_field_addr(field_desc.offset() - InstanceMirrorKlass::offset_of_static_fields());
     *((jboolean *) addr) = (jboolean) UseJVMCIClassLoader;
-    klass->initialize(CHECK_ABORT);
+    klass->initialize(CHECK_EXIT);
     _FactoryKlass = klass();
     assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
 
     JVMCIJavaClasses::compute_offsets(THREAD);
   }
 }
-
-#define CHECK_WARN_ABORT_(message) THREAD); \
-  if (HAS_PENDING_EXCEPTION) { \
-    warning(message); \
-    char buf[512]; \
-    jio_snprintf(buf, 512, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
-    JVMCIRuntime::abort_on_pending_exception(PENDING_EXCEPTION, buf); \
-    return; \
-  } \
-  (void)(0
 
 void JVMCIRuntime::shutdown(TRAPS) {
   if (_HotSpotJVMCIRuntime_instance != NULL) {
@@ -872,11 +848,11 @@ void JVMCIRuntime::shutdown(TRAPS) {
 void JVMCIRuntime::bootstrap_finished(TRAPS) {
   if (_HotSpotJVMCIRuntime_instance != NULL) {
     HandleMark hm(THREAD);
-    Handle receiver = get_HotSpotJVMCIRuntime(CHECK_ABORT);
+    Handle receiver = get_HotSpotJVMCIRuntime(CHECK_EXIT);
     JavaValue result(T_VOID);
     JavaCallArguments args;
     args.push_oop(receiver);
-    JavaCalls::call_special(&result, receiver->klass(), vmSymbols::bootstrapFinished_method_name(), vmSymbols::void_method_signature(), &args, CHECK_ABORT);
+    JavaCalls::call_special(&result, receiver->klass(), vmSymbols::bootstrapFinished_method_name(), vmSymbols::void_method_signature(), &args, CHECK_EXIT);
   }
 }
 
@@ -975,21 +951,24 @@ if (HAS_PENDING_EXCEPTION) { \
 #undef CHECK_RETURN
 }
 
-void JVMCIRuntime::abort_on_pending_exception(Handle exception, const char* message, bool dump_core) {
-  Thread* THREAD = Thread::current();
+void JVMCIRuntime::exit_on_pending_exception(Handle exception, const char* message) {
+  JavaThread* THREAD = JavaThread::current();
   CLEAR_PENDING_EXCEPTION;
-  tty->print_raw_cr(message);
 
-  java_lang_Throwable::print(exception, tty);
-  tty->cr();
-  java_lang_Throwable::print_stack_trace(exception(), tty);
+  static volatile int report_error = 0;
+  if (!report_error && Atomic::cmpxchg(1, &report_error, 0) == 0) {
+    // Only report an error once
+    tty->print_raw_cr(message);
+    java_lang_Throwable::print(exception, tty);
+    tty->cr();
+    java_lang_Throwable::print_stack_trace(exception(), tty);
+  } else {
+    // Allow error reporting thread to print the stack trace.
+    os::sleep(THREAD, 200, false);
+  }
 
-  // Give other aborting threads to also print their stack traces.
-  // This can be very useful when debugging class initialization
-  // failures.
-  os::sleep(THREAD, 200, false);
-
-  vm_abort(dump_core);
+  before_exit(THREAD);
+  vm_exit(-1);
 }
 
 void JVMCIRuntime::fthrow_error(Thread* thread, const char* file, int line, const char* format, ...) {
@@ -1013,13 +992,4 @@ Klass* JVMCIRuntime::resolve_or_null(Symbol* name, TRAPS) {
 Klass* JVMCIRuntime::resolve_or_fail(Symbol* name, TRAPS) {
   assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
   return SystemDictionary::resolve_or_fail(name, SystemDictionary::jvmci_loader(), Handle(), true, CHECK_NULL);
-}
-
-Klass* JVMCIRuntime::load_required_class(Symbol* name) {
-  Klass* klass = resolve_or_null(name, Thread::current());
-  if (klass == NULL) {
-    tty->print_cr("Could not load class %s", name->as_C_string());
-    vm_abort(false);
-  }
-  return klass;
 }

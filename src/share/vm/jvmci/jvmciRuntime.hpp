@@ -133,24 +133,24 @@ class JVMCIRuntime: public AllStatic {
   static void fthrow_error(Thread* thread, const char* file, int line, const char* format, ...) ATTRIBUTE_PRINTF(4, 5);
 
   /**
-   * Aborts the VM due to an unexpected exception.
+   * Exits the VM due to an unexpected exception.
    */
-  static void abort_on_pending_exception(Handle exception, const char* message, bool dump_core = false);
+  static void exit_on_pending_exception(Handle exception, const char* message);
 
-#define CHECK_ABORT THREAD); \
+#define CHECK_EXIT THREAD); \
   if (HAS_PENDING_EXCEPTION) { \
     char buf[256]; \
     jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
-    JVMCIRuntime::abort_on_pending_exception(PENDING_EXCEPTION, buf); \
+    JVMCIRuntime::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
     return; \
   } \
   (void)(0
 
-#define CHECK_ABORT_(result) THREAD); \
+#define CHECK_EXIT_(result) THREAD); \
   if (HAS_PENDING_EXCEPTION) { \
     char buf[256]; \
     jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
-    JVMCIRuntime::abort_on_pending_exception(PENDING_EXCEPTION, buf); \
+    JVMCIRuntime::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
     return result; \
   } \
   (void)(0
@@ -164,11 +164,6 @@ class JVMCIRuntime: public AllStatic {
    * Same as SystemDictionary::resolve_or_fail but uses the JVMCI loader.
    */
   static Klass* resolve_or_fail(Symbol* name, TRAPS);
-
-  /**
-   * Loads a given JVMCI class and aborts the VM if it fails.
-   */
-  static Klass* load_required_class(Symbol* name);
 
   static BasicType kindToBasicType(Handle kind, TRAPS);
 
