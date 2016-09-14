@@ -457,6 +457,11 @@ class Arguments : AllStatic {
   static inline bool gc_selected(); // whether a gc has been selected
   static void select_gc_ergonomically();
 
+
+#if INCLUDE_JVMCI
+  static void set_jvmci_specific_flags();
+#endif
+
   // Verifies that the given value will fit as a MinHeapFreeRatio. If not, an error
   // message is returned in the provided buffer.
   static bool verify_MinHeapFreeRatio(FormatBuffer<80>& err_msg, uintx min_heap_free_ratio);

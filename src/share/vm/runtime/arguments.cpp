@@ -1582,6 +1582,32 @@ void Arguments::select_gc() {
   }
 }
 
+
+#if INCLUDE_JVMCI
+void Arguments::set_jvmci_specific_flags() {
+  if (UseJVMCICompiler) {
+    if (FLAG_IS_DEFAULT(TypeProfileWidth)) {
+      FLAG_SET_DEFAULT(TypeProfileWidth, 8);
+    }
+    if (FLAG_IS_DEFAULT(OnStackReplacePercentage)) {
+      FLAG_SET_DEFAULT(OnStackReplacePercentage, 933);
+    }
+    if (FLAG_IS_DEFAULT(ReservedCodeCacheSize)) {
+      FLAG_SET_DEFAULT(ReservedCodeCacheSize, 64*M);
+    }
+    if (FLAG_IS_DEFAULT(InitialCodeCacheSize)) {
+      FLAG_SET_DEFAULT(InitialCodeCacheSize, 16*M);
+    }
+    if (FLAG_IS_DEFAULT(MetaspaceSize)) {
+      FLAG_SET_DEFAULT(MetaspaceSize, 12*M);
+    }
+    if (FLAG_IS_DEFAULT(NewSizeThreadIncrease)) {
+      FLAG_SET_DEFAULT(NewSizeThreadIncrease, 4*K);
+    }
+  }
+}
+#endif
+
 void Arguments::set_ergonomics_flags() {
   select_gc();
 
@@ -4094,6 +4120,11 @@ jint Arguments::apply_ergo() {
 
   // Set flags based on ergonomics.
   set_ergonomics_flags();
+
+#if INCLUDE_JVMCI
+  // Set flags specific to JVMCI. This is done prior to computing NMethodSweepFraction.
+  set_jvmci_specific_flags();
+#endif
 
   set_shared_spaces_flags();
 
