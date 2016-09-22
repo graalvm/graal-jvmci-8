@@ -53,7 +53,7 @@ final class HotSpotMethodData {
      * Reference to the C++ MethodData object.
      */
     final long metaspaceMethodData;
-    @SuppressWarnings("unused") private final HotSpotResolvedJavaMethodImpl method;
+    private final HotSpotResolvedJavaMethodImpl method;
 
     HotSpotMethodData(long metaspaceMethodData, HotSpotResolvedJavaMethodImpl method) {
         this.metaspaceMethodData = metaspaceMethodData;
@@ -214,6 +214,10 @@ final class HotSpotMethodData {
         StringBuilder sb = new StringBuilder();
         String nl = String.format("%n");
         String nlIndent = String.format("%n%38s", "");
+        sb.append("Raw method data for ");
+        sb.append(method.format("%H.%n(%p)"));
+        sb.append(":");
+        sb.append(nl);
         if (hasNormalData()) {
             int pos = 0;
             HotSpotMethodDataAccessor data;
@@ -427,6 +431,10 @@ final class HotSpotMethodData {
 
         protected abstract long getTypesNotRecordedExecutionCount(HotSpotMethodData data, int position);
 
+        public int getNonprofiledCount(HotSpotMethodData data, int position) {
+            return data.readUnsignedIntAsSignedInt(position, NONPROFILED_COUNT_OFFSET);
+        }
+
         private JavaTypeProfile createTypeProfile(TriState nullSeen, RawItemProfile<ResolvedJavaType> profile) {
             if (profile.entries <= 0 || profile.totalCount <= 0) {
                 return null;
@@ -462,7 +470,7 @@ final class HotSpotMethodData {
             TriState nullSeen = getNullSeen(data, pos);
             TriState exceptionSeen = getExceptionSeen(data, pos);
             sb.append(format("count(%d) null_seen(%s) exception_seen(%s) nonprofiled_count(%d) entries(%d)", getCounterValue(data, pos), nullSeen, exceptionSeen,
-                            getTypesNotRecordedExecutionCount(data, pos), profile.entries));
+                            getNonprofiledCount(data, pos), profile.entries));
             for (int i = 0; i < profile.entries; i++) {
                 long count = profile.counts[i];
                 sb.append(format("%n  %s (%d, %4.2f)", profile.items[i].toJavaName(), count, (double) count / profile.totalCount));
@@ -490,7 +498,7 @@ final class HotSpotMethodData {
 
         @Override
         protected long getTypesNotRecordedExecutionCount(HotSpotMethodData data, int position) {
-            return data.readUnsignedIntAsSignedInt(position, NONPROFILED_COUNT_OFFSET);
+            return getNonprofiledCount(data, position);
         }
     }
 
@@ -788,7 +796,8 @@ final class HotSpotMethodData {
 
         @Override
         public StringBuilder appendTo(StringBuilder sb, HotSpotMethodData data, int pos) {
-            return null;
+            sb.append("unknown profile data with tag: " + tag);
+            return sb;
         }
     }
 
