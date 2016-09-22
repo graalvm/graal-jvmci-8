@@ -50,6 +50,9 @@ public class BytecodePosition {
         this.caller = caller;
         this.method = method;
         this.bci = bci;
+        if (bci >= method.getCodeSize()) {
+            throw new IllegalArgumentException();
+        }
     }
 
     /**
