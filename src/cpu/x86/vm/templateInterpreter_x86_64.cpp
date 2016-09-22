@@ -404,6 +404,7 @@ void InterpreterGenerator::generate_counter_overflow(Label* do_continue) {
              c_rarg1);
 
   __ movptr(rbx, Address(rbp, method_offset));   // restore Method*
+  __ set_method_data_pointer_for_bcp();
   // Preserve invariant that r13/r14 contain bcp/locals of sender frame
   // and jump to the interpreted entry.
   __ jmp(*do_continue, relocInfo::none);

@@ -1726,17 +1726,18 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
       call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::frequency_counter_overflow), rdx);
       __ load_unsigned_byte(rbx, Address(rsi, 0));  // restore target bytecode
 
-      // rax,: osr nmethod (osr ok) or NULL (osr not possible)
-      // rbx,: target bytecode
+      Label maybe_load_mdp;
+      // rax: osr nmethod (osr ok) or NULL (osr not possible)
+      // rbx: target bytecode
       // rdx: scratch
       // rdi: locals pointer
       // rsi: bcp
-      __ testptr(rax, rax);                      // test result
-      __ jcc(Assembler::zero, dispatch);         // no osr if null
+      __ testptr(rax, rax);                        // test result
+      __ jcc(Assembler::zero, maybe_load_mdp);     // no osr if null
       // nmethod may have been invalidated (VM may block upon call_VM return)
       __ movl(rcx, Address(rax, nmethod::entry_bci_offset()));
       __ cmpl(rcx, InvalidOSREntryBci);
-      __ jcc(Assembler::equal, dispatch);
+      __ jcc(Assembler::equal, maybe_load_mdp);
 
       // We have the address of an on stack replacement routine in rax,
       // We need to prepare to execute the OSR method. First we must
@@ -1766,6 +1767,11 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
 
       // and begin the OSR nmethod
       __ jmp(Address(rbx, nmethod::osr_entry_point_offset()));
+
+      // Load the MDO in case it was created by frequency_counter_overflow
+      __ bind(maybe_load_mdp);
+      __ set_method_data_pointer_for_bcp();
+      __ jmp(dispatch);
     }
   }
 }

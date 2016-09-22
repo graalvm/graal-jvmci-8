@@ -443,6 +443,7 @@ void InterpreterGenerator::generate_counter_overflow(Label* do_continue) {
   __ call_VM(noreg, CAST_FROM_FN_PTR(address, InterpreterRuntime::frequency_counter_overflow), rax);
 
   __ movptr(rbx, Address(rbp, method_offset));   // restore Method*
+  __ set_method_data_pointer_for_bcp();
 
   // Preserve invariant that rsi/rdi contain bcp/locals of sender frame
   // and jump to the interpreted entry.
