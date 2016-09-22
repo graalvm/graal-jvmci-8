@@ -3594,8 +3594,10 @@ void LIR_Assembler::emit_profile_call(LIR_OpProfileCall* op) {
   Bytecodes::Code bc = method->java_code_at_bci(bci);
   const bool callee_is_static = callee->is_loaded() && callee->is_static();
   // Perform additional virtual call profiling for invokevirtual and
-  // invokeinterface bytecodes
-  if ((bc == Bytecodes::_invokevirtual || bc == Bytecodes::_invokeinterface) &&
+  // invokeinterface bytecodes.  For invokevirtual don't update the profile if
+  // the method can_be_statically_bound().  See
+  // InterpreterMacroAssembler::profile_final_call.
+  if (((bc == Bytecodes::_invokevirtual && !callee->can_be_statically_bound()) || bc == Bytecodes::_invokeinterface) &&
       !callee_is_static &&  // required for optimized MH invokes
       C1ProfileVirtualCalls) {
     assert(op->recv()->is_single_cpu(), "recv must be allocated");
