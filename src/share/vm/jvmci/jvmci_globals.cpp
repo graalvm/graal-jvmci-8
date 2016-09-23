@@ -66,7 +66,7 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
   if (UseJVMCICompiler) {
     if(JVMCIThreads < 1) {
       // Check the minimum number of JVMCI compiler threads
-      jio_fprintf(defaultStream::error_stream(), "JVMCIThreads of " INTX_FORMAT " is invalid; must be at least 1\n");
+      jio_fprintf(defaultStream::error_stream(), "JVMCIThreads of " INTX_FORMAT " is invalid; must be at least 1\n", JVMCIThreads);
       status = false;
     }
   }
