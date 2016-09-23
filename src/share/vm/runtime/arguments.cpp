@@ -1583,30 +1583,6 @@ void Arguments::select_gc() {
 }
 
 
-#if INCLUDE_JVMCI
-void Arguments::set_jvmci_specific_flags() {
-  if (UseJVMCICompiler) {
-    if (FLAG_IS_DEFAULT(TypeProfileWidth)) {
-      FLAG_SET_DEFAULT(TypeProfileWidth, 8);
-    }
-    if (FLAG_IS_DEFAULT(OnStackReplacePercentage)) {
-      FLAG_SET_DEFAULT(OnStackReplacePercentage, 933);
-    }
-    if (FLAG_IS_DEFAULT(ReservedCodeCacheSize)) {
-      FLAG_SET_DEFAULT(ReservedCodeCacheSize, 64*M);
-    }
-    if (FLAG_IS_DEFAULT(InitialCodeCacheSize)) {
-      FLAG_SET_DEFAULT(InitialCodeCacheSize, 16*M);
-    }
-    if (FLAG_IS_DEFAULT(MetaspaceSize)) {
-      FLAG_SET_DEFAULT(MetaspaceSize, 12*M);
-    }
-    if (FLAG_IS_DEFAULT(NewSizeThreadIncrease)) {
-      FLAG_SET_DEFAULT(NewSizeThreadIncrease, 4*K);
-    }
-  }
-}
-#endif
 
 void Arguments::set_ergonomics_flags() {
   select_gc();
@@ -2463,42 +2439,7 @@ bool Arguments::check_vm_args_consistency() {
 #endif
   }
 #if INCLUDE_JVMCI
-  if (!EnableJVMCI) {
-#define JVMCI_CHECK3(type, name, doc)        JVMCI_CHECK_FLAG(name)
-#define JVMCI_CHECK4(type, name, value, doc) JVMCI_CHECK_FLAG(name)
-#define JVMCI_CHECK_FLAG(FLAG)                         \
-    if (strcmp(#FLAG, "EnableJVMCI") && !FLAG_IS_DEFAULT(FLAG)) {                                   \
-      jio_fprintf(defaultStream::error_stream(), "EnableJVMCI must be enabled to use VM option '%s'\n", #FLAG); \
-      status = false; \
-    }
-    JVMCI_FLAGS(JVMCI_CHECK4, JVMCI_CHECK3, JVMCI_CHECK4, JVMCI_CHECK3, JVMCI_CHECK4)
-#undef JVMCI_CHECK3
-#undef JVMCI_CHECK4
-#undef JVMCI_CHECK_FLAG
-  } else {
-#ifndef TIERED
-    // JVMCI is only usable as a jit compiler if the VM supports tiered compilation.
-#define JVMCI_CHECK_FLAG(FLAG)                         \
-    if (!FLAG_IS_DEFAULT(FLAG)) {                                   \
-      jio_fprintf(defaultStream::error_stream(), "VM option '%s' cannot be set in non-tiered VM\n", #FLAG); \
-      status = false; \
-    }
-    JVMCI_CHECK_FLAG(UseJVMCICompiler)
-    JVMCI_CHECK_FLAG(BootstrapJVMCI)
-    JVMCI_CHECK_FLAG(PrintBootstrap)
-    JVMCI_CHECK_FLAG(JVMCIThreads)
-    JVMCI_CHECK_FLAG(JVMCIHostThreads)
-    JVMCI_CHECK_FLAG(JVMCICountersExcludeCompiler)
-#undef JVMCI_CHECK_FLAG
-#endif
-    if (BootstrapJVMCI && !UseJVMCICompiler) {
-      warning("BootstrapJVMCI has no effect if UseJVMCICompiler is disabled");
-    }
-    if (!ScavengeRootsInCode) {
-      warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
-      ScavengeRootsInCode = 1;
-    }
-  }
+  status = status && JVMCIGlobals::check_jvmci_flags_are_consistent();
 #endif
 
   // Need to limit the extent of the padding to reasonable size.
@@ -2563,14 +2504,6 @@ bool Arguments::check_vm_args_consistency() {
   assert(min_number_of_compiler_threads <= CI_COMPILER_COUNT, "minimum should be less or equal default number");
   // Check the minimum number of compiler threads
   status &=verify_min_value(CICompilerCount, min_number_of_compiler_threads, "CICompilerCount");
-
-#if INCLUDE_JVMCI
-  if (UseJVMCICompiler) {
-    // Check the minimum number of JVMCI compiler threads
-    status &=verify_min_value(JVMCIThreads, 1, "JVMCIThreads");
-  }
-#endif
-
   return status;
 }
 
@@ -4123,7 +4056,7 @@ jint Arguments::apply_ergo() {
 
 #if INCLUDE_JVMCI
   // Set flags specific to JVMCI. This is done prior to computing NMethodSweepFraction.
-  set_jvmci_specific_flags();
+  JVMCIGlobals::set_jvmci_specific_flags();
 #endif
 
   set_shared_spaces_flags();

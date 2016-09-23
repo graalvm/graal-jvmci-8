@@ -102,4 +102,14 @@
 
 JVMCI_FLAGS(DECLARE_DEVELOPER_FLAG, DECLARE_PD_DEVELOPER_FLAG, DECLARE_PRODUCT_FLAG, DECLARE_PD_PRODUCT_FLAG, DECLARE_NOTPRODUCT_FLAG)
 
+
+class JVMCIGlobals {
+ public:
+  static void set_jvmci_specific_flags();
+  // Return true if jvmci flags are consistent. If not consistent,
+  // an error message describing the inconsistency is printed before
+  // returning false.
+  static bool check_jvmci_flags_are_consistent();
+};
+
 #endif // SHARE_VM_JVMCI_JVMCI_GLOBALS_HPP
