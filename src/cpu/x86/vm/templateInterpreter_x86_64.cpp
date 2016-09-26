@@ -205,8 +205,9 @@ address InterpreterGenerator::generate_deopt_entry_for(TosState state,
   __ restore_bcp();
   __ restore_locals();
 #if INCLUDE_JVMCI
-  // Check if we need to take lock at entry of synchronized method.
-  {
+  // Check if we need to take lock at entry of synchronized method.  This can
+  // only occur on method entry so emit it only for vtos with step 0.
+  if (state == vtos && step == 0) {
     Label L;
     __ cmpb(Address(r15_thread, JavaThread::pending_monitorenter_offset()), 0);
     __ jcc(Assembler::zero, L);
@@ -217,6 +218,14 @@ address InterpreterGenerator::generate_deopt_entry_for(TosState state,
     // Take lock.
     lock_method();
     __ bind(L);
+  } else {
+#ifdef ASSERT
+    Label L;
+    __ cmpb(Address(r15_thread, JavaThread::pending_monitorenter_offset()), 0);
+    __ jccb(Assembler::zero, L);
+    __ stop("unexpected pending monitor in deopt entry");
+    __ bind(L);
+#endif
   }
 #endif
   // handle exceptions
