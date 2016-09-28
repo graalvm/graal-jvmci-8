@@ -78,6 +78,8 @@ void JVMCIGlobals::set_jvmci_specific_flags() {
     if (FLAG_IS_DEFAULT(TypeProfileWidth)) {
       FLAG_SET_DEFAULT(TypeProfileWidth, 8);
     }
+    // Adjust the on stack replacement percentage to avoid early
+    // OSR compilations while JVMCI itself is warming up
     if (FLAG_IS_DEFAULT(OnStackReplacePercentage)) {
       FLAG_SET_DEFAULT(OnStackReplacePercentage, 933);
     }
