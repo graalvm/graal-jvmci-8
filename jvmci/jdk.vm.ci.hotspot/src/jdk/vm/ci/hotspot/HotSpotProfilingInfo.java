@@ -57,6 +57,18 @@ public final class HotSpotProfilingInfo implements ProfilingInfo {
         return method.getCodeSize();
     }
 
+    public int getDecompileCount() {
+        return methodData.getDecompileCount();
+    }
+
+    public int getOverflowCompileCount() {
+        return methodData.getOverflowCompileCount();
+    }
+
+    public int getOverflowTrapsCount() {
+        return methodData.getOverflowTrapsCount();
+    }
+
     @Override
     public JavaTypeProfile getTypeProfile(int bci) {
         if (!isMature) {

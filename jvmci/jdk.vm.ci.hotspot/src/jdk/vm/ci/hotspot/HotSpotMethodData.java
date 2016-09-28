@@ -107,6 +107,18 @@ final class HotSpotMethodData {
         return UNSAFE.getByte(metaspaceMethodData + config.methodDataOopTrapHistoryOffset + config.deoptReasonOSROffset + reasonIndex) & 0xFF;
     }
 
+    public int getDecompileCount() {
+        return UNSAFE.getInt(metaspaceMethodData + config.methodDataDecompiles);
+    }
+
+    public int getOverflowCompileCount() {
+        return UNSAFE.getInt(metaspaceMethodData + config.methodDataOverflowRecompiles);
+    }
+
+    public int getOverflowTrapsCount() {
+        return UNSAFE.getInt(metaspaceMethodData + config.methodDataOverflowTraps);
+    }
+
     public HotSpotMethodDataAccessor getNormalData(int position) {
         if (position >= normalDataSize()) {
             return null;
