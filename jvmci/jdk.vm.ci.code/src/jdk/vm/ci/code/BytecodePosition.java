@@ -50,8 +50,14 @@ public class BytecodePosition {
         this.caller = caller;
         this.method = method;
         this.bci = bci;
-        if (bci >= method.getCodeSize()) {
-            throw new IllegalArgumentException();
+        /*
+         * Make sure the bci is within range of the bytecodes. If the code size is 0 then allow any
+         * value, otherwise the bci must be less than the code size. Any negative value is also
+         * allowed to represent special bytecode states.
+         */
+        int codeSize = method.getCodeSize();
+        if (codeSize != 0 && bci >= codeSize) {
+            throw new IllegalArgumentException(String.format("bci %d is out of range for %s %d bytes", bci, method.format("%H.%n(%p)"), codeSize));
         }
     }
 
