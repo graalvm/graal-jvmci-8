@@ -944,6 +944,13 @@ void CompileBroker::compilation_init(TRAPS) {
 #if INCLUDE_JVMCI
   if (EnableJVMCI) {
     JVMCICompiler* jvmci = new JVMCICompiler();
+    if (JVMCIPrintFlags) {
+      // Initialize JVMCI eagerly if JVMCIPrintFlags is enabled.
+      // The JVMCI Java initialization code will read this flag and
+      // do the printing if it's set.
+      JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
+      JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
+    }
     if (UseJVMCICompiler) {
       _compilers[1] = jvmci;
       if (FLAG_IS_DEFAULT(JVMCIThreads)) {

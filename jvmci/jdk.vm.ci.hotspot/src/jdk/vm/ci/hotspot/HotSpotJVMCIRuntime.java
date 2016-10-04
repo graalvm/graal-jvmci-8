@@ -89,14 +89,17 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
      * A list of all supported JVMCI options.
      */
     public enum Option {
+        // @formatter:off
         Compiler(String.class, null, "Selects the system compiler."),
         // Note: The following one is not used (see InitTimer.ENABLED). It is added here
-        // so that -Djvmci.PrintFlags=true shows the option.
-        InitTimer(boolean.class, false, "Specifies if initialization timing is enabled."),
-        PrintConfig(boolean.class, false, "Prints VM configuration available via JVMCI and exits."),
-        PrintFlags(boolean.class, false, "Prints all JVMCI flags and exits."),
-        ShowFlags(boolean.class, false, "Prints all JVMCI flags and continues."),
-        TraceMethodDataFilter(String.class, null, "");
+        // so that -XX:JVMCIPrintFlags shows the option.
+        InitTimer(Boolean.class, false, "Specifies if initialization timing is enabled."),
+        PrintConfig(Boolean.class, false, "Prints VM configuration available via JVMCI and exits."),
+        TraceMethodDataFilter(String.class, null,
+                        "Enables tracing of profiling info when read by JVMCI.",
+                        "Empty value: trace all methods",
+                        "Non-empty value: trace methods whose fully qualified name contains the value.");
+        // @formatter:on
 
         /**
          * The prefix for system properties that are JVMCI options.
@@ -112,14 +115,14 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         private Object value;
         private final Object defaultValue;
         private boolean isDefault;
-        private final String help;
+        private final String[] helpLines;
 
-        Option(Class<?> type, Object defaultValue, String help) {
+        Option(Class<?> type, Object defaultValue, String... helpLines) {
             assert Character.isUpperCase(name().charAt(0)) : "Option name must start with upper-case letter: " + name();
             this.type = type;
             this.value = UNINITIALIZED;
             this.defaultValue = defaultValue;
-            this.help = help;
+            this.helpLines = helpLines;
         }
 
         @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
@@ -130,7 +133,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
                     this.value = defaultValue;
                     this.isDefault = true;
                 } else {
-                    if (type == boolean.class) {
+                    if (type == Boolean.class) {
                         this.value = Boolean.parseBoolean(propertyValue);
                     } else if (type == String.class) {
                         this.value = propertyValue;
@@ -169,11 +172,26 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
          * @param out stream to print to
          */
         public static void printFlags(PrintStream out) {
-            out.println("[List of JVMCI options]");
-            for (Option option : values()) {
+            out.println("[List of JVMCI options. Set with \"jvmci.\" prefixed system property (e.g., -Djvmci." + InitTimer.name() + "=true)");
+            int typeWidth = 0;
+            int nameWidth = 0;
+            Option[] values = values();
+            for (Option option : values) {
+                typeWidth = Math.max(typeWidth, option.type.getSimpleName().length());
+                nameWidth = Math.max(nameWidth, option.name().length());
+            }
+            for (Option option : values) {
                 Object value = option.getValue();
-                String assign = option.isDefault ? ":=" : " =";
-                out.printf("%9s %-40s %s %-14s %s%n", option.type.getSimpleName(), option, assign, value, option.help);
+                if (value instanceof String) {
+                    value = '"' + String.valueOf(value) + '"';
+                }
+                String assign = option.isDefault ? " =" : ":=";
+                String format = "%" + (typeWidth + 1) + "s %-" + (nameWidth + 1) + "s %s %s%n";
+                out.printf(format, option.type.getSimpleName(), option.name(), assign, value);
+                String helpFormat = "%" + (typeWidth + 1) + "s %s%n";
+                for (String line : option.helpLines) {
+                    out.printf(helpFormat, "", line);
+                }
             }
         }
     }
@@ -260,20 +278,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
 
         metaAccessContext = new HotSpotJVMCIMetaAccessContext();
 
-        boolean printFlags = Option.PrintFlags.getBoolean();
-        boolean showFlags = Option.ShowFlags.getBoolean();
-        if (printFlags || showFlags) {
-            Option.printFlags(System.out);
-            if (printFlags) {
-                System.exit(0);
-            }
-        }
-
-        if (Option.PrintConfig.getBoolean()) {
-            printConfig(configStore, compilerToVm);
-            System.exit(0);
-        }
-
         compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory();
         if (compilerFactory instanceof HotSpotJVMCICompilerFactory) {
             hsCompilerFactory = (HotSpotJVMCICompilerFactory) compilerFactory;
@@ -296,6 +300,18 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
             hsCompilerFactory = null;
             trivialPrefixes = null;
             compilationLevelAdjustment = config.compLevelAdjustmentNone;
+        }
+
+        if (config.getFlag("JVMCIPrintFlags", Boolean.class)) {
+            PrintStream out = new PrintStream(getLogStream());
+            Option.printFlags(out);
+            compilerFactory.printFlags(out);
+            System.exit(0);
+        }
+
+        if (Option.PrintConfig.getBoolean()) {
+            printConfig(configStore, compilerToVm);
+            System.exit(0);
         }
     }
 
