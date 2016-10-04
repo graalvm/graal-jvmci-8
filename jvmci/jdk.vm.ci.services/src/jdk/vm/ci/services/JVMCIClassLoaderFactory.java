@@ -66,7 +66,7 @@ class JVMCIClassLoaderFactory {
      * Gets the URLs for lib/jvmci/*.jar.
      */
     private static URL[] getJVMCIJarsUrls() {
-        File javaHome = new File(System.getProperty("java.home"));
+        File javaHome = new File(VM.getSavedProperty("java.home"));
         File lib = new File(javaHome, "lib");
         File jvmci = new File(lib, "jvmci");
         if (!jvmci.isDirectory()) {
