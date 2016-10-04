@@ -57,7 +57,6 @@ define_pd_global(intx, CodeCacheExpansionSize,       64*K );
 define_pd_global(uintx,CodeCacheMinBlockLength,      4);
 define_pd_global(uintx, CodeCacheMinimumUseSpace,    400*K);
 define_pd_global(intx, TypeProfileWidth,             8);
-define_pd_global(intx, MethodProfileWidth,           0);
 #endif
 
 define_pd_global(intx, MaxVectorSize,                8);

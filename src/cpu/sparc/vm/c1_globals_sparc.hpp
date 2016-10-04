@@ -57,7 +57,6 @@ define_pd_global(intx, NewSizeThreadIncrease,        16*K );
 define_pd_global(uint64_t,MaxRAM,                    1ULL*G);
 define_pd_global(intx, InitialCodeCacheSize,         160*K);
 define_pd_global(intx, TypeProfileWidth,             0);
-define_pd_global(intx, MethodProfileWidth,           0);
 #endif // !TIERED
 
 define_pd_global(bool, UseTypeProfile,               false);

@@ -30,47 +30,73 @@
 JVMCI_FLAGS(MATERIALIZE_DEVELOPER_FLAG, MATERIALIZE_PD_DEVELOPER_FLAG, MATERIALIZE_PRODUCT_FLAG, MATERIALIZE_PD_PRODUCT_FLAG, MATERIALIZE_NOTPRODUCT_FLAG)
 
 bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
-  bool status = true;
-  if (!EnableJVMCI) {
-#define JVMCI_CHECK3(type, name, doc)        JVMCI_CHECK_FLAG(name)
-#define JVMCI_CHECK4(type, name, value, doc) JVMCI_CHECK_FLAG(name)
-#define JVMCI_CHECK_FLAG(FLAG)                         \
-    if (strcmp(#FLAG, "EnableJVMCI") && !FLAG_IS_DEFAULT(FLAG)) {                                   \
-      jio_fprintf(defaultStream::error_stream(), "EnableJVMCI must be enabled to use VM option '%s'\n", #FLAG); \
-      status = false; \
+#ifndef PRODUCT
+#define APPLY_JVMCI_FLAGS(params3, params4) \
+  JVMCI_FLAGS(params4, params3, params4, params3, params4)
+#define JVMCI_DECLARE_CHECK4(type, name, value, doc) bool name##checked = false;
+#define JVMCI_DECLARE_CHECK3(type, name, doc)        bool name##checked = false;
+#define JVMCI_FLAG_CHECKED(name)                          name##checked = true;
+  APPLY_JVMCI_FLAGS(JVMCI_DECLARE_CHECK3, JVMCI_DECLARE_CHECK4)
+#else
+#define JVMCI_FLAG_CHECKED(name)
+#endif
+
+  // Checks that a given flag is not set if a given guard flag is false.
+#define CHECK_NOT_SET(FLAG, GUARD)                     \
+  JVMCI_FLAG_CHECKED(FLAG)                             \
+  if (!GUARD && !FLAG_IS_DEFAULT(FLAG)) {              \
+    jio_fprintf(defaultStream::error_stream(),         \
+        "Improperly specified VM option '%s': '%s' must be enabled\n", #FLAG, #GUARD); \
+    return false;                                      \
+  }
+
+  JVMCI_FLAG_CHECKED(UseJVMCICompiler)
+  JVMCI_FLAG_CHECKED(EnableJVMCI)
+
+  CHECK_NOT_SET(BootstrapJVMCI,   UseJVMCICompiler)
+  CHECK_NOT_SET(PrintBootstrap,   UseJVMCICompiler)
+  CHECK_NOT_SET(JVMCIThreads,     UseJVMCICompiler)
+  CHECK_NOT_SET(JVMCIHostThreads, UseJVMCICompiler)
+
+  if (UseJVMCICompiler) {
+    if (!FLAG_IS_DEFAULT(EnableJVMCI) && !EnableJVMCI) {
+      jio_fprintf(defaultStream::error_stream(),
+          "Improperly specified VM option UseJVMCICompiler: EnableJVMCI cannot be disabled\n");
+      return false;
     }
-    JVMCI_FLAGS(JVMCI_CHECK4, JVMCI_CHECK3, JVMCI_CHECK4, JVMCI_CHECK3, JVMCI_CHECK4)
+    FLAG_SET_DEFAULT(EnableJVMCI, true);
+  }
+  CHECK_NOT_SET(UseJVMCIClassLoader,          EnableJVMCI)
+  CHECK_NOT_SET(CodeInstallSafepointChecks,   EnableJVMCI)
+  CHECK_NOT_SET(JVMCITraceLevel,              EnableJVMCI)
+  CHECK_NOT_SET(JVMCICounterSize,             EnableJVMCI)
+  CHECK_NOT_SET(JVMCICountersExcludeCompiler, EnableJVMCI)
+  CHECK_NOT_SET(JVMCIUseFastLocking,          EnableJVMCI)
+  CHECK_NOT_SET(JVMCINMethodSizeLimit,        EnableJVMCI)
+  CHECK_NOT_SET(MethodProfileWidth,           EnableJVMCI)
+  CHECK_NOT_SET(TraceUncollectedSpeculations, EnableJVMCI)
+
+#ifndef PRODUCT
+#define JVMCI_CHECK4(type, name, value, doc) assert(name##checked, #name " flag not checked");
+#define JVMCI_CHECK3(type, name, doc)        assert(name##checked, #name " flag not checked");
+  // Ensures that all JVMCI flags are checked by this method.
+  APPLY_JVMCI_FLAGS(JVMCI_CHECK3, JVMCI_CHECK4)
+#undef APPLY_JVMCI_FLAGS
+#undef JVMCI_DECLARE_CHECK3
+#undef JVMCI_DECLARE_CHECK4
 #undef JVMCI_CHECK3
 #undef JVMCI_CHECK4
-#undef JVMCI_CHECK_FLAG
-  } else {
-#ifndef TIERED
-    // JVMCI is only usable as a jit compiler if the VM supports tiered compilation.
-#define JVMCI_CHECK_FLAG(FLAG)                         \
-    if (!FLAG_IS_DEFAULT(FLAG)) {                                   \
-      jio_fprintf(defaultStream::error_stream(), "VM option '%s' cannot be set in non-tiered VM\n", #FLAG); \
-      status = false; \
-    }
-    JVMCI_CHECK_FLAG(UseJVMCICompiler)
-    JVMCI_CHECK_FLAG(BootstrapJVMCI)
-    JVMCI_CHECK_FLAG(PrintBootstrap)
-    JVMCI_CHECK_FLAG(JVMCIThreads)
-    JVMCI_CHECK_FLAG(JVMCIHostThreads)
-    JVMCI_CHECK_FLAG(JVMCICountersExcludeCompiler)
-#undef JVMCI_CHECK_FLAG
+#undef JVMCI_FLAG_CHECKED
 #endif
-    if (BootstrapJVMCI && !UseJVMCICompiler) {
-      warning("BootstrapJVMCI has no effect if UseJVMCICompiler is disabled");
-    }
-  }
+#undef CHECK_NOT_SET
   if (UseJVMCICompiler) {
     if(JVMCIThreads < 1) {
       // Check the minimum number of JVMCI compiler threads
       jio_fprintf(defaultStream::error_stream(), "JVMCIThreads of " INTX_FORMAT " is invalid; must be at least 1\n", JVMCIThreads);
-      status = false;
+      return false;
     }
   }
-  return status;
+  return true;
 }
 
 void JVMCIGlobals::set_jvmci_specific_flags() {
