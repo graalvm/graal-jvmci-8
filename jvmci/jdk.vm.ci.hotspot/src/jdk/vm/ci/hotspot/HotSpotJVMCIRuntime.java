@@ -179,7 +179,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
          * @param out stream to print to
          */
         public static void printFlags(PrintStream out) {
-            out.println("[List of JVMCI system properties]");
+            out.println("[JVMCI system properties]");
             int typeWidth = 0;
             int nameWidth = 0;
             Option[] values = values();
