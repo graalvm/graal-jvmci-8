@@ -111,11 +111,11 @@ final class HotSpotMethodData {
         return UNSAFE.getInt(metaspaceMethodData + config.methodDataDecompiles);
     }
 
-    public int getOverflowCompileCount() {
+    public int getOverflowRecompileCount() {
         return UNSAFE.getInt(metaspaceMethodData + config.methodDataOverflowRecompiles);
     }
 
-    public int getOverflowTrapsCount() {
+    public int getOverflowTrapCount() {
         return UNSAFE.getInt(metaspaceMethodData + config.methodDataOverflowTraps);
     }
 
@@ -230,6 +230,8 @@ final class HotSpotMethodData {
         sb.append(method.format("%H.%n(%p)"));
         sb.append(":");
         sb.append(nl);
+        sb.append(String.format("nof_decompiles(%d) nof_overflow_recompiles(%d) nof_overflow_traps(%d)%n",
+                        getDecompileCount(), getOverflowRecompileCount(), getOverflowTrapCount()));
         if (hasNormalData()) {
             int pos = 0;
             HotSpotMethodDataAccessor data;

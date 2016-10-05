@@ -61,12 +61,12 @@ public final class HotSpotProfilingInfo implements ProfilingInfo {
         return methodData.getDecompileCount();
     }
 
-    public int getOverflowCompileCount() {
-        return methodData.getOverflowCompileCount();
+    public int getOverflowRecompileCount() {
+        return methodData.getOverflowRecompileCount();
     }
 
-    public int getOverflowTrapsCount() {
-        return methodData.getOverflowTrapsCount();
+    public int getOverflowTrapCount() {
+        return methodData.getOverflowTrapCount();
     }
 
     @Override
