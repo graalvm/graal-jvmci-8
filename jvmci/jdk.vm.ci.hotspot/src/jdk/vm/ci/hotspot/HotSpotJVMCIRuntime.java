@@ -174,11 +174,11 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         }
 
         /**
-         * Prints all option flags to {@code out}.
+         * Prints system properties used to configure shared JVMCI code.
          *
          * @param out stream to print to
          */
-        public static void printFlags(PrintStream out) {
+        public static void printSystemProperties(PrintStream out) {
             out.println("[JVMCI system properties]");
             int typeWidth = 0;
             int nameWidth = 0;
@@ -311,8 +311,8 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
 
         if (config.getFlag("JVMCIPrintSystemProperties", Boolean.class)) {
             PrintStream out = new PrintStream(getLogStream());
-            Option.printFlags(out);
-            compilerFactory.printFlags(out);
+            Option.printSystemProperties(out);
+            compilerFactory.printSystemProperties(out);
         }
 
         if (Option.PrintConfig.getBoolean()) {

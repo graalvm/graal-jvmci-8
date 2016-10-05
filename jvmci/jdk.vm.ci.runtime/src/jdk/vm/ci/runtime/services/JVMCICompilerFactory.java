@@ -74,10 +74,10 @@ public abstract class JVMCICompilerFactory {
     public abstract JVMCICompiler createCompiler(JVMCIRuntime runtime);
 
     /**
-     * Prints a help message describing the flags supported by this compiler and how to set them.
+     * Prints a help message describing the system properties used to configure this compiler.
      *
      * @param out where to print the message
      */
-    public void printFlags(PrintStream out) {
+    public void printSystemProperties(PrintStream out) {
     }
 }
