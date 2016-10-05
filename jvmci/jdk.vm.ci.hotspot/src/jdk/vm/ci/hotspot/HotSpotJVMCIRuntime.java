@@ -306,12 +306,10 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
             PrintStream out = new PrintStream(getLogStream());
             Option.printFlags(out);
             compilerFactory.printFlags(out);
-            System.exit(0);
         }
 
         if (Option.PrintConfig.getBoolean()) {
             printConfig(configStore, compilerToVm);
-            System.exit(0);
         }
     }
 
