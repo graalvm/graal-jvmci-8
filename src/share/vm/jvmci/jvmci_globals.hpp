@@ -52,8 +52,8 @@
   product(bool, UseJVMCICompiler, false,                                    \
           "Use JVMCI as the default compiler")                              \
                                                                             \
-  product(bool, JVMCIPrintSystemProperties, false,                          \
-          "Prints system properties used by the JVMCI compiler")            \
+  product(bool, JVMCIPrintProperties, false,                                \
+          "Prints properties used by the JVMCI compiler")                   \
                                                                             \
   product(bool, UseJVMCIClassLoader, true,                                  \
           "Load JVMCI classes with separate class loader")                  \

@@ -92,9 +92,9 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         // @formatter:off
         Compiler(String.class, null, "Selects the system compiler."),
         // Note: The following one is not used (see InitTimer.ENABLED). It is added here
-        // so that -XX:+JVMCIPrintSystemProperties shows the option.
+        // so that -XX:+JVMCIPrintProperties shows the option.
         InitTimer(Boolean.class, false, "Specifies if initialization timing is enabled."),
-        PrintConfig(Boolean.class, false, "Prints VM configuration available via JVMCI and exits."),
+        PrintConfig(Boolean.class, false, "Prints VM configuration available via JVMCI."),
         TraceMethodDataFilter(String.class, null,
                         "Enables tracing of profiling info when read by JVMCI.",
                         "Empty value: trace all methods",
@@ -174,12 +174,12 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         }
 
         /**
-         * Prints system properties used to configure shared JVMCI code.
+         * Prints a description of the properties used to configure shared JVMCI code.
          *
          * @param out stream to print to
          */
-        public static void printSystemProperties(PrintStream out) {
-            out.println("[JVMCI system properties]");
+        public static void printProperties(PrintStream out) {
+            out.println("[JVMCI properties]");
             int typeWidth = 0;
             int nameWidth = 0;
             Option[] values = values();
@@ -263,7 +263,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
     @SuppressWarnings("unused") private final String[] trivialPrefixes;
 
     @SuppressWarnings("try")
-    @SuppressFBWarnings(value = "DM_EXIT", justification = "PrintFlags is meant to exit the VM")
     private HotSpotJVMCIRuntime() {
         compilerToVm = new CompilerToVM();
 
@@ -309,10 +308,10 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
             compilationLevelAdjustment = config.compLevelAdjustmentNone;
         }
 
-        if (config.getFlag("JVMCIPrintSystemProperties", Boolean.class)) {
+        if (config.getFlag("JVMCIPrintProperties", Boolean.class)) {
             PrintStream out = new PrintStream(getLogStream());
-            Option.printSystemProperties(out);
-            compilerFactory.printSystemProperties(out);
+            Option.printProperties(out);
+            compilerFactory.printProperties(out);
         }
 
         if (Option.PrintConfig.getBoolean()) {
