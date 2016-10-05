@@ -92,7 +92,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         // @formatter:off
         Compiler(String.class, null, "Selects the system compiler."),
         // Note: The following one is not used (see InitTimer.ENABLED). It is added here
-        // so that -XX:JVMCIPrintFlags shows the option.
+        // so that -XX:+JVMCIPrintSystemProperties shows the option.
         InitTimer(Boolean.class, false, "Specifies if initialization timing is enabled."),
         PrintConfig(Boolean.class, false, "Prints VM configuration available via JVMCI and exits."),
         TraceMethodDataFilter(String.class, null,
@@ -128,7 +128,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
         private Object getValue() {
             if (value == UNINITIALIZED) {
-                String propertyValue = VM.getSavedProperty(JVMCI_OPTION_PROPERTY_PREFIX + name());
+                String propertyValue = VM.getSavedProperty(getPropertyName());
                 if (propertyValue == null) {
                     this.value = defaultValue;
                     this.isDefault = true;
@@ -146,6 +146,13 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
                 assert value != UNINITIALIZED;
             }
             return value;
+        }
+
+        /**
+         * Gets the name of system property from which this option gets its value.
+         */
+        public String getPropertyName() {
+            return JVMCI_OPTION_PROPERTY_PREFIX + name();
         }
 
         /**
@@ -172,13 +179,13 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
          * @param out stream to print to
          */
         public static void printFlags(PrintStream out) {
-            out.println("[List of JVMCI options. Set with \"jvmci.\" prefixed system property (e.g., -Djvmci." + InitTimer.name() + "=true)");
+            out.println("[List of JVMCI system properties]");
             int typeWidth = 0;
             int nameWidth = 0;
             Option[] values = values();
             for (Option option : values) {
                 typeWidth = Math.max(typeWidth, option.type.getSimpleName().length());
-                nameWidth = Math.max(nameWidth, option.name().length());
+                nameWidth = Math.max(nameWidth, option.getPropertyName().length());
             }
             for (Option option : values) {
                 Object value = option.getValue();
@@ -187,7 +194,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
                 }
                 String assign = option.isDefault ? " =" : ":=";
                 String format = "%" + (typeWidth + 1) + "s %-" + (nameWidth + 1) + "s %s %s%n";
-                out.printf(format, option.type.getSimpleName(), option.name(), assign, value);
+                out.printf(format, option.type.getSimpleName(), option.getPropertyName(), assign, value);
                 String helpFormat = "%" + (typeWidth + 1) + "s %s%n";
                 for (String line : option.helpLines) {
                     out.printf(helpFormat, "", line);
@@ -302,7 +309,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
             compilationLevelAdjustment = config.compLevelAdjustmentNone;
         }
 
-        if (config.getFlag("JVMCIPrintFlags", Boolean.class)) {
+        if (config.getFlag("JVMCIPrintSystemProperties", Boolean.class)) {
             PrintStream out = new PrintStream(getLogStream());
             Option.printFlags(out);
             compilerFactory.printFlags(out);
