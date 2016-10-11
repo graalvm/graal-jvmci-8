@@ -24,9 +24,10 @@ package jdk.vm.ci.hotspot.jfr.events;
 
 import java.net.URISyntaxException;
 
+import jdk.vm.ci.hotspot.EventProvider;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime;
 import jdk.vm.ci.hotspot.HotSpotVMConfigAccess;
-import jdk.vm.ci.hotspot.services.EventProvider;
+import jdk.vm.ci.services.JVMCIServiceLocator;
 
 /**
  * A JFR implementation for {@link EventProvider}. This implementation is used when Flight Recorder
@@ -36,9 +37,20 @@ import jdk.vm.ci.hotspot.services.EventProvider;
  * <a href="https://bugs.openjdk.java.net/browse/JDK-8032211">JDK-8032211</a>.
  */
 @SuppressWarnings("deprecation")
-public final class JFREventProvider extends EventProvider {
+public final class JFREventProvider implements EventProvider {
 
     private final boolean enabled;
+
+    public static class Locator extends JVMCIServiceLocator {
+
+        @Override
+        public <S> S getProvider(Class<S> service) {
+            if (service == EventProvider.class) {
+                return service.cast(new JFREventProvider());
+            }
+            return null;
+        }
+    }
 
     /**
      * Need to store the producer in a field so that it doesn't disappear.
@@ -47,7 +59,7 @@ public final class JFREventProvider extends EventProvider {
 
     public JFREventProvider() {
         HotSpotVMConfigAccess config = new HotSpotVMConfigAccess(HotSpotJVMCIRuntime.runtime().getConfigStore());
-        enabled = config.getFlag("FightRecorder", Boolean.class, false);
+        enabled = config.getFlag("FlightRecorder", Boolean.class, false);
         com.oracle.jrockit.jfr.Producer p = null;
         if (enabled) {
             try {

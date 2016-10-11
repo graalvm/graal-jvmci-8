@@ -27,9 +27,10 @@ import jdk.vm.ci.code.CompilationRequestResult;
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.runtime.JVMCICompiler;
+import jdk.vm.ci.runtime.JVMCICompilerFactory;
 import jdk.vm.ci.runtime.JVMCIRuntime;
-import jdk.vm.ci.runtime.services.JVMCICompilerFactory;
-import jdk.vm.ci.services.Services;
+import jdk.vm.ci.services.JVMCIServiceLocator;
+import jdk.vm.ci.services.JVMCIPermission;
 
 final class HotSpotJVMCICompilerConfig {
 
@@ -38,7 +39,7 @@ final class HotSpotJVMCICompilerConfig {
      * to perform a compilation. This allows the reflective parts of the JVMCI API to be used
      * without requiring a compiler implementation to be available.
      */
-    private static class DummyCompilerFactory extends JVMCICompilerFactory implements JVMCICompiler {
+    private static class DummyCompilerFactory implements JVMCICompilerFactory, JVMCICompiler {
 
         public CompilationRequestResult compileMethod(CompilationRequest request) {
             throw new JVMCIError("no JVMCI compiler selected");
@@ -64,13 +65,15 @@ final class HotSpotJVMCICompilerConfig {
      * Gets the selected system compiler factory.
      *
      * @return the selected system compiler factory
+     * @throws SecurityException if a security manager is present and it denies
+     *             {@link JVMCIPermission} for any {@link JVMCIServiceLocator} loaded by this method
      */
     static JVMCICompilerFactory getCompilerFactory() {
         if (compilerFactory == null) {
             JVMCICompilerFactory factory = null;
             String compilerName = Option.Compiler.getString();
             if (compilerName != null) {
-                for (JVMCICompilerFactory f : Services.load(JVMCICompilerFactory.class)) {
+                for (JVMCICompilerFactory f : JVMCIServiceLocator.getProviders(JVMCICompilerFactory.class)) {
                     if (f.getCompilerName().equals(compilerName)) {
                         factory = f;
                     }
@@ -80,7 +83,7 @@ final class HotSpotJVMCICompilerConfig {
                 }
             } else {
                 // Auto select a single available compiler
-                for (JVMCICompilerFactory f : Services.load(JVMCICompilerFactory.class)) {
+                for (JVMCICompilerFactory f : JVMCIServiceLocator.getProviders(JVMCICompilerFactory.class)) {
                     if (factory == null) {
                         factory = f;
                     } else {
