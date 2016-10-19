@@ -53,7 +53,7 @@
           "Use JVMCI as the default compiler")                              \
                                                                             \
   product(bool, JVMCIPrintProperties, false,                                \
-          "Prints properties used by the JVMCI compiler")                   \
+          "Prints properties used by the JVMCI compiler and exits")         \
                                                                             \
   product(bool, UseJVMCIClassLoader, true,                                  \
           "Load JVMCI classes with separate class loader")                  \
