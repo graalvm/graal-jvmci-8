@@ -77,6 +77,16 @@
   static_field(CompilerToVM::Data,             dlog10,                                 address)                                      \
   static_field(CompilerToVM::Data,             dpow,                                   address)                                      \
                                                                                                                                      \
+  static_field(StubRoutines,                   _sha1_implCompress,                     address)                                      \
+  static_field(StubRoutines,                   _sha1_implCompressMB,                   address)                                      \
+  static_field(StubRoutines,                   _sha256_implCompress,                   address)                                      \
+  static_field(StubRoutines,                   _sha256_implCompressMB,                 address)                                      \
+  static_field(StubRoutines,                   _sha512_implCompress,                   address)                                      \
+  static_field(StubRoutines,                   _sha512_implCompressMB,                 address)                                      \
+  static_field(StubRoutines,                   _updateBytesCRC32,                      address)                                      \
+  static_field(StubRoutines,                   _crc_table_adr,                         address)                                      \
+  static_field(StubRoutines,                   _multiplyToLen,                         address)                                      \
+                                                                                                                                     \
   nonstatic_field(JavaThread,                  _pending_deoptimization,                int)                                          \
   nonstatic_field(JavaThread,                  _pending_failed_speculation,            oop)                                          \
   nonstatic_field(JavaThread,                  _pending_transfer_to_interpreter,       bool)                                         \
