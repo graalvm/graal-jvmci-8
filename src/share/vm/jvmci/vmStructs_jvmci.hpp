@@ -83,9 +83,6 @@
   static_field(StubRoutines,                   _sha256_implCompressMB,                 address)                                      \
   static_field(StubRoutines,                   _sha512_implCompress,                   address)                                      \
   static_field(StubRoutines,                   _sha512_implCompressMB,                 address)                                      \
-  static_field(StubRoutines,                   _updateBytesCRC32,                      address)                                      \
-  static_field(StubRoutines,                   _crc_table_adr,                         address)                                      \
-  static_field(StubRoutines,                   _multiplyToLen,                         address)                                      \
                                                                                                                                      \
   nonstatic_field(JavaThread,                  _pending_deoptimization,                int)                                          \
   nonstatic_field(JavaThread,                  _pending_failed_speculation,            oop)                                          \
