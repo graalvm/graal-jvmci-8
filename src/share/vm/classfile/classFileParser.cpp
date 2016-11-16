@@ -3194,19 +3194,19 @@ void ClassFileParser::layout_fields(Handle class_loader,
 
   // Field size and offset computation
   int nonstatic_field_size = _super_klass() == NULL ? 0 : _super_klass()->nonstatic_field_size();
-  int next_static_oop_offset;
-  int next_static_double_offset;
-  int next_static_word_offset;
-  int next_static_short_offset;
-  int next_static_byte_offset;
-  int next_nonstatic_oop_offset;
-  int next_nonstatic_double_offset;
-  int next_nonstatic_word_offset;
-  int next_nonstatic_short_offset;
-  int next_nonstatic_byte_offset;
-  int first_nonstatic_oop_offset;
-  int next_nonstatic_field_offset;
-  int next_nonstatic_padded_offset;
+  int next_static_oop_offset = 0;
+  int next_static_double_offset = 0;
+  int next_static_word_offset = 0;
+  int next_static_short_offset = 0;
+  int next_static_byte_offset = 0;
+  int next_nonstatic_oop_offset = 0;
+  int next_nonstatic_double_offset = 0;
+  int next_nonstatic_word_offset = 0;
+  int next_nonstatic_short_offset = 0;
+  int next_nonstatic_byte_offset = 0;
+  int first_nonstatic_oop_offset = 0;
+  int next_nonstatic_field_offset = 0;
+  int next_nonstatic_padded_offset = 0;
 
   // Count the contended fields by type.
   //
@@ -3359,14 +3359,14 @@ void ClassFileParser::layout_fields(Handle class_loader,
     ShouldNotReachHere();
   }
 
-  int nonstatic_oop_space_count   = 0;
-  int nonstatic_word_space_count  = 0;
-  int nonstatic_short_space_count = 0;
-  int nonstatic_byte_space_count  = 0;
-  int nonstatic_oop_space_offset;
-  int nonstatic_word_space_offset;
-  int nonstatic_short_space_offset;
-  int nonstatic_byte_space_offset;
+  int nonstatic_oop_space_count    = 0;
+  int nonstatic_word_space_count   = 0;
+  int nonstatic_short_space_count  = 0;
+  int nonstatic_byte_space_count   = 0;
+  int nonstatic_oop_space_offset   = 0;
+  int nonstatic_word_space_offset  = 0;
+  int nonstatic_short_space_offset = 0;
+  int nonstatic_byte_space_offset  = 0;
 
   // Try to squeeze some of the fields into the gaps due to
   // long/double alignment.
@@ -3438,7 +3438,7 @@ void ClassFileParser::layout_fields(Handle class_loader,
     // contended instance fields are handled below
     if (fs.is_contended() && !fs.access_flags().is_static()) continue;
 
-    int real_offset;
+    int real_offset = 0;
     FieldAllocationType atype = (FieldAllocationType) fs.allocation_type();
 
     // pack the rest of the fields
@@ -3571,7 +3571,7 @@ void ClassFileParser::layout_fields(Handle class_loader,
         // handle statics below
         if (fs.access_flags().is_static()) continue;
 
-        int real_offset;
+        int real_offset = 0;
         FieldAllocationType atype = (FieldAllocationType) fs.allocation_type();
 
         switch (atype) {
@@ -3975,6 +3975,11 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
     // Make sure this is the end of class file stream
     guarantee_property(cfs->at_eos(), "Extra bytes at the end of class file %s", CHECK_(nullHandle));
 
+    if (_class_name == vmSymbols::java_lang_Object()) {
+      check_property(_local_interfaces == Universe::the_empty_klass_array(),
+                     "java.lang.Object cannot implement an interface in class file %s",
+                     CHECK_(nullHandle));
+    }
     // We check super class after class file is parsed and format is checked
     if (super_class_index > 0 && super_klass.is_null()) {
       Symbol*  sk  = cp->klass_name_at(super_class_index);

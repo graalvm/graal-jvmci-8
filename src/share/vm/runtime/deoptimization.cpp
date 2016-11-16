@@ -2141,8 +2141,6 @@ const char* Deoptimization::format_trap_state(char* buf, size_t buflen,
                        trap_reason_name(reason),
                        recomp_flag ? " recompiled" : "");
   }
-  if (len >= buflen)
-    buf[buflen-1] = '\0';
   return buf;
 }
 
@@ -2236,8 +2234,6 @@ const char* Deoptimization::format_trap_request(char* buf, size_t buflen,
 #endif
                        );
   }
-  if (len >= buflen)
-    buf[buflen-1] = '\0';
   return buf;
 }
 

@@ -823,6 +823,8 @@ typedef TwoOopHashtable<Symbol*, mtClass>     SymbolTwoOopHashtable;
      static_field(StubRoutines,                _updateBytesCRC32,                             address)                               \
      static_field(StubRoutines,                _crc_table_adr,                                address)                               \
      static_field(StubRoutines,                _multiplyToLen,                                address)                               \
+     static_field(StubRoutines,                _squareToLen,                                  address)                               \
+     static_field(StubRoutines,                _mulAdd,                                       address)                               \
      static_field(StubRoutines,                _jbyte_arraycopy,                              address)                               \
      static_field(StubRoutines,                _jshort_arraycopy,                             address)                               \
      static_field(StubRoutines,                _jint_arraycopy,                               address)                               \
