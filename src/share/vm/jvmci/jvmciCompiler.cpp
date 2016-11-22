@@ -88,15 +88,13 @@ void JVMCICompiler::bootstrap(TRAPS) {
   }
 
   int qsize;
-  bool first_round = true;
   int z = 0;
   do {
     // Loop until there is something in the queue.
     do {
       os::sleep(THREAD, 100, true);
       qsize = CompileBroker::queue_size(CompLevel_full_optimization);
-    } while (!_bootstrap_compilation_request_handled && first_round && qsize == 0);
-    first_round = false;
+    } while (!_bootstrap_compilation_request_handled);
     if (PrintBootstrap) {
       while (z < (_methods_compiled / 100)) {
         ++z;
