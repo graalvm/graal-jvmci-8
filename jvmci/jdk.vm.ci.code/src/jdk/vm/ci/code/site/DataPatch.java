@@ -34,15 +34,27 @@ import jdk.vm.ci.meta.VMConstant;
 public final class DataPatch extends Site {
 
     public Reference reference;
+    public Object note;
 
     public DataPatch(int pcOffset, Reference reference) {
         super(pcOffset);
         this.reference = reference;
+        this.note = null;
+    }
+
+    public DataPatch(int pcOffset, Reference reference, Object note) {
+        super(pcOffset);
+        this.reference = reference;
+        this.note = note;
     }
 
     @Override
     public String toString() {
-        return String.format("%d[<data patch referring to %s>]", pcOffset, reference.toString());
+        if (note != null) {
+            return String.format("%d[<data patch referring to %s>, note: %s]", pcOffset, reference.toString(), note.toString());
+        } else {
+            return String.format("%d[<data patch referring to %s>]", pcOffset, reference.toString());
+        }
     }
 
     @Override
@@ -52,7 +64,7 @@ public final class DataPatch extends Site {
         }
         if (obj instanceof DataPatch) {
             DataPatch that = (DataPatch) obj;
-            if (this.pcOffset == that.pcOffset && Objects.equals(this.reference, that.reference)) {
+            if (this.pcOffset == that.pcOffset && Objects.equals(this.reference, that.reference) && Objects.equals(this.note, that.note)) {
                 return true;
             }
         }
