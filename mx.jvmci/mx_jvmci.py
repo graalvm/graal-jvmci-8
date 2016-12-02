@@ -107,10 +107,10 @@ _vm_prefix = None
 
 _make_eclipse_launch = False
 
-_minVersion = mx.VersionSpec('1.8')
+_minVersion = mx.VersionSpec('1.8.0_111')
 
 # max version (first _unsupported_ version)
-_untilVersion = None
+_untilVersion = mx.VersionSpec('1.9')
 
 class JDKDeployedDist(object):
     def __init__(self, name):
@@ -1414,10 +1414,10 @@ def get_jvmci_bootstrap_jdk():
     global _jvmci_bootstrap_jdk
     if not _jvmci_bootstrap_jdk:
         def _versionCheck(version):
-            return version >= _minVersion and (not _untilVersion or version >= _untilVersion)
+            return version >= _minVersion and ((not _untilVersion) or version < _untilVersion)
         versionDesc = ">=" + str(_minVersion)
         if _untilVersion:
-            versionDesc += " and <=" + str(_untilVersion)
+            versionDesc += " and <" + str(_untilVersion)
         _jvmci_bootstrap_jdk = mx.get_jdk(_versionCheck, versionDescription=versionDesc, tag='default')
     return _jvmci_bootstrap_jdk
 
