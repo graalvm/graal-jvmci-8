@@ -372,11 +372,9 @@ JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc*
     TRACE_jvmci_3("%s: entered locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(mark), p2i(lock));
     tty->flush();
   }
-#ifdef ASSERT
   if (PrintBiasedLockingStatistics) {
     Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
   }
-#endif
   Handle h_obj(thread, obj);
   assert(h_obj()->is_oop(), "must be NULL or an object");
   if (UseBiasedLocking) {
