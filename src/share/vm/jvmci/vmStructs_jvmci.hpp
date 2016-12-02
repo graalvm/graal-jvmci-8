@@ -30,7 +30,7 @@
 #include "jvmci/jvmciCompilerToVM.hpp"
 #include "jvmci/jvmciEnv.hpp"
 
-#define VM_STRUCTS_JVMCI(nonstatic_field, static_field)                       \
+#define VM_STRUCTS_JVMCI(nonstatic_field, static_field, volatile_nonstatic_field)                                                    \
   static_field(CompilerToVM::Data,             Klass_vtable_start_offset,              int)                                          \
   static_field(CompilerToVM::Data,             Klass_vtable_length_offset,             int)                                          \
                                                                                                                                      \
@@ -87,6 +87,10 @@
   static_field(StubRoutines,                   _montgomeryMultiply,                    address)                                      \
   static_field(StubRoutines,                   _montgomerySquare,                      address)                                      \
                                                                                                                                      \
+  volatile_nonstatic_field(ObjectMonitor,      _cxq,                                   ObjectWaiter*)                                \
+  volatile_nonstatic_field(ObjectMonitor,      _EntryList,                             ObjectWaiter*)                                \
+  volatile_nonstatic_field(ObjectMonitor,      _succ,                                  Thread*)                                      \
+                                                                                                                                     \
   nonstatic_field(JavaThread,                  _pending_deoptimization,                int)                                          \
   nonstatic_field(JavaThread,                  _pending_failed_speculation,            oop)                                          \
   nonstatic_field(JavaThread,                  _pending_transfer_to_interpreter,       bool)                                         \
@@ -99,6 +103,7 @@
   declare_toplevel_type(narrowKlass)                                          \
   declare_toplevel_type(JVMCIEnv)                                             \
   declare_toplevel_type(CompilerToVM::Data)                                   \
+  declare_toplevel_type(ObjectWaiter)                                         \
 
 #define VM_INT_CONSTANTS_JVMCI(declare_constant, declare_preprocessor_constant)                   \
   declare_constant(Deoptimization::Reason_unreached0)                                             \
