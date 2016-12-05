@@ -4195,7 +4195,7 @@ jint Arguments::apply_ergo() {
     }
   }
 #ifdef COMPILER2
-  if (!UseBiasedLocking || EmitSync != 0) {
+  if (!UseBiasedLocking || (EmitSync & ~(2 | 8)) != 0) {
     UseOptoBiasInlining = false;
   }
 #endif

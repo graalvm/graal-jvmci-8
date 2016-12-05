@@ -89,7 +89,6 @@
                                                                                                                                      \
   volatile_nonstatic_field(ObjectMonitor,      _cxq,                                   ObjectWaiter*)                                \
   volatile_nonstatic_field(ObjectMonitor,      _EntryList,                             ObjectWaiter*)                                \
-  volatile_nonstatic_field(ObjectMonitor,      _succ,                                  Thread*)                                      \
                                                                                                                                      \
   nonstatic_field(JavaThread,                  _pending_deoptimization,                int)                                          \
   nonstatic_field(JavaThread,                  _pending_failed_speculation,            oop)                                          \
