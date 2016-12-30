@@ -3588,7 +3588,6 @@ void SharedRuntime::generate_deopt_blob() {
     __ add(O7, 8, O7);
     __ reset_last_Java_frame();
 
-    after_fetch_unroll_info_call;
     __ ba(after_fetch_unroll_info_call);
     __ delayed()->nop(); // Delay slot
     masm->block_comment("END implicit_exception_uncommon_trap");

@@ -899,8 +899,8 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             # setMakeVar("EXPORT_PATH", jdk)
             if mx.get_os() == 'linux' and platform.processor() == 'sparc64':
                 # SPARC/Linux
-                setMakeVar("DEBUG_BINARIES", "true", env=env)
-                setMakeVar("EXTRA_CFLAGS", "-Wno-conversion-null -Wno-int-to-pointer-cast -Wno-unused-function -fno-tree-loop-distribute-patterns -fno-schedule-insns -fno-tree-ccp -fno-ipa-cp-clone -fno-predictive-commoning", env=env)
+                setMakeVar('INCLUDE_TRACE', 'false', env=env)
+                setMakeVar('DISABLE_COMMERCIAL_FEATURES', 'true', env=env)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
             if self.vm.endswith('nojvmci'):
