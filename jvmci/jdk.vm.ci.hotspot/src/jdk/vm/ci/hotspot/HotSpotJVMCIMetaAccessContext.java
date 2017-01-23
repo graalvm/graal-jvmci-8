@@ -145,10 +145,10 @@ public class HotSpotJVMCIMetaAccessContext {
         }
     }
 
-    private final ClassValue<ResolvedJavaType> resolvedJavaType = new ClassValue<ResolvedJavaType>() {
+    private final ClassValue<WeakReference<ResolvedJavaType>> resolvedJavaType = new ClassValue<WeakReference<ResolvedJavaType>>() {
         @Override
-        protected ResolvedJavaType computeValue(Class<?> type) {
-            return createClass(type);
+        protected WeakReference<ResolvedJavaType> computeValue(Class<?> type) {
+            return new WeakReference<>(createClass(type));
         }
     };
 
@@ -157,8 +157,16 @@ public class HotSpotJVMCIMetaAccessContext {
      *
      * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
      */
-    public synchronized ResolvedJavaType fromClass(Class<?> javaClass) {
-        return resolvedJavaType.get(javaClass);
+    public ResolvedJavaType fromClass(Class<?> javaClass) {
+        ResolvedJavaType javaType = null;
+        while (javaType == null) {
+            WeakReference<ResolvedJavaType> type = resolvedJavaType.get(javaClass);
+            javaType = type.get();
+            if (javaType == null) {
+                resolvedJavaType.remove(javaClass);
+            }
+        }
+        return javaType;
     }
 
     /**
