@@ -446,6 +446,7 @@ public class TestResolvedJavaMethod extends MethodUniverse {
         "getProfilingInfo",
         "reprofile",
         "getCompilerStorage",
+        "hasNeverInlineDirective",
         "canBeInlined",
         "shouldBeInlined",
         "getLineNumberTable",
