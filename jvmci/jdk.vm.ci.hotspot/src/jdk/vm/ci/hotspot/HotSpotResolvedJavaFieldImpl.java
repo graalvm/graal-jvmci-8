@@ -66,7 +66,6 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
             if (that.offset != this.offset || that.isStatic() != this.isStatic()) {
                 return false;
             } else if (this.holder.equals(that.holder)) {
-                assert this.name.equals(that.name) && this.type.equals(that.type);
                 return true;
             }
         }
