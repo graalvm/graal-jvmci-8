@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -277,17 +277,19 @@ final class CompilerToVM {
      * {@code constantPool}. The values returned in {@code info} are:
      *
      * <pre>
-     *     [(int) flags,   // only valid if field is resolved
-     *      (int) offset]  // only valid if field is resolved
+     *     [ flags,  // fieldDescriptor::access_flags()
+     *       offset, // fieldDescriptor::offset()
+     *       index   // fieldDescriptor::index()
+     *     ]
      * </pre>
      *
-     * The behavior of this method is undefined if {@code cpi} does not denote a
-     * {@code JVM_CONSTANT_Field} entry.
+     * The values encoded in {@code info} are only valid if the field is resolved. The behavior of
+     * this method is undefined if {@code cpi} does not denote a {@code JVM_CONSTANT_Field} entry.
      *
      * @param info an array in which the details of the field are returned
      * @return the type defining the field if resolution is successful, 0 otherwise
      */
-    native HotSpotResolvedObjectTypeImpl resolveFieldInPool(HotSpotConstantPool constantPool, int cpi, byte opcode, long[] info);
+    native HotSpotResolvedObjectTypeImpl resolveFieldInPool(HotSpotConstantPool constantPool, int cpi, byte opcode, int[] info);
 
     /**
      * Converts {@code cpci} from an index into the cache for {@code constantPool} to an index
@@ -492,6 +494,13 @@ final class CompilerToVM {
      * Gets the value of {@code metaspaceSymbol} as a String.
      */
     native String getSymbol(long metaspaceSymbol);
+
+    /**
+     * Gets the name of the field at index {@code index} in the fields array of {@code type}.
+     *
+     * @throws ArrayIndexOutOfBoundsException if {@code index} is out of bounds of the fields array
+     */
+    native String getFieldName(HotSpotResolvedObjectTypeImpl holder, int index);
 
     /**
      * Looks for the next Java stack frame matching an entry in {@code methods}.

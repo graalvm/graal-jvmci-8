@@ -524,8 +524,8 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return result;
     }
 
-    synchronized HotSpotResolvedJavaField createField(String fieldName, JavaType type, long offset, int rawFlags) {
-        return new HotSpotResolvedJavaFieldImpl(this, fieldName, type, offset, rawFlags);
+    synchronized HotSpotResolvedJavaField createField(JavaType type, long offset, int rawFlags, int index) {
+        return new HotSpotResolvedJavaFieldImpl(this, type, offset, rawFlags, index);
     }
 
     @Override
@@ -591,10 +591,6 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
             return readFieldSlot(config().fieldInfoAccessFlagsOffset);
         }
 
-        private int getNameIndex() {
-            return readFieldSlot(config().fieldInfoNameIndexOffset);
-        }
-
         private int getSignatureIndex() {
             return readFieldSlot(config().fieldInfoSignatureIndexOffset);
         }
@@ -614,15 +610,6 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         private int readFieldSlot(int index) {
             int offset = Short.BYTES * index;
             return UNSAFE.getChar(metaspaceData + offset);
-        }
-
-        /**
-         * Returns the name of this field as a {@link String}. If the field is an internal field the
-         * name index is pointing into the vmSymbols table.
-         */
-        public String getName() {
-            final int nameIndex = getNameIndex();
-            return isInternal() ? config().symbolAt(nameIndex) : getConstantPool().lookupUtf8(nameIndex);
         }
 
         /**
@@ -691,11 +678,10 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     }
 
     /**
-     * Returns the actual field count of this class's internal {@code InstanceKlass::_fields} array
-     * by walking the array and discounting the generic signature slots at the end of the array.
+     * Gets the instance or static fields of this class.
      *
-     * <p>
-     * See {@code FieldStreamBase::init_generic_signature_start_slot}
+     * @param retrieveStaticFields specifies whether to return instance or static fields
+     * @param prepend an array to be prepended to the returned result
      */
     private HotSpotResolvedJavaField[] getFields(boolean retrieveStaticFields, HotSpotResolvedJavaField[] prepend) {
         HotSpotVMConfig config = config();
@@ -731,7 +717,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
             FieldInfo field = new FieldInfo(i);
             if (field.isStatic() == retrieveStaticFields) {
                 int offset = field.getOffset();
-                HotSpotResolvedJavaField resolvedJavaField = createField(field.getName(), field.getType(), offset, field.getAccessFlags());
+                HotSpotResolvedJavaField resolvedJavaField = createField(field.getType(), offset, field.getAccessFlags(), i);
 
                 // Make sure the result is sorted by offset.
                 int j;

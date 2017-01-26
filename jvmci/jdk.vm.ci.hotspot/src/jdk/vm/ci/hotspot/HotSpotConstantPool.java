@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -605,8 +605,6 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
     public JavaField lookupField(int cpi, ResolvedJavaMethod method, int opcode) {
         final int index = rawIndexToConstantPoolIndex(cpi, opcode);
         final int nameAndTypeIndex = getNameAndTypeRefIndexAt(index);
-        final int nameIndex = getNameRefIndexAt(nameAndTypeIndex);
-        String name = lookupUtf8(nameIndex);
         final int typeIndex = getSignatureRefIndexAt(nameAndTypeIndex);
         String typeName = lookupUtf8(typeIndex);
         JavaType type = runtime().lookupType(typeName, getHolder(), false);
@@ -615,7 +613,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
         JavaType holder = lookupType(holderIndex, opcode);
 
         if (holder instanceof HotSpotResolvedObjectTypeImpl) {
-            long[] info = new long[2];
+            int[] info = new int[3];
             HotSpotResolvedObjectTypeImpl resolvedHolder;
             try {
                 resolvedHolder = compilerToVM().resolveFieldInPool(this, index, (byte) opcode, info);
@@ -624,14 +622,15 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
                  * If there was an exception resolving the field we give up and return an unresolved
                  * field.
                  */
-                return new HotSpotUnresolvedField(holder, name, type);
+                return new HotSpotUnresolvedField(holder, lookupUtf8(getNameRefIndexAt(nameAndTypeIndex)), type);
             }
-            final int flags = (int) info[0];
-            final long offset = info[1];
-            HotSpotResolvedJavaField result = resolvedHolder.createField(name, type, offset, flags);
+            final int flags = info[0];
+            final int offset = info[1];
+            final int fieldIndex = info[2];
+            HotSpotResolvedJavaField result = resolvedHolder.createField(type, offset, flags, fieldIndex);
             return result;
         } else {
-            return new HotSpotUnresolvedField(holder, name, type);
+            return new HotSpotUnresolvedField(holder, lookupUtf8(getNameRefIndexAt(nameAndTypeIndex)), type);
         }
     }
 

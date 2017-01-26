@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -747,7 +747,7 @@ C2V_VMENTRY(jint, constantPoolRemapInstructionOperandFromCache, (JNIEnv*, jobjec
   return cp->remap_instruction_operand_from_cache(index);
 C2V_END
 
-C2V_VMENTRY(jobject, resolveFieldInPool, (JNIEnv*, jobject, jobject jvmci_constant_pool, jint index, jbyte opcode, jlongArray info_handle))
+C2V_VMENTRY(jobject, resolveFieldInPool, (JNIEnv*, jobject, jobject jvmci_constant_pool, jint index, jbyte opcode, jintArray info_handle))
   ResourceMark rm;
   constantPoolHandle cp = CompilerToVM::asConstantPool(jvmci_constant_pool);
   Bytecodes::Code code = (Bytecodes::Code)(((int) opcode) & 0xFF);
@@ -755,8 +755,9 @@ C2V_VMENTRY(jobject, resolveFieldInPool, (JNIEnv*, jobject, jobject jvmci_consta
   LinkResolver::resolve_field_access(result, cp, index, Bytecodes::java_code(code), true, false, CHECK_0);
   typeArrayOop info = (typeArrayOop) JNIHandles::resolve(info_handle);
   assert(info != NULL && info->length() == 2, "must be");
-  info->long_at_put(0, (jlong) result.access_flags().as_int());
-  info->long_at_put(1, (jlong) result.offset());
+  info->int_at_put(0, result.access_flags().as_int());
+  info->int_at_put(1, result.offset());
+  info->int_at_put(2, result.index());
   oop field_holder = CompilerToVM::get_jvmci_type(result.field_holder(), CHECK_NULL);
   return JNIHandles::make_local(THREAD, field_holder);
 C2V_END
@@ -1110,6 +1111,15 @@ C2V_END
 C2V_VMENTRY(jobject, getSymbol, (JNIEnv*, jobject, jlong symbol))
   Handle sym = java_lang_String::create_from_symbol((Symbol*)(address)symbol, CHECK_NULL);
   return JNIHandles::make_local(THREAD, sym());
+C2V_END
+
+C2V_VMENTRY(jobject, getFieldName, (JNIEnv*, jobject, jobject jvmci_type, jint index))
+  InstanceKlass* klass = (InstanceKlass*) CompilerToVM::asKlass(jvmci_type);
+  if (index < 0 || index >= klass->fields()->length()) {
+    THROW_NULL(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
+  }
+  Handle name = java_lang_String::create_from_symbol(klass->field_name(index), CHECK_NULL);
+  return JNIHandles::make_local(THREAD, name());
 C2V_END
 
 bool matches(jobjectArray methods, Method* method) {
@@ -1534,7 +1544,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"resolveConstantInPool",                        CC"("HS_CONSTANT_POOL"I)"OBJECT,                                                  FN_PTR(resolveConstantInPool)},
   {CC"resolvePossiblyCachedConstantInPool",          CC"("HS_CONSTANT_POOL"I)"OBJECT,                                                  FN_PTR(resolvePossiblyCachedConstantInPool)},
   {CC"resolveTypeInPool",                            CC"("HS_CONSTANT_POOL"I)"HS_RESOLVED_KLASS,                                       FN_PTR(resolveTypeInPool)},
-  {CC"resolveFieldInPool",                           CC"("HS_CONSTANT_POOL"IB[J)"HS_RESOLVED_KLASS,                                    FN_PTR(resolveFieldInPool)},
+  {CC"resolveFieldInPool",                           CC"("HS_CONSTANT_POOL"IB[I)"HS_RESOLVED_KLASS,                                    FN_PTR(resolveFieldInPool)},
   {CC"resolveInvokeDynamicInPool",                   CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeDynamicInPool)},
   {CC"resolveInvokeHandleInPool",                    CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeHandleInPool)},
   {CC"resolveMethod",                                CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD HS_RESOLVED_KLASS")"HS_RESOLVED_METHOD, FN_PTR(resolveMethod)},
@@ -1563,6 +1573,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"isMature",                                     CC"("METASPACE_METHOD_DATA")Z",                                                   FN_PTR(isMature)},
   {CC"hasCompiledCodeForOSR",                        CC"("HS_RESOLVED_METHOD"II)Z",                                                    FN_PTR(hasCompiledCodeForOSR)},
   {CC"getSymbol",                                    CC"(J)"STRING,                                                                    FN_PTR(getSymbol)},
+  {CC"getFieldName",                                 CC"("HS_RESOLVED_KLASS"I)"STRING,                                                 FN_PTR(getFieldName)},
   {CC"getNextStackFrame",                            CC"("HS_STACK_FRAME_REF "["RESOLVED_METHOD"I)"HS_STACK_FRAME_REF,                 FN_PTR(getNextStackFrame)},
   {CC"materializeVirtualObjects",                    CC"("HS_STACK_FRAME_REF"Z)V",                                                     FN_PTR(materializeVirtualObjects)},
   {CC"shouldDebugNonSafepoints",                     CC"()Z",                                                                          FN_PTR(shouldDebugNonSafepoints)},
