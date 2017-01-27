@@ -98,7 +98,25 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
             Object element = ((Object[]) a)[index];
             return HotSpotObjectConstantImpl.forObject(element);
         } else {
-            return JavaConstant.forBoxedPrimitive(Array.get(a, index));
+            if (a instanceof int[]) {
+                return JavaConstant.forInt(((int[]) a)[index]);
+            } else if (a instanceof char[]) {
+                return JavaConstant.forChar(((char[]) a)[index]);
+            } else if (a instanceof byte[]) {
+                return JavaConstant.forByte(((byte[]) a)[index]);
+            } else if (a instanceof long[]) {
+                return JavaConstant.forLong(((long[]) a)[index]);
+            } else if (a instanceof short[]) {
+                return JavaConstant.forShort(((short[]) a)[index]);
+            } else if (a instanceof float[]) {
+                return JavaConstant.forFloat(((float[]) a)[index]);
+            } else if (a instanceof double[]) {
+                return JavaConstant.forDouble(((double[]) a)[index]);
+            } else if (a instanceof boolean[]) {
+                return JavaConstant.forBoolean(((boolean[]) a)[index]);
+            } else {
+                throw new JVMCIError("Should not reach here");
+            }
         }
     }
 
