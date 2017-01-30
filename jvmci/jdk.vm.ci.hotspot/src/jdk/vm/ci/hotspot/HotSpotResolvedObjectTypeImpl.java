@@ -255,7 +255,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
      * @return true if the type is a leaf class
      */
     private boolean isLeafClass() {
-        return getSubklass() == null;
+        return UNSAFE.getLong(this.getMetaspaceKlass() + config().subklassOffset) == 0;
     }
 
     /**
