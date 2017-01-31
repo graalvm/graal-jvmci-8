@@ -1122,6 +1122,12 @@ C2V_VMENTRY(jobject, getFieldName, (JNIEnv*, jobject, jobject jvmci_type, jint i
   return JNIHandles::make_local(THREAD, name());
 C2V_END
 
+C2V_VMENTRY(jobject, getMethodName, (JNIEnv*, jobject, jobject jvmci_method))
+  Method* method = CompilerToVM::asMethod(jvmci_method);
+  Handle name = java_lang_String::create_from_symbol(method->name(), CHECK_NULL);
+  return JNIHandles::make_local(THREAD, name());
+C2V_END
+
 bool matches(jobjectArray methods, Method* method) {
   objArrayOop methods_oop = (objArrayOop) JNIHandles::resolve(methods);
 
@@ -1529,8 +1535,8 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getStackTraceElement",                         CC"("HS_RESOLVED_METHOD"I)"STACK_TRACE_ELEMENT,                                   FN_PTR(getStackTraceElement)},
   {CC"methodIsIgnoredBySecurityStackWalk",           CC"("HS_RESOLVED_METHOD")Z",                                                      FN_PTR(methodIsIgnoredBySecurityStackWalk)},
   {CC"doNotInlineOrCompile",                         CC"("HS_RESOLVED_METHOD")V",                                                      FN_PTR(doNotInlineOrCompile)},
-  {CC"isCompilable",                                 CC"(" HS_RESOLVED_METHOD ")Z",                                                    FN_PTR(isCompilable)},
-  {CC"hasNeverInlineDirective",                      CC"(" HS_RESOLVED_METHOD ")Z",                                                    FN_PTR(hasNeverInlineDirective)},
+  {CC"isCompilable",                                 CC"("HS_RESOLVED_METHOD")Z",                                                      FN_PTR(isCompilable)},
+  {CC"hasNeverInlineDirective",                      CC"("HS_RESOLVED_METHOD")Z",                                                      FN_PTR(hasNeverInlineDirective)},
   {CC"shouldInlineMethod",                           CC"("HS_RESOLVED_METHOD")Z",                                                      FN_PTR(shouldInlineMethod)},
   {CC"lookupType",                                   CC"("STRING CLASS"Z)"HS_RESOLVED_KLASS,                                           FN_PTR(lookupType)},
   {CC"lookupNameInPool",                             CC"("HS_CONSTANT_POOL"I)"STRING,                                                  FN_PTR(lookupNameInPool)},
@@ -1548,12 +1554,12 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"resolveInvokeDynamicInPool",                   CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeDynamicInPool)},
   {CC"resolveInvokeHandleInPool",                    CC"("HS_CONSTANT_POOL"I)V",                                                       FN_PTR(resolveInvokeHandleInPool)},
   {CC"resolveMethod",                                CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD HS_RESOLVED_KLASS")"HS_RESOLVED_METHOD, FN_PTR(resolveMethod)},
-  {CC "getSignaturePolymorphicHolders",              CC "()[" STRING,                                                                  FN_PTR(getSignaturePolymorphicHolders)},
+  {CC"getSignaturePolymorphicHolders",               CC"()[" STRING,                                                                   FN_PTR(getSignaturePolymorphicHolders)},
   {CC"getVtableIndexForInterfaceMethod",             CC"("HS_RESOLVED_KLASS HS_RESOLVED_METHOD")I",                                    FN_PTR(getVtableIndexForInterfaceMethod)},
   {CC"getClassInitializer",                          CC"("HS_RESOLVED_KLASS")"HS_RESOLVED_METHOD,                                      FN_PTR(getClassInitializer)},
   {CC"hasFinalizableSubclass",                       CC"("HS_RESOLVED_KLASS")Z",                                                       FN_PTR(hasFinalizableSubclass)},
   {CC"getMaxCallTargetOffset",                       CC"(J)J",                                                                         FN_PTR(getMaxCallTargetOffset)},
-  {CC"asResolvedJavaMethod",                         CC "(" EXECUTABLE ")" HS_RESOLVED_METHOD,                                         FN_PTR(asResolvedJavaMethod)},
+  {CC"asResolvedJavaMethod",                         CC"(" EXECUTABLE ")" HS_RESOLVED_METHOD,                                          FN_PTR(asResolvedJavaMethod)},
   {CC"getResolvedJavaMethod",                        CC"(Ljava/lang/Object;J)"HS_RESOLVED_METHOD,                                      FN_PTR(getResolvedJavaMethod)},
   {CC"getConstantPool",                              CC"(Ljava/lang/Object;)"HS_CONSTANT_POOL,                                         FN_PTR(getConstantPool)},
   {CC"getResolvedJavaType",                          CC"(Ljava/lang/Object;JZ)"HS_RESOLVED_KLASS,                                      FN_PTR(getResolvedJavaType)},
@@ -1574,6 +1580,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"hasCompiledCodeForOSR",                        CC"("HS_RESOLVED_METHOD"II)Z",                                                    FN_PTR(hasCompiledCodeForOSR)},
   {CC"getSymbol",                                    CC"(J)"STRING,                                                                    FN_PTR(getSymbol)},
   {CC"getFieldName",                                 CC"("HS_RESOLVED_KLASS"I)"STRING,                                                 FN_PTR(getFieldName)},
+  {CC"getMethodName",                                CC"("HS_RESOLVED_METHOD")"STRING,                                                 FN_PTR(getMethodName)},
   {CC"getNextStackFrame",                            CC"("HS_STACK_FRAME_REF "["RESOLVED_METHOD"I)"HS_STACK_FRAME_REF,                 FN_PTR(getNextStackFrame)},
   {CC"materializeVirtualObjects",                    CC"("HS_STACK_FRAME_REF"Z)V",                                                     FN_PTR(materializeVirtualObjects)},
   {CC"shouldDebugNonSafepoints",                     CC"()Z",                                                                          FN_PTR(shouldDebugNonSafepoints)},
@@ -1581,7 +1588,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"flushDebugOutput",                             CC"()V",                                                                          FN_PTR(flushDebugOutput)},
   {CC"methodDataProfileDataSize",                    CC"(JI)I",                                                                        FN_PTR(methodDataProfileDataSize)},
   {CC"interpreterFrameSize",                         CC"("BYTECODE_FRAME")I",                                                          FN_PTR(interpreterFrameSize)},
-  {CC"compileToBytecode",                            CC "(" OBJECT ")V",                                                               FN_PTR(compileToBytecode)},
+  {CC"compileToBytecode",                            CC"(" OBJECT ")V",                                                                FN_PTR(compileToBytecode)},
 };
 
 int CompilerToVM::methods_count() {

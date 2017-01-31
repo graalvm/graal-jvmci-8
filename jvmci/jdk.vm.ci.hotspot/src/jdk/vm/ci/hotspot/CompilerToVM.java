@@ -503,6 +503,11 @@ final class CompilerToVM {
     native String getFieldName(HotSpotResolvedObjectTypeImpl holder, int index);
 
     /**
+     * Gets the name of {@code method}.
+     */
+    native String getMethodName(HotSpotResolvedJavaMethodImpl method);
+
+    /**
      * Looks for the next Java stack frame matching an entry in {@code methods}.
      *
      * @param frame the starting point of the search, where {@code null} refers to the topmost frame

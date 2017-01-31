@@ -74,6 +74,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     private HotSpotMethodData methodData;
     private byte[] code;
     private Executable toJavaCache;
+    private String nameCache;
 
     /**
      * Gets the holder of a HotSpot metaspace method native object.
@@ -106,8 +107,6 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     }
 
     HotSpotResolvedJavaMethodImpl(HotSpotResolvedObjectTypeImpl holder, long metaspaceMethod) {
-        // It would be too much work to get the method name here so we fill it in later.
-        super(null);
         this.metaspaceMethod = metaspaceMethod;
         this.holder = holder;
 
@@ -126,9 +125,6 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
             this.constantPool = compilerToVM().getConstantPool(this);
         }
 
-        final int nameIndex = UNSAFE.getChar(constMethod + config.constMethodNameIndexOffset);
-        this.name = constantPool.lookupUtf8(nameIndex);
-
         final int signatureIndex = UNSAFE.getChar(constMethod + config.constMethodSignatureIndexOffset);
         this.signature = (HotSpotSignature) constantPool.lookupSignature(signatureIndex);
     }
@@ -144,6 +140,13 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     private long getConstMethod() {
         assert metaspaceMethod != 0;
         return UNSAFE.getAddress(metaspaceMethod + config().methodConstMethodOffset);
+    }
+
+    public String getName() {
+        if (nameCache == null) {
+            nameCache = compilerToVM().getMethodName(this);
+        }
+        return nameCache;
     }
 
     @Override
@@ -328,12 +331,12 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     @Override
     public boolean isClassInitializer() {
-        return "<clinit>".equals(name) && isStatic();
+        return isStatic() && "<clinit>".equals(getName());
     }
 
     @Override
     public boolean isConstructor() {
-        return "<init>".equals(name) && !isStatic();
+        return !isStatic() && "<init>".equals(getName());
     }
 
     @Override
@@ -564,7 +567,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
             } else {
                 // Do not use Method.getDeclaredMethod() as it can return a bridge method
                 // when this.isBridge() is false and vice versa.
-                result = searchMethods(holder.mirror().getDeclaredMethods(), name, returnType, parameterTypes);
+                result = searchMethods(holder.mirror().getDeclaredMethods(), getName(), returnType, parameterTypes);
             }
             toJavaCache = result;
             return result;
