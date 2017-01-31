@@ -1143,7 +1143,9 @@ def _jvmci_gate_runner(args, tasks):
 
     # Build the fastdebug VM
     with Task('BuildHotSpotJVMCI: fastdebug', tasks) as t:
-        if t: buildvms(['--vms', 'server', '--builds', 'fastdebug'])
+        if t:
+            buildvms(['--vms', 'server', '--builds', 'fastdebug'])
+            run_vm(['-XX:+ExecuteInternalVMTests', '-version'], vm='server', vmbuild='fastdebug')
 
     with Task('CleanAndBuildIdealGraphVisualizer', tasks, disableJacoco=True) as t:
         if t and platform.processor() != 'sparc':

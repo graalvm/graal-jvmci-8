@@ -3531,6 +3531,17 @@ void VMStructs::test() {
       }
     }
   }
+
+  // Check for duplicate entries in structs array
+  for (int i = 0; localHotSpotVMStructs[i].typeName != NULL; i++) {
+    for (int j = i + 1; localHotSpotVMStructs[j].typeName != NULL; j++) {
+      if (strcmp(localHotSpotVMStructs[i].typeName, localHotSpotVMStructs[j].typeName) == 0 &&
+          strcmp(localHotSpotVMStructs[i].fieldName, localHotSpotVMStructs[j].fieldName) == 0) {
+        tty->print_cr("Duplicate entries for '%s::%s'", localHotSpotVMStructs[i].typeName, localHotSpotVMStructs[i].fieldName);
+        assert(false, "Duplicate types in localHotSpotVMStructs array");
+      }
+    }
+  }
 }
 #endif
 

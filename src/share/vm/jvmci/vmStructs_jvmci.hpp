@@ -83,7 +83,6 @@
   static_field(StubRoutines,                   _sha256_implCompressMB,                 address)                                      \
   static_field(StubRoutines,                   _sha512_implCompress,                   address)                                      \
   static_field(StubRoutines,                   _sha512_implCompressMB,                 address)                                      \
-  static_field(StubRoutines,                   _multiplyToLen,                         address)                                      \
   static_field(StubRoutines,                   _montgomeryMultiply,                    address)                                      \
   static_field(StubRoutines,                   _montgomerySquare,                      address)                                      \
                                                                                                                                      \
