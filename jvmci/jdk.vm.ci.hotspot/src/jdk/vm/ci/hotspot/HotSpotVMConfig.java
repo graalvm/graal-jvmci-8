@@ -77,7 +77,7 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
 
     final int arrayKlassComponentMirrorOffset = getFieldOffset("ArrayKlass::_component_mirror", Integer.class, "oop");
 
-    final int vtableEntrySize = getTypeSize("vtableEntry");
+    final int vtableEntrySize = getFieldValue("CompilerToVM::Data::sizeof_vtableEntry", Integer.class, "int");
     final int vtableEntryMethodOffset = getFieldOffset("vtableEntry::_method", Integer.class, "Method*");
 
     final int arrayU1LengthOffset = getFieldOffset("Array<int>::_length", Integer.class, "int");
@@ -149,20 +149,20 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int constMethodHasLocalVariableTable = getConstant("ConstMethod::_has_localvariable_table", Integer.class);
     final int constMethodHasExceptionTable = getConstant("ConstMethod::_has_exception_table", Integer.class);
 
-    final int exceptionTableElementSize = getTypeSize("ExceptionTableElement");
+    final int exceptionTableElementSize = getFieldValue("CompilerToVM::Data::sizeof_ExceptionTableElement", Integer.class, "int");
     final int exceptionTableElementStartPcOffset = getFieldOffset("ExceptionTableElement::start_pc", Integer.class, "u2");
     final int exceptionTableElementEndPcOffset = getFieldOffset("ExceptionTableElement::end_pc", Integer.class, "u2");
     final int exceptionTableElementHandlerPcOffset = getFieldOffset("ExceptionTableElement::handler_pc", Integer.class, "u2");
     final int exceptionTableElementCatchTypeIndexOffset = getFieldOffset("ExceptionTableElement::catch_type_index", Integer.class, "u2");
 
-    final int localVariableTableElementSize = getTypeSize("LocalVariableTableElement");
+    final int localVariableTableElementSize = getFieldValue("CompilerToVM::Data::sizeof_LocalVariableTableElement", Integer.class, "int");
     final int localVariableTableElementStartBciOffset = getFieldOffset("LocalVariableTableElement::start_bci", Integer.class, "u2");
     final int localVariableTableElementLengthOffset = getFieldOffset("LocalVariableTableElement::length", Integer.class, "u2");
     final int localVariableTableElementNameCpIndexOffset = getFieldOffset("LocalVariableTableElement::name_cp_index", Integer.class, "u2");
     final int localVariableTableElementDescriptorCpIndexOffset = getFieldOffset("LocalVariableTableElement::descriptor_cp_index", Integer.class, "u2");
     final int localVariableTableElementSlotOffset = getFieldOffset("LocalVariableTableElement::slot", Integer.class, "u2");
 
-    final int constantPoolSize = getTypeSize("ConstantPool");
+    final int constantPoolSize = getFieldValue("CompilerToVM::Data::sizeof_ConstantPool", Integer.class, "int");
     final int constantPoolTagsOffset = getFieldOffset("ConstantPool::_tags", Integer.class, "Array<u1>*");
     final int constantPoolHolderOffset = getFieldOffset("ConstantPool::_pool_holder", Integer.class, "InstanceKlass*");
     final int constantPoolLengthOffset = getFieldOffset("ConstantPool::_length", Integer.class, "int");
@@ -194,7 +194,7 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
 
     final int heapWordSize = getConstant("HeapWordSize", Integer.class);
 
-    final int symbolPointerSize = getTypeSize("Symbol*");
+    final int symbolPointerSize = getFieldValue("CompilerToVM::Data::sizeof_SymbolPointer", Integer.class, "int");
 
     final long vmSymbolsSymbols = getFieldAddress("vmSymbols::_symbols[0]", "Symbol*");
     final int vmSymbolsFirstSID = getConstant("vmSymbols::FIRST_SID", Integer.class);

@@ -68,6 +68,15 @@ class CompilerToVM {
 
      static int vm_page_size;
 
+     static int sizeof_vtableEntry;
+     static int sizeof_ExceptionTableElement;
+     static int sizeof_LocalVariableTableElement;
+     static int sizeof_ConstantPool;
+     static int sizeof_SymbolPointer;
+     static int sizeof_narrowKlass;
+     static int sizeof_arrayOopDesc;
+     static int sizeof_BasicLock;
+
      static address CodeCache_low_bound;
      static address CodeCache_high_bound;
 
@@ -87,6 +96,20 @@ class CompilerToVM {
       return Data::_max_oop_map_stack_offset;
     }
    };
+
+  static bool cstring_equals(const char* const& s0, const char* const& s1) {
+    return strcmp(s0, s1) == 0;
+  }
+
+  static unsigned cstring_hash(const char* const& s) {
+    int h = 0;
+    const char* p = s;
+    while (*p != '\0') {
+      h = 31 * h + *p;
+      p++;
+    }
+    return h;
+  }
 
   static JNINativeMethod methods[];
 

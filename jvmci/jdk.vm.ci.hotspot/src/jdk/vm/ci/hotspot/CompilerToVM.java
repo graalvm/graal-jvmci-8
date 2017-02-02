@@ -631,4 +631,12 @@ final class CompilerToVM {
      * @return the number of bytes required for deoptimization of this frame state
      */
     native int interpreterFrameSize(BytecodeFrame frame);
+
+    /**
+     * Gets the value of the VM flag named {@code name} boxed in an Object.
+     *
+     * @param name name of a VM option
+     * @return {@code null} if the named VM option doesn't exist
+     */
+    native Object getFlagValue(String name);
 }
