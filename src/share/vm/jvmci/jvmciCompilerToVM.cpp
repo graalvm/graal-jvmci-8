@@ -283,20 +283,20 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_bool_flag(PrintInlining)                                              \
   do_bool_flag(ReduceInitialCardMarks)                                     \
   do_bool_flag(RestrictContended)                                          \
-  /*do_intx_flag(StackReservedPages) - JDK 9*/                             \
+  /* do_intx_flag(StackReservedPages) JDK 9 */                             \
   do_intx_flag(StackShadowPages)                                           \
   do_bool_flag(TLABStats)                                                  \
   do_uintx_flag(TLABWasteIncrement)                                        \
   do_intx_flag(TypeProfileWidth)                                           \
   do_bool_flag(UseAESIntrinsics)                                           \
-  do_intx_flag(UseAVX)                                                     \
+  X86_ONLY(do_intx_flag(UseAVX))                                           \
   do_bool_flag(UseBiasedLocking)                                           \
   do_bool_flag(UseCRC32Intrinsics)                                         \
   do_bool_flag(UseCompressedClassPointers)                                 \
   do_bool_flag(UseCompressedOops)                                          \
   do_bool_flag(UseConcMarkSweepGC)                                         \
-  do_bool_flag(UseCountLeadingZerosInstruction)                            \
-  do_bool_flag(UseCountTrailingZerosInstruction)                           \
+  X86_ONLY(do_bool_flag(UseCountLeadingZerosInstruction))                  \
+  X86_ONLY(do_bool_flag(UseCountTrailingZerosInstruction))                 \
   do_bool_flag(UseG1GC)                                                    \
   COMPILER2_PRESENT(do_bool_flag(UseMontgomeryMultiplyIntrinsic))          \
   COMPILER2_PRESENT(do_bool_flag(UseMontgomerySquareIntrinsic))            \
@@ -312,6 +312,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_bool_flag(UseTLAB)                                                    \
   do_bool_flag(VerifyOops)                                                 \
 
+#define BOXED_BOOLEAN(name, value) oop name = ((jboolean)(value) ? boxedTrue() : boxedFalse())
 #define BOXED_DOUBLE(name, value) oop name; do { jvalue p; p.d = (jdouble) (value); name = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL);} while(0)
 #define BOXED_LONG(name, value) \
   oop name; \
@@ -343,13 +344,16 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   } while (0)
 
 C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
-
   ResourceMark rm;
   HandleMark hm;
 
   // Used to canonicalize Long and String values.
   ResourceHashtable<jlong, Handle> longs;
   ResourceHashtable<const char*, Handle, &CompilerToVM::cstring_hash, &CompilerToVM::cstring_equals> strings;
+
+  jvalue prim;
+  prim.z = true;  Handle boxedTrue =  java_lang_boxing_object::create(T_BOOLEAN, &prim, CHECK_NULL);
+  prim.z = false; Handle boxedFalse = java_lang_boxing_object::create(T_BOOLEAN, &prim, CHECK_NULL);
 
   CompilerToVM::Data::initialize(CHECK_NULL);
 
@@ -373,23 +377,23 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
     VMField::set_address(vmFieldObj, (jlong) vmField.address);
     if (vmField.isStatic && vmField.typeString != NULL) {
       if (strcmp(vmField.typeString, "bool") == 0) {
-        BOXED_LONG(value, *(jbyte*) vmField.address);
-        VMField::set_value(vmFieldObj, value);
+        BOXED_BOOLEAN(box, *(jbyte*) vmField.address);
+        VMField::set_value(vmFieldObj, box);
       } else if (strcmp(vmField.typeString, "int") == 0 ||
                  strcmp(vmField.typeString, "jint") == 0) {
-        BOXED_LONG(value, *(jint*) vmField.address);
-        VMField::set_value(vmFieldObj, value);
+        BOXED_LONG(box, *(jint*) vmField.address);
+        VMField::set_value(vmFieldObj, box);
       } else if (strcmp(vmField.typeString, "uint64_t") == 0) {
-        BOXED_LONG(value, *(uint64_t*) vmField.address);
-        VMField::set_value(vmFieldObj, value);
+        BOXED_LONG(box, *(uint64_t*) vmField.address);
+        VMField::set_value(vmFieldObj, box);
       } else if (strcmp(vmField.typeString, "address") == 0 ||
                  strcmp(vmField.typeString, "intptr_t") == 0 ||
                  strcmp(vmField.typeString, "uintptr_t") == 0 ||
                  strcmp(vmField.typeString, "size_t") == 0 ||
                  // All foo* types are addresses.
                  vmField.typeString[strlen(vmField.typeString) - 1] == '*') {
-        BOXED_LONG(value, *((address*) vmField.address));
-        VMField::set_value(vmFieldObj, value);
+        BOXED_LONG(box, *((address*) vmField.address));
+        VMField::set_value(vmFieldObj, box);
       }
     }
     vmFields->obj_at_put(i, vmFieldObj());
@@ -429,8 +433,8 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
 #define COUNT_FLAG(ignore) +1
 #ifdef ASSERT
 #define CHECK_FLAG(type, name) { \
-	Flag* flag = Flag::find_flag(#name, strlen(#name), /*allow_locked*/ true, /* return_flag */ true); \
-	assert(flag != NULL, "No such flag named " #name); \
+  Flag* flag = Flag::find_flag(#name, strlen(#name), /*allow_locked*/ true, /* return_flag */ true); \
+  assert(flag != NULL, "No such flag named " #name); \
   assert(flag->is_##type(), "Flag " #name " is not of type " #type); \
 }
 #else
@@ -439,7 +443,7 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
 
 #define ADD_FLAG(type, name, convert) { \
   CHECK_FLAG(type, name) \
-	instanceHandle vmFlagObj = InstanceKlass::cast(VMFlag::klass())->allocate_instance_handle(CHECK_NULL); \
+  instanceHandle vmFlagObj = InstanceKlass::cast(VMFlag::klass())->allocate_instance_handle(CHECK_NULL); \
   STRING(fname, #name); \
   STRING(ftype, #type); \
   VMFlag::set_name(vmFlagObj, fname()); \
@@ -448,13 +452,13 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
   VMFlag::set_value(vmFlagObj, value); \
   vmFlags->obj_at_put(i++, vmFlagObj()); \
 }
-#define ADD_BOOL_FLAG(name)  ADD_FLAG(bool, name, BOXED_LONG)
+#define ADD_BOOL_FLAG(name)  ADD_FLAG(bool, name, BOXED_BOOLEAN)
 #define ADD_INTX_FLAG(name)  ADD_FLAG(intx, name, BOXED_LONG)
 #define ADD_UINTX_FLAG(name) ADD_FLAG(uintx, name, BOXED_LONG)
 
   len = 0 + PREDEFINED_CONFIG_FLAGS(COUNT_FLAG, COUNT_FLAG, COUNT_FLAG);
   objArrayHandle vmFlags = oopFactory::new_objArray(VMFlag::klass(), len, CHECK_NULL);
-	int i = 0;
+  int i = 0;
   PREDEFINED_CONFIG_FLAGS(ADD_BOOL_FLAG, ADD_INTX_FLAG, ADD_UINTX_FLAG)
 
   objArrayHandle vmIntrinsics = CompilerToVM::initialize_intrinsics(CHECK_NULL);
@@ -475,7 +479,7 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
 #undef CHECK_FLAG
 C2V_END
 
-C2V_VMENTRY(jobject, getFlagValue, (JNIEnv *, jobject, jobject name_handle))
+C2V_VMENTRY(jobject, getFlagValue, (JNIEnv *, jobject c2vm, jobject name_handle))
 #define RETURN_BOXED_LONG(value) oop box; jvalue p; p.j = (jlong) (value); box = java_lang_boxing_object::create(T_LONG, &p, CHECK_NULL); return JNIHandles::make_local(THREAD, box);
 #define RETURN_BOXED_DOUBLE(value) oop box; jvalue p; p.d = (jdouble) (value); box = java_lang_boxing_object::create(T_DOUBLE, &p, CHECK_NULL); return JNIHandles::make_local(THREAD, box);
   Handle name = JNIHandles::resolve(name_handle);
@@ -485,17 +489,26 @@ C2V_VMENTRY(jobject, getFlagValue, (JNIEnv *, jobject, jobject name_handle))
   const char* cstring = java_lang_String::as_utf8_string(name());
   Flag* flag = Flag::find_flag(cstring, strlen(cstring), /* allow_locked */ true, /* return_flag */ true);
   if (flag == NULL) {
-    return NULL;
+    return c2vm;
   }
   if (flag->is_bool()) {
-    RETURN_BOXED_LONG(flag->get_bool());
+    jvalue prim;
+    prim.z = flag->get_bool();
+    oop box = java_lang_boxing_object::create(T_BOOLEAN, &prim, CHECK_NULL);
+    return JNIHandles::make_local(THREAD, box);
   } else if (flag->is_ccstr()) {
     Handle value = java_lang_String::create_from_str(flag->get_ccstr(), CHECK_NULL);
     return JNIHandles::make_local(THREAD, value());
   } else if (flag->is_intx()) {
     RETURN_BOXED_LONG(flag->get_intx());
+/*} else if (flag->is_int()) {
+    RETURN_BOXED_LONG(flag->get_int());
+  } else if (flag->is_uint()) {
+    RETURN_BOXED_LONG(flag->get_uint());*/
   } else if (flag->is_uint64_t()) {
     RETURN_BOXED_LONG(flag->get_uint64_t());
+/*} else if (flag->is_size_t()) {
+    RETURN_BOXED_LONG(flag->get_size_t());*/
   } else if (flag->is_uintx()) {
     RETURN_BOXED_LONG(flag->get_uintx());
   } else if (flag->is_double()) {
@@ -881,14 +894,16 @@ C2V_VMENTRY(jobject, resolveFieldInPool, (JNIEnv*, jobject, jobject jvmci_consta
   ResourceMark rm;
   constantPoolHandle cp = CompilerToVM::asConstantPool(jvmci_constant_pool);
   Bytecodes::Code code = (Bytecodes::Code)(((int) opcode) & 0xFF);
-  fieldDescriptor result;
-  LinkResolver::resolve_field_access(result, cp, index, Bytecodes::java_code(code), true, false, CHECK_0);
+  fieldDescriptor fd;
+  LinkResolver::resolve_field_access(fd, cp, index, Bytecodes::java_code(code), true, false, CHECK_0);
   typeArrayOop info = (typeArrayOop) JNIHandles::resolve(info_handle);
-  assert(info != NULL && info->length() == 2, "must be");
-  info->int_at_put(0, result.access_flags().as_int());
-  info->int_at_put(1, result.offset());
-  info->int_at_put(2, result.index());
-  oop field_holder = CompilerToVM::get_jvmci_type(result.field_holder(), CHECK_NULL);
+  if (info == NULL || info->length() != 3) {
+    JVMCI_ERROR_NULL("info must not be null and have a length of 3");
+  }
+  info->int_at_put(0, fd.access_flags().as_int());
+  info->int_at_put(1, fd.offset());
+  info->int_at_put(2, fd.index());
+  oop field_holder = CompilerToVM::get_jvmci_type(fd.field_holder(), CHECK_NULL);
   return JNIHandles::make_local(THREAD, field_holder);
 C2V_END
 
@@ -1241,21 +1256,6 @@ C2V_END
 C2V_VMENTRY(jobject, getSymbol, (JNIEnv*, jobject, jlong symbol))
   Handle sym = java_lang_String::create_from_symbol((Symbol*)(address)symbol, CHECK_NULL);
   return JNIHandles::make_local(THREAD, sym());
-C2V_END
-
-C2V_VMENTRY(jobject, getFieldName, (JNIEnv*, jobject, jobject jvmci_type, jint index))
-  InstanceKlass* klass = (InstanceKlass*) CompilerToVM::asKlass(jvmci_type);
-  if (index < 0 || index >= klass->fields()->length()) {
-    THROW_NULL(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
-  }
-  Handle name = java_lang_String::create_from_symbol(klass->field_name(index), CHECK_NULL);
-  return JNIHandles::make_local(THREAD, name());
-C2V_END
-
-C2V_VMENTRY(jobject, getMethodName, (JNIEnv*, jobject, jobject jvmci_method))
-  Method* method = CompilerToVM::asMethod(jvmci_method);
-  Handle name = java_lang_String::create_from_symbol(method->name(), CHECK_NULL);
-  return JNIHandles::make_local(THREAD, name());
 C2V_END
 
 bool matches(jobjectArray methods, Method* method) {
@@ -1709,8 +1709,6 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"isMature",                                     CC"("METASPACE_METHOD_DATA")Z",                                                   FN_PTR(isMature)},
   {CC"hasCompiledCodeForOSR",                        CC"("HS_RESOLVED_METHOD"II)Z",                                                    FN_PTR(hasCompiledCodeForOSR)},
   {CC"getSymbol",                                    CC"(J)"STRING,                                                                    FN_PTR(getSymbol)},
-  {CC"getFieldName",                                 CC"("HS_RESOLVED_KLASS"I)"STRING,                                                 FN_PTR(getFieldName)},
-  {CC"getMethodName",                                CC"("HS_RESOLVED_METHOD")"STRING,                                                 FN_PTR(getMethodName)},
   {CC"getNextStackFrame",                            CC"("HS_STACK_FRAME_REF "["RESOLVED_METHOD"I)"HS_STACK_FRAME_REF,                 FN_PTR(getNextStackFrame)},
   {CC"materializeVirtualObjects",                    CC"("HS_STACK_FRAME_REF"Z)V",                                                     FN_PTR(materializeVirtualObjects)},
   {CC"shouldDebugNonSafepoints",                     CC"()Z",                                                                          FN_PTR(shouldDebugNonSafepoints)},

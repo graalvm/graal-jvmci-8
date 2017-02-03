@@ -339,6 +339,7 @@ final class CompilerToVM {
      *         [String name, Long value, ...] vmConstants,
      *         [String name, Long value, ...] vmAddresses,
      *         VMFlag[] vmFlags
+     *         VMIntrinsicMethod[] vmIntrinsics
      *     ]
      * </pre>
      *
@@ -496,18 +497,6 @@ final class CompilerToVM {
     native String getSymbol(long metaspaceSymbol);
 
     /**
-     * Gets the name of the field at index {@code index} in the fields array of {@code type}.
-     *
-     * @throws ArrayIndexOutOfBoundsException if {@code index} is out of bounds of the fields array
-     */
-    native String getFieldName(HotSpotResolvedObjectTypeImpl holder, int index);
-
-    /**
-     * Gets the name of {@code method}.
-     */
-    native String getMethodName(HotSpotResolvedJavaMethodImpl method);
-
-    /**
      * Looks for the next Java stack frame matching an entry in {@code methods}.
      *
      * @param frame the starting point of the search, where {@code null} refers to the topmost frame
@@ -617,12 +606,6 @@ final class CompilerToVM {
     native int methodDataProfileDataSize(long metaspaceMethodData, int position);
 
     /**
-     * Invokes non-public method {@code java.lang.invoke.LambdaForm.compileToBytecode()} on
-     * {@code lambdaForm} (which must be a {@code java.lang.invoke.LambdaForm} instance).
-     */
-    native void compileToBytecode(Object lambdaForm);
-
-    /**
      * Return the amount of native stack required for the interpreter frames represented by
      * {@code frame}. This is used when emitting the stack banging code to ensure that there is
      * enough space for the frames during deoptimization.
@@ -633,10 +616,19 @@ final class CompilerToVM {
     native int interpreterFrameSize(BytecodeFrame frame);
 
     /**
-     * Gets the value of the VM flag named {@code name} boxed in an Object.
+     * Invokes non-public method {@code java.lang.invoke.LambdaForm.compileToBytecode()} on
+     * {@code lambdaForm} (which must be a {@code java.lang.invoke.LambdaForm} instance).
+     */
+    native void compileToBytecode(Object lambdaForm);
+
+    /**
+     * Gets the value of the VM flag named {@code name}.
      *
      * @param name name of a VM option
-     * @return {@code null} if the named VM option doesn't exist
+     * @return {@code this} if the named VM option doesn't exist, a {@link String} or {@code null}
+     *         if its type is {@code ccstr} or {@code ccstrlist}, a {@link Double} if its type is
+     *         {@code double}, a {@link Boolean} if its type is {@code bool} otherwise a
+     *         {@link Long}
      */
     native Object getFlagValue(String name);
 }

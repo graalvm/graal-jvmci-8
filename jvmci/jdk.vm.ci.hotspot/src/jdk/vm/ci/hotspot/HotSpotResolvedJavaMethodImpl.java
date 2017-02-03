@@ -74,6 +74,11 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     private HotSpotMethodData methodData;
     private byte[] code;
     private Executable toJavaCache;
+
+    /**
+     * Only 30% of {@link HotSpotResolvedJavaMethodImpl}s have their name accessed so compute it
+     * lazily and cache it.
+     */
     private String nameCache;
 
     /**
@@ -144,7 +149,8 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     public String getName() {
         if (nameCache == null) {
-            nameCache = compilerToVM().getMethodName(this);
+            final int nameIndex = UNSAFE.getChar(getConstMethod() + config().constMethodNameIndexOffset);
+            nameCache = constantPool.lookupUtf8(nameIndex);
         }
         return nameCache;
     }

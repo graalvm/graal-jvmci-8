@@ -563,11 +563,15 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return null;
     }
 
+    FieldInfo createFieldInfo(int index) {
+        return new FieldInfo(index);
+    }
+
     /**
      * This class represents the field information for one field contained in the fields array of an
      * {@code InstanceKlass}. The implementation is similar to the native {@code FieldInfo} class.
      */
-    private class FieldInfo {
+    class FieldInfo {
         /**
          * Native pointer into the array of Java shorts.
          */
@@ -591,6 +595,10 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
             return readFieldSlot(config().fieldInfoAccessFlagsOffset);
         }
 
+        private int getNameIndex() {
+            return readFieldSlot(config().fieldInfoNameIndexOffset);
+        }
+
         private int getSignatureIndex() {
             return readFieldSlot(config().fieldInfoSignatureIndexOffset);
         }
@@ -610,6 +618,15 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         private int readFieldSlot(int index) {
             int offset = Short.BYTES * index;
             return UNSAFE.getChar(metaspaceData + offset);
+        }
+
+        /**
+         * Returns the name of this field as a {@link String}. If the field is an internal field the
+         * name index is pointing into the vmSymbols table.
+         */
+        public String getName() {
+            final int nameIndex = getNameIndex();
+            return isInternal() ? config().symbolAt(nameIndex) : getConstantPool().lookupUtf8(nameIndex);
         }
 
         /**

@@ -22,7 +22,6 @@
  */
 package jdk.vm.ci.hotspot;
 
-import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
 import static jdk.vm.ci.hotspot.HotSpotModifiers.jvmFieldModifiers;
 import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 
@@ -51,11 +50,11 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
         this.holder = holder;
         this.type = type;
         this.index = (short) index;
+        this.offset = (int) offset;
+        this.modifiers = modifiers;
         assert this.index == index;
         assert offset != -1;
         assert offset == (int) offset : "offset larger than int";
-        this.offset = (int) offset;
-        this.modifiers = modifiers;
     }
 
     @Override
@@ -109,7 +108,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
 
     @Override
     public String getName() {
-        return compilerToVM().getFieldName(holder, index);
+        return holder.createFieldInfo(index).getName();
     }
 
     @Override
@@ -178,18 +177,12 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
         return null;
     }
 
-    private Field toJavaCache;
-
     private Field toJava() {
-        if (toJavaCache != null) {
-            return toJavaCache;
-        }
-
         if (isInternal()) {
             return null;
         }
         try {
-            return toJavaCache = holder.mirror().getDeclaredField(getName());
+            return holder.mirror().getDeclaredField(getName());
         } catch (NoSuchFieldException | NoClassDefFoundError e) {
             return null;
         }

@@ -281,7 +281,7 @@ public class HotSpotVMConfigAccess {
         if (entry == null) {
             // Fall back to VM call
             value = store.compilerToVm.getFlagValue(name);
-            if (value == null) {
+            if (value == store.compilerToVm) {
                 if (notPresent != null) {
                     return notPresent;
                 }
@@ -314,6 +314,10 @@ public class HotSpotVMConfigAccess {
                 return value;
             } else if (value instanceof Long) {
                 return (int) (long) value;
+            }
+        } else if (toType == String.class) {
+            if (value == null || value instanceof String) {
+                return value;
             }
         } else if (toType == Long.class) {
             return value;
