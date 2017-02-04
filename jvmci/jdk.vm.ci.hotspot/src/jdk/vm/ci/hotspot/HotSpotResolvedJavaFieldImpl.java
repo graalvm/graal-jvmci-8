@@ -138,7 +138,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
 
     @Override
     public boolean isSynthetic() {
-        return (config().syntheticFlag & modifiers) != 0;
+        return (config().jvmAccSynthetic & modifiers) != 0;
     }
 
     /**

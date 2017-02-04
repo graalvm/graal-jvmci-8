@@ -298,7 +298,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
      * @param index constant pool index
      * @return constant pool entry
      */
-    private long getEntryAt(int index) {
+    long getEntryAt(int index) {
         assert checkBounds(index);
         int offset = index * runtime().getHostJVMCIBackend().getTarget().wordSize;
         return UNSAFE.getAddress(getMetaspaceConstantPool() + config().constantPoolSize + offset);

@@ -86,6 +86,9 @@
   static_field(CompilerToVM::Data,             dlog10,                                 address)                                      \
   static_field(CompilerToVM::Data,             dpow,                                   address)                                      \
                                                                                                                                      \
+  static_field(CompilerToVM::Data,             symbol_init,                            address)                                      \
+  static_field(CompilerToVM::Data,             symbol_clinit,                          address)                                      \
+                                                                                                                                     \
   static_field(StubRoutines,                   _sha1_implCompress,                     address)                                      \
   static_field(StubRoutines,                   _sha1_implCompressMB,                   address)                                      \
   static_field(StubRoutines,                   _sha256_implCompress,                   address)                                      \

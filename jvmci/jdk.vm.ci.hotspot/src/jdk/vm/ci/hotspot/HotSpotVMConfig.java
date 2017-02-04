@@ -200,6 +200,9 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int vmSymbolsFirstSID = getConstant("vmSymbols::FIRST_SID", Integer.class);
     final int vmSymbolsSIDLimit = getConstant("vmSymbols::SID_LIMIT", Integer.class);
 
+    final long symbolInit = getFieldValue("CompilerToVM::Data::symbol_init", Long.class);
+    final long symbolClinit = getFieldValue("CompilerToVM::Data::symbol_clinit", Long.class);
+
     /**
      * Returns the symbol in the {@code vmSymbols} table at position {@code index} as a
      * {@link String}.
@@ -216,9 +219,6 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     }
 
     final int klassHasFinalizerFlag = getConstant("JVM_ACC_HAS_FINALIZER", Integer.class);
-
-    // Modifier.SYNTHETIC is not so we get it via vmStructs.
-    final int syntheticFlag = getConstant("JVM_ACC_SYNTHETIC", Integer.class);
 
     final int klassVtableStartOffset = getFieldValue("CompilerToVM::Data::Klass_vtable_start_offset", Integer.class, "int");
     final int klassVtableLengthOffset = getFieldValue("CompilerToVM::Data::Klass_vtable_length_offset", Integer.class, "int");

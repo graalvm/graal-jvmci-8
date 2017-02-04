@@ -138,10 +138,12 @@ address CompilerToVM::Data::dlog;
 address CompilerToVM::Data::dlog10;
 address CompilerToVM::Data::dpow;
 
+address CompilerToVM::Data::symbol_init;
+address CompilerToVM::Data::symbol_clinit;
+
 void CompilerToVM::Data::initialize(TRAPS) {
   Klass_vtable_start_offset = InstanceKlass::vtable_start_offset() * HeapWordSize;
   Klass_vtable_length_offset = InstanceKlass::vtable_length_offset() * HeapWordSize;
-
   Method_extra_stack_entries = Method::extra_stack_entries();
 
   SharedRuntime_ic_miss_stub = SharedRuntime::get_ic_miss_stub();
@@ -175,6 +177,9 @@ void CompilerToVM::Data::initialize(TRAPS) {
 
   CodeCache_low_bound = CodeCache::low_bound();
   CodeCache_high_bound = CodeCache::high_bound();
+
+  symbol_init = (address) vmSymbols::object_initializer_name();
+  symbol_clinit = (address) vmSymbols::class_initializer_name();
 
   BarrierSet* bs = Universe::heap()->barrier_set();
   switch (bs->kind()) {

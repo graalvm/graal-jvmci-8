@@ -337,12 +337,24 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     @Override
     public boolean isClassInitializer() {
-        return isStatic() && "<clinit>".equals(getName());
+        if (isStatic()) {
+            final int nameIndex = UNSAFE.getChar(getConstMethod() + config().constMethodNameIndexOffset);
+            long nameSymbol = constantPool.getEntryAt(nameIndex);
+            long clinitSymbol = config().symbolClinit;
+            return nameSymbol == clinitSymbol;
+        }
+        return false;
     }
 
     @Override
     public boolean isConstructor() {
-        return !isStatic() && "<init>".equals(getName());
+        if (!isStatic()) {
+            final int nameIndex = UNSAFE.getChar(getConstMethod() + config().constMethodNameIndexOffset);
+            long nameSymbol = constantPool.getEntryAt(nameIndex);
+            long initSymbol = config().symbolInit;
+            return nameSymbol == initSymbol;
+        }
+        return false;
     }
 
     @Override
@@ -524,9 +536,6 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     }
 
     public boolean isDefault() {
-        if (isConstructor()) {
-            return false;
-        }
         // Copied from java.lang.Method.isDefault()
         int mask = Modifier.ABSTRACT | Modifier.PUBLIC | Modifier.STATIC;
         return ((getModifiers() & mask) == Modifier.PUBLIC) && getDeclaringClass().isInterface();

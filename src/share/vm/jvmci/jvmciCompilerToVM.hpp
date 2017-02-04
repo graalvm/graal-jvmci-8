@@ -88,6 +88,9 @@ class CompilerToVM {
      static address dlog10;
      static address dpow;
 
+     static address symbol_init;
+     static address symbol_clinit;
+
     public:
      static void initialize(TRAPS);
 
