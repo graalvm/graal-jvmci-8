@@ -772,6 +772,8 @@ class Method : public Metadata {
 
   // Helper routines for intrinsic_id() and vmIntrinsics::method().
   void init_intrinsic_id();     // updates from _none if a match
+  void clear_jmethod_id(ClassLoaderData* loader_data);
+
   static vmSymbols::SID klass_id_for_intrinsics(Klass* holder);
 
   bool jfr_towrite() {

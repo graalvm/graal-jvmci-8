@@ -50,7 +50,7 @@ bool CompiledIC::is_icholder_call_site(virtual_call_Relocation* call_site) {
 // ----------------------------------------------------------------------------
 
 #define __ _masm.
-void CompiledStaticCall::emit_to_interp_stub(CodeBuffer &cbuf, address mark) {
+address CompiledStaticCall::emit_to_interp_stub(CodeBuffer &cbuf, address mark) {
   // Stub is fixed up when the corresponding call is converted from
   // calling compiled code to calling interpreted code.
   // movq rbx, 0
@@ -64,10 +64,10 @@ void CompiledStaticCall::emit_to_interp_stub(CodeBuffer &cbuf, address mark) {
   // That's why we must use the macroassembler to generate a stub.
   MacroAssembler _masm(&cbuf);
 
-  address base =
-  __ start_a_stub(to_interp_stub_size());
-  guarantee(base != NULL, "out of space");
-
+  address base = __ start_a_stub(to_interp_stub_size());
+  if (base == NULL) {
+    return NULL;  // CodeBuffer::expand failed.
+  }
   // Static stub relocation stores the instruction address of the call.
   __ relocate(static_stub_Relocation::spec(mark), Assembler::imm_operand);
   // Static stub relocation also tags the Method* in the code-stream.
@@ -75,10 +75,11 @@ void CompiledStaticCall::emit_to_interp_stub(CodeBuffer &cbuf, address mark) {
   // This is recognized as unresolved by relocs/nativeinst/ic code.
   __ jump(RuntimeAddress(__ pc()));
 
-  assert(__ pc() - base <= to_interp_stub_size(), "wrong stub size"); 
+  assert(__ pc() - base <= to_interp_stub_size(), "wrong stub size");
 
   // Update current stubs pointer and restore insts_end.
   __ end_a_stub();
+  return base;
 }
 #undef __
 
