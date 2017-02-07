@@ -333,7 +333,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
     } \
   } while (0)
 
-#define STRING(name, value) \
+#define CSTRING_TO_JSTRING(name, value) \
   Handle name; \
   do { \
     if (value != NULL) { \
@@ -374,8 +374,8 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
     size_t name_buf_len = strlen(vmField.typeName) + strlen(vmField.fieldName) + 2 /* "::" */;
     char* name_buf = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, name_buf_len + 1);
     sprintf(name_buf, "%s::%s", vmField.typeName, vmField.fieldName);
-    STRING(name, name_buf);
-    STRING(type, vmField.typeString);
+    CSTRING_TO_JSTRING(name, name_buf);
+    CSTRING_TO_JSTRING(type, vmField.typeString);
     VMField::set_name(vmFieldObj, name());
     VMField::set_type(vmFieldObj, type());
     VMField::set_offset(vmFieldObj, vmField.offset);
@@ -411,14 +411,14 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
   int insert = 0;
   for (int i = 0; i < ints_len ; i++) {
     VMIntConstantEntry c = VMStructs::localHotSpotVMIntConstants[i];
-    STRING(name, c.name);
+    CSTRING_TO_JSTRING(name, c.name);
     BOXED_LONG(value, c.value);
     vmConstants->obj_at_put(insert++, name());
     vmConstants->obj_at_put(insert++, value);
   }
   for (int i = 0; i < longs_len ; i++) {
     VMLongConstantEntry c = VMStructs::localHotSpotVMLongConstants[i];
-    STRING(name, c.name);
+    CSTRING_TO_JSTRING(name, c.name);
     BOXED_LONG(value, c.value);
     vmConstants->obj_at_put(insert++, name());
     vmConstants->obj_at_put(insert++, value);
@@ -429,7 +429,7 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
   objArrayHandle vmAddresses = oopFactory::new_objArray(SystemDictionary::Object_klass(), len * 2, CHECK_NULL);
   for (int i = 0; i < len ; i++) {
     VMAddressEntry a = VMStructs::localHotSpotVMAddresses[i];
-    STRING(name, a.name);
+    CSTRING_TO_JSTRING(name, a.name);
     BOXED_LONG(value, a.value);
     vmAddresses->obj_at_put(i * 2, name());
     vmAddresses->obj_at_put(i * 2 + 1, value);
@@ -449,8 +449,8 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
 #define ADD_FLAG(type, name, convert) { \
   CHECK_FLAG(type, name) \
   instanceHandle vmFlagObj = InstanceKlass::cast(VMFlag::klass())->allocate_instance_handle(CHECK_NULL); \
-  STRING(fname, #name); \
-  STRING(ftype, #type); \
+  CSTRING_TO_JSTRING(fname, #name); \
+  CSTRING_TO_JSTRING(ftype, #type); \
   VMFlag::set_name(vmFlagObj, fname()); \
   VMFlag::set_type(vmFlagObj, ftype()); \
   convert(value, name); \
@@ -491,6 +491,7 @@ C2V_VMENTRY(jobject, getFlagValue, (JNIEnv *, jobject c2vm, jobject name_handle)
   if (name.is_null()) {
     THROW_0(vmSymbols::java_lang_NullPointerException());
   }
+  ResourceMark rm;
   const char* cstring = java_lang_String::as_utf8_string(name());
   Flag* flag = Flag::find_flag(cstring, strlen(cstring), /* allow_locked */ true, /* return_flag */ true);
   if (flag == NULL) {
@@ -525,7 +526,7 @@ C2V_END
 
 #undef BOXED_LONG
 #undef BOXED_DOUBLE
-#undef STRING
+#undef CSTRING_TO_JSTRING
 
 C2V_VMENTRY(jbyteArray, getBytecode, (JNIEnv *, jobject, jobject jvmci_method))
   methodHandle method = CompilerToVM::asMethod(jvmci_method);
