@@ -1024,7 +1024,10 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
     CodeInstaller::pd_relocate_JavaMethod(hotspot_method, pc_offset, CHECK);
     if (_next_call_type == INVOKESTATIC || _next_call_type == INVOKESPECIAL) {
       // Need a static call stub for transitions from compiled to interpreted.
-      CompiledStaticCall::emit_to_interp_stub(buffer, _instructions->start() + pc_offset);
+      address addr = CompiledStaticCall::emit_to_interp_stub(buffer, _instructions->start() + pc_offset);
+      if (addr == NULL) {
+        JVMCI_ERROR("Could not emit static call stub, was estimate_stubs_size wrong?");
+      }
     }
   }
 
