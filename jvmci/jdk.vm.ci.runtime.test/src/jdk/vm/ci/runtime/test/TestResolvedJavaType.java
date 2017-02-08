@@ -68,8 +68,26 @@ import sun.reflect.ConstantPool;
  * Tests for {@link ResolvedJavaType}.
  */
 public class TestResolvedJavaType extends TypeUniverse {
+    private static final Class<? extends Annotation> SIGNATURE_POLYMORPHIC_CLASS = findPolymorphicSignatureClass();
 
     public TestResolvedJavaType() {
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Class<? extends Annotation> findPolymorphicSignatureClass() {
+        Class<? extends Annotation> signaturePolyAnnotation = null;
+        try {
+            for (Class<?> clazz : TestResolvedJavaType.class.getClassLoader().loadClass("java.lang.invoke.MethodHandle").getDeclaredClasses()) {
+                if (clazz.getName().endsWith("PolymorphicSignature") && Annotation.class.isAssignableFrom(clazz)) {
+                    signaturePolyAnnotation = (Class<? extends Annotation>) clazz;
+                    break;
+                }
+            }
+        } catch (Throwable e) {
+            throw new AssertionError("Could not find annotation PolymorphicSignature in java.lang.invoke.MethodHandle", e);
+        }
+        assertNotNull(signaturePolyAnnotation);
+        return signaturePolyAnnotation;
     }
 
     @Test
@@ -571,8 +589,14 @@ public class TestResolvedJavaType extends TypeUniverse {
                     for (Method decl : decls) {
                         ResolvedJavaMethod m = metaAccess.lookupJavaMethod(decl);
                         if (m.isPublic()) {
-                            ResolvedJavaMethod i = metaAccess.lookupJavaMethod(impl);
-                            assertEquals(m.toString(), i, type.resolveMethod(m, context));
+                            ResolvedJavaMethod resolvedMethod = type.resolveMethod(m, context);
+                            if (isSignaturePolymorphic(m)) {
+                                // Signature polymorphic methods must not be resolved
+                                assertNull(resolvedMethod);
+                            } else {
+                                ResolvedJavaMethod i = metaAccess.lookupJavaMethod(impl);
+                                assertEquals(m.toString(), i, resolvedMethod);
+                            }
                         }
                     }
                 }
@@ -600,8 +624,14 @@ public class TestResolvedJavaType extends TypeUniverse {
                     for (Method decl : decls) {
                         ResolvedJavaMethod m = metaAccess.lookupJavaMethod(decl);
                         if (m.isPublic()) {
-                            ResolvedJavaMethod i = metaAccess.lookupJavaMethod(impl);
-                            assertEquals(i, type.resolveConcreteMethod(m, context));
+                            ResolvedJavaMethod resolvedMethod = type.resolveConcreteMethod(m, context);
+                            if (isSignaturePolymorphic(m)) {
+                                // Signature polymorphic methods must not be resolved
+                                assertNull(String.format("Got: %s", resolvedMethod), resolvedMethod);
+                            } else {
+                                ResolvedJavaMethod i = metaAccess.lookupJavaMethod(impl);
+                                assertEquals(i, resolvedMethod);
+                            }
                         }
                     }
                 }
@@ -918,5 +948,9 @@ public class TestResolvedJavaType extends TypeUniverse {
                 assertFalse("test should be removed from untestedApiMethods" + m, known.contains(m.getName()));
             }
         }
+    }
+
+    private static boolean isSignaturePolymorphic(ResolvedJavaMethod method) {
+        return method.getAnnotation(SIGNATURE_POLYMORPHIC_CLASS) != null;
     }
 }

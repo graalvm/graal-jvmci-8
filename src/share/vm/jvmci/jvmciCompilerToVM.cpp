@@ -938,6 +938,11 @@ C2V_VMENTRY(jobject, resolveMethod, (JNIEnv *, jobject, jobject receiver_jvmci_t
   Symbol* h_name      = method->name();
   Symbol* h_signature = method->signature();
 
+  vmIntrinsics::ID iid = method()->intrinsic_id();
+  if (MethodHandles::is_signature_polymorphic(iid) && MethodHandles::is_signature_polymorphic_intrinsic(iid)) {
+      // Signature polymorphic methods are already resolved, JVMCI just returns NULL in this case.
+      return NULL;
+  }
   methodHandle m;
   // Only do exact lookup if receiver klass has been linked.  Otherwise,
   // the vtable has not been setup, and the LinkResolver will fail.
