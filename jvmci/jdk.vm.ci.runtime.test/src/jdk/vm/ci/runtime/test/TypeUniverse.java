@@ -26,6 +26,7 @@ import static java.lang.reflect.Modifier.isFinal;
 import static java.lang.reflect.Modifier.isStatic;
 
 import java.io.Serializable;
+import java.lang.invoke.MethodHandle;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -219,6 +220,10 @@ public class TypeUniverse {
     }
 
     private static void addClass(Class<?> c) {
+        if (MethodHandle.class.isAssignableFrom(c)) {
+            // skip MethodHandle for now because of troubles with resolveConcreteMethod
+            return;
+        }
         if (classes.add(c)) {
             if (c.getSuperclass() != null) {
                 addClass(c.getSuperclass());
