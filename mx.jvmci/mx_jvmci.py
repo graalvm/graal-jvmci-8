@@ -107,7 +107,7 @@ _vm_prefix = None
 
 _make_eclipse_launch = False
 
-_minVersion = mx.VersionSpec('1.8.0_111')
+_minVersion = mx.VersionSpec('1.8.0_121')
 
 # max version (first _unsupported_ version)
 _untilVersion = mx.VersionSpec('1.9')
