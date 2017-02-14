@@ -420,14 +420,28 @@ jobject JNIHandleBlock::allocate_handle(oop obj) {
     // This is the first allocation or the initial block got zapped when
     // entering a native function. If we have any following blocks they are
     // not valid anymore.
-    for (JNIHandleBlock* current = _next; current != NULL;
-         current = current->_next) {
+    JNIHandleBlock* current = _next;
+    while (current != NULL) {
       assert(current->_last == NULL, "only first block should have _last set");
       assert(current->_free_list == NULL,
              "only first block should have _free_list set");
+
+      // all blocks after the first free block must already be empty
+      if (current->_top == 0) break;
+
       current->_top = 0;
       if (ZapJNIHandleArea) current->zap();
+      
+      current = current->_next;
     }
+
+#ifdef ASSERT
+    while (current != NULL) {
+      assert(current->_top == 0, "all blocks must already have been reset before");
+      current = current->_next;
+    }
+#endif // ASSERT
+
     // Clear initial block
     _free_list = NULL;
     _allocate_before_rebuild = 0;
