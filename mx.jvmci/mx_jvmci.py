@@ -1147,11 +1147,6 @@ def _jvmci_gate_runner(args, tasks):
             buildvms(['--vms', 'server', '--builds', 'fastdebug'])
             run_vm(['-XX:+ExecuteInternalVMTests', '-version'], vm='server', vmbuild='fastdebug')
 
-    with Task('CleanAndBuildIdealGraphVisualizer', tasks, disableJacoco=True) as t:
-        if t and platform.processor() != 'sparc':
-            buildxml = mx._cygpathU2W(join(_suite.dir, 'src', 'share', 'tools', 'IdealGraphVisualizer', 'build.xml'))
-            mx.run(['ant', '-f', buildxml, '-q', 'clean', 'build'], env=_igvBuildEnv())
-
     # Prevent JVMCI modifications from breaking the standard builds
     if args.buildNonJVMCI:
         with Task('BuildHotSpotVarieties', tasks, disableJacoco=True) as t:
