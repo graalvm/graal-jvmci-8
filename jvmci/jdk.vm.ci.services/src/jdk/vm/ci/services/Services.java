@@ -22,10 +22,8 @@
  */
 package jdk.vm.ci.services;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Formatter;
-import java.util.List;
 import java.util.ServiceLoader;
 
 import sun.reflect.Reflection;
@@ -42,26 +40,24 @@ public final class Services {
 
     private static boolean jvmciEnabled = true;
 
-    private static final ClassValue<List<?>> cache = new ClassValue<List<?>>() {
-        @Override
-        protected List<?> computeValue(Class<?> type) {
-            List<Object> impls = new ArrayList<>();
-            if (jvmciEnabled) {
-                try {
-                    for (Object impl : ServiceLoader.load(type, getJVMCIClassLoader())) {
-                        impls.add(impl);
-                    }
-                } catch (InternalError e) {
-                    if (e.getMessage().equals("JVMCI is not enabled")) {
-                        jvmciEnabled = false;
-                    } else {
-                        throw e;
-                    }
+    private static <S> Iterable<S> load0(Class<S> service) {
+        if (jvmciEnabled) {
+            ClassLoader cl = null;
+            try {
+                cl = getJVMCIClassLoader();
+                return ServiceLoader.load(service, cl);
+            } catch (UnsatisfiedLinkError e) {
+                jvmciEnabled = false;
+            } catch (InternalError e) {
+                if (e.getMessage().equals("JVMCI is not enabled")) {
+                    jvmciEnabled = false;
+                } else {
+                    throw e;
                 }
             }
-            return impls;
         }
-    };
+        return Collections.emptyList();
+    }
 
     /**
      * Performs any required security checks and dynamic reconfiguration to allow the module of a
@@ -84,17 +80,12 @@ public final class Services {
      * @throws SecurityException if a security manager is present and it denies <tt>
      *             {@link RuntimePermission}("jvmci")</tt>
      */
-    @SuppressWarnings("unchecked")
     public static <S> Iterable<S> load(Class<S> service) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new JVMCIPermission());
         }
-        try {
-            return (Iterable<S>) cache.get(service);
-        } catch (UnsatisfiedLinkError e) {
-            return Collections.emptyList();
-        }
+        return load0(service);
     }
 
     /**
@@ -106,18 +97,12 @@ public final class Services {
      * @throws SecurityException if a security manager is present and it denies <tt>
      *             {@link RuntimePermission}("jvmci")</tt>
      */
-    @SuppressWarnings({"unchecked"})
     public static <S> S loadSingle(Class<S> service, boolean required) {
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             sm.checkPermission(new JVMCIPermission());
         }
-        Iterable<S> providers;
-        try {
-            providers = (Iterable<S>) cache.get(service);
-        } catch (UnsatisfiedLinkError e) {
-            providers = Collections.emptyList();
-        }
+        Iterable<S> providers = load0(service);
 
         S singleProvider = null;
         for (S provider : providers) {
@@ -140,7 +125,6 @@ public final class Services {
 
     static {
         Reflection.registerMethodsToFilter(Services.class, "getJVMCIClassLoader");
-        Reflection.registerFieldsToFilter(Services.class, "cache");
     }
 
     /**
