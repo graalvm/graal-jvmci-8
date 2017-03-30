@@ -35,6 +35,8 @@ public interface MemoryAccessProvider {
      * @param displacement the displacement within the object in bytes
      * @param bits the number of bits to read from memory
      * @return the read value encapsulated in a {@link JavaConstant} object of {@link JavaKind} kind
+     *         or {@code null} if {@code base} is a boxed object and the read address does not
+     *         denote a location holding an {@code kind} value
      * @throws IllegalArgumentException if {@code kind} is {@link JavaKind#Void} or not
      *             {@linkplain JavaKind#isPrimitive() primitive} kind or {@code bits} is not 8, 16,
      *             32 or 64
