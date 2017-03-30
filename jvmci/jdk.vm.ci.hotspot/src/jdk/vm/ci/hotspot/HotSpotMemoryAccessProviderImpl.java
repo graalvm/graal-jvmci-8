@@ -86,6 +86,11 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
                                     " at offset " + displacement + " in " +
                                     type.toJavaName() + " object");
                 }
+                if (field.getJavaKind() != kind) {
+                    throw new IllegalArgumentException("Unsafe object access: field " + field.format("%H.%n:%T") + " not of expected kind " + kind +
+                                    " at offset " + displacement + " in " +
+                                    type.toJavaName() + " object");
+                }
             }
             return object;
         }
