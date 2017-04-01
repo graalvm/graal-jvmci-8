@@ -62,10 +62,9 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
             HotSpotResolvedObjectType type = constant.getType();
             Object object = constant.object();
             if (object instanceof Class && kind != JavaKind.Object) {
-                // Cannot check bounds when reading from a java.lang.Class as
-                // we don't have the bounds for the variable length part of
-                // the object tail containing the static fields of the
-                // represented class.
+                // Cannot check bounds when reading primitives from java.lang.Class as
+                // we don't have the bounds for the part of a java.lang.Class object
+                // containing the static fields of the represented class.
             } else {
                 checkRead(runtime, kind, displacement, type, object);
             }
@@ -126,6 +125,9 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
                 if (displacement == runtime.getConfig().classMirrorOffset) {
                     // Klass::_java_mirror is valid for all Klass* values
                     return true;
+                } else if (displacement == runtime.getConfig().arrayKlassComponentMirrorOffset) {
+                    // ArrayKlass::_component_mirror is only valid for all ArrayKlass* values
+                    return ((HotSpotResolvedObjectTypeImpl) metaspaceObject).mirror().isArray();
                 }
             } else {
                 throw new IllegalArgumentException(String.valueOf(metaspaceObject));
