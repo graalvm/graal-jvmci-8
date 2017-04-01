@@ -61,7 +61,7 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
             HotSpotObjectConstantImpl constant = (HotSpotObjectConstantImpl) base;
             HotSpotResolvedObjectType type = constant.getType();
             Object object = constant.object();
-            if (object instanceof Class) {
+            if (object instanceof Class && kind != JavaKind.Object) {
                 // Cannot check bounds when reading from a java.lang.Class as
                 // we don't have the bounds for the variable length part of
                 // the object tail containing the static fields of the
