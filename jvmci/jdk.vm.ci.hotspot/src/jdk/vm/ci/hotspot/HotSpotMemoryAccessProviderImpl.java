@@ -96,7 +96,7 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
             int length = Array.getLength(object);
             long arrayEnd = headerSize + (sizeOfElement * length);
             boolean aligned = ((displacement - headerSize) % sizeOfElement) == 0;
-            if (displacement > (arrayEnd - sizeOfElement) || (kind == JavaKind.Object && !aligned)) {
+            if (displacement < 0 || displacement > (arrayEnd - sizeOfElement) || (kind == JavaKind.Object && !aligned)) {
                 int index = (int) ((displacement - headerSize) / sizeOfElement);
                 throw new AssertionError("Unsafe array access: reading element of kind " + kind +
                                 " at offset " + displacement + " (index ~ " + index + ") in " +
