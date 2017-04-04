@@ -314,7 +314,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
   ScopeDesc* trap_scope = chunk->at(0)->scope();
   Handle exceptionObject;
   if (trap_scope->rethrow_exception()) {
-    if (PrintDeoptimizationDetails) {
+    if (PrintDeoptimizationDetails || TraceDeoptimization) {
       tty->print_cr("Exception to be rethrown in the interpreter for method %s::%s at bci %d", trap_scope->method()->method_holder()->name()->as_C_string(), trap_scope->method()->name()->as_C_string(), trap_scope->bci());
     }
     GrowableArray<ScopeValue*>* expressions = trap_scope->expressions();
@@ -1081,9 +1081,11 @@ void Deoptimization::reassign_fields(frame* fr, RegisterMap* reg_map, GrowableAr
     if (obj.is_null()) {
       continue;
     }
+#ifndef PRODUCT
     if (PrintDeoptimizationDetails) {
       tty->print_cr("reassign fields for object of type %s!", k->name()->as_C_string());
     }
+#endif
 
     if (k->oop_is_instance()) {
       InstanceKlass* ik = InstanceKlass::cast(k());
@@ -1330,7 +1332,7 @@ void Deoptimization::deoptimize_single_frame(JavaThread* thread, frame fr, Deopt
     assert(nm != NULL, "only nmethods can deopt");
 
     ttyLocker ttyl;
-    xtty->begin_head("deoptimized thread='" UINTX_FORMAT "' pc='" UINTX_FORMAT "'", thread->osthread()->thread_id(), fr.pc());
+    xtty->begin_head("deoptimized thread='" UINTX_FORMAT "' pc='" INTPTR_FORMAT "'", thread->osthread()->thread_id(), fr.pc());
     nm->log_identity(xtty);
     xtty->end_head();
     for (ScopeDesc* sd = nm->scope_desc_at(fr.pc()); ; sd = sd->sender()) {

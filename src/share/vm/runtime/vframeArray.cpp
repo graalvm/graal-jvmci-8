@@ -316,9 +316,11 @@ void vframeArrayElement::unpack_on_stack(int caller_actual_parameters,
     }
   }
 
+#ifndef PRODUCT
   if (PrintDeoptimizationDetails) {
     tty->print_cr("Expressions size: %d", expressions()->size());
   }
+#endif
 
   // Unpack expression stack
   // If this is an intermediate frame (i.e. not top frame) then this
