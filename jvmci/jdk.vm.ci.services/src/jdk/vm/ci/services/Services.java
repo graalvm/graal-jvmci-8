@@ -22,10 +22,13 @@
  */
 package jdk.vm.ci.services;
 
+import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Formatter;
+import java.util.Properties;
 import java.util.ServiceLoader;
 
+import sun.misc.VM;
 import sun.reflect.Reflection;
 
 /**
@@ -36,6 +39,24 @@ import sun.reflect.Reflection;
 public final class Services {
 
     private Services() {
+    }
+
+    /**
+     * Gets the system properties saved when {@link System} is initialized. The caller must not
+     * modify the returned value.
+     */
+    public static Properties getSavedProperties() {
+        SecurityManager sm = System.getSecurityManager();
+        if (sm != null) {
+            sm.checkPermission(new JVMCIPermission());
+        }
+        try {
+            Field savedPropsField = VM.class.getDeclaredField("savedProps");
+            savedPropsField.setAccessible(true);
+            return (Properties) savedPropsField.get(null);
+        } catch (Exception e) {
+            throw new InternalError(e);
+        }
     }
 
     private static boolean jvmciEnabled = true;
