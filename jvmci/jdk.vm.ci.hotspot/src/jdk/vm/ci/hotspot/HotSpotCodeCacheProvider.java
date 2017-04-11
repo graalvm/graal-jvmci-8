@@ -59,7 +59,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         HotSpotVMConfigStore store = runtime.getConfigStore();
         for (Map.Entry<String, Long> e : store.getConstants().entrySet()) {
             String name = e.getKey();
-            if (name.startsWith("CodeInstaller::") && e.getValue() == markId) {
+            if (name.startsWith("MARKID_") && e.getValue() == markId) {
                 return name;
             }
         }
