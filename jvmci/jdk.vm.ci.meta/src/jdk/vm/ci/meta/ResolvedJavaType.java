@@ -321,4 +321,10 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
      * so they would to go through the normal {@link Object#clone} path.
      */
     boolean isCloneableWithAllocation();
+
+    /**
+     * Determines if this type is trusted by the runtime. This typically means the type is loaded by
+     * a trusted class loader such as the boot loader or platform loader.
+     */
+    boolean isPlatformType();
 }
