@@ -267,9 +267,4 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     public boolean isCloneableWithAllocation() {
         return false;
     }
-
-    @Override
-    public boolean isPlatformType() {
-        return true;
-    }
 }

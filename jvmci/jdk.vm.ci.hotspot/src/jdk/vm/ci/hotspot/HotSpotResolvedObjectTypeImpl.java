@@ -922,21 +922,4 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     public boolean isCloneableWithAllocation() {
         return (getAccessFlags() & config().jvmAccIsCloneable) != 0;
     }
-
-    static class ClassLoaders {
-        static ClassLoader getExtLoader() {
-            sun.misc.Launcher l = sun.misc.Launcher.getLauncher();
-            ClassLoader cl = l.getClassLoader().getParent();
-            assert cl.getClass().getName().equals("sun.misc.Launcher$ExtClassLoader") : cl.getClass().getName();
-            return cl;
-        }
-
-        static final ClassLoader EXT_LOADER = getExtLoader();
-    }
-
-    @Override
-    public boolean isPlatformType() {
-        ClassLoader cl = mirror().getClassLoader();
-        return cl == null || cl == getClass().getClassLoader() || cl == ClassLoaders.EXT_LOADER;
-    }
 }

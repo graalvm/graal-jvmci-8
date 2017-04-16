@@ -880,33 +880,6 @@ public class TestResolvedJavaType extends TypeUniverse {
     }
 
     @Test
-    public void isPlatformTypeTest() {
-        ResolvedJavaType type = metaAccess.lookupJavaType(getClass());
-        assertFalse(type.isPlatformType());
-
-        Class<?> feedbackCipherClass = null;
-        try {
-            ClassLoader scl = ClassLoader.getSystemClassLoader();
-            feedbackCipherClass = Class.forName("com.sun.crypto.provider.FeedbackCipher", true, scl);
-        } catch (ClassNotFoundException e) {
-        }
-        if (feedbackCipherClass != null) {
-            type = metaAccess.lookupJavaType(feedbackCipherClass);
-            assertTrue(type.toString(), type.isPlatformType());
-        }
-
-        for (Class<?> c : classes) {
-            type = metaAccess.lookupJavaType(c);
-            ClassLoader cl = c.getClassLoader();
-            if (cl == null || cl == ResolvedJavaType.class.getClassLoader()) {
-                assertTrue(type.toString(), type.isPlatformType());
-            } else {
-                assertFalse(type.toString(), type.isPlatformType());
-            }
-        }
-    }
-
-    @Test
     public void findMethodTest() {
         try {
             ResolvedJavaMethod findFoo = metaAccess.lookupJavaType(D.class).findMethod("foo", metaAccess.parseMethodDescriptor("()V"));
