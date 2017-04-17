@@ -52,6 +52,10 @@ private:
   void set_value(int value)                         { _value = value; }
   short _content_reg;
 
+  enum {
+    value_value = 0 /* for compatibility with serviceability agent */
+  };
+
 public:
   // Constants
   enum { type_bits                = 4,

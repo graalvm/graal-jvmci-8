@@ -2659,6 +2659,7 @@ typedef TwoOopHashtable<Symbol*, mtClass>     SymbolTwoOopHashtable;
   declare_constant(OopMapValue::narrowoop_value)                          \
   declare_constant(OopMapValue::callee_saved_value)                       \
   declare_constant(OopMapValue::derived_oop_value)                        \
+  declare_constant(OopMapValue::value_value)                              \
                                                                           \
   /******************/                                                    \
   /* JNIHandleBlock */                                                    \
