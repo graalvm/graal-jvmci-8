@@ -66,6 +66,17 @@ public final class Services {
         }
     }
 
+    /**
+     * Causes the JVMCI subsystem to be initialized if it isn't already initialized.
+     */
+    public static void initializeJVMCI() {
+        try {
+            Class.forName("jdk.vm.ci.runtime.JVMCI");
+        } catch (ClassNotFoundException e) {
+            throw new InternalError(e);
+        }
+    }
+
     private static boolean jvmciEnabled = true;
 
     private static <S> Iterable<S> load0(Class<S> service) {
