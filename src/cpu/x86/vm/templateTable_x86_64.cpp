@@ -1803,7 +1803,9 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
 
       // Load the MDO in case it was created by frequency_counter_overflow
       __ bind(maybe_load_mdp);
-      __ set_method_data_pointer_for_bcp();
+      if (ProfileInterpreter) {
+        __ set_method_data_pointer_for_bcp();
+      }
       __ jmp(dispatch);
     }
   }
