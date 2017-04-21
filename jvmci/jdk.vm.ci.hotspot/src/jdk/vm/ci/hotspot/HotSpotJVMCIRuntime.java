@@ -88,7 +88,10 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
      */
     public enum Option {
         // @formatter:off
-        Compiler(String.class, null, "Selects the system compiler."),
+        Compiler(String.class, null, "Selects the system compiler. This must match the getCompilerName() value returned " +
+                        "by a jdk.vm.ci.runtime.JVMCICompilerFactory provider. " +
+                        "An empty string or the value \"null\" selects a compiler " +
+                        "that will raise an exception upon receiving a compilation request."),
         // Note: The following one is not used (see InitTimer.ENABLED). It is added here
         // so that -XX:+JVMCIPrintProperties shows the option.
         InitTimer(Boolean.class, false, "Specifies if initialization timing is enabled."),

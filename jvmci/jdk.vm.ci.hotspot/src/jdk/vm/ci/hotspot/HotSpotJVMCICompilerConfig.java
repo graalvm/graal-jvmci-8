@@ -47,7 +47,7 @@ final class HotSpotJVMCICompilerConfig {
 
         @Override
         public String getCompilerName() {
-            return "<none>";
+            return "null";
         }
 
         @Override
@@ -73,13 +73,17 @@ final class HotSpotJVMCICompilerConfig {
             JVMCICompilerFactory factory = null;
             String compilerName = Option.Compiler.getString();
             if (compilerName != null) {
-                for (JVMCICompilerFactory f : JVMCIServiceLocator.getProviders(JVMCICompilerFactory.class)) {
-                    if (f.getCompilerName().equals(compilerName)) {
-                        factory = f;
+                if (compilerName.isEmpty() || compilerName.equals("null")) {
+                    factory = new DummyCompilerFactory();
+                } else {
+                    for (JVMCICompilerFactory f : JVMCIServiceLocator.getProviders(JVMCICompilerFactory.class)) {
+                        if (f.getCompilerName().equals(compilerName)) {
+                            factory = f;
+                        }
                     }
-                }
-                if (factory == null) {
-                    throw new JVMCIError("JVMCI compiler '%s' not found", compilerName);
+                    if (factory == null) {
+                        throw new JVMCIError("JVMCI compiler '%s' not found", compilerName);
+                    }
                 }
             } else {
                 // Auto select a single available compiler
