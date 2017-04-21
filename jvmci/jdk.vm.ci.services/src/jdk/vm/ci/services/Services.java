@@ -71,7 +71,7 @@ public final class Services {
      */
     public static void initializeJVMCI() {
         try {
-            Class.forName("jdk.vm.ci.runtime.JVMCI");
+            Class.forName("jdk.vm.ci.runtime.JVMCI", true, Services.getJVMCIClassLoader());
         } catch (ClassNotFoundException e) {
             throw new InternalError(e);
         }
