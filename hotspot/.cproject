@@ -44,7 +44,6 @@
 									<listOptionValue builtIn="false" value="TARGET_ARCH_MODEL_x86_64=1"/>
 									<listOptionValue builtIn="false" value="INCLUDE_JVMCI=1"/>
 									<listOptionValue builtIn="false" value="COMPILER2=1"/>
-									<listOptionValue builtIn="false" value="COMPILERJVMCI=1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.undef.2137486146" name="Undefined symbols (-U)" superClass="gnu.cpp.compiler.option.preprocessor.undef"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.866181452" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -286,7 +285,6 @@
 									<listOptionValue builtIn="false" value="TARGET_OS_ARCH_linux_x86=1"/>
 									<listOptionValue builtIn="false" value="TARGET_ARCH_MODEL_x86_64=1"/>
 									<listOptionValue builtIn="false" value="INCLUDE_JVMCI=1"/>
-									<listOptionValue builtIn="false" value="COMPILERJVMCI=1"/>
 								</option>
 								<option id="gnu.cpp.compiler.option.preprocessor.undef.1682796822" name="Undefined symbols (-U)" superClass="gnu.cpp.compiler.option.preprocessor.undef"/>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1552002453" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
@@ -517,7 +515,6 @@
 									<listOptionValue builtIn="false" value="DEBUG=1"/>
 									<listOptionValue builtIn="false" value="TARGET_COMPILER_gcc=1"/>
 									<listOptionValue builtIn="false" value="INCLUDE_JVMCI=1"/>
-									<listOptionValue builtIn="false" value="COMPILERJVMCI=1"/>
 									<listOptionValue builtIn="false" value="SPARC=1"/>
 									<listOptionValue builtIn="false" value="SOLARIS=1"/>
 									<listOptionValue builtIn="false" value="TARGET_ARCH_sparc=1"/>

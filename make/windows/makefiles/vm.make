@@ -48,10 +48,6 @@ CXX_FLAGS=$(CXX_FLAGS) /D "COMPILER2"
 CXX_FLAGS=$(CXX_FLAGS) /D "COMPILER1" /D "COMPILER2"
 !endif
 
-!if "$(Variant)" == "jvmci"
-CXX_FLAGS=$(CXX_FLAGS) /D "JVMCI" /D "COMPILERJVMCI" /D "COMPILER1"
-!endif
-
 !if "$(BUILDARCH)" == "i486"
 HOTSPOT_LIB_ARCH=i386
 !else
@@ -405,4 +401,3 @@ BUILD_VM_DEF_FLAG=-nosa
 
 vm.def: $(Obj_Files)
 	sh $(WorkSpace)/make/windows/build_vm_def.sh $(BUILD_VM_DEF_FLAG)
-

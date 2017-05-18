@@ -113,11 +113,6 @@ ifeq ($(JVM_VARIANTS),)
   endif
 endif
 
-# If we build a no-jvmci-version, we suffix the compiler dir with -nojvmci
-ifeq ($(COMPILER_DIR_SUFFIX)$(subst false,,$(INCLUDE_JVMCI)),)
-	COMPILER_DIR_SUFFIX=-nojvmci
-endif
-
 # hotspot version definitions
 include $(GAMMADIR)/make/hotspot_version
 
@@ -374,4 +369,3 @@ EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/$(JDK_INCLUDE_SUBDIR)/jni_md.h
 EXPORT_LIST += $(EXPORT_INCLUDE_DIR)/jmm.h
 
 .PHONY: $(HS_ALT_MAKE)/defs.make
-

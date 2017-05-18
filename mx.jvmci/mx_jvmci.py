@@ -59,8 +59,6 @@ _jvmciModes = {
 _vmAliases = {
     'jvmci' : 'server',
     'graal' : 'server',
-    'server-nograal' : 'server-nojvmci',
-    'client-nograal' : 'client-nograal',
 }
 
 _JVMCI_JDK_TAG = 'jvmci'
@@ -756,10 +754,6 @@ def _hotspotReplaceResultsVar(m):
     var = m.group(1)
     if var == 'os':
         return _hotspotOs(mx.get_os())
-    if var == 'nojvmci':
-        if get_vm().endswith('nojvmci'):
-            return '-nojvmci'
-        return ''
     if var == 'buildname':
         return _hotspotGetVariant()
     if var == 'vmbuild':
@@ -787,7 +781,7 @@ def _hotspotOs(mx_os):
 def _hotspotGetVariant(vm=None):
     if not vm:
         vm = get_vm()
-    variant = {'client': 'compiler1', 'server': 'compiler2', 'client-nojvmci': 'compiler1', 'server-nojvmci': 'compiler2'}.get(vm, vm)
+    variant = {'client': 'compiler1', 'server': 'compiler2'}.get(vm, vm)
     return variant
 
 """
@@ -903,13 +897,9 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 setMakeVar('DISABLE_COMMERCIAL_FEATURES', 'true', env=env)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
-            if self.vm.endswith('nojvmci'):
-                setMakeVar('INCLUDE_JVMCI', 'false')
-                setMakeVar('ALT_OUTPUTDIR', join(_suite.dir, 'build-nojvmci', _hotspotOs(mx.get_os())), env=env)
-            else:
-                version = _suite.release_version()
-                setMakeVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
-                setMakeVar('INCLUDE_JVMCI', 'true')
+            version = _suite.release_version()
+            setMakeVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
+            setMakeVar('INCLUDE_JVMCI', 'true')
             # setMakeVar('INSTALL', 'y', env=env)
             if mx.get_os() == 'darwin' and platform.mac_ver()[0] != '':
                 # Force use of clang on MacOS
@@ -1001,7 +991,6 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 shutil.rmtree(name, ignore_errors=False, onerror=handleRemoveReadonly)
             elif os.path.isfile(name):
                 os.unlink(name)
-        nojvmci_outputdir = join(_suite.dir, 'build-nojvmci', _hotspotOs(mx.get_os()))
         makeFiles = join(_suite.dir, 'make')
         if mx._opts.verbose:
             outCapture = None
@@ -1010,7 +999,6 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 pass
             outCapture = _consume
         mx.run([mx.gmake_cmd(), 'ARCH_DATA_MODEL=64', 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'clean'], out=outCapture, cwd=makeFiles)
-        mx.run([mx.gmake_cmd(), 'ARCH_DATA_MODEL=64', 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'ALT_OUTPUTDIR=' + nojvmci_outputdir, 'clean'], out=outCapture, cwd=makeFiles)
         rmIfExists(_jdksDir())
         self._newestOutput = None
 
@@ -1349,7 +1337,7 @@ def hcfdis(args):
                         print >> fp, l
 
 def isJVMCIEnabled(vm):
-    return vm != 'original' and not vm.endswith('nojvmci')
+    return vm != 'original'
 
 def jol(args):
     """Java Object Layout"""
@@ -1464,8 +1452,7 @@ class JVMCI8JDKConfig(mx.JDKConfig):
             mx.make_eclipse_launch(_suite, args, _suite.name + '-' + build, name=None, deps=mx.dependencies())
 
         pfx = _vm_prefix.split() if _vm_prefix is not None else []
-        if not vm.endswith('nojvmci'):
-            args = get_jvmci_mode_args() + args
+        args = get_jvmci_mode_args() + args
         cmd = pfx + [self.java] + ['-' + vm] + args
         return mx.run(cmd, nonZeroIsFatal=nonZeroIsFatal, out=out, err=err, cwd=cwd, timeout=timeout)
 

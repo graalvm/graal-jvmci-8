@@ -177,17 +177,7 @@ ProjectCreatorIDEOptionsIgnoreCompiler2=\
 ##################################################
 ProjectCreatorIDEOptions=$(ProjectCreatorIDEOptions) \
  -define_compiler1 COMPILER1 \
- -define_compiler1 JVMCI \
  $(ProjectCreatorIDEOptionsIgnoreCompiler2:TARGET=compiler1)
-
-##################################################
-# JVMCI compiler specific options
-##################################################
-ProjectCreatorIDEOptions=$(ProjectCreatorIDEOptions) \
- -define_jvmci COMPILER1 \
- -define_jvmci COMPILERJVMCI \
- -define_jvmci JVMCI \
- $(ProjectCreatorIDEOptionsIgnoreCompiler2:TARGET=jvmci)
 
 ##################################################
 # Server(C2) compiler specific options
@@ -196,7 +186,6 @@ ProjectCreatorIDEOptions=$(ProjectCreatorIDEOptions) \
 ProjectCreatorIDEOptions=$(ProjectCreatorIDEOptions) \
  -define_compiler2 COMPILER1 \
  -define_compiler2 COMPILER2 \
- -define_compiler2 JVMCI \
  -additionalFile_compiler2 $(Platform_arch_model).ad \
  -additionalFile_compiler2 ad_$(Platform_arch_model).cpp \
  -additionalFile_compiler2 ad_$(Platform_arch_model).hpp \

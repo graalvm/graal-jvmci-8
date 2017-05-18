@@ -36,8 +36,8 @@ suite = {
     },
 
     "C1VISUALIZER_DIST" : {
-      "urls" : ["https://java.net/downloads/c1visualizer/c1visualizer_2015-07-22.zip"],
-      "sha1" : "7ead6b2f7ed4643ef4d3343a5562e3d3f39564ac",
+      "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/c1visualizer/c1visualizer-1.6.zip"],
+      "sha1" : "5309b3fad46067846b9e2ea55933786cdbd6f6dd",
     },
 
     "JOL_INTERNALS" : {
@@ -216,7 +216,7 @@ suite = {
         "jdk.vm.ci.hotspot",
       ],
       "class" : "HotSpotProject",
-      "output" : "build<nojvmci>",
+      "output" : "build",
       # vs-<arch>/<buildname>/generated/jvmtifiles/jvmti.h
       # vs-<arch>/<buildname>/<vmbuild>/<lib:jvm>
       # vs-<arch>/<buildname>/<vmbuild>/<libdebug:jvm>

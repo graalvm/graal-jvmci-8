@@ -19,7 +19,7 @@
 # Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
 # or visit www.oracle.com if you need additional information or have any
 # questions.
-#  
+#
 #
 
 # Sets make macros for making client version of VM
@@ -29,7 +29,3 @@ TYPE=COMPILER1
 VM_SUBDIR = client
 
 CFLAGS += -DCOMPILER1
-
-ifeq ($(INCLUDE_JVMCI), false)
-  VM_SUBDIR = client-nojvmci
-endif
