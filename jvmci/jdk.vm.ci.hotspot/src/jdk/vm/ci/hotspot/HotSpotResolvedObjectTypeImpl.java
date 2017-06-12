@@ -922,4 +922,8 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     public boolean isCloneableWithAllocation() {
         return (getAccessFlags() & config().jvmAccIsCloneable) != 0;
     }
+
+    public long getFingerprint() {
+        return 0L;
+    }
 }

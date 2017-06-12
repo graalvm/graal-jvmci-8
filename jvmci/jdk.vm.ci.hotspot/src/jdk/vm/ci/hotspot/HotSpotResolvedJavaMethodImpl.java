@@ -759,6 +759,10 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         return UNSAFE.getByte(metaspaceMethod + config.methodIntrinsicIdOffset) & 0xff;
     }
 
+    public boolean isIntrinsicCandidate() {
+        return true;
+    }
+
     /**
      * Allocates a compile id for this method by asking the VM for one.
      *

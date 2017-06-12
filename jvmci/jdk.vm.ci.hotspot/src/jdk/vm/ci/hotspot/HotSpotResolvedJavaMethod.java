@@ -111,9 +111,7 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
      *
      * @see <a href="https://bugs.openjdk.java.net/browse/JDK-8076112">JDK-8076112</a>
      */
-    default boolean isIntrinsicCandidate() {
-        return true;
-    }
+    boolean isIntrinsicCandidate();
 
     /**
      * Allocates a compile id for this method by asking the VM for one.
