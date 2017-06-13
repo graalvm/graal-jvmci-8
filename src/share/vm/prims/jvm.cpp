@@ -2370,7 +2370,7 @@ JVM_ENTRY(jboolean, JVM_DesiredAssertionStatus(JNIEnv *env, jclass unused, jclas
 
   ResourceMark rm(THREAD);
   const char* name = k->name()->as_C_string();
-  bool system_class = k->class_loader() == NULL JVMCI_ONLY(|| SystemDictionary::jvmci_loader() == k->class_loader());
+  bool system_class = k->class_loader() == NULL JVMCI_ONLY(|| SystemDictionary::in_jvmci_loader_hierarchy(k->class_loader()));
   return JavaAssertions::enabled(name, system_class);
 
 JVM_END

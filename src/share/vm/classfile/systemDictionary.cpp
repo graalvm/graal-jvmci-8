@@ -98,6 +98,7 @@ bool        SystemDictionary::_has_checkPackageAccess     =  false;
 
 #if INCLUDE_JVMCI
 oop         SystemDictionary::_jvmci_loader               = NULL;
+oop         SystemDictionary::_jvmci_loader_parent        = NULL;
 #endif
 
 // lazily initialized klass variables
@@ -130,6 +131,21 @@ ClassLoaderData* SystemDictionary::register_loader(Handle class_loader, TRAPS) {
   if (class_loader() == NULL) return ClassLoaderData::the_null_class_loader_data();
   return ClassLoaderDataGraph::find_or_create(class_loader, CHECK_NULL);
 }
+
+#if INCLUDE_JVMCI
+void SystemDictionary::init_jvmci_loader(oop loader) {
+  assert(UseJVMCIClassLoader == (loader != NULL), "must be");
+  _jvmci_loader = loader;
+  if (loader != NULL) {
+    _jvmci_loader_parent = java_lang_ClassLoader::parent(loader);
+    assert(_jvmci_loader_parent == NULL ||
+           java_lang_ClassLoader::parent(_jvmci_loader_parent) == NULL,
+           "at most one parent allowed between the JVMCI loader and the boot loader");
+  }
+}
+#include "jvmci/jvmciRuntime.hpp"
+#endif
+
 
 // ----------------------------------------------------------------------------
 // debugging

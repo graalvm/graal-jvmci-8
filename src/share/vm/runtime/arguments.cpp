@@ -371,10 +371,10 @@ public:
   // must free the string if/when no longer needed.
   char* combined_path();
 
-private:
   // Utility routines.
   static char* add_to_path(const char* path, const char* str, bool prepend);
   static char* add_jars_to_path(char* path, const char* directory);
+private:
 
   inline void reset_item_at(int index);
 
@@ -3574,27 +3574,25 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
   scp_p->expand_endorsed();
 
 #if INCLUDE_JVMCI
+  // Append lib/boot/*.jar to boot class path
+  char bootDir[JVM_MAXPATHLEN];
+  const char* fileSep = os::file_separator();
+  jio_snprintf(bootDir, sizeof(bootDir), "%s%slib%sboot", Arguments::get_java_home(), fileSep, fileSep);
+  char* boot_suffix_path = SysClassPath::add_jars_to_path(NULL, bootDir);
+  if (boot_suffix_path != NULL) {
+    scp_p->add_suffix(boot_suffix_path);
+    scp_assembly_required = true;
+  }
+
   if (!UseJVMCIClassLoader) {
     // Append lib/jvmci/*.jar to boot class path
     char jvmciDir[JVM_MAXPATHLEN];
     const char* fileSep = os::file_separator();
     jio_snprintf(jvmciDir, sizeof(jvmciDir), "%s%slib%sjvmci", Arguments::get_java_home(), fileSep, fileSep);
-    DIR* dir = os::opendir(jvmciDir);
-    if (dir != NULL) {
-      struct dirent *entry;
-      char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(jvmciDir), mtInternal);
-      while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL) {
-        const char* name = entry->d_name;
-        const char* ext = name + strlen(name) - 4;
-        if (ext > name && strcmp(ext, ".jar") == 0) {
-          char fileName[JVM_MAXPATHLEN];
-          jio_snprintf(fileName, sizeof(fileName), "%s%s%s", jvmciDir, fileSep, name);
-          scp_p->add_suffix(fileName);
-          scp_assembly_required = true;
-        }
-      }
-      FREE_C_HEAP_ARRAY(char, dbuf, mtInternal);
-      os::closedir(dir);
+    char* jvmci_path = SysClassPath::add_jars_to_path(NULL, jvmciDir);
+    if (jvmci_path != NULL) {
+      scp_p->add_suffix(jvmci_path);
+      scp_assembly_required = true;
     }
     const char* path = Arguments::get_property("jvmci.class.path.append");
     if (path != NULL) {

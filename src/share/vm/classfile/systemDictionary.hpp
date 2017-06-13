@@ -500,11 +500,13 @@ public:
   // in which case it's equivalent to the boot loader
   static oop jvmci_loader()                 { return _jvmci_loader; }
 
-  // Sets the JVMCI loader. This is called at most once.
-  static void init_jvmci_loader(oop loader) {
-    assert(UseJVMCIClassLoader == (loader != NULL), "must be");
-    _jvmci_loader = loader;
+  // Determines if loader is in the JVMCI class loader hierarchy
+  static bool in_jvmci_loader_hierarchy (oop loader) {
+    return loader == NULL || loader == _jvmci_loader || loader == _jvmci_loader_parent;
   }
+
+  // Sets the JVMCI loader. This must be called at most once.
+  static void init_jvmci_loader(oop loader);
 #endif
 
   // Compute the default system loader
@@ -739,6 +741,7 @@ protected:
   static oop  _java_system_loader;
 #if INCLUDE_JVMCI
   static oop  _jvmci_loader;
+  static oop  _jvmci_loader_parent;
 #endif
 
   static bool _has_loadClassInternal;
