@@ -82,19 +82,32 @@ class JVMCIClassLoaderFactory {
      *         exist otherwise a {@link URLClassLoader} constructed from the class path in the file
      */
     private static ClassLoader getJVMCIParentClassLoader(Path jvmciDir) {
-        Path parentFile = jvmciDir.resolve("parentClassLoader.classpath");
-        if (Files.exists(parentFile)) {
+        Path parentClassPathFile = jvmciDir.resolve("parentClassLoader.classpath");
+        if (Files.exists(parentClassPathFile)) {
             String[] entries;
             try {
-                entries = new String(Files.readAllBytes(parentFile)).trim().split(File.pathSeparator);
+                entries = new String(Files.readAllBytes(parentClassPathFile)).trim().split(File.pathSeparator);
             } catch (IOException e) {
-                throw new InternalError("Error reading " + parentFile.toAbsolutePath(), e);
+                throw new InternalError("Error reading " + parentClassPathFile.toAbsolutePath(), e);
             }
             URL[] urls = new URL[entries.length];
             for (int i = 0; i < entries.length; i++) {
                 try {
+                    if (entries[i].isEmpty()) {
+                        throw new InternalError("Class path entry " + i + " in " + parentClassPathFile + " is empty");
+                    }
                     // If entries[i] is already absolute, it will remain unchanged
-                    urls[i] = jvmciDir.resolve(entries[i]).toFile().toURI().toURL();
+                    Path path = jvmciDir.resolve(entries[i]);
+                    if (!Files.exists(path)) {
+                        // Unlike the user class path, be strict about this class
+                        // path only referring to existing locations.
+                        String errorMsg = "Class path entry " + i + " in " + parentClassPathFile + " refers to a file or directory that does not exist: \"" + entries[i] + "\"";
+                        if (!path.toString().equals(entries[i])) {
+                            errorMsg += " (resolved: \"" + path + "\")";
+                        }
+                        throw new InternalError(errorMsg);
+                    }
+                    urls[i] = path.toFile().toURI().toURL();
                 } catch (MalformedURLException e) {
                     throw new InternalError(e);
                 }
