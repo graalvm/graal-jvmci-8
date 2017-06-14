@@ -50,7 +50,7 @@ _vmChoices = {
 }
 
 _jvmciModes = {
-    'hosted' : ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI'],
+    'hosted' : ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler'],
     'jit' : ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:+UseJVMCICompiler'],
     'disabled' : ['-XX:+UnlockExperimentalVMOptions', '-XX:-EnableJVMCI']
 }

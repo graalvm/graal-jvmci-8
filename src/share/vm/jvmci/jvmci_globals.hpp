@@ -49,7 +49,7 @@
   product(bool, EnableJVMCI, true,                                          \
           "Enable JVMCI")                                                   \
                                                                             \
-  product(bool, UseJVMCICompiler, false,                                    \
+  product(bool, UseJVMCICompiler, true,                                     \
           "Use JVMCI as the default compiler")                              \
                                                                             \
   product(bool, JVMCIPrintProperties, false,                                \
