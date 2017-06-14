@@ -26,6 +26,22 @@
 #include "jvmci/jvmci_globals.hpp"
 #include "utilities/defaultStream.hpp"
 #include "runtime/globals_extension.hpp"
+#include "runtime/arguments.hpp"
+#ifdef TARGET_OS_FAMILY_linux
+# include "os_linux.inline.hpp"
+#endif
+#ifdef TARGET_OS_FAMILY_solaris
+# include "os_solaris.inline.hpp"
+#endif
+#ifdef TARGET_OS_FAMILY_windows
+# include "os_windows.inline.hpp"
+#endif
+#ifdef TARGET_OS_FAMILY_aix
+# include "os_aix.inline.hpp"
+#endif
+#ifdef TARGET_OS_FAMILY_bsd
+# include "os_bsd.inline.hpp"
+#endif
 
 JVMCI_FLAGS(MATERIALIZE_DEVELOPER_FLAG, MATERIALIZE_PD_DEVELOPER_FLAG, MATERIALIZE_PRODUCT_FLAG, MATERIALIZE_PD_PRODUCT_FLAG, MATERIALIZE_NOTPRODUCT_FLAG)
 
@@ -101,6 +117,39 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 }
 
 void JVMCIGlobals::set_jvmci_specific_flags() {
+  if (FLAG_IS_DEFAULT(UseJVMCICompiler) && !UseJVMCICompiler) {
+    if (Arguments::get_property("jvmci.class.path.append") != NULL) {
+      // If jvmci.class.path.append is defined then
+      // assume there is a JVMCI compiler.
+      FLAG_SET_ERGO(bool, UseJVMCICompiler, true);
+    } else {
+      // If lib/jvmci contains at least one jar apart from
+      // jvmci-api.jar and jvmci-hotspot.jar, then
+      // assume there is a JVMCI compiler.
+      char jvmciDir[JVM_MAXPATHLEN];
+      const char* fileSep = os::file_separator();
+      jio_snprintf(jvmciDir, sizeof(jvmciDir), "%s%slib%sjvmci", Arguments::get_java_home(), fileSep, fileSep);
+      DIR* dir = os::opendir(jvmciDir);
+      if (dir != NULL) {
+        /* Scan the directory for jars */
+        struct dirent *entry;
+        char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(jvmciDir), mtInternal);
+        while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL) {
+          const char* name = entry->d_name;
+          const char* ext = name + strlen(name) - 4;
+          if (ext > name && os::file_name_strcmp(ext, ".jar") == 0) {
+            if (strcmp(name, "jvmci-api.jar") != 0 && strcmp(name, "jvmci-hotspot.jar") != 0) {
+              FLAG_SET_ERGO(bool, UseJVMCICompiler, true);
+              break;
+            }
+          }
+        }
+        FREE_C_HEAP_ARRAY(char, dbuf, mtInternal);
+        os::closedir(dir);
+      }
+    }
+  }
+
   if (UseJVMCICompiler) {
     if (FLAG_IS_DEFAULT(TypeProfileWidth)) {
       FLAG_SET_DEFAULT(TypeProfileWidth, 8);

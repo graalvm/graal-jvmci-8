@@ -49,8 +49,10 @@
   product(bool, EnableJVMCI, true,                                          \
           "Enable JVMCI")                                                   \
                                                                             \
-  product(bool, UseJVMCICompiler, true,                                     \
-          "Use JVMCI as the default compiler")                              \
+  product(bool, UseJVMCICompiler, false,                                    \
+          "Use JVMCI as the default compiler. Ergonomically set to "        \
+          "true if non-core JVMCI jars are in jre/lib/jvmci/ or the "       \
+          "jvmci.class.path.append system property is defined.")            \
                                                                             \
   product(bool, JVMCIPrintProperties, false,                                \
           "Prints properties used by the JVMCI compiler and exits")         \

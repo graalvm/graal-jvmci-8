@@ -143,13 +143,6 @@ class JarJDKDeployedDist(JDKDeployedDist):
     def deploy(self, jdkDir):
         self._copyToJdk(jdkDir, self.targetDir())
 
-class ExtJDKDeployedDist(JarJDKDeployedDist):
-    def __init__(self, name):
-        JarJDKDeployedDist.__init__(self, name)
-
-    def targetDir(self):
-        return join('jre', 'lib', 'ext')
-
 class LibJDKDeployedDist(JarJDKDeployedDist):
     def __init__(self, name):
         JarJDKDeployedDist.__init__(self, name)

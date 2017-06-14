@@ -37,9 +37,10 @@ import sun.misc.VM;
 
 /**
  * Utility called from the VM to create and register a separate class loader for loading JVMCI
- * classes (i.e., those in found in {@code <java.home>/lib/jvmci/*.jar)} as well as those available
- * on the class path in the {@code "jvmci.class.path.append"} system property. The JVMCI class
- * loader can optionally be given a parent other than the boot class loader as specified by
+ * classes. The core JVMCI classes are in {@code lib/jvmci/jvmci-api.jar} and
+ * {@code lib/jvmci/jvmci-hotspot.jar}. The JVMCI compiler classes are in {@code lib/jvmci/*.jar)}
+ * and the class path specified by the {@code "jvmci.class.path.append"} system property. The JVMCI
+ * class loader can optionally be given a parent other than the boot class loader as specified by
  * {@link #getJVMCIParentClassLoader(Path)}.
  */
 class JVMCIClassLoaderFactory {
@@ -107,7 +108,7 @@ class JVMCIClassLoaderFactory {
                         }
                         throw new InternalError(errorMsg);
                     }
-                    urls[i] = path.toFile().toURI().toURL();
+                    urls[i] = path.toUri().toURL();
                 } catch (MalformedURLException e) {
                     throw new InternalError(e);
                 }
@@ -118,36 +119,48 @@ class JVMCIClassLoaderFactory {
         return null;
     }
 
+    private static Path ensureExists(Path path) {
+        if (!Files.exists(path)) {
+            throw new InternalError("Required JVMCI jar is missing: " + path);
+        }
+        return path;
+    }
+
     /**
-     * Gets the URLs for all jar files in the {@code jvmciDir} directory as well as the entries
-     * specified by the {@code "jvmci.class.path.append"} system property.
+     * Gets the URLs for the required JVMCI jars, all the other jar files in the {@code jvmciDir}
+     * directory and the entries specified by the {@code "jvmci.class.path.append"} system property.
      */
     private static URL[] getJVMCIJarsUrls(Path jvmciDir) {
         String[] dirEntries = jvmciDir.toFile().list();
-
         String append = VM.getSavedProperty("jvmci.class.path.append");
         String[] appendEntries = append != null ? append.split(File.pathSeparator) : new String[0];
         List<URL> urls = new ArrayList<>(dirEntries.length + appendEntries.length);
 
-        for (String fileName : dirEntries) {
-            if (fileName.endsWith(".jar")) {
-                Path path = jvmciDir.resolve(fileName);
-                if (Files.isDirectory(path)) {
-                    continue;
-                }
-                try {
-                    urls.add(path.toFile().toURI().toURL());
-                } catch (MalformedURLException e) {
-                    throw new InternalError(e);
+        try {
+            urls.add(ensureExists(jvmciDir.resolve("jvmci-api.jar")).toUri().toURL());
+            urls.add(ensureExists(jvmciDir.resolve("jvmci-hotspot.jar")).toUri().toURL());
+
+            for (String e : dirEntries) {
+                if (e.endsWith(".jar")) {
+                    if (!e.equals("jvmci-api.jar") && !e.equals("jvmci-hotspot.jar")) {
+                        urls.add(jvmciDir.resolve(e).toUri().toURL());
+                    }
                 }
             }
-        }
-        for (String path : appendEntries) {
-            try {
-                urls.add(new File(path).toURI().toURL());
-            } catch (MalformedURLException e) {
-                throw new InternalError(e);
+            for (int i = 0; i < appendEntries.length; ++i) {
+                Path path = Paths.get(appendEntries[i]);
+                if (!Files.exists(path)) {
+                    // Unlike the user class path, be strict about this class
+                    // path only referring to existing locations.
+                    String errorMsg = "Entry " + i + " of class path specified by jvmci.class.path.append " +
+                                    "system property refers to a file or directory that does not exist: \"" +
+                                    appendEntries[i] + "\"";
+                    throw new InternalError(errorMsg);
+                }
+                urls.add(path.toUri().toURL());
             }
+        } catch (MalformedURLException e) {
+            throw new InternalError(e);
         }
 
         return urls.toArray(new URL[urls.size()]);

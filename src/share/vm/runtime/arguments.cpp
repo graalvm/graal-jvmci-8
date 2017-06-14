@@ -3575,10 +3575,10 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
 
 #if INCLUDE_JVMCI
   // Append lib/boot/*.jar to boot class path
-  char bootDir[JVM_MAXPATHLEN];
+  char pathBuffer[JVM_MAXPATHLEN];
   const char* fileSep = os::file_separator();
-  jio_snprintf(bootDir, sizeof(bootDir), "%s%slib%sboot", Arguments::get_java_home(), fileSep, fileSep);
-  char* boot_suffix_path = SysClassPath::add_jars_to_path(NULL, bootDir);
+  jio_snprintf(pathBuffer, sizeof(pathBuffer), "%s%slib%sboot", Arguments::get_java_home(), fileSep, fileSep);
+  char* boot_suffix_path = SysClassPath::add_jars_to_path(NULL, pathBuffer);
   if (boot_suffix_path != NULL) {
     scp_p->add_suffix(boot_suffix_path);
     scp_assembly_required = true;
@@ -3586,10 +3586,8 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
 
   if (!UseJVMCIClassLoader) {
     // Append lib/jvmci/*.jar to boot class path
-    char jvmciDir[JVM_MAXPATHLEN];
-    const char* fileSep = os::file_separator();
-    jio_snprintf(jvmciDir, sizeof(jvmciDir), "%s%slib%sjvmci", Arguments::get_java_home(), fileSep, fileSep);
-    char* jvmci_path = SysClassPath::add_jars_to_path(NULL, jvmciDir);
+    jio_snprintf(pathBuffer, sizeof(pathBuffer), "%s%slib%sjvmci", Arguments::get_java_home(), fileSep, fileSep);
+    char* jvmci_path = SysClassPath::add_jars_to_path(NULL, pathBuffer);
     if (jvmci_path != NULL) {
       scp_p->add_suffix(jvmci_path);
       scp_assembly_required = true;
