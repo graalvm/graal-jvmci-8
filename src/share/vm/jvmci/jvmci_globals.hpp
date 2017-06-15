@@ -51,7 +51,8 @@
                                                                             \
   product(bool, UseJVMCICompiler, false,                                    \
           "Use JVMCI as the default compiler. Will be true by default "     \
-          "if <java.home>/lib/use-jvmci-compiler-by-default exists.")       \
+          "if jvmci.Compiler property is set (either on command line or "   \
+          "from contents of <java.home>/lib/jvmci/compiler-name")           \
                                                                             \
   product(bool, JVMCIPrintProperties, false,                                \
           "Prints properties used by the JVMCI compiler and exits")         \

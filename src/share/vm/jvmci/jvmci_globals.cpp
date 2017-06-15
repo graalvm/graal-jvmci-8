@@ -66,6 +66,56 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
     return false;                                      \
   }
 
+  if (FLAG_IS_DEFAULT(UseJVMCICompiler) && !UseJVMCICompiler) {
+    const char* compiler_name = Arguments::get_property("jvmci.Compiler");
+    if (compiler_name != NULL) {
+      FLAG_SET_DEFAULT(UseJVMCICompiler, true);
+    } else {
+      char filename[JVM_MAXPATHLEN];
+      const char* fileSep = os::file_separator();
+      jio_snprintf(filename, sizeof(filename), "%s%slib%sjvmci%scompiler-name", Arguments::get_java_home(), fileSep, fileSep, fileSep);
+      struct stat statbuf;
+      if (os::stat(filename, &statbuf) == 0) {
+        char line[256];
+        if ((size_t) statbuf.st_size > sizeof(line)) {
+          jio_fprintf(defaultStream::error_stream(), "Size of %s is greater than %d\n", filename, sizeof(line));
+          return false;
+        }
+
+        FILE* stream = fopen(filename, "r");
+        if (stream != NULL) {
+          char line[256];
+          if (fgets(line, sizeof(line), stream) != NULL) {
+            // Strip newline from end of the line
+            char* p = line + strlen(line) - 1;
+            while (p >= line && (*p == '\r' || *p == '\n')) {
+              *p-- = 0;
+            }
+            SystemProperty* props = Arguments::system_properties();
+            if (props != NULL) {
+              while (props->next() != NULL) {
+                props = props->next();
+              }
+              SystemProperty* new_p = new SystemProperty("jvmci.Compiler", line, true);
+              props->set_next(new_p);
+              FLAG_SET_DEFAULT(UseJVMCICompiler, true);
+            }
+          } else {
+            jio_fprintf(defaultStream::error_stream(),
+                "Failed to read from %s (errno = %d)\n", filename, errno);
+            fclose(stream);
+            return false;
+          }
+          fclose(stream);
+        } else {
+          jio_fprintf(defaultStream::error_stream(),
+              "Failed to open %s (errno = %d)\n", filename, errno);
+          return false;
+        }
+      }
+    }
+  }
+
   JVMCI_FLAG_CHECKED(UseJVMCICompiler)
   JVMCI_FLAG_CHECKED(EnableJVMCI)
 
@@ -117,16 +167,6 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 }
 
 void JVMCIGlobals::set_jvmci_specific_flags() {
-  if (FLAG_IS_DEFAULT(UseJVMCICompiler) && !UseJVMCICompiler) {
-    char filename[JVM_MAXPATHLEN];
-    const char* fileSep = os::file_separator();
-    jio_snprintf(filename, sizeof(filename), "%s%slib%suse-jvmci-compiler-by-default", Arguments::get_java_home(), fileSep, fileSep);
-    struct stat statbuf;
-    if (os::stat(filename, &statbuf) == 0) {
-      FLAG_SET_ERGO(bool, UseJVMCICompiler, true);
-    }
-  }
-
   if (UseJVMCICompiler) {
     if (FLAG_IS_DEFAULT(TypeProfileWidth)) {
       FLAG_SET_DEFAULT(TypeProfileWidth, 8);
