@@ -118,35 +118,12 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 
 void JVMCIGlobals::set_jvmci_specific_flags() {
   if (FLAG_IS_DEFAULT(UseJVMCICompiler) && !UseJVMCICompiler) {
-    if (Arguments::get_property("jvmci.class.path.append") != NULL) {
-      // If jvmci.class.path.append is defined then
-      // assume there is a JVMCI compiler.
+    char filename[JVM_MAXPATHLEN];
+    const char* fileSep = os::file_separator();
+    jio_snprintf(filename, sizeof(filename), "%s%slib%suse-jvmci-compiler-by-default", Arguments::get_java_home(), fileSep, fileSep);
+    struct stat statbuf;
+    if (os::stat(filename, &statbuf) == 0) {
       FLAG_SET_ERGO(bool, UseJVMCICompiler, true);
-    } else {
-      // If lib/jvmci contains at least one jar apart from
-      // jvmci-api.jar and jvmci-hotspot.jar, then
-      // assume there is a JVMCI compiler.
-      char jvmciDir[JVM_MAXPATHLEN];
-      const char* fileSep = os::file_separator();
-      jio_snprintf(jvmciDir, sizeof(jvmciDir), "%s%slib%sjvmci", Arguments::get_java_home(), fileSep, fileSep);
-      DIR* dir = os::opendir(jvmciDir);
-      if (dir != NULL) {
-        /* Scan the directory for jars */
-        struct dirent *entry;
-        char *dbuf = NEW_C_HEAP_ARRAY(char, os::readdir_buf_size(jvmciDir), mtInternal);
-        while ((entry = os::readdir(dir, (dirent *) dbuf)) != NULL) {
-          const char* name = entry->d_name;
-          const char* ext = name + strlen(name) - 4;
-          if (ext > name && os::file_name_strcmp(ext, ".jar") == 0) {
-            if (strcmp(name, "jvmci-api.jar") != 0 && strcmp(name, "jvmci-hotspot.jar") != 0) {
-              FLAG_SET_ERGO(bool, UseJVMCICompiler, true);
-              break;
-            }
-          }
-        }
-        FREE_C_HEAP_ARRAY(char, dbuf, mtInternal);
-        os::closedir(dir);
-      }
     }
   }
 

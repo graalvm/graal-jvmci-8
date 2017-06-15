@@ -22,6 +22,11 @@
  */
 package jdk.vm.ci.hotspot;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+
 import jdk.vm.ci.code.CompilationRequest;
 import jdk.vm.ci.code.CompilationRequestResult;
 import jdk.vm.ci.common.JVMCIError;
@@ -29,8 +34,9 @@ import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.runtime.JVMCICompiler;
 import jdk.vm.ci.runtime.JVMCICompilerFactory;
 import jdk.vm.ci.runtime.JVMCIRuntime;
-import jdk.vm.ci.services.JVMCIServiceLocator;
 import jdk.vm.ci.services.JVMCIPermission;
+import jdk.vm.ci.services.JVMCIServiceLocator;
+import sun.misc.VM;
 
 final class HotSpotJVMCICompilerConfig {
 
@@ -41,8 +47,14 @@ final class HotSpotJVMCICompilerConfig {
      */
     private static class DummyCompilerFactory implements JVMCICompilerFactory, JVMCICompiler {
 
+        private final String reason;
+
+        DummyCompilerFactory(String reason) {
+            this.reason = reason;
+        }
+
         public CompilationRequestResult compileMethod(CompilationRequest request) {
-            throw new JVMCIError("no JVMCI compiler selected");
+            throw new JVMCIError("No JVMCI compiler selected. " + reason);
         }
 
         @Override
@@ -74,7 +86,8 @@ final class HotSpotJVMCICompilerConfig {
             String compilerName = Option.Compiler.getString();
             if (compilerName != null) {
                 if (compilerName.isEmpty() || compilerName.equals("null")) {
-                    factory = new DummyCompilerFactory();
+                    factory = new DummyCompilerFactory("Value of " + Option.Compiler.getPropertyName() + " property is \"" +
+                                    compilerName + "\" which denotes the null JVMCI compiler.");
                 } else {
                     for (JVMCICompilerFactory f : JVMCIServiceLocator.getProviders(JVMCICompilerFactory.class)) {
                         if (f.getCompilerName().equals(compilerName)) {
@@ -82,22 +95,33 @@ final class HotSpotJVMCICompilerConfig {
                         }
                     }
                     if (factory == null) {
-                        throw new JVMCIError("JVMCI compiler '%s' not found", compilerName);
+                        throw new JVMCIError("JVMCI compiler \"%s\" not found", compilerName);
                     }
                 }
             } else {
                 // Auto select a single available compiler
+                List<String> multiple = null;
                 for (JVMCICompilerFactory f : JVMCIServiceLocator.getProviders(JVMCICompilerFactory.class)) {
-                    if (factory == null) {
+                    if (multiple != null) {
+                        multiple.add(f.getCompilerName());
+                    } else if (factory == null) {
                         factory = f;
                     } else {
-                        // Multiple factories seen - cancel auto selection
+                        multiple = new ArrayList<>();
+                        multiple.add(f.getCompilerName());
+                        multiple.add(factory.getCompilerName());
                         factory = null;
-                        break;
                     }
                 }
-                if (factory == null) {
-                    factory = new DummyCompilerFactory();
+                if (multiple != null) {
+                    factory = new DummyCompilerFactory("Multiple providers of " + JVMCICompilerFactory.class + " available: " +
+                                    String.join(", ", multiple) +
+                                    ". You can select one of these with the " + Option.Compiler.getPropertyName() + " property " +
+                                    "(e.g., -D" + Option.Compiler.getPropertyName() + "=" + multiple.get(0) + ").");
+                } else if (factory == null) {
+                    Path jvmciDir = Paths.get(VM.getSavedProperty("java.home"), "lib", "jvmci");
+                    factory = new DummyCompilerFactory("No providers of " + JVMCICompilerFactory.class + " found in " + jvmciDir +
+                                    " or on the class path specified by the jvmci.class.path.append property.");
                 }
             }
             factory.onSelection();
