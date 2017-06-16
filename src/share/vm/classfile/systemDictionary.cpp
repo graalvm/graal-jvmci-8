@@ -1747,6 +1747,7 @@ void SystemDictionary::roots_oops_do(OopClosure* strong, OopClosure* weak) {
   strong->do_oop(&_system_loader_lock_obj);
   CDS_ONLY(SystemDictionaryShared::roots_oops_do(strong);)
   JVMCI_ONLY(strong->do_oop(&_jvmci_loader);)
+  JVMCI_ONLY(strong->do_oop(&_jvmci_loader_parent);)
 
   // Adjust dictionary
   dictionary()->roots_oops_do(strong, weak);
@@ -1760,6 +1761,7 @@ void SystemDictionary::oops_do(OopClosure* f) {
   f->do_oop(&_system_loader_lock_obj);
   CDS_ONLY(SystemDictionaryShared::oops_do(f);)
   JVMCI_ONLY(f->do_oop(&_jvmci_loader);)
+  JVMCI_ONLY(f->do_oop(&_jvmci_loader_parent);)
 
   // Adjust dictionary
   dictionary()->oops_do(f);
