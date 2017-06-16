@@ -45,6 +45,61 @@
 
 JVMCI_FLAGS(MATERIALIZE_DEVELOPER_FLAG, MATERIALIZE_PD_DEVELOPER_FLAG, MATERIALIZE_PRODUCT_FLAG, MATERIALIZE_PD_PRODUCT_FLAG, MATERIALIZE_NOTPRODUCT_FLAG)
 
+// Gets the value of the jvmci.Compiler system property, initializing it
+// from <java.home>/lib/jvmci/compiler-name if the property is not
+// already defined and the compiler-name file exists.
+static const char* get_jvmci_compiler_name(bool* error) {
+  *error = false;
+  const char* compiler_name = Arguments::get_property("jvmci.Compiler");
+  if (compiler_name == NULL) {
+    char filename[JVM_MAXPATHLEN];
+    const char* fileSep = os::file_separator();
+    jio_snprintf(filename, sizeof(filename), "%s%slib%sjvmci%scompiler-name", Arguments::get_java_home(), fileSep, fileSep, fileSep);
+    struct stat statbuf;
+    if (os::stat(filename, &statbuf) == 0) {
+      char line[256];
+      if ((size_t) statbuf.st_size > sizeof(line)) {
+        jio_fprintf(defaultStream::error_stream(), "Size of %s is greater than %d\n", filename, sizeof(line));
+        *error = true;
+        return NULL;
+      }
+
+      FILE* stream = fopen(filename, "r");
+      if (stream != NULL) {
+        char line[256];
+        if (fgets(line, sizeof(line), stream) != NULL) {
+          // Strip newline from end of the line
+          char* p = line + strlen(line) - 1;
+          while (p >= line && (*p == '\r' || *p == '\n')) {
+            *p-- = 0;
+          }
+          SystemProperty* last_prop = NULL;
+          for (SystemProperty* p = Arguments::system_properties(); p != NULL; p = p->next()) {
+            last_prop = p;
+          }
+          guarantee(last_prop != NULL, "Cannot set jvmci.Compiler property before system properties have been created");
+          SystemProperty* new_p = new SystemProperty("jvmci.Compiler", line, true);
+          last_prop->set_next(new_p);
+          compiler_name = new_p->value();
+        } else {
+          jio_fprintf(defaultStream::error_stream(),
+              "Failed to read from %s (errno = %d)\n", filename, errno);
+          fclose(stream);
+          *error = true;
+          return NULL;
+        }
+        fclose(stream);
+      } else {
+        jio_fprintf(defaultStream::error_stream(),
+            "Failed to open %s (errno = %d)\n", filename, errno);
+        *error = true;
+        return NULL;
+      }
+    }
+  }
+  return compiler_name;
+}
+
 bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 #ifndef PRODUCT
 #define APPLY_JVMCI_FLAGS(params3, params4) \
@@ -66,53 +121,17 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
     return false;                                      \
   }
 
-  if (FLAG_IS_DEFAULT(UseJVMCICompiler) && !UseJVMCICompiler) {
-    const char* compiler_name = Arguments::get_property("jvmci.Compiler");
-    if (compiler_name != NULL) {
-      FLAG_SET_DEFAULT(UseJVMCICompiler, true);
-    } else {
-      char filename[JVM_MAXPATHLEN];
-      const char* fileSep = os::file_separator();
-      jio_snprintf(filename, sizeof(filename), "%s%slib%sjvmci%scompiler-name", Arguments::get_java_home(), fileSep, fileSep, fileSep);
-      struct stat statbuf;
-      if (os::stat(filename, &statbuf) == 0) {
-        char line[256];
-        if ((size_t) statbuf.st_size > sizeof(line)) {
-          jio_fprintf(defaultStream::error_stream(), "Size of %s is greater than %d\n", filename, sizeof(line));
-          return false;
-        }
+  bool error;
+  const char* compiler_name = get_jvmci_compiler_name(&error);
+  if (error) {
+    return false;
+  }
 
-        FILE* stream = fopen(filename, "r");
-        if (stream != NULL) {
-          char line[256];
-          if (fgets(line, sizeof(line), stream) != NULL) {
-            // Strip newline from end of the line
-            char* p = line + strlen(line) - 1;
-            while (p >= line && (*p == '\r' || *p == '\n')) {
-              *p-- = 0;
-            }
-            SystemProperty* props = Arguments::system_properties();
-            if (props != NULL) {
-              while (props->next() != NULL) {
-                props = props->next();
-              }
-              SystemProperty* new_p = new SystemProperty("jvmci.Compiler", line, true);
-              props->set_next(new_p);
-              FLAG_SET_DEFAULT(UseJVMCICompiler, true);
-            }
-          } else {
-            jio_fprintf(defaultStream::error_stream(),
-                "Failed to read from %s (errno = %d)\n", filename, errno);
-            fclose(stream);
-            return false;
-          }
-          fclose(stream);
-        } else {
-          jio_fprintf(defaultStream::error_stream(),
-              "Failed to open %s (errno = %d)\n", filename, errno);
-          return false;
-        }
-      }
+  if (FLAG_IS_DEFAULT(UseJVMCICompiler) && !UseJVMCICompiler) {
+    if (compiler_name != NULL) {
+      // If a JVMCI compiler has been explicitly specified, then
+      // we enable the JVMCI compiler by default.
+      FLAG_SET_DEFAULT(UseJVMCICompiler, true);
     }
   }
 
