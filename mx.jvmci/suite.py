@@ -275,6 +275,9 @@ suite = {
           }
         },
         "solaris" : {
+          "amd64" : {
+            "path" : "build/<vmbuild>/solaris/amd64/<vm>/jvm.tar",
+          },
           "sparcv9" : {
             "path" : "build/<vmbuild>/solaris/sparcv9/<vm>/jvm.tar",
           }
