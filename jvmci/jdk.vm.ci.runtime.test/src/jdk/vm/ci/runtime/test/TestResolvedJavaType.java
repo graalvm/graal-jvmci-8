@@ -52,6 +52,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.junit.Test;
 
@@ -134,6 +135,29 @@ public class TestResolvedJavaType extends TypeUniverse {
             boolean actual = type.isArray();
             assertEquals(expected, actual);
         }
+    }
+
+    @Test
+    public void getHostClassTest() {
+        for (Class<?> c : classes) {
+            ResolvedJavaType type = metaAccess.lookupJavaType(c);
+            ResolvedJavaType host = type.getHostClass();
+            assertNull(host);
+        }
+
+        class LocalClass {
+        }
+        Cloneable clone = new Cloneable() {
+        };
+        assertNull(metaAccess.lookupJavaType(LocalClass.class).getHostClass());
+        assertNull(metaAccess.lookupJavaType(clone.getClass()).getHostClass());
+
+        Supplier<Runnable> lambda = () -> () -> System.out.println("run");
+        ResolvedJavaType lambdaType = metaAccess.lookupJavaType(lambda.getClass());
+        ResolvedJavaType nestedLambdaType = metaAccess.lookupJavaType(lambda.get().getClass());
+        assertNotNull(lambdaType.getHostClass());
+        assertNotNull(nestedLambdaType.getHostClass());
+        assertEquals(lambdaType.getHostClass(), nestedLambdaType.getHostClass());
     }
 
     @Test
