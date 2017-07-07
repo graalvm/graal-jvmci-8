@@ -465,7 +465,13 @@ def getVmCfgInJdk(jdkDir, jvmCfgFile='jvm.cfg'):
     return join(vmLibDirInJdk(jdkDir), jvmCfgFile)
 
 def _jdksDir():
-    return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, 'jdk' + str(get_jvmci_bootstrap_jdk().version)))
+    bootstrap_jdk = get_jvmci_bootstrap_jdk()
+    output = subprocess.check_output([bootstrap_jdk.java, '-version'], stderr=subprocess.STDOUT)
+    if 'openjdk' in output.lower():
+        prefix = 'openjdk'
+    else:
+        prefix = 'jdk'
+    return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, prefix + str(bootstrap_jdk.version)))
 
 def _handle_missing_VM(bld, vm=None):
     if not vm:
