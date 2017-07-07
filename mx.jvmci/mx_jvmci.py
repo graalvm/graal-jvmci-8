@@ -858,7 +858,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             def filterXusage(line):
                 if not 'Xusage.txt' in line:
                     sys.stderr.write(line + os.linesep)
-            cpus = self.parallelism
+            cpus = mx.cpu_count()
             makeDir = join(_suite.dir, 'make')
             runCmd = [mx.gmake_cmd(), '-C', makeDir]
 
