@@ -324,6 +324,12 @@ inline void oopDesc::metadata_field_put(int offset, Metadata* value) {
   *metadata_field_addr(offset) = value;
 }
 
+inline void oopDesc::metadata_field_put_volatile(int offset, Metadata* value) {
+  OrderAccess::release();
+  *metadata_field_addr(offset) = value;
+  OrderAccess::fence();
+}
+
 inline void oopDesc::obj_field_put_raw(int offset, oop value) {
   UseCompressedOops ?
     encode_store_heap_oop(obj_field_addr<narrowOop>(offset), value) :

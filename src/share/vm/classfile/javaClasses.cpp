@@ -589,6 +589,7 @@ void java_lang_Class::create_mirror(KlassHandle k, Handle class_loader,
   if (SystemDictionary::Class_klass_loaded()) {
     // Allocate mirror (java.lang.Class instance)
     Handle mirror = InstanceMirrorKlass::cast(SystemDictionary::Class_klass())->allocate_instance(k, CHECK);
+    Handle comp_mirror;
 
     // Setup indirection from mirror->klass
     if (!k.is_null()) {
@@ -602,21 +603,21 @@ void java_lang_Class::create_mirror(KlassHandle k, Handle class_loader,
 
     // It might also have a component mirror.  This mirror must already exist.
     if (k->oop_is_array()) {
-      Handle comp_mirror;
       if (k->oop_is_typeArray()) {
         BasicType type = TypeArrayKlass::cast(k())->element_type();
-        comp_mirror = Universe::java_mirror(type);
+        comp_mirror = Handle(THREAD, Universe::java_mirror(type));
       } else {
         assert(k->oop_is_objArray(), "Must be");
         Klass* element_klass = ObjArrayKlass::cast(k())->element_klass();
         assert(element_klass != NULL, "Must have an element klass");
-        comp_mirror = element_klass->java_mirror();
+        comp_mirror = Handle(THREAD, element_klass->java_mirror());
       }
       assert(comp_mirror.not_null(), "must have a mirror");
 
       // Two-way link between the array klass and its component mirror:
       ArrayKlass::cast(k())->set_component_mirror(comp_mirror());
-      set_array_klass(comp_mirror(), k());
+      // Set after k->java_mirror() is published.
+      // set_array_klass(comp_mirror(), k());
     } else {
       assert(k->oop_is_instance(), "Must be");
 
@@ -635,10 +636,11 @@ void java_lang_Class::create_mirror(KlassHandle k, Handle class_loader,
     assert(class_loader() == k->class_loader(), "should be same");
     set_class_loader(mirror(), class_loader());
 
-    // Setup indirection from klass->mirror last
+    // Setup indirection from klass->mirror
     // after any exceptions can happen during allocations.
-    if (!k.is_null()) {
-      k->set_java_mirror(mirror());
+    k->set_java_mirror(mirror());
+    if (comp_mirror() != NULL) {
+        set_array_klass(comp_mirror(), k());
     }
   } else {
     if (fixup_mirror_list() == NULL) {
@@ -811,10 +813,9 @@ Klass* java_lang_Class::array_klass(oop java_class) {
   return k;
 }
 
-
 void java_lang_Class::set_array_klass(oop java_class, Klass* klass) {
   assert(klass->is_klass() && klass->oop_is_array(), "should be array klass");
-  java_class->metadata_field_put(_array_klass_offset, klass);
+  java_class->metadata_field_put_volatile(_array_klass_offset, klass);
 }
 
 
