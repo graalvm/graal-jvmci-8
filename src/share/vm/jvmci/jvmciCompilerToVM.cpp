@@ -1283,8 +1283,8 @@ C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject 
   ResourceMark rm;
 
   if (!thread->has_last_Java_frame()) return NULL;
-  Handle result = HotSpotStackFrameReference::klass()->allocate_instance(thread);
-  HotSpotStackFrameReference::klass()->initialize(thread);
+  Handle result = HotSpotStackFrameReference::klass()->allocate_instance(CHECK_NULL);
+  HotSpotStackFrameReference::klass()->initialize(CHECK_NULL);
 
   StackFrameStream fst(thread);
   if (hs_frame != NULL) {
@@ -1338,11 +1338,11 @@ C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject 
             ScopeDesc* scope = cvf->scope();
             // native wrapper do not have a scope
             if (scope != NULL && scope->objects() != NULL) {
-              bool realloc_failures = Deoptimization::realloc_objects(thread, fst.current(), scope->objects(), THREAD);
+              bool realloc_failures = Deoptimization::realloc_objects(thread, fst.current(), scope->objects(), CHECK_NULL);
               Deoptimization::reassign_fields(fst.current(), fst.register_map(), scope->objects(), realloc_failures, false);
 
               GrowableArray<ScopeValue*>* local_values = scope->locals();
-              typeArrayHandle array = oopFactory::new_boolArray(local_values->length(), thread);
+              typeArrayHandle array = oopFactory::new_boolArray(local_values->length(), CHECK_NULL);
               for (int i = 0; i < local_values->length(); i++) {
                 ScopeValue* value = local_values->at(i);
                 if (value->is_object()) {
@@ -1383,7 +1383,7 @@ C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject 
         HotSpotStackFrameReference::set_frameNumber(result, frame_number);
 
         // initialize the locals array
-        objArrayHandle array = oopFactory::new_objectArray(locals->size(), thread);
+        objArrayHandle array = oopFactory::new_objectArray(locals->size(), CHECK_NULL);
         for (int i = 0; i < locals->size(); i++) {
           StackValue* var = locals->at(i);
           if (var->type() == T_OBJECT) {
@@ -1517,7 +1517,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     return;
   }
 
-  bool realloc_failures = Deoptimization::realloc_objects(thread, fstAfterDeopt.current(), objects, THREAD);
+  bool realloc_failures = Deoptimization::realloc_objects(thread, fstAfterDeopt.current(), objects, CHECK);
   Deoptimization::reassign_fields(fstAfterDeopt.current(), fstAfterDeopt.register_map(), objects, realloc_failures, false);
 
   for (int frame_index = 0; frame_index < virtualFrames->length(); frame_index++) {
