@@ -324,10 +324,8 @@ inline void oopDesc::metadata_field_put(int offset, Metadata* value) {
   *metadata_field_addr(offset) = value;
 }
 
-inline void oopDesc::metadata_field_put_volatile(int offset, Metadata* value) {
-  OrderAccess::release();
-  *metadata_field_addr(offset) = value;
-  OrderAccess::fence();
+void oopDesc::release_metadata_field_put(int offset, Metadata* value) {
+  OrderAccess::release_store_ptr(metadata_field_addr(offset), value);
 }
 
 inline void oopDesc::obj_field_put_raw(int offset, oop value) {
