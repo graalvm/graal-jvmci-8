@@ -1225,7 +1225,7 @@ JRT_ENTRY_NO_ASYNC(address, OptoRuntime::handle_exception_C_helper(JavaThread* t
         // and there didn't happen another exception during the computation of the
         // compiled exception handler. Checking for exception oop equality is not
         // sufficient because some exceptions are pre-allocated and reused.
-        if (!force_unwind && recursive_exception) {
+        if (!force_unwind && !recursive_exception) {
           nm->add_handler_for_exception_and_pc(exception,pc,handler_address);
         }
       } else {
