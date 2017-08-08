@@ -1336,7 +1336,7 @@ C2V_VMENTRY(jobject, getNextStackFrame, (JNIEnv*, jobject compilerToVM, jobject 
             initialSkip --;
           } else {
             ScopeDesc* scope = cvf->scope();
-            // native wrapper do not have a scope
+            // native wrappers do not have a scope
             if (scope != NULL && scope->objects() != NULL) {
               bool realloc_failures = Deoptimization::realloc_objects(thread, fst.current(), scope->objects(), CHECK_NULL);
               Deoptimization::reassign_fields(fst.current(), fst.register_map(), scope->objects(), realloc_failures, false);
@@ -1459,7 +1459,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     THROW_MSG(vmSymbols::java_lang_NullPointerException(), "stack frame is null")
   }
 
-  HotSpotStackFrameReference::klass()->initialize(thread);
+  HotSpotStackFrameReference::klass()->initialize(CHECK);
 
   // look for the given stack frame
   StackFrameStream fst(thread);
