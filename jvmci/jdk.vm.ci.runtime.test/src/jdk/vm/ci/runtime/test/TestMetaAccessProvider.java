@@ -101,4 +101,15 @@ public class TestMetaAccessProvider extends TypeUniverse {
             }
         }
     }
+
+    @Test
+    public void parseSignatureTest() {
+        for (String badSig : new String[]{"", "()", "(", "()Vextra", "()E", "(E)", "(Ljava.lang.Object;)V"}) {
+            try {
+                metaAccess.parseMethodDescriptor(badSig);
+                throw new AssertionError("Expected signature to be invalid: " + badSig);
+            } catch (IllegalArgumentException e) {
+            }
+        }
+    }
 }
