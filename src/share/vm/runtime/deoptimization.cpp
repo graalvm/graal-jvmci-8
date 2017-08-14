@@ -1369,6 +1369,26 @@ void Deoptimization::deoptimize(JavaThread* thread, frame fr, RegisterMap *map, 
 
 }
 
+address Deoptimization::deoptimize_for_missing_exception_handler(nmethod* nm) {
+  // there is no exception handler for this pc => deoptimize
+  nm->make_not_entrant();
+
+  // Use Deoptimization::deoptimize for all of its side-effects:
+  // revoking biases of monitors, gathering traps statistics, logging...
+  // it also patches the return pc but we do not care about that
+  // since we return a continuation to the deopt_blob below.
+  JavaThread* thread = JavaThread::current();
+  RegisterMap reg_map(thread, UseBiasedLocking);
+  frame runtime_frame = thread->last_frame();
+  frame caller_frame = runtime_frame.sender(&reg_map);
+  assert(caller_frame.cb()->as_nmethod_or_null() == nm, "expect top frame nmethod");
+  Deoptimization::deoptimize(thread, caller_frame, &reg_map, Deoptimization::Reason_not_compiled_exception_handler);
+
+  MethodData* trap_mdo = get_method_data(thread, nm->method(), true);
+  trap_mdo->inc_trap_count(Deoptimization::Reason_not_compiled_exception_handler);
+
+  return SharedRuntime::deopt_blob()->unpack_with_exception_in_tls();
+}
 
 void Deoptimization::deoptimize_frame_internal(JavaThread* thread, intptr_t* id, DeoptReason reason) {
   assert(thread == Thread::current() || SafepointSynchronize::is_at_safepoint(),
