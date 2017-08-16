@@ -315,21 +315,8 @@ OPT_CFLAGS/NOOPT=-O0
 
 # Work around some compiler bugs.
 ifeq ($(USE_CLANG), true)
-  # Clang 4.2
-  ifeq ($(shell expr $(CC_VER_MAJOR) = 4 \& $(CC_VER_MINOR) = 2), 1)
-    OPT_CFLAGS/loopTransform.o += $(OPT_CFLAGS/NOOPT)
-    OPT_CFLAGS/unsafe.o += -O1
-  endif
-  # Clang 5.0
-  ifeq ($(shell expr $(CC_VER_MAJOR) = 5 \& \( $(CC_VER_MINOR) = 0 \| $(CC_VER_MINOR) = 1 \) ), 1)
-    OPT_CFLAGS/loopTransform.o += $(OPT_CFLAGS/NOOPT)
-    OPT_CFLAGS/unsafe.o += -O1
-  endif
-  # Clang 6.x
-  ifeq ($(shell expr $(CC_VER_MAJOR) = 6), 1)
-    OPT_CFLAGS/loopTransform.o += $(OPT_CFLAGS/NOOPT)
-    OPT_CFLAGS/unsafe.o += -O1
-  endif
+  OPT_CFLAGS/loopTransform.o += $(OPT_CFLAGS/NOOPT)
+  OPT_CFLAGS/unsafe.o += -O1
 else
   # 6835796. Problem in GCC 4.3.0 with mulnode.o optimized compilation.
   ifeq ($(shell expr $(CC_VER_MAJOR) = 4 \& $(CC_VER_MINOR) = 3), 1)
