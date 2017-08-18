@@ -154,7 +154,7 @@ final class CompilerToVM {
      * @param resolve force resolution to a {@link ResolvedJavaType}. If true, this method will
      *            either return a {@link ResolvedJavaType} or throw an exception
      * @return the type for {@code name} or 0 if resolution failed and {@code resolve == false}
-     * @throws LinkageError if {@code resolve == true} and the resolution failed
+     * @throws ClassNotFoundException if {@code resolve == true} and the resolution failed
      */
     native HotSpotResolvedObjectTypeImpl lookupType(String name, Class<?> accessingClass, boolean resolve) throws ClassNotFoundException;
 
