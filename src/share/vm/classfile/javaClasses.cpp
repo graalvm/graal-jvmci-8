@@ -602,7 +602,6 @@ void java_lang_Class::create_mirror(KlassHandle k, Handle class_loader,
 
     // It might also have a component mirror.  This mirror must already exist.
     if (k->oop_is_array()) {
-      Handle comp_mirror;
       if (k->oop_is_typeArray()) {
         BasicType type = TypeArrayKlass::cast(k())->element_type();
         comp_mirror = Handle(THREAD, Universe::java_mirror(type));
