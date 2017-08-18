@@ -156,7 +156,7 @@ final class CompilerToVM {
      * @return the type for {@code name} or 0 if resolution failed and {@code resolve == false}
      * @throws LinkageError if {@code resolve == true} and the resolution failed
      */
-    native HotSpotResolvedObjectTypeImpl lookupType(String name, Class<?> accessingClass, boolean resolve);
+    native HotSpotResolvedObjectTypeImpl lookupType(String name, Class<?> accessingClass, boolean resolve) throws ClassNotFoundException;
 
     /**
      * Resolves the entry at index {@code cpi} in {@code constantPool} to an object.
