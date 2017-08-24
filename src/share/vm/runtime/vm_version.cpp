@@ -42,7 +42,10 @@
 # include "vm_version_ppc.hpp"
 #endif
 
-const char* Abstract_VM_Version::_s_vm_release = Abstract_VM_Version::vm_release();
+const char* Abstract_VM_Version::_s_vm_release = NULL;
+const char* Abstract_VM_Version::_s_vm_name = NULL;
+int Abstract_VM_Version::_vm_properties_initialized_from_file =
+    Abstract_VM_Version::init_vm_properties(Abstract_VM_Version::_s_vm_name, Abstract_VM_Version::_s_vm_release);
 const char* Abstract_VM_Version::_s_internal_vm_info_string = Abstract_VM_Version::internal_vm_info_string();
 bool Abstract_VM_Version::_supports_cx8 = false;
 bool Abstract_VM_Version::_supports_atomic_getset4 = false;
@@ -132,10 +135,108 @@ void Abstract_VM_Version::initialize() {
 #endif
 #define VMNAME HOTSPOT_VM_DISTRO " " VMLP EMBEDDED_ONLY("Embedded ") VMTYPE " VM"
 
-const char* Abstract_VM_Version::vm_name() {
-  return VMNAME;
+int Abstract_VM_Version::init_vm_properties(const char*& name, const char*& version) {
+  int non_defaults = 0;
+  name = VMNAME;
+  version = VM_RELEASE;
+  char filename[JVM_MAXPATHLEN];
+  os::jvm_path(filename, JVM_MAXPATHLEN);
+  char *end = strrchr(filename, *os::file_separator());
+  if (end == NULL) {
+    warning("Could not find '%c' in %s", *os::file_separator(), filename);
+  } else {
+    snprintf(end, JVM_MAXPATHLEN - (end - filename), "%svm.properties", os::file_separator());
+    struct stat statbuf;
+
+    if (os::stat(filename, &statbuf) == 0) {
+      FILE* stream = fopen(filename, "r");
+      if (stream != NULL) {
+        char* buffer = NEW_C_HEAP_ARRAY(char, statbuf.st_size + 1, mtInternal);
+        int num_read = fread(buffer, 1, statbuf.st_size, stream);
+        int err = ferror(stream);
+        fclose(stream);
+        if (num_read != statbuf.st_size) {
+          warning("Only read %d of " SIZE_FORMAT " characters from %s", num_read, statbuf.st_size, filename);
+          FREE_C_HEAP_ARRAY(char, buffer, mtInternal);
+        } else if (err != 0) {
+          warning("Error reading from %s (errno = %d)", filename, err);
+          FREE_C_HEAP_ARRAY(char, buffer, mtInternal);
+        } else {
+          char* last = buffer + statbuf.st_size;
+          *last = '\0';
+          // Strip trailing new lines at end of file
+          while (--last >= buffer && (*last == '\r' || *last == '\n')) {
+            *last = '\0';
+          }
+
+          char* line = buffer;
+          int line_no = 1;
+          while (line - buffer < statbuf.st_size) {
+            // find line end (\r, \n or \r\n)
+            char* nextline = NULL;
+            char* cr = strchr(line, '\r');
+            char* lf = strchr(line, '\n');
+            if (cr != NULL && lf != NULL) {
+              char* min = MIN2(cr, lf);
+              *min = '\0';
+              if (lf == cr + 1) {
+                nextline = lf + 1;
+              } else {
+                nextline = min + 1;
+              }
+            } else if (cr != NULL) {
+              *cr = '\0';
+              nextline = cr + 1;
+            } else if (lf != NULL) {
+              *lf = '\0';
+              nextline = lf + 1;
+            }
+
+            char* sep = strchr(line, '=');
+            if (sep == NULL) {
+              warning("%s:%d: could not find '='", filename, line_no);
+              return non_defaults;
+            }
+            if (sep == line) {
+              warning("%s:%d: empty property name", filename, line_no);
+              return non_defaults;
+            }
+            *sep = '\0';
+            const char* key = line;
+            char* value = sep + 1;
+            if (strcmp(key, "name") == 0) {
+              if (name == VMNAME) {
+                non_defaults++;
+              }
+              name = value;
+            } else if (strcmp(key, "version") == 0) {
+              if (version == VM_RELEASE) {
+                non_defaults++;
+              }
+              version = value;
+            } else {
+              warning("%s:%d: property must be \"name\" or \"version\", not \"%s\"", filename, line_no, key);
+              return non_defaults;
+            }
+
+            if (nextline == NULL) {
+              return true;
+            }
+            line = nextline;
+            line_no++;
+          }
+        }
+      } else {
+        warning("Error reading from %s (errno = %d)", filename, errno);
+      }
+    }
+  }
+  return non_defaults;
 }
 
+const char* Abstract_VM_Version::vm_name() {
+  return _s_vm_name;
+}
 
 const char* Abstract_VM_Version::vm_vendor() {
 #ifdef VENDOR
@@ -164,7 +265,7 @@ const char* Abstract_VM_Version::vm_info_string() {
 //       fatal error handler. if the crash is in native thread,
 //       stringStream cannot get resource allocated and will SEGV.
 const char* Abstract_VM_Version::vm_release() {
-  return VM_RELEASE;
+  return _s_vm_release;
 }
 
 // NOTE: do *not* use stringStream. this function is called by

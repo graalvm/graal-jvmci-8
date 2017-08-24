@@ -33,6 +33,8 @@
 class Abstract_VM_Version: AllStatic {
  protected:
   friend class VMStructs;
+  static int          _vm_properties_initialized_from_file;
+  static const char*  _s_vm_name;
   static const char*  _s_vm_release;
   static const char*  _s_internal_vm_info_string;
   // These are set by machine-dependent initializations
@@ -53,6 +55,13 @@ class Abstract_VM_Version: AllStatic {
   static unsigned int nof_parallel_worker_threads(unsigned int num,
                                                   unsigned int dem,
                                                   unsigned int switch_pt);
+  // Reads "name" and "version" properties from vm.properties
+  // if it exists as a sibling of libjvm. Default values
+  // are returned if they are not available in this file.
+  // @param name returns the value of the "name" property
+  // @param version returns the value of the "version" property
+  // @return number of properties initialized from the file
+  static int init_vm_properties(const char*& name, const char*& version);
  public:
   // Called as part of the runtime services initialization which is
   // called from the management module initialization (via init_globals())
