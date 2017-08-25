@@ -46,7 +46,7 @@ const char* Abstract_VM_Version::_s_vm_release = NULL;
 const char* Abstract_VM_Version::_s_vm_name = NULL;
 int Abstract_VM_Version::_vm_properties_initialized_from_file =
     Abstract_VM_Version::init_vm_properties(Abstract_VM_Version::_s_vm_name, Abstract_VM_Version::_s_vm_release);
-const char* Abstract_VM_Version::_s_internal_vm_info_string = Abstract_VM_Version::internal_vm_info_string();
+const char* Abstract_VM_Version::_s_internal_vm_info_string = Abstract_VM_Version::init_internal_vm_info_string();
 bool Abstract_VM_Version::_supports_cx8 = false;
 bool Abstract_VM_Version::_supports_atomic_getset4 = false;
 bool Abstract_VM_Version::_supports_atomic_getset8 = false;
@@ -297,7 +297,7 @@ const char *Abstract_VM_Version::vm_platform_string() {
   return OS "-" CPU;
 }
 
-const char* Abstract_VM_Version::internal_vm_info_string() {
+const char* Abstract_VM_Version::init_internal_vm_info_string() {
   #ifndef HOTSPOT_BUILD_USER
     #define HOTSPOT_BUILD_USER unknown
   #endif
@@ -359,9 +359,25 @@ const char* Abstract_VM_Version::internal_vm_info_string() {
     #define FLOAT_ARCH_STR XSTR(FLOAT_ARCH)
   #endif
 
-  return VMNAME " (" VM_RELEASE ") for " OS "-" CPU FLOAT_ARCH_STR
-         " JRE (" JRE_RELEASE_VERSION "), built on " __DATE__ " " __TIME__
-         " by " XSTR(HOTSPOT_BUILD_USER) " with " HOTSPOT_BUILD_COMPILER;
+
+#define VM_INTERNAL_INFO_FORMAT(name, release) \
+  name " (" release ") for " OS "-" CPU FLOAT_ARCH_STR \
+  " JRE (" JRE_RELEASE_VERSION "), built on " __DATE__ " " __TIME__ \
+  " by " XSTR(HOTSPOT_BUILD_USER) " with " HOTSPOT_BUILD_COMPILER
+
+  if (_s_vm_name != VMNAME || _s_vm_release != VM_RELEASE) {
+    int len = strlen(VM_INTERNAL_INFO_FORMAT(VMNAME, VM_RELEASE)) - strlen(VMNAME VM_RELEASE) +
+              strlen(_s_vm_name) + strlen(_s_vm_release);
+    char* buffer = NEW_C_HEAP_ARRAY(char, len + 1, mtInternal);
+    sprintf(buffer, VM_INTERNAL_INFO_FORMAT("%s", "%s"), _s_vm_name, _s_vm_release);
+    return buffer;
+  }
+  return VM_INTERNAL_INFO_FORMAT(VMNAME, VM_RELEASE);
+#undef VM_INTERNAL_INFO_FORMAT
+}
+
+const char* Abstract_VM_Version::internal_vm_info_string() {
+  return _s_internal_vm_info_string;
 }
 
 const char *Abstract_VM_Version::vm_build_user() {

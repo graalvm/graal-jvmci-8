@@ -62,6 +62,8 @@ class Abstract_VM_Version: AllStatic {
   // @param version returns the value of the "version" property
   // @return number of properties initialized from the file
   static int init_vm_properties(const char*& name, const char*& version);
+
+  static const char* init_internal_vm_info_string();
  public:
   // Called as part of the runtime services initialization which is
   // called from the management module initialization (via init_globals())
