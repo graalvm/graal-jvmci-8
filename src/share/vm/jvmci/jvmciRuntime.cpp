@@ -870,7 +870,7 @@ CompLevel JVMCIRuntime::adjust_comp_level(methodHandle method, bool is_osr, Comp
 }
 
 CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread) {
-  JVMCICompiler* compiler = JVMCICompiler::instance(thread);
+  JVMCICompiler* compiler = JVMCICompiler::instance(false, thread);
   if (compiler != NULL && compiler->is_bootstrapping()) {
     return level;
   }

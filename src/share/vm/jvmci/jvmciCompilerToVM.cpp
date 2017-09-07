@@ -1001,7 +1001,7 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
   Handle installed_code_handle = JNIHandles::resolve(installed_code);
   Handle speculation_log_handle = JNIHandles::resolve(speculation_log);
 
-  JVMCICompiler* compiler = JVMCICompiler::instance(CHECK_(JNI_ERR));
+  JVMCICompiler* compiler = JVMCICompiler::instance(true, CHECK_(JNI_ERR));
 
   TraceTime install_time("installCode", JVMCICompiler::codeInstallTimer());
   CodeInstaller installer;
@@ -1053,7 +1053,7 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
 C2V_END
 
 C2V_VMENTRY(void, resetCompilationStatistics, (JNIEnv *jniEnv, jobject))
-  JVMCICompiler* compiler = JVMCICompiler::instance(CHECK);
+  JVMCICompiler* compiler = JVMCICompiler::instance(true, CHECK);
   CompilerStatistics* stats = compiler->stats();
   stats->_standard.reset();
   stats->_osr.reset();
