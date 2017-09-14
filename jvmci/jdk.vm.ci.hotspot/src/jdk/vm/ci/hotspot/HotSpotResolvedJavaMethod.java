@@ -62,15 +62,6 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
     void setNotInlineableOrCompileable();
 
     /**
-     * Use {@link #setNotInlineableOrCompileable()} instead as its name better reflect the semantics
-     * this method has always had.
-     */
-    @Deprecated
-    default void setNotInlineable() {
-        setNotInlineableOrCompileable();
-    }
-
-    /**
      * Returns true if this method is one of the special methods that is ignored by security stack
      * walks.
      *
