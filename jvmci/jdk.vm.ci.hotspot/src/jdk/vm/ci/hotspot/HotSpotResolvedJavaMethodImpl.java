@@ -319,10 +319,10 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     }
 
     /**
-     * Manually adds a DontInline annotation to this method.
+     * Sets flags on {@code method} indicating that it should never be inlined or compiled.
      */
-    public void setNotInlineable() {
-        compilerToVM().doNotInlineOrCompile(this);
+    public void setNotInlineableOrCompileable() {
+        compilerToVM().setNotInlineableOrCompileable(this);
     }
 
     /**
