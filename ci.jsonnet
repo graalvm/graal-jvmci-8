@@ -3,6 +3,8 @@
         packages+: {
             git : ">=1.8.3",
             mercurial : ">=2.2",
+            "pip:astroid" : "==1.1.0",
+            "pip:pylint" : "==1.1.0",
             make : ">=3.83",
             "gcc-build-essentials" : "==4.9.1"
         },
@@ -16,6 +18,8 @@
         packages+: {
             git: ">=1.8.3",
             mercurial: ">=2.2",
+            "pip:astroid" : "==1.1.0",
+            "pip:pylint" : "==1.1.0",
             make : ">=3.83",
             solarisstudio: "==12.3"
         },
@@ -27,6 +31,8 @@
     },
     Darwin:: {
         packages+: {
+            "pip:astroid" : "==1.1.0",
+            "pip:pylint" : "==1.1.0",
             # Brew does not support versions
             git : "",
             mercurial : "",
@@ -68,9 +74,19 @@
         },
     },
 
+    JDT:: {
+        downloads+: {
+            JDT: {
+                name: "ecj",
+                version: "4.5.1",
+                platformspecific: false
+            }
+        }
+    },
+
     Build:: {
         name: "gate",
-        timelimit: "30:00",
+        timelimit: "1:00:00",
         logs: ["*.log"],
         targets: ["gate"],
         downloads: {
@@ -78,22 +94,30 @@
                 name : "oraclejdk",
                 version : "8u141",
                 platformspecific: true
-            },
-            JDT: {
-                name: "ecj",
-                version: "4.5.1",
-                platformspecific: false
-            },
+            }
         },
         run: [
-            ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"]
+            ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
+
+            # Test on graal
+            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
+
+            # Look for a well known branch that fixes a downstream failure caused by a JDK change
+            ["git", "-C", "graal", "checkout", "master", "||", "true"],
+
+            ["mx", "-v", "-p", "graal/compiler",
+                    "--java-home", ["mx", "--vm=server", "jdkhome"],
+                    "gate", "--tags", "build,ctw,test"
+            ]
         ],
     },
 
     builds: [
         self.Build + mach
         for mach in [
-            self.Linux + self.AMD64 + self.Eclipse,
+            # Only need to test formatting and building
+            # with Eclipse on one platform.
+            self.Linux + self.AMD64 + self.Eclipse + self.JDT,
             self.Darwin + self.AMD64,
             self.Solaris + self.SPARCv9,
         ]
