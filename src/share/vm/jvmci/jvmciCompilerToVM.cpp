@@ -1021,7 +1021,7 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
   if (result != JVMCIEnv::ok) {
     assert(cb == NULL, "should be");
   } else {
-    if (!installed_code_handle.is_null()) {
+    if (installed_code_handle.not_null()) {
       assert(installed_code_handle->is_a(InstalledCode::klass()), "wrong type");
       nmethod::invalidate_installed_code(installed_code_handle, CHECK_0);
       {
@@ -1041,12 +1041,6 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *jniEnv, jobject, jobject target, jobject
         }
       }
       nmethod* nm = cb->as_nmethod_or_null();
-      if (nm != NULL && installed_code_handle->is_scavengable()) {
-        assert(nm->detect_scavenge_root_oops(), "nm should be scavengable if installed_code is scavengable");
-        if (!UseG1GC) {
-          assert(nm->on_scavenge_root_list(), "nm should be on scavengable list");
-        }
-      }
     }
   }
   return result;

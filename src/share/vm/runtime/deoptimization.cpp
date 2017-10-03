@@ -1655,19 +1655,9 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
         nm->method()->print_short_name(tty);
         tty->print(" compiler=%s compile_id=%d", nm->compiler() == NULL ? "" : nm->compiler()->name(), nm->compile_id());
 #if INCLUDE_JVMCI
-        oop installedCode = nm->jvmci_installed_code();
-        if (installedCode != NULL) {
-          oop installedCodeName = NULL;
-          if (installedCode->is_a(InstalledCode::klass())) {
-            installedCodeName = InstalledCode::name(installedCode);
-          }
-          if (installedCodeName != NULL) {
-            tty->print(" (JVMCI: installedCodeName=%s) ", java_lang_String::as_utf8_string(installedCodeName));
-          } else {
-            tty->print(" (JVMCI: installed code has no name) ");
-          }
-        } else if (nm->is_compiled_by_jvmci()) {
-          tty->print(" (JVMCI: no installed code) ");
+        char* installed_code_name = nm->jvmci_installed_code_name(buf, sizeof(buf));
+        if (installed_code_name != NULL) {
+          tty->print(" (JVMCI: installed code name=%s) ", installed_code_name);
         }
 #endif
         tty->print(" (@" INTPTR_FORMAT ") thread=" UINTX_FORMAT " reason=%s action=%s unloaded_class_index=%d" JVMCI_ONLY(" debug_id=%d"),
