@@ -40,7 +40,8 @@
             # available once Xcode has been installed.
         },
         environment+: {
-            CI_OS: "darwin"
+            CI_OS: "darwin",
+            JAVA_HOME: "$JAVA_HOME/Contents/Home"
         },
         capabilities+: ["darwin"],
         name+: "-darwin",

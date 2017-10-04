@@ -105,7 +105,7 @@ _vm_prefix = None
 
 _make_eclipse_launch = False
 
-_minVersion = mx.VersionSpec('1.8.0_121')
+_minVersion = mx.VersionSpec('1.8.0_141')
 
 # max version (first _unsupported_ version)
 _untilVersion = mx.VersionSpec('1.9')
@@ -360,7 +360,7 @@ def export(args):
 
     # archive different build types of hotspot
     for vmBuild in _vmbuildChoices:
-        jdkDir = join(_jdksDir(), vmBuild)
+        jdkDir = _jdkDir(_jdksDir(), vmBuild)
         if not exists(jdkDir):
             mx.logv("skipping " + vmBuild)
             continue
@@ -473,6 +473,12 @@ def _jdksDir():
         prefix = 'jdk'
     return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, prefix + str(bootstrap_jdk.version)))
 
+def _jdkDir(jdks, build):
+    if platform.mac_ver()[0] != '':
+        return join(jdks, build, 'Contents', 'Home')
+    else:
+        return join(jdks, build)
+
 def _handle_missing_VM(bld, vm=None):
     if not vm:
         vm = get_vm()
@@ -506,12 +512,17 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
     """
     if not build:
         build = _vmbuild
-    jdkDir = join(_jdksDir(), build)
+    jdkDir = _jdkDir(_jdksDir(), build)
     if create:
-        srcJdk = get_jvmci_bootstrap_jdk().home
         if not exists(jdkDir):
+            srcJdk = get_jvmci_bootstrap_jdk().home
             mx.log('Creating ' + jdkDir + ' from ' + srcJdk)
-            shutil.copytree(srcJdk, jdkDir)
+            if jdkDir.endswith('/Contents/Home'):
+                srcJdkRoot = srcJdk[:-len('/Contents/Home')]
+                jdkDirRoot = jdkDir[:-len('/Contents/Home')]
+                shutil.copytree(srcJdkRoot, jdkDirRoot, symlinks=True)
+            else:
+                shutil.copytree(srcJdk, jdkDir)
 
             # Make a copy of the default VM so that this JDK can be
             # reliably used as the bootstrap for a HotSpot build.
@@ -630,7 +641,7 @@ def _installDistInJdks(deployableDist):
     jdks = _jdksDir()
     if exists(jdks):
         for e in os.listdir(jdks):
-            jdkDir = join(jdks, e)
+            jdkDir = _jdkDir(jdks, e)
             deployableDist.deploy(jdkDir)
 
 def _vmbuildFromJdkDir(jdkDir):
@@ -639,7 +650,11 @@ def _vmbuildFromJdkDir(jdkDir):
     """
     jdksDir = _jdksDir()
     assert jdkDir.startswith(jdksDir)
-    vmbuild = os.path.relpath(jdkDir, jdksDir)
+    if jdkDir.endswith('/Contents/Home'):
+        jdkDirRoot = jdkDir[:-len('/Contents/Home')]
+        vmbuild = os.path.relpath(jdkDirRoot, jdksDir)
+    else:
+        vmbuild = os.path.relpath(jdkDir, jdksDir)
     assert vmbuild in _vmbuildChoices, 'The vmbuild derived from ' + jdkDir + ' is unknown: ' + vmbuild
     return vmbuild
 
@@ -1403,6 +1418,9 @@ def get_jvmci_bootstrap_jdk():
         if _untilVersion:
             versionDesc += " and <" + str(_untilVersion)
         _jvmci_bootstrap_jdk = mx.get_jdk(_versionCheck, versionDescription=versionDesc, tag='default')
+        if platform.mac_ver()[0] != '':
+            if not _jvmci_bootstrap_jdk.home.endswith('/Contents/Home'):
+                mx.abort("JAVA_HOME on MacOS is expected to end with /Contents/Home: " + _jvmci_bootstrap_jdk.home)
     return _jvmci_bootstrap_jdk
 
 _jvmci_bootclasspath_prepends = []
