@@ -471,7 +471,8 @@ def _jdksDir():
         prefix = 'openjdk'
     else:
         prefix = 'jdk'
-    return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, prefix + str(bootstrap_jdk.version)))
+    plat = mx.get_os() + '-' + mx.get_arch()
+    return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, prefix + str(bootstrap_jdk.version), plat))
 
 def _jdkDir(jdks, build):
     if platform.mac_ver()[0] != '':
