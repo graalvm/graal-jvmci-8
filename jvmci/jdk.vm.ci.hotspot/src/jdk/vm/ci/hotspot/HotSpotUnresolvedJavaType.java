@@ -48,8 +48,10 @@ final class HotSpotUnresolvedJavaType extends HotSpotJavaType {
 
     @Override
     public JavaType getComponentType() {
-        assert getName().charAt(0) == '[' : "no array class" + getName();
-        return new HotSpotUnresolvedJavaType(getName().substring(1), runtime);
+        if (getName().charAt(0) == '[') {
+            return new HotSpotUnresolvedJavaType(getName().substring(1), runtime);
+        }
+        return null;
     }
 
     @Override
