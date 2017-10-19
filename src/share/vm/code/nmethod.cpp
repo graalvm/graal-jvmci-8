@@ -1519,10 +1519,6 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
   // Java wrapper is no longer alive. Here we need to clear out this weak
   // reference to the dead object.
   maybe_invalidate_installed_code();
-  // Clear these out after the nmethod has been unregistered and any
-  // updates to the InstalledCode instance have been performed.
-  clear_jvmci_installed_code();
-  clear_speculation_log();
 #endif
 
   // The Method* is gone at this point
@@ -1733,11 +1729,8 @@ void nmethod::flush() {
 #endif // SHARK
 
 #if INCLUDE_JVMCI
-  oop obj = JNIHandles::resolve(_jvmci_installed_code);
-  assert(obj == NULL || (InstalledCode::address(obj) == 0 && InstalledCode::entryPoint(obj) == 0),
-      "dangling reference from InstalledCode to nmethod about to be flushed");
-  clear_jvmci_installed_code();
-  clear_speculation_log();
+  assert(_jvmci_installed_code == NULL, "should have been nulled out when transitioned to zombie");
+  assert(_speculation_log == NULL, "should have been nulled out when transitioned to zombie");
 #endif
 
   ((CodeBlob*)(this))->flush();
@@ -3529,7 +3522,7 @@ void nmethod::print_statistics() {
 
 #if INCLUDE_JVMCI
 void nmethod::clear_jvmci_installed_code() {
-  assert_locked_or_safepoint(CodeCache_lock);
+  assert_locked_or_safepoint(Patching_lock);
   if (_jvmci_installed_code != NULL) {
     JNIHandles::destroy_weak_global(_jvmci_installed_code);
     _jvmci_installed_code = NULL;
@@ -3537,7 +3530,7 @@ void nmethod::clear_jvmci_installed_code() {
 }
 
 void nmethod::clear_speculation_log() {
-  assert_locked_or_safepoint(CodeCache_lock);
+  assert_locked_or_safepoint(Patching_lock);
   if (_speculation_log != NULL) {
     JNIHandles::destroy_weak_global(_speculation_log);
     _speculation_log = NULL;
@@ -3549,25 +3542,29 @@ void nmethod::maybe_invalidate_installed_code() {
          SafepointSynchronize::is_at_safepoint(), "should be performed under a lock for consistency");
   oop installed_code = JNIHandles::resolve(_jvmci_installed_code);
   if (installed_code != NULL) {
+    // Update the values in the InstalledCode instance if it still refers to this nmethod
     nmethod* nm = (nmethod*)InstalledCode::address(installed_code);
-    if (nm == NULL || nm != this) {
-      // The link has been broken or the InstalledCode instance is
-      // associated with another nmethod so do nothing.
-      return;
+    if (nm == this) {
+      if (!is_alive()) {
+        // Break the link between nmethod and InstalledCode such that the nmethod
+        // can subsequently be flushed safely.  The link must be maintained while
+        // the method could have live activations since invalidateInstalledCode
+        // might want to invalidate all existing activations.
+        InstalledCode::set_address(installed_code, 0);
+        InstalledCode::set_entryPoint(installed_code, 0);
+      } else if (is_not_entrant()) {
+        // Remove the entry point so any invocation will fail but keep
+        // the address link around that so that existing activations can
+        // be invalidated.
+        InstalledCode::set_entryPoint(installed_code, 0);
+      }
     }
-    if (!is_alive()) {
-      // Break the link between nmethod and InstalledCode such that the nmethod
-      // can subsequently be flushed safely.  The link must be maintained while
-      // the method could have live activations since invalidateInstalledCode
-      // might want to invalidate all existing activations.
-      InstalledCode::set_address(installed_code, 0);
-      InstalledCode::set_entryPoint(installed_code, 0);
-    } else if (is_not_entrant()) {
-      // Remove the entry point so any invocation will fail but keep
-      // the address link around that so that existing activations can
-      // be invalidated.
-      InstalledCode::set_entryPoint(installed_code, 0);
-    }
+  }
+  if (!is_alive()) {
+    // Clear these out after the nmethod has been unregistered and any
+    // updates to the InstalledCode instance have been performed.
+    clear_jvmci_installed_code();
+    clear_speculation_log();
   }
 }
 
