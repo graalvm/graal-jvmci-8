@@ -89,7 +89,24 @@ suite = {
     "jdk.vm.ci.code" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
-      "dependencies" : ["jdk.vm.ci.meta"],
+      "dependencies" : [
+        "jdk.vm.ci.common",
+        "jdk.vm.ci.meta"
+      ],
+      "checkstyle" : "jdk.vm.ci.services",
+      "javaCompliance" : "1.8",
+      "workingSets" : "API,JVMCI",
+    },
+
+    "jdk.vm.ci.code.test" : {
+      "subDir" : "jvmci",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "mx:JUNIT",
+        "jdk.vm.ci.common",
+        "jdk.vm.ci.code",
+        "jdk.vm.ci.runtime",
+      ],
       "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
@@ -153,8 +170,23 @@ suite = {
       "sourceDirs" : ["src"],
       "dependencies" : [
         "jdk.vm.ci.services",
+        "jdk.vm.ci.runtime",
+      ],
+      "checkstyle" : "jdk.vm.ci.services",
+      "javaCompliance" : "1.8",
+      "workingSets" : "JVMCI",
+    },
+
+    "jdk.vm.ci.hotspot.test" : {
+      "subDir" : "jvmci",
+      "sourceDirs" : ["src"],
+      "dependencies" : [
+        "mx:JUNIT",
+        "jdk.vm.ci.services",
+        "jdk.vm.ci.hotspot",
         "jdk.vm.ci.common",
         "jdk.vm.ci.runtime",
+        "jdk.vm.ci.code.test",
       ],
       "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
