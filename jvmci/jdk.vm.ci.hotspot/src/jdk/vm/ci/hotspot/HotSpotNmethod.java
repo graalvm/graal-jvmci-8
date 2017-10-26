@@ -30,13 +30,10 @@ import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 
 /**
- * Implementation of {@link InstalledCode} for code installed as an nmethod. The nmethod stores a
- * weak reference to an instance of this class. This is necessary to keep the nmethod from being
- * unloaded while the associated {@link HotSpotNmethod} instance is alive.
- * <p>
- * Note that there is no (current) way for the reference from an nmethod to a {@link HotSpotNmethod}
- * instance to be anything but weak. This is due to the fact that HotSpot does not treat nmethods as
- * strong GC roots.
+ * Implementation of {@link InstalledCode} for code installed as an nmethod.
+ *
+ * When a {@link HotSpotNmethod} dies, it triggers unloading of the nmethod unless
+ * {@link #isDefault() == true}.
  */
 public class HotSpotNmethod extends HotSpotInstalledCode {
 
