@@ -523,8 +523,8 @@ JVMCIEnv::CodeInstallResult JVMCIEnv::register_method(
                                  frame_words, oop_map_set,
                                  handler_table, &implicit_tbl,
                                  compiler, comp_level,
-                                 JNIHandles::make_weak_global(installed_code()),
-                                 JNIHandles::make_weak_global(speculation_log()));
+                                 JNIHandles::make_weak_global(installed_code),
+                                 JNIHandles::make_weak_global(speculation_log));
 
       // Free codeBlobs
       //code_buffer->free_blob();
