@@ -456,7 +456,7 @@ final class CompilerToVM {
     /**
      * Sets flags on {@code method} indicating that it should never be inlined or compiled.
      */
-    native void setNotInlineableOrCompileable(HotSpotResolvedJavaMethodImpl method);
+    native void setNotInlinableOrCompilable(HotSpotResolvedJavaMethodImpl method);
 
     /**
      * Invalidates the profiling information for {@code method} and (re)initializes it such that
