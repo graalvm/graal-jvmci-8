@@ -59,7 +59,7 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
     /**
      * Sets flags on {@code method} indicating that it should never be inlined or compiled.
      */
-    void setNotInlineableOrCompileable();
+    void setNotInlinableOrCompilable();
 
     /**
      * Returns true if this method is one of the special methods that is ignored by security stack
