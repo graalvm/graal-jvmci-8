@@ -1,10 +1,8 @@
 {
     Linux:: {
         packages+: {
-            git : ">=1.8.3",
-            mercurial : ">=2.2",
-            "pip:astroid" : "==1.1.0",
-            "pip:pylint" : "==1.1.0",
+            git: ">=1.8.3",
+            mercurial: ">=2.2",
             make : ">=3.83",
             "gcc-build-essentials" : "==4.9.1"
         },
@@ -18,8 +16,6 @@
         packages+: {
             git: ">=1.8.3",
             mercurial: ">=2.2",
-            "pip:astroid" : "==1.1.0",
-            "pip:pylint" : "==1.1.0",
             make : ">=3.83",
             solarisstudio: "==12.3"
         },
@@ -31,18 +27,22 @@
     },
     Darwin:: {
         packages+: {
-            "pip:astroid" : "==1.1.0",
-            "pip:pylint" : "==1.1.0",
-            # Brew does not support versions
-            git : "",
-            mercurial : "",
             # No need to specify a "make" package as Mac OS X has make 3.81
             # available once Xcode has been installed.
         },
         environment+: {
             CI_OS: "darwin",
+            ac_cv_func_basename_r: "no",
+            ac_cv_func_clock_getres: "no",
+            ac_cv_func_clock_gettime: "no",
+            ac_cv_func_clock_settime: "no",
+            ac_cv_func_dirname_r: "no",
+            ac_cv_func_getentropy: "no",
+            ac_cv_func_mkostemp: "no",
+            ac_cv_func_mkostemps: "no",
+            MACOSX_DEPLOYMENT_TARGET: "10.11"
         },
-        capabilities+: ["darwin"],
+        capabilities+: ["darwin_sierra"],
         name+: "-darwin",
     },
 
@@ -85,6 +85,10 @@
     },
 
     Build:: {
+        packages+: {
+            "pip:astroid" : "==1.1.0",
+            "pip:pylint" : "==1.1.0",
+        },
         name: "gate",
         timelimit: "1:00:00",
         logs: ["*.log"],
