@@ -455,6 +455,8 @@ class Dependencies: public ResourceObj {
 
   void copy_to(nmethod* nm);
 
+  DepType validate_dependencies(CompileTask* task, bool counter_changed, char** failure_detail = NULL);
+
   void log_all_dependencies();
 
   void log_dependency(DepType dept, GrowableArray<ciBaseObject*>* args) {
@@ -620,6 +622,8 @@ class Dependencies: public ResourceObj {
 
     // Print the current dependency to tty.
     void print_dependency(Klass* witness = NULL, bool verbose = false, outputStream* st = tty);
+
+    char* dependency_as_string(Klass* witness = NULL);
   };
   friend class Dependencies::DepStream;
 
