@@ -40,7 +40,12 @@ public final class DebugInfo {
 
     private final BytecodePosition bytecodePosition;
     private ReferenceMap referenceMap;
-    @SuppressWarnings("unused") private final VirtualObject[] virtualObjectMapping;
+
+    public VirtualObject[] getVirtualObjectMapping() {
+        return virtualObjectMapping;
+    }
+
+    private final VirtualObject[] virtualObjectMapping;
     private RegisterSaveLayout calleeSaveInfo;
 
     /**
