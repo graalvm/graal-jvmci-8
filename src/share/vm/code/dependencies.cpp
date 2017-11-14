@@ -29,6 +29,7 @@
 #include "ci/ciMethod.hpp"
 #include "code/dependencies.hpp"
 #include "compiler/compileLog.hpp"
+#include "compiler/compileBroker.hpp"
 #include "oops/oop.inline.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "runtime/handles.hpp"
@@ -614,6 +615,79 @@ int Dependencies::dep_args(Dependencies::DepType dept) {
 
 void Dependencies::check_valid_dependency_type(DepType dept) {
   guarantee(FIRST_TYPE <= dept && dept < TYPE_LIMIT, err_msg("invalid dependency type: %d", (int) dept));
+}
+
+char* Dependencies::DepStream::dependency_as_string(Klass* witness) {
+  // Use a fixed size buffer to prevent the string stream from
+  // resizing in the context of an inner resource mark.
+  char* buffer = NEW_RESOURCE_ARRAY(char, O_BUFLEN);
+  stringStream st(buffer, O_BUFLEN);
+  print_dependency(witness, true, &st);
+  return st.as_string();
+}
+
+Dependencies::DepType Dependencies::validate_dependencies(CompileTask* task, bool counter_changed, char** failure_detail) {
+  // First, check non-klass dependencies as we might return early and
+  // not check klass dependencies if the system dictionary
+  // modification counter hasn't changed (see below).
+  for (Dependencies::DepStream deps(this); deps.next(); ) {
+    if (deps.is_klass_type())  continue;  // skip klass dependencies
+    Klass* witness = deps.check_dependency();
+    if (witness != NULL) {
+      if (failure_detail != NULL) {
+        *failure_detail = deps.dependency_as_string(witness);
+      }
+      return deps.type();
+    }
+  }
+
+  // Klass dependencies must be checked when the system dictionary
+  // changes.  If logging is enabled all violated dependences will be
+  // recorded in the log.  In debug mode check dependencies even if
+  // the system dictionary hasn't changed to verify that no invalid
+  // dependencies were inserted.  Any violated dependences in this
+  // case are dumped to the tty.
+  if (!counter_changed && !trueInDebug) {
+    return end_marker;
+  }
+
+  int klass_violations = 0;
+  DepType result = end_marker;
+  for (Dependencies::DepStream deps(this); deps.next(); ) {
+    if (!deps.is_klass_type())  continue;  // skip non-klass dependencies
+    Klass* witness = deps.check_dependency();
+    if (witness != NULL) {
+      if (klass_violations == 0) {
+        result = deps.type();
+        if (failure_detail != NULL) {
+          *failure_detail = deps.dependency_as_string(witness);
+        }
+      }
+      klass_violations++;
+      if (!counter_changed) {
+        // Dependence failed but counter didn't change.  Log a message
+        // describing what failed and allow the assert at the end to
+        // trigger.
+        deps.print_dependency(witness);
+      } else if (xtty == NULL) {
+        // If we're not logging then a single violation is sufficient,
+        // otherwise we want to log all the dependences which were
+        // violated.
+        break;
+      }
+    }
+  }
+
+  if (klass_violations != 0) {
+#ifdef ASSERT
+    if (task != NULL && !counter_changed && !PrintCompilation) {
+      // Print out the compile task that failed
+      task->print_line();
+    }
+#endif
+    assert(counter_changed, "failed dependencies, but counter didn't change");
+  }
+  return result;
 }
 
 // for the sake of the compiler log, print out current dependencies:
