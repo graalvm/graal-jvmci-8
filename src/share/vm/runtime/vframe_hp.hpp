@@ -51,12 +51,17 @@ class compiledVFrame: public javaVFrame {
     return (compiledVFrame*) vf;
   }
 
+  void update_deferred_value(BasicType type, int index, jvalue value);
+
  public:
   // Constructors
   compiledVFrame(const frame* fr, const RegisterMap* reg_map, JavaThread* thread, nmethod* nm);
 
   // Update a local in a compiled frame. Update happens when deopt occurs
   void update_local(BasicType type, int index, jvalue value);
+
+  // Update an expression stack value in a compiled frame. Update happens when deopt occurs
+  void update_stack(BasicType type, int index, jvalue value);
 
   // Returns the active nmethod
   nmethod*  code() const;
@@ -91,6 +96,8 @@ class compiledVFrame: public javaVFrame {
 
 class jvmtiDeferredLocalVariable;
 class jvmtiDeferredLocalVariableSet : public CHeapObj<mtCompiler> {
+  friend class compiledVFrame;
+
 private:
 
   Method* _method;
@@ -99,17 +106,22 @@ private:
   int _vframe_id;
   GrowableArray<jvmtiDeferredLocalVariable*>* _locals;
 
+  void                              update_value(StackValueCollection* locals, BasicType type, int index, jvalue value);
+
+  void                              set_value_at(int idx, BasicType typ, jvalue val);
+
  public:
   // JVM state
   Method*                           method()         const  { return _method; }
   int                               bci()            const  { return _bci; }
   intptr_t*                         id()             const  { return _id; }
   int                               vframe_id()      const  { return _vframe_id; }
-  GrowableArray<jvmtiDeferredLocalVariable*>* locals()         const  { return _locals; }
-  void                              set_local_at(int idx, BasicType typ, jvalue val);
+
+  void                              update_locals(StackValueCollection* locals);
+  void                              update_stack(StackValueCollection* locals);
 
   // Does the vframe match this jvmtiDeferredLocalVariableSet
-  bool                              matches(vframe* vf);
+  bool                              matches(const vframe* vf);
   // GC
   void                              oops_do(OopClosure* f);
 
