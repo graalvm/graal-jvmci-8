@@ -965,7 +965,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             return (superNeeds, superReason)
         newestOutput = self.newestOutput()
         for d in ['src', 'make', join('jvmci', 'jdk.vm.ci.hotspot', 'src_gen', 'hotspot')]:  # TODO should this be replaced by a dependency to the project?
-            for root, dirnames, files in os.walk(join(_suite.dir, d)):
+            for root, dirnames, files in os.walk(join(_suite.dir, d), followlinks=True):
                 # ignore src/share/tools
                 if root == join(_suite.dir, 'src', 'share'):
                     dirnames.remove('tools')
