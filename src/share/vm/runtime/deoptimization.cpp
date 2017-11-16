@@ -1369,6 +1369,7 @@ void Deoptimization::deoptimize(JavaThread* thread, frame fr, RegisterMap *map, 
 
 }
 
+#if INCLUDE_JVMCI
 address Deoptimization::deoptimize_for_missing_exception_handler(nmethod* nm) {
   // there is no exception handler for this pc => deoptimize
   nm->make_not_entrant();
@@ -1389,6 +1390,7 @@ address Deoptimization::deoptimize_for_missing_exception_handler(nmethod* nm) {
 
   return SharedRuntime::deopt_blob()->unpack_with_exception_in_tls();
 }
+#endif
 
 void Deoptimization::deoptimize_frame_internal(JavaThread* thread, intptr_t* id, DeoptReason reason) {
   assert(thread == Thread::current() || SafepointSynchronize::is_at_safepoint(),
