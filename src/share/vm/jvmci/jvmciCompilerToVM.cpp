@@ -1542,6 +1542,14 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
         }
       }
     }
+
+    GrowableArray<MonitorValue*>* scopeMonitors = cvf->scope()->monitors();
+    GrowableArray<MonitorInfo*>* monitors = cvf->monitors();
+    if (monitors != NULL) {
+      for (int i2 = 0; i2 < monitors->length(); i2++) {
+        cvf->update_monitor(i2, monitors->at(i2));
+      }
+    }
   }
 
   // all locals are materialized by now

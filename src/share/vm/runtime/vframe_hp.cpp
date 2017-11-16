@@ -56,12 +56,12 @@ StackValueCollection* compiledVFrame::locals() const {
   // There is one scv_list entry for every JVM stack state in use.
   int length = scv_list->length();
   StackValueCollection* result = new StackValueCollection(length);
-  for( int i = 0; i < length; i++ ) {
-    result->add( create_stack_value(scv_list->at(i)) );
+  for (int i = 0; i < length; i++) {
+    result->add(create_stack_value(scv_list->at(i)));
   }
 
-  // In rare instances set_locals may have occurred in which case
-  // there are local values that are not described by the ScopeValue anymore
+  // Replace the original values with any stores that have been
+  // performed through compiledVFrame::update_locals.
   GrowableArray<jvmtiDeferredLocalVariableSet*>* list = thread()->deferred_locals();
   if (list != NULL ) {
     // In real life this never happens or is typically a single element search
@@ -92,13 +92,20 @@ void compiledVFrame::update_stack(BasicType type, int index, jvalue value) {
   update_deferred_value(type, index + method()->max_locals(), value);
 }
 
+void compiledVFrame::update_monitor(int index, MonitorInfo* val) {
+  assert(index >= 0, "out of bounds");
+  jvalue value;
+  value.l = (jobject) val->owner();
+  update_deferred_value(T_OBJECT, index + method()->max_locals() + method()->max_stack(), value);
+}
+
 void compiledVFrame::update_deferred_value(BasicType type, int index, jvalue value) {
   assert(fr().is_deoptimized_frame(), "frame must be scheduled for deoptimization");
   GrowableArray<jvmtiDeferredLocalVariableSet*>* deferred = thread()->deferred_locals();
   jvmtiDeferredLocalVariableSet* locals = NULL;
   if (deferred != NULL ) {
     // See if this vframe has already had locals with deferred writes
-    for (int f = 0 ; f < deferred->length() ; f++ ) {
+    for (int f = 0; f < deferred->length(); f++ ) {
       if (deferred->at(f)->matches(this)) {
         locals = deferred->at(f);
         break;
@@ -130,11 +137,11 @@ StackValueCollection* compiledVFrame::expressions() const {
   int length = scv_list->length();
   StackValueCollection* result = new StackValueCollection(length);
   for (int i = 0; i < length; i++) {
-    result->add( create_stack_value(scv_list->at(i)) );
+    result->add(create_stack_value(scv_list->at(i)));
   }
 
-  // In rare instances set_locals may have occurred in which case
-  // there are local values that are not described by the ScopeValue anymore
+  // Replace the original values with any stores that have been
+  // performed through compiledVFrame::update_stack.
   GrowableArray<jvmtiDeferredLocalVariableSet*>* list = thread()->deferred_locals();
   if (list != NULL ) {
     // In real life this never happens or is typically a single element search
@@ -206,6 +213,20 @@ GrowableArray<MonitorInfo*>* compiledVFrame::monitors() const {
                                    mv->eliminated(), false));
     }
   }
+
+  // Replace the original values with any stores that have been
+  // performed through compiledVFrame::update_monitors.
+  GrowableArray<jvmtiDeferredLocalVariableSet*>* list = thread()->deferred_locals();
+  if (list != NULL ) {
+    // In real life this never happens or is typically a single element search
+    for (int i = 0; i < list->length(); i++) {
+      if (list->at(i)->matches(this)) {
+        list->at(i)->update_monitors(result);
+        break;
+      }
+    }
+  }
+
   return result;
 }
 
@@ -302,7 +323,7 @@ jvmtiDeferredLocalVariableSet::jvmtiDeferredLocalVariableSet(Method* method, int
 }
 
 jvmtiDeferredLocalVariableSet::~jvmtiDeferredLocalVariableSet() {
-  for (int i = 0; i < _locals->length() ; i++ ) {
+  for (int i = 0; i < _locals->length(); i++ ) {
     delete _locals->at(i);
   }
   // Free growableArray and c heap for elements
@@ -320,7 +341,7 @@ bool jvmtiDeferredLocalVariableSet::matches(const vframe* vf) {
 }
 
 void jvmtiDeferredLocalVariableSet::set_value_at(int idx, BasicType type, jvalue val) {
-  for (int i = 0 ; i < _locals->length(); i++) {
+  for (int i = 0; i < _locals->length(); i++) {
     if (_locals->at(i)->index() == idx) {
       assert(_locals->at(i)->type() == type, "Wrong type");
       _locals->at(i)->set_value(val);
@@ -380,8 +401,21 @@ void jvmtiDeferredLocalVariableSet::update_locals(StackValueCollection* locals) 
 void jvmtiDeferredLocalVariableSet::update_stack(StackValueCollection* expressions) {
   for (int l = 0; l < _locals->length(); l ++) {
     jvmtiDeferredLocalVariable* val = _locals->at(l);
-    if (val->index() >= method()->max_locals()) {
+    if (val->index() >= method()->max_locals() && val->index() < method()->max_locals() + method()->max_stack()) {
       update_value(expressions, val->type(), val->index() - method()->max_locals(), val->value());
+    }
+  }
+}
+
+
+void jvmtiDeferredLocalVariableSet::update_monitors(GrowableArray<MonitorInfo*>* monitors) {
+  for (int l = 0; l < _locals->length(); l ++) {
+    jvmtiDeferredLocalVariable* val = _locals->at(l);
+    if (val->index() >= method()->max_locals() + method()->max_stack()) {
+      int lock_index = val->index() - (method()->max_locals() + method()->max_stack());
+      MonitorInfo* info = monitors->at(lock_index);
+      MonitorInfo* new_info = new MonitorInfo((oopDesc*)val->value().l, info->lock(), info->eliminated(), info->owner_is_scalar_replaced());
+      monitors->at_put(lock_index, new_info);
     }
   }
 }
@@ -390,7 +424,7 @@ void jvmtiDeferredLocalVariableSet::update_stack(StackValueCollection* expressio
 void jvmtiDeferredLocalVariableSet::oops_do(OopClosure* f) {
   // The Method* is on the stack so a live activation keeps it alive
   // either by mirror in interpreter or code in compiled code.
-  for ( int i = 0; i < _locals->length(); i++ ) {
+  for (int i = 0; i < _locals->length(); i++) {
     if (_locals->at(i)->type() == T_OBJECT) {
       f->do_oop(_locals->at(i)->oop_addr());
     }

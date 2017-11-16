@@ -63,6 +63,9 @@ class compiledVFrame: public javaVFrame {
   // Update an expression stack value in a compiled frame. Update happens when deopt occurs
   void update_stack(BasicType type, int index, jvalue value);
 
+  // Update a lock value in a compiled frame. Update happens when deopt occurs
+  void update_monitor(int index, MonitorInfo* value);
+
   // Returns the active nmethod
   nmethod*  code() const;
 
@@ -119,6 +122,7 @@ private:
 
   void                              update_locals(StackValueCollection* locals);
   void                              update_stack(StackValueCollection* locals);
+  void                              update_monitors(GrowableArray<MonitorInfo*>* monitors);
 
   // Does the vframe match this jvmtiDeferredLocalVariableSet
   bool                              matches(const vframe* vf);
