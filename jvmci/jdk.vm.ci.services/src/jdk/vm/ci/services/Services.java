@@ -79,11 +79,27 @@ public final class Services {
 
     private static boolean jvmciEnabled = true;
 
+    /**
+     * When {@code -XX:-UseJVMCIClassLoader} is in use, JVMCI classes are loaded via the boot class
+     * loader. When {@code null} is the second argument to
+     * {@link ServiceLoader#load(Class, ClassLoader)}, service lookup will use the system class
+     * loader and thus find application classes which violates the API of {@link #load} and
+     * {@link #loadSingle}. To avoid this, a class loader that simply delegates to the boot class
+     * loader is used.
+     */
+    static class LazyBootClassPath {
+        static final ClassLoader bootClassPath = new ClassLoader(null) {
+        };
+    }
+
     private static <S> Iterable<S> load0(Class<S> service) {
         if (jvmciEnabled) {
             ClassLoader cl = null;
             try {
                 cl = getJVMCIClassLoader();
+                if (cl == null) {
+                    cl = LazyBootClassPath.bootClassPath;
+                }
                 return ServiceLoader.load(service, cl);
             } catch (UnsatisfiedLinkError e) {
                 jvmciEnabled = false;
