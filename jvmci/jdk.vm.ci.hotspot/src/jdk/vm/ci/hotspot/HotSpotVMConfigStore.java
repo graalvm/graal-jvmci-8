@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 
 import jdk.vm.ci.common.InitTimer;
+import jdk.vm.ci.common.JVMCIError;
 
 /**
  * Access to VM configuration data.
@@ -108,7 +109,9 @@ public final class HotSpotVMConfigStore {
         try (InitTimer t = timer("CompilerToVm readConfiguration")) {
             data = compilerToVm.readConfiguration();
         }
-        assert data.length == 5 : data.length;
+        if (data.length != 5) {
+            throw new JVMCIError("Expected data.length to be 5, not %d", data.length);
+        }
 
         // @formatter:off
         VMField[] vmFieldsInfo    = (VMField[]) data[0];
@@ -144,5 +147,16 @@ public final class HotSpotVMConfigStore {
                 vmFlags.put(vmFlag.name, vmFlag);
             }
         }
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s[%d fields, %d constants, %d addresses, %d flags, %d intrinsics]",
+                        getClass().getSimpleName(),
+                        vmFields.size(),
+                        vmConstants.size(),
+                        vmAddresses.size(),
+                        vmFlags.size(),
+                        vmIntrinsics.size());
     }
 }
