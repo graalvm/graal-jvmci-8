@@ -50,6 +50,7 @@ public class HotSpotVMConfigAccess {
             if (notPresent != null) {
                 return notPresent;
             }
+            store.printConfig();
             throw new JVMCIError("expected VM symbol not found in " + store + ": " + name);
         }
         return entry;
@@ -81,6 +82,7 @@ public class HotSpotVMConfigAccess {
             if (notPresent != null) {
                 return notPresent;
             }
+            store.printConfig();
             throw new JVMCIError("expected VM constant not found in " + store + ": " + name);
         }
         return type.cast(convertValue(name, type, c, null));
@@ -241,6 +243,7 @@ public class HotSpotVMConfigAccess {
             if (!required) {
                 return null;
             }
+            store.printConfig();
             throw new JVMCIError("expected VM field not found in " + store + ": " + name);
         }
 
@@ -285,6 +288,7 @@ public class HotSpotVMConfigAccess {
                 if (notPresent != null) {
                     return notPresent;
                 }
+                store.printConfig();
                 throw new JVMCIError("expected VM flag not found in " + store + ": " + name);
             } else {
                 cppType = null;

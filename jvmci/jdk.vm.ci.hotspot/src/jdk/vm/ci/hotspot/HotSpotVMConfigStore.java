@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import jdk.vm.ci.common.InitTimer;
 import jdk.vm.ci.common.JVMCIError;
@@ -159,4 +160,41 @@ public final class HotSpotVMConfigStore {
                         vmFlags.size(),
                         vmIntrinsics.size());
     }
+
+    void printConfig() {
+        CompilerToVM vm = compilerToVm;
+        TreeMap<String, VMField> fields = new TreeMap<>(getFields());
+        for (VMField field : fields.values()) {
+            if (!field.isStatic()) {
+                printConfigLine(vm, "[vmconfig:instance field] %s %s {offset=%d[0x%x]}%n", field.type, field.name, field.offset, field.offset);
+            } else {
+                String value = field.value == null ? "null" : field.value instanceof Boolean ? field.value.toString() : String.format("%d[0x%x]", field.value, field.value);
+                printConfigLine(vm, "[vmconfig:static field] %s %s = %s {address=0x%x}%n", field.type, field.name, value, field.address);
+            }
+        }
+        TreeMap<String, VMFlag> flags = new TreeMap<>(getFlags());
+        for (VMFlag flag : flags.values()) {
+            printConfigLine(vm, "[vmconfig:flag] %s %s = %s%n", flag.type, flag.name, flag.value);
+        }
+        TreeMap<String, Long> addresses = new TreeMap<>(getAddresses());
+        for (Map.Entry<String, Long> e : addresses.entrySet()) {
+            printConfigLine(vm, "[vmconfig:address] %s = %d[0x%x]%n", e.getKey(), e.getValue(), e.getValue());
+        }
+        TreeMap<String, Long> constants = new TreeMap<>(getConstants());
+        for (Map.Entry<String, Long> e : constants.entrySet()) {
+            printConfigLine(vm, "[vmconfig:constant] %s = %d[0x%x]%n", e.getKey(), e.getValue(), e.getValue());
+        }
+        for (VMIntrinsicMethod e : getIntrinsics()) {
+            printConfigLine(vm, "[vmconfig:intrinsic] %d = %s.%s %s%n", e.id, e.declaringClass, e.name, e.descriptor);
+        }
+    }
+
+    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "no localization here please!")
+    private static void printConfigLine(CompilerToVM vm, String format, Object... args) {
+        String line = String.format(format, args);
+        byte[] lineBytes = line.getBytes();
+        vm.writeDebugOutput(lineBytes, 0, lineBytes.length);
+        vm.flushDebugOutput();
+    }
+
 }
