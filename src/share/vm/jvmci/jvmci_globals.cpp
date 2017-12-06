@@ -201,12 +201,6 @@ void JVMCIGlobals::set_jvmci_specific_flags() {
     if (FLAG_IS_DEFAULT(InitialCodeCacheSize)) {
       FLAG_SET_DEFAULT(InitialCodeCacheSize, 16*M);
     }
-    if (FLAG_IS_DEFAULT(MetaspaceSize)) {
-      FLAG_SET_DEFAULT(MetaspaceSize, 12*M);
-    }
-    if (FLAG_IS_DEFAULT(NewSizeThreadIncrease)) {
-      FLAG_SET_DEFAULT(NewSizeThreadIncrease, 4*K);
-    }
   }
   if (!ScavengeRootsInCode) {
     warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
