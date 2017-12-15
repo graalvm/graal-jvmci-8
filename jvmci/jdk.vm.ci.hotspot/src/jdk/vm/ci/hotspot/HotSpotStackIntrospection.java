@@ -37,14 +37,6 @@ public class HotSpotStackIntrospection implements StackIntrospection {
     @Override
     public <T> T iterateFrames(ResolvedJavaMethod[] initialMethods, ResolvedJavaMethod[] matchingMethods, int initialSkip, InspectedFrameVisitor<T> visitor) {
         CompilerToVM compilerToVM = runtime.getCompilerToVM();
-        HotSpotStackFrameReference current = compilerToVM.getNextStackFrame(null, initialMethods, initialSkip);
-        while (current != null) {
-            T result = visitor.visitFrame(current);
-            if (result != null) {
-                return result;
-            }
-            current = compilerToVM.getNextStackFrame(current, matchingMethods, 0);
-        }
-        return null;
+        return compilerToVM.iterateFrames(initialMethods, matchingMethods, initialSkip, visitor);
     }
 }
