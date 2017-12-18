@@ -1366,7 +1366,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
           if (initialSkip > 0) {
             initialSkip --;
           } else {
-            locals = ivf->locals();
+            locals = ivf->locals_no_oop_map_cache();
             HotSpotStackFrameReference::set_bci(frame_reference, ivf->bci());
             oop method = CompilerToVM::get_jvmci_method(ivf->method(), CHECK_NULL);
             HotSpotStackFrameReference::set_method(frame_reference, method);

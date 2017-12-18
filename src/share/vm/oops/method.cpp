@@ -218,7 +218,7 @@ void Method::mask_for(int bci, InterpreterOopMap* mask) {
 
   Thread* myThread    = Thread::current();
   methodHandle h_this(myThread, this);
-#if defined(ASSERT) && !INCLUDE_JVMCI
+#ifdef ASSERT
   bool has_capability = myThread->is_VM_thread() ||
                         myThread->is_ConcurrentGC_thread() ||
                         myThread->is_GC_task_thread();
