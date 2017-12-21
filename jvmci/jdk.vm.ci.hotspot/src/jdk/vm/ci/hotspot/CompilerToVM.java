@@ -136,8 +136,9 @@ final class CompilerToVM {
     /**
      * Gets the implementor for the interface class {@code type}.
      *
-     * @return the implementor if there is a single implementor, 0 if there is no implementor, or
-     *         {@code type} itself if there is more than one implementor
+     * @return the implementor if there is a single implementor, {@code null} if there is no
+     *         implementor, or {@code type} itself if there is more than one implementor
+     * @throws IllegalArgumentException if type is not an interface type
      */
     native HotSpotResolvedObjectTypeImpl getImplementor(HotSpotResolvedObjectTypeImpl type);
 
@@ -361,7 +362,7 @@ final class CompilerToVM {
     /**
      * Gets the static initializer of {@code type}.
      *
-     * @return 0 if {@code type} has no static initializer
+     * @return {@code null} if {@code type} has no static initializer
      */
     native HotSpotResolvedJavaMethodImpl getClassInitializer(HotSpotResolvedObjectTypeImpl type);
 
