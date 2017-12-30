@@ -726,7 +726,7 @@ C2V_VMENTRY(jobject, getImplementor, (JNIEnv *, jobject, jobject jvmci_type))
     THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
         err_msg("Expected interface type, got %s", klass->external_name()));
   }
-  InstanceKlass* iklass = (InstanceKlass*) CompilerToVM::asKlass(jvmci_type);
+  InstanceKlass* iklass = InstanceKlass::cast(klass);
   oop implementor = CompilerToVM::get_jvmci_type(iklass->implementor(), CHECK_NULL);
   return JNIHandles::make_local(THREAD, implementor);
 C2V_END
@@ -980,10 +980,10 @@ C2V_END
 
 C2V_VMENTRY(jobject, getClassInitializer, (JNIEnv *, jobject, jobject jvmci_type))
   Klass* klass = CompilerToVM::asKlass(jvmci_type);
-  if (klass->oop_is_array()) {
+  if (!klass->oop_is_instance()) {
     return NULL;
   }
-  InstanceKlass* iklass = (InstanceKlass*) klass;
+  InstanceKlass* iklass = InstanceKlass::cast(klass);
   oop result = CompilerToVM::get_jvmci_method(iklass->class_initializer(), CHECK_NULL);
   return JNIHandles::make_local(THREAD, result);
 C2V_END
