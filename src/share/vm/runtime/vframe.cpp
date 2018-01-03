@@ -351,6 +351,14 @@ StackValueCollection* interpretedVFrame::expressions() const {
   return stack_data(true);
 }
 
+StackValueCollection* interpretedVFrame::locals_no_oop_map_cache() const {
+  return stack_data(false, true);
+}
+
+StackValueCollection* interpretedVFrame::expressions_no_oop_map_cache() const {
+  return stack_data(true, true);
+}
+
 /*
  * Worker routine for fetching references and/or values
  * for a particular bci in the interpretedVFrame.
@@ -362,11 +370,11 @@ StackValueCollection* interpretedVFrame::expressions() const {
                        (false == locals / true == expressions)
  *
  */
-StackValueCollection* interpretedVFrame::stack_data(bool expressions) const {
+StackValueCollection* interpretedVFrame::stack_data(bool expressions, bool no_oop_map_cache) const {
 
   InterpreterOopMap oop_mask;
   // oopmap for current bci
-  if ((TraceDeoptimization && Verbose) JVMCI_ONLY( || PrintDeoptimizationDetails)) {
+  if (no_oop_map_cache || (TraceDeoptimization && Verbose) JVMCI_ONLY( || PrintDeoptimizationDetails)) {
     methodHandle m_h(Thread::current(), method());
     OopMapCache::compute_one_oop_map(m_h, bci(), &oop_mask);
   } else {

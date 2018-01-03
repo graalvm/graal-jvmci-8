@@ -164,6 +164,9 @@ class interpretedVFrame: public javaVFrame {
   StackValueCollection*        expressions()    const;
   GrowableArray<MonitorInfo*>* monitors()       const;
 
+  StackValueCollection*        locals_no_oop_map_cache()      const;
+  StackValueCollection*        expressions_no_oop_map_cache() const;
+
   void set_locals(StackValueCollection* values) const;
 
   // Test operation
@@ -186,7 +189,7 @@ class interpretedVFrame: public javaVFrame {
  private:
   static const int bcp_offset;
   intptr_t* locals_addr_at(int offset) const;
-  StackValueCollection* stack_data(bool expressions) const;
+  StackValueCollection* stack_data(bool expressions, bool no_oop_map_cache = false) const;
   // returns where the parameters starts relative to the frame pointer
   int start_of_parameters() const;
 
