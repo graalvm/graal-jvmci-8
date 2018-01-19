@@ -1286,20 +1286,6 @@ bool matches(jobjectArray methods, Method* method) {
   return false;
 }
 
-void call_interface(JavaValue* result, KlassHandle spec_klass, Symbol* name, Symbol* signature, JavaCallArguments* args, TRAPS) {
-  CallInfo callinfo;
-  Handle receiver = args->receiver();
-  KlassHandle recvrKlass(THREAD, receiver.is_null() ? (Klass*)NULL : receiver->klass());
-  LinkResolver::resolve_interface_call(
-          callinfo, receiver, recvrKlass, spec_klass, name, signature,
-          KlassHandle(), false, true, CHECK);
-  methodHandle method = callinfo.selected_method();
-  assert(method.not_null(), "should have thrown exception");
-
-  // Invoke the method
-  JavaCalls::call(result, method, args, CHECK);
-}
-
 C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray initial_methods, jobjectArray match_methods, jint initialSkip, jobject visitor))
   ResourceMark rm;
 
@@ -1312,6 +1298,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
   StackFrameStream fst(thread);
 
   jobjectArray methods = initial_methods;
+  methodHandle visitor_method = NULL;
 
   int frame_number = 0;
   vframe* vf = vframe::new_vframe(fst.current(), fst.register_map(), thread);
@@ -1403,8 +1390,19 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
 
         JavaValue result(T_OBJECT);
         JavaCallArguments args(JNIHandles::resolve_non_null(visitor));
+        if (visitor_method.is_null()) {
+          CallInfo callinfo;
+          Handle receiver = args.receiver();
+          KlassHandle recvrKlass(THREAD, receiver.is_null() ? (Klass*)NULL : receiver->klass());
+          LinkResolver::resolve_interface_call(
+                  callinfo, receiver, recvrKlass, SystemDictionary::InspectedFrameVisitor_klass(), vmSymbols::visitFrame_name(), vmSymbols::visitFrame_signature(),
+                  KlassHandle(), false, true, CHECK_NULL);
+          visitor_method = callinfo.selected_method();
+          assert(visitor_method.not_null(), "should have thrown exception");
+        }
+
         args.push_oop(frame_reference);
-        call_interface(&result, SystemDictionary::InspectedFrameVisitor_klass(), vmSymbols::visitFrame_name(), vmSymbols::visitFrame_signature(), &args, CHECK_NULL);
+        JavaCalls::call(&result, visitor_method, &args, CHECK_NULL);
         if (result.get_jobject() != NULL) {
           return JNIHandles::make_local(thread, (oop) result.get_jobject());
         }
