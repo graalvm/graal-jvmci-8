@@ -1279,7 +1279,8 @@ bool matches(jobjectArray methods, Method* method) {
 
   for (int i = 0; i < methods_oop->length(); i++) {
     oop resolved = methods_oop->obj_at(i);
-    if (resolved->is_a(HotSpotResolvedJavaMethodImpl::klass()) && CompilerToVM::asMethod(resolved) == method) {
+    assert(resolved->is_a(HotSpotResolvedJavaMethodImpl::klass()), "only HotSpotResolvedJavaMethodImpl are supported");
+    if (CompilerToVM::asMethod(resolved) == method) {
       return true;
     }
   }
