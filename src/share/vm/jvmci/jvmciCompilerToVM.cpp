@@ -1274,13 +1274,26 @@ C2V_VMENTRY(jobject, getSymbol, (JNIEnv*, jobject, jlong symbol))
   return JNIHandles::make_local(THREAD, sym());
 C2V_END
 
-bool matches(jobjectArray methods, Method* method) {
-  objArrayOop methods_oop = (objArrayOop) JNIHandles::resolve(methods);
-
-  for (int i = 0; i < methods_oop->length(); i++) {
-    oop resolved = methods_oop->obj_at(i);
-    assert(resolved->is_a(HotSpotResolvedJavaMethodImpl::klass()), "only HotSpotResolvedJavaMethodImpl are supported");
-    if (CompilerToVM::asMethod(resolved) == method) {
+bool matches(jobjectArray methods, Method* method, GrowableArray<Method*>** resolved_methods_ref) {
+  GrowableArray<Method*>* resolved_methods = *resolved_methods_ref;
+  if (resolved_methods == NULL) {
+    objArrayOop methods_oop = (objArrayOop) JNIHandles::resolve(methods);
+    resolved_methods = new GrowableArray<Method*>(methods_oop->length());
+    for (int i = 0; i < methods_oop->length(); i++) {
+      oop resolved = methods_oop->obj_at(i);
+      assert(HotSpotResolvedJavaMethodImpl::klass()->is_leaf_class(), "must be leaf to perform direct comparison");
+      Method* resolved_method = NULL;
+      if (resolved->klass() == HotSpotResolvedJavaMethodImpl::klass()) {
+        resolved_method = CompilerToVM::asMethod(resolved);
+      }
+      resolved_methods->append(resolved_method);
+    }
+    *resolved_methods_ref = resolved_methods;
+  }
+  assert(method != NULL, "method should not be NULL");
+  for (int i = 0; i < resolved_methods->length(); i++) {
+    Method* m = resolved_methods->at(i);
+    if (m == method) {
       return true;
     }
   }
@@ -1300,6 +1313,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
 
   jobjectArray methods = initial_methods;
   methodHandle visitor_method = NULL;
+  GrowableArray<Method*>* resolved_methods = NULL;
 
   int frame_number = 0;
   vframe* vf = vframe::new_vframe(fst.current(), fst.register_map(), thread);
@@ -1312,7 +1326,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
       if (vf->is_compiled_frame()) {
         // compiled method frame
         compiledVFrame* cvf = compiledVFrame::cast(vf);
-        if (methods == NULL || matches(methods, cvf->method())) {
+        if (methods == NULL || matches(methods, cvf->method(), &resolved_methods)) {
           if (initialSkip > 0) {
             initialSkip --;
           } else {
@@ -1360,7 +1374,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
       } else if (vf->is_interpreted_frame()) {
         // interpreted method frame
         interpretedVFrame* ivf = interpretedVFrame::cast(vf);
-        if (methods == NULL || matches(methods, ivf->method())) {
+        if (methods == NULL || matches(methods, ivf->method(), &resolved_methods)) {
           if (initialSkip > 0) {
             initialSkip --;
           } else {
@@ -1411,7 +1425,12 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
         if (result.get_jobject() != NULL) {
           return JNIHandles::make_local(thread, (oop) result.get_jobject());
         }
-        methods = match_methods;
+        if (methods == initial_methods) {
+          methods = match_methods;
+          if (resolved_methods != NULL && JNIHandles::resolve(match_methods) != JNIHandles::resolve(initial_methods)) {
+            resolved_methods = NULL;
+          }
+        }
         assert(initialSkip == 0, "There should be no match before initialSkip == 0");
         if (HotSpotStackFrameReference::objectsMaterialized(frame_reference) == JNI_TRUE) {
           // the frame has been deoptimized, we need to re-synchronize the frame and vframe
