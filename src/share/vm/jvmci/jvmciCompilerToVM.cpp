@@ -1293,6 +1293,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
   if (!thread->has_last_Java_frame()) {
     return NULL;
   }
+  HotSpotStackFrameReference::klass()->initialize(CHECK_NULL);
   Handle frame_reference = Handle();
 
   StackFrameStream fst(thread);
@@ -1316,7 +1317,6 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
             initialSkip --;
           } else {
             frame_reference = HotSpotStackFrameReference::klass()->allocate_instance(CHECK_NULL);
-            HotSpotStackFrameReference::klass()->initialize(CHECK_NULL);
             ScopeDesc* scope = cvf->scope();
             // native wrappers do not have a scope
             if (scope != NULL && scope->objects() != NULL) {
@@ -1365,7 +1365,6 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
             initialSkip --;
           } else {
             frame_reference = HotSpotStackFrameReference::klass()->allocate_instance(CHECK_NULL);
-            HotSpotStackFrameReference::klass()->initialize(CHECK_NULL);
             locals = ivf->locals_no_oop_map_cache();
             HotSpotStackFrameReference::set_bci(frame_reference, ivf->bci());
             oop method = CompilerToVM::get_jvmci_method(ivf->method(), CHECK_NULL);
