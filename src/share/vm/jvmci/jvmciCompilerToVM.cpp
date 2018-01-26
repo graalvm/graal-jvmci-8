@@ -1274,30 +1274,30 @@ C2V_VMENTRY(jobject, getSymbol, (JNIEnv*, jobject, jlong symbol))
   return JNIHandles::make_local(THREAD, sym());
 C2V_END
 
-bool matches(jobjectArray methods, Method* method) {
-  objArrayOop methods_oop = (objArrayOop) JNIHandles::resolve(methods);
-
-  for (int i = 0; i < methods_oop->length(); i++) {
-    oop resolved = methods_oop->obj_at(i);
-    if (resolved->is_a(HotSpotResolvedJavaMethodImpl::klass()) && CompilerToVM::asMethod(resolved) == method) {
+bool matches(jobjectArray methods, Method* method, GrowableArray<Method*>** resolved_methods_ref) {
+  GrowableArray<Method*>* resolved_methods = *resolved_methods_ref;
+  if (resolved_methods == NULL) {
+    objArrayOop methods_oop = (objArrayOop) JNIHandles::resolve(methods);
+    resolved_methods = new GrowableArray<Method*>(methods_oop->length());
+    for (int i = 0; i < methods_oop->length(); i++) {
+      oop resolved = methods_oop->obj_at(i);
+      assert(HotSpotResolvedJavaMethodImpl::klass()->is_leaf_class(), "must be leaf to perform direct comparison");
+      Method* resolved_method = NULL;
+      if (resolved->klass() == HotSpotResolvedJavaMethodImpl::klass()) {
+        resolved_method = CompilerToVM::asMethod(resolved);
+      }
+      resolved_methods->append(resolved_method);
+    }
+    *resolved_methods_ref = resolved_methods;
+  }
+  assert(method != NULL, "method should not be NULL");
+  for (int i = 0; i < resolved_methods->length(); i++) {
+    Method* m = resolved_methods->at(i);
+    if (m == method) {
       return true;
     }
   }
   return false;
-}
-
-void call_interface(JavaValue* result, KlassHandle spec_klass, Symbol* name, Symbol* signature, JavaCallArguments* args, TRAPS) {
-  CallInfo callinfo;
-  Handle receiver = args->receiver();
-  KlassHandle recvrKlass(THREAD, receiver.is_null() ? (Klass*)NULL : receiver->klass());
-  LinkResolver::resolve_interface_call(
-          callinfo, receiver, recvrKlass, spec_klass, name, signature,
-          KlassHandle(), false, true, CHECK);
-  methodHandle method = callinfo.selected_method();
-  assert(method.not_null(), "should have thrown exception");
-
-  // Invoke the method
-  JavaCalls::call(result, method, args, CHECK);
 }
 
 C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray initial_methods, jobjectArray match_methods, jint initialSkip, jobject visitor))
@@ -1306,12 +1306,14 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
   if (!thread->has_last_Java_frame()) {
     return NULL;
   }
-  Handle frame_reference = HotSpotStackFrameReference::klass()->allocate_instance(CHECK_NULL);
   HotSpotStackFrameReference::klass()->initialize(CHECK_NULL);
+  Handle frame_reference = Handle();
 
   StackFrameStream fst(thread);
 
   jobjectArray methods = initial_methods;
+  methodHandle visitor_method = NULL;
+  GrowableArray<Method*>* resolved_methods = NULL;
 
   int frame_number = 0;
   vframe* vf = vframe::new_vframe(fst.current(), fst.register_map(), thread);
@@ -1324,10 +1326,11 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
       if (vf->is_compiled_frame()) {
         // compiled method frame
         compiledVFrame* cvf = compiledVFrame::cast(vf);
-        if (methods == NULL || matches(methods, cvf->method())) {
+        if (methods == NULL || matches(methods, cvf->method(), &resolved_methods)) {
           if (initialSkip > 0) {
             initialSkip --;
           } else {
+            frame_reference = HotSpotStackFrameReference::klass()->allocate_instance(CHECK_NULL);
             ScopeDesc* scope = cvf->scope();
             // native wrappers do not have a scope
             if (scope != NULL && scope->objects() != NULL) {
@@ -1371,10 +1374,11 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
       } else if (vf->is_interpreted_frame()) {
         // interpreted method frame
         interpretedVFrame* ivf = interpretedVFrame::cast(vf);
-        if (methods == NULL || matches(methods, ivf->method())) {
+        if (methods == NULL || matches(methods, ivf->method(), &resolved_methods)) {
           if (initialSkip > 0) {
             initialSkip --;
           } else {
+            frame_reference = HotSpotStackFrameReference::klass()->allocate_instance(CHECK_NULL);
             locals = ivf->locals_no_oop_map_cache();
             HotSpotStackFrameReference::set_bci(frame_reference, ivf->bci());
             oop method = CompilerToVM::get_jvmci_method(ivf->method(), CHECK_NULL);
@@ -1383,6 +1387,8 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
           }
         }
       }
+
+      assert((locals == NULL) == (frame_reference.is_null()), "should be synchronized");
 
       // locals != NULL means that we found a matching frame and result is already partially initialized
       if (locals != NULL) {
@@ -1403,12 +1409,28 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
 
         JavaValue result(T_OBJECT);
         JavaCallArguments args(JNIHandles::resolve_non_null(visitor));
+        if (visitor_method.is_null()) {
+          CallInfo callinfo;
+          Handle receiver = args.receiver();
+          KlassHandle recvrKlass(THREAD, receiver.is_null() ? (Klass*)NULL : receiver->klass());
+          LinkResolver::resolve_interface_call(
+                  callinfo, receiver, recvrKlass, SystemDictionary::InspectedFrameVisitor_klass(), vmSymbols::visitFrame_name(), vmSymbols::visitFrame_signature(),
+                  KlassHandle(), false, true, CHECK_NULL);
+          visitor_method = callinfo.selected_method();
+          assert(visitor_method.not_null(), "should have thrown exception");
+        }
+
         args.push_oop(frame_reference);
-        call_interface(&result, SystemDictionary::InspectedFrameVisitor_klass(), vmSymbols::visitFrame_name(), vmSymbols::visitFrame_signature(), &args, CHECK_NULL);
+        JavaCalls::call(&result, visitor_method, &args, CHECK_NULL);
         if (result.get_jobject() != NULL) {
           return JNIHandles::make_local(thread, (oop) result.get_jobject());
         }
-        methods = match_methods;
+        if (methods == initial_methods) {
+          methods = match_methods;
+          if (resolved_methods != NULL && JNIHandles::resolve(match_methods) != JNIHandles::resolve(initial_methods)) {
+            resolved_methods = NULL;
+          }
+        }
         assert(initialSkip == 0, "There should be no match before initialSkip == 0");
         if (HotSpotStackFrameReference::objectsMaterialized(frame_reference) == JNI_TRUE) {
           // the frame has been deoptimized, we need to re-synchronize the frame and vframe
@@ -1432,8 +1454,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
             assert(vf->is_compiled_frame(), "Wrong frame type");
           }
         }
-        frame_reference = HotSpotStackFrameReference::klass()->allocate_instance(CHECK_NULL);
-        HotSpotStackFrameReference::klass()->initialize(CHECK_NULL);
+        frame_reference = Handle();
       }
 
       if (vf->is_top()) {
