@@ -44,16 +44,20 @@ public interface SpeculationLog {
     void collectFailedSpeculations();
 
     /**
-     * If this method returns true, the compiler is allowed to {@link #speculate} with the given
-     * reason.
+     * Determines if the compiler is allowed to {@link #speculate} with the given reason.
      */
     boolean maySpeculate(SpeculationReason reason);
 
     /**
-     * Registers a speculation that was performed by the compiler.
+     * Registers a speculation performed by the compiler. The compiler must guard every call to this
+     * method for a specific reason with a call to {@link #maySpeculate(SpeculationReason)}.
      *
-     * @return A compiler constant encapsulating the provided reason. It is usually passed as an
+     * @param reason an object representing the reason for the speculation
+     * @return a compiler constant encapsulating the provided reason. It is usually passed as an
      *         argument to the deoptimization function.
+     * @throws IllegalArgumentException if {@code reason} cannot be speculated on (i.e., a call to
+     *             {@link #maySpeculate(SpeculationReason)} with {@code reason} returns
+     *             {@code false}
      */
     JavaConstant speculate(SpeculationReason reason);
 
