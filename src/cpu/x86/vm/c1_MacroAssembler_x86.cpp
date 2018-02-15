@@ -45,12 +45,16 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
 
   verify_oop(obj);
 
+  if (PrintBiasedLockingStatistics) {
+    atomic_incl(ExternalAddress((address)BiasedLocking::c1_counters()->total_entry_count_addr()), disp_hdr);
+  }
+
   // save object being locked into the BasicObjectLock
   movptr(Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()), obj);
 
   if (UseBiasedLocking) {
     assert(scratch != noreg, "should have scratch register at this point");
-    null_check_offset = biased_locking_enter(disp_hdr, obj, hdr, scratch, false, done, &slow_case);
+    null_check_offset = biased_locking_enter(disp_hdr, obj, hdr, scratch, false, done, &slow_case, BiasedLocking::c1_counters());
   } else {
     null_check_offset = offset();
   }
@@ -69,7 +73,7 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   // if the object header was the same, we're done
   if (PrintBiasedLockingStatistics) {
     cond_inc32(Assembler::equal,
-               ExternalAddress((address)BiasedLocking::fast_path_entry_count_addr()));
+               ExternalAddress((address)BiasedLocking::c1_counters()->fast_path_entry_count_addr()));
   }
   jcc(Assembler::equal, done);
   // if the object header was not the same, it is now in the hdr register
@@ -90,6 +94,10 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   // for recursive locking, the result is zero => save it in the displaced header
   // location (NULL in the displaced hdr location indicates recursive locking)
   movptr(Address(disp_hdr, 0), hdr);
+  if (PrintBiasedLockingStatistics) {
+    cond_inc32(Assembler::zero,
+               ExternalAddress((address)BiasedLocking::c1_counters()->fast_path_entry_count_addr()));
+  }
   // otherwise we don't care about the result and handle locking via runtime call
   jcc(Assembler::notZero, slow_case);
   // done

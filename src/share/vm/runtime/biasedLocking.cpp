@@ -33,7 +33,11 @@
 #include "runtime/vm_operations.hpp"
 
 static bool _biased_locking_enabled = false;
-BiasedLockingCounters BiasedLocking::_counters;
+BiasedLockingCounters BiasedLocking::_c1_counters;
+BiasedLockingCounters BiasedLocking::_opto_counters;
+BiasedLockingCounters BiasedLocking::_jvmci_counters;
+BiasedLockingCounters BiasedLocking::_interpreter_counters;
+BiasedLockingCounters BiasedLocking::_native_warpper_counters;
 
 static GrowableArray<Handle>*  _preserved_oop_stack  = NULL;
 static GrowableArray<markOop>* _preserved_mark_stack = NULL;
@@ -741,16 +745,6 @@ void BiasedLocking::restore_marks() {
   _preserved_mark_stack = NULL;
 }
 
-
-int* BiasedLocking::total_entry_count_addr()                   { return _counters.total_entry_count_addr(); }
-int* BiasedLocking::biased_lock_entry_count_addr()             { return _counters.biased_lock_entry_count_addr(); }
-int* BiasedLocking::anonymously_biased_lock_entry_count_addr() { return _counters.anonymously_biased_lock_entry_count_addr(); }
-int* BiasedLocking::rebiased_lock_entry_count_addr()           { return _counters.rebiased_lock_entry_count_addr(); }
-int* BiasedLocking::revoked_lock_entry_count_addr()            { return _counters.revoked_lock_entry_count_addr(); }
-int* BiasedLocking::fast_path_entry_count_addr()               { return _counters.fast_path_entry_count_addr(); }
-int* BiasedLocking::slow_path_entry_count_addr()               { return _counters.slow_path_entry_count_addr(); }
-
-
 // BiasedLockingCounters
 
 int BiasedLockingCounters::slow_path_entry_count() {
@@ -764,6 +758,16 @@ int BiasedLockingCounters::slow_path_entry_count() {
   return _total_entry_count - sum;
 }
 
+void BiasedLockingCounters::add(BiasedLockingCounters* other) {
+  this->_total_entry_count += other->_total_entry_count;
+  this->_biased_lock_entry_count += other->_biased_lock_entry_count;
+  this->_anonymously_biased_lock_entry_count += other->_anonymously_biased_lock_entry_count;
+  this->_rebiased_lock_entry_count += other->_rebiased_lock_entry_count;
+  this->_revoked_lock_entry_count += other->_revoked_lock_entry_count;
+  this->_fast_path_entry_count += other->_fast_path_entry_count;
+  this->_slow_path_entry_count += other->_slow_path_entry_count;
+}
+
 void BiasedLockingCounters::print_on(outputStream* st) {
   tty->print_cr("# total entries: %d", _total_entry_count);
   tty->print_cr("# biased lock entries: %d", _biased_lock_entry_count);
@@ -771,5 +775,6 @@ void BiasedLockingCounters::print_on(outputStream* st) {
   tty->print_cr("# rebiased lock entries: %d", _rebiased_lock_entry_count);
   tty->print_cr("# revoked lock entries: %d", _revoked_lock_entry_count);
   tty->print_cr("# fast path lock entries: %d", _fast_path_entry_count);
+  tty->print_cr("# raw slow path lock entries: %d", _slow_path_entry_count);
   tty->print_cr("# slow path lock entries: %d", slow_path_entry_count());
 }

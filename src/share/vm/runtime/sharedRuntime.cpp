@@ -1920,7 +1920,8 @@ JRT_ENTRY_NO_ASYNC(void, SharedRuntime::complete_monitor_locking_C(oopDesc* _obj
   _monitor_enter_ctr++;             // monitor enter slow
 #endif
   if (PrintBiasedLockingStatistics) {
-    Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
+    // this might come from opto or native wrappers
+    Atomic::inc(BiasedLocking::opto_counters()->slow_path_entry_count_addr());
   }
   Handle h_obj(THREAD, obj);
   if (UseBiasedLocking) {

@@ -142,21 +142,20 @@ class BiasedLockingCounters VALUE_OBJ_CLASS_SPEC {
 
   void print_on(outputStream* st);
   void print() { print_on(tty); }
+
+  void add(BiasedLockingCounters* other);
 };
 
 
 class BiasedLocking : AllStatic {
 private:
-  static BiasedLockingCounters _counters;
+  static BiasedLockingCounters _c1_counters;
+  static BiasedLockingCounters _opto_counters;
+  static BiasedLockingCounters _jvmci_counters;
+  static BiasedLockingCounters _interpreter_counters;
+  static BiasedLockingCounters _native_warpper_counters;
 
 public:
-  static int* total_entry_count_addr();
-  static int* biased_lock_entry_count_addr();
-  static int* anonymously_biased_lock_entry_count_addr();
-  static int* rebiased_lock_entry_count_addr();
-  static int* revoked_lock_entry_count_addr();
-  static int* fast_path_entry_count_addr();
-  static int* slow_path_entry_count_addr();
 
   enum Condition {
     NOT_BIASED = 1,
@@ -182,8 +181,35 @@ public:
   static void revoke_at_safepoint(Handle obj);
   static void revoke_at_safepoint(GrowableArray<Handle>* objs);
 
-  static void print_counters() { _counters.print(); }
-  static BiasedLockingCounters* counters() { return &_counters; }
+  static void print_counters() {
+#ifdef PRINT_BIASED_LOCKING_DETAIL
+    tty->print_cr("C1:");
+    _c1_counters.print();
+    tty->print_cr("C2:");
+    _opto_counters.print();
+    tty->print_cr("JVMCI:");
+    _jvmci_counters.print();
+    tty->print_cr("Interpreter:");
+    _interpreter_counters.print();
+    tty->print_cr("Native wrappers:");
+    _native_warpper_counters.print();
+#endif
+
+    BiasedLockingCounters total;
+    total.add(c1_counters());
+    total.add(opto_counters());
+    total.add(jvmci_counters());
+    total.add(interpreter_counters());
+    total.add(native_wrapper_counters());
+
+    tty->print_cr("Total:");
+    total.print();
+  }
+  static BiasedLockingCounters* c1_counters() { return &_c1_counters; }
+  static BiasedLockingCounters* opto_counters() { return &_opto_counters; }
+  static BiasedLockingCounters* jvmci_counters() { return &_jvmci_counters; }
+  static BiasedLockingCounters* interpreter_counters() { return &_interpreter_counters; }
+  static BiasedLockingCounters* native_wrapper_counters() { return &_native_warpper_counters; }
 
   // These routines are GC-related and should not be called by end
   // users. GCs which do not do preservation of mark words do not need

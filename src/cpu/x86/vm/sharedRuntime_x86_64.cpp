@@ -2326,11 +2326,15 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     __ lea(lock_reg, Address(rsp, lock_slot_offset * VMRegImpl::stack_slot_size));
 
+    if (PrintBiasedLockingStatistics) {
+      __ atomic_incl(ExternalAddress((address)BiasedLocking::native_wrapper_counters()->total_entry_count_addr()), obj_reg);
+    }
+
     // Load the oop from the handle
     __ movptr(obj_reg, Address(oop_handle_reg, 0));
 
     if (UseBiasedLocking) {
-      __ biased_locking_enter(lock_reg, obj_reg, swap_reg, rscratch1, false, lock_done, &slow_path_lock);
+      __ biased_locking_enter(lock_reg, obj_reg, swap_reg, rscratch1, false, lock_done, &slow_path_lock, BiasedLocking::native_wrapper_counters());
     }
 
     // Load immediate 1 into swap_reg %rax
@@ -2348,6 +2352,10 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     // src -> dest iff dest == rax else rax <- dest
     __ cmpxchgptr(lock_reg, Address(obj_reg, 0));
+    if (PrintBiasedLockingStatistics) {
+      __ cond_inc32(Assembler::equal,
+                 ExternalAddress((address) BiasedLocking::native_wrapper_counters()->fast_path_entry_count_addr()));
+    }
     __ jcc(Assembler::equal, lock_done);
 
     // Hmm should this move to the slow path code area???
@@ -2366,6 +2374,10 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     // Save the test result, for recursive case, the result is zero
     __ movptr(Address(lock_reg, mark_word_offset), swap_reg);
+    if (PrintBiasedLockingStatistics) {
+      __ cond_inc32(Assembler::zero,
+                 ExternalAddress((address) BiasedLocking::native_wrapper_counters()->fast_path_entry_count_addr()));
+    }
     __ jcc(Assembler::notEqual, slow_path_lock);
 
     // Slow path will re-enter here

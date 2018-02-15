@@ -1082,8 +1082,8 @@ int MacroAssembler::biased_locking_enter(Register lock_reg,
   Address mark_addr      (obj_reg, oopDesc::mark_offset_in_bytes());
   Address saved_mark_addr(lock_reg, 0);
 
-  if (PrintBiasedLockingStatistics && counters == NULL) {
-    counters = BiasedLocking::counters();
+  if (PrintBiasedLockingStatistics) {
+    guarantee(counters != NULL, "invalid state");
   }
   // Biased locking
   // See whether the lock is currently biased toward our thread and
@@ -1139,7 +1139,7 @@ int MacroAssembler::biased_locking_enter(Register lock_reg,
     pop(tmp_reg);
   }
   if (counters != NULL) {
-    cond_inc32(Assembler::zero,
+    cond_inc32(Assembler::equal,
                ExternalAddress((address) counters->biased_lock_entry_count_addr()));
   }
   jcc(Assembler::equal, done);
@@ -1712,6 +1712,10 @@ void MacroAssembler::fast_lock(Register objReg, Register boxReg, Register tmpReg
     assert_different_registers(objReg, boxReg, tmpReg, scrReg);
   }
 
+  if (PrintBiasedLockingStatistics && counters == NULL) {
+    counters = BiasedLocking::opto_counters();
+  }
+
   if (counters != NULL) {
     atomic_incl(ExternalAddress((address)counters->total_entry_count_addr()), scrReg);
   }
@@ -1960,6 +1964,10 @@ void MacroAssembler::fast_lock(Register objReg, Register boxReg, Register tmpReg
       lock();
     }
     cmpxchgptr(r15_thread, Address(boxReg, ObjectMonitor::owner_offset_in_bytes()-2));
+    if (counters != NULL) {
+      cond_inc32(Assembler::equal,
+                 ExternalAddress((address)counters->fast_path_entry_count_addr()));
+    }
     // Intentional fall-through into DONE_LABEL ...
 #endif // _LP64
 
