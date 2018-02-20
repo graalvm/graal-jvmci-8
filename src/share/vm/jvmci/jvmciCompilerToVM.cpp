@@ -205,8 +205,12 @@ void CompilerToVM::Data::initialize(TRAPS) {
 
   vm_page_size = os::vm_page_size();
 
-#define SET_TRIGFUNC(name)                                      \
-  name = CAST_FROM_FN_PTR(address, SharedRuntime::name);      \
+#define SET_TRIGFUNC(name)                                 \
+  name = StubRoutines::name();                             \
+  if (name == NULL) {                                      \
+	  name = CAST_FROM_FN_PTR(address, SharedRuntime::name); \
+  }                                                        \
+  assert(name != NULL, "could not initialize " #name)
 
   SET_TRIGFUNC(dsin);
   SET_TRIGFUNC(dcos);
@@ -215,7 +219,6 @@ void CompilerToVM::Data::initialize(TRAPS) {
   SET_TRIGFUNC(dlog10);
   SET_TRIGFUNC(dlog);
   SET_TRIGFUNC(dpow);
-
 #undef SET_TRIGFUNC
 }
 
