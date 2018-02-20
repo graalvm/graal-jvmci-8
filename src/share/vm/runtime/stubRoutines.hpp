@@ -380,6 +380,14 @@ class StubRoutines: AllStatic {
 
   static address zero_aligned_words()   { return _zero_aligned_words; }
 
+  static address dlog()   { return CAST_FROM_FN_PTR(address, _intrinsic_log);   }
+  static address dlog10() { return CAST_FROM_FN_PTR(address, _intrinsic_log10); }
+  static address dexp()   { return CAST_FROM_FN_PTR(address, _intrinsic_exp);   }
+  static address dpow()   { return CAST_FROM_FN_PTR(address, _intrinsic_pow);   }
+  static address dsin()   { return CAST_FROM_FN_PTR(address, _intrinsic_sin);   }
+  static address dcos()   { return CAST_FROM_FN_PTR(address, _intrinsic_cos);   }
+  static address dtan()   { return CAST_FROM_FN_PTR(address, _intrinsic_tan);   }
+
   static double  intrinsic_log(double d) {
     assert(_intrinsic_log != NULL, "must be defined");
     return _intrinsic_log(d);
