@@ -319,6 +319,7 @@ void NMethodSweeper::possibly_sweep() {
 }
 
 void NMethodSweeper::sweep_code_cache() {
+  ResourceMark rm;
   Ticks sweep_start_counter = Ticks::now();
 
   _flushed_count                = 0;
@@ -634,6 +635,7 @@ int NMethodSweeper::process_nmethod(nmethod *nm) {
 // state of the code cache if it's requested.
 void NMethodSweeper::log_sweep(const char* msg, const char* format, ...) {
   if (PrintMethodFlushing) {
+    ResourceMark rm;
     stringStream s;
     // Dump code cache state into a buffer before locking the tty,
     // because log_state() will use locks causing lock conflicts.
@@ -651,6 +653,7 @@ void NMethodSweeper::log_sweep(const char* msg, const char* format, ...) {
   }
 
   if (LogCompilation && (xtty != NULL)) {
+    ResourceMark rm;
     stringStream s;
     // Dump code cache state into a buffer before locking the tty,
     // because log_state() will use locks causing lock conflicts.
