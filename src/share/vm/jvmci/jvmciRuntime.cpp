@@ -373,7 +373,7 @@ JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc*
     tty->flush();
   }
   if (PrintBiasedLockingStatistics) {
-    Atomic::inc(BiasedLocking::jvmci_counters()->slow_path_entry_count_addr());
+    Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
   }
   Handle h_obj(thread, obj);
   assert(h_obj()->is_oop(), "must be NULL or an object");

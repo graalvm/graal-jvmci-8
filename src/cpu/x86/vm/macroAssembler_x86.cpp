@@ -1082,8 +1082,8 @@ int MacroAssembler::biased_locking_enter(Register lock_reg,
   Address mark_addr      (obj_reg, oopDesc::mark_offset_in_bytes());
   Address saved_mark_addr(lock_reg, 0);
 
-  if (PrintBiasedLockingStatistics) {
-    guarantee(counters != NULL, "invalid state");
+  if (PrintBiasedLockingStatistics && counters == NULL) {
+    counters = BiasedLocking::counters();
   }
   // Biased locking
   // See whether the lock is currently biased toward our thread and
@@ -1713,7 +1713,7 @@ void MacroAssembler::fast_lock(Register objReg, Register boxReg, Register tmpReg
   }
 
   if (PrintBiasedLockingStatistics && counters == NULL) {
-    counters = BiasedLocking::opto_counters();
+    counters = BiasedLocking::counters();
   }
 
   if (counters != NULL) {

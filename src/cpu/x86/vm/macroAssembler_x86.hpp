@@ -651,8 +651,8 @@ class MacroAssembler: public Assembler {
   int biased_locking_enter(Register lock_reg, Register obj_reg,
                            Register swap_reg, Register tmp_reg,
                            bool swap_reg_contains_mark,
-                           Label& done, Label* slow_case,
-                           BiasedLockingCounters* counters);
+                           Label& done, Label* slow_case = NULL,
+                           BiasedLockingCounters* counters = NULL);
   void biased_locking_exit (Register obj_reg, Register temp_reg, Label& done);
 #ifdef COMPILER2
   // Code used by cmpFastLock and cmpFastUnlock mach instructions in .ad file.

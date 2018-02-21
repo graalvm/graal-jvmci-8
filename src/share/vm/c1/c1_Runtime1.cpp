@@ -655,7 +655,7 @@ JRT_END
 JRT_ENTRY_NO_ASYNC(void, Runtime1::monitorenter(JavaThread* thread, oopDesc* obj, BasicObjectLock* lock))
   NOT_PRODUCT(_monitorenter_slowcase_cnt++;)
   if (PrintBiasedLockingStatistics) {
-    Atomic::inc(BiasedLocking::c1_counters()->slow_path_entry_count_addr());
+    Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
   }
   Handle h_obj(thread, obj);
   assert(h_obj()->is_oop(), "must be NULL or an object");

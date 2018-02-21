@@ -709,14 +709,14 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
     Label slow_case;
 
     if (PrintBiasedLockingStatistics) {
-      atomic_incl(ExternalAddress((address)BiasedLocking::interpreter_counters()->total_entry_count_addr()), obj_reg);
+      atomic_incl(ExternalAddress((address)BiasedLocking::total_entry_count_addr()), obj_reg);
     }
 
     // Load object pointer into obj_reg %c_rarg3
     movptr(obj_reg, Address(lock_reg, obj_offset));
 
     if (UseBiasedLocking) {
-      biased_locking_enter(lock_reg, obj_reg, swap_reg, rscratch1, false, done, &slow_case, BiasedLocking::interpreter_counters());
+      biased_locking_enter(lock_reg, obj_reg, swap_reg, rscratch1, false, done, &slow_case);
     }
 
     // Load immediate 1 into swap_reg %rax
@@ -735,7 +735,7 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
     cmpxchgptr(lock_reg, Address(obj_reg, 0));
     if (PrintBiasedLockingStatistics) {
       cond_inc32(Assembler::zero,
-                 ExternalAddress((address) BiasedLocking::interpreter_counters()->fast_path_entry_count_addr()));
+                 ExternalAddress((address) BiasedLocking::fast_path_entry_count_addr()));
     }
     jcc(Assembler::zero, done);
 
@@ -756,14 +756,14 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
 
     if (PrintBiasedLockingStatistics) {
       cond_inc32(Assembler::zero,
-                 ExternalAddress((address) BiasedLocking::interpreter_counters()->fast_path_entry_count_addr()));
+                 ExternalAddress((address) BiasedLocking::fast_path_entry_count_addr()));
     }
     jcc(Assembler::zero, done);
 
     bind(slow_case);
 
     if (PrintBiasedLockingStatistics) {
-      atomic_incl(ExternalAddress((address) BiasedLocking::interpreter_counters()->slow_path_entry_count_addr()), obj_reg);
+      atomic_incl(ExternalAddress((address) BiasedLocking::slow_path_entry_count_addr()), obj_reg);
     }
 
     // Call the runtime routine for slow case
