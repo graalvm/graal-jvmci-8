@@ -96,7 +96,7 @@
         downloads: {
             JAVA_HOME: {
                 name : "oraclejdk",
-                version : "8u151",
+                version : "8u161",
                 platformspecific: true
             }
         },
