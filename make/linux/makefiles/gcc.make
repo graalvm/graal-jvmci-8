@@ -264,6 +264,7 @@ else
   ifeq ($(shell expr $(CC_VER_MAJOR) = 4 \& $(CC_VER_MINOR) = 3), 1)
     OPT_CFLAGS/mulnode.o += $(OPT_CFLAGS/NOOPT)
   endif
+  OPT_CFLAGS/jvmciCompilerToVM.o += -fno-var-tracking-assignments
 endif
 
 # Flags for generating make dependency flags.
