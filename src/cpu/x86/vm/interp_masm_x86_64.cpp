@@ -708,6 +708,10 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
 
     Label slow_case;
 
+    if (PrintBiasedLockingStatistics) {
+      atomic_incl(ExternalAddress((address)BiasedLocking::total_entry_count_addr()), obj_reg);
+    }
+
     // Load object pointer into obj_reg %c_rarg3
     movptr(obj_reg, Address(lock_reg, obj_offset));
 
@@ -757,6 +761,10 @@ void InterpreterMacroAssembler::lock_object(Register lock_reg) {
     jcc(Assembler::zero, done);
 
     bind(slow_case);
+
+    if (PrintBiasedLockingStatistics) {
+      atomic_incl(ExternalAddress((address) BiasedLocking::slow_path_entry_count_addr()), obj_reg);
+    }
 
     // Call the runtime routine for slow case
     call_VM(noreg,

@@ -35,6 +35,7 @@
 #include "oops/compiledICHolder.hpp"
 #include "prims/jvmtiRedefineClassesTrace.hpp"
 #include "runtime/sharedRuntime.hpp"
+#include "runtime/biasedLocking.hpp"
 #include "runtime/vframeArray.hpp"
 #include "vmreg_x86.inline.hpp"
 #ifdef COMPILER1
@@ -2326,6 +2327,10 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     __ lea(lock_reg, Address(rsp, lock_slot_offset * VMRegImpl::stack_slot_size));
 
+    if (PrintBiasedLockingStatistics) {
+      __ atomic_incl(ExternalAddress((address)BiasedLocking::total_entry_count_addr()), obj_reg);
+    }
+
     // Load the oop from the handle
     __ movptr(obj_reg, Address(oop_handle_reg, 0));
 
@@ -2348,6 +2353,10 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     // src -> dest iff dest == rax else rax <- dest
     __ cmpxchgptr(lock_reg, Address(obj_reg, 0));
+    if (PrintBiasedLockingStatistics) {
+      __ cond_inc32(Assembler::equal,
+                 ExternalAddress((address) BiasedLocking::fast_path_entry_count_addr()));
+    }
     __ jcc(Assembler::equal, lock_done);
 
     // Hmm should this move to the slow path code area???
@@ -2366,6 +2375,10 @@ nmethod* SharedRuntime::generate_native_wrapper(MacroAssembler* masm,
 
     // Save the test result, for recursive case, the result is zero
     __ movptr(Address(lock_reg, mark_word_offset), swap_reg);
+    if (PrintBiasedLockingStatistics) {
+      __ cond_inc32(Assembler::zero,
+                 ExternalAddress((address) BiasedLocking::fast_path_entry_count_addr()));
+    }
     __ jcc(Assembler::notEqual, slow_path_lock);
 
     // Slow path will re-enter here

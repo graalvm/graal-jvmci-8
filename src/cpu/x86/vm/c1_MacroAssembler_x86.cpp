@@ -45,6 +45,10 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
 
   verify_oop(obj);
 
+  if (PrintBiasedLockingStatistics) {
+    atomic_incl(ExternalAddress((address)BiasedLocking::total_entry_count_addr()), disp_hdr);
+  }
+
   // save object being locked into the BasicObjectLock
   movptr(Address(disp_hdr, BasicObjectLock::obj_offset_in_bytes()), obj);
 
@@ -90,6 +94,10 @@ int C1_MacroAssembler::lock_object(Register hdr, Register obj, Register disp_hdr
   // for recursive locking, the result is zero => save it in the displaced header
   // location (NULL in the displaced hdr location indicates recursive locking)
   movptr(Address(disp_hdr, 0), hdr);
+  if (PrintBiasedLockingStatistics) {
+    cond_inc32(Assembler::zero,
+               ExternalAddress((address)BiasedLocking::fast_path_entry_count_addr()));
+  }
   // otherwise we don't care about the result and handle locking via runtime call
   jcc(Assembler::notZero, slow_case);
   // done

@@ -619,7 +619,8 @@ IRT_ENTRY_NO_ASYNC(void, InterpreterRuntime::monitorenter(JavaThread* thread, Ba
   thread->last_frame().interpreter_frame_verify_monitor(elem);
 #endif
   if (PrintBiasedLockingStatistics) {
-    Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
+    // Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
+    // Done in InterpreterMacroAssembler::lock_object. For some mysterious reason some increments from here are missed
   }
   Handle h_obj(thread, elem->obj());
   assert(Universe::heap()->is_in_reserved_or_null(h_obj()),

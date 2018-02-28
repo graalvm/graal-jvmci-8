@@ -771,5 +771,6 @@ void BiasedLockingCounters::print_on(outputStream* st) {
   tty->print_cr("# rebiased lock entries: %d", _rebiased_lock_entry_count);
   tty->print_cr("# revoked lock entries: %d", _revoked_lock_entry_count);
   tty->print_cr("# fast path lock entries: %d", _fast_path_entry_count);
+  tty->print_cr("# raw slow path lock entries: %d", _slow_path_entry_count);
   tty->print_cr("# slow path lock entries: %d", slow_path_entry_count());
 }
