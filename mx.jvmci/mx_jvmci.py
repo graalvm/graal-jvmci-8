@@ -534,7 +534,6 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
             with open(jvmCfg) as f:
                 jvmCfgLines = f.readlines()
 
-            defaultVM = 'server'
             chmodRecursive(jdkDir, JDK_UNIX_PERMISSIONS_DIR)
 
             if mx.get_os() != 'windows':
@@ -1049,23 +1048,21 @@ def run_vm(args, vm=None, nonZeroIsFatal=True, out=None, err=None, cwd=None, tim
 
 def _unittest_config_participant(config):
     vmArgs, mainClass, mainClassArgs = config
-    if isJVMCIEnabled(get_vm()):
-        # Remove entries from class path that are in JVMCI loaded jars
-        cpIndex, cp = mx.find_classpath_arg(vmArgs)
-        if cp:
-            excluded = set()
-            for jdkDist in jdkDeployedDists:
-                dist = jdkDist.dist()
-                excluded.update([d.output_dir() for d in dist.archived_deps() if d.isJavaProject()])
-                excluded.add(dist.path)
-            cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
-            vmArgs[cpIndex] = cp
+    # Remove entries from class path that are in JVMCI loaded jars
+    cpIndex, cp = mx.find_classpath_arg(vmArgs)
+    if cp:
+        excluded = set()
+        for jdkDist in jdkDeployedDists:
+            dist = jdkDist.dist()
+            excluded.update([d.output_dir() for d in dist.archived_deps() if d.isJavaProject()])
+            excluded.add(dist.path)
+        cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
+        vmArgs[cpIndex] = cp
 
-        # Run the VM in a mode where application/test classes can
-        # access JVMCI loaded classes.
-        vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
-        return (vmArgs, mainClass, mainClassArgs)
-    return config
+    # Run the VM in a mode where application/test classes can
+    # access JVMCI loaded classes.
+    vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
+    return (vmArgs, mainClass, mainClassArgs)
 
 def _unittest_vm_launcher(vmArgs, mainClass, mainClassArgs):
     run_vm(vmArgs + [mainClass] + mainClassArgs)
@@ -1340,9 +1337,6 @@ def hcfdis(args):
                 with open('new_' + f, "w") as fp:
                     for l in lines:
                         print >> fp, l
-
-def isJVMCIEnabled(vm):
-    return True
 
 def jol(args):
     """Java Object Layout"""
