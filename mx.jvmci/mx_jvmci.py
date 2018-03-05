@@ -46,7 +46,6 @@ JVMCI_VERSION = 8
 _vmChoices = {
     'server' : 'Normal compilation is performed with a tiered system (C1 + C2 or Graal) and Graal is available for hosted compilation.',
     'client' : None,  # VM compilation with client compiler, hosted compilation with Graal
-    'original' : None,  # default VM copied from bootstrap JDK
 }
 
 _jvmciModes = {
@@ -535,11 +534,7 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
             with open(jvmCfg) as f:
                 jvmCfgLines = f.readlines()
 
-            jvmCfgLines += ['-original KNOWN\n']
-
-            defaultVM = 'server'
             chmodRecursive(jdkDir, JDK_UNIX_PERMISSIONS_DIR)
-            shutil.move(join(vmLibDirInJdk(jdkDir), defaultVM), join(vmLibDirInJdk(jdkDir), 'original'))
 
             if mx.get_os() != 'windows':
                 os.chmod(jvmCfg, JDK_UNIX_PERMISSIONS_FILE)
@@ -981,10 +976,6 @@ class HotSpotBuildTask(mx.NativeBuildTask):
     def buildForbidden(self):
         if mx.NativeBuildTask.buildForbidden(self):
             return True
-        if self.vm == 'original':
-            if self.vmbuild != 'product':
-                mx.log('only product build of original VM exists')
-            return True
         if not isVMSupported(self.vm):
             mx.log('The ' + self.vm + ' VM is not supported on this platform - skipping')
             return True
@@ -1057,23 +1048,21 @@ def run_vm(args, vm=None, nonZeroIsFatal=True, out=None, err=None, cwd=None, tim
 
 def _unittest_config_participant(config):
     vmArgs, mainClass, mainClassArgs = config
-    if isJVMCIEnabled(get_vm()):
-        # Remove entries from class path that are in JVMCI loaded jars
-        cpIndex, cp = mx.find_classpath_arg(vmArgs)
-        if cp:
-            excluded = set()
-            for jdkDist in jdkDeployedDists:
-                dist = jdkDist.dist()
-                excluded.update([d.output_dir() for d in dist.archived_deps() if d.isJavaProject()])
-                excluded.add(dist.path)
-            cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
-            vmArgs[cpIndex] = cp
+    # Remove entries from class path that are in JVMCI loaded jars
+    cpIndex, cp = mx.find_classpath_arg(vmArgs)
+    if cp:
+        excluded = set()
+        for jdkDist in jdkDeployedDists:
+            dist = jdkDist.dist()
+            excluded.update([d.output_dir() for d in dist.archived_deps() if d.isJavaProject()])
+            excluded.add(dist.path)
+        cp = os.pathsep.join([e for e in cp.split(os.pathsep) if e not in excluded])
+        vmArgs[cpIndex] = cp
 
-        # Run the VM in a mode where application/test classes can
-        # access JVMCI loaded classes.
-        vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
-        return (vmArgs, mainClass, mainClassArgs)
-    return config
+    # Run the VM in a mode where application/test classes can
+    # access JVMCI loaded classes.
+    vmArgs = ['-XX:-UseJVMCIClassLoader'] + vmArgs
+    return (vmArgs, mainClass, mainClassArgs)
 
 def _unittest_vm_launcher(vmArgs, mainClass, mainClassArgs):
     run_vm(vmArgs + [mainClass] + mainClassArgs)
@@ -1109,8 +1098,6 @@ def buildvms(args):
             continue
 
         for vmbuild in builds:
-            if vm == 'original' and vmbuild != 'product':
-                continue
             if not args.console:
                 logFile = join(vm + '-' + vmbuild + '.log')
                 log = open(join(_suite.dir, logFile), 'wb')
@@ -1350,9 +1337,6 @@ def hcfdis(args):
                 with open('new_' + f, "w") as fp:
                     for l in lines:
                         print >> fp, l
-
-def isJVMCIEnabled(vm):
-    return vm != 'original'
 
 def jol(args):
     """Java Object Layout"""
