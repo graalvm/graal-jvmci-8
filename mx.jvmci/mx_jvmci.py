@@ -878,6 +878,8 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             cpus = mx.cpu_count()
             makeDir = join(_suite.dir, 'make')
             runCmd = [mx.gmake_cmd(), '-C', makeDir]
+            if self.args.keep_going:
+                runCmd += ['-k']
 
             env = os.environ.copy()
 
@@ -1030,6 +1032,7 @@ def build(args, vm=None):
     # Call mx.build to compile the Java sources
     parser = AP()
     parser.add_argument('-D', action='append', help='set a HotSpot build variable (run \'mx buildvars\' to list variables)', metavar='name=value')
+    parser.add_argument('-k', '--keep-going', action='store_true', help='Pass -k to make command')
 
     # initialize jdk
     get_jvmci_jdk_dir(create=True)
