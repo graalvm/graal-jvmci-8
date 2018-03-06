@@ -66,6 +66,9 @@
   product(bool, PrintBootstrap, true,                                       \
           "Print JVMCI bootstrap progress and summary")                     \
                                                                             \
+  product(bool, EagerJVMCI, false,                                          \
+          "Force eager initialization of the JVMCI compiler")               \
+                                                                            \
   product(intx, JVMCIThreads, 1,                                            \
           "Force number of JVMCI compiler threads to use")                  \
                                                                             \

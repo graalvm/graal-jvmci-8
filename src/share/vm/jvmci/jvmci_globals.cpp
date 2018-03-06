@@ -151,6 +151,16 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
     }
     FLAG_SET_DEFAULT(EnableJVMCI, true);
   }
+
+  if (!EnableJVMCI) {
+    // Switch off eager JVMCI initialization if JVMCI is disabled.
+    // To simplify testing, don't throw error if EagerJVMCI is set.
+    if (EagerJVMCI) {
+      FLAG_SET_DEFAULT(EagerJVMCI, false);
+    }
+  }
+  JVMCI_FLAG_CHECKED(EagerJVMCI)
+
   CHECK_NOT_SET(UseJVMCIClassLoader,          EnableJVMCI)
   CHECK_NOT_SET(CodeInstallSafepointChecks,   EnableJVMCI)
   CHECK_NOT_SET(JVMCITraceLevel,              EnableJVMCI)

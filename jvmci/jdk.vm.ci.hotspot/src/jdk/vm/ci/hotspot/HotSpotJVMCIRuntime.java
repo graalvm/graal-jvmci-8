@@ -70,6 +70,12 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         static {
             try (InitTimer t = timer("HotSpotJVMCIRuntime.<init>")) {
                 instance = new HotSpotJVMCIRuntime();
+
+                // Can only do eager initialization of the JVMCI compiler
+                // once the singleton instance is available.
+                if (instance.config.getFlag("EagerJVMCI", Boolean.class)) {
+                    instance.getCompiler();
+                }
             }
         }
     }

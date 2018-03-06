@@ -284,6 +284,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
   do_intx_flag(HugeMethodLimit)                                            \
   do_bool_flag(Inline)                                                     \
   do_intx_flag(JVMCICounterSize)                                           \
+  do_bool_flag(EagerJVMCI)                                                 \
   do_bool_flag(JVMCIPrintProperties)                                       \
   do_bool_flag(JVMCIUseFastLocking)                                        \
   do_intx_flag(MethodProfileWidth)                                         \
