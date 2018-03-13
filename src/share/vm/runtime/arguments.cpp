@@ -3612,6 +3612,86 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
   }
 
   if (!UseJVMCIClassLoader) {
+    // Append resolved entries from lib/jvmci/parentClassLoader.classpath to boot class path
+    jio_snprintf(pathBuffer, sizeof(pathBuffer), "%s%slib%sjvmci%sparentClassLoader.classpath", Arguments::get_java_home(), fileSep, fileSep, fileSep);
+    struct stat st;
+    if (os::stat(pathBuffer, &st) == 0) {
+      char* class_path = NEW_C_HEAP_ARRAY(char, st.st_size + 1, mtInternal);
+      int file_handle = os::open(pathBuffer, 0, 0);
+      if (file_handle != -1) {
+        int class_path_len = (int) os::read(file_handle, class_path, st.st_size);
+        // close file
+        os::close(file_handle);
+        if (class_path_len == st.st_size) {
+          // Strip newline from end of file contents
+          char* p = class_path + class_path_len - 1;
+          while (p >= class_path && (*p == '\r' || *p == '\n')) {
+            --p;
+            --class_path_len;
+          }
+
+          // Iterate over class path entries
+          int end = 0;
+          int entry_index = 0;
+          char path_sep = os::path_separator()[0];
+          for (int start = 0; start < class_path_len; start = end) {
+            char entry[JVM_MAXPATHLEN];
+            int i = 0;
+            while (end < class_path_len && class_path[end] != path_sep) {
+              char ch = class_path[end];
+              if (i == 0) {
+                // Only paths starting with '\' will be considered
+                // absolute on Windows. The complete test for an absolute
+                // path on Windows is complex and not worth supporting
+                // for this feature.
+                bool is_absolute_path = ch == fileSep[0];
+                if (!is_absolute_path) {
+                  // Prepend lib/jvmci dir for relative path
+                  i = jio_snprintf(entry, sizeof(entry), "%s%slib%sjvmci%s", Arguments::get_java_home(), fileSep, fileSep, fileSep);
+                }
+              }
+              if (i >= (int) sizeof(entry) - 1) {
+                jio_fprintf(defaultStream::error_stream(),
+                    "Resolving class path entry %d in %s exceeds %d characters (truncated value \"%s\")\n", entry_index, pathBuffer, sizeof(entry) - 2, entry);
+                FREE_C_HEAP_ARRAY(char, class_path, mtInternal);
+                return JNI_ERR;
+              }
+              entry[i++] = ch;
+              end++;
+            }
+            entry[i++] = '\0';
+
+            struct stat st2;
+            if (os::stat(entry, &st2) != 0) {
+              jio_fprintf(defaultStream::error_stream(),
+                  "Resolved class path entry %d in %s does not refer to an existing file or directory" \
+                  " (note: only class path entries starting with '%c' are interpreted as absolute): '%s'\n", entry_index, pathBuffer, fileSep[0], entry);
+              FREE_C_HEAP_ARRAY(char, class_path, mtInternal);
+              return JNI_ERR;
+            }
+            scp_p->add_suffix(entry);
+            scp_assembly_required = true;
+
+            while (class_path[end] == os::path_separator()[0]) {
+              end++;
+            }
+            entry_index++;
+          }
+          FREE_C_HEAP_ARRAY(char, class_path, mtInternal);
+        } else {
+          jio_fprintf(defaultStream::error_stream(),
+              "Truncated read from %s (only read %d of %d bytes)\n", pathBuffer, class_path_len, st.st_size);
+          FREE_C_HEAP_ARRAY(char, class_path, mtInternal);
+          return JNI_ERR;
+        }
+      } else {
+        jio_fprintf(defaultStream::error_stream(),
+            "Failed to open %s (%s)\n", pathBuffer, strerror(errno));
+        FREE_C_HEAP_ARRAY(char, class_path, mtInternal);
+        return JNI_ERR;
+      }
+    }
+
     // Append lib/jvmci/*.jar to boot class path
     jio_snprintf(pathBuffer, sizeof(pathBuffer), "%s%slib%sjvmci", Arguments::get_java_home(), fileSep, fileSep);
     char* jvmci_path = SysClassPath::add_jars_to_path(NULL, pathBuffer);
@@ -3619,6 +3699,8 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
       scp_p->add_suffix(jvmci_path);
       scp_assembly_required = true;
     }
+
+    // Append value of jvmci.class.path.append system property to boot class path
     const char* path = Arguments::get_property("jvmci.class.path.append");
     if (path != NULL) {
       scp_p->add_suffix(path);
