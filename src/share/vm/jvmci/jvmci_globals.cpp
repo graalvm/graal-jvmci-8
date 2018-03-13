@@ -66,7 +66,6 @@ static const char* get_jvmci_compiler_name(bool* error) {
 
       FILE* stream = fopen(filename, "r");
       if (stream != NULL) {
-        char line[256];
         if (fgets(line, sizeof(line), stream) != NULL) {
           // Strip newline from end of the line
           char* p = line + strlen(line) - 1;
