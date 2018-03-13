@@ -509,7 +509,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Hand
       id = CompileBroker::assign_compile_id_unlocked(Thread::current(), method, entry_bci);
     }
     result = JVMCIEnv::register_method(method, nm, entry_bci, &_offsets, _orig_pc_offset, &buffer,
-                                       stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table,
+                                       stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table, &_implicit_exception_table,
                                        compiler, _debug_recorder, _dependencies, env, id,
                                        has_unsafe_access, _has_wide_vector, installed_code, compiled_code, speculation_log);
     cb = nm;
@@ -695,11 +695,17 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
     } else if (site->is_a(site_Infopoint::klass())) {
       // three reasons for infopoints denote actual safepoints
       oop reason = site_Infopoint::reason(site);
-      if (site_InfopointReason::SAFEPOINT() == reason || site_InfopointReason::CALL() == reason || site_InfopointReason::IMPLICIT_EXCEPTION() == reason) {
+      if (site_InfopointReason::SAFEPOINT() == reason ||
+          site_InfopointReason::CALL() == reason ||
+          site_InfopointReason::IMPLICIT_EXCEPTION() == reason) {
         TRACE_jvmci_4("safepoint at %i", pc_offset);
         site_Safepoint(buffer, pc_offset, site, CHECK_OK);
         if (_orig_pc_offset < 0) {
           JVMCI_ERROR_OK("method contains safepoint, but has no deopt rescue slot");
+        }
+        if (site_InfopointReason::IMPLICIT_EXCEPTION() == reason) {
+          TRACE_jvmci_4("implicit exception at %i", pc_offset);
+          _implicit_exception_table.add_deoptimize(pc_offset);
         }
       } else {
         TRACE_jvmci_4("infopoint at %i", pc_offset);

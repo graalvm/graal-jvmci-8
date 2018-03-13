@@ -37,6 +37,7 @@
 #include "oops/methodData.hpp"
 #include "prims/jvmtiRedefineClassesTrace.hpp"
 #include "prims/jvmtiImpl.hpp"
+#include "runtime/deoptimization.hpp"
 #include "runtime/orderAccess.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/sweeper.hpp"
@@ -1136,6 +1137,7 @@ void nmethod::print_nmethod(bool printmethod) {
   ttyLocker ttyl;  // keep the following output all in one block
   if (xtty != NULL) {
     xtty->begin_head("print_nmethod");
+    log_identity(xtty);
     xtty->stamp();
     xtty->end_head();
   }
@@ -2789,11 +2791,11 @@ bool nmethod::is_patchable_at(address instr_addr) {
 }
 
 
-address nmethod::continuation_for_implicit_exception(address pc) {
+address nmethod::continuation_for_implicit_exception(address pc, bool for_div0_check) {
   // Exception happened outside inline-cache check code => we are inside
   // an active nmethod => use cpc to determine a return address
   int exception_offset = pc - code_begin();
-  int cont_offset = ImplicitExceptionTable(this).at( exception_offset );
+  int cont_offset = ImplicitExceptionTable(this).continuation_offset( exception_offset );
 #ifdef ASSERT
   if (cont_offset == 0) {
     Thread* thread = ThreadLocalStorage::get_thread_slow();
@@ -2812,6 +2814,18 @@ address nmethod::continuation_for_implicit_exception(address pc) {
   if (cont_offset == 0) {
     // Let the normal error handling report the exception
     return NULL;
+  }
+  if (cont_offset == exception_offset) {
+#if INCLUDE_JVMCI
+    Deoptimization::DeoptReason deopt_reason = for_div0_check ? Deoptimization::Reason_div0_check : Deoptimization::Reason_null_check;
+    JavaThread *thread = JavaThread::current();
+    thread->set_jvmci_implicit_exception_pc(pc);
+    thread->set_pending_deoptimization(Deoptimization::make_trap_request(deopt_reason,
+                                                                         Deoptimization::Action_reinterpret));
+    return (SharedRuntime::deopt_blob()->implicit_exception_uncommon_trap());
+#else
+    ShouldNotReachHere();
+#endif
   }
   return code_begin() + cont_offset;
 }
@@ -3366,21 +3380,35 @@ void nmethod::print_nmethod_labels(outputStream* stream, address block_begin) co
 }
 
 void nmethod::print_code_comment_on(outputStream* st, int column, u_char* begin, u_char* end) {
-  // First, find an oopmap in (begin, end].
-  // We use the odd half-closed interval so that oop maps and scope descs
-  // which are tied to the byte after a call are printed with the call itself.
+  int pc_offset = begin - code_begin();
+  int cont_offset = ImplicitExceptionTable(this).continuation_offset(pc_offset);
+  if (cont_offset != 0) {
+    st->move_to(column);
+    if (pc_offset == cont_offset) {
+      st->print("; implicit exception: deoptimizes");
+    } else {
+      st->print("; implicit exception: dispatches to " INTPTR_FORMAT, code_begin() + cont_offset);
+    }
+  }
+
+  // Find an oopmap in (begin, end].  We use the odd half-closed
+  // interval so that oop maps and scope descs which are tied to the
+  // byte after a call are printed with the call itself.  OopMaps
+  // associated with implicit exceptions are printed with the implicit
+  // instruction.
   address base = code_begin();
   OopMapSet* oms = oop_maps();
   if (oms != NULL) {
     for (int i = 0, imax = oms->size(); i < imax; i++) {
       OopMap* om = oms->at(i);
       address pc = base + om->offset();
-      if (pc > begin) {
-        if (pc <= end) {
-          st->move_to(column);
-          st->print("; ");
-          om->print_on(st);
-        }
+      bool is_implicit = ImplicitExceptionTable(this).continuation_offset(om->offset()) == (uint) om->offset();
+      if (is_implicit ? pc == begin : pc > begin && pc <= end) {
+        st->move_to(column);
+        st->print("; ");
+        om->print_on(st);
+      }
+      if (pc > end) {
         break;
       }
     }
@@ -3457,12 +3485,6 @@ void nmethod::print_code_comment_on(outputStream* st, int column, u_char* begin,
     st->move_to(column);
     st->print(";   {%s}", str);
   }
-  int cont_offset = ImplicitExceptionTable(this).at(begin - code_begin());
-  if (cont_offset != 0) {
-    st->move_to(column);
-    st->print("; implicit exception: dispatches to " INTPTR_FORMAT, code_begin() + cont_offset);
-  }
-
 }
 
 #ifndef PRODUCT

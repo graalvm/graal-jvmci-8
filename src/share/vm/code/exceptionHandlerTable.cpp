@@ -175,7 +175,7 @@ void ImplicitExceptionTable::append( uint exec_off, uint cont_off ) {
   _len = l+1;
 };
 
-uint ImplicitExceptionTable::at( uint exec_off ) const {
+uint ImplicitExceptionTable::continuation_offset( uint exec_off ) const {
   uint l = len();
   for( uint i=0; i<l; i++ )
     if( *adr(i) == exec_off )

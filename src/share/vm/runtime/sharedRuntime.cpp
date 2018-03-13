@@ -783,18 +783,9 @@ JRT_ENTRY(void, SharedRuntime::throw_StackOverflowError(JavaThread* thread))
   throw_and_post_jvmti_exception(thread, exception);
 JRT_END
 
-#if INCLUDE_JVMCI
-address SharedRuntime::deoptimize_for_implicit_exception(JavaThread* thread, address pc, nmethod* nm, int deopt_reason) {
-  assert(deopt_reason > Deoptimization::Reason_none && deopt_reason < Deoptimization::Reason_LIMIT, "invalid deopt reason");
-  thread->set_jvmci_implicit_exception_pc(pc);
-  thread->set_pending_deoptimization(Deoptimization::make_trap_request((Deoptimization::DeoptReason)deopt_reason, Deoptimization::Action_reinterpret));
-  return (SharedRuntime::deopt_blob()->implicit_exception_uncommon_trap());
-}
-#endif
-
 address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread,
                                                            address pc,
-                                                           SharedRuntime::ImplicitExceptionKind exception_kind)
+                                                           ImplicitExceptionKind exception_kind)
 {
   address target_pc = NULL;
 
@@ -889,18 +880,7 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread,
 #ifndef PRODUCT
           _implicit_null_throws++;
 #endif
-#if INCLUDE_JVMCI
-          if (nm->is_compiled_by_jvmci() && nm->pc_desc_at(pc) != NULL) {
-            // If there's no PcDesc then we'll die way down inside of
-            // deopt instead of just getting normal error reporting,
-            // so only go there if it will succeed.
-            return deoptimize_for_implicit_exception(thread, pc, nm, Deoptimization::Reason_null_check);
-          } else {
-#endif
-          target_pc = nm->continuation_for_implicit_exception(pc);
-#if INCLUDE_JVMCI
-          }
-#endif
+          target_pc = nm->continuation_for_implicit_null_exception(pc);
           // If there's an unexpected fault, target_pc might be NULL,
           // in which case we want to fall through into the normal
           // error handling code.
@@ -916,15 +896,7 @@ address SharedRuntime::continuation_for_implicit_exception(JavaThread* thread,
 #ifndef PRODUCT
         _implicit_div0_throws++;
 #endif
-#if INCLUDE_JVMCI
-        if (nm->is_compiled_by_jvmci() && nm->pc_desc_at(pc) != NULL) {
-          return deoptimize_for_implicit_exception(thread, pc, nm, Deoptimization::Reason_div0_check);
-        } else {
-#endif
-        target_pc = nm->continuation_for_implicit_exception(pc);
-#if INCLUDE_JVMCI
-        }
-#endif
+        target_pc = nm->continuation_for_implicit_div0_exception(pc);
         // If there's an unexpected fault, target_pc might be NULL,
         // in which case we want to fall through into the normal
         // error handling code.

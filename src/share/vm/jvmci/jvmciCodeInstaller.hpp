@@ -83,6 +83,7 @@ private:
   DebugInformationRecorder* _debug_recorder;
   Dependencies*             _dependencies;
   ExceptionHandlerTable     _exception_handler_table;
+  ImplicitExceptionTable    _implicit_exception_table;
 
   static ConstantOopWriteValue* _oop_null_scope_value;
   static ConstantIntValue*    _int_m1_scope_value;
