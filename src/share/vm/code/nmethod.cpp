@@ -2948,6 +2948,28 @@ void nmethod::verify() {
     }
   }
 
+#ifdef INCLUDE_JVMCI
+  {
+    // Verify that implicit exceptions that deoptimize have a PcDesc and OopMap
+    OopMapSet* oms = oop_maps();
+    ImplicitExceptionTable implicit_table(this);
+    for (uint i = 0; i < implicit_table.len(); i++) {
+      int exec_offset = (int) implicit_table.get_exec_offset(i);
+      if (implicit_table.get_exec_offset(i) == implicit_table.get_cont_offset(i)) {
+        assert(find_pc_desc(code_begin() + exec_offset, false) != NULL, "missing PcDesc");
+        bool found = false;
+        for (int i = 0, imax = oms->size(); i < imax; i++) {
+          if (oms->at(i)->offset() == exec_offset) {
+            found = true;
+            break;
+          }
+        }
+        assert(found, "missing oopmap");
+      }
+    }
+  }
+#endif
+
   VerifyOopsClosure voc(this);
   oops_do(&voc);
   assert(voc.ok(), "embedded oops must be OK");
@@ -3380,8 +3402,9 @@ void nmethod::print_nmethod_labels(outputStream* stream, address block_begin) co
 }
 
 void nmethod::print_code_comment_on(outputStream* st, int column, u_char* begin, u_char* end) {
+  ImplicitExceptionTable implicit_table(this);
   int pc_offset = begin - code_begin();
-  int cont_offset = ImplicitExceptionTable(this).continuation_offset(pc_offset);
+  int cont_offset = implicit_table.continuation_offset(pc_offset);
   if (cont_offset != 0) {
     st->move_to(column);
     if (pc_offset == cont_offset) {
@@ -3402,8 +3425,12 @@ void nmethod::print_code_comment_on(outputStream* st, int column, u_char* begin,
     for (int i = 0, imax = oms->size(); i < imax; i++) {
       OopMap* om = oms->at(i);
       address pc = base + om->offset();
-      bool is_implicit = ImplicitExceptionTable(this).continuation_offset(om->offset()) == (uint) om->offset();
-      if (is_implicit ? pc == begin : pc > begin && pc <= end) {
+#ifdef INCLUDE_JVMCI
+      bool is_implicit_deopt = implicit_table.continuation_offset(om->offset()) == (uint) om->offset();
+#else
+      bool is_implicit_deopt = false;
+#endif
+      if (is_implicit_deopt ? pc == begin : pc > begin && pc <= end) {
         st->move_to(column);
         st->print("; ");
         om->print_on(st);
