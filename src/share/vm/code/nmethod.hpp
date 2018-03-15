@@ -29,6 +29,7 @@
 #include "code/pcDesc.hpp"
 #include "oops/metadata.hpp"
 
+
 // This class is used internally by nmethods, to cache
 // exception/pc/handler information.
 
@@ -557,6 +558,8 @@ private:
   void fix_oop_relocations(address begin, address end, bool initialize_immediates);
   inline void initialize_immediate_oop(oop* dest, jobject handle);
 
+  address continuation_for_implicit_exception(address pc, bool for_div0_check);
+
 public:
   void fix_oop_relocations(address begin, address end) { fix_oop_relocations(begin, end, false); }
   void fix_oop_relocations()                           { fix_oop_relocations(NULL, NULL, false); }
@@ -597,7 +600,8 @@ public:
   void clean_exception_cache(BoolObjectClosure* is_alive);
 
   // implicit exceptions support
-  address continuation_for_implicit_exception(address pc);
+  address continuation_for_implicit_div0_exception(address pc) { return continuation_for_implicit_exception(pc, true); }
+  address continuation_for_implicit_null_exception(address pc) { return continuation_for_implicit_exception(pc, false); }
 
   // On-stack replacement support
   int   osr_entry_bci() const                     { assert(is_osr_method(), "wrong kind of nmethod"); return _entry_bci; }
