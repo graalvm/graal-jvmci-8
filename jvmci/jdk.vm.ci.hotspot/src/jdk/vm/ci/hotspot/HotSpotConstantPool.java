@@ -271,6 +271,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
         return metaspaceConstantPool;
     }
 
+    @Override
     public long getMetaspacePointer() {
         return getMetaspaceConstantPool();
     }

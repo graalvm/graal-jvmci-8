@@ -99,6 +99,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         return installedCode;
     }
 
+    @Override
     public InstalledCode installCode(ResolvedJavaMethod method, CompiledCode compiledCode, InstalledCode installedCode, SpeculationLog log, boolean isDefault) {
         InstalledCode resultInstalledCode;
         if (installedCode == null) {
@@ -136,6 +137,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         return logOrDump(resultInstalledCode, compiledCode);
     }
 
+    @Override
     public void invalidateInstalledCode(InstalledCode installedCode) {
         runtime.getCompilerToVM().invalidateInstalledCode(installedCode);
     }
@@ -152,14 +154,17 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         return null;
     }
 
+    @Override
     public SpeculationLog createSpeculationLog() {
         return new HotSpotSpeculationLog();
     }
 
+    @Override
     public long getMaxCallTargetOffset(long address) {
         return runtime.getCompilerToVM().getMaxCallTargetOffset(address);
     }
 
+    @Override
     public boolean shouldDebugNonSafepoints() {
         return runtime.getCompilerToVM().shouldDebugNonSafepoints();
     }

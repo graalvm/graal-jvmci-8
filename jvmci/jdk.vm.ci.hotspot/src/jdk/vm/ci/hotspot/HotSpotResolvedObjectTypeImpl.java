@@ -296,6 +296,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return compilerToVM().getImplementor(this);
     }
 
+    @Override
     public HotSpotResolvedObjectTypeImpl getSupertype() {
         if (isArray()) {
             ResolvedJavaType componentType = getComponentType();
@@ -447,6 +448,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return compilerToVM().resolveMethod(this, hotSpotMethod, hotSpotCallerType);
     }
 
+    @Override
     public HotSpotConstantPool getConstantPool() {
         if (constantPool == null || !isArray() && UNSAFE.getAddress(getMetaspaceKlass() + config().instanceKlassConstantsOffset) != constantPool.getMetaspaceConstantPool()) {
             /*
@@ -465,6 +467,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
      * allocated, then the returned value is negative (its absolute value gives the size). Must not
      * be called if this is an array or interface type.
      */
+    @Override
     public int instanceSize() {
         assert !isArray();
         assert !isInterface();
@@ -482,6 +485,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return needsSlowPath ? -size : size;
     }
 
+    @Override
     public int layoutHelper() {
         HotSpotVMConfig config = config();
         return UNSAFE.getInt(getMetaspaceKlass() + config.klassLayoutHelperOffset);
@@ -522,6 +526,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         }
     }
 
+    @Override
     public int getVtableLength() {
         HotSpotVMConfig config = config();
         if (isInterface() || isArray()) {
@@ -795,6 +800,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
      * {@linkplain HotSpotJVMCIRuntime#lookupType(String, HotSpotResolvedObjectType, boolean)
      * re-resolving} the type.
      */
+    @Override
     public boolean isDefinitelyResolvedWithRespectTo(ResolvedJavaType accessingClass) {
         assert accessingClass != null;
         ResolvedJavaType elementType = getElementalType();
@@ -825,19 +831,23 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     /**
      * Gets the metaspace Klass boxed in a {@link JavaConstant}.
      */
+    @Override
     public Constant klass() {
         return HotSpotMetaspaceConstantImpl.forMetaspaceObject(this, false);
     }
 
+    @Override
     public boolean isPrimaryType() {
         return config().secondarySuperCacheOffset != superCheckOffset();
     }
 
+    @Override
     public int superCheckOffset() {
         HotSpotVMConfig config = config();
         return UNSAFE.getInt(getMetaspaceKlass() + config.superCheckOffsetOffset);
     }
 
+    @Override
     public long prototypeMarkWord() {
         HotSpotVMConfig config = config();
         if (isArray()) {
@@ -917,6 +927,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return result;
     }
 
+    @Override
     public ResolvedJavaMethod getClassInitializer() {
         if (!isArray()) {
             return compilerToVM().getClassInitializer(this);
@@ -934,6 +945,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return (getAccessFlags() & config().jvmAccIsCloneable) != 0;
     }
 
+    @Override
     public long getFingerprint() {
         return 0L;
     }

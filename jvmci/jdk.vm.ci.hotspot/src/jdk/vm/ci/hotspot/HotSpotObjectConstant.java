@@ -36,8 +36,10 @@ import jdk.vm.ci.meta.VMConstant;
  */
 public interface HotSpotObjectConstant extends JavaConstant, HotSpotConstant, VMConstant {
 
+    @Override
     JavaConstant compress();
 
+    @Override
     JavaConstant uncompress();
 
     /**

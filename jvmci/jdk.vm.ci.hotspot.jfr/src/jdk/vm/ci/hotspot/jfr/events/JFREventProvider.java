@@ -128,30 +128,37 @@ public final class JFREventProvider implements EventProvider {
         @com.oracle.jrockit.jfr.ValueDefinition(name = "Compiled Code Size", contentType = com.oracle.jrockit.jfr.ContentType.Bytes) public int codeSize;
         @com.oracle.jrockit.jfr.ValueDefinition(name = "Inlined Code Size", contentType = com.oracle.jrockit.jfr.ContentType.Bytes) public int inlinedBytes;
 
+        @Override
         public void setMethod(String method) {
             this.method = method;
         }
 
+        @Override
         public void setCompileId(int id) {
             this.compileId = id;
         }
 
+        @Override
         public void setCompileLevel(int compileLevel) {
             this.compileLevel = (short) compileLevel;
         }
 
+        @Override
         public void setSucceeded(boolean succeeded) {
             this.succeeded = succeeded;
         }
 
+        @Override
         public void setIsOsr(boolean isOsr) {
             this.isOsr = isOsr;
         }
 
+        @Override
         public void setCodeSize(int codeSize) {
             this.codeSize = codeSize;
         }
 
+        @Override
         public void setInlinedBytes(int inlinedBytes) {
             this.inlinedBytes = inlinedBytes;
         }
@@ -177,10 +184,12 @@ public final class JFREventProvider implements EventProvider {
         @com.oracle.jrockit.jfr.ValueDefinition(name = "Compilation ID", relationKey = "COMP_ID") public int compileId;
         @com.oracle.jrockit.jfr.ValueDefinition(name = "Message", description = "The failure message") public String failure;
 
+        @Override
         public void setCompileId(int id) {
             this.compileId = id;
         }
 
+        @Override
         public void setMessage(String message) {
             this.failure = message;
         }

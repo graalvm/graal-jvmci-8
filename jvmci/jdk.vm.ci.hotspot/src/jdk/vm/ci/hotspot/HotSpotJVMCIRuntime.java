@@ -334,22 +334,27 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         return backend;
     }
 
+    @Override
     public ResolvedJavaType fromClass(Class<?> javaClass) {
         return metaAccessContext.fromClass(javaClass);
     }
 
+    @Override
     public HotSpotVMConfigStore getConfigStore() {
         return configStore;
     }
 
+    @Override
     public HotSpotVMConfig getConfig() {
         return config;
     }
 
+    @Override
     public CompilerToVM getCompilerToVM() {
         return compilerToVm;
     }
 
+    @Override
     public JVMCICompiler getCompiler() {
         if (compiler == null) {
             synchronized (this) {
@@ -361,6 +366,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         return compiler;
     }
 
+    @Override
     public JavaType lookupType(String name, HotSpotResolvedObjectType accessingType, boolean resolve) {
         Objects.requireNonNull(accessingType, "cannot resolve type without an accessing class");
         // If the name represents a primitive type we can short-circuit the lookup.
@@ -384,10 +390,12 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         }
     }
 
+    @Override
     public JVMCIBackend getHostJVMCIBackend() {
         return hostBackend;
     }
 
+    @Override
     public <T extends Architecture> JVMCIBackend getJVMCIBackend(Class<T> arch) {
         assert arch != Architecture.class;
         return backends.get(arch);
@@ -495,6 +503,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         }
     }
 
+    @Override
     public OutputStream getLogStream() {
         return new OutputStream() {
 

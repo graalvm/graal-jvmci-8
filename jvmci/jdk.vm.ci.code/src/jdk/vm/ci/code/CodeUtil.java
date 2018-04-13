@@ -377,6 +377,7 @@ public class CodeUtil {
 
     public static class NumberedRefMapFormatter implements RefMapFormatter {
 
+        @Override
         public String formatStackSlot(int frameRefMapIndex) {
             return "s" + frameRefMapIndex;
         }

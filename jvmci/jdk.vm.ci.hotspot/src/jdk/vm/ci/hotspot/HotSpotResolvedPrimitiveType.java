@@ -74,6 +74,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
         return HotSpotResolvedObjectTypeImpl.fromObjectClass(javaArrayMirror);
     }
 
+    @Override
     public ResolvedJavaType getElementalType() {
         return this;
     }
@@ -128,6 +129,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
         return true;
     }
 
+    @Override
     public boolean isLinked() {
         return true;
     }
