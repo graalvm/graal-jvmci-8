@@ -139,6 +139,7 @@ public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         return "JVMCIBackend:" + getArchitecture();
     }
 
+    @Override
     @SuppressWarnings("try")
     public JVMCIBackend createJVMCIBackend(HotSpotJVMCIRuntimeProvider runtime, JVMCIBackend host) {
         assert host == null;

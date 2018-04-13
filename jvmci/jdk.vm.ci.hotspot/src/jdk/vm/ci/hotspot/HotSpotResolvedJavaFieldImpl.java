@@ -94,6 +94,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
      * @return true iff this is a non-static field and its declaring class is assignable from
      *         {@code object}'s class
      */
+    @Override
     public boolean isInObject(Object object) {
         if (isStatic()) {
             return false;
@@ -127,6 +128,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
         return type;
     }
 
+    @Override
     public int offset() {
         return offset;
     }
@@ -146,6 +148,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
      *
      * @return true if field has {@link Stable} annotation, false otherwise
      */
+    @Override
     public boolean isStable() {
         return (config().jvmAccFieldStable & modifiers) != 0;
     }

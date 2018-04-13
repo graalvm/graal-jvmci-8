@@ -40,14 +40,17 @@ class HotSpotUnresolvedField implements JavaField {
         this.holder = holder;
     }
 
+    @Override
     public String getName() {
         return name;
     }
 
+    @Override
     public JavaType getType() {
         return type;
     }
 
+    @Override
     public JavaType getDeclaringClass() {
         return holder;
     }

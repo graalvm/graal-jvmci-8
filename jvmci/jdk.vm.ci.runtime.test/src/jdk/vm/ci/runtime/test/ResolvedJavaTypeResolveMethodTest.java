@@ -24,12 +24,13 @@ package jdk.vm.ci.runtime.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+
+import org.junit.Test;
+
 import jdk.vm.ci.meta.MetaAccessProvider;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.runtime.JVMCI;
-
-import org.junit.Test;
 
 public class ResolvedJavaTypeResolveMethodTest {
     public final MetaAccessProvider metaAccess;
@@ -53,6 +54,7 @@ public class ResolvedJavaTypeResolveMethodTest {
     }
 
     protected static class B extends A implements I {
+        @Override
         public void i() {
         }
 
@@ -67,6 +69,7 @@ public class ResolvedJavaTypeResolveMethodTest {
     }
 
     protected static class C extends B {
+        @Override
         public void d() {
         }
     }

@@ -37,6 +37,7 @@ public interface ResolvedJavaField extends JavaField, ModifiersProvider, Annotat
      * Only the {@linkplain Modifier#fieldModifiers() field flags} specified in the JVM
      * specification will be included in the returned mask.
      */
+    @Override
     int getModifiers();
 
     default boolean isFinal() {
@@ -58,5 +59,6 @@ public interface ResolvedJavaField extends JavaField, ModifiersProvider, Annotat
      * Returns the {@link ResolvedJavaType} object representing the class or interface that declares
      * this field.
      */
+    @Override
     ResolvedJavaType getDeclaringClass();
 }

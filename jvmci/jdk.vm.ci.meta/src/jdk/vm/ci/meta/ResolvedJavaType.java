@@ -52,6 +52,7 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
      *
      * @return {@code true} if this type is an interface
      */
+    @Override
     boolean isInterface();
 
     /**
@@ -186,8 +187,10 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
      */
     AssumptionResult<ResolvedJavaType> findLeafConcreteSubtype();
 
+    @Override
     ResolvedJavaType getComponentType();
 
+    @Override
     default ResolvedJavaType getElementalType() {
         ResolvedJavaType t = this;
         while (t.isArray()) {
@@ -196,6 +199,7 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
         return t;
     }
 
+    @Override
     ResolvedJavaType getArrayClass();
 
     /**

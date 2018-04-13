@@ -41,6 +41,7 @@ final class HotSpotMethodUnresolved extends HotSpotMethod {
         this.signature = signature;
     }
 
+    @Override
     public String getName() {
         return name;
     }

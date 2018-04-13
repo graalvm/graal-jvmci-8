@@ -45,24 +45,32 @@ public interface HotSpotResolvedObjectType extends ResolvedJavaType {
         return HotSpotResolvedObjectTypeImpl.fromObjectClass(javaClass);
     }
 
+    @Override
     HotSpotResolvedObjectType getArrayClass();
 
+    @Override
     ResolvedJavaType getComponentType();
 
+    @Override
     AssumptionResult<ResolvedJavaType> findLeafConcreteSubtype();
 
+    @Override
     HotSpotResolvedObjectType getSuperclass();
 
+    @Override
     HotSpotResolvedObjectType[] getInterfaces();
 
     HotSpotResolvedObjectType getSupertype();
 
+    @Override
     HotSpotResolvedObjectType findLeastCommonAncestor(ResolvedJavaType otherType);
 
+    @Override
     default boolean isPrimitive() {
         return false;
     }
 
+    @Override
     default JavaKind getJavaKind() {
         return JavaKind.Object;
     }
@@ -103,8 +111,10 @@ public interface HotSpotResolvedObjectType extends ResolvedJavaType {
 
     int layoutHelper();
 
+    @Override
     HotSpotResolvedObjectType getEnclosingType();
 
+    @Override
     ResolvedJavaMethod getClassInitializer();
 
     /**

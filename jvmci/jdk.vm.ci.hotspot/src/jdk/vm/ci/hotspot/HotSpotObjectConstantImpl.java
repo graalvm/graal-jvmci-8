@@ -91,24 +91,29 @@ final class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
         return object;
     }
 
+    @Override
     public boolean isCompressed() {
         return compressed;
     }
 
+    @Override
     public JavaConstant compress() {
         assert !compressed;
         return new HotSpotObjectConstantImpl(object, true);
     }
 
+    @Override
     public JavaConstant uncompress() {
         assert compressed;
         return new HotSpotObjectConstantImpl(object, false);
     }
 
+    @Override
     public HotSpotResolvedObjectType getType() {
         return fromObjectClass(object.getClass());
     }
 
+    @Override
     public JavaConstant getClassLoader() {
         if (object instanceof Class) {
             /*
@@ -120,10 +125,12 @@ final class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
         return null;
     }
 
+    @Override
     public int getIdentityHashCode() {
         return System.identityHashCode(object);
     }
 
+    @Override
     public JavaConstant getComponentType() {
         if (object instanceof Class) {
             return HotSpotObjectConstantImpl.forObject(((Class<?>) object).getComponentType());
@@ -131,6 +138,7 @@ final class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
         return null;
     }
 
+    @Override
     public JavaConstant getSuperclass() {
         if (object instanceof Class) {
             return HotSpotObjectConstantImpl.forObject(((Class<?>) object).getSuperclass());
@@ -138,6 +146,7 @@ final class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
         return null;
     }
 
+    @Override
     public JavaConstant getCallSiteTarget(Assumptions assumptions) {
         if (object instanceof CallSite) {
             CallSite callSite = (CallSite) object;
@@ -153,6 +162,7 @@ final class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
         return null;
     }
 
+    @Override
     @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "reference equality is what we want")
     public boolean isInternedString() {
         if (object instanceof String) {
@@ -162,6 +172,7 @@ final class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
         return false;
     }
 
+    @Override
     public <T> T asObject(Class<T> type) {
         if (type.isInstance(object)) {
             return type.cast(object);
@@ -169,6 +180,7 @@ final class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
         return null;
     }
 
+    @Override
     public Object asObject(ResolvedJavaType type) {
         if (type.isInstance(this)) {
             return object;

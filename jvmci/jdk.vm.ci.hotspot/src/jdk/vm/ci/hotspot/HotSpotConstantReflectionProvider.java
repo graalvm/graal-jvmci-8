@@ -50,6 +50,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         this.memoryAccess = new HotSpotMemoryAccessProviderImpl(runtime);
     }
 
+    @Override
     public MethodHandleAccessProvider getMethodHandleAccess() {
         return methodHandleAccess;
     }
@@ -167,6 +168,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         return JavaConstant.forBoxedPrimitive(((HotSpotObjectConstantImpl) source).object());
     }
 
+    @Override
     public JavaConstant forString(String value) {
         return HotSpotObjectConstantImpl.forObject(value);
     }
@@ -192,6 +194,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         return null;
     }
 
+    @Override
     public JavaConstant readFieldValue(ResolvedJavaField field, JavaConstant receiver) {
         HotSpotResolvedJavaField hotspotField = (HotSpotResolvedJavaField) field;
         if (hotspotField.isStatic()) {

@@ -60,6 +60,7 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
      * Returns the {@link ResolvedJavaType} object representing the class or interface that declares
      * this method.
      */
+    @Override
     ResolvedJavaType getDeclaringClass();
 
     /**
@@ -273,14 +274,17 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
             return method.isVarArgs() && index == method.getSignature().getParameterCount(false) - 1;
         }
 
+        @Override
         public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
             return method.getParameterAnnotations(annotationClass)[index];
         }
 
+        @Override
         public Annotation[] getAnnotations() {
             return method.getParameterAnnotations()[index];
         }
 
+        @Override
         public Annotation[] getDeclaredAnnotations() {
             return getAnnotations();
         }

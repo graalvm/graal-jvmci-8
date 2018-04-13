@@ -53,6 +53,7 @@ final class HotSpotJVMCICompilerConfig {
             this.reason = reason;
         }
 
+        @Override
         public CompilationRequestResult compileMethod(CompilationRequest request) {
             throw new JVMCIError("No JVMCI compiler selected. " + reason);
         }

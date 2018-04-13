@@ -22,24 +22,6 @@
  */
 package jdk.vm.ci.hotspot;
 
-import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
-import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
-import static jdk.vm.ci.hotspot.HotSpotModifiers.BRIDGE;
-import static jdk.vm.ci.hotspot.HotSpotModifiers.SYNTHETIC;
-import static jdk.vm.ci.hotspot.HotSpotModifiers.VARARGS;
-import static jdk.vm.ci.hotspot.HotSpotModifiers.jvmMethodModifiers;
-import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
-import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
-
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Executable;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.lang.reflect.Type;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.meta.Constant;
@@ -57,6 +39,24 @@ import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.meta.Signature;
 import jdk.vm.ci.meta.SpeculationLog;
 import jdk.vm.ci.meta.TriState;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Executable;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
+import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.vm.ci.hotspot.HotSpotModifiers.BRIDGE;
+import static jdk.vm.ci.hotspot.HotSpotModifiers.SYNTHETIC;
+import static jdk.vm.ci.hotspot.HotSpotModifiers.VARARGS;
+import static jdk.vm.ci.hotspot.HotSpotModifiers.jvmMethodModifiers;
+import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
+import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
 /**
  * Implementation of {@link JavaMethod} for resolved HotSpot methods.
@@ -147,6 +147,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         return UNSAFE.getAddress(metaspaceMethod + config().methodConstMethodOffset);
     }
 
+    @Override
     public String getName() {
         if (nameCache == null) {
             final int nameIndex = UNSAFE.getChar(getConstMethod() + config().constMethodNameIndexOffset);
@@ -203,6 +204,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         return HotSpotMetaspaceConstantImpl.forMetaspaceObject(this, false);
     }
 
+    @Override
     public long getMetaspacePointer() {
         return metaspaceMethod;
     }
@@ -295,6 +297,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
      *
      * @return true if CallerSensitive annotation present, false otherwise
      */
+    @Override
     public boolean isCallerSensitive() {
         return (getFlags() & config().methodFlagsCallerSensitive) != 0;
     }
@@ -304,6 +307,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
      *
      * @return true if ForceInline annotation present, false otherwise
      */
+    @Override
     public boolean isForceInline() {
         return (getFlags() & config().methodFlagsForceInline) != 0;
     }
@@ -313,6 +317,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
      *
      * @return true if ReservedStackAccess annotation present, false otherwise
      */
+    @Override
     public boolean hasReservedStackAccess() {
         // Annotation isn't available in JDK8
         return false;
@@ -321,6 +326,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     /**
      * Sets flags on {@code method} indicating that it should never be inlined or compiled.
      */
+    @Override
     public void setNotInlinableOrCompilable() {
         compilerToVM().setNotInlinableOrCompilable(this);
     }
@@ -331,6 +337,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
      *
      * @return true if special method ignored by security stack walks, false otherwise
      */
+    @Override
     public boolean ignoredBySecurityStackWalk() {
         return compilerToVM().methodIsIgnoredBySecurityStackWalk(this);
     }
@@ -385,6 +392,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         return compilerToVM().getStackTraceElement(this, bci);
     }
 
+    @Override
     public ResolvedJavaMethod uniqueConcreteMethod(HotSpotResolvedObjectType receiver) {
         if (receiver.isInterface()) {
             // Cannot trust interfaces. Because of:
@@ -424,6 +432,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
      *
      * @return true if this method has compiled code, false otherwise
      */
+    @Override
     public boolean hasCompiledCode() {
         return getCompiledCode() != 0L;
     }
@@ -432,6 +441,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
      * @param level
      * @return true if the currently installed code was generated at {@code level}.
      */
+    @Override
     public boolean hasCompiledCodeAtLevel(int level) {
         long compiledCode = getCompiledCode();
         if (compiledCode != 0) {
@@ -522,6 +532,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         return javaMethod == null ? null : javaMethod.getAnnotation(annotationClass);
     }
 
+    @Override
     public boolean isBridge() {
         return (BRIDGE & getModifiers()) != 0;
     }
@@ -531,10 +542,12 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         return (SYNTHETIC & getModifiers()) != 0;
     }
 
+    @Override
     public boolean isVarArgs() {
         return (VARARGS & getModifiers()) != 0;
     }
 
+    @Override
     public boolean isDefault() {
         // Copied from java.lang.Method.isDefault()
         int mask = Modifier.ABSTRACT | Modifier.PUBLIC | Modifier.STATIC;
@@ -674,6 +687,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
      *
      * @return the offset of this method into the v-table
      */
+    @Override
     public int vtableEntryOffset(ResolvedJavaType resolved) {
         if (!isInVirtualMethodTable(resolved)) {
             throw new JVMCIError("%s does not have a vtable entry in type %s", this, resolved);
@@ -741,6 +755,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         }
     };
 
+    @Override
     public SpeculationLog getSpeculationLog() {
         Map<Long, SpeculationLog> map = SpeculationLogs.get(holder.mirror());
         synchronized (map) {
@@ -753,12 +768,14 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
         }
     }
 
+    @Override
     public int intrinsicId() {
         HotSpotVMConfig config = config();
         // Important: Size of field changed, JDK8 has u1 and JDK9 u2
         return UNSAFE.getByte(metaspaceMethod + config.methodIntrinsicIdOffset) & 0xff;
     }
 
+    @Override
     public boolean isIntrinsicCandidate() {
         return true;
     }
@@ -769,10 +786,12 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
      * @param entryBCI entry bci
      * @return compile id
      */
+    @Override
     public int allocateCompileId(int entryBCI) {
         return compilerToVM().allocateCompileId(this, entryBCI);
     }
 
+    @Override
     public boolean hasCodeAtLevel(int entryBCI, int level) {
         if (entryBCI == config().invocationEntryBci) {
             return hasCompiledCodeAtLevel(level);
