@@ -56,8 +56,8 @@ static const char* get_jvmci_compiler_name(bool* error) {
     const char* fileSep = os::file_separator();
     jio_snprintf(filename, sizeof(filename), "%s%slib%sjvmci%scompiler-name", Arguments::get_java_home(), fileSep, fileSep, fileSep);
     struct stat statbuf;
+    char line[256];
     if (os::stat(filename, &statbuf) == 0) {
-      char line[256];
       if ((size_t) statbuf.st_size > sizeof(line)) {
         jio_fprintf(defaultStream::error_stream(), "Size of %s is greater than %d\n", filename, sizeof(line));
         *error = true;

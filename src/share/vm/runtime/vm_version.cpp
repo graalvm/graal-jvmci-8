@@ -42,11 +42,11 @@
 # include "vm_version_ppc.hpp"
 #endif
 
+
 const char* Abstract_VM_Version::_s_vm_release = NULL;
 const char* Abstract_VM_Version::_s_vm_name = NULL;
-int Abstract_VM_Version::_vm_properties_initialized_from_file =
-    Abstract_VM_Version::init_vm_properties(Abstract_VM_Version::_s_vm_name, Abstract_VM_Version::_s_vm_release);
-const char* Abstract_VM_Version::_s_internal_vm_info_string = Abstract_VM_Version::init_internal_vm_info_string();
+int Abstract_VM_Version::_vm_properties_initialized_from_file = NULL;
+const char* Abstract_VM_Version::_s_internal_vm_info_string = NULL;
 bool Abstract_VM_Version::_supports_cx8 = false;
 bool Abstract_VM_Version::_supports_atomic_getset4 = false;
 bool Abstract_VM_Version::_supports_atomic_getset8 = false;
@@ -80,6 +80,12 @@ int Abstract_VM_Version::_vm_build_number = 0;
 bool Abstract_VM_Version::_initialized = false;
 int Abstract_VM_Version::_parallel_worker_threads = 0;
 bool Abstract_VM_Version::_parallel_worker_threads_initialized = false;
+
+void Abstract_VM_Version::early_initialize() {
+  Abstract_VM_Version::initialize();
+  _vm_properties_initialized_from_file = Abstract_VM_Version::init_vm_properties(Abstract_VM_Version::_s_vm_name, Abstract_VM_Version::_s_vm_release);
+  _s_internal_vm_info_string = Abstract_VM_Version::init_internal_vm_info_string();
+}
 
 void Abstract_VM_Version::initialize() {
   if (_initialized) {
@@ -146,14 +152,14 @@ int Abstract_VM_Version::init_vm_properties(const char*& name, const char*& vers
   if (end == NULL) {
     warning("Could not find '%c' in %s", *os::file_separator(), filename);
   } else {
-    snprintf(end, JVM_MAXPATHLEN - (end - filename), "%svm.properties", os::file_separator());
+    jio_snprintf(end, JVM_MAXPATHLEN - (end - filename), "%svm.properties", os::file_separator());
     struct stat statbuf;
 
     if (os::stat(filename, &statbuf) == 0) {
       FILE* stream = fopen(filename, "r");
       if (stream != NULL) {
         char* buffer = NEW_C_HEAP_ARRAY(char, statbuf.st_size + 1, mtInternal);
-        int num_read = fread(buffer, 1, statbuf.st_size, stream);
+        int num_read = (int)fread(buffer, 1, statbuf.st_size, stream);
         int err = ferror(stream);
         fclose(stream);
         if (num_read != statbuf.st_size) {
@@ -367,8 +373,8 @@ const char* Abstract_VM_Version::init_internal_vm_info_string() {
   " by " XSTR(HOTSPOT_BUILD_USER) " with " HOTSPOT_BUILD_COMPILER
 
   if (_s_vm_name != VMNAME || _s_vm_release != VM_RELEASE) {
-    int len = strlen(VM_INTERNAL_INFO_FORMAT(VMNAME, VM_RELEASE)) - strlen(VMNAME VM_RELEASE) +
-              strlen(_s_vm_name) + strlen(_s_vm_release);
+    int len = (int) (strlen(VM_INTERNAL_INFO_FORMAT(VMNAME, VM_RELEASE)) - strlen(VMNAME VM_RELEASE) +
+              strlen(_s_vm_name) + strlen(_s_vm_release));
     char* buffer = NEW_C_HEAP_ARRAY(char, len + 1, mtInternal);
     sprintf(buffer, VM_INTERNAL_INFO_FORMAT("%s", "%s"), _s_vm_name, _s_vm_release);
     return buffer;
