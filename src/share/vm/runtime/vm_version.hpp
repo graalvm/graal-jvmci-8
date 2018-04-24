@@ -79,7 +79,7 @@ class Abstract_VM_Version: AllStatic {
   // full VM_Version initialization is possible. It can not depend on any
   // other part of the VM being initialized when called. Platforms that
   // need to specialize this define VM_Version::early_initialize().
-  static void early_initialize() { }
+  static void early_initialize();
 
   // Called to initialize VM variables needing initialization
   // after command line parsing. Platforms that need to specialize
