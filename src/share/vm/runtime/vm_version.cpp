@@ -45,7 +45,7 @@
 
 const char* Abstract_VM_Version::_s_vm_release = NULL;
 const char* Abstract_VM_Version::_s_vm_name = NULL;
-int Abstract_VM_Version::_vm_properties_initialized_from_file = NULL;
+int Abstract_VM_Version::_vm_properties_initialized_from_file = 0;
 const char* Abstract_VM_Version::_s_internal_vm_info_string = NULL;
 bool Abstract_VM_Version::_supports_cx8 = false;
 bool Abstract_VM_Version::_supports_atomic_getset4 = false;
