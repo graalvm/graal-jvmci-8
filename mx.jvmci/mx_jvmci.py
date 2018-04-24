@@ -910,7 +910,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
             version = _suite.release_version()
-            setMakeXVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
+            setMakeVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
             setMakeVar('INCLUDE_JVMCI', 'true')
             # setMakeVar('INSTALL', 'y', env=env)
             if mx.get_os() == 'darwin' and platform.mac_ver()[0] != '':
