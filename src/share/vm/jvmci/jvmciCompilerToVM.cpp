@@ -349,6 +349,7 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
       } else { \
         name = (*e)(); \
       } \
+      guarantee(!name.is_null(), err_msg("null String for %s", value)); \
     } \
   } while (0)
 
