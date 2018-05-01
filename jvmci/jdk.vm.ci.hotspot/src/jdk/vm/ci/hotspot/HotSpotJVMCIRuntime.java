@@ -22,17 +22,6 @@
  */
 package jdk.vm.ci.hotspot;
 
-import static jdk.vm.ci.common.InitTimer.timer;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-
 import jdk.vm.ci.code.Architecture;
 import jdk.vm.ci.code.CompilationRequestResult;
 import jdk.vm.ci.code.CompiledCode;
@@ -50,6 +39,17 @@ import jdk.vm.ci.runtime.JVMCICompilerFactory;
 import jdk.vm.ci.services.JVMCIServiceLocator;
 import jdk.vm.ci.services.Services;
 import sun.misc.VM;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+import static jdk.vm.ci.common.InitTimer.timer;
 
 /**
  * HotSpot implementation of a JVMCI runtime.
@@ -531,6 +531,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         };
     }
 
+    @Override
     public OutputStream getCompileLogStream() {
         try {
             compilerToVm.writeCompileLogOutput(new byte[0], 0, 0);
@@ -549,8 +550,15 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
 
     private class CompileLogStream extends OutputStream {
 
+        private final Thread thread;
+
+        CompileLogStream() {
+            this.thread = Thread.currentThread();
+        }
+
         @Override
         public void write(byte[] b, int off, int len) throws IOException {
+            checkThread();
             if (b == null) {
                 throw new NullPointerException();
             } else if (off < 0 || off > b.length || len < 0 || (off + len) > b.length || (off + len) < 0) {
@@ -561,6 +569,12 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
             compilerToVm.writeCompileLogOutput(b, off, len);
         }
 
+        private void checkThread() {
+            if (thread != Thread.currentThread()) {
+                throw new IllegalStateException("must be used from creating thread");
+            }
+        }
+
         @Override
         public void write(int b) throws IOException {
             write(new byte[]{(byte) b}, 0, 1);
@@ -568,6 +582,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
 
         @Override
         public void flush() throws IOException {
+            checkThread();
             compilerToVm.flushCompileLogOutput();
         }
     }

@@ -43,12 +43,15 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
     CompilerToVM getCompilerToVM();
 
     /**
-     * Gets an output stream that writes to the HotSpot's {@code tty} stream.
+     * Gets an output stream that writes to HotSpot's {@code tty} stream.
      */
     OutputStream getLogStream();
 
     /**
-     * Gets an output stream that writes to the HotSpot's {@code CompileLog} stream.
+     * Gets an output stream that writes to HotSpot's {@code CompileLog} stream. The stream can only
+     * be used by the thread that created it and should be closed when writing is completed.
+     *
+     * @return the stream or {@code null} if the current thread doesn't have a CompileLog.
      */
     OutputStream getCompileLogStream();
 
