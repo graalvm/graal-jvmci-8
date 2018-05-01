@@ -543,6 +543,21 @@ final class CompilerToVM {
     native void flushDebugOutput();
 
     /**
+     * Writes {@code length} bytes from {@code bytes} starting at offset {@code offset} to the
+     * HotSpot's log stream.
+     *
+     * @exception NullPointerException if {@code bytes == null}
+     * @exception IndexOutOfBoundsException if copying would cause access of data outside array
+     *                bounds
+     */
+    native void writeCompileLogOutput(byte[] bytes, int offset, int length);
+
+    /**
+     * Flush HotSpot's CompileLog stream.
+     */
+    native void flushCompileLogOutput();
+
+    /**
      * Read a HotSpot Method* value from the memory location described by {@code base} plus
      * {@code displacement} and return the {@link HotSpotResolvedJavaMethodImpl} wrapping it. This
      * method does no checking that the memory location actually contains a valid pointer and may

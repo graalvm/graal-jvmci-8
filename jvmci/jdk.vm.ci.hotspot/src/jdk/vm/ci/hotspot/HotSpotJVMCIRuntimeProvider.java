@@ -48,6 +48,11 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
     OutputStream getLogStream();
 
     /**
+     * Gets an output stream that writes to the HotSpot's {@code CompileLog} stream.
+     */
+    OutputStream getCompileLogStream();
+
+    /**
      * Converts a name to a Java type. This method attempts to resolve {@code name} to a
      * {@link ResolvedJavaType}.
      *
