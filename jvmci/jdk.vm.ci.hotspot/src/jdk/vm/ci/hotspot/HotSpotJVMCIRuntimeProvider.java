@@ -22,14 +22,14 @@
  */
 package jdk.vm.ci.hotspot;
 
-import java.io.OutputStream;
-
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.runtime.JVMCIRuntime;
 import sun.misc.Unsafe;
+
+import java.io.OutputStream;
 
 /**
  * Configuration information for the HotSpot JVMCI runtime.
@@ -43,9 +43,19 @@ public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
     CompilerToVM getCompilerToVM();
 
     /**
-     * Gets an output stream that writes to the HotSpot's {@code tty} stream.
+     * Gets an output stream that writes to HotSpot's {@code tty} stream.
      */
     OutputStream getLogStream();
+
+    /**
+     * Gets an output stream that writes to HotSpot's {@code CompileLog} stream. The stream can only
+     * be used by the thread that created it and should be closed when writing is completed. Writing
+     * to the stream from a different thread than the creator will end up writing to that threads
+     * log or possibly throwing an @{link IllegalArgumentException} if there is no log.
+     *
+     * @return the stream or {@code null} if the current thread doesn't have a CompileLog.
+     */
+    OutputStream getCompileLogStream();
 
     /**
      * Converts a name to a Java type. This method attempts to resolve {@code name} to a

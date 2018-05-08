@@ -528,12 +528,11 @@ final class CompilerToVM {
     native boolean shouldDebugNonSafepoints();
 
     /**
-     * Writes {@code length} bytes from {@code bytes} starting at offset {@code offset} to the
-     * HotSpot's log stream.
+     * Writes {@code length} bytes from {@code bytes} starting at offset {@code offset} to HotSpot's
+     * log stream.
      *
-     * @exception NullPointerException if {@code bytes == null}
-     * @exception IndexOutOfBoundsException if copying would cause access of data outside array
-     *                bounds
+     * @throws NullPointerException if {@code bytes == null}
+     * @throws IndexOutOfBoundsException if copying would cause access of data outside array bounds
      */
     native void writeDebugOutput(byte[] bytes, int offset, int length);
 
@@ -541,6 +540,24 @@ final class CompilerToVM {
      * Flush HotSpot's log stream.
      */
     native void flushDebugOutput();
+
+    /**
+     * Writes {@code length} bytes from {@code bytes} starting at offset {@code offset} to the
+     * current threads CompileLog stream, if it exists.
+     *
+     * @throws NullPointerException if {@code bytes == null}
+     * @throws IndexOutOfBoundsException if copying would cause access of data outside array bounds
+     *
+     * @throws IllegalArgumentException if the current thread doesn't have a CompileLog
+     */
+    native void writeCompileLogOutput(byte[] bytes, int offset, int length);
+
+    /**
+     * Flush HotSpot's CompileLog stream.
+     *
+     * @throws IllegalArgumentException if the current thread doesn't have a CompileLog
+     */
+    native void flushCompileLogOutput();
 
     /**
      * Read a HotSpot Method* value from the memory location described by {@code base} plus

@@ -34,6 +34,7 @@
 #include "jvmci/jvmciRuntime.hpp"
 #include "compiler/abstractCompiler.hpp"
 #include "compiler/compileBroker.hpp"
+#include "compiler/compileLog.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "compiler/disassembler.hpp"
 #include "jvmci/jvmciCompilerToVM.hpp"
@@ -1648,11 +1649,11 @@ C2V_VMENTRY(void, writeDebugOutput, (JNIEnv*, jobject, jbyteArray bytes, jint of
 
   // Check if offset and length are non negative.
   if (offset < 0 || length < 0) {
-    THROW(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
+    THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
   }
   // Check if the range is valid.
   if ((((unsigned int) length + (unsigned int) offset) > (unsigned int) array->length())) {
-    THROW(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
+    THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
   }
   while (length > 0) {
     jbyte* start = array->byte_at_addr(offset);
@@ -1664,6 +1665,46 @@ C2V_END
 
 C2V_VMENTRY(void, flushDebugOutput, (JNIEnv*, jobject))
   tty->flush();
+C2V_END
+
+C2V_VMENTRY(void, writeCompileLogOutput, (JNIEnv*, jobject, jbyteArray bytes, jint offset, jint length))
+  CompileLog*     log = NULL;
+  if (THREAD->is_Compiler_thread()) {
+    log = ((CompilerThread*)THREAD)->log();
+  }
+  if (log == NULL) {
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "No CompileLog available");
+  }
+  if (bytes == NULL) {
+    THROW(vmSymbols::java_lang_NullPointerException());
+  }
+  typeArrayOop array = (typeArrayOop) JNIHandles::resolve(bytes);
+
+  // Check if offset and length are non negative.
+  if (offset < 0 || length < 0) {
+    THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
+  }
+  // Check if the range is valid.
+  if ((((unsigned int) length + (unsigned int) offset) > (unsigned int) array->length())) {
+    THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
+  }
+  while (length > 0) {
+    jbyte* start = array->byte_at_addr(offset);
+    log->write((char*) start, MIN2(length, O_BUFLEN));
+    length -= O_BUFLEN;
+    offset += O_BUFLEN;
+  }
+C2V_END
+
+C2V_VMENTRY(void, flushCompileLogOutput, (JNIEnv*, jobject))
+  CompileLog*     log = NULL;
+  if (THREAD->is_Compiler_thread()) {
+    log = ((CompilerThread*)THREAD)->log();
+  }
+  if (log == NULL) {
+    THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(), "No CompileLog available");
+  }
+  log->flush();
 C2V_END
 
 C2V_VMENTRY(int, methodDataProfileDataSize, (JNIEnv*, jobject, jlong metaspace_method_data, jint position))
@@ -1819,6 +1860,8 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"shouldDebugNonSafepoints",                     CC"()Z",                                                                          FN_PTR(shouldDebugNonSafepoints)},
   {CC"writeDebugOutput",                             CC"([BII)V",                                                                      FN_PTR(writeDebugOutput)},
   {CC"flushDebugOutput",                             CC"()V",                                                                          FN_PTR(flushDebugOutput)},
+  {CC"writeCompileLogOutput",                        CC"([BII)V",                                                                      FN_PTR(writeCompileLogOutput)},
+  {CC"flushCompileLogOutput",                        CC"()V",                                                                          FN_PTR(flushCompileLogOutput)},
   {CC"methodDataProfileDataSize",                    CC"(JI)I",                                                                        FN_PTR(methodDataProfileDataSize)},
   {CC"getHostClass",                                 CC"("HS_RESOLVED_KLASS")"HS_RESOLVED_KLASS,                                       FN_PTR(getHostClass)},
   {CC"interpreterFrameSize",                         CC"("BYTECODE_FRAME")I",                                                          FN_PTR(interpreterFrameSize)},

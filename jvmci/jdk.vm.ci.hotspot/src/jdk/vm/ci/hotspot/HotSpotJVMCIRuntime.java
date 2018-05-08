@@ -531,10 +531,45 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         };
     }
 
+    @Override
+    public OutputStream getCompileLogStream() {
+        try {
+            /*
+             * Attempt to write zero bytes to the compile log to ensure it exists for the current
+             * thread.
+             */
+            compilerToVm.writeCompileLogOutput(new byte[0], 0, 0);
+        } catch (IllegalArgumentException iae) {
+            return null;
+        }
+        return new CompileLogStream();
+    }
+
     /**
      * Collects the current values of all JVMCI benchmark counters, summed up over all threads.
      */
     public long[] collectCounters() {
         return compilerToVm.collectCounters();
+    }
+
+    private class CompileLogStream extends OutputStream {
+
+        CompileLogStream() {
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            compilerToVm.writeCompileLogOutput(b, off, len);
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            write(new byte[]{(byte) b}, 0, 1);
+        }
+
+        @Override
+        public void flush() throws IOException {
+            compilerToVm.flushCompileLogOutput();
+        }
     }
 }
