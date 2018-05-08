@@ -1649,11 +1649,11 @@ C2V_VMENTRY(void, writeDebugOutput, (JNIEnv*, jobject, jbyteArray bytes, jint of
 
   // Check if offset and length are non negative.
   if (offset < 0 || length < 0) {
-    THROW(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
+    THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
   }
   // Check if the range is valid.
   if ((((unsigned int) length + (unsigned int) offset) > (unsigned int) array->length())) {
-    THROW(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
+    THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
   }
   while (length > 0) {
     jbyte* start = array->byte_at_addr(offset);
@@ -1682,11 +1682,11 @@ C2V_VMENTRY(void, writeCompileLogOutput, (JNIEnv*, jobject, jbyteArray bytes, ji
 
   // Check if offset and length are non negative.
   if (offset < 0 || length < 0) {
-    THROW(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
+    THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
   }
   // Check if the range is valid.
   if ((((unsigned int) length + (unsigned int) offset) > (unsigned int) array->length())) {
-    THROW(vmSymbols::java_lang_ArrayIndexOutOfBoundsException());
+    THROW(vmSymbols::java_lang_IndexOutOfBoundsException());
   }
   while (length > 0) {
     jbyte* start = array->byte_at_addr(offset);
