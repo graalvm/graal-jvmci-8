@@ -2229,6 +2229,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
         retry_message = "not retryable";
         compilable = ciEnv::MethodCompilable_not_at_tier;
       }
+      task->set_failure_reason(failure_reason);
     }
     post_compile(thread, task, event, task->code() != NULL, NULL);
   } else
