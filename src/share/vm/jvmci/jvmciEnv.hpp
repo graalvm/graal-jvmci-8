@@ -99,8 +99,9 @@ private:
   CompileTask*     _task;
   int              _system_dictionary_modification_counter;
 
-  // Compilation result values
-  const char*      _failure_reason;
+  // Compilation result values.  The failure message might be resource
+  // allocated so preallocate a buffer for the message instead.
+  char             _failure_reason[O_BUFLEN];
   bool             _retryable;
 
   // Cache JVMTI state
@@ -144,11 +145,11 @@ private:
 public:
   CompileTask* task() { return _task; }
 
-  const char* failure_reason() { return _failure_reason; }
+  const char* failure_reason() { return (_failure_reason[0] == '\0') ? NULL : _failure_reason; }
   bool retryable() { return _retryable; }
 
   void set_failure(const char* reason, bool retryable) {
-    _failure_reason = reason;
+    strncpy(_failure_reason, reason, sizeof(_failure_reason) - 1);
     _retryable = retryable;
   }
 
