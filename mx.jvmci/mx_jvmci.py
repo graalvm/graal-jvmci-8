@@ -475,7 +475,7 @@ def _jdksDir():
 def _jdkDir(jdks, build):
     bootstrap_jdk = get_jvmci_bootstrap_jdk()
     if bootstrap_jdk.home.endswith('/Contents/Home'):
-        return join(jdks, build, '/Contents/Home')
+        return join(jdks, build, 'Contents/Home')
     else:
         return join(jdks, build)
 
