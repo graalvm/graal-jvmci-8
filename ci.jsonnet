@@ -84,6 +84,28 @@
         }
     },
 
+    OracleJDK:: {
+        name+: "-oraclejdk",
+        downloads: {
+            JAVA_HOME: {
+                name : "oraclejdk",
+                version : "8u171",
+                platformspecific: true
+            }
+        }
+    },
+
+    OpenJDK:: {
+        name+: "-openjdk",
+        downloads: {
+            JAVA_HOME: {
+                name : "openjdk",
+                version : "8u172",
+                platformspecific: true
+            }
+        }
+    },
+
     Build:: {
         packages+: {
             "pip:astroid" : "==1.1.0",
@@ -93,13 +115,6 @@
         timelimit: "1:00:00",
         logs: ["*.log"],
         targets: ["gate"],
-        downloads: {
-            JAVA_HOME: {
-                name : "oraclejdk",
-                version : "8u161",
-                platformspecific: true
-            }
-        },
         run: [
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
 
@@ -121,9 +136,11 @@
         for mach in [
             # Only need to test formatting and building
             # with Eclipse on one platform.
-            self.Linux + self.AMD64 + self.Eclipse + self.JDT,
-            self.Darwin + self.AMD64,
-            self.Solaris + self.SPARCv9,
+            self.Linux + self.AMD64 + self.OracleJDK + self.Eclipse + self.JDT,
+            self.Linux + self.AMD64 + self.OpenJDK,
+            self.Darwin + self.AMD64 + self.OracleJDK,
+            self.Darwin + self.AMD64 + self.OpenJDK,
+            self.Solaris + self.SPARCv9 + self.OracleJDK,
         ]
     ]
 }

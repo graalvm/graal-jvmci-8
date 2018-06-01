@@ -465,8 +465,7 @@ def getVmCfgInJdk(jdkDir, jvmCfgFile='jvm.cfg'):
 
 def _jdksDir():
     bootstrap_jdk = get_jvmci_bootstrap_jdk()
-    output = subprocess.check_output([bootstrap_jdk.java, '-version'], stderr=subprocess.STDOUT)
-    if 'openjdk' in output.lower():
+    if bootstrap_jdk.is_openjdk:
         prefix = 'openjdk'
     else:
         prefix = 'jdk'
@@ -474,8 +473,9 @@ def _jdksDir():
     return os.path.abspath(join(_installed_jdks if _installed_jdks else _suite.dir, prefix + str(bootstrap_jdk.version), plat))
 
 def _jdkDir(jdks, build):
-    if platform.mac_ver()[0] != '':
-        return join(jdks, build, 'Contents', 'Home')
+    bootstrap_jdk = get_jvmci_bootstrap_jdk()
+    if bootstrap_jdk.home.endswith('/Contents/Home'):
+        return join(jdks, build, 'Contents/Home')
     else:
         return join(jdks, build)
 
@@ -1406,9 +1406,12 @@ def get_jvmci_bootstrap_jdk():
         if _untilVersion:
             versionDesc += " and <" + str(_untilVersion)
         _jvmci_bootstrap_jdk = mx.get_jdk(_versionCheck, versionDescription=versionDesc, tag='default')
-        if platform.mac_ver()[0] != '':
+        _jvmci_bootstrap_jdk.is_openjdk = 'openjdk' in subprocess.check_output([_jvmci_bootstrap_jdk.java, '-version'], stderr=subprocess.STDOUT).lower()
+        is_oraclejdk = not _jvmci_bootstrap_jdk.is_openjdk
+        if is_oraclejdk and platform.mac_ver()[0] != '':
+            # OracleJDK on macOS should have a `Contents/Home` top level directory
             if not _jvmci_bootstrap_jdk.home.endswith('/Contents/Home'):
-                mx.abort("JAVA_HOME on MacOS is expected to end with /Contents/Home: " + _jvmci_bootstrap_jdk.home)
+                mx.abort("JAVA_HOME for OracleJDK on MacOS is expected to end with /Contents/Home: " + _jvmci_bootstrap_jdk.home)
     return _jvmci_bootstrap_jdk
 
 _jvmci_bootclasspath_prepends = []
