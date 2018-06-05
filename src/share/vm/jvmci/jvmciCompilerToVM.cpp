@@ -75,6 +75,13 @@ oop CompilerToVM::get_jvmci_method(const methodHandle& method, TRAPS) {
 
 oop CompilerToVM::get_jvmci_type(KlassHandle klass, TRAPS) {
   if (klass() != NULL) {
+#ifdef INCLUDE_ALL_GCS
+    if (UseG1GC) {
+      // The klass might have come from a weak location so enqueue
+      // the Class to make sure it's noticed by G1
+      G1SATBCardTableModRefBS::enqueue(klass->java_mirror());
+    }
+#endif
     JavaValue result(T_OBJECT);
     JavaCallArguments args;
     args.push_oop(klass->java_mirror());
