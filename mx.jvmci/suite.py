@@ -1,5 +1,5 @@
 suite = {
-  "mxversion" : "5.33.1",
+  "mxversion" : "5.169.0",
   "name" : "jvmci",
   "url" : "http://openjdk.java.net/projects/graal",
   "developer" : {
@@ -66,6 +66,7 @@ suite = {
       "sourceDirs" : ["src"],
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
+      "checkstyleVersion" : "8.8",
     },
 
     # ------------- JVMCI:API -------------
@@ -136,8 +137,6 @@ suite = {
       "workingSets" : "API,JVMCI",
     },
 
-    # ------------- JVMCI:HotSpot -------------
-
     "jdk.vm.ci.aarch64" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
@@ -165,6 +164,8 @@ suite = {
       "workingSets" : "JVMCI,SPARC",
     },
 
+    # ------------- JVMCI:HotSpot -------------
+
     "jdk.vm.ci.hotspot" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
@@ -172,7 +173,7 @@ suite = {
         "jdk.vm.ci.services",
         "jdk.vm.ci.runtime",
       ],
-      "checkstyle" : "jdk.vm.ci.services",
+      "checkstyleVersion" : "8.8",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",
     },
@@ -188,7 +189,7 @@ suite = {
         "jdk.vm.ci.runtime",
         "jdk.vm.ci.code.test",
       ],
-      "checkstyle" : "jdk.vm.ci.services",
+      "checkstyle" : "jdk.vm.ci.hotspot",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",
     },
@@ -200,7 +201,7 @@ suite = {
         "jdk.vm.ci.aarch64",
         "jdk.vm.ci.hotspot",
       ],
-      "checkstyle" : "jdk.vm.ci.services",
+      "checkstyle" : "jdk.vm.ci.hotspot",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,AArch64",
     },
@@ -212,7 +213,7 @@ suite = {
         "jdk.vm.ci.amd64",
         "jdk.vm.ci.hotspot",
       ],
-      "checkstyle" : "jdk.vm.ci.services",
+      "checkstyle" : "jdk.vm.ci.hotspot",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,AMD64",
     },
@@ -224,7 +225,7 @@ suite = {
         "jdk.vm.ci.sparc",
         "jdk.vm.ci.hotspot",
       ],
-      "checkstyle" : "jdk.vm.ci.services",
+      "checkstyle" : "jdk.vm.ci.hotspot",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI,HotSpot,SPARC",
     },
@@ -236,7 +237,7 @@ suite = {
         "jdk.vm.ci.hotspot",
         "JFR",
       ],
-      "checkstyle" : "jdk.vm.ci.services",
+      "checkstyle" : "jdk.vm.ci.hotspot",
       "javaCompliance" : "1.8",
       "profile" : "",
       "workingSets" : "JVMCI,HotSpot",
