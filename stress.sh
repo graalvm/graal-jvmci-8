@@ -22,5 +22,5 @@ while [ $? -eq 0 -a $i -ge 0 ]; do
     echo "------ $i ------"
     date
     i=$(( $i - 1 ))
-    mx -v vm -Djvmci.PrintConfig=true -XX:+UseJVMCICompiler Stress >print_config.log
+    mx vm -esa -Djvmci.class.path.append=graal.jar:graal-management.jar -Xbootclasspath/a:graal-sdk.jar:truffle-api.jar -Djvmci.PrintConfig=true -XX:+UseJVMCICompiler -XX:+BootstrapJVMCI -version >print_config.log
 done
