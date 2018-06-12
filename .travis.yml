@@ -1,0 +1,15 @@
+sudo: required
+dist: trusty
+language: java
+python:
+  - '2.7'
+jdk:
+  - openjdk8
+env:
+  - JVMCI_VERSION=0.44
+script:
+  - env | sort
+  # Only run build for a pull request or when pushing a tagged commit to master
+  - if [ "${TRAVIS_PULL_REQUEST}" != "false" ]; then ./stress.sh; fi
+after_failure:
+  - find . -iname "*.log" -print0 | xargs -0 cat

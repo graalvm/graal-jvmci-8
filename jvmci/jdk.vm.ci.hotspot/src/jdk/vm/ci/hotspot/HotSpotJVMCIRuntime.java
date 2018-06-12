@@ -324,6 +324,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
 
         if (Option.PrintConfig.getBoolean()) {
             configStore.printConfig();
+            System.exit(0);
         }
     }
 
