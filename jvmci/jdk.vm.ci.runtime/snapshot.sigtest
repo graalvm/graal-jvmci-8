@@ -1,0 +1,49 @@
+#Signature file v4.1
+#Version 
+
+CLSS public java.lang.Object
+cons public init()
+meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected void finalize() throws java.lang.Throwable
+meth public boolean equals(java.lang.Object)
+meth public final java.lang.Class<?> getClass()
+meth public final void notify()
+meth public final void notifyAll()
+meth public final void wait() throws java.lang.InterruptedException
+meth public final void wait(long) throws java.lang.InterruptedException
+meth public final void wait(long,int) throws java.lang.InterruptedException
+meth public int hashCode()
+meth public java.lang.String toString()
+
+CLSS public jdk.vm.ci.runtime.JVMCI
+cons public init()
+meth public static jdk.vm.ci.runtime.JVMCIRuntime getRuntime()
+meth public static void initialize()
+supr java.lang.Object
+hfds runtime
+
+CLSS public jdk.vm.ci.runtime.JVMCIBackend
+cons public init(jdk.vm.ci.meta.MetaAccessProvider,jdk.vm.ci.code.CodeCacheProvider,jdk.vm.ci.meta.ConstantReflectionProvider,jdk.vm.ci.code.stack.StackIntrospection)
+meth public jdk.vm.ci.code.CodeCacheProvider getCodeCache()
+meth public jdk.vm.ci.code.TargetDescription getTarget()
+meth public jdk.vm.ci.code.stack.StackIntrospection getStackIntrospection()
+meth public jdk.vm.ci.meta.ConstantReflectionProvider getConstantReflection()
+meth public jdk.vm.ci.meta.MetaAccessProvider getMetaAccess()
+supr java.lang.Object
+hfds codeCache,constantReflection,metaAccess,stackIntrospection
+
+CLSS public abstract interface jdk.vm.ci.runtime.JVMCICompiler
+fld public final static int INVOCATION_ENTRY_BCI = -1
+meth public abstract jdk.vm.ci.code.CompilationRequestResult compileMethod(jdk.vm.ci.code.CompilationRequest)
+
+CLSS public abstract interface jdk.vm.ci.runtime.JVMCICompilerFactory
+meth public abstract java.lang.String getCompilerName()
+meth public abstract jdk.vm.ci.runtime.JVMCICompiler createCompiler(jdk.vm.ci.runtime.JVMCIRuntime)
+meth public void onSelection()
+meth public void printProperties(java.io.PrintStream)
+
+CLSS public abstract interface jdk.vm.ci.runtime.JVMCIRuntime
+meth public abstract <%0 extends jdk.vm.ci.code.Architecture> jdk.vm.ci.runtime.JVMCIBackend getJVMCIBackend(java.lang.Class<{%%0}>)
+meth public abstract jdk.vm.ci.runtime.JVMCIBackend getHostJVMCIBackend()
+meth public abstract jdk.vm.ci.runtime.JVMCICompiler getCompiler()
+

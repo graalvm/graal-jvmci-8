@@ -1,0 +1,756 @@
+#Signature file v4.1
+#Version 
+
+CLSS public abstract interface java.io.Serializable
+
+CLSS public abstract interface java.lang.Comparable<%0 extends java.lang.Object>
+meth public abstract int compareTo({java.lang.Comparable%0})
+
+CLSS public abstract java.lang.Enum<%0 extends java.lang.Enum<{java.lang.Enum%0}>>
+cons protected init(java.lang.String,int)
+intf java.io.Serializable
+intf java.lang.Comparable<{java.lang.Enum%0}>
+meth protected final java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected final void finalize()
+meth public final boolean equals(java.lang.Object)
+meth public final int compareTo({java.lang.Enum%0})
+meth public final int hashCode()
+meth public final int ordinal()
+meth public final java.lang.Class<{java.lang.Enum%0}> getDeclaringClass()
+meth public final java.lang.String name()
+meth public java.lang.String toString()
+meth public static <%0 extends java.lang.Enum<{%%0}>> {%%0} valueOf(java.lang.Class<{%%0}>,java.lang.String)
+supr java.lang.Object
+hfds name,ordinal
+
+CLSS public abstract interface java.lang.Iterable<%0 extends java.lang.Object>
+meth public abstract java.util.Iterator<{java.lang.Iterable%0}> iterator()
+meth public java.util.Spliterator<{java.lang.Iterable%0}> spliterator()
+meth public void forEach(java.util.function.Consumer<? super {java.lang.Iterable%0}>)
+
+CLSS public java.lang.Object
+cons public init()
+meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected void finalize() throws java.lang.Throwable
+meth public boolean equals(java.lang.Object)
+meth public final java.lang.Class<?> getClass()
+meth public final void notify()
+meth public final void notifyAll()
+meth public final void wait() throws java.lang.InterruptedException
+meth public final void wait(long) throws java.lang.InterruptedException
+meth public final void wait(long,int) throws java.lang.InterruptedException
+meth public int hashCode()
+meth public java.lang.String toString()
+
+CLSS public abstract interface java.lang.reflect.AnnotatedElement
+meth public <%0 extends java.lang.annotation.Annotation> {%%0} getDeclaredAnnotation(java.lang.Class<{%%0}>)
+meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getAnnotationsByType(java.lang.Class<{%%0}>)
+meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getDeclaredAnnotationsByType(java.lang.Class<{%%0}>)
+meth public abstract <%0 extends java.lang.annotation.Annotation> {%%0} getAnnotation(java.lang.Class<{%%0}>)
+meth public abstract java.lang.annotation.Annotation[] getAnnotations()
+meth public abstract java.lang.annotation.Annotation[] getDeclaredAnnotations()
+meth public boolean isAnnotationPresent(java.lang.Class<? extends java.lang.annotation.Annotation>)
+
+CLSS public abstract jdk.vm.ci.meta.AbstractJavaProfile<%0 extends jdk.vm.ci.meta.AbstractProfiledItem<{jdk.vm.ci.meta.AbstractJavaProfile%1}>, %1 extends java.lang.Object>
+cons public init(double,{jdk.vm.ci.meta.AbstractJavaProfile%0}[])
+meth protected {jdk.vm.ci.meta.AbstractJavaProfile%0}[] getItems()
+meth public boolean equals(java.lang.Object)
+meth public boolean isIncluded({jdk.vm.ci.meta.AbstractJavaProfile%1})
+meth public double getNotRecordedProbability()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public {jdk.vm.ci.meta.AbstractJavaProfile%0} findEntry(jdk.vm.ci.meta.ResolvedJavaType)
+supr java.lang.Object
+hfds notRecordedProbability,pitems
+
+CLSS public abstract jdk.vm.ci.meta.AbstractProfiledItem<%0 extends java.lang.Object>
+cons public init({jdk.vm.ci.meta.AbstractProfiledItem%0},double)
+fld protected final double probability
+fld protected final {jdk.vm.ci.meta.AbstractProfiledItem%0} item
+intf java.lang.Comparable<jdk.vm.ci.meta.AbstractProfiledItem<?>>
+meth protected {jdk.vm.ci.meta.AbstractProfiledItem%0} getItem()
+meth public abstract java.lang.String toString()
+meth public boolean equals(java.lang.Object)
+meth public double getProbability()
+meth public int compareTo(jdk.vm.ci.meta.AbstractProfiledItem<?>)
+meth public int hashCode()
+supr java.lang.Object
+
+CLSS public abstract jdk.vm.ci.meta.AllocatableValue
+cons public init(jdk.vm.ci.meta.ValueKind<?>)
+fld public final static jdk.vm.ci.meta.AllocatableValue[] NONE
+intf jdk.vm.ci.meta.JavaValue
+supr jdk.vm.ci.meta.Value
+
+CLSS public final jdk.vm.ci.meta.Assumptions
+cons public init()
+innr public abstract static Assumption
+innr public final static CallSiteTargetValue
+innr public final static ConcreteMethod
+innr public final static ConcreteSubtype
+innr public final static LeafType
+innr public final static NoFinalizableSubclass
+innr public static AssumptionResult
+intf java.lang.Iterable<jdk.vm.ci.meta.Assumptions$Assumption>
+meth public boolean equals(java.lang.Object)
+meth public boolean isEmpty()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public java.util.Iterator<jdk.vm.ci.meta.Assumptions$Assumption> iterator()
+meth public jdk.vm.ci.meta.Assumptions$Assumption[] toArray()
+meth public void record(jdk.vm.ci.meta.Assumptions$Assumption)
+meth public void record(jdk.vm.ci.meta.Assumptions)
+meth public void recordConcreteMethod(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.meta.ResolvedJavaType,jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public void recordConcreteSubtype(jdk.vm.ci.meta.ResolvedJavaType,jdk.vm.ci.meta.ResolvedJavaType)
+meth public void recordNoFinalizableSubclassAssumption(jdk.vm.ci.meta.ResolvedJavaType)
+supr java.lang.Object
+hfds assumptions
+
+CLSS public abstract static jdk.vm.ci.meta.Assumptions$Assumption
+ outer jdk.vm.ci.meta.Assumptions
+cons public init()
+supr java.lang.Object
+
+CLSS public static jdk.vm.ci.meta.Assumptions$AssumptionResult<%0 extends java.lang.Object>
+ outer jdk.vm.ci.meta.Assumptions
+cons public !varargs init({jdk.vm.ci.meta.Assumptions$AssumptionResult%0},jdk.vm.ci.meta.Assumptions$Assumption[])
+cons public init({jdk.vm.ci.meta.Assumptions$AssumptionResult%0})
+meth public boolean canRecordTo(jdk.vm.ci.meta.Assumptions)
+meth public boolean isAssumptionFree()
+meth public void add(jdk.vm.ci.meta.Assumptions$AssumptionResult<{jdk.vm.ci.meta.Assumptions$AssumptionResult%0}>)
+meth public void recordTo(jdk.vm.ci.meta.Assumptions)
+meth public {jdk.vm.ci.meta.Assumptions$AssumptionResult%0} getResult()
+supr java.lang.Object
+hfds EMPTY,assumptions,result
+
+CLSS public final static jdk.vm.ci.meta.Assumptions$CallSiteTargetValue
+ outer jdk.vm.ci.meta.Assumptions
+cons public init(java.lang.invoke.CallSite,java.lang.invoke.MethodHandle)
+fld public final java.lang.invoke.CallSite callSite
+fld public final java.lang.invoke.MethodHandle methodHandle
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+supr jdk.vm.ci.meta.Assumptions$Assumption
+
+CLSS public final static jdk.vm.ci.meta.Assumptions$ConcreteMethod
+ outer jdk.vm.ci.meta.Assumptions
+cons public init(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.meta.ResolvedJavaType,jdk.vm.ci.meta.ResolvedJavaMethod)
+fld public final jdk.vm.ci.meta.ResolvedJavaMethod impl
+fld public final jdk.vm.ci.meta.ResolvedJavaMethod method
+fld public final jdk.vm.ci.meta.ResolvedJavaType context
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+supr jdk.vm.ci.meta.Assumptions$Assumption
+
+CLSS public final static jdk.vm.ci.meta.Assumptions$ConcreteSubtype
+ outer jdk.vm.ci.meta.Assumptions
+cons public init(jdk.vm.ci.meta.ResolvedJavaType,jdk.vm.ci.meta.ResolvedJavaType)
+fld public final jdk.vm.ci.meta.ResolvedJavaType context
+fld public final jdk.vm.ci.meta.ResolvedJavaType subtype
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+supr jdk.vm.ci.meta.Assumptions$Assumption
+
+CLSS public final static jdk.vm.ci.meta.Assumptions$LeafType
+ outer jdk.vm.ci.meta.Assumptions
+cons public init(jdk.vm.ci.meta.ResolvedJavaType)
+fld public final jdk.vm.ci.meta.ResolvedJavaType context
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+supr jdk.vm.ci.meta.Assumptions$Assumption
+
+CLSS public final static jdk.vm.ci.meta.Assumptions$NoFinalizableSubclass
+ outer jdk.vm.ci.meta.Assumptions
+cons public init(jdk.vm.ci.meta.ResolvedJavaType)
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+supr jdk.vm.ci.meta.Assumptions$Assumption
+hfds receiverType
+
+CLSS public abstract interface jdk.vm.ci.meta.Constant
+meth public abstract boolean isDefaultForKind()
+meth public abstract java.lang.String toValueString()
+
+CLSS public abstract interface jdk.vm.ci.meta.ConstantPool
+meth public abstract int length()
+meth public abstract java.lang.Object lookupConstant(int)
+meth public abstract java.lang.String lookupUtf8(int)
+meth public abstract jdk.vm.ci.meta.JavaConstant lookupAppendix(int,int)
+meth public abstract jdk.vm.ci.meta.JavaField lookupField(int,jdk.vm.ci.meta.ResolvedJavaMethod,int)
+meth public abstract jdk.vm.ci.meta.JavaMethod lookupMethod(int,int)
+meth public abstract jdk.vm.ci.meta.JavaType lookupType(int,int)
+meth public abstract jdk.vm.ci.meta.Signature lookupSignature(int)
+meth public abstract void loadReferencedType(int,int)
+
+CLSS public abstract interface jdk.vm.ci.meta.ConstantReflectionProvider
+meth public abstract java.lang.Boolean constantEquals(jdk.vm.ci.meta.Constant,jdk.vm.ci.meta.Constant)
+meth public abstract java.lang.Integer readArrayLength(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.Constant asObjectHub(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.JavaConstant asJavaClass(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.JavaConstant boxPrimitive(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.JavaConstant forString(java.lang.String)
+meth public abstract jdk.vm.ci.meta.JavaConstant readArrayElement(jdk.vm.ci.meta.JavaConstant,int)
+meth public abstract jdk.vm.ci.meta.JavaConstant readFieldValue(jdk.vm.ci.meta.ResolvedJavaField,jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.JavaConstant unboxPrimitive(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.MemoryAccessProvider getMemoryAccessProvider()
+meth public abstract jdk.vm.ci.meta.MethodHandleAccessProvider getMethodHandleAccess()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType asJavaType(jdk.vm.ci.meta.Constant)
+
+CLSS public final jdk.vm.ci.meta.DefaultProfilingInfo
+intf jdk.vm.ci.meta.ProfilingInfo
+meth public boolean isMature()
+meth public boolean setCompilerIRSize(java.lang.Class<?>,int)
+meth public double getBranchTakenProbability(int)
+meth public double[] getSwitchProbabilities(int)
+meth public int getCodeSize()
+meth public int getCompilerIRSize(java.lang.Class<?>)
+meth public int getDeoptimizationCount(jdk.vm.ci.meta.DeoptimizationReason)
+meth public int getExecutionCount(int)
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaMethodProfile getMethodProfile(int)
+meth public jdk.vm.ci.meta.JavaTypeProfile getTypeProfile(int)
+meth public jdk.vm.ci.meta.TriState getExceptionSeen(int)
+meth public jdk.vm.ci.meta.TriState getNullSeen(int)
+meth public static jdk.vm.ci.meta.ProfilingInfo get(jdk.vm.ci.meta.TriState)
+meth public void setMature()
+supr java.lang.Object
+hfds NO_PROFILING_INFO,exceptionSeen
+
+CLSS public final !enum jdk.vm.ci.meta.DeoptimizationAction
+fld public final static jdk.vm.ci.meta.DeoptimizationAction InvalidateRecompile
+fld public final static jdk.vm.ci.meta.DeoptimizationAction InvalidateReprofile
+fld public final static jdk.vm.ci.meta.DeoptimizationAction InvalidateStopCompiling
+fld public final static jdk.vm.ci.meta.DeoptimizationAction None
+fld public final static jdk.vm.ci.meta.DeoptimizationAction RecompileIfTooManyDeopts
+meth public boolean doesInvalidateCompilation()
+meth public static jdk.vm.ci.meta.DeoptimizationAction valueOf(java.lang.String)
+meth public static jdk.vm.ci.meta.DeoptimizationAction[] values()
+supr java.lang.Enum<jdk.vm.ci.meta.DeoptimizationAction>
+hfds invalidatesCompilation
+
+CLSS public final !enum jdk.vm.ci.meta.DeoptimizationReason
+fld public final static jdk.vm.ci.meta.DeoptimizationReason Aliasing
+fld public final static jdk.vm.ci.meta.DeoptimizationReason ArithmeticException
+fld public final static jdk.vm.ci.meta.DeoptimizationReason ArrayStoreException
+fld public final static jdk.vm.ci.meta.DeoptimizationReason BoundsCheckException
+fld public final static jdk.vm.ci.meta.DeoptimizationReason ClassCastException
+fld public final static jdk.vm.ci.meta.DeoptimizationReason JavaSubroutineMismatch
+fld public final static jdk.vm.ci.meta.DeoptimizationReason LoopLimitCheck
+fld public final static jdk.vm.ci.meta.DeoptimizationReason None
+fld public final static jdk.vm.ci.meta.DeoptimizationReason NotCompiledExceptionHandler
+fld public final static jdk.vm.ci.meta.DeoptimizationReason NullCheckException
+fld public final static jdk.vm.ci.meta.DeoptimizationReason OptimizedTypeCheckViolated
+fld public final static jdk.vm.ci.meta.DeoptimizationReason RuntimeConstraint
+fld public final static jdk.vm.ci.meta.DeoptimizationReason TransferToInterpreter
+fld public final static jdk.vm.ci.meta.DeoptimizationReason TypeCheckedInliningViolated
+fld public final static jdk.vm.ci.meta.DeoptimizationReason UnreachedCode
+fld public final static jdk.vm.ci.meta.DeoptimizationReason Unresolved
+meth public static jdk.vm.ci.meta.DeoptimizationReason valueOf(java.lang.String)
+meth public static jdk.vm.ci.meta.DeoptimizationReason[] values()
+supr java.lang.Enum<jdk.vm.ci.meta.DeoptimizationReason>
+
+CLSS public final jdk.vm.ci.meta.ExceptionHandler
+cons public init(int,int,int,int,jdk.vm.ci.meta.JavaType)
+meth public boolean equals(java.lang.Object)
+meth public boolean isCatchAll()
+meth public int catchTypeCPI()
+meth public int getEndBCI()
+meth public int getHandlerBCI()
+meth public int getStartBCI()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaType getCatchType()
+supr java.lang.Object
+hfds catchType,catchTypeCPI,endBCI,handlerBCI,startBCI
+
+CLSS public abstract interface jdk.vm.ci.meta.InvokeTarget
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaConstant
+fld public final static jdk.vm.ci.meta.JavaConstant NULL_POINTER
+fld public final static jdk.vm.ci.meta.PrimitiveConstant DOUBLE_0
+fld public final static jdk.vm.ci.meta.PrimitiveConstant DOUBLE_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant FALSE
+fld public final static jdk.vm.ci.meta.PrimitiveConstant FLOAT_0
+fld public final static jdk.vm.ci.meta.PrimitiveConstant FLOAT_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_0
+fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_2
+fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_MINUS_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant LONG_0
+fld public final static jdk.vm.ci.meta.PrimitiveConstant LONG_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant TRUE
+intf jdk.vm.ci.meta.Constant
+intf jdk.vm.ci.meta.JavaValue
+meth public abstract boolean asBoolean()
+meth public abstract boolean isDefaultForKind()
+meth public abstract boolean isNull()
+meth public abstract double asDouble()
+meth public abstract float asFloat()
+meth public abstract int asInt()
+meth public abstract java.lang.Object asBoxedPrimitive()
+meth public abstract jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public abstract long asLong()
+meth public boolean isNonNull()
+meth public java.lang.String toValueString()
+meth public static boolean isNull(jdk.vm.ci.meta.Constant)
+meth public static java.lang.String toString(jdk.vm.ci.meta.JavaConstant)
+meth public static jdk.vm.ci.meta.JavaConstant defaultForKind(jdk.vm.ci.meta.JavaKind)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forBoolean(boolean)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forBoxedPrimitive(java.lang.Object)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forByte(byte)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forChar(char)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forDouble(double)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forFloat(float)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forIllegal()
+meth public static jdk.vm.ci.meta.PrimitiveConstant forInt(int)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forIntegerKind(jdk.vm.ci.meta.JavaKind,long)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forLong(long)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forPrimitiveInt(int,long)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forShort(short)
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaField
+meth public abstract java.lang.String getName()
+meth public abstract jdk.vm.ci.meta.JavaType getDeclaringClass()
+meth public abstract jdk.vm.ci.meta.JavaType getType()
+meth public java.lang.String format(java.lang.String)
+meth public jdk.vm.ci.meta.JavaKind getJavaKind()
+
+CLSS public final !enum jdk.vm.ci.meta.JavaKind
+fld public final static jdk.vm.ci.meta.JavaKind Boolean
+fld public final static jdk.vm.ci.meta.JavaKind Byte
+fld public final static jdk.vm.ci.meta.JavaKind Char
+fld public final static jdk.vm.ci.meta.JavaKind Double
+fld public final static jdk.vm.ci.meta.JavaKind Float
+fld public final static jdk.vm.ci.meta.JavaKind Illegal
+fld public final static jdk.vm.ci.meta.JavaKind Int
+fld public final static jdk.vm.ci.meta.JavaKind Long
+fld public final static jdk.vm.ci.meta.JavaKind Object
+fld public final static jdk.vm.ci.meta.JavaKind Short
+fld public final static jdk.vm.ci.meta.JavaKind Void
+innr public abstract interface static FormatWithToString
+meth public boolean isNumericFloat()
+meth public boolean isNumericInteger()
+meth public boolean isObject()
+meth public boolean isPrimitive()
+meth public boolean isUnsigned()
+meth public boolean needsTwoSlots()
+meth public char getTypeChar()
+meth public int getBitCount()
+meth public int getByteCount()
+meth public int getSlotCount()
+meth public java.lang.Class<?> toBoxedJavaClass()
+meth public java.lang.Class<?> toJavaClass()
+meth public java.lang.String format(java.lang.Object)
+meth public java.lang.String getJavaName()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaKind getStackKind()
+meth public long getMaxValue()
+meth public long getMinValue()
+meth public static jdk.vm.ci.meta.JavaKind fromJavaClass(java.lang.Class<?>)
+meth public static jdk.vm.ci.meta.JavaKind fromPrimitiveOrVoidTypeChar(char)
+meth public static jdk.vm.ci.meta.JavaKind fromTypeString(java.lang.String)
+meth public static jdk.vm.ci.meta.JavaKind fromWordSize(int)
+meth public static jdk.vm.ci.meta.JavaKind valueOf(java.lang.String)
+meth public static jdk.vm.ci.meta.JavaKind[] values()
+supr java.lang.Enum<jdk.vm.ci.meta.JavaKind>
+hfds MAX_FORMAT_ARRAY_LENGTH,boxedJavaClass,isStackInt,javaName,primitiveJavaClass,slotCount,typeChar
+
+CLSS public abstract interface static jdk.vm.ci.meta.JavaKind$FormatWithToString
+ outer jdk.vm.ci.meta.JavaKind
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaMethod
+meth public abstract java.lang.String getName()
+meth public abstract jdk.vm.ci.meta.JavaType getDeclaringClass()
+meth public abstract jdk.vm.ci.meta.Signature getSignature()
+meth public java.lang.String format(java.lang.String)
+
+CLSS public final jdk.vm.ci.meta.JavaMethodProfile
+cons public init(double,jdk.vm.ci.meta.JavaMethodProfile$ProfiledMethod[])
+innr public static ProfiledMethod
+meth public jdk.vm.ci.meta.JavaMethodProfile$ProfiledMethod[] getMethods()
+supr jdk.vm.ci.meta.AbstractJavaProfile<jdk.vm.ci.meta.JavaMethodProfile$ProfiledMethod,jdk.vm.ci.meta.ResolvedJavaMethod>
+
+CLSS public static jdk.vm.ci.meta.JavaMethodProfile$ProfiledMethod
+ outer jdk.vm.ci.meta.JavaMethodProfile
+cons public init(jdk.vm.ci.meta.ResolvedJavaMethod,double)
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+supr jdk.vm.ci.meta.AbstractProfiledItem<jdk.vm.ci.meta.ResolvedJavaMethod>
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaType
+meth public abstract java.lang.String getName()
+meth public abstract jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public abstract jdk.vm.ci.meta.JavaType getArrayClass()
+meth public abstract jdk.vm.ci.meta.JavaType getComponentType()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType resolve(jdk.vm.ci.meta.ResolvedJavaType)
+meth public boolean isArray()
+meth public java.lang.String getUnqualifiedName()
+meth public java.lang.String toClassName()
+meth public java.lang.String toJavaName()
+meth public java.lang.String toJavaName(boolean)
+meth public jdk.vm.ci.meta.JavaType getElementalType()
+
+CLSS public final jdk.vm.ci.meta.JavaTypeProfile
+cons public init(jdk.vm.ci.meta.TriState,double,jdk.vm.ci.meta.JavaTypeProfile$ProfiledType[])
+innr public static ProfiledType
+meth public boolean allTypesRecorded()
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaTypeProfile restrict(jdk.vm.ci.meta.JavaTypeProfile)
+meth public jdk.vm.ci.meta.JavaTypeProfile restrict(jdk.vm.ci.meta.ResolvedJavaType,boolean)
+meth public jdk.vm.ci.meta.JavaTypeProfile$ProfiledType[] getTypes()
+meth public jdk.vm.ci.meta.ResolvedJavaType asSingleType()
+meth public jdk.vm.ci.meta.TriState getNullSeen()
+supr jdk.vm.ci.meta.AbstractJavaProfile<jdk.vm.ci.meta.JavaTypeProfile$ProfiledType,jdk.vm.ci.meta.ResolvedJavaType>
+hfds EMPTY_ARRAY,nullSeen
+
+CLSS public static jdk.vm.ci.meta.JavaTypeProfile$ProfiledType
+ outer jdk.vm.ci.meta.JavaTypeProfile
+cons public init(jdk.vm.ci.meta.ResolvedJavaType,double)
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.ResolvedJavaType getType()
+supr jdk.vm.ci.meta.AbstractProfiledItem<jdk.vm.ci.meta.ResolvedJavaType>
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaValue
+
+CLSS public jdk.vm.ci.meta.LineNumberTable
+cons public init(int[],int[])
+meth public int getLineNumber(int)
+meth public int[] getBcis()
+meth public int[] getLineNumbers()
+supr java.lang.Object
+hfds bcis,lineNumbers
+
+CLSS public jdk.vm.ci.meta.Local
+cons public init(java.lang.String,jdk.vm.ci.meta.JavaType,int,int,int)
+meth public boolean equals(java.lang.Object)
+meth public int getEndBCI()
+meth public int getSlot()
+meth public int getStartBCI()
+meth public int hashCode()
+meth public java.lang.String getName()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaType getType()
+supr java.lang.Object
+hfds endBci,name,slot,startBci,type
+
+CLSS public jdk.vm.ci.meta.LocalVariableTable
+cons public init(jdk.vm.ci.meta.Local[])
+meth public jdk.vm.ci.meta.Local getLocal(int,int)
+meth public jdk.vm.ci.meta.Local[] getLocals()
+meth public jdk.vm.ci.meta.Local[] getLocalsAt(int)
+supr java.lang.Object
+hfds locals
+
+CLSS public abstract interface jdk.vm.ci.meta.MemoryAccessProvider
+meth public abstract jdk.vm.ci.meta.JavaConstant readObjectConstant(jdk.vm.ci.meta.Constant,long)
+meth public abstract jdk.vm.ci.meta.JavaConstant readPrimitiveConstant(jdk.vm.ci.meta.JavaKind,jdk.vm.ci.meta.Constant,long,int)
+
+CLSS public abstract interface jdk.vm.ci.meta.MetaAccessProvider
+meth public abstract int decodeDebugId(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.DeoptimizationAction decodeDeoptAction(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.DeoptimizationReason decodeDeoptReason(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.JavaConstant encodeDeoptActionAndReason(jdk.vm.ci.meta.DeoptimizationAction,jdk.vm.ci.meta.DeoptimizationReason,int)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaField lookupJavaField(java.lang.reflect.Field)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod lookupJavaMethod(java.lang.reflect.Executable)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(java.lang.Class<?>)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.Signature parseMethodDescriptor(java.lang.String)
+meth public abstract long getMemorySize(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.ResolvedJavaType[] lookupJavaTypes(java.lang.Class<?>[])
+
+CLSS public jdk.vm.ci.meta.MetaUtil
+cons public init()
+meth public static java.lang.String getSimpleName(java.lang.Class<?>,boolean)
+meth public static java.lang.String identityHashCodeString(java.lang.Object)
+meth public static java.lang.String internalNameToJava(java.lang.String,boolean,boolean)
+meth public static java.lang.String toInternalName(java.lang.String)
+meth public static java.lang.String toLocation(jdk.vm.ci.meta.ResolvedJavaMethod,int)
+meth public static java.lang.StringBuilder appendLocation(java.lang.StringBuilder,jdk.vm.ci.meta.ResolvedJavaMethod,int)
+supr java.lang.Object
+
+CLSS public abstract interface jdk.vm.ci.meta.MethodHandleAccessProvider
+innr public final static !enum IntrinsicMethod
+meth public abstract jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod lookupMethodHandleIntrinsic(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod resolveInvokeBasicTarget(jdk.vm.ci.meta.JavaConstant,boolean)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod resolveLinkToTarget(jdk.vm.ci.meta.JavaConstant)
+
+CLSS public final static !enum jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod
+ outer jdk.vm.ci.meta.MethodHandleAccessProvider
+fld public final static jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod INVOKE_BASIC
+fld public final static jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod LINK_TO_INTERFACE
+fld public final static jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod LINK_TO_SPECIAL
+fld public final static jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod LINK_TO_STATIC
+fld public final static jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod LINK_TO_VIRTUAL
+meth public static jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod valueOf(java.lang.String)
+meth public static jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod[] values()
+supr java.lang.Enum<jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod>
+
+CLSS public abstract interface jdk.vm.ci.meta.ModifiersProvider
+meth public abstract int getModifiers()
+meth public boolean isAbstract()
+meth public boolean isConcrete()
+meth public boolean isFinalFlagSet()
+meth public boolean isInterface()
+meth public boolean isNative()
+meth public boolean isPackagePrivate()
+meth public boolean isPrivate()
+meth public boolean isProtected()
+meth public boolean isPublic()
+meth public boolean isStatic()
+meth public boolean isStrict()
+meth public boolean isSynchronized()
+meth public boolean isTransient()
+meth public boolean isVolatile()
+
+CLSS public abstract interface jdk.vm.ci.meta.PlatformKind
+innr public abstract interface static Key
+innr public static EnumKey
+meth public abstract char getTypeChar()
+meth public abstract int getSizeInBytes()
+meth public abstract int getVectorLength()
+meth public abstract java.lang.String name()
+meth public abstract jdk.vm.ci.meta.PlatformKind$Key getKey()
+
+CLSS public static jdk.vm.ci.meta.PlatformKind$EnumKey<%0 extends java.lang.Enum<{jdk.vm.ci.meta.PlatformKind$EnumKey%0}>>
+ outer jdk.vm.ci.meta.PlatformKind
+cons public init(java.lang.Enum<{jdk.vm.ci.meta.PlatformKind$EnumKey%0}>)
+intf jdk.vm.ci.meta.PlatformKind$Key
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+supr java.lang.Object
+hfds e
+
+CLSS public abstract interface static jdk.vm.ci.meta.PlatformKind$Key
+ outer jdk.vm.ci.meta.PlatformKind
+
+CLSS public jdk.vm.ci.meta.PrimitiveConstant
+cons protected init(jdk.vm.ci.meta.JavaKind,long)
+intf jdk.vm.ci.meta.JavaConstant
+intf jdk.vm.ci.meta.SerializableConstant
+meth public boolean asBoolean()
+meth public boolean equals(java.lang.Object)
+meth public boolean isDefaultForKind()
+meth public boolean isNull()
+meth public double asDouble()
+meth public float asFloat()
+meth public int asInt()
+meth public int getSerializedSize()
+meth public int hashCode()
+meth public java.lang.Object asBoxedPrimitive()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public long asLong()
+meth public void serialize(java.nio.ByteBuffer)
+supr java.lang.Object
+hfds kind,primitive
+
+CLSS public abstract interface jdk.vm.ci.meta.ProfilingInfo
+meth public abstract boolean isMature()
+meth public abstract boolean setCompilerIRSize(java.lang.Class<?>,int)
+meth public abstract double getBranchTakenProbability(int)
+meth public abstract double[] getSwitchProbabilities(int)
+meth public abstract int getCodeSize()
+meth public abstract int getCompilerIRSize(java.lang.Class<?>)
+meth public abstract int getDeoptimizationCount(jdk.vm.ci.meta.DeoptimizationReason)
+meth public abstract int getExecutionCount(int)
+meth public abstract jdk.vm.ci.meta.JavaMethodProfile getMethodProfile(int)
+meth public abstract jdk.vm.ci.meta.JavaTypeProfile getTypeProfile(int)
+meth public abstract jdk.vm.ci.meta.TriState getExceptionSeen(int)
+meth public abstract jdk.vm.ci.meta.TriState getNullSeen(int)
+meth public abstract void setMature()
+meth public java.lang.String toString(jdk.vm.ci.meta.ResolvedJavaMethod,java.lang.String)
+
+CLSS public jdk.vm.ci.meta.RawConstant
+cons public init(long)
+supr jdk.vm.ci.meta.PrimitiveConstant
+
+CLSS public abstract interface jdk.vm.ci.meta.ResolvedJavaField
+intf java.lang.reflect.AnnotatedElement
+intf jdk.vm.ci.meta.JavaField
+intf jdk.vm.ci.meta.ModifiersProvider
+meth public abstract boolean isInternal()
+meth public abstract boolean isSynthetic()
+meth public abstract int getModifiers()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getDeclaringClass()
+meth public boolean isFinal()
+
+CLSS public abstract interface jdk.vm.ci.meta.ResolvedJavaMethod
+innr public static Parameter
+intf java.lang.reflect.AnnotatedElement
+intf jdk.vm.ci.meta.InvokeTarget
+intf jdk.vm.ci.meta.JavaMethod
+intf jdk.vm.ci.meta.ModifiersProvider
+meth public <%0 extends java.lang.annotation.Annotation> {%%0} getParameterAnnotation(java.lang.Class<{%%0}>,int)
+meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getParameterAnnotations(java.lang.Class<{%%0}>)
+meth public abstract boolean canBeInlined()
+meth public abstract boolean canBeStaticallyBound()
+meth public abstract boolean hasNeverInlineDirective()
+meth public abstract boolean isBridge()
+meth public abstract boolean isClassInitializer()
+meth public abstract boolean isConstructor()
+meth public abstract boolean isDefault()
+meth public abstract boolean isInVirtualMethodTable(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract boolean isSynthetic()
+meth public abstract boolean isVarArgs()
+meth public abstract boolean shouldBeInlined()
+meth public abstract byte[] getCode()
+meth public abstract int getCodeSize()
+meth public abstract int getMaxLocals()
+meth public abstract int getMaxStackSize()
+meth public abstract java.lang.StackTraceElement asStackTraceElement(int)
+meth public abstract java.lang.annotation.Annotation[][] getParameterAnnotations()
+meth public abstract java.lang.reflect.Type[] getGenericParameterTypes()
+meth public abstract jdk.vm.ci.meta.Constant getEncoding()
+meth public abstract jdk.vm.ci.meta.ConstantPool getConstantPool()
+meth public abstract jdk.vm.ci.meta.ExceptionHandler[] getExceptionHandlers()
+meth public abstract jdk.vm.ci.meta.LineNumberTable getLineNumberTable()
+meth public abstract jdk.vm.ci.meta.LocalVariableTable getLocalVariableTable()
+meth public abstract jdk.vm.ci.meta.ProfilingInfo getProfilingInfo(boolean,boolean)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getDeclaringClass()
+meth public abstract jdk.vm.ci.meta.SpeculationLog getSpeculationLog()
+meth public abstract void reprofile()
+meth public boolean hasBytecodes()
+meth public boolean hasReceiver()
+meth public boolean isFinal()
+meth public boolean isJavaLangObjectInit()
+meth public jdk.vm.ci.meta.JavaType[] toParameterTypes()
+meth public jdk.vm.ci.meta.ProfilingInfo getProfilingInfo()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod$Parameter[] getParameters()
+
+CLSS public static jdk.vm.ci.meta.ResolvedJavaMethod$Parameter
+ outer jdk.vm.ci.meta.ResolvedJavaMethod
+cons public init(java.lang.String,int,jdk.vm.ci.meta.ResolvedJavaMethod,int)
+intf java.lang.reflect.AnnotatedElement
+meth public <%0 extends java.lang.annotation.Annotation> {%%0} getAnnotation(java.lang.Class<{%%0}>)
+meth public boolean equals(java.lang.Object)
+meth public boolean isNamePresent()
+meth public boolean isVarArgs()
+meth public int getModifiers()
+meth public int hashCode()
+meth public java.lang.String getName()
+meth public java.lang.String toString()
+meth public java.lang.annotation.Annotation[] getAnnotations()
+meth public java.lang.annotation.Annotation[] getDeclaredAnnotations()
+meth public java.lang.reflect.Type getParameterizedType()
+meth public jdk.vm.ci.meta.JavaKind getKind()
+meth public jdk.vm.ci.meta.JavaType getType()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod getDeclaringMethod()
+supr java.lang.Object
+hfds index,method,modifiers,name
+
+CLSS public abstract interface jdk.vm.ci.meta.ResolvedJavaType
+intf java.lang.reflect.AnnotatedElement
+intf jdk.vm.ci.meta.JavaType
+intf jdk.vm.ci.meta.ModifiersProvider
+meth public abstract boolean hasFinalizer()
+meth public abstract boolean isAssignableFrom(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract boolean isCloneableWithAllocation()
+meth public abstract boolean isInitialized()
+meth public abstract boolean isInstance(jdk.vm.ci.meta.JavaConstant)
+meth public abstract boolean isInstanceClass()
+meth public abstract boolean isInterface()
+meth public abstract boolean isLinked()
+meth public abstract boolean isLocal()
+meth public abstract boolean isMember()
+meth public abstract boolean isPrimitive()
+meth public abstract java.lang.String getSourceFileName()
+meth public abstract jdk.vm.ci.meta.Assumptions$AssumptionResult<java.lang.Boolean> hasFinalizableSubclass()
+meth public abstract jdk.vm.ci.meta.Assumptions$AssumptionResult<jdk.vm.ci.meta.ResolvedJavaMethod> findUniqueConcreteMethod(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public abstract jdk.vm.ci.meta.Assumptions$AssumptionResult<jdk.vm.ci.meta.ResolvedJavaType> findLeafConcreteSubtype()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaField findInstanceFieldWithOffset(long,jdk.vm.ci.meta.JavaKind)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaField[] getInstanceFields(boolean)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaField[] getStaticFields()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod getClassInitializer()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod resolveMethod(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod[] getDeclaredConstructors()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod[] getDeclaredMethods()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType findLeastCommonAncestor(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getArrayClass()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getComponentType()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getEnclosingType()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getHostClass()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getSingleImplementor()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getSuperclass()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType[] getInterfaces()
+meth public abstract void initialize()
+meth public boolean isJavaLangObject()
+meth public boolean isLeaf()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod findMethod(java.lang.String,jdk.vm.ci.meta.Signature)
+meth public jdk.vm.ci.meta.ResolvedJavaMethod resolveConcreteMethod(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.meta.ResolvedJavaType)
+meth public jdk.vm.ci.meta.ResolvedJavaType getElementalType()
+
+CLSS public abstract interface jdk.vm.ci.meta.SerializableConstant
+intf jdk.vm.ci.meta.Constant
+meth public abstract int getSerializedSize()
+meth public abstract void serialize(java.nio.ByteBuffer)
+
+CLSS public abstract interface jdk.vm.ci.meta.Signature
+meth public abstract int getParameterCount(boolean)
+meth public abstract jdk.vm.ci.meta.JavaType getParameterType(int,jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.JavaType getReturnType(jdk.vm.ci.meta.ResolvedJavaType)
+meth public java.lang.String toMethodDescriptor()
+meth public jdk.vm.ci.meta.JavaKind getParameterKind(int)
+meth public jdk.vm.ci.meta.JavaKind getReturnKind()
+meth public jdk.vm.ci.meta.JavaKind[] toParameterKinds(boolean)
+meth public jdk.vm.ci.meta.JavaType[] toParameterTypes(jdk.vm.ci.meta.JavaType)
+
+CLSS public abstract interface jdk.vm.ci.meta.SpeculationLog
+innr public abstract interface static SpeculationReason
+meth public abstract boolean hasSpeculations()
+meth public abstract boolean maySpeculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public abstract jdk.vm.ci.meta.JavaConstant speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public abstract void collectFailedSpeculations()
+
+CLSS public abstract interface static jdk.vm.ci.meta.SpeculationLog$SpeculationReason
+ outer jdk.vm.ci.meta.SpeculationLog
+
+CLSS public final !enum jdk.vm.ci.meta.TriState
+fld public final static jdk.vm.ci.meta.TriState FALSE
+fld public final static jdk.vm.ci.meta.TriState TRUE
+fld public final static jdk.vm.ci.meta.TriState UNKNOWN
+meth public boolean isFalse()
+meth public boolean isKnown()
+meth public boolean isTrue()
+meth public boolean isUnknown()
+meth public boolean toBoolean()
+meth public static jdk.vm.ci.meta.TriState get(boolean)
+meth public static jdk.vm.ci.meta.TriState merge(jdk.vm.ci.meta.TriState,jdk.vm.ci.meta.TriState)
+meth public static jdk.vm.ci.meta.TriState valueOf(java.lang.String)
+meth public static jdk.vm.ci.meta.TriState[] values()
+supr java.lang.Enum<jdk.vm.ci.meta.TriState>
+
+CLSS public abstract interface jdk.vm.ci.meta.VMConstant
+intf jdk.vm.ci.meta.Constant
+
+CLSS public abstract jdk.vm.ci.meta.Value
+cons protected init(jdk.vm.ci.meta.ValueKind<?>)
+fld public final static jdk.vm.ci.meta.AllocatableValue ILLEGAL
+fld public final static jdk.vm.ci.meta.Value[] NO_VALUES
+meth protected final java.lang.String getKindSuffix()
+meth public boolean equals(java.lang.Object)
+meth public final <%0 extends jdk.vm.ci.meta.ValueKind<{%%0}>> {%%0} getValueKind(java.lang.Class<{%%0}>)
+meth public final boolean identityEquals(jdk.vm.ci.meta.Value)
+meth public final jdk.vm.ci.meta.PlatformKind getPlatformKind()
+meth public final jdk.vm.ci.meta.ValueKind<?> getValueKind()
+meth public int hashCode()
+supr java.lang.Object
+hfds valueKind
+hcls IllegalValue
+
+CLSS public abstract jdk.vm.ci.meta.ValueKind<%0 extends jdk.vm.ci.meta.ValueKind<{jdk.vm.ci.meta.ValueKind%0}>>
+cons public init(jdk.vm.ci.meta.PlatformKind)
+fld public final static jdk.vm.ci.meta.ValueKind<?> Illegal
+meth public abstract {jdk.vm.ci.meta.ValueKind%0} changeType(jdk.vm.ci.meta.PlatformKind)
+meth public final jdk.vm.ci.meta.PlatformKind getPlatformKind()
+meth public java.lang.String getKindSuffix()
+supr java.lang.Object
+hfds platformKind
+hcls IllegalKind,IllegalValueKind
+

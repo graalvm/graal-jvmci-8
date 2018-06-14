@@ -1,0 +1,1028 @@
+#Signature file v4.1
+#Version 
+
+CLSS public abstract interface java.io.Serializable
+
+CLSS public abstract interface java.lang.Comparable<%0 extends java.lang.Object>
+meth public abstract int compareTo({java.lang.Comparable%0})
+
+CLSS public abstract java.lang.Enum<%0 extends java.lang.Enum<{java.lang.Enum%0}>>
+cons protected init(java.lang.String,int)
+intf java.io.Serializable
+intf java.lang.Comparable<{java.lang.Enum%0}>
+meth protected final java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected final void finalize()
+meth public final boolean equals(java.lang.Object)
+meth public final int compareTo({java.lang.Enum%0})
+meth public final int hashCode()
+meth public final int ordinal()
+meth public final java.lang.Class<{java.lang.Enum%0}> getDeclaringClass()
+meth public final java.lang.String name()
+meth public java.lang.String toString()
+meth public static <%0 extends java.lang.Enum<{%%0}>> {%%0} valueOf(java.lang.Class<{%%0}>,java.lang.String)
+supr java.lang.Object
+hfds name,ordinal
+
+CLSS public java.lang.Object
+cons public init()
+meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected void finalize() throws java.lang.Throwable
+meth public boolean equals(java.lang.Object)
+meth public final java.lang.Class<?> getClass()
+meth public final void notify()
+meth public final void notifyAll()
+meth public final void wait() throws java.lang.InterruptedException
+meth public final void wait(long) throws java.lang.InterruptedException
+meth public final void wait(long,int) throws java.lang.InterruptedException
+meth public int hashCode()
+meth public java.lang.String toString()
+
+CLSS public abstract interface java.lang.reflect.AnnotatedElement
+meth public <%0 extends java.lang.annotation.Annotation> {%%0} getDeclaredAnnotation(java.lang.Class<{%%0}>)
+meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getAnnotationsByType(java.lang.Class<{%%0}>)
+meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getDeclaredAnnotationsByType(java.lang.Class<{%%0}>)
+meth public abstract <%0 extends java.lang.annotation.Annotation> {%%0} getAnnotation(java.lang.Class<{%%0}>)
+meth public abstract java.lang.annotation.Annotation[] getAnnotations()
+meth public abstract java.lang.annotation.Annotation[] getDeclaredAnnotations()
+meth public boolean isAnnotationPresent(java.lang.Class<? extends java.lang.annotation.Annotation>)
+
+CLSS public jdk.vm.ci.code.CallingConvention
+cons public !varargs init(int,jdk.vm.ci.meta.AllocatableValue,jdk.vm.ci.meta.AllocatableValue[])
+innr public abstract interface static Type
+meth public int getArgumentCount()
+meth public int getStackSize()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.AllocatableValue getArgument(int)
+meth public jdk.vm.ci.meta.AllocatableValue getReturn()
+meth public jdk.vm.ci.meta.AllocatableValue[] getArguments()
+supr java.lang.Object
+hfds argumentLocations,returnLocation,stackSize
+
+CLSS public abstract interface static jdk.vm.ci.code.CallingConvention$Type
+ outer jdk.vm.ci.code.CallingConvention
+
+CLSS public abstract interface jdk.vm.ci.code.CodeCacheProvider
+meth public abstract boolean shouldDebugNonSafepoints()
+meth public abstract int getMinimumOutgoingSize()
+meth public abstract jdk.vm.ci.code.InstalledCode installCode(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.code.CompiledCode,jdk.vm.ci.code.InstalledCode,jdk.vm.ci.meta.SpeculationLog,boolean)
+meth public abstract jdk.vm.ci.code.RegisterConfig getRegisterConfig()
+meth public abstract jdk.vm.ci.code.TargetDescription getTarget()
+meth public abstract jdk.vm.ci.meta.SpeculationLog createSpeculationLog()
+meth public abstract long getMaxCallTargetOffset(long)
+meth public abstract void invalidateInstalledCode(jdk.vm.ci.code.InstalledCode)
+meth public java.lang.String getMarkName(jdk.vm.ci.code.site.Mark)
+meth public java.lang.String getTargetName(jdk.vm.ci.code.site.Call)
+meth public jdk.vm.ci.code.InstalledCode addCode(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.code.CompiledCode,jdk.vm.ci.meta.SpeculationLog,jdk.vm.ci.code.InstalledCode)
+meth public jdk.vm.ci.code.InstalledCode setDefaultCode(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.code.CompiledCode)
+
+CLSS public jdk.vm.ci.code.CompilationRequest
+cons public init(jdk.vm.ci.meta.ResolvedJavaMethod)
+cons public init(jdk.vm.ci.meta.ResolvedJavaMethod,int)
+meth public int getEntryBCI()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+supr java.lang.Object
+hfds entryBCI,method
+
+CLSS public abstract interface jdk.vm.ci.code.CompilationRequestResult
+meth public abstract java.lang.Object getFailure()
+
+CLSS public abstract interface jdk.vm.ci.code.CompiledCode
+
+CLSS public jdk.vm.ci.code.InstalledCode
+cons public init(java.lang.String)
+fld protected final java.lang.String name
+fld protected long address
+fld protected long entryPoint
+fld protected long version
+meth public !varargs java.lang.Object executeVarargs(java.lang.Object[]) throws jdk.vm.ci.code.InvalidInstalledCodeException
+meth public boolean isAlive()
+meth public boolean isValid()
+meth public byte[] getCode()
+meth public final long getAddress()
+meth public final long getEntryPoint()
+meth public final long getVersion()
+meth public java.lang.String getName()
+meth public long getStart()
+meth public void invalidate()
+supr java.lang.Object
+
+CLSS public abstract jdk.vm.ci.code.ReferenceMap
+cons public init()
+supr java.lang.Object
+
+CLSS public abstract interface jdk.vm.ci.code.stack.InspectedFrame
+meth public abstract boolean hasVirtualObjects()
+meth public abstract boolean isMethod(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public abstract boolean isVirtual(int)
+meth public abstract int getBytecodeIndex()
+meth public abstract java.lang.Object getLocal(int)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+meth public abstract void materializeVirtualObjects(boolean)
+
+CLSS public abstract interface jdk.vm.ci.code.stack.StackIntrospection
+meth public abstract <%0 extends java.lang.Object> {%%0} iterateFrames(jdk.vm.ci.meta.ResolvedJavaMethod[],jdk.vm.ci.meta.ResolvedJavaMethod[],int,jdk.vm.ci.code.stack.InspectedFrameVisitor<{%%0}>)
+
+CLSS public abstract interface jdk.vm.ci.hotspot.EventProvider
+innr public abstract interface static CompilationEvent
+innr public abstract interface static CompilerFailureEvent
+innr public abstract interface static InstantEvent
+innr public abstract interface static TimedEvent
+meth public abstract jdk.vm.ci.hotspot.EventProvider$CompilationEvent newCompilationEvent()
+meth public abstract jdk.vm.ci.hotspot.EventProvider$CompilerFailureEvent newCompilerFailureEvent()
+meth public static jdk.vm.ci.hotspot.EventProvider createEmptyEventProvider()
+meth public static jdk.vm.ci.hotspot.EventProvider$CompilationEvent createEmptyCompilationEvent()
+meth public static jdk.vm.ci.hotspot.EventProvider$CompilerFailureEvent createEmptyCompilerFailureEvent()
+
+CLSS public abstract interface static jdk.vm.ci.hotspot.EventProvider$CompilationEvent
+ outer jdk.vm.ci.hotspot.EventProvider
+intf jdk.vm.ci.hotspot.EventProvider$TimedEvent
+meth public abstract void setCodeSize(int)
+meth public abstract void setCompileId(int)
+meth public abstract void setCompileLevel(int)
+meth public abstract void setInlinedBytes(int)
+meth public abstract void setIsOsr(boolean)
+meth public abstract void setMethod(java.lang.String)
+meth public abstract void setSucceeded(boolean)
+
+CLSS public abstract interface static jdk.vm.ci.hotspot.EventProvider$CompilerFailureEvent
+ outer jdk.vm.ci.hotspot.EventProvider
+intf jdk.vm.ci.hotspot.EventProvider$InstantEvent
+meth public abstract void setCompileId(int)
+meth public abstract void setMessage(java.lang.String)
+
+CLSS public abstract interface static jdk.vm.ci.hotspot.EventProvider$InstantEvent
+ outer jdk.vm.ci.hotspot.EventProvider
+meth public abstract boolean shouldWrite()
+meth public abstract void commit()
+
+CLSS public abstract interface static jdk.vm.ci.hotspot.EventProvider$TimedEvent
+ outer jdk.vm.ci.hotspot.EventProvider
+intf jdk.vm.ci.hotspot.EventProvider$InstantEvent
+meth public abstract void begin()
+meth public abstract void end()
+
+CLSS public final !enum jdk.vm.ci.hotspot.HotSpotCallingConventionType
+fld public final boolean out
+fld public final static jdk.vm.ci.code.CallingConvention$Type[] VALUES
+fld public final static jdk.vm.ci.hotspot.HotSpotCallingConventionType JavaCall
+fld public final static jdk.vm.ci.hotspot.HotSpotCallingConventionType JavaCallee
+fld public final static jdk.vm.ci.hotspot.HotSpotCallingConventionType NativeCall
+intf jdk.vm.ci.code.CallingConvention$Type
+meth public static jdk.vm.ci.hotspot.HotSpotCallingConventionType valueOf(java.lang.String)
+meth public static jdk.vm.ci.hotspot.HotSpotCallingConventionType[] values()
+supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotCallingConventionType>
+
+CLSS public jdk.vm.ci.hotspot.HotSpotCodeCacheProvider
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.code.TargetDescription,jdk.vm.ci.code.RegisterConfig)
+fld protected final jdk.vm.ci.code.RegisterConfig regConfig
+fld protected final jdk.vm.ci.code.TargetDescription target
+fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime
+intf jdk.vm.ci.code.CodeCacheProvider
+meth public boolean shouldDebugNonSafepoints()
+meth public int getMinimumOutgoingSize()
+meth public int interpreterFrameSize(jdk.vm.ci.code.BytecodeFrame)
+meth public java.lang.String disassemble(jdk.vm.ci.code.InstalledCode)
+meth public java.lang.String getMarkName(jdk.vm.ci.code.site.Mark)
+meth public java.lang.String getTargetName(jdk.vm.ci.code.site.Call)
+meth public jdk.vm.ci.code.InstalledCode installCode(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.code.CompiledCode,jdk.vm.ci.code.InstalledCode,jdk.vm.ci.meta.SpeculationLog,boolean)
+meth public jdk.vm.ci.code.RegisterConfig getRegisterConfig()
+meth public jdk.vm.ci.code.TargetDescription getTarget()
+meth public jdk.vm.ci.meta.SpeculationLog createSpeculationLog()
+meth public long getMaxCallTargetOffset(long)
+meth public void invalidateInstalledCode(jdk.vm.ci.code.InstalledCode)
+meth public void resetCompilationStatistics()
+supr java.lang.Object
+hfds config
+
+CLSS public jdk.vm.ci.hotspot.HotSpotCompilationRequest
+cons public init(jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod,int,long)
+cons public init(jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod,int,long,int)
+meth public int getId()
+meth public jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod getMethod()
+meth public long getJvmciEnv()
+supr jdk.vm.ci.code.CompilationRequest
+hfds id,jvmciEnv
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotCompilationRequestResult
+intf jdk.vm.ci.code.CompilationRequestResult
+meth public boolean getRetry()
+meth public int getInlinedBytecodes()
+meth public java.lang.Object getFailure()
+meth public java.lang.String getFailureMessage()
+meth public static jdk.vm.ci.hotspot.HotSpotCompilationRequestResult failure(java.lang.String,boolean)
+meth public static jdk.vm.ci.hotspot.HotSpotCompilationRequestResult success(int)
+supr java.lang.Object
+hfds failureMessage,inlinedBytecodes,retry
+
+CLSS public jdk.vm.ci.hotspot.HotSpotCompiledCode
+cons public init(java.lang.String,byte[],int,jdk.vm.ci.code.site.Site[],jdk.vm.ci.meta.Assumptions$Assumption[],jdk.vm.ci.meta.ResolvedJavaMethod[],jdk.vm.ci.hotspot.HotSpotCompiledCode$Comment[],byte[],int,jdk.vm.ci.code.site.DataPatch[],boolean,int,jdk.vm.ci.code.StackSlot)
+fld protected final boolean isImmutablePIC
+fld protected final byte[] dataSection
+fld protected final byte[] targetCode
+fld protected final int dataSectionAlignment
+fld protected final int targetCodeSize
+fld protected final int totalFrameSize
+fld protected final java.lang.String name
+fld protected final jdk.vm.ci.code.StackSlot deoptRescueSlot
+fld protected final jdk.vm.ci.code.site.DataPatch[] dataSectionPatches
+fld protected final jdk.vm.ci.code.site.Site[] sites
+fld protected final jdk.vm.ci.hotspot.HotSpotCompiledCode$Comment[] comments
+fld protected final jdk.vm.ci.meta.Assumptions$Assumption[] assumptions
+fld protected final jdk.vm.ci.meta.ResolvedJavaMethod[] methods
+innr public static Comment
+intf jdk.vm.ci.code.CompiledCode
+meth public java.lang.String getName()
+meth public java.lang.String toString()
+meth public static void verifyVirtualObject(jdk.vm.ci.code.VirtualObject)
+supr java.lang.Object
+
+CLSS public static jdk.vm.ci.hotspot.HotSpotCompiledCode$Comment
+ outer jdk.vm.ci.hotspot.HotSpotCompiledCode
+cons public init(int,java.lang.String)
+fld public final int pcOffset
+fld public final java.lang.String text
+supr java.lang.Object
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotCompiledNmethod
+cons public init(java.lang.String,byte[],int,jdk.vm.ci.code.site.Site[],jdk.vm.ci.meta.Assumptions$Assumption[],jdk.vm.ci.meta.ResolvedJavaMethod[],jdk.vm.ci.hotspot.HotSpotCompiledCode$Comment[],byte[],int,jdk.vm.ci.code.site.DataPatch[],boolean,int,jdk.vm.ci.code.StackSlot,jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod,int,int,long,boolean)
+fld protected final boolean hasUnsafeAccess
+fld protected final int entryBCI
+fld protected final int id
+fld protected final jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod method
+fld protected final long jvmciEnv
+meth public java.lang.String getInstallationFailureMessage()
+meth public java.lang.String toString()
+supr jdk.vm.ci.hotspot.HotSpotCompiledCode
+hfds installationFailureMessage
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotCompressedNullConstant
+fld public final static jdk.vm.ci.meta.JavaConstant COMPRESSED_NULL
+intf jdk.vm.ci.hotspot.HotSpotConstant
+intf jdk.vm.ci.meta.JavaConstant
+meth public boolean asBoolean()
+meth public boolean equals(java.lang.Object)
+meth public boolean isCompressed()
+meth public boolean isDefaultForKind()
+meth public boolean isNull()
+meth public double asDouble()
+meth public float asFloat()
+meth public int asInt()
+meth public int hashCode()
+meth public java.lang.Object asBoxedPrimitive()
+meth public java.lang.String toString()
+meth public java.lang.String toValueString()
+meth public jdk.vm.ci.meta.Constant compress()
+meth public jdk.vm.ci.meta.Constant uncompress()
+meth public jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public long asLong()
+supr java.lang.Object
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotConstant
+intf jdk.vm.ci.meta.Constant
+meth public abstract boolean isCompressed()
+meth public abstract jdk.vm.ci.meta.Constant compress()
+meth public abstract jdk.vm.ci.meta.Constant uncompress()
+
+CLSS public jdk.vm.ci.hotspot.HotSpotConstantReflectionProvider
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
+fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider runtime
+fld protected final jdk.vm.ci.hotspot.HotSpotMethodHandleAccessProvider methodHandleAccess
+intf jdk.vm.ci.meta.ConstantReflectionProvider
+meth public java.lang.Boolean constantEquals(jdk.vm.ci.meta.Constant,jdk.vm.ci.meta.Constant)
+meth public java.lang.Integer readArrayLength(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.Constant asObjectHub(jdk.vm.ci.meta.ResolvedJavaType)
+meth public jdk.vm.ci.meta.JavaConstant asJavaClass(jdk.vm.ci.meta.ResolvedJavaType)
+meth public jdk.vm.ci.meta.JavaConstant boxPrimitive(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.JavaConstant forObject(java.lang.Object)
+meth public jdk.vm.ci.meta.JavaConstant forString(java.lang.String)
+meth public jdk.vm.ci.meta.JavaConstant readArrayElement(jdk.vm.ci.meta.JavaConstant,int)
+meth public jdk.vm.ci.meta.JavaConstant readFieldValue(jdk.vm.ci.meta.ResolvedJavaField,jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.JavaConstant unboxPrimitive(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.MemoryAccessProvider getMemoryAccessProvider()
+meth public jdk.vm.ci.meta.MethodHandleAccessProvider getMethodHandleAccess()
+meth public jdk.vm.ci.meta.ResolvedJavaType asJavaType(jdk.vm.ci.meta.Constant)
+supr java.lang.Object
+hfds memoryAccess
+
+CLSS public jdk.vm.ci.hotspot.HotSpotForeignCallTarget
+cons public init(long)
+fld protected long address
+intf jdk.vm.ci.meta.InvokeTarget
+supr java.lang.Object
+
+CLSS public abstract jdk.vm.ci.hotspot.HotSpotInstalledCode
+cons public init(java.lang.String)
+meth public abstract java.lang.String toString()
+meth public byte[] getCode()
+meth public int getSize()
+meth public long getCodeSize()
+meth public long getStart()
+supr jdk.vm.ci.code.InstalledCode
+hfds codeSize,codeStart,size
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory
+meth public abstract java.lang.String getArchitecture()
+meth public abstract jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.runtime.JVMCIBackend)
+
+CLSS public abstract jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory
+cons public init()
+innr public final static !enum CompilationLevel
+innr public final static !enum CompilationLevelAdjustment
+intf jdk.vm.ci.runtime.JVMCICompilerFactory
+meth public java.lang.String[] getTrivialPrefixes()
+meth public jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel adjustCompilationLevel(java.lang.Class<?>,java.lang.String,java.lang.String,boolean,jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel)
+meth public jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment getCompilationLevelAdjustment()
+supr java.lang.Object
+
+CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel
+ outer jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel FullOptimization
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel FullProfile
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel LimitedProfile
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel None
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel Simple
+meth public static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel valueOf(java.lang.String)
+meth public static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel[] values()
+supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel>
+
+CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment
+ outer jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment ByFullSignature
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment ByHolder
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment None
+meth public static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment valueOf(java.lang.String)
+meth public static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment[] values()
+supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment>
+
+CLSS public jdk.vm.ci.hotspot.HotSpotJVMCIMetaAccessContext
+meth protected jdk.vm.ci.meta.ResolvedJavaType createClass(java.lang.Class<?>)
+meth public jdk.vm.ci.meta.ResolvedJavaType fromClass(java.lang.Class<?>)
+supr java.lang.Object
+hfds allContexts,freed,list,metadataRoots,queue,resolvedJavaType
+hcls ChunkedList
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime
+fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIMetaAccessContext metaAccessContext
+fld protected final jdk.vm.ci.hotspot.HotSpotVMConfigStore configStore
+innr public final static !enum Option
+intf jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider
+meth public <%0 extends jdk.vm.ci.code.Architecture> jdk.vm.ci.runtime.JVMCIBackend getJVMCIBackend(java.lang.Class<{%%0}>)
+meth public java.io.OutputStream getCompileLogStream()
+meth public java.io.OutputStream getLogStream()
+meth public java.util.Map<java.lang.Class<? extends jdk.vm.ci.code.Architecture>,jdk.vm.ci.runtime.JVMCIBackend> getJVMCIBackends()
+meth public jdk.vm.ci.hotspot.HotSpotVMConfigStore getConfigStore()
+meth public jdk.vm.ci.meta.JavaType lookupType(java.lang.String,jdk.vm.ci.hotspot.HotSpotResolvedObjectType,boolean)
+meth public jdk.vm.ci.meta.ResolvedJavaType fromClass(java.lang.Class<?>)
+meth public jdk.vm.ci.runtime.JVMCIBackend getHostJVMCIBackend()
+meth public jdk.vm.ci.runtime.JVMCICompiler getCompiler()
+meth public long[] collectCounters()
+meth public static jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory findFactory(java.lang.String)
+meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime()
+meth public static jdk.vm.ci.meta.JavaKind getHostWordKind()
+supr java.lang.Object
+hfds backends,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,hostBackend,hsCompilerFactory,trivialPrefixes,vmEventListeners
+hcls CompileLogStream,DelayedInit
+
+CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option
+ outer jdk.vm.ci.hotspot.HotSpotJVMCIRuntime
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option Compiler
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option InitTimer
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option PrintConfig
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option TraceMethodDataFilter
+meth public boolean getBoolean()
+meth public java.lang.String getPropertyName()
+meth public java.lang.String getString()
+meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option valueOf(java.lang.String)
+meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option[] values()
+meth public static void printProperties(java.io.PrintStream)
+supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option>
+hfds JVMCI_OPTION_PROPERTY_PREFIX,PROPERTY_HELP_INDENT,PROPERTY_LINE_WIDTH,UNINITIALIZED,defaultValue,helpLines,isDefault,type,value
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider
+intf jdk.vm.ci.runtime.JVMCIRuntime
+meth public abstract java.io.OutputStream getCompileLogStream()
+meth public abstract java.io.OutputStream getLogStream()
+meth public abstract jdk.vm.ci.hotspot.HotSpotVMConfigStore getConfigStore()
+meth public abstract jdk.vm.ci.meta.JavaType lookupType(java.lang.String,jdk.vm.ci.hotspot.HotSpotResolvedObjectType,boolean)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType fromClass(java.lang.Class<?>)
+meth public static int getArrayBaseOffset(jdk.vm.ci.meta.JavaKind)
+meth public static int getArrayIndexScale(jdk.vm.ci.meta.JavaKind)
+
+CLSS public abstract jdk.vm.ci.hotspot.HotSpotJavaType
+cons public init(java.lang.String)
+intf jdk.vm.ci.meta.JavaType
+meth public final java.lang.String getName()
+supr java.lang.Object
+hfds name
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotMemoryAccessProvider
+intf jdk.vm.ci.meta.MemoryAccessProvider
+meth public abstract jdk.vm.ci.meta.Constant readKlassPointerConstant(jdk.vm.ci.meta.Constant,long)
+meth public abstract jdk.vm.ci.meta.Constant readMethodPointerConstant(jdk.vm.ci.meta.Constant,long)
+meth public abstract jdk.vm.ci.meta.Constant readNarrowKlassPointerConstant(jdk.vm.ci.meta.Constant,long)
+meth public abstract jdk.vm.ci.meta.JavaConstant readNarrowOopConstant(jdk.vm.ci.meta.Constant,long)
+
+CLSS public jdk.vm.ci.hotspot.HotSpotMetaAccessProvider
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
+fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime
+intf jdk.vm.ci.meta.MetaAccessProvider
+meth public int computeArrayAllocationSize(int,int,int)
+meth public int convertDeoptAction(jdk.vm.ci.meta.DeoptimizationAction)
+meth public int convertDeoptReason(jdk.vm.ci.meta.DeoptimizationReason)
+meth public int decodeDebugId(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.hotspot.HotSpotResolvedObjectType lookupJavaType(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.DeoptimizationAction convertDeoptAction(int)
+meth public jdk.vm.ci.meta.DeoptimizationAction decodeDeoptAction(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.DeoptimizationReason convertDeoptReason(int)
+meth public jdk.vm.ci.meta.DeoptimizationReason decodeDeoptReason(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.JavaConstant encodeDeoptActionAndReason(jdk.vm.ci.meta.DeoptimizationAction,jdk.vm.ci.meta.DeoptimizationReason,int)
+meth public jdk.vm.ci.meta.ResolvedJavaField lookupJavaField(java.lang.reflect.Field)
+meth public jdk.vm.ci.meta.ResolvedJavaMethod lookupJavaMethod(java.lang.reflect.Executable)
+meth public jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(java.lang.Class<?>)
+meth public jdk.vm.ci.meta.Signature parseMethodDescriptor(java.lang.String)
+meth public long getMemorySize(jdk.vm.ci.meta.JavaConstant)
+supr java.lang.Object
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotMetaspaceConstant
+intf jdk.vm.ci.hotspot.HotSpotConstant
+intf jdk.vm.ci.meta.VMConstant
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod asResolvedJavaMethod()
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType asResolvedJavaType()
+
+CLSS public jdk.vm.ci.hotspot.HotSpotMethodHandleAccessProvider
+cons public init(jdk.vm.ci.meta.ConstantReflectionProvider)
+intf jdk.vm.ci.meta.MethodHandleAccessProvider
+meth public jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod lookupMethodHandleIntrinsic(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public jdk.vm.ci.meta.ResolvedJavaMethod resolveInvokeBasicTarget(jdk.vm.ci.meta.JavaConstant,boolean)
+meth public jdk.vm.ci.meta.ResolvedJavaMethod resolveLinkToTarget(jdk.vm.ci.meta.JavaConstant)
+meth public static jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod getMethodHandleIntrinsic(int)
+supr java.lang.Object
+hfds constantReflection
+hcls LazyInitialization
+
+CLSS public jdk.vm.ci.hotspot.HotSpotModifiers
+cons public init()
+fld public final static int ANNOTATION
+fld public final static int BRIDGE
+fld public final static int ENUM
+fld public final static int SYNTHETIC
+fld public final static int VARARGS
+meth public static int jvmClassModifiers()
+meth public static int jvmFieldModifiers()
+meth public static int jvmMethodModifiers()
+supr java.lang.Object
+
+CLSS public jdk.vm.ci.hotspot.HotSpotNmethod
+cons public init(jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod,java.lang.String,boolean)
+meth protected boolean checkThreeObjectArgs()
+meth public !varargs java.lang.Object executeVarargs(java.lang.Object[]) throws jdk.vm.ci.code.InvalidInstalledCodeException
+meth public boolean isDefault()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+meth public long getStart()
+meth public void invalidate()
+supr jdk.vm.ci.hotspot.HotSpotInstalledCode
+hfds isDefault,method
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotObjectConstant
+intf jdk.vm.ci.hotspot.HotSpotConstant
+intf jdk.vm.ci.meta.JavaConstant
+intf jdk.vm.ci.meta.VMConstant
+meth public abstract <%0 extends java.lang.Object> {%%0} asObject(java.lang.Class<{%%0}>)
+meth public abstract boolean isInternedString()
+meth public abstract int getIdentityHashCode()
+meth public abstract java.lang.Object asObject(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getType()
+meth public abstract jdk.vm.ci.meta.JavaConstant compress()
+meth public abstract jdk.vm.ci.meta.JavaConstant getCallSiteTarget(jdk.vm.ci.meta.Assumptions)
+meth public abstract jdk.vm.ci.meta.JavaConstant getClassLoader()
+meth public abstract jdk.vm.ci.meta.JavaConstant getComponentType()
+meth public abstract jdk.vm.ci.meta.JavaConstant getSuperclass()
+meth public abstract jdk.vm.ci.meta.JavaConstant uncompress()
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotReferenceMap
+cons public init(jdk.vm.ci.code.Location[],jdk.vm.ci.code.Location[],int[],int)
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+supr jdk.vm.ci.code.ReferenceMap
+hfds derivedBase,maxRegisterSize,objects,sizeInBytes
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotResolvedJavaField
+intf jdk.vm.ci.meta.ResolvedJavaField
+meth public abstract boolean isInObject(java.lang.Object)
+meth public abstract boolean isStable()
+meth public abstract int offset()
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod
+intf jdk.vm.ci.meta.ResolvedJavaMethod
+meth public abstract boolean hasCodeAtLevel(int,int)
+meth public abstract boolean hasCompiledCode()
+meth public abstract boolean hasCompiledCodeAtLevel(int)
+meth public abstract boolean hasReservedStackAccess()
+meth public abstract boolean ignoredBySecurityStackWalk()
+meth public abstract boolean isCallerSensitive()
+meth public abstract boolean isForceInline()
+meth public abstract boolean isIntrinsicCandidate()
+meth public abstract int allocateCompileId(int)
+meth public abstract int intrinsicId()
+meth public abstract int vtableEntryOffset(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getDeclaringClass()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod uniqueConcreteMethod(jdk.vm.ci.hotspot.HotSpotResolvedObjectType)
+meth public abstract void setNotInlinableOrCompilable()
+meth public boolean isDefault()
+
+CLSS public abstract jdk.vm.ci.hotspot.HotSpotResolvedJavaType
+intf jdk.vm.ci.meta.ResolvedJavaType
+meth public abstract java.lang.Class<?> mirror()
+meth public final boolean equals(java.lang.Object)
+meth public final int hashCode()
+supr jdk.vm.ci.hotspot.HotSpotJavaType
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotResolvedObjectType
+intf jdk.vm.ci.meta.ResolvedJavaType
+meth public abstract boolean isDefinitelyResolvedWithRespectTo(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract boolean isPrimaryType()
+meth public abstract int getVtableLength()
+meth public abstract int instanceSize()
+meth public abstract int layoutHelper()
+meth public abstract int superCheckOffset()
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType findLeastCommonAncestor(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getArrayClass()
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getEnclosingType()
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getSuperclass()
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getSupertype()
+meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType[] getInterfaces()
+meth public abstract jdk.vm.ci.meta.Assumptions$AssumptionResult<jdk.vm.ci.meta.ResolvedJavaMethod> findUniqueConcreteMethod(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public abstract jdk.vm.ci.meta.Assumptions$AssumptionResult<jdk.vm.ci.meta.ResolvedJavaType> findLeafConcreteSubtype()
+meth public abstract jdk.vm.ci.meta.Constant klass()
+meth public abstract jdk.vm.ci.meta.ConstantPool getConstantPool()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod getClassInitializer()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getComponentType()
+meth public abstract long getFingerprint()
+meth public abstract long prototypeMarkWord()
+meth public boolean isPrimitive()
+meth public jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public static jdk.vm.ci.hotspot.HotSpotResolvedObjectType fromObjectClass(java.lang.Class<?>)
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotResolvedPrimitiveType
+cons public init(jdk.vm.ci.meta.JavaKind)
+meth public <%0 extends java.lang.annotation.Annotation> {%%0} getAnnotation(java.lang.Class<{%%0}>)
+meth public boolean hasFinalizer()
+meth public boolean isArray()
+meth public boolean isAssignableFrom(jdk.vm.ci.meta.ResolvedJavaType)
+meth public boolean isCloneableWithAllocation()
+meth public boolean isInitialized()
+meth public boolean isInstance(jdk.vm.ci.meta.JavaConstant)
+meth public boolean isInstanceClass()
+meth public boolean isInterface()
+meth public boolean isJavaLangObject()
+meth public boolean isLinked()
+meth public boolean isLocal()
+meth public boolean isMember()
+meth public boolean isPrimitive()
+meth public int getModifiers()
+meth public java.lang.Class<?> mirror()
+meth public java.lang.String getSourceFileName()
+meth public java.lang.String toString()
+meth public java.lang.annotation.Annotation[] getAnnotations()
+meth public java.lang.annotation.Annotation[] getDeclaredAnnotations()
+meth public jdk.vm.ci.hotspot.HotSpotResolvedObjectType getArrayClass()
+meth public jdk.vm.ci.meta.Assumptions$AssumptionResult<java.lang.Boolean> hasFinalizableSubclass()
+meth public jdk.vm.ci.meta.Assumptions$AssumptionResult<jdk.vm.ci.meta.ResolvedJavaMethod> findUniqueConcreteMethod(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public jdk.vm.ci.meta.Assumptions$AssumptionResult<jdk.vm.ci.meta.ResolvedJavaType> findLeafConcreteSubtype()
+meth public jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public jdk.vm.ci.meta.ResolvedJavaField findInstanceFieldWithOffset(long,jdk.vm.ci.meta.JavaKind)
+meth public jdk.vm.ci.meta.ResolvedJavaField[] getInstanceFields(boolean)
+meth public jdk.vm.ci.meta.ResolvedJavaField[] getStaticFields()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod getClassInitializer()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod resolveMethod(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.meta.ResolvedJavaType)
+meth public jdk.vm.ci.meta.ResolvedJavaMethod[] getDeclaredConstructors()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod[] getDeclaredMethods()
+meth public jdk.vm.ci.meta.ResolvedJavaType findLeastCommonAncestor(jdk.vm.ci.meta.ResolvedJavaType)
+meth public jdk.vm.ci.meta.ResolvedJavaType getComponentType()
+meth public jdk.vm.ci.meta.ResolvedJavaType getElementalType()
+meth public jdk.vm.ci.meta.ResolvedJavaType getEnclosingType()
+meth public jdk.vm.ci.meta.ResolvedJavaType getHostClass()
+meth public jdk.vm.ci.meta.ResolvedJavaType getSingleImplementor()
+meth public jdk.vm.ci.meta.ResolvedJavaType getSuperclass()
+meth public jdk.vm.ci.meta.ResolvedJavaType resolve(jdk.vm.ci.meta.ResolvedJavaType)
+meth public jdk.vm.ci.meta.ResolvedJavaType[] getInterfaces()
+meth public void initialize()
+supr jdk.vm.ci.hotspot.HotSpotResolvedJavaType
+hfds kind
+
+CLSS public jdk.vm.ci.hotspot.HotSpotRuntimeStub
+cons public init(java.lang.String)
+meth public !varargs java.lang.Object executeVarargs(java.lang.Object[]) throws jdk.vm.ci.code.InvalidInstalledCodeException
+meth public boolean isValid()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+meth public void invalidate()
+supr jdk.vm.ci.hotspot.HotSpotInstalledCode
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotSentinelConstant
+cons public init(jdk.vm.ci.meta.ValueKind<?>,jdk.vm.ci.meta.JavaKind)
+intf jdk.vm.ci.meta.JavaConstant
+intf jdk.vm.ci.meta.VMConstant
+meth public boolean asBoolean()
+meth public boolean equals(java.lang.Object)
+meth public boolean isDefaultForKind()
+meth public boolean isNull()
+meth public double asDouble()
+meth public float asFloat()
+meth public int asInt()
+meth public int hashCode()
+meth public java.lang.Object asBoxedPrimitive()
+meth public java.lang.String toString()
+meth public java.lang.String toValueString()
+meth public jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public long asLong()
+supr jdk.vm.ci.meta.Value
+hfds javaKind
+
+CLSS public jdk.vm.ci.hotspot.HotSpotSignature
+cons public !varargs init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.meta.ResolvedJavaType,jdk.vm.ci.meta.ResolvedJavaType[])
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,java.lang.String)
+intf jdk.vm.ci.meta.Signature
+meth public boolean equals(java.lang.Object)
+meth public int getParameterCount(boolean)
+meth public int hashCode()
+meth public java.lang.String toMethodDescriptor()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaKind getParameterKind(int)
+meth public jdk.vm.ci.meta.JavaKind getReturnKind()
+meth public jdk.vm.ci.meta.JavaType getParameterType(int,jdk.vm.ci.meta.ResolvedJavaType)
+meth public jdk.vm.ci.meta.JavaType getReturnType(jdk.vm.ci.meta.ResolvedJavaType)
+supr java.lang.Object
+hfds originalString,parameterTypes,parameters,returnType,returnTypeCache,runtime
+
+CLSS public jdk.vm.ci.hotspot.HotSpotSpeculationLog
+cons public init()
+intf jdk.vm.ci.meta.SpeculationLog
+meth public boolean hasSpeculations()
+meth public boolean maySpeculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public jdk.vm.ci.meta.JavaConstant speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public void collectFailedSpeculations()
+supr java.lang.Object
+hfds failedSpeculations,lastFailed,speculations
+
+CLSS public jdk.vm.ci.hotspot.HotSpotStackFrameReference
+cons public init()
+intf jdk.vm.ci.code.stack.InspectedFrame
+meth public boolean hasVirtualObjects()
+meth public boolean isMethod(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public boolean isVirtual(int)
+meth public int getBytecodeIndex()
+meth public int getFrameNumber()
+meth public java.lang.Object getLocal(int)
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+meth public long getStackPointer()
+meth public void materializeVirtualObjects(boolean)
+supr java.lang.Object
+hfds bci,compilerToVM,frameNumber,localIsVirtual,locals,method,objectsMaterialized,stackPointer
+
+CLSS public jdk.vm.ci.hotspot.HotSpotStackIntrospection
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
+fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime
+intf jdk.vm.ci.code.stack.StackIntrospection
+meth public <%0 extends java.lang.Object> {%%0} iterateFrames(jdk.vm.ci.meta.ResolvedJavaMethod[],jdk.vm.ci.meta.ResolvedJavaMethod[],int,jdk.vm.ci.code.stack.InspectedFrameVisitor<{%%0}>)
+supr java.lang.Object
+
+CLSS public jdk.vm.ci.hotspot.HotSpotVMConfigAccess
+cons public init(jdk.vm.ci.hotspot.HotSpotVMConfigStore)
+meth public <%0 extends java.lang.Object> {%%0} getConstant(java.lang.String,java.lang.Class<{%%0}>)
+meth public <%0 extends java.lang.Object> {%%0} getConstant(java.lang.String,java.lang.Class<{%%0}>,{%%0})
+meth public <%0 extends java.lang.Object> {%%0} getFieldOffset(java.lang.String,java.lang.Class<{%%0}>)
+meth public <%0 extends java.lang.Object> {%%0} getFieldOffset(java.lang.String,java.lang.Class<{%%0}>,java.lang.String)
+meth public <%0 extends java.lang.Object> {%%0} getFieldOffset(java.lang.String,java.lang.Class<{%%0}>,java.lang.String,{%%0})
+meth public <%0 extends java.lang.Object> {%%0} getFieldValue(java.lang.String,java.lang.Class<{%%0}>)
+meth public <%0 extends java.lang.Object> {%%0} getFieldValue(java.lang.String,java.lang.Class<{%%0}>,java.lang.String)
+meth public <%0 extends java.lang.Object> {%%0} getFieldValue(java.lang.String,java.lang.Class<{%%0}>,java.lang.String,{%%0})
+meth public <%0 extends java.lang.Object> {%%0} getFlag(java.lang.String,java.lang.Class<{%%0}>)
+meth public <%0 extends java.lang.Object> {%%0} getFlag(java.lang.String,java.lang.Class<{%%0}>,{%%0})
+meth public jdk.vm.ci.hotspot.HotSpotVMConfigStore getStore()
+meth public long getAddress(java.lang.String)
+meth public long getAddress(java.lang.String,java.lang.Long)
+meth public long getFieldAddress(java.lang.String,java.lang.String)
+meth public long getFieldAddress(java.lang.String,java.lang.String,java.lang.Long)
+supr java.lang.Object
+hfds store
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotVMConfigStore
+meth public java.lang.String toString()
+meth public java.util.List<jdk.vm.ci.hotspot.VMIntrinsicMethod> getIntrinsics()
+meth public java.util.Map<java.lang.String,java.lang.Long> getAddresses()
+meth public java.util.Map<java.lang.String,java.lang.Long> getConstants()
+meth public java.util.Map<java.lang.String,jdk.vm.ci.hotspot.VMField> getFields()
+meth public java.util.Map<java.lang.String,jdk.vm.ci.hotspot.VMFlag> getFlags()
+supr java.lang.Object
+hfds compilerToVm,vmAddresses,vmConstants,vmFields,vmFlags,vmIntrinsics
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotVMEventListener
+meth public void notifyBootstrapFinished()
+meth public void notifyInstall(jdk.vm.ci.hotspot.HotSpotCodeCacheProvider,jdk.vm.ci.code.InstalledCode,jdk.vm.ci.code.CompiledCode)
+meth public void notifyShutdown()
+
+CLSS public final jdk.vm.ci.hotspot.VMField
+cons public init(java.lang.String,java.lang.String,long)
+cons public init(java.lang.String,java.lang.String,long,java.lang.Long)
+fld public final java.lang.Object value
+fld public final java.lang.String name
+fld public final java.lang.String type
+fld public final long address
+fld public final long offset
+meth public boolean isStatic()
+meth public java.lang.String toString()
+supr java.lang.Object
+
+CLSS public final jdk.vm.ci.hotspot.VMFlag
+fld public final java.lang.Object value
+fld public final java.lang.String name
+fld public final java.lang.String type
+meth public java.lang.String toString()
+supr java.lang.Object
+
+CLSS public final jdk.vm.ci.hotspot.VMIntrinsicMethod
+fld public final int id
+fld public final java.lang.String declaringClass
+fld public final java.lang.String descriptor
+fld public final java.lang.String name
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+supr java.lang.Object
+
+CLSS public abstract interface jdk.vm.ci.meta.Constant
+meth public abstract boolean isDefaultForKind()
+meth public abstract java.lang.String toValueString()
+
+CLSS public abstract interface jdk.vm.ci.meta.ConstantReflectionProvider
+meth public abstract java.lang.Boolean constantEquals(jdk.vm.ci.meta.Constant,jdk.vm.ci.meta.Constant)
+meth public abstract java.lang.Integer readArrayLength(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.Constant asObjectHub(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.JavaConstant asJavaClass(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.JavaConstant boxPrimitive(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.JavaConstant forString(java.lang.String)
+meth public abstract jdk.vm.ci.meta.JavaConstant readArrayElement(jdk.vm.ci.meta.JavaConstant,int)
+meth public abstract jdk.vm.ci.meta.JavaConstant readFieldValue(jdk.vm.ci.meta.ResolvedJavaField,jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.JavaConstant unboxPrimitive(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.MemoryAccessProvider getMemoryAccessProvider()
+meth public abstract jdk.vm.ci.meta.MethodHandleAccessProvider getMethodHandleAccess()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType asJavaType(jdk.vm.ci.meta.Constant)
+
+CLSS public abstract interface jdk.vm.ci.meta.InvokeTarget
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaConstant
+fld public final static jdk.vm.ci.meta.JavaConstant NULL_POINTER
+fld public final static jdk.vm.ci.meta.PrimitiveConstant DOUBLE_0
+fld public final static jdk.vm.ci.meta.PrimitiveConstant DOUBLE_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant FALSE
+fld public final static jdk.vm.ci.meta.PrimitiveConstant FLOAT_0
+fld public final static jdk.vm.ci.meta.PrimitiveConstant FLOAT_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_0
+fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_2
+fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_MINUS_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant LONG_0
+fld public final static jdk.vm.ci.meta.PrimitiveConstant LONG_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant TRUE
+intf jdk.vm.ci.meta.Constant
+intf jdk.vm.ci.meta.JavaValue
+meth public abstract boolean asBoolean()
+meth public abstract boolean isDefaultForKind()
+meth public abstract boolean isNull()
+meth public abstract double asDouble()
+meth public abstract float asFloat()
+meth public abstract int asInt()
+meth public abstract java.lang.Object asBoxedPrimitive()
+meth public abstract jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public abstract long asLong()
+meth public boolean isNonNull()
+meth public java.lang.String toValueString()
+meth public static boolean isNull(jdk.vm.ci.meta.Constant)
+meth public static java.lang.String toString(jdk.vm.ci.meta.JavaConstant)
+meth public static jdk.vm.ci.meta.JavaConstant defaultForKind(jdk.vm.ci.meta.JavaKind)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forBoolean(boolean)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forBoxedPrimitive(java.lang.Object)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forByte(byte)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forChar(char)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forDouble(double)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forFloat(float)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forIllegal()
+meth public static jdk.vm.ci.meta.PrimitiveConstant forInt(int)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forIntegerKind(jdk.vm.ci.meta.JavaKind,long)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forLong(long)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forPrimitiveInt(int,long)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forShort(short)
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaField
+meth public abstract java.lang.String getName()
+meth public abstract jdk.vm.ci.meta.JavaType getDeclaringClass()
+meth public abstract jdk.vm.ci.meta.JavaType getType()
+meth public java.lang.String format(java.lang.String)
+meth public jdk.vm.ci.meta.JavaKind getJavaKind()
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaMethod
+meth public abstract java.lang.String getName()
+meth public abstract jdk.vm.ci.meta.JavaType getDeclaringClass()
+meth public abstract jdk.vm.ci.meta.Signature getSignature()
+meth public java.lang.String format(java.lang.String)
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaType
+meth public abstract java.lang.String getName()
+meth public abstract jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public abstract jdk.vm.ci.meta.JavaType getArrayClass()
+meth public abstract jdk.vm.ci.meta.JavaType getComponentType()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType resolve(jdk.vm.ci.meta.ResolvedJavaType)
+meth public boolean isArray()
+meth public java.lang.String getUnqualifiedName()
+meth public java.lang.String toClassName()
+meth public java.lang.String toJavaName()
+meth public java.lang.String toJavaName(boolean)
+meth public jdk.vm.ci.meta.JavaType getElementalType()
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaValue
+
+CLSS public abstract interface jdk.vm.ci.meta.MemoryAccessProvider
+meth public abstract jdk.vm.ci.meta.JavaConstant readObjectConstant(jdk.vm.ci.meta.Constant,long)
+meth public abstract jdk.vm.ci.meta.JavaConstant readPrimitiveConstant(jdk.vm.ci.meta.JavaKind,jdk.vm.ci.meta.Constant,long,int)
+
+CLSS public abstract interface jdk.vm.ci.meta.MetaAccessProvider
+meth public abstract int decodeDebugId(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.DeoptimizationAction decodeDeoptAction(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.DeoptimizationReason decodeDeoptReason(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.JavaConstant encodeDeoptActionAndReason(jdk.vm.ci.meta.DeoptimizationAction,jdk.vm.ci.meta.DeoptimizationReason,int)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaField lookupJavaField(java.lang.reflect.Field)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod lookupJavaMethod(java.lang.reflect.Executable)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(java.lang.Class<?>)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.Signature parseMethodDescriptor(java.lang.String)
+meth public abstract long getMemorySize(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.ResolvedJavaType[] lookupJavaTypes(java.lang.Class<?>[])
+
+CLSS public abstract interface jdk.vm.ci.meta.MethodHandleAccessProvider
+innr public final static !enum IntrinsicMethod
+meth public abstract jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod lookupMethodHandleIntrinsic(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod resolveInvokeBasicTarget(jdk.vm.ci.meta.JavaConstant,boolean)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod resolveLinkToTarget(jdk.vm.ci.meta.JavaConstant)
+
+CLSS public abstract interface jdk.vm.ci.meta.ModifiersProvider
+meth public abstract int getModifiers()
+meth public boolean isAbstract()
+meth public boolean isConcrete()
+meth public boolean isFinalFlagSet()
+meth public boolean isInterface()
+meth public boolean isNative()
+meth public boolean isPackagePrivate()
+meth public boolean isPrivate()
+meth public boolean isProtected()
+meth public boolean isPublic()
+meth public boolean isStatic()
+meth public boolean isStrict()
+meth public boolean isSynchronized()
+meth public boolean isTransient()
+meth public boolean isVolatile()
+
+CLSS public abstract interface jdk.vm.ci.meta.ResolvedJavaField
+intf java.lang.reflect.AnnotatedElement
+intf jdk.vm.ci.meta.JavaField
+intf jdk.vm.ci.meta.ModifiersProvider
+meth public abstract boolean isInternal()
+meth public abstract boolean isSynthetic()
+meth public abstract int getModifiers()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getDeclaringClass()
+meth public boolean isFinal()
+
+CLSS public abstract interface jdk.vm.ci.meta.ResolvedJavaMethod
+innr public static Parameter
+intf java.lang.reflect.AnnotatedElement
+intf jdk.vm.ci.meta.InvokeTarget
+intf jdk.vm.ci.meta.JavaMethod
+intf jdk.vm.ci.meta.ModifiersProvider
+meth public <%0 extends java.lang.annotation.Annotation> {%%0} getParameterAnnotation(java.lang.Class<{%%0}>,int)
+meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getParameterAnnotations(java.lang.Class<{%%0}>)
+meth public abstract boolean canBeInlined()
+meth public abstract boolean canBeStaticallyBound()
+meth public abstract boolean hasNeverInlineDirective()
+meth public abstract boolean isBridge()
+meth public abstract boolean isClassInitializer()
+meth public abstract boolean isConstructor()
+meth public abstract boolean isDefault()
+meth public abstract boolean isInVirtualMethodTable(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract boolean isSynthetic()
+meth public abstract boolean isVarArgs()
+meth public abstract boolean shouldBeInlined()
+meth public abstract byte[] getCode()
+meth public abstract int getCodeSize()
+meth public abstract int getMaxLocals()
+meth public abstract int getMaxStackSize()
+meth public abstract java.lang.StackTraceElement asStackTraceElement(int)
+meth public abstract java.lang.annotation.Annotation[][] getParameterAnnotations()
+meth public abstract java.lang.reflect.Type[] getGenericParameterTypes()
+meth public abstract jdk.vm.ci.meta.Constant getEncoding()
+meth public abstract jdk.vm.ci.meta.ConstantPool getConstantPool()
+meth public abstract jdk.vm.ci.meta.ExceptionHandler[] getExceptionHandlers()
+meth public abstract jdk.vm.ci.meta.LineNumberTable getLineNumberTable()
+meth public abstract jdk.vm.ci.meta.LocalVariableTable getLocalVariableTable()
+meth public abstract jdk.vm.ci.meta.ProfilingInfo getProfilingInfo(boolean,boolean)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getDeclaringClass()
+meth public abstract jdk.vm.ci.meta.SpeculationLog getSpeculationLog()
+meth public abstract void reprofile()
+meth public boolean hasBytecodes()
+meth public boolean hasReceiver()
+meth public boolean isFinal()
+meth public boolean isJavaLangObjectInit()
+meth public jdk.vm.ci.meta.JavaType[] toParameterTypes()
+meth public jdk.vm.ci.meta.ProfilingInfo getProfilingInfo()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod$Parameter[] getParameters()
+
+CLSS public abstract interface jdk.vm.ci.meta.ResolvedJavaType
+intf java.lang.reflect.AnnotatedElement
+intf jdk.vm.ci.meta.JavaType
+intf jdk.vm.ci.meta.ModifiersProvider
+meth public abstract boolean hasFinalizer()
+meth public abstract boolean isAssignableFrom(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract boolean isCloneableWithAllocation()
+meth public abstract boolean isInitialized()
+meth public abstract boolean isInstance(jdk.vm.ci.meta.JavaConstant)
+meth public abstract boolean isInstanceClass()
+meth public abstract boolean isInterface()
+meth public abstract boolean isLinked()
+meth public abstract boolean isLocal()
+meth public abstract boolean isMember()
+meth public abstract boolean isPrimitive()
+meth public abstract java.lang.String getSourceFileName()
+meth public abstract jdk.vm.ci.meta.Assumptions$AssumptionResult<java.lang.Boolean> hasFinalizableSubclass()
+meth public abstract jdk.vm.ci.meta.Assumptions$AssumptionResult<jdk.vm.ci.meta.ResolvedJavaMethod> findUniqueConcreteMethod(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public abstract jdk.vm.ci.meta.Assumptions$AssumptionResult<jdk.vm.ci.meta.ResolvedJavaType> findLeafConcreteSubtype()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaField findInstanceFieldWithOffset(long,jdk.vm.ci.meta.JavaKind)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaField[] getInstanceFields(boolean)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaField[] getStaticFields()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod getClassInitializer()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod resolveMethod(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod[] getDeclaredConstructors()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod[] getDeclaredMethods()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType findLeastCommonAncestor(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getArrayClass()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getComponentType()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getEnclosingType()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getHostClass()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getSingleImplementor()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType getSuperclass()
+meth public abstract jdk.vm.ci.meta.ResolvedJavaType[] getInterfaces()
+meth public abstract void initialize()
+meth public boolean isJavaLangObject()
+meth public boolean isLeaf()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod findMethod(java.lang.String,jdk.vm.ci.meta.Signature)
+meth public jdk.vm.ci.meta.ResolvedJavaMethod resolveConcreteMethod(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.meta.ResolvedJavaType)
+meth public jdk.vm.ci.meta.ResolvedJavaType getElementalType()
+
+CLSS public abstract interface jdk.vm.ci.meta.Signature
+meth public abstract int getParameterCount(boolean)
+meth public abstract jdk.vm.ci.meta.JavaType getParameterType(int,jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract jdk.vm.ci.meta.JavaType getReturnType(jdk.vm.ci.meta.ResolvedJavaType)
+meth public java.lang.String toMethodDescriptor()
+meth public jdk.vm.ci.meta.JavaKind getParameterKind(int)
+meth public jdk.vm.ci.meta.JavaKind getReturnKind()
+meth public jdk.vm.ci.meta.JavaKind[] toParameterKinds(boolean)
+meth public jdk.vm.ci.meta.JavaType[] toParameterTypes(jdk.vm.ci.meta.JavaType)
+
+CLSS public abstract interface jdk.vm.ci.meta.SpeculationLog
+innr public abstract interface static SpeculationReason
+meth public abstract boolean hasSpeculations()
+meth public abstract boolean maySpeculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public abstract jdk.vm.ci.meta.JavaConstant speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public abstract void collectFailedSpeculations()
+
+CLSS public abstract interface jdk.vm.ci.meta.VMConstant
+intf jdk.vm.ci.meta.Constant
+
+CLSS public abstract jdk.vm.ci.meta.Value
+cons protected init(jdk.vm.ci.meta.ValueKind<?>)
+fld public final static jdk.vm.ci.meta.AllocatableValue ILLEGAL
+fld public final static jdk.vm.ci.meta.Value[] NO_VALUES
+meth protected final java.lang.String getKindSuffix()
+meth public boolean equals(java.lang.Object)
+meth public final <%0 extends jdk.vm.ci.meta.ValueKind<{%%0}>> {%%0} getValueKind(java.lang.Class<{%%0}>)
+meth public final boolean identityEquals(jdk.vm.ci.meta.Value)
+meth public final jdk.vm.ci.meta.PlatformKind getPlatformKind()
+meth public final jdk.vm.ci.meta.ValueKind<?> getValueKind()
+meth public int hashCode()
+supr java.lang.Object
+hfds valueKind
+hcls IllegalValue
+
+CLSS public abstract interface jdk.vm.ci.runtime.JVMCICompilerFactory
+meth public abstract java.lang.String getCompilerName()
+meth public abstract jdk.vm.ci.runtime.JVMCICompiler createCompiler(jdk.vm.ci.runtime.JVMCIRuntime)
+meth public void onSelection()
+meth public void printProperties(java.io.PrintStream)
+
+CLSS public abstract interface jdk.vm.ci.runtime.JVMCIRuntime
+meth public abstract <%0 extends jdk.vm.ci.code.Architecture> jdk.vm.ci.runtime.JVMCIBackend getJVMCIBackend(java.lang.Class<{%%0}>)
+meth public abstract jdk.vm.ci.runtime.JVMCIBackend getHostJVMCIBackend()
+meth public abstract jdk.vm.ci.runtime.JVMCICompiler getCompiler()
+

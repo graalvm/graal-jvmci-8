@@ -1,0 +1,70 @@
+#Signature file v4.1
+#Version 
+
+CLSS public abstract interface java.io.Serializable
+
+CLSS public java.lang.Object
+cons public init()
+meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected void finalize() throws java.lang.Throwable
+meth public boolean equals(java.lang.Object)
+meth public final java.lang.Class<?> getClass()
+meth public final void notify()
+meth public final void notifyAll()
+meth public final void wait() throws java.lang.InterruptedException
+meth public final void wait(long) throws java.lang.InterruptedException
+meth public final void wait(long,int) throws java.lang.InterruptedException
+meth public int hashCode()
+meth public java.lang.String toString()
+
+CLSS public abstract java.security.BasicPermission
+cons public init(java.lang.String)
+cons public init(java.lang.String,java.lang.String)
+intf java.io.Serializable
+meth public boolean equals(java.lang.Object)
+meth public boolean implies(java.security.Permission)
+meth public int hashCode()
+meth public java.lang.String getActions()
+meth public java.security.PermissionCollection newPermissionCollection()
+supr java.security.Permission
+hfds exitVM,path,serialVersionUID,wildcard
+
+CLSS public abstract interface java.security.Guard
+meth public abstract void checkGuard(java.lang.Object)
+
+CLSS public abstract java.security.Permission
+cons public init(java.lang.String)
+intf java.io.Serializable
+intf java.security.Guard
+meth public abstract boolean equals(java.lang.Object)
+meth public abstract boolean implies(java.security.Permission)
+meth public abstract int hashCode()
+meth public abstract java.lang.String getActions()
+meth public final java.lang.String getName()
+meth public java.lang.String toString()
+meth public java.security.PermissionCollection newPermissionCollection()
+meth public void checkGuard(java.lang.Object)
+supr java.lang.Object
+hfds name,serialVersionUID
+
+CLSS public jdk.vm.ci.services.JVMCIPermission
+cons public init()
+supr java.security.BasicPermission
+hfds serialVersionUID
+
+CLSS public abstract jdk.vm.ci.services.JVMCIServiceLocator
+cons protected init()
+meth public abstract <%0 extends java.lang.Object> {%%0} getProvider(java.lang.Class<{%%0}>)
+meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> getProviders(java.lang.Class<{%%0}>)
+supr java.lang.Object
+
+CLSS public final jdk.vm.ci.services.Services
+meth public static <%0 extends java.lang.Object> java.lang.Iterable<{%%0}> load(java.lang.Class<{%%0}>)
+meth public static <%0 extends java.lang.Object> {%%0} loadSingle(java.lang.Class<{%%0}>,boolean)
+meth public static java.util.Map<java.lang.String,java.lang.String> getSavedProperties()
+meth public static void exportJVMCITo(java.lang.Class<?>)
+meth public static void initializeJVMCI()
+supr java.lang.Object
+hfds jvmciEnabled
+hcls LazyBootClassPath
+

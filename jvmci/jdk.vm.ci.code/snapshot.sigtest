@@ -1,0 +1,501 @@
+#Signature file v4.1
+#Version 
+
+CLSS public abstract interface java.io.Serializable
+
+CLSS public abstract interface java.lang.Comparable<%0 extends java.lang.Object>
+meth public abstract int compareTo({java.lang.Comparable%0})
+
+CLSS public java.lang.Exception
+cons protected init(java.lang.String,java.lang.Throwable,boolean,boolean)
+cons public init()
+cons public init(java.lang.String)
+cons public init(java.lang.String,java.lang.Throwable)
+cons public init(java.lang.Throwable)
+supr java.lang.Throwable
+hfds serialVersionUID
+
+CLSS public abstract interface java.lang.Iterable<%0 extends java.lang.Object>
+meth public abstract java.util.Iterator<{java.lang.Iterable%0}> iterator()
+meth public java.util.Spliterator<{java.lang.Iterable%0}> spliterator()
+meth public void forEach(java.util.function.Consumer<? super {java.lang.Iterable%0}>)
+
+CLSS public java.lang.Object
+cons public init()
+meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected void finalize() throws java.lang.Throwable
+meth public boolean equals(java.lang.Object)
+meth public final java.lang.Class<?> getClass()
+meth public final void notify()
+meth public final void notifyAll()
+meth public final void wait() throws java.lang.InterruptedException
+meth public final void wait(long) throws java.lang.InterruptedException
+meth public final void wait(long,int) throws java.lang.InterruptedException
+meth public int hashCode()
+meth public java.lang.String toString()
+
+CLSS public java.lang.RuntimeException
+cons protected init(java.lang.String,java.lang.Throwable,boolean,boolean)
+cons public init()
+cons public init(java.lang.String)
+cons public init(java.lang.String,java.lang.Throwable)
+cons public init(java.lang.Throwable)
+supr java.lang.Exception
+hfds serialVersionUID
+
+CLSS public java.lang.Throwable
+cons protected init(java.lang.String,java.lang.Throwable,boolean,boolean)
+cons public init()
+cons public init(java.lang.String)
+cons public init(java.lang.String,java.lang.Throwable)
+cons public init(java.lang.Throwable)
+intf java.io.Serializable
+meth public final java.lang.Throwable[] getSuppressed()
+meth public final void addSuppressed(java.lang.Throwable)
+meth public java.lang.StackTraceElement[] getStackTrace()
+meth public java.lang.String getLocalizedMessage()
+meth public java.lang.String getMessage()
+meth public java.lang.String toString()
+meth public java.lang.Throwable fillInStackTrace()
+meth public java.lang.Throwable getCause()
+meth public java.lang.Throwable initCause(java.lang.Throwable)
+meth public void printStackTrace()
+meth public void printStackTrace(java.io.PrintStream)
+meth public void printStackTrace(java.io.PrintWriter)
+meth public void setStackTrace(java.lang.StackTraceElement[])
+supr java.lang.Object
+hfds CAUSE_CAPTION,EMPTY_THROWABLE_ARRAY,NULL_CAUSE_MESSAGE,SELF_SUPPRESSION_MESSAGE,SUPPRESSED_CAPTION,SUPPRESSED_SENTINEL,UNASSIGNED_STACK,backtrace,cause,detailMessage,serialVersionUID,stackTrace,suppressedExceptions
+hcls PrintStreamOrWriter,SentinelHolder,WrappedPrintStream,WrappedPrintWriter
+
+CLSS public abstract jdk.vm.ci.code.Architecture
+cons protected init(java.lang.String,jdk.vm.ci.meta.PlatformKind,java.nio.ByteOrder,boolean,jdk.vm.ci.code.RegisterArray,int,int,int)
+meth public abstract boolean canStoreValue(jdk.vm.ci.code.Register$RegisterCategory,jdk.vm.ci.meta.PlatformKind)
+meth public abstract jdk.vm.ci.meta.PlatformKind getLargestStorableKind(jdk.vm.ci.code.Register$RegisterCategory)
+meth public abstract jdk.vm.ci.meta.PlatformKind getPlatformKind(jdk.vm.ci.meta.JavaKind)
+meth public boolean supportsUnalignedMemoryAccess()
+meth public final boolean equals(java.lang.Object)
+meth public final int hashCode()
+meth public final int requiredBarriers(int)
+meth public final java.lang.String toString()
+meth public int getMachineCodeCallDisplacementOffset()
+meth public int getReturnAddressSize()
+meth public int getWordSize()
+meth public java.lang.String getName()
+meth public java.nio.ByteOrder getByteOrder()
+meth public jdk.vm.ci.code.RegisterArray getAvailableValueRegisters()
+meth public jdk.vm.ci.code.RegisterArray getRegisters()
+meth public jdk.vm.ci.meta.PlatformKind getWordKind()
+supr java.lang.Object
+hfds byteOrder,implicitMemoryBarriers,machineCodeCallDisplacementOffset,name,registers,returnAddressSize,unalignedMemoryAccess,wordKind
+
+CLSS public jdk.vm.ci.code.BailoutException
+cons public !varargs init(boolean,java.lang.String,java.lang.Object[])
+cons public !varargs init(java.lang.String,java.lang.Object[])
+cons public !varargs init(java.lang.Throwable,java.lang.String,java.lang.Object[])
+fld public final static long serialVersionUID = 8974598793458772
+meth public boolean isPermanent()
+supr java.lang.RuntimeException
+hfds permanent
+
+CLSS public final jdk.vm.ci.code.BytecodeFrame
+cons public init(jdk.vm.ci.code.BytecodeFrame,jdk.vm.ci.meta.ResolvedJavaMethod,int,boolean,boolean,jdk.vm.ci.meta.JavaValue[],jdk.vm.ci.meta.JavaKind[],int,int,int)
+fld public final boolean duringCall
+fld public final boolean rethrowException
+fld public final int numLocals
+fld public final int numLocks
+fld public final int numStack
+fld public final jdk.vm.ci.meta.JavaValue[] values
+fld public final static int AFTER_BCI = -3
+fld public final static int AFTER_EXCEPTION_BCI = -4
+fld public final static int BEFORE_BCI = -2
+fld public final static int INVALID_FRAMESTATE_BCI = -6
+fld public final static int UNKNOWN_BCI = -5
+fld public final static int UNWIND_BCI = -1
+meth public boolean equals(java.lang.Object)
+meth public boolean validateFormat()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.code.BytecodeFrame caller()
+meth public jdk.vm.ci.meta.JavaKind getLocalValueKind(int)
+meth public jdk.vm.ci.meta.JavaKind getStackValueKind(int)
+meth public jdk.vm.ci.meta.JavaValue getLocalValue(int)
+meth public jdk.vm.ci.meta.JavaValue getLockValue(int)
+meth public jdk.vm.ci.meta.JavaValue getStackValue(int)
+meth public static boolean isPlaceholderBci(int)
+meth public static java.lang.String getPlaceholderBciName(int)
+supr jdk.vm.ci.code.BytecodePosition
+hfds slotKinds
+
+CLSS public jdk.vm.ci.code.BytecodePosition
+cons public init(jdk.vm.ci.code.BytecodePosition,jdk.vm.ci.meta.ResolvedJavaMethod,int)
+meth public boolean equals(java.lang.Object)
+meth public int getBCI()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.code.BytecodePosition addCaller(jdk.vm.ci.code.BytecodePosition)
+meth public jdk.vm.ci.code.BytecodePosition getCaller()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+supr java.lang.Object
+hfds bci,caller,method
+
+CLSS public jdk.vm.ci.code.CallingConvention
+cons public !varargs init(int,jdk.vm.ci.meta.AllocatableValue,jdk.vm.ci.meta.AllocatableValue[])
+innr public abstract interface static Type
+meth public int getArgumentCount()
+meth public int getStackSize()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.AllocatableValue getArgument(int)
+meth public jdk.vm.ci.meta.AllocatableValue getReturn()
+meth public jdk.vm.ci.meta.AllocatableValue[] getArguments()
+supr java.lang.Object
+hfds argumentLocations,returnLocation,stackSize
+
+CLSS public abstract interface static jdk.vm.ci.code.CallingConvention$Type
+ outer jdk.vm.ci.code.CallingConvention
+
+CLSS public abstract interface jdk.vm.ci.code.CodeCacheProvider
+meth public abstract boolean shouldDebugNonSafepoints()
+meth public abstract int getMinimumOutgoingSize()
+meth public abstract jdk.vm.ci.code.InstalledCode installCode(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.code.CompiledCode,jdk.vm.ci.code.InstalledCode,jdk.vm.ci.meta.SpeculationLog,boolean)
+meth public abstract jdk.vm.ci.code.RegisterConfig getRegisterConfig()
+meth public abstract jdk.vm.ci.code.TargetDescription getTarget()
+meth public abstract jdk.vm.ci.meta.SpeculationLog createSpeculationLog()
+meth public abstract long getMaxCallTargetOffset(long)
+meth public abstract void invalidateInstalledCode(jdk.vm.ci.code.InstalledCode)
+meth public java.lang.String getMarkName(jdk.vm.ci.code.site.Mark)
+meth public java.lang.String getTargetName(jdk.vm.ci.code.site.Call)
+meth public jdk.vm.ci.code.InstalledCode addCode(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.code.CompiledCode,jdk.vm.ci.meta.SpeculationLog,jdk.vm.ci.code.InstalledCode)
+meth public jdk.vm.ci.code.InstalledCode setDefaultCode(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.code.CompiledCode)
+
+CLSS public jdk.vm.ci.code.CodeUtil
+cons public init()
+fld public final static int K = 1024
+fld public final static int M = 1048576
+fld public final static java.lang.String NEW_LINE
+innr public abstract interface static RefMapFormatter
+innr public static DefaultRefMapFormatter
+innr public static NumberedRefMapFormatter
+meth public static boolean isEven(int)
+meth public static boolean isOdd(int)
+meth public static boolean isPowerOf2(int)
+meth public static boolean isPowerOf2(long)
+meth public static int log2(int)
+meth public static int log2(long)
+meth public static java.lang.String tabulate(java.lang.Object[],int,int,int)
+meth public static java.lang.String tabulateValues(jdk.vm.ci.code.BytecodeFrame)
+meth public static java.lang.StringBuilder append(java.lang.StringBuilder,jdk.vm.ci.code.BytecodeFrame)
+meth public static java.lang.StringBuilder append(java.lang.StringBuilder,jdk.vm.ci.code.BytecodePosition)
+meth public static java.lang.StringBuilder append(java.lang.StringBuilder,jdk.vm.ci.code.DebugInfo,jdk.vm.ci.code.CodeUtil$RefMapFormatter)
+meth public static jdk.vm.ci.code.CallingConvention getCallingConvention(jdk.vm.ci.code.CodeCacheProvider,jdk.vm.ci.code.CallingConvention$Type,jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.code.ValueKindFactory<?>)
+meth public static long convert(long,int,boolean)
+meth public static long mask(int)
+meth public static long maxValue(int)
+meth public static long minValue(int)
+meth public static long narrow(long,int)
+meth public static long signExtend(long,int)
+meth public static long zeroExtend(long,int)
+supr java.lang.Object
+
+CLSS public static jdk.vm.ci.code.CodeUtil$DefaultRefMapFormatter
+ outer jdk.vm.ci.code.CodeUtil
+cons public init(int,jdk.vm.ci.code.Register,int)
+fld public final int refMapToFPOffset
+fld public final int slotSize
+fld public final jdk.vm.ci.code.Register fp
+intf jdk.vm.ci.code.CodeUtil$RefMapFormatter
+meth public java.lang.String formatStackSlot(int)
+supr java.lang.Object
+
+CLSS public static jdk.vm.ci.code.CodeUtil$NumberedRefMapFormatter
+ outer jdk.vm.ci.code.CodeUtil
+cons public init()
+intf jdk.vm.ci.code.CodeUtil$RefMapFormatter
+meth public java.lang.String formatRegister(int)
+meth public java.lang.String formatStackSlot(int)
+supr java.lang.Object
+
+CLSS public abstract interface static jdk.vm.ci.code.CodeUtil$RefMapFormatter
+ outer jdk.vm.ci.code.CodeUtil
+meth public abstract java.lang.String formatStackSlot(int)
+
+CLSS public jdk.vm.ci.code.CompilationRequest
+cons public init(jdk.vm.ci.meta.ResolvedJavaMethod)
+cons public init(jdk.vm.ci.meta.ResolvedJavaMethod,int)
+meth public int getEntryBCI()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+supr java.lang.Object
+hfds entryBCI,method
+
+CLSS public abstract interface jdk.vm.ci.code.CompilationRequestResult
+meth public abstract java.lang.Object getFailure()
+
+CLSS public abstract interface jdk.vm.ci.code.CompiledCode
+
+CLSS public final jdk.vm.ci.code.DebugInfo
+cons public init(jdk.vm.ci.code.BytecodePosition)
+cons public init(jdk.vm.ci.code.BytecodePosition,jdk.vm.ci.code.VirtualObject[])
+meth public boolean equals(java.lang.Object)
+meth public boolean hasFrame()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.code.BytecodeFrame frame()
+meth public jdk.vm.ci.code.BytecodePosition getBytecodePosition()
+meth public jdk.vm.ci.code.ReferenceMap getReferenceMap()
+meth public jdk.vm.ci.code.RegisterSaveLayout getCalleeSaveInfo()
+meth public jdk.vm.ci.code.VirtualObject[] getVirtualObjectMapping()
+meth public void setCalleeSaveInfo(jdk.vm.ci.code.RegisterSaveLayout)
+meth public void setReferenceMap(jdk.vm.ci.code.ReferenceMap)
+supr java.lang.Object
+hfds bytecodePosition,calleeSaveInfo,referenceMap,virtualObjectMapping
+
+CLSS public jdk.vm.ci.code.InstalledCode
+cons public init(java.lang.String)
+fld protected final java.lang.String name
+fld protected long address
+fld protected long entryPoint
+fld protected long version
+meth public !varargs java.lang.Object executeVarargs(java.lang.Object[]) throws jdk.vm.ci.code.InvalidInstalledCodeException
+meth public boolean isAlive()
+meth public boolean isValid()
+meth public byte[] getCode()
+meth public final long getAddress()
+meth public final long getEntryPoint()
+meth public final long getVersion()
+meth public java.lang.String getName()
+meth public long getStart()
+meth public void invalidate()
+supr java.lang.Object
+
+CLSS public final jdk.vm.ci.code.InvalidInstalledCodeException
+cons public init()
+supr java.lang.Exception
+hfds serialVersionUID
+
+CLSS public final jdk.vm.ci.code.Location
+fld public final int offset
+fld public final jdk.vm.ci.code.Register reg
+meth public boolean isRegister()
+meth public boolean isStack()
+meth public java.lang.String toString()
+meth public static jdk.vm.ci.code.Location register(jdk.vm.ci.code.Register)
+meth public static jdk.vm.ci.code.Location stack(int)
+meth public static jdk.vm.ci.code.Location subregister(jdk.vm.ci.code.Register,int)
+supr java.lang.Object
+
+CLSS public jdk.vm.ci.code.MemoryBarriers
+cons public init()
+fld public final static int JMM_POST_VOLATILE_READ = 3
+fld public final static int JMM_POST_VOLATILE_WRITE = 12
+fld public final static int JMM_PRE_VOLATILE_READ = 0
+fld public final static int JMM_PRE_VOLATILE_WRITE = 10
+fld public final static int LOAD_LOAD = 1
+fld public final static int LOAD_STORE = 2
+fld public final static int STORE_LOAD = 4
+fld public final static int STORE_STORE = 8
+meth public static java.lang.String barriersString(int)
+supr java.lang.Object
+
+CLSS public abstract jdk.vm.ci.code.ReferenceMap
+cons public init()
+supr java.lang.Object
+
+CLSS public final jdk.vm.ci.code.Register
+cons public init(int,int,java.lang.String,jdk.vm.ci.code.Register$RegisterCategory)
+fld public final int encoding
+fld public final int number
+fld public final java.lang.String name
+fld public final static jdk.vm.ci.code.Register None
+fld public final static jdk.vm.ci.code.Register$RegisterCategory SPECIAL
+innr public static RegisterCategory
+intf java.lang.Comparable<jdk.vm.ci.code.Register>
+meth public boolean equals(java.lang.Object)
+meth public boolean isValid()
+meth public boolean mayContainReference()
+meth public int compareTo(jdk.vm.ci.code.Register)
+meth public int encoding()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.code.Register$RegisterCategory getRegisterCategory()
+meth public jdk.vm.ci.code.RegisterValue asValue()
+meth public jdk.vm.ci.code.RegisterValue asValue(jdk.vm.ci.meta.ValueKind<?>)
+supr java.lang.Object
+hfds registerCategory
+
+CLSS public static jdk.vm.ci.code.Register$RegisterCategory
+ outer jdk.vm.ci.code.Register
+cons public init(java.lang.String)
+cons public init(java.lang.String,boolean)
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+supr java.lang.Object
+hfds mayContainReference,name
+
+CLSS public final jdk.vm.ci.code.RegisterArray
+cons public !varargs init(jdk.vm.ci.code.Register[])
+cons public init(java.util.Collection<jdk.vm.ci.code.Register>)
+intf java.lang.Iterable<jdk.vm.ci.code.Register>
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public int size()
+meth public java.lang.String toString()
+meth public java.util.Iterator<jdk.vm.ci.code.Register> iterator()
+meth public java.util.List<jdk.vm.ci.code.Register> asList()
+meth public jdk.vm.ci.code.Register get(int)
+meth public jdk.vm.ci.code.Register[] toArray()
+meth public void addTo(java.util.Collection<jdk.vm.ci.code.Register>)
+supr java.lang.Object
+hfds hash,registers
+
+CLSS public jdk.vm.ci.code.RegisterAttributes
+cons public init(boolean,boolean,boolean)
+fld public final static jdk.vm.ci.code.RegisterAttributes NONE
+meth public boolean isAllocatable()
+meth public boolean isCalleeSave()
+meth public boolean isCallerSave()
+meth public static jdk.vm.ci.code.RegisterAttributes[] createMap(jdk.vm.ci.code.RegisterConfig,jdk.vm.ci.code.RegisterArray)
+supr java.lang.Object
+hfds allocatable,calleeSave,callerSave
+
+CLSS public abstract interface jdk.vm.ci.code.RegisterConfig
+meth public abstract boolean areAllAllocatableRegistersCallerSaved()
+meth public abstract jdk.vm.ci.code.CallingConvention getCallingConvention(jdk.vm.ci.code.CallingConvention$Type,jdk.vm.ci.meta.JavaType,jdk.vm.ci.meta.JavaType[],jdk.vm.ci.code.ValueKindFactory<?>)
+meth public abstract jdk.vm.ci.code.Register getFrameRegister()
+meth public abstract jdk.vm.ci.code.Register getReturnRegister(jdk.vm.ci.meta.JavaKind)
+meth public abstract jdk.vm.ci.code.RegisterArray filterAllocatableRegisters(jdk.vm.ci.meta.PlatformKind,jdk.vm.ci.code.RegisterArray)
+meth public abstract jdk.vm.ci.code.RegisterArray getAllocatableRegisters()
+meth public abstract jdk.vm.ci.code.RegisterArray getCalleeSaveRegisters()
+meth public abstract jdk.vm.ci.code.RegisterArray getCallerSaveRegisters()
+meth public abstract jdk.vm.ci.code.RegisterArray getCallingConventionRegisters(jdk.vm.ci.code.CallingConvention$Type,jdk.vm.ci.meta.JavaKind)
+meth public abstract jdk.vm.ci.code.RegisterAttributes[] getAttributesMap()
+meth public int getMaximumFrameSize()
+
+CLSS public final jdk.vm.ci.code.RegisterSaveLayout
+cons public init(jdk.vm.ci.code.Register[],int[])
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public int registerToSlot(jdk.vm.ci.code.Register)
+meth public java.lang.String toString()
+meth public java.util.Map<java.lang.Integer,jdk.vm.ci.code.Register> slotsToRegisters(boolean)
+meth public java.util.Map<jdk.vm.ci.code.Register,java.lang.Integer> registersToSlots(boolean)
+supr java.lang.Object
+hfds registers,slots
+
+CLSS public final jdk.vm.ci.code.RegisterValue
+cons protected init(jdk.vm.ci.meta.ValueKind<?>,jdk.vm.ci.code.Register)
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.code.Register getRegister()
+supr jdk.vm.ci.meta.AllocatableValue
+hfds reg
+
+CLSS public final jdk.vm.ci.code.StackLockValue
+cons public init(jdk.vm.ci.meta.JavaValue,jdk.vm.ci.meta.AllocatableValue,boolean)
+intf jdk.vm.ci.meta.JavaValue
+meth public boolean equals(java.lang.Object)
+meth public boolean isEliminated()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaValue getOwner()
+meth public jdk.vm.ci.meta.Value getSlot()
+meth public void setOwner(jdk.vm.ci.meta.JavaValue)
+meth public void setSlot(jdk.vm.ci.meta.AllocatableValue)
+supr java.lang.Object
+hfds eliminated,owner,slot
+
+CLSS public final jdk.vm.ci.code.StackSlot
+meth public boolean equals(java.lang.Object)
+meth public boolean getRawAddFrameSize()
+meth public boolean isInCallerFrame()
+meth public int getOffset(int)
+meth public int getRawOffset()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.code.StackSlot asInArg()
+meth public jdk.vm.ci.code.StackSlot asOutArg()
+meth public static jdk.vm.ci.code.StackSlot get(jdk.vm.ci.meta.ValueKind<?>,int,boolean)
+supr jdk.vm.ci.meta.AllocatableValue
+hfds addFrameSize,offset
+
+CLSS public jdk.vm.ci.code.TargetDescription
+cons public init(jdk.vm.ci.code.Architecture,boolean,int,int,boolean)
+fld public final boolean inlineObjects
+fld public final boolean isMP
+fld public final int implicitNullCheckLimit
+fld public final int stackAlignment
+fld public final int wordSize
+fld public final jdk.vm.ci.code.Architecture arch
+fld public final jdk.vm.ci.meta.JavaKind wordJavaKind
+meth public final boolean equals(java.lang.Object)
+meth public final int hashCode()
+meth public java.lang.String toString()
+supr java.lang.Object
+
+CLSS public abstract interface jdk.vm.ci.code.ValueKindFactory<%0 extends jdk.vm.ci.meta.ValueKind<{jdk.vm.ci.code.ValueKindFactory%0}>>
+meth public abstract {jdk.vm.ci.code.ValueKindFactory%0} getValueKind(jdk.vm.ci.meta.JavaKind)
+
+CLSS public final jdk.vm.ci.code.ValueUtil
+cons public init()
+meth public static boolean isAllocatableValue(jdk.vm.ci.meta.Value)
+meth public static boolean isConstantJavaValue(jdk.vm.ci.meta.JavaValue)
+meth public static boolean isIllegal(jdk.vm.ci.meta.Value)
+meth public static boolean isIllegalJavaValue(jdk.vm.ci.meta.JavaValue)
+meth public static boolean isLegal(jdk.vm.ci.meta.Value)
+meth public static boolean isRegister(jdk.vm.ci.meta.Value)
+meth public static boolean isStackSlot(jdk.vm.ci.meta.Value)
+meth public static boolean isVirtualObject(jdk.vm.ci.meta.JavaValue)
+meth public static jdk.vm.ci.code.Register asRegister(jdk.vm.ci.meta.Value)
+meth public static jdk.vm.ci.code.Register asRegister(jdk.vm.ci.meta.Value,jdk.vm.ci.meta.PlatformKind)
+meth public static jdk.vm.ci.code.RegisterValue asRegisterValue(jdk.vm.ci.meta.Value)
+meth public static jdk.vm.ci.code.StackSlot asStackSlot(jdk.vm.ci.meta.Value)
+meth public static jdk.vm.ci.code.VirtualObject asVirtualObject(jdk.vm.ci.meta.JavaValue)
+meth public static jdk.vm.ci.meta.AllocatableValue asAllocatableValue(jdk.vm.ci.meta.Value)
+meth public static jdk.vm.ci.meta.JavaConstant asConstantJavaValue(jdk.vm.ci.meta.JavaValue)
+supr java.lang.Object
+
+CLSS public final jdk.vm.ci.code.VirtualObject
+innr public abstract interface static LayoutVerifier
+intf jdk.vm.ci.meta.JavaValue
+meth public boolean equals(java.lang.Object)
+meth public int getId()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaKind getSlotKind(int)
+meth public jdk.vm.ci.meta.JavaValue[] getValues()
+meth public jdk.vm.ci.meta.ResolvedJavaType getType()
+meth public static jdk.vm.ci.code.VirtualObject get(jdk.vm.ci.meta.ResolvedJavaType,int)
+meth public void setValues(jdk.vm.ci.meta.JavaValue[],jdk.vm.ci.meta.JavaKind[])
+meth public void verifyLayout(jdk.vm.ci.code.VirtualObject$LayoutVerifier)
+supr java.lang.Object
+hfds id,slotKinds,type,values
+
+CLSS public abstract interface static jdk.vm.ci.code.VirtualObject$LayoutVerifier
+ outer jdk.vm.ci.code.VirtualObject
+meth public abstract int getOffset(jdk.vm.ci.meta.ResolvedJavaField)
+meth public jdk.vm.ci.meta.JavaKind getStorageKind(jdk.vm.ci.meta.ResolvedJavaField)
+
+CLSS public abstract jdk.vm.ci.meta.AllocatableValue
+cons public init(jdk.vm.ci.meta.ValueKind<?>)
+fld public final static jdk.vm.ci.meta.AllocatableValue[] NONE
+intf jdk.vm.ci.meta.JavaValue
+supr jdk.vm.ci.meta.Value
+
+CLSS public abstract interface jdk.vm.ci.meta.JavaValue
+
+CLSS public abstract jdk.vm.ci.meta.Value
+cons protected init(jdk.vm.ci.meta.ValueKind<?>)
+fld public final static jdk.vm.ci.meta.AllocatableValue ILLEGAL
+fld public final static jdk.vm.ci.meta.Value[] NO_VALUES
+meth protected final java.lang.String getKindSuffix()
+meth public boolean equals(java.lang.Object)
+meth public final <%0 extends jdk.vm.ci.meta.ValueKind<{%%0}>> {%%0} getValueKind(java.lang.Class<{%%0}>)
+meth public final boolean identityEquals(jdk.vm.ci.meta.Value)
+meth public final jdk.vm.ci.meta.PlatformKind getPlatformKind()
+meth public final jdk.vm.ci.meta.ValueKind<?> getValueKind()
+meth public int hashCode()
+supr java.lang.Object
+hfds valueKind
+hcls IllegalValue
+
