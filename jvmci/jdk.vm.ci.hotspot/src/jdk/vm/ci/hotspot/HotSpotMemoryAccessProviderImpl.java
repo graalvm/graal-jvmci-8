@@ -43,10 +43,10 @@ import jdk.vm.ci.meta.ResolvedJavaType;
  */
 class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
 
-    protected final HotSpotJVMCIRuntimeProvider runtime;
+    protected final HotSpotJVMCIRuntime runtime;
 
     HotSpotMemoryAccessProviderImpl(HotSpotJVMCIRuntimeProvider runtime) {
-        this.runtime = runtime;
+        this.runtime = (HotSpotJVMCIRuntime) runtime;
     }
 
     /**

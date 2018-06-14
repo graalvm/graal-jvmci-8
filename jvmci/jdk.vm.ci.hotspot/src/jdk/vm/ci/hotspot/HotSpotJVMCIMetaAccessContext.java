@@ -124,7 +124,7 @@ public class HotSpotJVMCIMetaAccessContext {
      * @param metaspaceObject
      */
 
-    public synchronized void add(MetaspaceWrapperObject metaspaceObject) {
+    synchronized void add(MetaspaceWrapperObject metaspaceObject) {
         clean();
         list.add(new WeakReference<>(metaspaceObject, queue));
         if (list.getHead() != metadataRoots) {

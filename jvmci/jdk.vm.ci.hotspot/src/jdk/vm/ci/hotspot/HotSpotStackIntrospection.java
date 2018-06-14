@@ -28,10 +28,10 @@ import jdk.vm.ci.meta.ResolvedJavaMethod;
 
 public class HotSpotStackIntrospection implements StackIntrospection {
 
-    protected final HotSpotJVMCIRuntimeProvider runtime;
+    protected final HotSpotJVMCIRuntime runtime;
 
     public HotSpotStackIntrospection(HotSpotJVMCIRuntimeProvider runtime) {
-        this.runtime = runtime;
+        this.runtime = (HotSpotJVMCIRuntime) runtime;
     }
 
     @Override

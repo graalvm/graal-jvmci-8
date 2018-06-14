@@ -22,6 +22,8 @@
  */
 package jdk.vm.ci.hotspot;
 
+import java.io.OutputStream;
+
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
@@ -29,18 +31,12 @@ import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.runtime.JVMCIRuntime;
 import sun.misc.Unsafe;
 
-import java.io.OutputStream;
-
 /**
  * Configuration information for the HotSpot JVMCI runtime.
  */
 public interface HotSpotJVMCIRuntimeProvider extends JVMCIRuntime {
 
     HotSpotVMConfigStore getConfigStore();
-
-    HotSpotVMConfig getConfig();
-
-    CompilerToVM getCompilerToVM();
 
     /**
      * Gets an output stream that writes to HotSpot's {@code tty} stream.
