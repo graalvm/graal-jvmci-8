@@ -350,7 +350,6 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
       } else { \
         name = (*e)(); \
       } \
-      guarantee(!name.is_null(), err_msg("null String for %s", value)); \
     } \
   } while (0)
 
@@ -385,9 +384,7 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
     if (vmField.typeString != NULL) {
       CSTRING_TO_JSTRING(type, vmField.typeString);
       VMField::set_type(vmFieldObj, type());
-      guarantee(VMField::type(vmFieldObj) != NULL, "npe");
     }
-    guarantee(VMField::name(vmFieldObj) != NULL, "npe");
     VMField::set_offset(vmFieldObj, vmField.offset);
     VMField::set_address(vmFieldObj, (jlong) vmField.address);
     if (vmField.isStatic && vmField.typeString != NULL) {
