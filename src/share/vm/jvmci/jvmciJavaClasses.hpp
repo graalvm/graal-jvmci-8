@@ -305,8 +305,8 @@ class name : AllStatic {                                                        
     friend class JVMCICompiler;                                                                                                                                \
     static void check(oop obj, const char* field_name, int offset) {                                                                                           \
         assert(obj != NULL, err_msg("NULL field access of %s.%s", #name, field_name));                                                                         \
-        assert(obj->is_a(SystemDictionary::name##_klass()), err_msg("wrong class, " #name " expected, found %s", obj->klass()->external_name())); \
-        assert(offset != 0, "must be valid offset");                                                                                                           \
+        assert(obj->is_a(SystemDictionary::name##_klass()), err_msg("wrong class, " #name " expected, found %s", obj->klass()->external_name()));              \
+        guarantee(offset != 0, "must be valid offset");                                                                                                        \
     }                                                                                                                                                          \
     static void compute_offsets();                                                                                                                             \
   public:                                                                                                                                                      \
