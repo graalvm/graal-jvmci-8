@@ -350,7 +350,6 @@ objArrayHandle CompilerToVM::initialize_intrinsics(TRAPS) {
       } else { \
         name = (*e)(); \
       } \
-      guarantee(!name.is_null(), err_msg("null String for %s", value)); \
     } \
   } while (0)
 
@@ -381,9 +380,11 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
     char* name_buf = NEW_RESOURCE_ARRAY_IN_THREAD(THREAD, char, name_buf_len + 1);
     sprintf(name_buf, "%s::%s", vmField.typeName, vmField.fieldName);
     CSTRING_TO_JSTRING(name, name_buf);
-    CSTRING_TO_JSTRING(type, vmField.typeString);
     VMField::set_name(vmFieldObj, name());
-    VMField::set_type(vmFieldObj, type());
+    if (vmField.typeString != NULL) {
+      CSTRING_TO_JSTRING(type, vmField.typeString);
+      VMField::set_type(vmFieldObj, type());
+    }
     VMField::set_offset(vmFieldObj, vmField.offset);
     VMField::set_address(vmFieldObj, (jlong) vmField.address);
     if (vmField.isStatic && vmField.typeString != NULL) {
@@ -474,14 +475,14 @@ C2V_VMENTRY(jobjectArray, readConfiguration, (JNIEnv *env))
 
   objArrayHandle vmIntrinsics = CompilerToVM::initialize_intrinsics(CHECK_NULL);
 
-  objArrayOop data = oopFactory::new_objArray(SystemDictionary::Object_klass(), 5, CHECK_NULL);
+  objArrayHandle data = oopFactory::new_objArray(SystemDictionary::Object_klass(), 5, CHECK_NULL);
   data->obj_at_put(0, vmFields());
   data->obj_at_put(1, vmConstants());
   data->obj_at_put(2, vmAddresses());
   data->obj_at_put(3, vmFlags());
   data->obj_at_put(4, vmIntrinsics());
 
-  return (jobjectArray) JNIHandles::make_local(THREAD, data);
+  return (jobjectArray) JNIHandles::make_local(THREAD, data());
 #undef COUNT_FLAG
 #undef ADD_FLAG
 #undef ADD_BOOL_FLAG

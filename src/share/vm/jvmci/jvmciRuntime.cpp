@@ -612,6 +612,7 @@ JVM_ENTRY(void, JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader_h
   SystemDictionary::init_jvmci_loader(JNIHandles::resolve(loader_handle));
   SystemDictionary::WKID scan = SystemDictionary::FIRST_JVMCI_WKID;
   SystemDictionary::initialize_wk_klasses_through(SystemDictionary::LAST_JVMCI_WKID, scan, CHECK);
+  JVMCIJavaClasses::compute_offsets(THREAD);
 JVM_END
 
 // private static JVMCIRuntime JVMCI.initializeRuntime()
@@ -818,8 +819,6 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
     klass->initialize(CHECK_EXIT);
     _FactoryKlass = klass();
     assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
-
-    JVMCIJavaClasses::compute_offsets(THREAD);
   }
 }
 

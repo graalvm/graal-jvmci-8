@@ -131,7 +131,7 @@ public final class HotSpotVMConfigStore {
             for (int i = 0; i < vmFieldsInfo.length; i++) {
                 VMField vmField = vmFieldsInfo[i];
                 if (vmField.name == null) {
-                    throw new NullPointerException("missing name for vm field " + i);
+                    throw new NullPointerException("missing name for vm field " + i + ": " + vmField);
                 }
                 vmFields.put(vmField.name, vmField);
             }
