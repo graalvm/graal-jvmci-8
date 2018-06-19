@@ -493,6 +493,7 @@ meth public abstract <%0 extends java.lang.Object> {%%0} asObject(java.lang.Clas
 meth public abstract boolean isInternedString()
 meth public abstract int getIdentityHashCode()
 meth public abstract java.lang.Object asObject(jdk.vm.ci.meta.ResolvedJavaType)
+meth public abstract java.lang.String toValueString()
 meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getType()
 meth public abstract jdk.vm.ci.meta.JavaConstant compress()
 meth public abstract jdk.vm.ci.meta.JavaConstant getCallSiteTarget(jdk.vm.ci.meta.Assumptions)
