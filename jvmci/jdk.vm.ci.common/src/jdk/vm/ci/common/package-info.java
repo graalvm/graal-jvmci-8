@@ -20,6 +20,8 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
 /**
+ * Common utility classes used by the JVMCI API.
  */
 package jdk.vm.ci.common;

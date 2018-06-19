@@ -20,6 +20,8 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
+
 /**
+ * HotSpot Java Flight Recorder support for the JVMCI API.
  */
 package jdk.vm.ci.hotspot.jfr;
