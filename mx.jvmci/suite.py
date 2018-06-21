@@ -31,23 +31,28 @@ suite = {
     # ------------- Libraries -------------
 
     "HCFDIS" : {
-      "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/hcfdis-3.jar"],
+      "urls" : ["https://github.com/oracle/graal/releases/download/hcfdis-3/hcfdis-3.jar"],
       "sha1" : "a71247c6ddb90aad4abf7c77e501acc60674ef57",
     },
 
     "C1VISUALIZER_DIST" : {
-      "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/c1visualizer/c1visualizer-1.6.zip"],
+      "urls" : ["https://github.com/oracle/graal/releases/download/c1visualizer-1.7/c1visualizer-1.7.zip"],
       "sha1" : "5309b3fad46067846b9e2ea55933786cdbd6f6dd",
     },
 
-    "JOL_INTERNALS" : {
-      "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/truffle/jol/jol-internals.jar"],
-      "sha1" : "508bcd26a4d7c4c44048990c6ea789a3b11a62dc",
+    "JOL_CLI" : {
+      "sha1" : "45dd0cf195b16e70710a8d6d763cda614cf6f31e",
+      "maven" : {
+        "groupId" : "org.openjdk.jol",
+        "artifactId" : "jol-cli",
+        "version" : "0.9",
+        "suffix" : "full",
+      },
     },
 
     "BATIK" : {
       "sha1" : "122b87ca88e41a415cf8b523fd3d03b4325134a3",
-      "urls" : ["https://lafo.ssw.uni-linz.ac.at/pub/graal-external-deps/batik-all-1.7.jar"],
+      "urls" : ["https://github.com/oracle/graal/releases/download/batik-all-1.7/batik-all-1.7.jar"],
     },
   },
 

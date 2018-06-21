@@ -1266,18 +1266,18 @@ def hsdis(args, copyToDir=None):
     libpattern = mx.add_lib_suffix('hsdis-' + mx.get_arch() + '-' + mx.get_os() + '-%s')
 
     sha1s = {
-        'att/hsdis-amd64-windows-%s.dll' : 'bcbd535a9568b5075ab41e96205e26a2bac64f72',
-        'att/hsdis-amd64-linux-%s.so' : '36a0b8e30fc370727920cc089f104bfb9cd508a0',
-        'att/hsdis-amd64-darwin-%s.dylib' : 'c1865e9a58ca773fdc1c5eea0a4dfda213420ffb',
-        'intel/hsdis-amd64-windows-%s.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
-        'intel/hsdis-amd64-linux-%s.so' : '0d031013db9a80d6c88330c42c983fbfa7053193',
-        'intel/hsdis-amd64-darwin-%s.dylib' : '67f6d23cbebd8998450a88b5bef362171f66f11a',
+        'att-hsdis-amd64-windows-%s.dll' : 'bcbd535a9568b5075ab41e96205e26a2bac64f72',
+        'att-hsdis-amd64-linux-%s.so' : '36a0b8e30fc370727920cc089f104bfb9cd508a0',
+        'att-hsdis-amd64-darwin-%s.dylib' : 'c1865e9a58ca773fdc1c5eea0a4dfda213420ffb',
+        'intel-hsdis-amd64-windows-%s.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
+        'intel-hsdis-amd64-linux-%s.so' : '0d031013db9a80d6c88330c42c983fbfa7053193',
+        'intel-hsdis-amd64-darwin-%s.dylib' : '67f6d23cbebd8998450a88b5bef362171f66f11a',
         'hsdis-sparcv9-solaris-%s.so': '970640a9af0bd63641f9063c11275b371a59ee60',
         'hsdis-sparcv9-linux-%s.so': '0c375986d727651dee1819308fbbc0de4927d5d9',
     }
 
     if flavor:
-        flavoredLib = flavor + "/" + libpattern
+        flavoredLib = flavor + "-" + libpattern
     else:
         flavoredLib = libpattern
     if flavoredLib not in sha1s:
@@ -1289,7 +1289,7 @@ def hsdis(args, copyToDir=None):
     path = join(_suite.get_output_root(), lib)
     if not exists(path):
         sha1path = path + '.sha1'
-        mx.download_file_with_sha1('hsdis', path, ['https://lafo.ssw.uni-linz.ac.at/pub/hsdis/' + lib], sha1, sha1path, True, True, sources=False)
+        mx.download_file_with_sha1('hsdis', path, ['https://github.com/oracle/graal/releases/download/hsdis-20180108/' + lib], sha1, sha1path, True, True, sources=False)
     if copyToDir is not None and exists(copyToDir):
         destFileName = mx.add_lib_suffix('hsdis-' + mx.get_arch())
         shutil.copy(path, copyToDir + os.sep + destFileName)
@@ -1343,16 +1343,24 @@ def hcfdis(args):
 
 def jol(args):
     """Java Object Layout"""
-    joljar = mx.library('JOL_INTERNALS').get_path(resolve=True)
-    candidates = mx.findclass(args, logToConsole=False, matcher=lambda s, classname: s == classname or classname.endswith('.' + s) or classname.endswith('$' + s))
+    joljar = mx.library('JOL_CLI').get_path(resolve=True)
 
-    if len(candidates) > 0:
-        candidates = mx.select_items(sorted(candidates))
-    else:
-        # mx.findclass can be mistaken, don't give up yet
-        candidates = args
+    commands = ['estimates', 'externals', 'footprint', 'heapdump', 'heapdumpstats', 'idealpack', 'internals', 'shapes', 'string-compress', 'help']
+    command = 'internals'
+    if len(args) == 0:
+        command = 'help'
+    elif args[0] in commands:
+        command, args = args[0], args[1:]
 
-    run_vm(['-javaagent:' + joljar, '-cp', os.pathsep.join([mx.classpath(jdk=get_jvmci_jdk()), joljar]), "org.openjdk.jol.MainObjectInternals"] + candidates)
+    # classpath operations
+    if command in ['estimates', 'externals', 'footprint', 'internals']:
+        candidates = mx.findclass(args, logToConsole=False, matcher=lambda s, classname: s == classname or classname.endswith('.' + s) or classname.endswith('$' + s))
+        if len(candidates) > 0:
+            args = mx.select_items(sorted(candidates))
+        if len(args) > 0:
+            args = ['-cp', mx.classpath(jdk=mx.get_jdk())] + args
+
+    run_vm(['-javaagent:' + joljar, '-cp', joljar, 'org.openjdk.jol.Main', command] + args)
 
 def deploy_binary(args):
     for vmbuild in ['product', 'fastdebug']:
