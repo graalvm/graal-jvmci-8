@@ -1,0 +1,64 @@
+#Signature file v4.1
+#Version 
+
+CLSS public java.lang.Object
+cons public init()
+meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected void finalize() throws java.lang.Throwable
+meth public boolean equals(java.lang.Object)
+meth public final java.lang.Class<?> getClass()
+meth public final void notify()
+meth public final void notifyAll()
+meth public final void wait() throws java.lang.InterruptedException
+meth public final void wait(long) throws java.lang.InterruptedException
+meth public final void wait(long,int) throws java.lang.InterruptedException
+meth public int hashCode()
+meth public java.lang.String toString()
+
+CLSS public abstract interface jdk.vm.ci.code.RegisterConfig
+meth public abstract boolean areAllAllocatableRegistersCallerSaved()
+meth public abstract jdk.vm.ci.code.CallingConvention getCallingConvention(jdk.vm.ci.code.CallingConvention$Type,jdk.vm.ci.meta.JavaType,jdk.vm.ci.meta.JavaType[],jdk.vm.ci.code.ValueKindFactory<?>)
+meth public abstract jdk.vm.ci.code.Register getFrameRegister()
+meth public abstract jdk.vm.ci.code.Register getReturnRegister(jdk.vm.ci.meta.JavaKind)
+meth public abstract jdk.vm.ci.code.RegisterArray filterAllocatableRegisters(jdk.vm.ci.meta.PlatformKind,jdk.vm.ci.code.RegisterArray)
+meth public abstract jdk.vm.ci.code.RegisterArray getAllocatableRegisters()
+meth public abstract jdk.vm.ci.code.RegisterArray getCalleeSaveRegisters()
+meth public abstract jdk.vm.ci.code.RegisterArray getCallerSaveRegisters()
+meth public abstract jdk.vm.ci.code.RegisterArray getCallingConventionRegisters(jdk.vm.ci.code.CallingConvention$Type,jdk.vm.ci.meta.JavaKind)
+meth public abstract jdk.vm.ci.code.RegisterAttributes[] getAttributesMap()
+meth public int getMaximumFrameSize()
+
+CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory
+meth public abstract java.lang.String getArchitecture()
+meth public abstract jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.runtime.JVMCIBackend)
+
+CLSS public jdk.vm.ci.hotspot.amd64.AMD64HotSpotJVMCIBackendFactory
+cons public init()
+intf jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory
+meth protected jdk.vm.ci.hotspot.HotSpotCodeCacheProvider createCodeCache(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.code.TargetDescription,jdk.vm.ci.code.RegisterConfig)
+meth protected jdk.vm.ci.hotspot.HotSpotConstantReflectionProvider createConstantReflection(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
+meth protected jdk.vm.ci.hotspot.HotSpotMetaAccessProvider createMetaAccess(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
+meth protected jdk.vm.ci.runtime.JVMCIBackend createBackend(jdk.vm.ci.hotspot.HotSpotMetaAccessProvider,jdk.vm.ci.hotspot.HotSpotCodeCacheProvider,jdk.vm.ci.meta.ConstantReflectionProvider,jdk.vm.ci.code.stack.StackIntrospection)
+meth public java.lang.String getArchitecture()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.runtime.JVMCIBackend)
+supr java.lang.Object
+
+CLSS public jdk.vm.ci.hotspot.amd64.AMD64HotSpotRegisterConfig
+cons public init(jdk.vm.ci.code.TargetDescription,boolean,boolean)
+cons public init(jdk.vm.ci.code.TargetDescription,jdk.vm.ci.code.RegisterArray,boolean)
+intf jdk.vm.ci.code.RegisterConfig
+meth public boolean areAllAllocatableRegistersCallerSaved()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.code.CallingConvention getCallingConvention(jdk.vm.ci.code.CallingConvention$Type,jdk.vm.ci.meta.JavaType,jdk.vm.ci.meta.JavaType[],jdk.vm.ci.code.ValueKindFactory<?>)
+meth public jdk.vm.ci.code.Register getFrameRegister()
+meth public jdk.vm.ci.code.Register getReturnRegister(jdk.vm.ci.meta.JavaKind)
+meth public jdk.vm.ci.code.RegisterArray filterAllocatableRegisters(jdk.vm.ci.meta.PlatformKind,jdk.vm.ci.code.RegisterArray)
+meth public jdk.vm.ci.code.RegisterArray getAllocatableRegisters()
+meth public jdk.vm.ci.code.RegisterArray getCalleeSaveRegisters()
+meth public jdk.vm.ci.code.RegisterArray getCallerSaveRegisters()
+meth public jdk.vm.ci.code.RegisterArray getCallingConventionRegisters(jdk.vm.ci.code.CallingConvention$Type,jdk.vm.ci.meta.JavaKind)
+meth public jdk.vm.ci.code.RegisterAttributes[] getAttributesMap()
+supr java.lang.Object
+hfds allAllocatableAreCallerSaved,allocatable,attributesMap,callerSaved,javaGeneralParameterRegisters,javaXMMParameterRegisters,nativeGeneralParameterRegisters,nativeXMMParameterRegisters,needsNativeStackHomeSpace,reservedRegisters,target,windowsOS
+

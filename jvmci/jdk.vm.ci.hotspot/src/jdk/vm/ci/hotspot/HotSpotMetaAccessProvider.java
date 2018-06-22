@@ -52,10 +52,10 @@ import jdk.vm.ci.meta.Signature;
  */
 public class HotSpotMetaAccessProvider implements MetaAccessProvider {
 
-    protected final HotSpotJVMCIRuntimeProvider runtime;
+    protected final HotSpotJVMCIRuntime runtime;
 
     public HotSpotMetaAccessProvider(HotSpotJVMCIRuntimeProvider runtime) {
-        this.runtime = runtime;
+        this.runtime = (HotSpotJVMCIRuntime) runtime;
     }
 
     @Override

@@ -231,10 +231,10 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         return runtime().getHostJVMCIBackend().getCodeCache().getTarget().wordJavaKind;
     }
 
-    protected final CompilerToVM compilerToVm;
+    final CompilerToVM compilerToVm;
 
     protected final HotSpotVMConfigStore configStore;
-    protected final HotSpotVMConfig config;
+    private final HotSpotVMConfig config;
     private final JVMCIBackend hostBackend;
 
     private final JVMCICompilerFactory compilerFactory;
@@ -344,13 +344,11 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         return configStore;
     }
 
-    @Override
-    public HotSpotVMConfig getConfig() {
+    HotSpotVMConfig getConfig() {
         return config;
     }
 
-    @Override
-    public CompilerToVM getCompilerToVM() {
+    CompilerToVM getCompilerToVM() {
         return compilerToVm;
     }
 

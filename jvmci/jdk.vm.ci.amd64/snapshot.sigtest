@@ -1,0 +1,244 @@
+#Signature file v4.1
+#Version 
+
+CLSS public abstract interface java.io.Serializable
+
+CLSS public abstract interface java.lang.Comparable<%0 extends java.lang.Object>
+meth public abstract int compareTo({java.lang.Comparable%0})
+
+CLSS public abstract java.lang.Enum<%0 extends java.lang.Enum<{java.lang.Enum%0}>>
+cons protected init(java.lang.String,int)
+intf java.io.Serializable
+intf java.lang.Comparable<{java.lang.Enum%0}>
+meth protected final java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected final void finalize()
+meth public final boolean equals(java.lang.Object)
+meth public final int compareTo({java.lang.Enum%0})
+meth public final int hashCode()
+meth public final int ordinal()
+meth public final java.lang.Class<{java.lang.Enum%0}> getDeclaringClass()
+meth public final java.lang.String name()
+meth public java.lang.String toString()
+meth public static <%0 extends java.lang.Enum<{%%0}>> {%%0} valueOf(java.lang.Class<{%%0}>,java.lang.String)
+supr java.lang.Object
+hfds name,ordinal
+
+CLSS public java.lang.Object
+cons public init()
+meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected void finalize() throws java.lang.Throwable
+meth public boolean equals(java.lang.Object)
+meth public final java.lang.Class<?> getClass()
+meth public final void notify()
+meth public final void notifyAll()
+meth public final void wait() throws java.lang.InterruptedException
+meth public final void wait(long) throws java.lang.InterruptedException
+meth public final void wait(long,int) throws java.lang.InterruptedException
+meth public int hashCode()
+meth public java.lang.String toString()
+
+CLSS public jdk.vm.ci.amd64.AMD64
+cons public init(java.util.EnumSet<jdk.vm.ci.amd64.AMD64$CPUFeature>,java.util.EnumSet<jdk.vm.ci.amd64.AMD64$Flag>)
+fld public final static jdk.vm.ci.code.Register k0
+fld public final static jdk.vm.ci.code.Register k1
+fld public final static jdk.vm.ci.code.Register k2
+fld public final static jdk.vm.ci.code.Register k3
+fld public final static jdk.vm.ci.code.Register k4
+fld public final static jdk.vm.ci.code.Register k5
+fld public final static jdk.vm.ci.code.Register k6
+fld public final static jdk.vm.ci.code.Register k7
+fld public final static jdk.vm.ci.code.Register r10
+fld public final static jdk.vm.ci.code.Register r11
+fld public final static jdk.vm.ci.code.Register r12
+fld public final static jdk.vm.ci.code.Register r13
+fld public final static jdk.vm.ci.code.Register r14
+fld public final static jdk.vm.ci.code.Register r15
+fld public final static jdk.vm.ci.code.Register r8
+fld public final static jdk.vm.ci.code.Register r9
+fld public final static jdk.vm.ci.code.Register rax
+fld public final static jdk.vm.ci.code.Register rbp
+fld public final static jdk.vm.ci.code.Register rbx
+fld public final static jdk.vm.ci.code.Register rcx
+fld public final static jdk.vm.ci.code.Register rdi
+fld public final static jdk.vm.ci.code.Register rdx
+fld public final static jdk.vm.ci.code.Register rip
+fld public final static jdk.vm.ci.code.Register rsi
+fld public final static jdk.vm.ci.code.Register rsp
+fld public final static jdk.vm.ci.code.Register xmm0
+fld public final static jdk.vm.ci.code.Register xmm1
+fld public final static jdk.vm.ci.code.Register xmm10
+fld public final static jdk.vm.ci.code.Register xmm11
+fld public final static jdk.vm.ci.code.Register xmm12
+fld public final static jdk.vm.ci.code.Register xmm13
+fld public final static jdk.vm.ci.code.Register xmm14
+fld public final static jdk.vm.ci.code.Register xmm15
+fld public final static jdk.vm.ci.code.Register xmm16
+fld public final static jdk.vm.ci.code.Register xmm17
+fld public final static jdk.vm.ci.code.Register xmm18
+fld public final static jdk.vm.ci.code.Register xmm19
+fld public final static jdk.vm.ci.code.Register xmm2
+fld public final static jdk.vm.ci.code.Register xmm20
+fld public final static jdk.vm.ci.code.Register xmm21
+fld public final static jdk.vm.ci.code.Register xmm22
+fld public final static jdk.vm.ci.code.Register xmm23
+fld public final static jdk.vm.ci.code.Register xmm24
+fld public final static jdk.vm.ci.code.Register xmm25
+fld public final static jdk.vm.ci.code.Register xmm26
+fld public final static jdk.vm.ci.code.Register xmm27
+fld public final static jdk.vm.ci.code.Register xmm28
+fld public final static jdk.vm.ci.code.Register xmm29
+fld public final static jdk.vm.ci.code.Register xmm3
+fld public final static jdk.vm.ci.code.Register xmm30
+fld public final static jdk.vm.ci.code.Register xmm31
+fld public final static jdk.vm.ci.code.Register xmm4
+fld public final static jdk.vm.ci.code.Register xmm5
+fld public final static jdk.vm.ci.code.Register xmm6
+fld public final static jdk.vm.ci.code.Register xmm7
+fld public final static jdk.vm.ci.code.Register xmm8
+fld public final static jdk.vm.ci.code.Register xmm9
+fld public final static jdk.vm.ci.code.Register$RegisterCategory CPU
+fld public final static jdk.vm.ci.code.Register$RegisterCategory MASK
+fld public final static jdk.vm.ci.code.Register$RegisterCategory XMM
+fld public final static jdk.vm.ci.code.RegisterArray allRegisters
+fld public final static jdk.vm.ci.code.RegisterArray valueRegistersAVX512
+fld public final static jdk.vm.ci.code.RegisterArray valueRegistersSSE
+fld public final static jdk.vm.ci.code.Register[] cpuRegisters
+fld public final static jdk.vm.ci.code.Register[] xmmRegistersAVX512
+fld public final static jdk.vm.ci.code.Register[] xmmRegistersSSE
+innr public final static !enum CPUFeature
+innr public final static !enum Flag
+meth public boolean canStoreValue(jdk.vm.ci.code.Register$RegisterCategory,jdk.vm.ci.meta.PlatformKind)
+meth public java.util.EnumSet<jdk.vm.ci.amd64.AMD64$CPUFeature> getFeatures()
+meth public java.util.EnumSet<jdk.vm.ci.amd64.AMD64$Flag> getFlags()
+meth public jdk.vm.ci.amd64.AMD64Kind getLargestStorableKind(jdk.vm.ci.code.Register$RegisterCategory)
+meth public jdk.vm.ci.code.RegisterArray getAvailableValueRegisters()
+meth public jdk.vm.ci.meta.PlatformKind getPlatformKind(jdk.vm.ci.meta.JavaKind)
+supr jdk.vm.ci.code.Architecture
+hfds features,flags,largestKind
+
+CLSS public final static !enum jdk.vm.ci.amd64.AMD64$CPUFeature
+ outer jdk.vm.ci.amd64.AMD64
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature ADX
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AES
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AMD_3DNOW_PREFETCH
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AVX
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AVX2
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AVX512BW
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AVX512CD
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AVX512DQ
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AVX512ER
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AVX512F
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AVX512PF
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature AVX512VL
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature BMI1
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature BMI2
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature CLMUL
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature CMOV
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature CX8
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature ERMS
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature FXSR
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature HT
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature LZCNT
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature MMX
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature POPCNT
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature RTM
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature SHA
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature SSE
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature SSE2
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature SSE3
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature SSE4A
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature SSE4_1
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature SSE4_2
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature SSSE3
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature TSC
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature TSCINV
+meth public static jdk.vm.ci.amd64.AMD64$CPUFeature valueOf(java.lang.String)
+meth public static jdk.vm.ci.amd64.AMD64$CPUFeature[] values()
+supr java.lang.Enum<jdk.vm.ci.amd64.AMD64$CPUFeature>
+
+CLSS public final static !enum jdk.vm.ci.amd64.AMD64$Flag
+ outer jdk.vm.ci.amd64.AMD64
+fld public final static jdk.vm.ci.amd64.AMD64$Flag UseCountLeadingZerosInstruction
+fld public final static jdk.vm.ci.amd64.AMD64$Flag UseCountTrailingZerosInstruction
+meth public static jdk.vm.ci.amd64.AMD64$Flag valueOf(java.lang.String)
+meth public static jdk.vm.ci.amd64.AMD64$Flag[] values()
+supr java.lang.Enum<jdk.vm.ci.amd64.AMD64$Flag>
+
+CLSS public final !enum jdk.vm.ci.amd64.AMD64Kind
+fld public final static jdk.vm.ci.amd64.AMD64Kind BYTE
+fld public final static jdk.vm.ci.amd64.AMD64Kind DOUBLE
+fld public final static jdk.vm.ci.amd64.AMD64Kind DWORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind MASK16
+fld public final static jdk.vm.ci.amd64.AMD64Kind MASK32
+fld public final static jdk.vm.ci.amd64.AMD64Kind MASK64
+fld public final static jdk.vm.ci.amd64.AMD64Kind MASK8
+fld public final static jdk.vm.ci.amd64.AMD64Kind QWORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind SINGLE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V128_BYTE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V128_DOUBLE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V128_DWORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V128_QWORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V128_SINGLE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V128_WORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V256_BYTE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V256_DOUBLE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V256_DWORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V256_QWORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V256_SINGLE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V256_WORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V32_BYTE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V32_WORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V512_BYTE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V512_DOUBLE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V512_DWORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V512_QWORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V512_SINGLE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V512_WORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V64_BYTE
+fld public final static jdk.vm.ci.amd64.AMD64Kind V64_DWORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind V64_WORD
+fld public final static jdk.vm.ci.amd64.AMD64Kind WORD
+intf jdk.vm.ci.meta.PlatformKind
+meth public boolean isInteger()
+meth public boolean isMask()
+meth public boolean isXMM()
+meth public char getTypeChar()
+meth public int getSizeInBytes()
+meth public int getVectorLength()
+meth public jdk.vm.ci.amd64.AMD64Kind getScalar()
+meth public jdk.vm.ci.meta.PlatformKind$Key getKey()
+meth public static jdk.vm.ci.amd64.AMD64Kind valueOf(java.lang.String)
+meth public static jdk.vm.ci.amd64.AMD64Kind[] values()
+supr java.lang.Enum<jdk.vm.ci.amd64.AMD64Kind>
+hfds key,scalar,size,vectorLength
+
+CLSS public abstract jdk.vm.ci.code.Architecture
+cons protected init(java.lang.String,jdk.vm.ci.meta.PlatformKind,java.nio.ByteOrder,boolean,jdk.vm.ci.code.RegisterArray,int,int,int)
+meth public abstract boolean canStoreValue(jdk.vm.ci.code.Register$RegisterCategory,jdk.vm.ci.meta.PlatformKind)
+meth public abstract jdk.vm.ci.meta.PlatformKind getLargestStorableKind(jdk.vm.ci.code.Register$RegisterCategory)
+meth public abstract jdk.vm.ci.meta.PlatformKind getPlatformKind(jdk.vm.ci.meta.JavaKind)
+meth public boolean supportsUnalignedMemoryAccess()
+meth public final boolean equals(java.lang.Object)
+meth public final int hashCode()
+meth public final int requiredBarriers(int)
+meth public final java.lang.String toString()
+meth public int getMachineCodeCallDisplacementOffset()
+meth public int getReturnAddressSize()
+meth public int getWordSize()
+meth public java.lang.String getName()
+meth public java.nio.ByteOrder getByteOrder()
+meth public jdk.vm.ci.code.RegisterArray getAvailableValueRegisters()
+meth public jdk.vm.ci.code.RegisterArray getRegisters()
+meth public jdk.vm.ci.meta.PlatformKind getWordKind()
+supr java.lang.Object
+hfds byteOrder,implicitMemoryBarriers,machineCodeCallDisplacementOffset,name,registers,returnAddressSize,unalignedMemoryAccess,wordKind
+
+CLSS public abstract interface jdk.vm.ci.meta.PlatformKind
+innr public abstract interface static Key
+innr public static EnumKey
+meth public abstract char getTypeChar()
+meth public abstract int getSizeInBytes()
+meth public abstract int getVectorLength()
+meth public abstract java.lang.String name()
+meth public abstract jdk.vm.ci.meta.PlatformKind$Key getKey()
+
