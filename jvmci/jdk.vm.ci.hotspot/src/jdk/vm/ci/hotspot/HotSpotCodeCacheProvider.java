@@ -46,9 +46,9 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
     protected final TargetDescription target;
     protected final RegisterConfig regConfig;
 
-    public HotSpotCodeCacheProvider(HotSpotJVMCIRuntimeProvider runtime, TargetDescription target, RegisterConfig regConfig) {
-        this.runtime = (HotSpotJVMCIRuntime) runtime;
-        this.config = ((HotSpotJVMCIRuntime) runtime).getConfig();
+    public HotSpotCodeCacheProvider(HotSpotJVMCIRuntime runtime, TargetDescription target, RegisterConfig regConfig) {
+        this.runtime = runtime;
+        this.config = runtime.getConfig();
         this.target = target;
         this.regConfig = regConfig;
     }

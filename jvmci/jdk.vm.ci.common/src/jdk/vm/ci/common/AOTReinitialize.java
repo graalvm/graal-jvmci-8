@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -20,30 +20,17 @@
  * or visit www.oracle.com if you need additional information or have any
  * questions.
  */
-package jdk.vm.ci.hotspot;
+package jdk.vm.ci.common;
 
-import jdk.vm.ci.meta.ResolvedJavaType;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public abstract class HotSpotResolvedJavaType extends HotSpotJavaType implements ResolvedJavaType {
-
-    HotSpotResolvedJavaType(String name) {
-        super(name);
-    }
-
-    abstract Class<?> mirror();
-
-    @Override
-    public final boolean equals(Object obj) {
-        if (!(obj instanceof HotSpotResolvedJavaType)) {
-            return false;
-        }
-        HotSpotResolvedJavaType that = (HotSpotResolvedJavaType) obj;
-        return this.mirror().equals(that.mirror());
-    }
-
-    @Override
-    public final int hashCode() {
-        return getName().hashCode();
-    }
-
+/**
+ * Denotes a field that should have the default value for its type in an ahead of time image.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.FIELD})
+public @interface AOTReinitialize {
 }

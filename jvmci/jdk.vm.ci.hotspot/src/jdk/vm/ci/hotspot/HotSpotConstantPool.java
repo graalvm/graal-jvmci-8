@@ -38,6 +38,9 @@ import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.meta.Signature;
+import jdk.vm.ci.meta.UnresolvedJavaField;
+import jdk.vm.ci.meta.UnresolvedJavaMethod;
+import jdk.vm.ci.meta.UnresolvedJavaType;
 
 /**
  * Implementation of {@link ConstantPool} for HotSpot.
@@ -559,7 +562,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
     private static JavaType getJavaType(final Object type) {
         if (type instanceof String) {
             String name = (String) type;
-            return HotSpotUnresolvedJavaType.create(runtime(), "L" + name + ";");
+            return UnresolvedJavaType.create("L" + name + ";");
         } else {
             return (JavaType) type;
         }
@@ -577,12 +580,12 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
             HotSpotSignature signature = new HotSpotSignature(runtime(), getSignatureOf(index));
             if (opcode == Bytecodes.INVOKEDYNAMIC) {
                 HotSpotResolvedObjectType holder = HotSpotResolvedObjectTypeImpl.fromObjectClass(MethodHandle.class);
-                return new HotSpotMethodUnresolved(name, signature, holder);
+                return new UnresolvedJavaMethod(name, signature, holder);
             } else {
                 final int klassIndex = getKlassRefIndexAt(index);
                 final Object type = compilerToVM().lookupKlassInPool(this, klassIndex);
                 JavaType holder = getJavaType(type);
-                return new HotSpotMethodUnresolved(name, signature, holder);
+                return new UnresolvedJavaMethod(name, signature, holder);
             }
         }
     }
@@ -623,7 +626,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
                  * If there was an exception resolving the field we give up and return an unresolved
                  * field.
                  */
-                return new HotSpotUnresolvedField(holder, lookupUtf8(getNameRefIndexAt(nameAndTypeIndex)), type);
+                return new UnresolvedJavaField(holder, lookupUtf8(getNameRefIndexAt(nameAndTypeIndex)), type);
             }
             final int flags = info[0];
             final int offset = info[1];
@@ -631,7 +634,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
             HotSpotResolvedJavaField result = resolvedHolder.createField(type, offset, flags, fieldIndex);
             return result;
         } else {
-            return new HotSpotUnresolvedField(holder, lookupUtf8(getNameRefIndexAt(nameAndTypeIndex)), type);
+            return new UnresolvedJavaField(holder, lookupUtf8(getNameRefIndexAt(nameAndTypeIndex)), type);
         }
     }
 

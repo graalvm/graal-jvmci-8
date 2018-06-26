@@ -28,8 +28,10 @@ import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 
+import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaType;
+import jdk.vm.ci.meta.UnresolvedJavaType;
 
 /**
  * Represents a field in a HotSpot type.
@@ -95,10 +97,11 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
      *         {@code object}'s class
      */
     @Override
-    public boolean isInObject(Object object) {
+    public boolean isInObject(JavaConstant constant) {
         if (isStatic()) {
             return false;
         }
+        Object object = ((HotSpotObjectConstantImpl) constant).object();
         return getDeclaringClass().isAssignableFrom(HotSpotResolvedObjectTypeImpl.fromObjectClass(object.getClass()));
     }
 
@@ -117,10 +120,10 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
         // Pull field into local variable to prevent a race causing
         // a ClassCastException below
         JavaType currentType = type;
-        if (currentType instanceof HotSpotUnresolvedJavaType) {
+        if (currentType instanceof UnresolvedJavaType) {
             // Don't allow unresolved types to hang around forever
-            HotSpotUnresolvedJavaType unresolvedType = (HotSpotUnresolvedJavaType) currentType;
-            ResolvedJavaType resolved = unresolvedType.reresolve(holder);
+            UnresolvedJavaType unresolvedType = (UnresolvedJavaType) currentType;
+            ResolvedJavaType resolved = unresolvedType.resolve(holder);
             if (resolved != null) {
                 type = resolved;
             }
@@ -129,7 +132,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
     }
 
     @Override
-    public int offset() {
+    public int getOffset() {
         return offset;
     }
 

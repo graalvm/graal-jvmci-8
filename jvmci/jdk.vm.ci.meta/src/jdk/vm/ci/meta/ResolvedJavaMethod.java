@@ -27,6 +27,7 @@ package jdk.vm.ci.meta;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
@@ -466,4 +467,15 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
     }
 
     SpeculationLog getSpeculationLog();
+
+    /**
+     *
+     * @param object
+     * @param args
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
+    default JavaConstant invoke(JavaConstant object, JavaConstant... args) throws InvocationTargetException, IllegalAccessException {
+        throw new InternalError("unimplemented");
+    }
 }

@@ -80,6 +80,13 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
     }
 
     /**
+     * Checks whether this type is an enum.
+     *
+     * @return {@code true} if this type is an enum
+     */
+    boolean isEnum();
+
+    /**
      * Checks whether this type is initialized. If a type is initialized it implies that it was
      * {@link #isLinked() linked} and that the static initializer has run.
      *
@@ -334,4 +341,17 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
      * so they would to go through the normal {@link Object#clone} path.
      */
     boolean isCloneableWithAllocation();
+
+    /**
+     * Lookup an unresolved type relative to an existing resolved type.
+     */
+    @SuppressWarnings("unused")
+    default ResolvedJavaType lookupType(UnresolvedJavaType unresolvedJavaType, boolean resolve) {
+        return null;
+    }
+
+    @SuppressWarnings("unused")
+    default ResolvedJavaField resolveField(UnresolvedJavaField unresolvedJavaField, ResolvedJavaType accessingClass) {
+        return null;
+    }
 }

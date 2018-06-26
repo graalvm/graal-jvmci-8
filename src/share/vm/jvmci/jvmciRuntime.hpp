@@ -55,9 +55,6 @@ class JVMCIRuntime: public AllStatic {
   static jobject _HotSpotJVMCIRuntime_instance;
   static bool _HotSpotJVMCIRuntime_initialized;
 
-  static int _trivial_prefixes_count;
-  static char** _trivial_prefixes;
-
   static CompLevelAdjustment _comp_level_adjustment;
 
   static bool _shutdown_called;
@@ -110,8 +107,6 @@ class JVMCIRuntime: public AllStatic {
   static bool shutdown_called() {
     return _shutdown_called;
   }
-
-  static bool treat_as_trivial(Method* method);
 
   /**
    * Lets JVMCI modify the compilation level currently selected for a method by
@@ -182,7 +177,7 @@ class JVMCIRuntime: public AllStatic {
   static void monitorexit (JavaThread* thread, oopDesc* obj, BasicLock* lock);
   static void vm_error(JavaThread* thread, jlong where, jlong format, jlong value);
   static oopDesc* load_and_clear_exception(JavaThread* thread);
-  static void log_printf(JavaThread* thread, oopDesc* format, jlong v1, jlong v2, jlong v3);
+  static void log_printf(JavaThread* thread, const char* format, jlong v1, jlong v2, jlong v3);
   static void log_primitive(JavaThread* thread, jchar typeChar, jlong value, jboolean newline);
   // Print the passed in object, optionally followed by a newline.  If
   // as_string is true and the object is a java.lang.String then it

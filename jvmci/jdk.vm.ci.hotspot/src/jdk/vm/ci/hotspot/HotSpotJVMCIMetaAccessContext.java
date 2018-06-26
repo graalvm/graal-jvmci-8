@@ -44,7 +44,7 @@ import jdk.vm.ci.meta.ResolvedJavaType;
  * longer used.
  *
  */
-public class HotSpotJVMCIMetaAccessContext {
+class HotSpotJVMCIMetaAccessContext {
 
     /**
      * The set of currently live contexts used for tracking of live metadata. Examined from the VM

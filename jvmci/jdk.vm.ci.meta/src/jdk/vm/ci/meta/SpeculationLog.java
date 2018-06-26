@@ -33,12 +33,36 @@ package jdk.vm.ci.meta;
  * failed speculations during deoptimization, since every VM has different needs there.
  */
 public interface SpeculationLog {
-
     /**
      * Marker interface for speculation objects that can be added to the speculation log.
      */
     public interface SpeculationReason {
     }
+
+    /**
+     * Marker class that indicates that a speculation has no reason.
+     */
+    final class NoSpeculationReason implements SpeculationReason {
+    }
+
+    class Speculation {
+        private SpeculationReason reason;
+
+        public Speculation(SpeculationReason reason) {
+            this.reason = reason;
+        }
+
+        public SpeculationReason getReason() {
+            return reason;
+        }
+
+        @Override
+        public String toString() {
+            return reason.toString();
+        }
+    }
+
+    Speculation NO_SPECULATION = new Speculation(new NoSpeculationReason());
 
     /**
      * Must be called before compilation, i.e., before a compiler calls {@link #maySpeculate}.
@@ -61,7 +85,7 @@ public interface SpeculationLog {
      *             {@link #maySpeculate(SpeculationReason)} with {@code reason} returns
      *             {@code false}
      */
-    JavaConstant speculate(SpeculationReason reason);
+    Speculation speculate(SpeculationReason reason);
 
     /**
      * Returns if this log has speculations.
@@ -69,4 +93,6 @@ public interface SpeculationLog {
      * @return true if there are speculations, false otherwise
      */
     boolean hasSpeculations();
+
+    Speculation lookupSpeculation(JavaConstant constant);
 }

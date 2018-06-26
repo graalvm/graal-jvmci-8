@@ -30,8 +30,8 @@ public class HotSpotStackIntrospection implements StackIntrospection {
 
     protected final HotSpotJVMCIRuntime runtime;
 
-    public HotSpotStackIntrospection(HotSpotJVMCIRuntimeProvider runtime) {
-        this.runtime = (HotSpotJVMCIRuntime) runtime;
+    public HotSpotStackIntrospection(HotSpotJVMCIRuntime runtime) {
+        this.runtime = runtime;
     }
 
     @Override

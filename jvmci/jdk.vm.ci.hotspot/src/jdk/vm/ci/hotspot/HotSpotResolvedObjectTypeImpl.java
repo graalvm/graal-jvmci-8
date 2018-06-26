@@ -51,6 +51,8 @@ import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
+import jdk.vm.ci.meta.UnresolvedJavaField;
+import jdk.vm.ci.meta.UnresolvedJavaType;
 
 /**
  * Implementation of {@link JavaType} for resolved non-primitive HotSpot classes.
@@ -353,6 +355,11 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     @Override
     public boolean isArray() {
         return mirror().isArray();
+    }
+
+    @Override
+    public boolean isEnum() {
+        return mirror().isEnum();
     }
 
     @Override
@@ -752,7 +759,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
 
                 // Make sure the result is sorted by offset.
                 int j;
-                for (j = resultIndex - 1; j >= prependLength && result[j].offset() > offset; j--) {
+                for (j = resultIndex - 1; j >= prependLength && result[j].getOffset() > offset; j--) {
                     result[j + 1] = result[j];
                 }
                 result[j + 1] = resolvedJavaField;
@@ -871,7 +878,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     private static ResolvedJavaField findFieldWithOffset(long offset, JavaKind expectedEntryKind, ResolvedJavaField[] declaredFields) {
         for (ResolvedJavaField field : declaredFields) {
             HotSpotResolvedJavaField resolvedField = (HotSpotResolvedJavaField) field;
-            long resolvedFieldOffset = resolvedField.offset();
+            long resolvedFieldOffset = resolvedField.getOffset();
             // @formatter:off
             if (ByteOrder.nativeOrder() == ByteOrder.BIG_ENDIAN  &&
                             expectedEntryKind.isPrimitive() &&
@@ -943,6 +950,30 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     @Override
     public boolean isCloneableWithAllocation() {
         return (getAccessFlags() & config().jvmAccIsCloneable) != 0;
+    }
+
+    @Override
+    public ResolvedJavaType lookupType(UnresolvedJavaType unresolvedJavaType, boolean resolve) {
+        JavaType javaType = HotSpotJVMCIRuntime.runtime().lookupType(unresolvedJavaType.getName(), this, resolve);
+        if (javaType instanceof ResolvedJavaType) {
+            return (ResolvedJavaType) javaType;
+        }
+        return null;
+    }
+
+    @Override
+    public ResolvedJavaField resolveField(UnresolvedJavaField unresolvedJavaField, ResolvedJavaType accessingClass) {
+        for (ResolvedJavaField field : getInstanceFields(false)) {
+            if (field.getName().equals(unresolvedJavaField.getName())) {
+                return field;
+            }
+        }
+        for (ResolvedJavaField field : getStaticFields()) {
+            if (field.getName().equals(unresolvedJavaField.getName())) {
+                return field;
+            }
+        }
+        throw new InternalError(unresolvedJavaField.toString());
     }
 
     @Override

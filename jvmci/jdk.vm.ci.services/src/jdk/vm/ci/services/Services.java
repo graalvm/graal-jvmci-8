@@ -42,6 +42,29 @@ import sun.reflect.Reflection;
  */
 public final class Services {
 
+    /**
+     * Guards code that should be run when building an SVM image but should be excluded from (being
+     * compiled into) the image. Such code must be directly guarded by an {@code if} statement on
+     * this field - the guard cannot be behind a method call.
+     */
+    public static final boolean BUILDING_SVM_AOT = Boolean.getBoolean("org.graalvm.building.svm.aot");
+
+    /**
+     * Guards code that should only be run in SVM image. Such code must be directly guarded by an
+     * {@code if} statement on this field - the guard cannot be behind a method call.
+     *
+     * The value of this field seen during analysis and compilation of an SVM image must be
+     * {@code true}.
+     */
+    public static final boolean SVM_AOT;
+    static {
+        /*
+         * Prevents javac from constant folding use of this field. It is set to true in the SVM
+         * image via substitution during image building.
+         */
+        SVM_AOT = false;
+    }
+
     private Services() {
     }
 

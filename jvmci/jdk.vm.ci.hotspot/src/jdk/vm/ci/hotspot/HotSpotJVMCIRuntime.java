@@ -29,9 +29,12 @@ import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.function.Predicate;
 
 import jdk.vm.ci.code.Architecture;
 import jdk.vm.ci.code.CompilationRequestResult;
@@ -43,12 +46,15 @@ import jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory.CompilationLevel;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaType;
+import jdk.vm.ci.meta.UnresolvedJavaType;
 import jdk.vm.ci.runtime.JVMCI;
 import jdk.vm.ci.runtime.JVMCIBackend;
 import jdk.vm.ci.runtime.JVMCICompiler;
 import jdk.vm.ci.runtime.JVMCICompilerFactory;
+import jdk.vm.ci.runtime.JVMCIRuntime;
 import jdk.vm.ci.services.JVMCIServiceLocator;
 import jdk.vm.ci.services.Services;
+import sun.misc.Unsafe;
 import sun.misc.VM;
 
 /**
@@ -61,7 +67,7 @@ import sun.misc.VM;
  * {@link #runtime()}. This allows the initialization to funnel back through
  * {@link JVMCI#initialize()} without deadlocking.
  */
-public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
+public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
 
     @SuppressWarnings("try")
     static class DelayedInit {
@@ -214,7 +220,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         }
     }
 
-    public static HotSpotJVMCIBackendFactory findFactory(String architecture) {
+    static HotSpotJVMCIBackendFactory findFactory(String architecture) {
         for (HotSpotJVMCIBackendFactory factory : Services.load(HotSpotJVMCIBackendFactory.class)) {
             if (factory.getArchitecture().equalsIgnoreCase(architecture)) {
                 return factory;
@@ -240,7 +246,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
     private final JVMCICompilerFactory compilerFactory;
     private final HotSpotJVMCICompilerFactory hsCompilerFactory;
     private volatile JVMCICompiler compiler;
-    protected final HotSpotJVMCIMetaAccessContext metaAccessContext;
+    final HotSpotJVMCIMetaAccessContext metaAccessContext;
 
     /**
      * Stores the result of {@link HotSpotJVMCICompilerFactory#getCompilationLevelAdjustment} so
@@ -262,12 +268,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         }
         return vmEventListeners;
     }
-
-    /**
-     * Stores the result of {@link HotSpotJVMCICompilerFactory#getTrivialPrefixes()} so that it can
-     * be read from the VM.
-     */
-    @SuppressWarnings("unused") private final String[] trivialPrefixes;
 
     @SuppressWarnings("try")
     private HotSpotJVMCIRuntime() {
@@ -294,7 +294,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory();
         if (compilerFactory instanceof HotSpotJVMCICompilerFactory) {
             hsCompilerFactory = (HotSpotJVMCICompilerFactory) compilerFactory;
-            trivialPrefixes = hsCompilerFactory.getTrivialPrefixes();
             switch (hsCompilerFactory.getCompilationLevelAdjustment()) {
                 case None:
                     compilationLevelAdjustment = config.compLevelAdjustmentNone;
@@ -311,7 +310,6 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
             }
         } else {
             hsCompilerFactory = null;
-            trivialPrefixes = null;
             compilationLevelAdjustment = config.compLevelAdjustmentNone;
         }
 
@@ -334,12 +332,10 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         return backend;
     }
 
-    @Override
-    public ResolvedJavaType fromClass(Class<?> javaClass) {
+    ResolvedJavaType fromClass(Class<?> javaClass) {
         return metaAccessContext.fromClass(javaClass);
     }
 
-    @Override
     public HotSpotVMConfigStore getConfigStore() {
         return configStore;
     }
@@ -350,6 +346,74 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
 
     CompilerToVM getCompilerToVM() {
         return compilerToVm;
+    }
+
+    // Non-volatile since multi-initialization is harmless
+    private Predicate<ResolvedJavaType> intrinsificationTrustPredicate;
+
+    /**
+     * Gets a predicate that determines if a given type can be considered trusted for the purpose of
+     * intrinsifying methods it declares.
+     *
+     * @param compilerLeafClasses classes in the leaves of the module graph comprising the JVMCI
+     *            compiler.
+     */
+    public Predicate<ResolvedJavaType> getIntrinsificationTrustPredicate(Class<?>... compilerLeafClasses) {
+        if (intrinsificationTrustPredicate == null) {
+            intrinsificationTrustPredicate = new Predicate<ResolvedJavaType>() {
+                @Override
+                public boolean test(ResolvedJavaType type) {
+                    if (type instanceof HotSpotResolvedJavaType) {
+                        Class<?> mirror = getMirror((HotSpotResolvedJavaType) type);
+                        ClassLoader cl = mirror.getClassLoader();
+                        return cl == null || getTrustedLoaders().contains(cl);
+                    } else {
+                        return false;
+                    }
+                }
+
+                // Non-volatile since initialization is idempotent
+                private Set<ClassLoader> trustedLoaders;
+
+                private Set<ClassLoader> getTrustedLoaders() {
+                    Set<ClassLoader> loaders = trustedLoaders;
+                    if (loaders == null) {
+                        loaders = new HashSet<>();
+                        try {
+                            Object launcher = Class.forName("sun.misc.Launcher").getMethod("getLauncher").invoke(null);
+                            ClassLoader appLoader = (ClassLoader) launcher.getClass().getMethod("getClassLoader").invoke(launcher);
+                            ClassLoader extLoader = appLoader.getParent();
+                            assert extLoader.getClass().getName().equals("sun.misc.Launcher$ExtClassLoader") : extLoader;
+                            loaders.add(extLoader);
+                        } catch (Exception e) {
+                            throw new JVMCIError(e);
+                        }
+                        for (Class<?> compilerLeafClass : compilerLeafClasses) {
+                            ClassLoader cl = compilerLeafClass.getClassLoader();
+                            while (cl != null) {
+                                loaders.add(cl);
+                                cl = cl.getParent();
+                            }
+                        }
+                        trustedLoaders = loaders;
+                    }
+                    return loaders;
+                }
+            };
+        }
+        return intrinsificationTrustPredicate;
+    }
+
+    /**
+     * Get the {@link Class} corresponding to {@code type}.
+     *
+     * @param type the type for which a {@link Class} is requested
+     * @return the original Java class corresponding to {@code type} or {@code null} if this runtime
+     *         does not support mapping {@link ResolvedJavaType} instances to {@link Class}
+     *         instances
+     */
+    public Class<?> getMirror(ResolvedJavaType type) {
+        return ((HotSpotResolvedJavaType) type).mirror();
     }
 
     @Override
@@ -364,7 +428,19 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         return compiler;
     }
 
-    @Override
+    /**
+     * Converts a name to a Java type. This method attempts to resolve {@code name} to a
+     * {@link ResolvedJavaType}.
+     *
+     * @param name a well formed Java type in {@linkplain JavaType#getName() internal} format
+     * @param accessingType the context of resolution which must be non-null
+     * @param resolve specifies whether resolution failure results in an unresolved type being
+     *            return or a {@link LinkageError} being thrown
+     * @return a Java type for {@code name} which is guaranteed to be of type
+     *         {@link ResolvedJavaType} if {@code resolve == true}
+     * @throws LinkageError if {@code resolve == true} and the resolution failed
+     * @throws NullPointerException if {@code accessingClass} is {@code null}
+     */
     public JavaType lookupType(String name, HotSpotResolvedObjectType accessingType, boolean resolve) {
         Objects.requireNonNull(accessingType, "cannot resolve type without an accessing class");
         // If the name represents a primitive type we can short-circuit the lookup.
@@ -380,7 +456,7 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
 
             if (klass == null) {
                 assert resolve == false;
-                return HotSpotUnresolvedJavaType.create(this, name);
+                return UnresolvedJavaType.create(name);
             }
             return klass;
         } catch (ClassNotFoundException e) {
@@ -501,7 +577,9 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         }
     }
 
-    @Override
+    /**
+     * Gets an output stream that writes to HotSpot's {@code tty} stream.
+     */
     public OutputStream getLogStream() {
         return new OutputStream() {
 
@@ -529,7 +607,14 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         };
     }
 
-    @Override
+    /**
+     * Gets an output stream that writes to HotSpot's {@code CompileLog} stream. The stream can only
+     * be used by the thread that created it and should be closed when writing is completed. Writing
+     * to the stream from a different thread than the creator will end up writing to that threads
+     * log or possibly throwing an @{link IllegalArgumentException} if there is no log.
+     *
+     * @return the stream or {@code null} if the current thread doesn't have a CompileLog.
+     */
     public OutputStream getCompileLogStream() {
         try {
             /*
@@ -568,6 +653,68 @@ public final class HotSpotJVMCIRuntime implements HotSpotJVMCIRuntimeProvider {
         @Override
         public void flush() throws IOException {
             compilerToVm.flushCompileLogOutput();
+        }
+    }
+
+    /**
+     * The offset from the origin of an array to the first element.
+     *
+     * @return the offset in bytes
+     */
+    public int getArrayBaseOffset(JavaKind kind) {
+        switch (kind) {
+            case Boolean:
+                return Unsafe.ARRAY_BOOLEAN_BASE_OFFSET;
+            case Byte:
+                return Unsafe.ARRAY_BYTE_BASE_OFFSET;
+            case Char:
+                return Unsafe.ARRAY_CHAR_BASE_OFFSET;
+            case Short:
+                return Unsafe.ARRAY_SHORT_BASE_OFFSET;
+            case Int:
+                return Unsafe.ARRAY_INT_BASE_OFFSET;
+            case Long:
+                return Unsafe.ARRAY_LONG_BASE_OFFSET;
+            case Float:
+                return Unsafe.ARRAY_FLOAT_BASE_OFFSET;
+            case Double:
+                return Unsafe.ARRAY_DOUBLE_BASE_OFFSET;
+            case Object:
+                return Unsafe.ARRAY_OBJECT_BASE_OFFSET;
+            default:
+                throw new JVMCIError("%s", kind);
+        }
+
+    }
+
+    /**
+     * The scale used for the index when accessing elements of an array of this kind.
+     *
+     * @return the scale in order to convert the index into a byte offset
+     */
+    public int getArrayIndexScale(JavaKind kind) {
+        switch (kind) {
+            case Boolean:
+                return Unsafe.ARRAY_BOOLEAN_INDEX_SCALE;
+            case Byte:
+                return Unsafe.ARRAY_BYTE_INDEX_SCALE;
+            case Char:
+                return Unsafe.ARRAY_CHAR_INDEX_SCALE;
+            case Short:
+                return Unsafe.ARRAY_SHORT_INDEX_SCALE;
+            case Int:
+                return Unsafe.ARRAY_INT_INDEX_SCALE;
+            case Long:
+                return Unsafe.ARRAY_LONG_INDEX_SCALE;
+            case Float:
+                return Unsafe.ARRAY_FLOAT_INDEX_SCALE;
+            case Double:
+                return Unsafe.ARRAY_DOUBLE_INDEX_SCALE;
+            case Object:
+                return Unsafe.ARRAY_OBJECT_INDEX_SCALE;
+            default:
+                throw new JVMCIError("%s", kind);
+
         }
     }
 }
