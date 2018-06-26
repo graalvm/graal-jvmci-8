@@ -884,7 +884,13 @@ enum JavaThreadState {
 // Handy constants for deciding which compiler mode to use.
 enum MethodCompilation {
   InvocationEntryBci = -1,     // i.e., not a on-stack replacement compilation
-  InvalidOSREntryBci = -2
+  BeforeBci            = InvocationEntryBci,
+  AfterBci             = -2,
+  UnwindBci            = -3,
+  AfterExceptionBci    = -4,
+  UnknownBci           = -5,
+  InvalidFrameStateBci = -6,
+  InvalidOSREntryBci   = -7
 };
 
 // Enumeration to distinguish tiers of compilation
