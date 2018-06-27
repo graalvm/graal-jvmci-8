@@ -82,9 +82,6 @@ public class HotSpotSpeculationLog implements SpeculationLog {
 
     @Override
     public synchronized Speculation speculate(SpeculationReason reason) {
-        if (!maySpeculate(reason)) {
-            throw new IllegalArgumentException("Cannot make speculation with reason " + reason + " as it is known to fail");
-        }
         if (speculations == null) {
             speculations = new HashMap<>();
         }

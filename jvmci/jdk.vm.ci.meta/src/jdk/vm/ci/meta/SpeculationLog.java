@@ -78,12 +78,15 @@ public interface SpeculationLog {
      * Registers a speculation performed by the compiler. The compiler must guard every call to this
      * method for a specific reason with a call to {@link #maySpeculate(SpeculationReason)}.
      *
+     * This API is subject to a benign race where a during the course of a compilation another
+     * thread might fail a speculation such that {@link #maySpeculate(SpeculationReason)} will
+     * return false but an earlier call returned true. This method will still return a working
+     * {@link Speculation} in that case but the compile will eventually be invalidated and the
+     * compile attempted again without the now invalid speculation.
+     *
      * @param reason an object representing the reason for the speculation
      * @return a compiler constant encapsulating the provided reason. It is usually passed as an
      *         argument to the deoptimization function.
-     * @throws IllegalArgumentException if {@code reason} cannot be speculated on (i.e., a call to
-     *             {@link #maySpeculate(SpeculationReason)} with {@code reason} returns
-     *             {@code false}
      */
     Speculation speculate(SpeculationReason reason);
 
@@ -94,5 +97,10 @@ public interface SpeculationLog {
      */
     boolean hasSpeculations();
 
+    /**
+     * Given a {@link JavaConstant} previously returned from
+     * {@link MetaAccessProvider#encodeSpeculation(Speculation)} return the original
+     * {@link Speculation} object.
+     */
     Speculation lookupSpeculation(JavaConstant constant);
 }
