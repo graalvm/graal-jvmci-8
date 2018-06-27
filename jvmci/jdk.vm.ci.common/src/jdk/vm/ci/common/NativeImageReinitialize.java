@@ -28,9 +28,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Denotes a field that should have the default value for its type in an ahead of time image.
+ * Denotes a field that should have the default value for its type when building a native image.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.FIELD})
-public @interface AOTReinitialize {
+public @interface NativeImageReinitialize {
 }
