@@ -946,8 +946,10 @@ void JVMCIRuntime::exit_on_pending_exception(Handle exception, const char* messa
     tty->cr();
     java_lang_Throwable::print_stack_trace(exception(), tty);
   } else {
-    // Allow error reporting thread to print the stack trace.
-    os::sleep(THREAD, 200, false);
+    // Allow error reporting thread to print the stack trace.  Windows
+    // doesn't allow uninterruptible wait for JavaThreads
+    const bool interruptible = true;
+    os::sleep(THREAD, 200, interruptible);
   }
 
   before_exit(THREAD);
