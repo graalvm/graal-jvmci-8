@@ -717,4 +717,56 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
 
         }
     }
+
+    /**
+     * Links each native method in {@code clazz} to an implementation in the JVMCI SVM library.
+     * <p>
+     * A use case for this is a JVMCI compiler implementation that offers an API to Java code
+     * executing in HotSpot to exercise functionality (mostly) in the JVMCI SVM library. For
+     * example:
+     *
+     * <pre>
+     * package com.jcompile;
+     *
+     * import java.lang.reflect.Method;
+     *
+     * public static class JCompile {
+     *     static {
+     *         HotSpotJVMCIRuntime.runtime().registerNativeMethods(JCompile.class);
+     *     }
+     *     public static boolean compile(Method method, String[] options) {
+     *         // Convert to simpler data types for passing/serializing across native interface
+     *         long metaspaceMethodHandle = getHandle(method);
+     *         char[] opts = convertToCharArray(options);
+     *         return compile(metaspaceMethodHandle, opts);
+     *     }
+     *     private static native boolean compile0(long metaspaceMethodHandle, char[] options);
+     *
+     *     private static long getHandle(Method method) { ... }
+     *     private static char[] convertToCharArray(String[] a) { ... }
+     * }
+     * </pre>
+     *
+     * The implementation of the native {@code JCompile.compile0} method would be in the SVM library
+     * that contains the bulk of the JVMCI compiler. The {@code JCompile.compile0} implementation
+     * will be exported as the following JNI-compliant symbol:
+     *
+     * <pre>
+     * Java_com_jcompile_JCompile_compile0
+     * </pre>
+     *
+     * How the JVMCI compiler SVM library is built is outside the scope of this document.
+     *
+     * @see "https://docs.oracle.com/javase/10/docs/specs/jni/design.html#resolving-native-method-names"
+     *
+     * @throws NullPointerException if {@code clazz == null}
+     * @throws IllegalArgumentException if the current execution context is SVM or if {@code clazz}
+     *             is {@link Class#isPrimitive()}
+     * @throws UnsatisfiedLinkError if the JVMCI SVM library is not available, a native method in
+     *             {@code clazz} is already linked or the SVM JVMCI library does not contain a
+     *             JNI-compliant symbol for a native method in {@code clazz}
+     */
+    public void registerNativeMethods(Class<?> clazz) {
+        throw new UnsatisfiedLinkError("SVM library is not available");
+    }
 }
