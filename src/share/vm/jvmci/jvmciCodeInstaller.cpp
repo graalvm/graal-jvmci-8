@@ -779,8 +779,10 @@ void CodeInstaller::assumption_ConcreteMethod(Handle assumption) {
 }
 
 void CodeInstaller::assumption_CallSiteTargetValue(Handle assumption) {
-  Handle callSite = Assumptions_CallSiteTargetValue::callSite(assumption());
-  Handle methodHandle = Assumptions_CallSiteTargetValue::methodHandle(assumption());
+  Handle callSiteConstant = Assumptions_CallSiteTargetValue::callSite(assumption());
+  Handle callSite = HotSpotObjectConstantImpl::object(callSiteConstant());
+  Handle methodHandleConstant = Assumptions_CallSiteTargetValue::methodHandle(assumption());
+  Handle methodHandle = HotSpotObjectConstantImpl::object(methodHandleConstant());
 
   _dependencies->assert_call_site_target_value(callSite(), methodHandle());
 }

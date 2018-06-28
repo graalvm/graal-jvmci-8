@@ -114,36 +114,8 @@ final class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
     }
 
     @Override
-    public JavaConstant getClassLoader() {
-        if (object instanceof Class) {
-            /*
-             * This is an intrinsic for getClassLoader0, which occurs after any security checks. We
-             * can't call that directly so just call getClassLoader.
-             */
-            return HotSpotObjectConstantImpl.forObject(((Class<?>) object).getClassLoader());
-        }
-        return null;
-    }
-
-    @Override
     public int getIdentityHashCode() {
         return System.identityHashCode(object);
-    }
-
-    @Override
-    public JavaConstant getComponentType() {
-        if (object instanceof Class) {
-            return HotSpotObjectConstantImpl.forObject(((Class<?>) object).getComponentType());
-        }
-        return null;
-    }
-
-    @Override
-    public JavaConstant getSuperclass() {
-        if (object instanceof Class) {
-            return HotSpotObjectConstantImpl.forObject(((Class<?>) object).getSuperclass());
-        }
-        return null;
     }
 
     @Override
@@ -151,13 +123,15 @@ final class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
         if (object instanceof CallSite) {
             CallSite callSite = (CallSite) object;
             MethodHandle target = callSite.getTarget();
+            JavaConstant targetConstant = HotSpotObjectConstantImpl.forObject(target);
             if (!(callSite instanceof ConstantCallSite)) {
                 if (assumptions == null) {
                     return null;
                 }
-                assumptions.record(new Assumptions.CallSiteTargetValue(callSite, target));
+                assumptions.record(new Assumptions.CallSiteTargetValue(this, targetConstant));
             }
-            return HotSpotObjectConstantImpl.forObject(target);
+
+            return targetConstant;
         }
         return null;
     }

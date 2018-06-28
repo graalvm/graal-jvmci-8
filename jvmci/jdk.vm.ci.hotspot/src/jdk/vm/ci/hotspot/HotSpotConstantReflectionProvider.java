@@ -40,11 +40,11 @@ import jdk.vm.ci.meta.ResolvedJavaType;
  */
 public class HotSpotConstantReflectionProvider implements ConstantReflectionProvider {
 
-    protected final HotSpotJVMCIRuntimeProvider runtime;
+    protected final HotSpotJVMCIRuntime runtime;
     protected final HotSpotMethodHandleAccessProvider methodHandleAccess;
     private final HotSpotMemoryAccessProviderImpl memoryAccess;
 
-    public HotSpotConstantReflectionProvider(HotSpotJVMCIRuntimeProvider runtime) {
+    public HotSpotConstantReflectionProvider(HotSpotJVMCIRuntime runtime) {
         this.runtime = runtime;
         this.methodHandleAccess = new HotSpotMethodHandleAccessProvider(this);
         this.memoryAccess = new HotSpotMemoryAccessProviderImpl(runtime);
@@ -205,7 +205,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         } else {
             if (receiver.isNonNull()) {
                 Object object = ((HotSpotObjectConstantImpl) receiver).object();
-                if (hotspotField.isInObject(object)) {
+                if (hotspotField.isInObject(receiver)) {
                     return memoryAccess.readFieldValue(hotspotField, object);
                 }
             }

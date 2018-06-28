@@ -173,7 +173,7 @@ public class HotSpotCompiledCode implements CompiledCode {
         v.verifyLayout(new VirtualObject.LayoutVerifier() {
             @Override
             public int getOffset(ResolvedJavaField field) {
-                return ((HotSpotResolvedJavaField) field).offset();
+                return ((HotSpotResolvedJavaField) field).getOffset();
             }
         });
     }

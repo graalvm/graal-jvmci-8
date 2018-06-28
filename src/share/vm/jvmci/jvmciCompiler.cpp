@@ -184,13 +184,6 @@ void JVMCICompiler::compile_method(ciEnv* env, ciMethod* target, int entry_bci) 
   ShouldNotReachHere();
 }
 
-bool JVMCICompiler::is_trivial(Method* method) {
-  if (_bootstrapping) {
-    return false;
-  }
-  return JVMCIRuntime::treat_as_trivial(method);
-}
-
 // Print compilation timers and statistics
 void JVMCICompiler::print_timers() {
   print_compilation_timers();

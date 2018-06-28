@@ -144,8 +144,8 @@ class JVMCIJavaClasses : AllStatic {
     oop_field(Assumptions_ConcreteMethod, impl, "Ljdk/vm/ci/meta/ResolvedJavaMethod;")                                                                         \
   end_class                                                                                                                                                    \
   start_class(Assumptions_CallSiteTargetValue)                                                                                                                 \
-    oop_field(Assumptions_CallSiteTargetValue, callSite, "Ljava/lang/invoke/CallSite;")                                                                        \
-    oop_field(Assumptions_CallSiteTargetValue, methodHandle, "Ljava/lang/invoke/MethodHandle;")                                                                \
+    oop_field(Assumptions_CallSiteTargetValue, callSite, "Ljdk/vm/ci/meta/JavaConstant;")                                                                      \
+    oop_field(Assumptions_CallSiteTargetValue, methodHandle, "Ljdk/vm/ci/meta/JavaConstant;")                                                                  \
   end_class                                                                                                                                                    \
   start_class(site_Site)                                                                                                                                       \
     int_field(site_Site, pcOffset)                                                                                                                             \
@@ -283,7 +283,7 @@ class JVMCIJavaClasses : AllStatic {
     boolean_field(StackLockValue, eliminated)                                                                                                                  \
   end_class                                                                                                                                                    \
   start_class(HotSpotSpeculationLog)                                                                                                                           \
-    oop_field(HotSpotSpeculationLog, lastFailed, "Ljava/lang/Object;")                                                                                         \
+    long_field(HotSpotSpeculationLog, lastFailed)                                                                                                              \
   end_class                                                                                                                                                    \
   start_class(HotSpotStackFrameReference)                                                                                                                      \
     oop_field(HotSpotStackFrameReference, compilerToVM, "Ljdk/vm/ci/hotspot/CompilerToVM;")                                                                    \
@@ -299,7 +299,6 @@ class JVMCIJavaClasses : AllStatic {
     long_field(HotSpotConstantPool, metaspaceConstantPool)                                                                                                     \
   end_class                                                                                                                                                    \
   start_class(HotSpotJVMCIRuntime)                                                                                                                             \
-    objArrayOop_field(HotSpotJVMCIRuntime, trivialPrefixes, "[Ljava/lang/String;")                                                                             \
     int_field(HotSpotJVMCIRuntime, compilationLevelAdjustment)                                                                                                 \
   end_class                                                                                                                                                    \
   /* end*/

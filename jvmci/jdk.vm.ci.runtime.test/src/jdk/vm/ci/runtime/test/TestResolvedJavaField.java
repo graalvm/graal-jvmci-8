@@ -109,6 +109,7 @@ public class TestResolvedJavaField extends FieldUniverse {
     // @formatter:off
     private static final String[] untestedApiMethods = {
         "getDeclaringClass",
+        "getOffset",
         "isInternal",
         "isFinal"
     };

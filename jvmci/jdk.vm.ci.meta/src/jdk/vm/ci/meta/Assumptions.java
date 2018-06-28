@@ -24,8 +24,6 @@
  */
 package jdk.vm.ci.meta;
 
-import java.lang.invoke.CallSite;
-import java.lang.invoke.MethodHandle;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -276,10 +274,10 @@ public final class Assumptions implements Iterable<Assumptions.Assumption> {
      */
     public static final class CallSiteTargetValue extends Assumption {
 
-        public final CallSite callSite;
-        public final MethodHandle methodHandle;
+        public final JavaConstant callSite;
+        public final JavaConstant methodHandle;
 
-        public CallSiteTargetValue(CallSite callSite, MethodHandle methodHandle) {
+        public CallSiteTargetValue(JavaConstant callSite, JavaConstant methodHandle) {
             this.callSite = callSite;
             this.methodHandle = methodHandle;
         }

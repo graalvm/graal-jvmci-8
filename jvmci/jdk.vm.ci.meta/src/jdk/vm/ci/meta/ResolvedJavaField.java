@@ -42,6 +42,8 @@ public interface ResolvedJavaField extends JavaField, ModifiersProvider, Annotat
     @Override
     int getModifiers();
 
+    int getOffset();
+
     default boolean isFinal() {
         return ModifiersProvider.super.isFinalFlagSet();
     }
