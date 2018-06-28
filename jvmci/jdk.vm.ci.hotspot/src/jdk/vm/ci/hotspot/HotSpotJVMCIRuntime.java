@@ -364,7 +364,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                 @Override
                 public boolean test(ResolvedJavaType type) {
                     if (type instanceof HotSpotResolvedJavaType) {
-                        Class<?> mirror = getMirror((HotSpotResolvedJavaType) type);
+                        Class<?> mirror = getMirror(type);
                         ClassLoader cl = mirror.getClassLoader();
                         return cl == null || getTrustedLoaders().contains(cl);
                     } else {
@@ -412,6 +412,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *         does not support mapping {@link ResolvedJavaType} instances to {@link Class}
      *         instances
      */
+    @SuppressWarnings("static-method")
     public Class<?> getMirror(ResolvedJavaType type) {
         return ((HotSpotResolvedJavaType) type).mirror();
     }
@@ -661,6 +662,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *
      * @return the offset in bytes
      */
+    @SuppressWarnings("static-method")
     public int getArrayBaseOffset(JavaKind kind) {
         switch (kind) {
             case Boolean:
@@ -692,6 +694,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *
      * @return the scale in order to convert the index into a byte offset
      */
+    @SuppressWarnings("static-method")
     public int getArrayIndexScale(JavaKind kind) {
         switch (kind) {
             case Boolean:
@@ -766,6 +769,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *             {@code clazz} is already linked or the SVM JVMCI library does not contain a
      *             JNI-compliant symbol for a native method in {@code clazz}
      */
+    @SuppressWarnings({"static-method", "unused"})
     public void registerNativeMethods(Class<?> clazz) {
         throw new UnsatisfiedLinkError("SVM library is not available");
     }
