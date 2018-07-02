@@ -6,6 +6,23 @@ CLSS public abstract interface java.io.Serializable
 CLSS public abstract interface java.lang.Comparable<%0 extends java.lang.Object>
 meth public abstract int compareTo({java.lang.Comparable%0})
 
+CLSS public abstract java.lang.Enum<%0 extends java.lang.Enum<{java.lang.Enum%0}>>
+cons protected init(java.lang.String,int)
+intf java.io.Serializable
+intf java.lang.Comparable<{java.lang.Enum%0}>
+meth protected final java.lang.Object clone() throws java.lang.CloneNotSupportedException
+meth protected final void finalize()
+meth public final boolean equals(java.lang.Object)
+meth public final int compareTo({java.lang.Enum%0})
+meth public final int hashCode()
+meth public final int ordinal()
+meth public final java.lang.Class<{java.lang.Enum%0}> getDeclaringClass()
+meth public final java.lang.String name()
+meth public java.lang.String toString()
+meth public static <%0 extends java.lang.Enum<{%%0}>> {%%0} valueOf(java.lang.Class<{%%0}>,java.lang.String)
+supr java.lang.Object
+hfds name,ordinal
+
 CLSS public java.lang.Exception
 cons protected init(java.lang.String,java.lang.Throwable,boolean,boolean)
 cons public init()
@@ -475,6 +492,108 @@ CLSS public abstract interface static jdk.vm.ci.code.VirtualObject$LayoutVerifie
  outer jdk.vm.ci.code.VirtualObject
 meth public abstract int getOffset(jdk.vm.ci.meta.ResolvedJavaField)
 meth public jdk.vm.ci.meta.JavaKind getStorageKind(jdk.vm.ci.meta.ResolvedJavaField)
+
+CLSS public final jdk.vm.ci.code.site.Call
+cons public init(jdk.vm.ci.meta.InvokeTarget,int,int,boolean,jdk.vm.ci.code.DebugInfo)
+fld public final boolean direct
+fld public final int size
+fld public final jdk.vm.ci.meta.InvokeTarget target
+meth public boolean equals(java.lang.Object)
+meth public java.lang.String toString()
+supr jdk.vm.ci.code.site.Infopoint
+
+CLSS public final jdk.vm.ci.code.site.ConstantReference
+cons public init(jdk.vm.ci.meta.VMConstant)
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.VMConstant getConstant()
+supr jdk.vm.ci.code.site.Reference
+hfds constant
+
+CLSS public final jdk.vm.ci.code.site.DataPatch
+cons public init(int,jdk.vm.ci.code.site.Reference)
+cons public init(int,jdk.vm.ci.code.site.Reference,java.lang.Object)
+fld public java.lang.Object note
+fld public jdk.vm.ci.code.site.Reference reference
+meth public boolean equals(java.lang.Object)
+meth public java.lang.String toString()
+supr jdk.vm.ci.code.site.Site
+
+CLSS public final jdk.vm.ci.code.site.DataSectionReference
+cons public init()
+meth public boolean equals(java.lang.Object)
+meth public int getOffset()
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public void setOffset(int)
+supr jdk.vm.ci.code.site.Reference
+hfds initialized,offset
+
+CLSS public final jdk.vm.ci.code.site.ExceptionHandler
+cons public init(int,int)
+fld public final int handlerPos
+meth public boolean equals(java.lang.Object)
+meth public java.lang.String toString()
+supr jdk.vm.ci.code.site.Site
+
+CLSS public jdk.vm.ci.code.site.Infopoint
+cons public init(int,jdk.vm.ci.code.DebugInfo,jdk.vm.ci.code.site.InfopointReason)
+fld public final jdk.vm.ci.code.DebugInfo debugInfo
+fld public final jdk.vm.ci.code.site.InfopointReason reason
+intf java.lang.Comparable<jdk.vm.ci.code.site.Infopoint>
+meth protected static void appendDebugInfo(java.lang.StringBuilder,jdk.vm.ci.code.DebugInfo)
+meth public boolean equals(java.lang.Object)
+meth public int compareTo(jdk.vm.ci.code.site.Infopoint)
+meth public java.lang.String toString()
+supr jdk.vm.ci.code.site.Site
+
+CLSS public final !enum jdk.vm.ci.code.site.InfopointReason
+fld public final static jdk.vm.ci.code.site.InfopointReason BYTECODE_POSITION
+fld public final static jdk.vm.ci.code.site.InfopointReason CALL
+fld public final static jdk.vm.ci.code.site.InfopointReason IMPLICIT_EXCEPTION
+fld public final static jdk.vm.ci.code.site.InfopointReason METHOD_END
+fld public final static jdk.vm.ci.code.site.InfopointReason METHOD_START
+fld public final static jdk.vm.ci.code.site.InfopointReason SAFEPOINT
+meth public static jdk.vm.ci.code.site.InfopointReason valueOf(java.lang.String)
+meth public static jdk.vm.ci.code.site.InfopointReason[] values()
+supr java.lang.Enum<jdk.vm.ci.code.site.InfopointReason>
+
+CLSS public final jdk.vm.ci.code.site.Mark
+cons public init(int,java.lang.Object)
+fld public final java.lang.Object id
+meth public boolean equals(java.lang.Object)
+meth public java.lang.String toString()
+supr jdk.vm.ci.code.site.Site
+
+CLSS public abstract jdk.vm.ci.code.site.Reference
+cons public init()
+meth public abstract boolean equals(java.lang.Object)
+meth public abstract int hashCode()
+supr java.lang.Object
+
+CLSS public abstract jdk.vm.ci.code.site.Site
+cons public init(int)
+fld public final int pcOffset
+meth public abstract boolean equals(java.lang.Object)
+meth public final int hashCode()
+meth public java.lang.String toString()
+supr java.lang.Object
+
+CLSS public abstract interface jdk.vm.ci.code.stack.InspectedFrame
+meth public abstract boolean hasVirtualObjects()
+meth public abstract boolean isMethod(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public abstract boolean isVirtual(int)
+meth public abstract int getBytecodeIndex()
+meth public abstract java.lang.Object getLocal(int)
+meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+meth public abstract void materializeVirtualObjects(boolean)
+
+CLSS public abstract interface jdk.vm.ci.code.stack.InspectedFrameVisitor<%0 extends java.lang.Object>
+meth public abstract {jdk.vm.ci.code.stack.InspectedFrameVisitor%0} visitFrame(jdk.vm.ci.code.stack.InspectedFrame)
+
+CLSS public abstract interface jdk.vm.ci.code.stack.StackIntrospection
+meth public abstract <%0 extends java.lang.Object> {%%0} iterateFrames(jdk.vm.ci.meta.ResolvedJavaMethod[],jdk.vm.ci.meta.ResolvedJavaMethod[],int,jdk.vm.ci.code.stack.InspectedFrameVisitor<{%%0}>)
 
 CLSS public abstract jdk.vm.ci.meta.AllocatableValue
 cons public init(jdk.vm.ci.meta.ValueKind<?>)

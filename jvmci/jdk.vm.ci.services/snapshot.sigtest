@@ -59,6 +59,8 @@ meth public static <%0 extends java.lang.Object> java.util.List<{%%0}> getProvid
 supr java.lang.Object
 
 CLSS public final jdk.vm.ci.services.Services
+fld public final static boolean IS_BUILDING_NATIVE_IMAGE
+fld public final static boolean IS_IN_NATIVE_IMAGE
 meth public static <%0 extends java.lang.Object> java.lang.Iterable<{%%0}> load(java.lang.Class<{%%0}>)
 meth public static <%0 extends java.lang.Object> {%%0} loadSingle(java.lang.Class<{%%0}>,boolean)
 meth public static java.util.Map<java.lang.String,java.lang.String> getSavedProperties()
