@@ -125,9 +125,9 @@ hfds EMPTY,assumptions,result
 
 CLSS public final static jdk.vm.ci.meta.Assumptions$CallSiteTargetValue
  outer jdk.vm.ci.meta.Assumptions
-cons public init(java.lang.invoke.CallSite,java.lang.invoke.MethodHandle)
-fld public final java.lang.invoke.CallSite callSite
-fld public final java.lang.invoke.MethodHandle methodHandle
+cons public init(jdk.vm.ci.meta.JavaConstant,jdk.vm.ci.meta.JavaConstant)
+fld public final jdk.vm.ci.meta.JavaConstant callSite
+fld public final jdk.vm.ci.meta.JavaConstant methodHandle
 meth public boolean equals(java.lang.Object)
 meth public int hashCode()
 meth public java.lang.String toString()
@@ -340,6 +340,7 @@ meth public boolean isPrimitive()
 meth public boolean isUnsigned()
 meth public boolean needsTwoSlots()
 meth public char getTypeChar()
+meth public int getBasicType()
 meth public int getBitCount()
 meth public int getByteCount()
 meth public int getSlotCount()
@@ -358,7 +359,7 @@ meth public static jdk.vm.ci.meta.JavaKind fromWordSize(int)
 meth public static jdk.vm.ci.meta.JavaKind valueOf(java.lang.String)
 meth public static jdk.vm.ci.meta.JavaKind[] values()
 supr java.lang.Enum<jdk.vm.ci.meta.JavaKind>
-hfds MAX_FORMAT_ARRAY_LENGTH,boxedJavaClass,isStackInt,javaName,primitiveJavaClass,slotCount,typeChar
+hfds MAX_FORMAT_ARRAY_LENGTH,basicType,boxedJavaClass,isStackInt,javaName,primitiveJavaClass,slotCount,typeChar
 
 CLSS public abstract interface static jdk.vm.ci.meta.JavaKind$FormatWithToString
  outer jdk.vm.ci.meta.JavaKind
@@ -454,14 +455,18 @@ meth public abstract jdk.vm.ci.meta.JavaConstant readPrimitiveConstant(jdk.vm.ci
 
 CLSS public abstract interface jdk.vm.ci.meta.MetaAccessProvider
 meth public abstract int decodeDebugId(jdk.vm.ci.meta.JavaConstant)
+meth public abstract int getArrayBaseOffset(jdk.vm.ci.meta.JavaKind)
+meth public abstract int getArrayIndexScale(jdk.vm.ci.meta.JavaKind)
 meth public abstract jdk.vm.ci.meta.DeoptimizationAction decodeDeoptAction(jdk.vm.ci.meta.JavaConstant)
 meth public abstract jdk.vm.ci.meta.DeoptimizationReason decodeDeoptReason(jdk.vm.ci.meta.JavaConstant)
 meth public abstract jdk.vm.ci.meta.JavaConstant encodeDeoptActionAndReason(jdk.vm.ci.meta.DeoptimizationAction,jdk.vm.ci.meta.DeoptimizationReason,int)
+meth public abstract jdk.vm.ci.meta.JavaConstant encodeSpeculation(jdk.vm.ci.meta.SpeculationLog$Speculation)
 meth public abstract jdk.vm.ci.meta.ResolvedJavaField lookupJavaField(java.lang.reflect.Field)
 meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod lookupJavaMethod(java.lang.reflect.Executable)
 meth public abstract jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(java.lang.Class<?>)
 meth public abstract jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(jdk.vm.ci.meta.JavaConstant)
 meth public abstract jdk.vm.ci.meta.Signature parseMethodDescriptor(java.lang.String)
+meth public abstract jdk.vm.ci.meta.SpeculationLog$Speculation decodeSpeculation(jdk.vm.ci.meta.JavaConstant,jdk.vm.ci.meta.SpeculationLog)
 meth public abstract long getMemorySize(jdk.vm.ci.meta.JavaConstant)
 meth public jdk.vm.ci.meta.ResolvedJavaType[] lookupJavaTypes(java.lang.Class<?>[])
 
@@ -578,6 +583,7 @@ intf jdk.vm.ci.meta.ModifiersProvider
 meth public abstract boolean isInternal()
 meth public abstract boolean isSynthetic()
 meth public abstract int getModifiers()
+meth public abstract int getOffset()
 meth public abstract jdk.vm.ci.meta.ResolvedJavaType getDeclaringClass()
 meth public boolean isFinal()
 
@@ -587,6 +593,7 @@ intf java.lang.reflect.AnnotatedElement
 intf jdk.vm.ci.meta.InvokeTarget
 intf jdk.vm.ci.meta.JavaMethod
 intf jdk.vm.ci.meta.ModifiersProvider
+meth public !varargs jdk.vm.ci.meta.JavaConstant invoke(jdk.vm.ci.meta.JavaConstant,jdk.vm.ci.meta.JavaConstant[]) throws java.lang.IllegalAccessException,java.lang.reflect.InvocationTargetException
 meth public <%0 extends java.lang.annotation.Annotation> {%%0} getParameterAnnotation(java.lang.Class<{%%0}>,int)
 meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getParameterAnnotations(java.lang.Class<{%%0}>)
 meth public abstract boolean canBeInlined()
@@ -652,6 +659,7 @@ intf jdk.vm.ci.meta.ModifiersProvider
 meth public abstract boolean hasFinalizer()
 meth public abstract boolean isAssignableFrom(jdk.vm.ci.meta.ResolvedJavaType)
 meth public abstract boolean isCloneableWithAllocation()
+meth public abstract boolean isEnum()
 meth public abstract boolean isInitialized()
 meth public abstract boolean isInstance(jdk.vm.ci.meta.JavaConstant)
 meth public abstract boolean isInstanceClass()
@@ -682,9 +690,11 @@ meth public abstract jdk.vm.ci.meta.ResolvedJavaType[] getInterfaces()
 meth public abstract void initialize()
 meth public boolean isJavaLangObject()
 meth public boolean isLeaf()
+meth public jdk.vm.ci.meta.ResolvedJavaField resolveField(jdk.vm.ci.meta.UnresolvedJavaField,jdk.vm.ci.meta.ResolvedJavaType)
 meth public jdk.vm.ci.meta.ResolvedJavaMethod findMethod(java.lang.String,jdk.vm.ci.meta.Signature)
 meth public jdk.vm.ci.meta.ResolvedJavaMethod resolveConcreteMethod(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.meta.ResolvedJavaType)
 meth public jdk.vm.ci.meta.ResolvedJavaType getElementalType()
+meth public jdk.vm.ci.meta.ResolvedJavaType lookupType(jdk.vm.ci.meta.UnresolvedJavaType,boolean)
 
 CLSS public abstract interface jdk.vm.ci.meta.SerializableConstant
 intf jdk.vm.ci.meta.Constant
@@ -702,11 +712,29 @@ meth public jdk.vm.ci.meta.JavaKind[] toParameterKinds(boolean)
 meth public jdk.vm.ci.meta.JavaType[] toParameterTypes(jdk.vm.ci.meta.JavaType)
 
 CLSS public abstract interface jdk.vm.ci.meta.SpeculationLog
+fld public final static jdk.vm.ci.meta.SpeculationLog$Speculation NO_SPECULATION
 innr public abstract interface static SpeculationReason
+innr public final static NoSpeculationReason
+innr public static Speculation
 meth public abstract boolean hasSpeculations()
 meth public abstract boolean maySpeculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
-meth public abstract jdk.vm.ci.meta.JavaConstant speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public abstract jdk.vm.ci.meta.SpeculationLog$Speculation lookupSpeculation(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.SpeculationLog$Speculation speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
 meth public abstract void collectFailedSpeculations()
+
+CLSS public final static jdk.vm.ci.meta.SpeculationLog$NoSpeculationReason
+ outer jdk.vm.ci.meta.SpeculationLog
+cons public init()
+intf jdk.vm.ci.meta.SpeculationLog$SpeculationReason
+supr java.lang.Object
+
+CLSS public static jdk.vm.ci.meta.SpeculationLog$Speculation
+ outer jdk.vm.ci.meta.SpeculationLog
+cons public init(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.SpeculationLog$SpeculationReason getReason()
+supr java.lang.Object
+hfds reason
 
 CLSS public abstract interface static jdk.vm.ci.meta.SpeculationLog$SpeculationReason
  outer jdk.vm.ci.meta.SpeculationLog
@@ -725,6 +753,45 @@ meth public static jdk.vm.ci.meta.TriState merge(jdk.vm.ci.meta.TriState,jdk.vm.
 meth public static jdk.vm.ci.meta.TriState valueOf(java.lang.String)
 meth public static jdk.vm.ci.meta.TriState[] values()
 supr java.lang.Enum<jdk.vm.ci.meta.TriState>
+
+CLSS public final jdk.vm.ci.meta.UnresolvedJavaField
+cons public init(jdk.vm.ci.meta.JavaType,java.lang.String,jdk.vm.ci.meta.JavaType)
+intf jdk.vm.ci.meta.JavaField
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String getName()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaType getDeclaringClass()
+meth public jdk.vm.ci.meta.JavaType getType()
+meth public jdk.vm.ci.meta.ResolvedJavaField resolve(jdk.vm.ci.meta.ResolvedJavaType)
+supr java.lang.Object
+hfds holder,name,type
+
+CLSS public final jdk.vm.ci.meta.UnresolvedJavaMethod
+cons public init(java.lang.String,jdk.vm.ci.meta.Signature,jdk.vm.ci.meta.JavaType)
+fld protected jdk.vm.ci.meta.JavaType holder
+intf jdk.vm.ci.meta.JavaMethod
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String getName()
+meth public jdk.vm.ci.meta.JavaType getDeclaringClass()
+meth public jdk.vm.ci.meta.Signature getSignature()
+supr java.lang.Object
+hfds name,signature
+
+CLSS public final jdk.vm.ci.meta.UnresolvedJavaType
+intf jdk.vm.ci.meta.JavaType
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String getName()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public jdk.vm.ci.meta.JavaType getArrayClass()
+meth public jdk.vm.ci.meta.JavaType getComponentType()
+meth public jdk.vm.ci.meta.ResolvedJavaType resolve(jdk.vm.ci.meta.ResolvedJavaType)
+meth public static jdk.vm.ci.meta.UnresolvedJavaType create(java.lang.String)
+supr java.lang.Object
+hfds name
 
 CLSS public abstract interface jdk.vm.ci.meta.VMConstant
 intf jdk.vm.ci.meta.Constant

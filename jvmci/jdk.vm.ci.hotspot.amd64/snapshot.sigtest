@@ -30,18 +30,18 @@ meth public int getMaximumFrameSize()
 
 CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory
 meth public abstract java.lang.String getArchitecture()
-meth public abstract jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.runtime.JVMCIBackend)
+meth public abstract jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime,jdk.vm.ci.runtime.JVMCIBackend)
 
 CLSS public jdk.vm.ci.hotspot.amd64.AMD64HotSpotJVMCIBackendFactory
 cons public init()
 intf jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory
-meth protected jdk.vm.ci.hotspot.HotSpotCodeCacheProvider createCodeCache(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.code.TargetDescription,jdk.vm.ci.code.RegisterConfig)
-meth protected jdk.vm.ci.hotspot.HotSpotConstantReflectionProvider createConstantReflection(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
-meth protected jdk.vm.ci.hotspot.HotSpotMetaAccessProvider createMetaAccess(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
+meth protected jdk.vm.ci.hotspot.HotSpotCodeCacheProvider createCodeCache(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime,jdk.vm.ci.code.TargetDescription,jdk.vm.ci.code.RegisterConfig)
+meth protected jdk.vm.ci.hotspot.HotSpotConstantReflectionProvider createConstantReflection(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime)
+meth protected jdk.vm.ci.hotspot.HotSpotMetaAccessProvider createMetaAccess(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime)
 meth protected jdk.vm.ci.runtime.JVMCIBackend createBackend(jdk.vm.ci.hotspot.HotSpotMetaAccessProvider,jdk.vm.ci.hotspot.HotSpotCodeCacheProvider,jdk.vm.ci.meta.ConstantReflectionProvider,jdk.vm.ci.code.stack.StackIntrospection)
 meth public java.lang.String getArchitecture()
 meth public java.lang.String toString()
-meth public jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.runtime.JVMCIBackend)
+meth public jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime,jdk.vm.ci.runtime.JVMCIBackend)
 supr java.lang.Object
 
 CLSS public jdk.vm.ci.hotspot.amd64.AMD64HotSpotRegisterConfig

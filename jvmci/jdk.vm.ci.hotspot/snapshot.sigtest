@@ -174,7 +174,7 @@ meth public static jdk.vm.ci.hotspot.HotSpotCallingConventionType[] values()
 supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotCallingConventionType>
 
 CLSS public jdk.vm.ci.hotspot.HotSpotCodeCacheProvider
-cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.code.TargetDescription,jdk.vm.ci.code.RegisterConfig)
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime,jdk.vm.ci.code.TargetDescription,jdk.vm.ci.code.RegisterConfig)
 fld protected final jdk.vm.ci.code.RegisterConfig regConfig
 fld protected final jdk.vm.ci.code.TargetDescription target
 fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime
@@ -285,8 +285,8 @@ meth public abstract jdk.vm.ci.meta.Constant compress()
 meth public abstract jdk.vm.ci.meta.Constant uncompress()
 
 CLSS public jdk.vm.ci.hotspot.HotSpotConstantReflectionProvider
-cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
-fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider runtime
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime)
+fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime
 fld protected final jdk.vm.ci.hotspot.HotSpotMethodHandleAccessProvider methodHandleAccess
 intf jdk.vm.ci.meta.ConstantReflectionProvider
 meth public java.lang.Boolean constantEquals(jdk.vm.ci.meta.Constant,jdk.vm.ci.meta.Constant)
@@ -323,15 +323,14 @@ hfds codeSize,codeStart,size
 
 CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory
 meth public abstract java.lang.String getArchitecture()
-meth public abstract jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.runtime.JVMCIBackend)
+meth public abstract jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime,jdk.vm.ci.runtime.JVMCIBackend)
 
 CLSS public abstract jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory
 cons public init()
 innr public final static !enum CompilationLevel
 innr public final static !enum CompilationLevelAdjustment
 intf jdk.vm.ci.runtime.JVMCICompilerFactory
-meth public java.lang.String[] getTrivialPrefixes()
-meth public jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel adjustCompilationLevel(java.lang.Class<?>,java.lang.String,java.lang.String,boolean,jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel)
+meth public jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel adjustCompilationLevel(java.lang.Object,java.lang.String,java.lang.String,boolean,jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevel)
 meth public jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment getCompilationLevelAdjustment()
 supr java.lang.Object
 
@@ -355,33 +354,28 @@ meth public static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLeve
 meth public static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment[] values()
 supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment>
 
-CLSS public jdk.vm.ci.hotspot.HotSpotJVMCIMetaAccessContext
-meth protected jdk.vm.ci.meta.ResolvedJavaType createClass(java.lang.Class<?>)
-meth public jdk.vm.ci.meta.ResolvedJavaType fromClass(java.lang.Class<?>)
-supr java.lang.Object
-hfds allContexts,freed,list,metadataRoots,queue,resolvedJavaType
-hcls ChunkedList
-
 CLSS public final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime
-fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIMetaAccessContext metaAccessContext
 fld protected final jdk.vm.ci.hotspot.HotSpotVMConfigStore configStore
 innr public final static !enum Option
-intf jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider
+intf jdk.vm.ci.runtime.JVMCIRuntime
+meth public !varargs java.util.function.Predicate<jdk.vm.ci.meta.ResolvedJavaType> getIntrinsificationTrustPredicate(java.lang.Class<?>[])
 meth public <%0 extends jdk.vm.ci.code.Architecture> jdk.vm.ci.runtime.JVMCIBackend getJVMCIBackend(java.lang.Class<{%%0}>)
+meth public int getArrayBaseOffset(jdk.vm.ci.meta.JavaKind)
+meth public int getArrayIndexScale(jdk.vm.ci.meta.JavaKind)
 meth public java.io.OutputStream getCompileLogStream()
 meth public java.io.OutputStream getLogStream()
+meth public java.lang.Class<?> getMirror(jdk.vm.ci.meta.ResolvedJavaType)
 meth public java.util.Map<java.lang.Class<? extends jdk.vm.ci.code.Architecture>,jdk.vm.ci.runtime.JVMCIBackend> getJVMCIBackends()
 meth public jdk.vm.ci.hotspot.HotSpotVMConfigStore getConfigStore()
 meth public jdk.vm.ci.meta.JavaType lookupType(java.lang.String,jdk.vm.ci.hotspot.HotSpotResolvedObjectType,boolean)
-meth public jdk.vm.ci.meta.ResolvedJavaType fromClass(java.lang.Class<?>)
 meth public jdk.vm.ci.runtime.JVMCIBackend getHostJVMCIBackend()
 meth public jdk.vm.ci.runtime.JVMCICompiler getCompiler()
 meth public long[] collectCounters()
-meth public static jdk.vm.ci.hotspot.HotSpotJVMCIBackendFactory findFactory(java.lang.String)
 meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime()
 meth public static jdk.vm.ci.meta.JavaKind getHostWordKind()
+meth public void registerNativeMethods(java.lang.Class<?>)
 supr java.lang.Object
-hfds backends,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,hostBackend,hsCompilerFactory,trivialPrefixes,vmEventListeners
+hfds backends,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,hostBackend,hsCompilerFactory,intrinsificationTrustPredicate,metaAccessContext,vmEventListeners
 hcls CompileLogStream,DelayedInit
 
 CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option
@@ -399,16 +393,6 @@ meth public static void printProperties(java.io.PrintStream)
 supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option>
 hfds JVMCI_OPTION_PROPERTY_PREFIX,PROPERTY_HELP_INDENT,PROPERTY_LINE_WIDTH,UNINITIALIZED,defaultValue,helpLines,isDefault,type,value
 
-CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider
-intf jdk.vm.ci.runtime.JVMCIRuntime
-meth public abstract java.io.OutputStream getCompileLogStream()
-meth public abstract java.io.OutputStream getLogStream()
-meth public abstract jdk.vm.ci.hotspot.HotSpotVMConfigStore getConfigStore()
-meth public abstract jdk.vm.ci.meta.JavaType lookupType(java.lang.String,jdk.vm.ci.hotspot.HotSpotResolvedObjectType,boolean)
-meth public abstract jdk.vm.ci.meta.ResolvedJavaType fromClass(java.lang.Class<?>)
-meth public static int getArrayBaseOffset(jdk.vm.ci.meta.JavaKind)
-meth public static int getArrayIndexScale(jdk.vm.ci.meta.JavaKind)
-
 CLSS public abstract jdk.vm.ci.hotspot.HotSpotJavaType
 cons public init(java.lang.String)
 intf jdk.vm.ci.meta.JavaType
@@ -424,23 +408,27 @@ meth public abstract jdk.vm.ci.meta.Constant readNarrowKlassPointerConstant(jdk.
 meth public abstract jdk.vm.ci.meta.JavaConstant readNarrowOopConstant(jdk.vm.ci.meta.Constant,long)
 
 CLSS public jdk.vm.ci.hotspot.HotSpotMetaAccessProvider
-cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime)
 fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime
 intf jdk.vm.ci.meta.MetaAccessProvider
 meth public int computeArrayAllocationSize(int,int,int)
 meth public int convertDeoptAction(jdk.vm.ci.meta.DeoptimizationAction)
 meth public int convertDeoptReason(jdk.vm.ci.meta.DeoptimizationReason)
 meth public int decodeDebugId(jdk.vm.ci.meta.JavaConstant)
+meth public int getArrayBaseOffset(jdk.vm.ci.meta.JavaKind)
+meth public int getArrayIndexScale(jdk.vm.ci.meta.JavaKind)
 meth public jdk.vm.ci.hotspot.HotSpotResolvedObjectType lookupJavaType(jdk.vm.ci.meta.JavaConstant)
 meth public jdk.vm.ci.meta.DeoptimizationAction convertDeoptAction(int)
 meth public jdk.vm.ci.meta.DeoptimizationAction decodeDeoptAction(jdk.vm.ci.meta.JavaConstant)
 meth public jdk.vm.ci.meta.DeoptimizationReason convertDeoptReason(int)
 meth public jdk.vm.ci.meta.DeoptimizationReason decodeDeoptReason(jdk.vm.ci.meta.JavaConstant)
 meth public jdk.vm.ci.meta.JavaConstant encodeDeoptActionAndReason(jdk.vm.ci.meta.DeoptimizationAction,jdk.vm.ci.meta.DeoptimizationReason,int)
+meth public jdk.vm.ci.meta.JavaConstant encodeSpeculation(jdk.vm.ci.meta.SpeculationLog$Speculation)
 meth public jdk.vm.ci.meta.ResolvedJavaField lookupJavaField(java.lang.reflect.Field)
 meth public jdk.vm.ci.meta.ResolvedJavaMethod lookupJavaMethod(java.lang.reflect.Executable)
 meth public jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(java.lang.Class<?>)
 meth public jdk.vm.ci.meta.Signature parseMethodDescriptor(java.lang.String)
+meth public jdk.vm.ci.meta.SpeculationLog$Speculation decodeSpeculation(jdk.vm.ci.meta.JavaConstant,jdk.vm.ci.meta.SpeculationLog)
 meth public long getMemorySize(jdk.vm.ci.meta.JavaConstant)
 supr java.lang.Object
 
@@ -497,9 +485,6 @@ meth public abstract java.lang.String toValueString()
 meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getType()
 meth public abstract jdk.vm.ci.meta.JavaConstant compress()
 meth public abstract jdk.vm.ci.meta.JavaConstant getCallSiteTarget(jdk.vm.ci.meta.Assumptions)
-meth public abstract jdk.vm.ci.meta.JavaConstant getClassLoader()
-meth public abstract jdk.vm.ci.meta.JavaConstant getComponentType()
-meth public abstract jdk.vm.ci.meta.JavaConstant getSuperclass()
 meth public abstract jdk.vm.ci.meta.JavaConstant uncompress()
 
 CLSS public final jdk.vm.ci.hotspot.HotSpotReferenceMap
@@ -512,9 +497,8 @@ hfds derivedBase,maxRegisterSize,objects,sizeInBytes
 
 CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotResolvedJavaField
 intf jdk.vm.ci.meta.ResolvedJavaField
-meth public abstract boolean isInObject(java.lang.Object)
+meth public abstract boolean isInObject(jdk.vm.ci.meta.JavaConstant)
 meth public abstract boolean isStable()
-meth public abstract int offset()
 
 CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod
 intf jdk.vm.ci.meta.ResolvedJavaMethod
@@ -536,7 +520,6 @@ meth public boolean isDefault()
 
 CLSS public abstract jdk.vm.ci.hotspot.HotSpotResolvedJavaType
 intf jdk.vm.ci.meta.ResolvedJavaType
-meth public abstract java.lang.Class<?> mirror()
 meth public final boolean equals(java.lang.Object)
 meth public final int hashCode()
 supr jdk.vm.ci.hotspot.HotSpotJavaType
@@ -565,15 +548,14 @@ meth public abstract long getFingerprint()
 meth public abstract long prototypeMarkWord()
 meth public boolean isPrimitive()
 meth public jdk.vm.ci.meta.JavaKind getJavaKind()
-meth public static jdk.vm.ci.hotspot.HotSpotResolvedObjectType fromObjectClass(java.lang.Class<?>)
 
 CLSS public final jdk.vm.ci.hotspot.HotSpotResolvedPrimitiveType
-cons public init(jdk.vm.ci.meta.JavaKind)
 meth public <%0 extends java.lang.annotation.Annotation> {%%0} getAnnotation(java.lang.Class<{%%0}>)
 meth public boolean hasFinalizer()
 meth public boolean isArray()
 meth public boolean isAssignableFrom(jdk.vm.ci.meta.ResolvedJavaType)
 meth public boolean isCloneableWithAllocation()
+meth public boolean isEnum()
 meth public boolean isInitialized()
 meth public boolean isInstance(jdk.vm.ci.meta.JavaConstant)
 meth public boolean isInstanceClass()
@@ -584,7 +566,6 @@ meth public boolean isLocal()
 meth public boolean isMember()
 meth public boolean isPrimitive()
 meth public int getModifiers()
-meth public java.lang.Class<?> mirror()
 meth public java.lang.String getSourceFileName()
 meth public java.lang.String toString()
 meth public java.lang.annotation.Annotation[] getAnnotations()
@@ -644,8 +625,8 @@ supr jdk.vm.ci.meta.Value
 hfds javaKind
 
 CLSS public jdk.vm.ci.hotspot.HotSpotSignature
-cons public !varargs init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,jdk.vm.ci.meta.ResolvedJavaType,jdk.vm.ci.meta.ResolvedJavaType[])
-cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider,java.lang.String)
+cons public !varargs init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime,jdk.vm.ci.meta.ResolvedJavaType,jdk.vm.ci.meta.ResolvedJavaType[])
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime,java.lang.String)
 intf jdk.vm.ci.meta.Signature
 meth public boolean equals(java.lang.Object)
 meth public int getParameterCount(boolean)
@@ -661,13 +642,21 @@ hfds originalString,parameterTypes,parameters,returnType,returnTypeCache,runtime
 
 CLSS public jdk.vm.ci.hotspot.HotSpotSpeculationLog
 cons public init()
+innr public final static HotSpotSpeculation
 intf jdk.vm.ci.meta.SpeculationLog
 meth public boolean hasSpeculations()
 meth public boolean maySpeculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
-meth public jdk.vm.ci.meta.JavaConstant speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public jdk.vm.ci.meta.SpeculationLog$Speculation lookupSpeculation(jdk.vm.ci.meta.JavaConstant)
+meth public jdk.vm.ci.meta.SpeculationLog$Speculation speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
 meth public void collectFailedSpeculations()
 supr java.lang.Object
-hfds failedSpeculations,lastFailed,speculations
+hfds currentSpeculationID,failedSpeculations,lastFailed,speculations
+
+CLSS public final static jdk.vm.ci.hotspot.HotSpotSpeculationLog$HotSpotSpeculation
+ outer jdk.vm.ci.hotspot.HotSpotSpeculationLog
+meth public jdk.vm.ci.meta.JavaConstant getEncoding()
+supr jdk.vm.ci.meta.SpeculationLog$Speculation
+hfds encoding
 
 CLSS public jdk.vm.ci.hotspot.HotSpotStackFrameReference
 cons public init()
@@ -686,7 +675,7 @@ supr java.lang.Object
 hfds bci,compilerToVM,frameNumber,localIsVirtual,locals,method,objectsMaterialized,stackPointer
 
 CLSS public jdk.vm.ci.hotspot.HotSpotStackIntrospection
-cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntimeProvider)
+cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime)
 fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime
 intf jdk.vm.ci.code.stack.StackIntrospection
 meth public <%0 extends java.lang.Object> {%%0} iterateFrames(jdk.vm.ci.meta.ResolvedJavaMethod[],jdk.vm.ci.meta.ResolvedJavaMethod[],int,jdk.vm.ci.code.stack.InspectedFrameVisitor<{%%0}>)
@@ -728,8 +717,6 @@ meth public void notifyInstall(jdk.vm.ci.hotspot.HotSpotCodeCacheProvider,jdk.vm
 meth public void notifyShutdown()
 
 CLSS public final jdk.vm.ci.hotspot.VMField
-cons public init(java.lang.String,java.lang.String,long)
-cons public init(java.lang.String,java.lang.String,long,java.lang.Long)
 fld public final java.lang.Object value
 fld public final java.lang.String name
 fld public final java.lang.String type
@@ -853,14 +840,18 @@ meth public abstract jdk.vm.ci.meta.JavaConstant readPrimitiveConstant(jdk.vm.ci
 
 CLSS public abstract interface jdk.vm.ci.meta.MetaAccessProvider
 meth public abstract int decodeDebugId(jdk.vm.ci.meta.JavaConstant)
+meth public abstract int getArrayBaseOffset(jdk.vm.ci.meta.JavaKind)
+meth public abstract int getArrayIndexScale(jdk.vm.ci.meta.JavaKind)
 meth public abstract jdk.vm.ci.meta.DeoptimizationAction decodeDeoptAction(jdk.vm.ci.meta.JavaConstant)
 meth public abstract jdk.vm.ci.meta.DeoptimizationReason decodeDeoptReason(jdk.vm.ci.meta.JavaConstant)
 meth public abstract jdk.vm.ci.meta.JavaConstant encodeDeoptActionAndReason(jdk.vm.ci.meta.DeoptimizationAction,jdk.vm.ci.meta.DeoptimizationReason,int)
+meth public abstract jdk.vm.ci.meta.JavaConstant encodeSpeculation(jdk.vm.ci.meta.SpeculationLog$Speculation)
 meth public abstract jdk.vm.ci.meta.ResolvedJavaField lookupJavaField(java.lang.reflect.Field)
 meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod lookupJavaMethod(java.lang.reflect.Executable)
 meth public abstract jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(java.lang.Class<?>)
 meth public abstract jdk.vm.ci.meta.ResolvedJavaType lookupJavaType(jdk.vm.ci.meta.JavaConstant)
 meth public abstract jdk.vm.ci.meta.Signature parseMethodDescriptor(java.lang.String)
+meth public abstract jdk.vm.ci.meta.SpeculationLog$Speculation decodeSpeculation(jdk.vm.ci.meta.JavaConstant,jdk.vm.ci.meta.SpeculationLog)
 meth public abstract long getMemorySize(jdk.vm.ci.meta.JavaConstant)
 meth public jdk.vm.ci.meta.ResolvedJavaType[] lookupJavaTypes(java.lang.Class<?>[])
 
@@ -894,6 +885,7 @@ intf jdk.vm.ci.meta.ModifiersProvider
 meth public abstract boolean isInternal()
 meth public abstract boolean isSynthetic()
 meth public abstract int getModifiers()
+meth public abstract int getOffset()
 meth public abstract jdk.vm.ci.meta.ResolvedJavaType getDeclaringClass()
 meth public boolean isFinal()
 
@@ -903,6 +895,7 @@ intf java.lang.reflect.AnnotatedElement
 intf jdk.vm.ci.meta.InvokeTarget
 intf jdk.vm.ci.meta.JavaMethod
 intf jdk.vm.ci.meta.ModifiersProvider
+meth public !varargs jdk.vm.ci.meta.JavaConstant invoke(jdk.vm.ci.meta.JavaConstant,jdk.vm.ci.meta.JavaConstant[]) throws java.lang.IllegalAccessException,java.lang.reflect.InvocationTargetException
 meth public <%0 extends java.lang.annotation.Annotation> {%%0} getParameterAnnotation(java.lang.Class<{%%0}>,int)
 meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getParameterAnnotations(java.lang.Class<{%%0}>)
 meth public abstract boolean canBeInlined()
@@ -947,6 +940,7 @@ intf jdk.vm.ci.meta.ModifiersProvider
 meth public abstract boolean hasFinalizer()
 meth public abstract boolean isAssignableFrom(jdk.vm.ci.meta.ResolvedJavaType)
 meth public abstract boolean isCloneableWithAllocation()
+meth public abstract boolean isEnum()
 meth public abstract boolean isInitialized()
 meth public abstract boolean isInstance(jdk.vm.ci.meta.JavaConstant)
 meth public abstract boolean isInstanceClass()
@@ -977,9 +971,11 @@ meth public abstract jdk.vm.ci.meta.ResolvedJavaType[] getInterfaces()
 meth public abstract void initialize()
 meth public boolean isJavaLangObject()
 meth public boolean isLeaf()
+meth public jdk.vm.ci.meta.ResolvedJavaField resolveField(jdk.vm.ci.meta.UnresolvedJavaField,jdk.vm.ci.meta.ResolvedJavaType)
 meth public jdk.vm.ci.meta.ResolvedJavaMethod findMethod(java.lang.String,jdk.vm.ci.meta.Signature)
 meth public jdk.vm.ci.meta.ResolvedJavaMethod resolveConcreteMethod(jdk.vm.ci.meta.ResolvedJavaMethod,jdk.vm.ci.meta.ResolvedJavaType)
 meth public jdk.vm.ci.meta.ResolvedJavaType getElementalType()
+meth public jdk.vm.ci.meta.ResolvedJavaType lookupType(jdk.vm.ci.meta.UnresolvedJavaType,boolean)
 
 CLSS public abstract interface jdk.vm.ci.meta.Signature
 meth public abstract int getParameterCount(boolean)
@@ -992,11 +988,23 @@ meth public jdk.vm.ci.meta.JavaKind[] toParameterKinds(boolean)
 meth public jdk.vm.ci.meta.JavaType[] toParameterTypes(jdk.vm.ci.meta.JavaType)
 
 CLSS public abstract interface jdk.vm.ci.meta.SpeculationLog
+fld public final static jdk.vm.ci.meta.SpeculationLog$Speculation NO_SPECULATION
 innr public abstract interface static SpeculationReason
+innr public final static NoSpeculationReason
+innr public static Speculation
 meth public abstract boolean hasSpeculations()
 meth public abstract boolean maySpeculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
-meth public abstract jdk.vm.ci.meta.JavaConstant speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public abstract jdk.vm.ci.meta.SpeculationLog$Speculation lookupSpeculation(jdk.vm.ci.meta.JavaConstant)
+meth public abstract jdk.vm.ci.meta.SpeculationLog$Speculation speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
 meth public abstract void collectFailedSpeculations()
+
+CLSS public static jdk.vm.ci.meta.SpeculationLog$Speculation
+ outer jdk.vm.ci.meta.SpeculationLog
+cons public init(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.SpeculationLog$SpeculationReason getReason()
+supr java.lang.Object
+hfds reason
 
 CLSS public abstract interface jdk.vm.ci.meta.VMConstant
 intf jdk.vm.ci.meta.Constant
