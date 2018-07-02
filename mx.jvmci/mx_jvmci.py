@@ -35,6 +35,7 @@ import mx
 import mx_unittest
 from mx_unittest import unittest
 from mx_gate import Task
+from mx_sigtest import sigtest
 import mx_gate
 
 _suite = mx.suite('jvmci')
@@ -1145,6 +1146,10 @@ def _jvmci_gate_runner(args, tasks):
         with Task('BuildHotSpotVarieties', tasks, disableJacoco=True) as t:
             if t:
                 buildvms(['--vms', 'client,server', '--builds', 'fastdebug,product'])
+
+    with Task('JVMCI Signature Tests', tasks) as t:
+        if t: sigtest(['--check', 'binary'])
+
 
 mx_gate.add_gate_runner(_suite, _jvmci_gate_runner)
 mx_gate.add_gate_argument('-g', '--only-build-jvmci', action='store_false', dest='buildNonJVMCI', help='only build the JVMCI VM')
