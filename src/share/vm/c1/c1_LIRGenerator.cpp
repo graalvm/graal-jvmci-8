@@ -3350,11 +3350,26 @@ void LIRGenerator::do_ProfileInvoke(ProfileInvoke* x) {
   if (!x->inlinee()->is_accessor()) {
     CodeEmitInfo* info = state_for(x, x->state(), true);
     // Notify the runtime very infrequently only to take care of counter overflows
-    increment_event_counter_impl(info, x->inlinee(), (1 << Tier23InlineeNotifyFreqLog) - 1, InvocationEntryBci, false, true);
+    increment_event_counter_impl(info, x->inlinee(), LIR_OprFact::intConst(InvocationCounter::count_increment), right_n_bits(Tier23InlineeNotifyFreqLog), InvocationEntryBci, false, true);
   }
 }
 
-void LIRGenerator::increment_event_counter(CodeEmitInfo* info, int bci, bool backedge) {
+void LIRGenerator::increment_backedge_counter_conditionally(LIR_Condition cond, LIR_Opr left, LIR_Opr right, CodeEmitInfo* info, int left_bci, int right_bci, int bci) {
+  if (compilation()->count_backedges()) {
+    __ cmp(cond, left, right);
+    LIR_Opr step = new_register(T_INT);
+    LIR_Opr plus_one = LIR_OprFact::intConst(InvocationCounter::count_increment);
+    LIR_Opr zero = LIR_OprFact::intConst(0);
+    __ cmove(cond,
+        (left_bci < bci) ? plus_one : zero,
+        (right_bci < bci) ? plus_one : zero,
+        step, left->type());
+    increment_backedge_counter(info, step, bci);
+  }
+}
+
+
+void LIRGenerator::increment_event_counter(CodeEmitInfo* info, LIR_Opr step, int bci, bool backedge) {
   int freq_log = 0;
   int level = compilation()->env()->comp_level();
   if (level == CompLevel_limited_profile) {
@@ -3365,11 +3380,11 @@ void LIRGenerator::increment_event_counter(CodeEmitInfo* info, int bci, bool bac
     ShouldNotReachHere();
   }
   // Increment the appropriate invocation/backedge counter and notify the runtime.
-  increment_event_counter_impl(info, info->scope()->method(), (1 << freq_log) - 1, bci, backedge, true);
+  increment_event_counter_impl(info, info->scope()->method(), step, right_n_bits(freq_log), bci, backedge, true);
 }
 
 void LIRGenerator::increment_event_counter_impl(CodeEmitInfo* info,
-                                                ciMethod *method, int frequency,
+                                                ciMethod *method, LIR_Opr step, int frequency,
                                                 int bci, bool backedge, bool notify) {
   assert(frequency == 0 || is_power_of_2(frequency + 1), "Frequency must be x^2 - 1 or 0");
   int level = _compilation->env()->comp_level();
@@ -3400,17 +3415,31 @@ void LIRGenerator::increment_event_counter_impl(CodeEmitInfo* info,
   LIR_Address* counter = new LIR_Address(counter_holder, offset, T_INT);
   LIR_Opr result = new_register(T_INT);
   __ load(counter, result);
-  __ add(result, LIR_OprFact::intConst(InvocationCounter::count_increment), result);
+  __ add(result, step, result);
   __ store(result, counter);
-  if (notify) {
-    LIR_Opr mask = load_immediate(frequency << InvocationCounter::count_shift, T_INT);
-    LIR_Opr meth = new_register(T_METADATA);
-    __ metadata2reg(method->constant_encoding(), meth);
-    __ logical_and(result, mask, result);
-    __ cmp(lir_cond_equal, result, LIR_OprFact::intConst(0));
+  if (notify && (!backedge || UseOnStackReplacement)) {
+    LIR_Opr meth = LIR_OprFact::metadataConst(method->constant_encoding());
     // The bci for info can point to cmp for if's we want the if bci
     CodeStub* overflow = new CounterOverflowStub(info, bci, meth);
-    __ branch(lir_cond_equal, T_INT, overflow);
+    int freq = frequency << InvocationCounter::count_shift;
+    if (freq == 0) {
+      if (!step->is_constant()) {
+        __ cmp(lir_cond_notEqual, step, LIR_OprFact::intConst(0));
+        __ branch(lir_cond_notEqual, T_ILLEGAL, overflow);
+      } else {
+        __ branch(lir_cond_always, T_ILLEGAL, overflow);
+      }
+    } else {
+      LIR_Opr mask = load_immediate(freq, T_INT);
+      if (!step->is_constant()) {
+        // If step is 0, make sure the overflow check below always fails
+        __ cmp(lir_cond_notEqual, step, LIR_OprFact::intConst(0));
+        __ cmove(lir_cond_notEqual, result, LIR_OprFact::intConst(InvocationCounter::count_increment), result, T_INT);
+      }
+      __ logical_and(result, mask, result);
+      __ cmp(lir_cond_equal, result, LIR_OprFact::intConst(0));
+      __ branch(lir_cond_equal, T_INT, overflow);
+    }
     __ branch_destination(overflow->continuation());
   }
 }
