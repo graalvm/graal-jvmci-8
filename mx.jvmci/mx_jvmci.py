@@ -865,7 +865,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             project_config = variant + '_' + self.vmbuild
             jvmciHome = mx._cygpathU2W(_suite.dir)
             _runInDebugShell('msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcproj /p:Configuration=' + project_config + ' /target:clean', jvmciHome)
-            winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + r'& set path=%JAVA_HOME%\bin;%path%;%HotSpotMksHome%& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
+            winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + r'& set path=!JAVA_HOME!\bin;%path%;!HotSpotMksHome!;& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
             print winCompileCmd
             winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
             if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
