@@ -1656,9 +1656,13 @@ void TemplateTable::branch(bool is_jsr, bool is_wide) {
         __ load_const_optimized(Rscratch3, mask, R0);
         __ addi(Rscratch2, Rscratch2, increment);
         __ stw(Rscratch2, mdo_bc_offs, Rmdo);
-        __ and_(Rscratch3, Rscratch2, Rscratch3);
-        __ bne(CCR0, Lforward);
-        __ b(Loverflow);
+        if (UseOnStackReplacement) {
+          __ and_(Rscratch3, Rscratch2, Rscratch3);
+          __ bne(CCR0, Lforward);
+          __ b(Loverflow);
+        } else {
+          __ b(Lforward);
+        }
       }
 
       // If there's no MDO, increment counter in method.
