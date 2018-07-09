@@ -677,16 +677,16 @@ def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo
     startToken = 'RUNINDEBUGSHELL_STARTSEQUENCE'
     endToken = 'RUNINDEBUGSHELL_ENDSEQUENCE'
 
-    winSDK = mx.get_env('VSINSTALLDIR', 'C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\')
+    winSDK = mx.get_env('WIN_SDK', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\')
 
     if not exists(mx._cygpathW2U(winSDK)):
         mx.abort("Could not find Windows SDK : '" + winSDK + "' does not exist")
 
-    winSDKSetEnv = mx._cygpathW2U(join(winSDK, 'VC', 'vcvarsall.bat'))
+    winSDKSetEnv = mx._cygpathW2U(join(winSDK, 'Bin', 'SetEnv.cmd'))
     if not exists(winSDKSetEnv):
-        mx.abort("Invalid Windows SDK path (" + winSDK + ") : could not find vcvarsall.bat (you can use the WIN_SDK environment variable to specify an other path to Visual Studio)")
+        mx.abort("Invalid Windows SDK path (" + winSDK + ") : could not find Bin/SetEnv.cmd (you can use the WIN_SDK environment variable to specify an other path)")
 
-    wincmd = 'cmd.exe /E:ON /V:ON /K "' + mx._cygpathU2W(winSDKSetEnv) + '" amd64'
+    wincmd = 'cmd.exe /E:ON /V:ON /K "' + mx._cygpathU2W(winSDKSetEnv) + '"'
     p = subprocess.Popen(wincmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdout = p.stdout
     stdin = p.stdin
