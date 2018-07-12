@@ -601,10 +601,12 @@ void Reflection::check_for_inner_class(instanceKlassHandle outer, instanceKlassH
   InnerClassesIterator iter(outer);
   constantPoolHandle cp   (THREAD, outer->constants());
   for (; !iter.done(); iter.next()) {
-     int ioff = iter.inner_class_info_index();
-     int ooff = iter.outer_class_info_index();
+    int ioff = iter.inner_class_info_index();
+    int ooff = iter.outer_class_info_index();
 
-     if (inner_is_member && ioff != 0 && ooff != 0) {
+    if (inner_is_member && ioff != 0 && ooff != 0) {
+      if (cp->klass_name_at_matches(outer, ooff) &&
+          cp->klass_name_at_matches(inner, ioff)) {
         Klass* o = cp->klass_at(ooff, CHECK);
         if (o == outer()) {
           Klass* i = cp->klass_at(ioff, CHECK);
@@ -612,14 +614,15 @@ void Reflection::check_for_inner_class(instanceKlassHandle outer, instanceKlassH
             return;
           }
         }
-     }
-     if (!inner_is_member && ioff != 0 && ooff == 0 &&
-         cp->klass_name_at_matches(inner, ioff)) {
-        Klass* i = cp->klass_at(ioff, CHECK);
-        if (i == inner()) {
-          return;
-        }
-     }
+      }
+    }
+    if (!inner_is_member && ioff != 0 && ooff == 0 &&
+        cp->klass_name_at_matches(inner, ioff)) {
+      Klass* i = cp->klass_at(ioff, CHECK);
+      if (i == inner()) {
+        return;
+      }
+    }
   }
 
   // 'inner' not declared as an inner klass in outer
