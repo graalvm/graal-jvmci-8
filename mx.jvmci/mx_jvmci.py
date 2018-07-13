@@ -545,11 +545,12 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
 
             # Install a copy of the disassembler library
             try:
-                hsdis_args = []
-                syntax = mx.get_env('HSDIS_SYNTAX')
-                if syntax:
-                    hsdis_args = [syntax]
-                hsdis(hsdis_args, copyToDir=vmLibDirInJdk(jdkDir))
+                if 'true' == mx.get_env('INCLUDE_HSDIS', 'true').lower():
+                    hsdis_args = []
+                    syntax = mx.get_env('HSDIS_SYNTAX')
+                    if syntax:
+                        hsdis_args = [syntax]
+                    hsdis(hsdis_args, copyToDir=vmLibDirInJdk(jdkDir))
             except SystemExit:
                 pass
     else:
@@ -1286,7 +1287,7 @@ def hsdis(args, copyToDir=None):
     else:
         flavoredLib = libpattern
     if flavoredLib not in sha1s:
-        mx.warn("hsdis with flavor '{}' not supported on this plattform or architecture".format(flavor))
+        mx.warn("hsdis with flavor '{}' not supported on this platform or architecture".format(flavor))
         return
 
     sha1 = sha1s[flavoredLib]
