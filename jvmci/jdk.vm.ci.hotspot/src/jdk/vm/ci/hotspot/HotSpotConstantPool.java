@@ -639,8 +639,12 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
     }
 
     @Override
-    @SuppressWarnings("fallthrough")
     public void loadReferencedType(int cpi, int opcode) {
+        loadReferencedType(cpi, opcode, true /* initialize */);
+    }
+
+    @SuppressWarnings("fallthrough")
+    public void loadReferencedType(int cpi, int opcode, boolean initialize) {
         int index;
         switch (opcode) {
             case Bytecodes.CHECKCAST:
@@ -695,8 +699,10 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
             case UnresolvedClassInError:
                 final HotSpotResolvedObjectTypeImpl type = compilerToVM().resolveTypeInPool(this, index);
                 Class<?> klass = type.mirror();
-                if (!klass.isPrimitive() && !klass.isArray()) {
-                    UNSAFE.ensureClassInitialized(klass);
+                if (initialize) {
+                    if (!klass.isPrimitive() && !klass.isArray()) {
+                        UNSAFE.ensureClassInitialized(klass);
+                    }
                 }
                 if (tag == JVM_CONSTANT.MethodRef) {
                     if (Bytecodes.isInvokeHandleAlias(opcode) && isSignaturePolymorphicHolder(type)) {
