@@ -1295,7 +1295,7 @@ def hsdis(args, copyToDir=None):
     path = join(_suite.get_output_root(), lib)
     if not exists(path):
         sha1path = path + '.sha1'
-        mx.download_file_with_sha1('hsdis', path, ['https://github.com/oracle/graal/releases/download/hsdis-20180108/' + lib], sha1, sha1path, True, True, sources=False)
+        mx.download_file_with_sha1('hsdis', path, ['https://lafo.ssw.uni-linz.ac.at/pub/graal-external-deps/hsdis/' + lib], sha1, sha1path, True, True, sources=False)
     if copyToDir is not None and exists(copyToDir):
         destFileName = mx.add_lib_suffix('hsdis-' + mx.get_arch())
         shutil.copy(path, copyToDir + os.sep + destFileName)
