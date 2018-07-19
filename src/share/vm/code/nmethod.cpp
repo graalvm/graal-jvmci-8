@@ -3425,15 +3425,17 @@ void nmethod::print_code_comment_on(outputStream* st, int column, u_char* begin,
     for (int i = 0, imax = oms->size(); i < imax; i++) {
       OopMap* om = oms->at(i);
       address pc = base + om->offset();
+      if (pc >= begin) {
 #ifdef INCLUDE_JVMCI
-      bool is_implicit_deopt = implicit_table.continuation_offset(om->offset()) == (uint) om->offset();
+        bool is_implicit_deopt = implicit_table.continuation_offset(om->offset()) == (uint) om->offset();
 #else
-      bool is_implicit_deopt = false;
+        bool is_implicit_deopt = false;
 #endif
-      if (is_implicit_deopt ? pc == begin : pc > begin && pc <= end) {
-        st->move_to(column);
-        st->print("; ");
-        om->print_on(st);
+        if (is_implicit_deopt ? pc == begin : pc > begin && pc <= end) {
+          st->move_to(column);
+          st->print("; ");
+          om->print_on(st);
+        }
       }
       if (pc > end) {
         break;
