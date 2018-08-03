@@ -870,7 +870,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
             if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
                 mx.abort('Error executing create command')
-            winBuildCmd = 'msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcxproj /p:Configuration=' + project_config + ' /p:Platform=x64'
+            winBuildCmd = 'msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcxproj /p:Configuration=' + project_config + ' /p:Platform=x64 /p:TargetRuntime=Native'
             if not _runInDebugShell(winBuildCmd, jvmciHome, t_compilelogfile):
                 mx.abort('Error building project')
         else:
