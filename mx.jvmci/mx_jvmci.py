@@ -677,16 +677,16 @@ def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo
     startToken = 'RUNINDEBUGSHELL_STARTSEQUENCE'
     endToken = 'RUNINDEBUGSHELL_ENDSEQUENCE'
 
-    winSDK = mx.get_env('VSINSTALLDIR', 'C:\\Program Files (x86)\\Microsoft Visual Studio 10.0\\')
+    winSDK = mx.get_env('WIN_SDK', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\')
 
     if not exists(mx._cygpathW2U(winSDK)):
         mx.abort("Could not find Windows SDK : '" + winSDK + "' does not exist")
 
-    winSDKSetEnv = mx._cygpathW2U(join(winSDK, 'VC', 'vcvarsall.bat'))
+    winSDKSetEnv = mx._cygpathW2U(join(winSDK, 'Bin', 'SetEnv.cmd'))
     if not exists(winSDKSetEnv):
-        mx.abort("Invalid Windows SDK path (" + winSDK + ") : could not find vcvarsall.bat (you can use the WIN_SDK environment variable to specify an other path to Visual Studio)")
+        mx.abort("Invalid Windows SDK path (" + winSDK + ") : could not find Bin/SetEnv.cmd (you can use the WIN_SDK environment variable to specify an other path)")
 
-    wincmd = 'cmd.exe /E:ON /V:ON /K "' + mx._cygpathU2W(winSDKSetEnv) + '" amd64'
+    wincmd = 'cmd.exe /E:ON /V:ON /K "' + mx._cygpathU2W(winSDKSetEnv) + '"'
     p = subprocess.Popen(wincmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     stdout = p.stdout
     stdin = p.stdin
@@ -857,6 +857,8 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             assert self.vm.startswith('client'), self.vm
             buildSuffix = '1'
 
+        jvmci_version = 'jvmci-' + _suite.release_version()
+
         if isWindows:
             t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "jvmciCompile.log"))
             mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
@@ -864,13 +866,18 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             variant = _hotspotGetVariant(self.vm)
             project_config = variant + '_' + self.vmbuild
             jvmciHome = mx._cygpathU2W(_suite.dir)
-            _runInDebugShell('msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcproj /p:Configuration=' + project_config + ' /target:clean', jvmciHome)
-            winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + r'& set path=%JAVA_HOME%\bin;%path%;%HotSpotMksHome%& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
-            print winCompileCmd
+            project_file = jvmciHome + r'\build\vs-amd64\jvm.vcxproj'
+            if exists(mx._cygpathW2U(project_file)):
+                _runInDebugShell('msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /target:clean', jvmciHome)
+            winCompileCmd = r'set USER_RELEASE_SUFFIX=' + jvmci_version + \
+                            r'& set HotSpotMksHome=' + mksHome + \
+                            r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + \
+                            r'& set path=!JAVA_HOME!\bin;%path%;!HotSpotMksHome!;' \
+                            r'& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
             winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
             if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
                 mx.abort('Error executing create command')
-            winBuildCmd = 'msbuild ' + jvmciHome + r'\build\vs-amd64\jvm.vcxproj /p:Configuration=' + project_config + ' /p:Platform=x64'
+            winBuildCmd = 'msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /p:TargetRuntime=Native'
             if not _runInDebugShell(winBuildCmd, jvmciHome, t_compilelogfile):
                 mx.abort('Error building project')
         else:
@@ -911,8 +918,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 setMakeVar('DISABLE_COMMERCIAL_FEATURES', 'true', env=env)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
-            version = _suite.release_version()
-            setMakeVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
+            setMakeVar('USER_RELEASE_SUFFIX', jvmci_version)
             setMakeVar('INCLUDE_JVMCI', 'true')
             # setMakeVar('INSTALL', 'y', env=env)
             if mx.get_os() == 'darwin' and platform.mac_ver()[0] != '':
