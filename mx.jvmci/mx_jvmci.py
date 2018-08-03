@@ -857,6 +857,8 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             assert self.vm.startswith('client'), self.vm
             buildSuffix = '1'
 
+        jvmci_version = 'jvmci-' + _suite.release_version()
+
         if isWindows:
             t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "jvmciCompile.log"))
             mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
@@ -867,7 +869,11 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             project_file = jvmciHome + r'\build\vs-amd64\jvm.vcxproj'
             if exists(mx._cygpathW2U(project_file)):
                 _runInDebugShell('msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /target:clean', jvmciHome)
-            winCompileCmd = r'set HotSpotMksHome=' + mksHome + r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + r'& set path=!JAVA_HOME!\bin;%path%;!HotSpotMksHome!;& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
+            winCompileCmd = r'set USER_RELEASE_SUFFIX=' + jvmci_version + \
+                            r'& set HotSpotMksHome=' + mksHome + \
+                            r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + \
+                            r'& set path=!JAVA_HOME!\bin;%path%;!HotSpotMksHome!;' \
+                            r'& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
             winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
             if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
                 mx.abort('Error executing create command')
@@ -912,8 +918,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 setMakeVar('DISABLE_COMMERCIAL_FEATURES', 'true', env=env)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
-            version = _suite.release_version()
-            setMakeVar('USER_RELEASE_SUFFIX', 'jvmci-' + version)
+            setMakeVar('USER_RELEASE_SUFFIX', jvmci_version)
             setMakeVar('INCLUDE_JVMCI', 'true')
             # setMakeVar('INSTALL', 'y', env=env)
             if mx.get_os() == 'darwin' and platform.mac_ver()[0] != '':
