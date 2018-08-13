@@ -1080,6 +1080,13 @@ void nmethod::log_identity(xmlStream* log) const {
   if (TieredCompilation) {
     log->print(" level='%d'", comp_level());
   }
+#if INCLUDE_JVMCI
+    char buffer[O_BUFLEN];
+    char* jvmci_name = jvmci_installed_code_name(buffer, O_BUFLEN);
+    if (jvmci_name != NULL) {
+      log->print(" jvmci_installed_code_name='%s'", jvmci_name);
+    }
+#endif
 }
 
 
@@ -1519,7 +1526,7 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
   _state = unloaded;
 
   // Log the unloading.
-  log_state_change();
+  log_state_change(cause);
 
 #if INCLUDE_JVMCI
   // The method can only be unloaded after the pointer to the installed code
@@ -1545,7 +1552,7 @@ void nmethod::invalidate_osr_method() {
   _entry_bci = InvalidOSREntryBci;
 }
 
-void nmethod::log_state_change() const {
+void nmethod::log_state_change(oop cause) const {
   if (LogCompilation) {
     if (xtty != NULL) {
       ttyLocker ttyl;  // keep the following output all in one block
@@ -1558,6 +1565,9 @@ void nmethod::log_state_change() const {
                          (_state == zombie ? " zombie='1'" : ""));
       }
       log_identity(xtty);
+      if (cause != NULL) {
+        xtty->print(" cause='%s'", cause->klass()->external_name());
+      }
       xtty->stamp();
       xtty->end_elem();
     }
@@ -3668,7 +3678,7 @@ oop nmethod::speculation_log() {
   return JNIHandles::resolve(_speculation_log);
 }
 
-char* nmethod::jvmci_installed_code_name(char* buf, size_t buflen) {
+char* nmethod::jvmci_installed_code_name(char* buf, size_t buflen) const {
   if (!this->is_compiled_by_jvmci()) {
     return NULL;
   }
