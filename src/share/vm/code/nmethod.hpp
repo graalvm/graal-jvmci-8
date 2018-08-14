@@ -206,14 +206,14 @@ class nmethod : public CodeBlob {
   unsigned int _has_wide_vectors:1;          // Preserve wide vectors at safepoints
 
 #if INCLUDE_JVMCI
-  // Determines whether this nmethod is unloaded when the
+  // Determines whether this nmethod is invalidated when the
   // referent in _jvmci_installed_code is cleared. This
   // will be false if the referent is initialized to a
   // HotSpotNMethod object whose isDefault field is true.
   // That is, installed code other than a "default"
-  // HotSpotNMethod causes nmethod unloading.
+  // HotSpotNMethod causes nmethod invalidation.
   // This field is ignored once _jvmci_installed_code is NULL.
-  unsigned int _jvmci_installed_code_triggers_unloading:1;
+  unsigned int _jvmci_installed_code_triggers_invalidation:1;
 #endif
 
   // Protected by Patching_lock
@@ -658,7 +658,7 @@ public:
   // Copies the value of the name field in the InstalledCode
   // object (if any) associated with this nmethod into buf.
   // Returns the value of buf if it was updated otherwise NULL.
-  char* jvmci_installed_code_name(char* buf, size_t buflen);
+  char* jvmci_installed_code_name(char* buf, size_t buflen) const;
 
   // Updates the state of the InstalledCode (if any) associated with
   // this nmethod based on the current value of _state.
@@ -688,9 +688,8 @@ public:
   // GC support
   void do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred);
 #if INCLUDE_JVMCI
-  // See comment for _jvmci_installed_code_triggers_unloading field.
-  // Returns whether this nmethod was unloaded.
-  bool unload_for_installed_code(BoolObjectClosure* is_alive, bool unloading_occurred);
+  // See comment for _jvmci_installed_code_triggers_invalidation field.
+  void update_installed_code(BoolObjectClosure* is_alive, bool unloading_occurred);
 #endif
   //  The parallel versions are used by G1.
   bool do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_occurred);
@@ -789,7 +788,7 @@ public:
   // Logging
   void log_identity(xmlStream* log) const;
   void log_new_nmethod() const;
-  void log_state_change() const;
+  void log_state_change(oop cause = NULL) const;
 
   // Prints block-level comments, including nmethod specific block labels:
   virtual void print_block_comment(outputStream* stream, address block_begin) const {

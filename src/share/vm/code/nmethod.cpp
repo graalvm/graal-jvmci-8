@@ -581,7 +581,7 @@ void nmethod::init_defaults() {
 #endif
 #if INCLUDE_JVMCI
   _jvmci_installed_code   = NULL;
-  _jvmci_installed_code_triggers_unloading = false;
+  _jvmci_installed_code_triggers_invalidation = false;
   _speculation_log        = NULL;
 #endif
 #ifdef HAVE_DTRACE_H
@@ -974,9 +974,9 @@ nmethod::nmethod(
     _speculation_log = speculation_log;
     oop obj = JNIHandles::resolve(installed_code);
     if (obj == NULL || (obj->is_a(HotSpotNmethod::klass()) && HotSpotNmethod::isDefault(obj))) {
-      _jvmci_installed_code_triggers_unloading = false;
+      _jvmci_installed_code_triggers_invalidation = false;
     } else {
-      _jvmci_installed_code_triggers_unloading = true;
+      _jvmci_installed_code_triggers_invalidation = true;
     }
 
     if (compiler->is_jvmci()) {
@@ -1080,6 +1080,13 @@ void nmethod::log_identity(xmlStream* log) const {
   if (TieredCompilation) {
     log->print(" level='%d'", comp_level());
   }
+#if INCLUDE_JVMCI
+    char buffer[O_BUFLEN];
+    char* jvmci_name = jvmci_installed_code_name(buffer, O_BUFLEN);
+    if (jvmci_name != NULL) {
+      log->print(" jvmci_installed_code_name='%s'", jvmci_name);
+    }
+#endif
 }
 
 
@@ -1519,7 +1526,7 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
   _state = unloaded;
 
   // Log the unloading.
-  log_state_change();
+  log_state_change(cause);
 
 #if INCLUDE_JVMCI
   // The method can only be unloaded after the pointer to the installed code
@@ -1545,7 +1552,7 @@ void nmethod::invalidate_osr_method() {
   _entry_bci = InvalidOSREntryBci;
 }
 
-void nmethod::log_state_change() const {
+void nmethod::log_state_change(oop cause) const {
   if (LogCompilation) {
     if (xtty != NULL) {
       ttyLocker ttyl;  // keep the following output all in one block
@@ -1558,6 +1565,9 @@ void nmethod::log_state_change() const {
                          (_state == zombie ? " zombie='1'" : ""));
       }
       log_identity(xtty);
+      if (cause != NULL) {
+        xtty->print(" cause='%s'", cause->klass()->external_name());
+      }
       xtty->stamp();
       xtty->end_elem();
     }
@@ -2006,9 +2016,7 @@ void nmethod::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred)
   }
 
 #if INCLUDE_JVMCI
-  if (unload_for_installed_code(is_alive, unloading_occurred)) {
-    return;
-  }
+  update_installed_code(is_alive, unloading_occurred);
 #endif
 
   // Ensure that all metadata is still alive
@@ -2016,24 +2024,18 @@ void nmethod::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred)
 }
 
 #if INCLUDE_JVMCI
-bool nmethod::unload_for_installed_code(BoolObjectClosure* is_alive, bool unloading_occurred) {
+void nmethod::update_installed_code(BoolObjectClosure* is_alive, bool unloading_occurred) {
   if (_jvmci_installed_code != NULL) {
     oop installed_code = JNIHandles::resolve(_jvmci_installed_code);
-    if (_jvmci_installed_code_triggers_unloading) {
-      if (installed_code == NULL) {
-        // jweak reference processing has already cleared the referent
-        make_unloaded(is_alive, NULL);
-        return true;
-      } else if (can_unload(is_alive, (oop*)&installed_code, unloading_occurred)) {
-        return true;
+    if (installed_code == NULL || !is_alive->do_object_b(installed_code)) {
+      if (_jvmci_installed_code_triggers_invalidation) {
+        // The reference to the installed code has been dropped so invalidate
+        // this nmethod and allow the sweeper to reclaim it.
+        make_not_entrant();
       }
-    } else {
-      if (installed_code == NULL || !is_alive->do_object_b(installed_code)) {
-        clear_jvmci_installed_code();
-      }
+      clear_jvmci_installed_code();
     }
   }
-  return false;
 }
 #endif
 
@@ -2213,9 +2215,7 @@ bool nmethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_
   }
 
 #if INCLUDE_JVMCI
-  if (unload_for_installed_code(is_alive, unloading_occurred)) {
-    is_unloaded = true;
-  }
+  update_installed_code(is_alive, unloading_occurred);
 #endif
 
   // Ensure that all metadata is still alive
@@ -3678,7 +3678,7 @@ oop nmethod::speculation_log() {
   return JNIHandles::resolve(_speculation_log);
 }
 
-char* nmethod::jvmci_installed_code_name(char* buf, size_t buflen) {
+char* nmethod::jvmci_installed_code_name(char* buf, size_t buflen) const {
   if (!this->is_compiled_by_jvmci()) {
     return NULL;
   }

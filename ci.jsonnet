@@ -56,6 +56,7 @@
     SPARCv9:: {
         capabilities+: ["sparcv9"],
         name+: "-sparcv9",
+        timelimit: "1:30:00",
         environment+: {
             CI_ARCH: "sparcv9"
         }
