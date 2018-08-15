@@ -73,7 +73,13 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     private final HotSpotSignature signature;
     private HotSpotMethodData methodData;
     private byte[] code;
-    private Executable toJavaCache;
+
+    /**
+     * Cache for {@link #toJava()}. Set to {@link #signature} when resolving reflection object fails
+     * due to reflection filtering (see {@code Reflection.fieldFilterMap} and
+     * {@code Reflection.methodFilterMap}).
+     */
+    private Object toJavaCache;
 
     /**
      * Only 30% of {@link HotSpotResolvedJavaMethodImpl}s have their name accessed so compute it
@@ -583,25 +589,33 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     private Executable toJava() {
         if (toJavaCache != null) {
-            return toJavaCache;
-        }
-        try {
-            Class<?>[] parameterTypes = signatureToTypes();
-            Class<?> returnType = ((HotSpotResolvedJavaType) getSignature().getReturnType(holder).resolve(holder)).mirror();
-
-            Executable result;
-            if (isConstructor()) {
-                result = holder.mirror().getDeclaredConstructor(parameterTypes);
-            } else {
-                // Do not use Method.getDeclaredMethod() as it can return a bridge method
-                // when this.isBridge() is false and vice versa.
-                result = searchMethods(holder.mirror().getDeclaredMethods(), getName(), returnType, parameterTypes);
+            if (toJavaCache == signature) {
+                return null;
             }
-            toJavaCache = result;
-            return result;
-        } catch (NoSuchMethodException | NoClassDefFoundError e) {
-            return null;
+            return (Executable) toJavaCache;
         }
+        Class<?>[] parameterTypes = signatureToTypes();
+        Class<?> returnType = ((HotSpotResolvedJavaType) getSignature().getReturnType(holder).resolve(holder)).mirror();
+
+        Executable result;
+        if (isConstructor()) {
+            try {
+                result = holder.mirror().getDeclaredConstructor(parameterTypes);
+            } catch (NoSuchMethodException e) {
+                toJavaCache = signature;
+                return null;
+            }
+        } else {
+            // Do not use Method.getDeclaredMethod() as it can return a bridge method
+            // when this.isBridge() is false and vice versa.
+            result = searchMethods(holder.mirror().getDeclaredMethods(), getName(), returnType, parameterTypes);
+            if (result == null) {
+                toJavaCache = signature;
+                return null;
+            }
+        }
+        toJavaCache = result;
+        return result;
     }
 
     @Override
