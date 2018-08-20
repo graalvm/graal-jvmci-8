@@ -1587,7 +1587,8 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
   // Make sure neither the nmethod nor the method is flushed in case of a safepoint in code below.
   nmethodLocker nml(this);
   methodHandle the_method(method());
-  No_Safepoint_Verifier nsv;
+  // This can be called while the system is already at a safepoint which is ok
+  No_Safepoint_Verifier nsv(true, !SafepointSynchronize::is_at_safepoint());
 
   // during patching, depending on the nmethod state we must notify the GC that
   // code has been unloaded, unregistering it. We cannot do this right while
