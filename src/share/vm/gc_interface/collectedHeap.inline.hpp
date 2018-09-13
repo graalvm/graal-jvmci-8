@@ -147,27 +147,33 @@ HeapWord* CollectedHeap::common_mem_allocate_noinit(KlassHandle klass, size_t si
 
 
   if (!gc_overhead_limit_was_exceeded) {
-    // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
-    report_java_out_of_memory("Java heap space");
+    if (!THREAD->in_retryable_allocation()) {
+      // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
+      report_java_out_of_memory("Java heap space");
 
-    if (JvmtiExport::should_post_resource_exhausted()) {
-      JvmtiExport::post_resource_exhausted(
-        JVMTI_RESOURCE_EXHAUSTED_OOM_ERROR | JVMTI_RESOURCE_EXHAUSTED_JAVA_HEAP,
-        "Java heap space");
+      if (JvmtiExport::should_post_resource_exhausted()) {
+        JvmtiExport::post_resource_exhausted(
+          JVMTI_RESOURCE_EXHAUSTED_OOM_ERROR | JVMTI_RESOURCE_EXHAUSTED_JAVA_HEAP,
+          "Java heap space");
+      }
+      THROW_OOP_0(Universe::out_of_memory_error_java_heap());
+    } else {
+      THROW_OOP_0(Universe::out_of_memory_error_retry());
     }
-
-    THROW_OOP_0(Universe::out_of_memory_error_java_heap());
   } else {
-    // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
-    report_java_out_of_memory("GC overhead limit exceeded");
+    if (!THREAD->in_retryable_allocation()) {
+      // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
+      report_java_out_of_memory("GC overhead limit exceeded");
 
-    if (JvmtiExport::should_post_resource_exhausted()) {
-      JvmtiExport::post_resource_exhausted(
-        JVMTI_RESOURCE_EXHAUSTED_OOM_ERROR | JVMTI_RESOURCE_EXHAUSTED_JAVA_HEAP,
-        "GC overhead limit exceeded");
+      if (JvmtiExport::should_post_resource_exhausted()) {
+        JvmtiExport::post_resource_exhausted(
+          JVMTI_RESOURCE_EXHAUSTED_OOM_ERROR | JVMTI_RESOURCE_EXHAUSTED_JAVA_HEAP,
+          "GC overhead limit exceeded");
+      }
+      THROW_OOP_0(Universe::out_of_memory_error_gc_overhead_limit());
+    } else {
+      THROW_OOP_0(Universe::out_of_memory_error_retry());
     }
-
-    THROW_OOP_0(Universe::out_of_memory_error_gc_overhead_limit());
   }
 }
 
