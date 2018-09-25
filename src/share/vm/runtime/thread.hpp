@@ -216,8 +216,8 @@ class Thread: public ThreadShadow {
   // (e.g., by deoptimizing and re-executing in the interpreter).
   // In this case, the failed allocation must raise
   // Universe::out_of_memory_error_retry() and omit side effects
-  // such as JVMTI events and acting on -XX:+HeapDumpOnOutOfMemoryError
-  // of -XX:OnOutOfMemoryError.
+  // such as JVMTI events and handling -XX:+HeapDumpOnOutOfMemoryError
+  // and -XX:OnOutOfMemoryError.
   virtual bool in_retryable_allocation() const { return false; }
 
  private:
@@ -1351,8 +1351,7 @@ class JavaThread: public Thread {
   void set_jvmci_implicit_exception_pc(address a) { assert(_jvmci._implicit_exception_pc == NULL, "must be"); _jvmci._implicit_exception_pc = a; }
 
   virtual bool in_retryable_allocation() const    { return _in_retryable_allocation; }
-  void enter_retryable_allocation()               { _in_retryable_allocation = true; }
-  void exit_retryable_allocation()                { _in_retryable_allocation = false; }
+  void set_in_retryable_allocation(bool b)        { _in_retryable_allocation = b; }
 #endif
 
   // Exception handling for compiled methods

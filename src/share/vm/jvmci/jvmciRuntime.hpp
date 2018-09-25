@@ -171,21 +171,20 @@ class JVMCIRuntime: public AllStatic {
   // The following routines are called from compiled JVMCI code
 
   // When allocation fails, these stubs:
-  // 1. Exercise -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
-  // 2. Post a JVMTI_EVENT_RESOURCE_EXHAUSTED event
-  // 3. Set a pending OutOfMemoryError exception
-  // 4. Return NULL
-  // Compiled code must ensure these stubs are not called twice for the
-  // same allocation site as 1 and 2 are visible side effects of failed
-  // allocation that must not be repeated.
+  // 1. Exercise -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError handling and also
+  //    post a JVMTI_EVENT_RESOURCE_EXHAUSTED event if the failure is an OutOfMemroyError
+  // 2. Return NULL with a pending exception.
+  // Compiled code must ensure these stubs are not called twice for the same allocation
+  // site due to the non-repeatable side effects in the case of OOME.
   static void new_instance(JavaThread* thread, Klass* klass) { new_instance_common(thread, klass, false); }
   static void new_array(JavaThread* thread, Klass* klass, jint length) { new_array_common(thread, klass, length, false); }
   static void new_multi_array(JavaThread* thread, Klass* klass, int rank, jint* dims) { new_multi_array_common(thread, klass, rank, dims, false); }
   static void dynamic_new_array(JavaThread* thread, oopDesc* element_mirror, jint length) { dynamic_new_array_common(thread, element_mirror, length, false); }
   static void dynamic_new_instance(JavaThread* thread, oopDesc* type_mirror) { dynamic_new_instance_common(thread, type_mirror, false); }
 
-  // When allocation fails, these stubs return NULL.
-  // Compiled code can use these stubs to retry a failed allocation.
+  // When allocation fails, these stubs return NULL and have no pending exception. Compiled code
+  // can use these stubs if a failed allocation will be retried (e.g., by deoptimizing and
+  // re-executing in the interpreter).
   static void new_instance_or_null(JavaThread* thread, Klass* klass) { new_instance_common(thread, klass, true); }
   static void new_array_or_null(JavaThread* thread, Klass* klass, jint length) { new_array_common(thread, klass, length, true); }
   static void new_multi_array_or_null(JavaThread* thread, Klass* klass, int rank, jint* dims) { new_multi_array_common(thread, klass, rank, dims, true); }
