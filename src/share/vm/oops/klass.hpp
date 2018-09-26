@@ -488,6 +488,9 @@ protected:
   virtual Klass* array_klass_impl(bool or_null, int rank, TRAPS);
   virtual Klass* array_klass_impl(bool or_null, TRAPS);
 
+  // Error handling when length > max_length
+  static void check_array_allocation_length(int length, int max_length, TRAPS);
+
  public:
   // CDS support - remove and restore oops from metadata. Oops are not shared.
   virtual void remove_unshareable_info();
