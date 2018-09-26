@@ -145,35 +145,22 @@ HeapWord* CollectedHeap::common_mem_allocate_noinit(KlassHandle klass, size_t si
     return result;
   }
 
+  const char* message = gc_overhead_limit_was_exceeded ? "GC overhead limit exceeded" : "Java heap space";
+  if (!THREAD->in_retryable_allocation()) {
+    // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
+    report_java_out_of_memory(message);
 
-  if (!gc_overhead_limit_was_exceeded) {
-    if (!THREAD->in_retryable_allocation()) {
-      // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
-      report_java_out_of_memory("Java heap space");
-
-      if (JvmtiExport::should_post_resource_exhausted()) {
-        JvmtiExport::post_resource_exhausted(
-          JVMTI_RESOURCE_EXHAUSTED_OOM_ERROR | JVMTI_RESOURCE_EXHAUSTED_JAVA_HEAP,
-          "Java heap space");
-      }
-      THROW_OOP_0(Universe::out_of_memory_error_java_heap());
-    } else {
-      THROW_OOP_0(Universe::out_of_memory_error_retry());
+    if (JvmtiExport::should_post_resource_exhausted()) {
+      JvmtiExport::post_resource_exhausted(
+        JVMTI_RESOURCE_EXHAUSTED_OOM_ERROR | JVMTI_RESOURCE_EXHAUSTED_JAVA_HEAP,
+        message);
     }
+    oop exception = gc_overhead_limit_was_exceeded ?
+        Universe::out_of_memory_error_gc_overhead_limit() :
+        Universe::out_of_memory_error_java_heap();
+    THROW_OOP_0(exception);
   } else {
-    if (!THREAD->in_retryable_allocation()) {
-      // -XX:+HeapDumpOnOutOfMemoryError and -XX:OnOutOfMemoryError support
-      report_java_out_of_memory("GC overhead limit exceeded");
-
-      if (JvmtiExport::should_post_resource_exhausted()) {
-        JvmtiExport::post_resource_exhausted(
-          JVMTI_RESOURCE_EXHAUSTED_OOM_ERROR | JVMTI_RESOURCE_EXHAUSTED_JAVA_HEAP,
-          "GC overhead limit exceeded");
-      }
-      THROW_OOP_0(Universe::out_of_memory_error_gc_overhead_limit());
-    } else {
-      THROW_OOP_0(Universe::out_of_memory_error_retry());
-    }
+    THROW_OOP_0(Universe::out_of_memory_error_retry());
   }
 }
 
