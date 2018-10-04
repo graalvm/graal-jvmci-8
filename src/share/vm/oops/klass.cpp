@@ -579,6 +579,18 @@ Klass* Klass::array_klass_impl(bool or_null, TRAPS) {
   return NULL;
 }
 
+void Klass::check_array_allocation_length(int length, int max_length, TRAPS) {
+  if (length > max_length) {
+    if (!THREAD->in_retryable_allocation()) {
+      report_java_out_of_memory("Requested array size exceeds VM limit");
+      JvmtiExport::post_array_size_exhausted();
+      THROW_OOP(Universe::out_of_memory_error_array_size());
+    } else {
+      THROW_OOP(Universe::out_of_memory_error_retry());
+    }
+  }
+}
+
 oop Klass::class_loader() const { return class_loader_data()->class_loader(); }
 
 const char* Klass::external_name() const {

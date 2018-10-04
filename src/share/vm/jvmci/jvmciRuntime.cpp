@@ -95,17 +95,61 @@ static void deopt_caller() {
   }
 }
 
-JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance(JavaThread* thread, Klass* klass))
+// Manages a scope in which a failed heap allocation will throw an exception.
+// The pending exception is cleared when leaving the scope.
+class RetryableAllocationMark: public StackObj {
+ private:
+  JavaThread* _thread;
+ public:
+  RetryableAllocationMark(JavaThread* thread, bool activate) {
+    if (activate) {
+      assert(!thread->in_retryable_allocation(), "retryable allocation scope is non-reentrant");
+      _thread = thread;
+      _thread->set_in_retryable_allocation(true);
+    } else {
+      _thread = NULL;
+    }
+  }
+  ~RetryableAllocationMark() {
+    if (_thread != NULL) {
+      _thread->set_in_retryable_allocation(false);
+      JavaThread* THREAD = _thread;
+      if (HAS_PENDING_EXCEPTION) {
+        oop ex = PENDING_EXCEPTION;
+        CLEAR_PENDING_EXCEPTION;
+        oop retry_oome = Universe::out_of_memory_error_retry();
+        if (ex->is_a(retry_oome->klass()) && retry_oome != ex) {
+          ResourceMark rm;
+          fatal(err_msg("Unexpected exception in scope of retryable allocation: " INTPTR_FORMAT " of type %s", p2i(ex), ex->klass()->external_name()));
+        }
+      }
+    }
+  }
+};
+
+JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance_common(JavaThread* thread, Klass* klass, bool null_on_fail))
   JRT_BLOCK;
   assert(klass->is_klass(), "not a class");
   Handle holder(THREAD, klass->klass_holder()); // keep the klass alive
   instanceKlassHandle h(thread, klass);
-  h->check_valid_for_instantiation(true, CHECK);
-  // make sure klass is initialized
-  h->initialize(CHECK);
-  // allocate instance and return via TLS
-  oop obj = h->allocate_instance(CHECK);
-  thread->set_vm_result(obj);
+  {
+    RetryableAllocationMark ram(thread, null_on_fail);
+    h->check_valid_for_instantiation(true, CHECK);
+    oop obj;
+    if (null_on_fail) {
+      if (!h->is_initialized()) {
+        // Cannot re-execute class initialization without side effects
+        // so return without attempting the initialization
+        return;
+      }
+    } else {
+      // make sure klass is initialized
+      h->initialize(CHECK);
+    }
+    // allocate instance and return via TLS
+    obj = h->allocate_instance(CHECK);
+    thread->set_vm_result(obj);
+  }
   JRT_BLOCK_END;
 
   if (ReduceInitialCardMarks) {
@@ -113,7 +157,7 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance(JavaThread* thread, Klass* klas
   }
 JRT_END
 
-JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array(JavaThread* thread, Klass* array_klass, jint length))
+JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array_common(JavaThread* thread, Klass* array_klass, jint length, bool null_on_fail))
   JRT_BLOCK;
   // Note: no handle for klass needed since they are not used
   //       anymore after new_objArray() and no GC can happen before.
@@ -122,10 +166,12 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array(JavaThread* thread, Klass* array_k
   oop obj;
   if (array_klass->oop_is_typeArray()) {
     BasicType elt_type = TypeArrayKlass::cast(array_klass)->element_type();
+    RetryableAllocationMark ram(thread, null_on_fail);
     obj = oopFactory::new_typeArray(elt_type, length, CHECK);
   } else {
     Handle holder(THREAD, array_klass->klass_holder()); // keep the klass alive
     Klass* elem_klass = ObjArrayKlass::cast(array_klass)->element_klass();
+    RetryableAllocationMark ram(thread, null_on_fail);
     obj = oopFactory::new_objArray(elem_klass, length, CHECK);
   }
   thread->set_vm_result(obj);
@@ -135,8 +181,12 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_array(JavaThread* thread, Klass* array_k
     static int deopts = 0;
     // Alternate between deoptimizing and raising an error (which will also cause a deopt)
     if (deopts++ % 2 == 0) {
-      ResourceMark rm(THREAD);
-      THROW(vmSymbols::java_lang_OutOfMemoryError());
+      if (null_on_fail) {
+        return;
+      } else {
+        ResourceMark rm(THREAD);
+        THROW(vmSymbols::java_lang_OutOfMemoryError());
+      }
     } else {
       deopt_caller();
     }
@@ -165,32 +215,43 @@ void JVMCIRuntime::new_store_pre_barrier(JavaThread* thread) {
   thread->set_vm_result(new_obj);
 }
 
-JRT_ENTRY(void, JVMCIRuntime::new_multi_array(JavaThread* thread, Klass* klass, int rank, jint* dims))
+JRT_ENTRY(void, JVMCIRuntime::new_multi_array_common(JavaThread* thread, Klass* klass, int rank, jint* dims, bool null_on_fail))
   assert(klass->is_klass(), "not a class");
   assert(rank >= 1, "rank must be nonzero");
   Handle holder(THREAD, klass->klass_holder()); // keep the klass alive
+  RetryableAllocationMark ram(thread, null_on_fail);
   oop obj = ArrayKlass::cast(klass)->multi_allocate(rank, dims, CHECK);
   thread->set_vm_result(obj);
 JRT_END
 
-JRT_ENTRY(void, JVMCIRuntime::dynamic_new_array(JavaThread* thread, oopDesc* element_mirror, jint length))
+JRT_ENTRY(void, JVMCIRuntime::dynamic_new_array_common(JavaThread* thread, oopDesc* element_mirror, jint length, bool null_on_fail))
+  RetryableAllocationMark ram(thread, null_on_fail);
   oop obj = Reflection::reflect_new_array(element_mirror, length, CHECK);
   thread->set_vm_result(obj);
 JRT_END
 
-JRT_ENTRY(void, JVMCIRuntime::dynamic_new_instance(JavaThread* thread, oopDesc* type_mirror))
+JRT_ENTRY(void, JVMCIRuntime::dynamic_new_instance_common(JavaThread* thread, oopDesc* type_mirror, bool null_on_fail))
   instanceKlassHandle klass(THREAD, java_lang_Class::as_Klass(type_mirror));
 
   if (klass == NULL) {
     ResourceMark rm(THREAD);
     THROW(vmSymbols::java_lang_InstantiationException());
   }
+  RetryableAllocationMark ram(thread, null_on_fail);
 
   // Create new instance (the receiver)
   klass->check_valid_for_instantiation(false, CHECK);
 
-  // Make sure klass gets initialized
-  klass->initialize(CHECK);
+  if (null_on_fail) {
+    if (!klass->is_initialized()) {
+      // Cannot re-execute class initialization without side effects
+      // so return without attempting the initialization
+      return;
+    }
+  } else {
+    // Make sure klass gets initialized
+    klass->initialize(CHECK);
+  }
 
   oop obj = klass->allocate_instance(CHECK);
   thread->set_vm_result(obj);

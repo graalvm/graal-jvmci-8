@@ -186,15 +186,10 @@ int ObjArrayKlass::oop_size(oop obj) const {
 
 objArrayOop ObjArrayKlass::allocate(int length, TRAPS) {
   if (length >= 0) {
-    if (length <= arrayOopDesc::max_array_length(T_OBJECT)) {
-      int size = objArrayOopDesc::object_size(length);
-      KlassHandle h_k(THREAD, this);
-      return (objArrayOop)CollectedHeap::array_allocate(h_k, size, length, CHECK_NULL);
-    } else {
-      report_java_out_of_memory("Requested array size exceeds VM limit");
-      JvmtiExport::post_array_size_exhausted();
-      THROW_OOP_0(Universe::out_of_memory_error_array_size());
-    }
+    check_array_allocation_length(length, arrayOopDesc::max_array_length(T_OBJECT), CHECK_NULL);
+    int size = objArrayOopDesc::object_size(length);
+    KlassHandle h_k(THREAD, this);
+    return (objArrayOop)CollectedHeap::array_allocate(h_k, size, length, CHECK_NULL);
   } else {
     THROW_0(vmSymbols::java_lang_NegativeArraySizeException());
   }

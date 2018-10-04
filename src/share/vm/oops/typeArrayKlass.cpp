@@ -98,22 +98,17 @@ TypeArrayKlass::TypeArrayKlass(BasicType type, Symbol* name) : ArrayKlass(name) 
 typeArrayOop TypeArrayKlass::allocate_common(int length, bool do_zero, TRAPS) {
   assert(log2_element_size() >= 0, "bad scale");
   if (length >= 0) {
-    if (length <= max_length()) {
-      size_t size = typeArrayOopDesc::object_size(layout_helper(), length);
-      KlassHandle h_k(THREAD, this);
-      typeArrayOop t;
-      CollectedHeap* ch = Universe::heap();
-      if (do_zero) {
-        t = (typeArrayOop)CollectedHeap::array_allocate(h_k, (int)size, length, CHECK_NULL);
-      } else {
-        t = (typeArrayOop)CollectedHeap::array_allocate_nozero(h_k, (int)size, length, CHECK_NULL);
-      }
-      return t;
+    check_array_allocation_length(length, max_length(), CHECK_NULL);
+    size_t size = typeArrayOopDesc::object_size(layout_helper(), length);
+    KlassHandle h_k(THREAD, this);
+    typeArrayOop t;
+    CollectedHeap* ch = Universe::heap();
+    if (do_zero) {
+      t = (typeArrayOop)CollectedHeap::array_allocate(h_k, (int)size, length, CHECK_NULL);
     } else {
-      report_java_out_of_memory("Requested array size exceeds VM limit");
-      JvmtiExport::post_array_size_exhausted();
-      THROW_OOP_0(Universe::out_of_memory_error_array_size());
+      t = (typeArrayOop)CollectedHeap::array_allocate_nozero(h_k, (int)size, length, CHECK_NULL);
     }
+    return t;
   } else {
     THROW_0(vmSymbols::java_lang_NegativeArraySizeException());
   }
