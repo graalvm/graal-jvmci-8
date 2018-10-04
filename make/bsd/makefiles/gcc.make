@@ -327,8 +327,12 @@ endif
 # We want to use libc++ on Clang 5.0
 ifeq ($(USE_CLANG), true)
   # Clang 5.0
-  ifeq ($(shell expr $(CC_VER_MAJOR) = 5 \& \( $(CC_VER_MINOR) = 0 \| $(CC_VER_MINOR) = 1 \) ), 1)
+  ifeq ($(shell expr $(CC_VER_MAJOR) \>= 10 ), 1)
     CFLAGS += -stdlib=libc++
+    LFLAGS += -stdlib=libc++
+  else
+    CFLAGS += -stdlib=libstdc++
+    LFLAGS += -stdlib=libstdc++
   endif
 endif
 
@@ -371,11 +375,6 @@ ASFLAGS += -x assembler-with-cpp
 
 # statically link libstdc++.so, work with gcc but ignored by g++
 STATIC_STDCXX = -Wl,-Bstatic -lstdc++ -Wl,-Bdynamic
-
-# Ensure use libstdc++ on clang, not libc++
-ifeq ($(USE_CLANG), true)
-  LFLAGS += -stdlib=libstdc++
-endif
 
 ifeq ($(USE_CLANG),)
   # statically link libgcc and/or libgcc_s, libgcc does not exist before gcc-3.x.
