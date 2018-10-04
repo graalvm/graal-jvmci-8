@@ -103,7 +103,7 @@ class RetryableAllocationMark: public StackObj {
  public:
   RetryableAllocationMark(JavaThread* thread, bool activate) {
     if (activate) {
-      assert(thread->in_retryable_allocation(), "retryable allocation scope is non-reentrant");
+      assert(!thread->in_retryable_allocation(), "retryable allocation scope is non-reentrant");
       _thread = thread;
       _thread->set_in_retryable_allocation(true);
     } else {
