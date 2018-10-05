@@ -95,8 +95,13 @@ static void deopt_caller() {
   }
 }
 
-// Manages a scope in which a failed heap allocation will throw an exception.
-// The pending exception is cleared when leaving the scope.
+// Manages a scope for a JVMCI runtime call that attempts a heap allocation.
+// If there is a pending exception upon closing the scope and the runtime
+// call is of the variety where allocation failure returns NULL without an
+// exception, the following action is taken:
+//   1. The pending exception is cleared
+//   2. NULL is written to JavaThread::_vm_result
+//   3. Checks that an OutOfMemoryError is Universe::out_of_memory_error_retry().
 class RetryableAllocationMark: public StackObj {
  private:
   JavaThread* _thread;
@@ -122,6 +127,7 @@ class RetryableAllocationMark: public StackObj {
           ResourceMark rm;
           fatal(err_msg("Unexpected exception in scope of retryable allocation: " INTPTR_FORMAT " of type %s", p2i(ex), ex->klass()->external_name()));
         }
+        _thread->set_vm_result(NULL);
       }
     }
   }
