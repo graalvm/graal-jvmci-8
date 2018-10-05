@@ -97,21 +97,17 @@ TypeArrayKlass::TypeArrayKlass(BasicType type, Symbol* name) : ArrayKlass(name) 
 
 typeArrayOop TypeArrayKlass::allocate_common(int length, bool do_zero, TRAPS) {
   assert(log2_element_size() >= 0, "bad scale");
-  if (length >= 0) {
-    check_array_allocation_length(length, max_length(), CHECK_NULL);
-    size_t size = typeArrayOopDesc::object_size(layout_helper(), length);
-    KlassHandle h_k(THREAD, this);
-    typeArrayOop t;
-    CollectedHeap* ch = Universe::heap();
-    if (do_zero) {
-      t = (typeArrayOop)CollectedHeap::array_allocate(h_k, (int)size, length, CHECK_NULL);
-    } else {
-      t = (typeArrayOop)CollectedHeap::array_allocate_nozero(h_k, (int)size, length, CHECK_NULL);
-    }
-    return t;
+  check_array_allocation_length(length, max_length(), CHECK_NULL);
+  size_t size = typeArrayOopDesc::object_size(layout_helper(), length);
+  KlassHandle h_k(THREAD, this);
+  typeArrayOop t;
+  CollectedHeap* ch = Universe::heap();
+  if (do_zero) {
+    t = (typeArrayOop)CollectedHeap::array_allocate(h_k, (int)size, length, CHECK_NULL);
   } else {
-    THROW_0(vmSymbols::java_lang_NegativeArraySizeException());
+    t = (typeArrayOop)CollectedHeap::array_allocate_nozero(h_k, (int)size, length, CHECK_NULL);
   }
+  return t;
 }
 
 oop TypeArrayKlass::multi_allocate(int rank, jint* last_size, TRAPS) {

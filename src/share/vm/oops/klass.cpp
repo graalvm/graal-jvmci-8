@@ -588,6 +588,8 @@ void Klass::check_array_allocation_length(int length, int max_length, TRAPS) {
     } else {
       THROW_OOP(Universe::out_of_memory_error_retry());
     }
+  } else if (length < 0) {
+    THROW_MSG(vmSymbols::java_lang_NegativeArraySizeException(), err_msg("%d", length));
   }
 }
 

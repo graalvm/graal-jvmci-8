@@ -135,9 +135,6 @@ klassVtable* ArrayKlass::vtable() const {
 
 
 objArrayOop ArrayKlass::allocate_arrayArray(int n, int length, TRAPS) {
-  if (length < 0) {
-    THROW_0(vmSymbols::java_lang_NegativeArraySizeException());
-  }
   check_array_allocation_length(length, arrayOopDesc::max_array_length(T_ARRAY), CHECK_0);
   int size = objArrayOopDesc::object_size(length);
   Klass* k = array_klass(n+dimension(), CHECK_0);

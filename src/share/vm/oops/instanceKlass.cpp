@@ -1113,7 +1113,6 @@ bool InstanceKlass::is_same_or_direct_interface(Klass *k) const {
 }
 
 objArrayOop InstanceKlass::allocate_objArray(int n, int length, TRAPS) {
-  if (length < 0) THROW_0(vmSymbols::java_lang_NegativeArraySizeException());
   check_array_allocation_length(length, arrayOopDesc::max_array_length(T_OBJECT), CHECK_NULL);
   int size = objArrayOopDesc::object_size(length);
   Klass* ak = array_klass(n, CHECK_NULL);

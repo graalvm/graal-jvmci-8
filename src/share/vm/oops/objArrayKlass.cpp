@@ -185,14 +185,10 @@ int ObjArrayKlass::oop_size(oop obj) const {
 }
 
 objArrayOop ObjArrayKlass::allocate(int length, TRAPS) {
-  if (length >= 0) {
-    check_array_allocation_length(length, arrayOopDesc::max_array_length(T_OBJECT), CHECK_NULL);
-    int size = objArrayOopDesc::object_size(length);
-    KlassHandle h_k(THREAD, this);
-    return (objArrayOop)CollectedHeap::array_allocate(h_k, size, length, CHECK_NULL);
-  } else {
-    THROW_0(vmSymbols::java_lang_NegativeArraySizeException());
-  }
+  check_array_allocation_length(length, arrayOopDesc::max_array_length(T_OBJECT), CHECK_NULL);
+  int size = objArrayOopDesc::object_size(length);
+  KlassHandle h_k(THREAD, this);
+  return (objArrayOop)CollectedHeap::array_allocate(h_k, size, length, CHECK_NULL);
 }
 
 static int multi_alloc_counter = 0;
