@@ -885,6 +885,13 @@ void Type::dump_on(outputStream *st) const {
     st->print(" [narrowklass]");
   }
 }
+
+//-----------------------------------------------------------------------------
+const char* Type::str(const Type* t) {
+  stringStream ss;
+  t->dump_on(&ss);
+  return ss.as_string();
+}
 #endif
 
 //------------------------------singleton--------------------------------------
