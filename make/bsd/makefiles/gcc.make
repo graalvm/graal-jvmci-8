@@ -259,6 +259,7 @@ ifeq ($(USE_CLANG), true)
 #  WARNINGS_ARE_ERRORS += -Wno-tautological-constant-out-of-range-compare
   WARNINGS_ARE_ERRORS += -Wno-delete-non-virtual-dtor -Wno-deprecated -Wno-format -Wno-dynamic-class-memaccess
   WARNINGS_ARE_ERRORS += -Wno-empty-body
+  WARNINGS_ARE_ERRORS += -Wno-undefined-var-template -Wno-undefined-bool-conversion
 endif
 
 WARNING_FLAGS = -Wpointer-arith -Wsign-compare -Wundef
