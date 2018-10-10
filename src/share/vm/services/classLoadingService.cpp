@@ -80,6 +80,19 @@ HS_DTRACE_PROBE_DECL4(hotspot, class__unloaded, char*, int, oop, bool);
 #endif
 
 #if INCLUDE_MANAGEMENT
+class ClassUnloadingLog : public StringEventLog {
+ public:
+  ClassUnloadingLog() : StringEventLog("Class unloading") {
+  }
+
+  void log_unloading(const char* name, intptr_t klass_pointer) {
+    Thread* thread = Thread::current();
+    log(thread, "unloaded %s " INTPTR_FORMAT, name, klass_pointer);
+  }
+};
+
+static ClassUnloadingLog* _class_unloading_log = NULL;
+
 // counters for classes loaded from class files
 PerfCounter*    ClassLoadingService::_classes_loaded_count = NULL;
 PerfCounter*    ClassLoadingService::_classes_unloaded_count = NULL;
@@ -134,6 +147,10 @@ void ClassLoadingService::init() {
                  PerfDataManager::create_variable(SUN_CLS, "methodBytes",
                                                   PerfData::U_Bytes, CHECK);
   }
+
+  if (LogEvents) {
+    _class_unloading_log = new ClassUnloadingLog();
+  }
 }
 
 void ClassLoadingService::notify_class_unloaded(InstanceKlass* k) {
@@ -158,6 +175,9 @@ void ClassLoadingService::notify_class_unloaded(InstanceKlass* k) {
   if (TraceClassUnloading) {
     ResourceMark rm;
     tty->print_cr("[Unloading class %s " INTPTR_FORMAT "]", k->external_name(), p2i(k));
+  }
+  if (_class_unloading_log != NULL) {
+    _class_unloading_log->log_unloading(k->external_name(), p2i(k));
   }
 }
 
