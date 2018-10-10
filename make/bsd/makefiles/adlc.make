@@ -64,6 +64,14 @@ CXXFLAGS = $(SYSDEFS) $(INCLUDES)
 # Force assertions on.
 CXXFLAGS += -DASSERT
 
+ifeq ($(USE_CLANG), true)
+  WARNINGS_ARE_ERRORS += -Wno-logical-op-parentheses -Wno-parentheses-equality -Wno-parentheses
+  WARNINGS_ARE_ERRORS += -Wno-switch -Wno-tautological-compare
+  WARNINGS_ARE_ERRORS += -Wno-delete-non-virtual-dtor -Wno-deprecated -Wno-format -Wno-dynamic-class-memaccess
+  WARNINGS_ARE_ERRORS += -Wno-empty-body
+  WARNINGS_ARE_ERRORS += -Wno-undefined-var-template -Wno-undefined-bool-conversion
+endif
+
 # CFLAGS_WARN holds compiler options to suppress/enable warnings.
 # Compiler warnings are treated as errors
 ifneq ($(COMPILER_WARNINGS_FATAL),false)
