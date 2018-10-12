@@ -102,6 +102,7 @@ endif()
 
 add_definitions(-DTARGET_OS_ARCH_${HS_OS}_${HS_CPU})
 add_definitions(-DTARGET_ARCH_${HS_CPU})
+add_definitions(-DTARGET_OS_FAMILY_${HS_OS})
 set(BUILD_DIR ${BUILD_ROOT}/${HS_OS}/${HS_OS}_${HS_ARCH}_${HS_VARIANT})
 set(GENERATED_DIR ${BUILD_DIR}/generated)
 set(OS_CPU_VM_SOURCES_DIR ${HOTSPOT_SRC_ROOT}/os_cpu/${HS_OS}_${HS_CPU}${VM_DIR})
