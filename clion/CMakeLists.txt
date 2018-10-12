@@ -70,10 +70,10 @@ file(GLOB CPU_JVM_SOURCES
         )
 
 if (LINUX)
-    add_definitions(-DLINUX -D_GNU_SOURCE -DTARGET_OS_FAMILY_linux)
+    add_definitions(-DLINUX -D_GNU_SOURCE)
     set(HS_OS linux)
 elseif(DARWIN)
-    add_definitions(-D_ALLBSD_SOURCE -D_GNU_SOURCE -DTARGET_OS_FAMILY_linux)
+    add_definitions(-D_ALLBSD_SOURCE -D_GNU_SOURCE)
     set(HS_OS bsd)
 endif()
 
@@ -100,7 +100,8 @@ if (${HS_VARIANT} STREQUAL "compiler2")
     add_definitions(-DCOMPILER1)
 endif()
 
-add_definitions(-DTARGET_OS_ARCH_${HS_OS}_${HS_CPU})
+add_definitions(-DTARGET_OS_ARCH_${HS_OS}_${HS_CPU}))
+add_definitions(-DTARGET_ARCH_${HS_CPU})
 set(BUILD_DIR ${BUILD_ROOT}/${HS_OS}/${HS_OS}_${HS_ARCH}_${HS_VARIANT})
 set(GENERATED_DIR ${BUILD_DIR}/generated)
 set(OS_CPU_VM_SOURCES_DIR ${HOTSPOT_SRC_ROOT}/os_cpu/${HS_OS}_${HS_CPU}${VM_DIR})
