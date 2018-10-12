@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 98)
 
 set(HOTSPOT_ROOT ..)
 set(BUILD_ROOT ${HOTSPOT_ROOT}/build)
-set(VM_DIR ${VM_DIR})
+set(VM_DIR /vm)
 set(HOTSPOT_SRC_ROOT ${HOTSPOT_ROOT}/src)
 
 if (UNIX AND NOT APPLE)
@@ -100,7 +100,7 @@ if (${HS_VARIANT} STREQUAL "compiler2")
     add_definitions(-DCOMPILER1)
 endif()
 
-add_definitions(-DTARGET_OS_ARCH_${HS_OS}_${HS_CPU}))
+add_definitions(-DTARGET_OS_ARCH_${HS_OS}_${HS_CPU})
 add_definitions(-DTARGET_ARCH_${HS_CPU})
 set(BUILD_DIR ${BUILD_ROOT}/${HS_OS}/${HS_OS}_${HS_ARCH}_${HS_VARIANT})
 set(GENERATED_DIR ${BUILD_DIR}/generated)
