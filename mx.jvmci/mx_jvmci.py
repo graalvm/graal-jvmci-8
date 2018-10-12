@@ -817,13 +817,12 @@ class HotSpotBuildTask(mx.NativeBuildTask):
         mx.NativeBuildTask.__init__(self, args, project)
         self.vm = vm
         self.vmbuild = vmbuild
+        self.is_windows = mx.get_os() == 'windows' or mx.get_os() == 'cygwin'
 
     def __str__(self):
         return 'Building HotSpot[{}, {}]'.format(self.vmbuild, self.vm)
 
     def build(self):
-        isWindows = platform.system() == 'Windows' or "CYGWIN" in platform.system()
-
         if self.vm.startswith('server'):
             buildSuffix = ''
         else:
@@ -833,9 +832,11 @@ class HotSpotBuildTask(mx.NativeBuildTask):
         jvmci_version = 'jvmci-' + _suite.release_version()
         hs_release_version = get_hotspot_release_version()
 
-        if isWindows:
+        if self.is_windows:
             t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "jvmciCompile.log"))
             mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
+            if ' ' in mksHome:
+                mx.abort('Spaces are not supported in MKS_HOME: "{}"'.format(mksHome))
 
             variant = _hotspotGetVariant(self.vm)
             project_config = variant + '_' + self.vmbuild
@@ -982,8 +983,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             elif os.path.isfile(name):
                 os.unlink(name)
 
-        isWindows = platform.system() == 'Windows' or "CYGWIN" in platform.system()
-        if isWindows:
+        if self.is_windows:
             rmIfExists(join(_suite.dir, 'build', 'vs-amd64'))
         else:
             makeFiles = join(_suite.dir, 'make')
