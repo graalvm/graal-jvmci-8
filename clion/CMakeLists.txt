@@ -58,6 +58,7 @@ set(SHARED_VM_SOURCES_DIR ${HOTSPOT_SRC_ROOT}/share${VM_DIR})
 
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
     set(HS_CPU x86)
+    set(HS_MODEL 64)
     set(HS_ARCH amd64)
     add_definitions(-DAMD64)
 endif()
@@ -66,14 +67,15 @@ endif()
 add_definitions(-DTARGET_ARCH_${HS_CPU})
 set(CPU_VM_SOURCES_DIR ${HOTSPOT_SRC_ROOT}/cpu/${HS_CPU}${VM_DIR})
 file(GLOB CPU_JVM_SOURCES
-        ${CPU_VM_SOURCES_DIR}/*.cpp
+        ${CPU_VM_SOURCES_DIR}/*${HS_CPU}.cpp
+        ${CPU_VM_SOURCES_DIR}/*${HS_CPU}_${HS_MODEL}.cpp
         )
 
 if (LINUX)
     add_definitions(-DLINUX -D_GNU_SOURCE)
     set(HS_OS linux)
 elseif(DARWIN)
-    add_definitions(-D_ALLBSD_SOURCE -D_GNU_SOURCE)
+    add_definitions(-D_ALLBSD_SOURCE -D_GNU_SOURCE -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE)
     set(HS_OS bsd)
 endif()
 
@@ -101,18 +103,27 @@ if (${HS_VARIANT} STREQUAL "compiler2")
 endif()
 
 add_definitions(-DTARGET_OS_ARCH_${HS_OS}_${HS_CPU})
+add_definitions(-DTARGET_ARCH_MODEL_${HS_CPU}_${HS_MODEL})
 add_definitions(-DTARGET_ARCH_${HS_CPU})
 add_definitions(-DTARGET_OS_FAMILY_${HS_OS})
+add_definitions(-DHOTSPOT_LIB_ARCH=\"${HS_ARCH}\")
 set(BUILD_DIR ${BUILD_ROOT}/${HS_OS}/${HS_OS}_${HS_ARCH}_${HS_VARIANT})
 set(GENERATED_DIR ${BUILD_DIR}/generated)
 set(OS_CPU_VM_SOURCES_DIR ${HOTSPOT_SRC_ROOT}/os_cpu/${HS_OS}_${HS_CPU}${VM_DIR})
 file(GLOB OS_CPU_JVM_SOURCES
-        ${OS_CPU_VM_SOURCES_DIR}/*.cpp
+        ${OS_CPU_VM_SOURCES_DIR}/*${HS_CPU}.cpp
+        ${OS_CPU_VM_SOURCES_DIR}/*${HS_CPU}_${HS_MODEL}.cpp
         )
+
 
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     add_definitions(-DTARGET_COMPILER_gcc)
+endif()
+# This matches both Clang and AppleClang
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_definitions(-DTARGET_COMPILER_gcc)
+    set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -Wno-logical-op-parentheses -Wno-parentheses-equality -Wno-parentheses -Wno-switch -Wno-tautological-compare -Wno-delete-non-virtual-dtor -Wno-deprecated -Wno-format -Wno-dynamic-class-memaccess -Wno-empty-body -Wno-undefined-var-template -Wno-undefined-bool-conversion")
 endif()
 
 file(GLOB SHARED_JVM_SOURCES
@@ -164,8 +175,11 @@ file(GLOB SHARED_JVM_SOURCES
         ${SHARED_VM_SOURCES_DIR}/utilities/*.cpp
         ${SHARED_VM_SOURCES_DIR}/utilities/*.c
         ${SHARED_VM_SOURCES_DIR}/utilities/*.s
-        ${GENERATED_DIR}/jvmtifiles/*.cpp
+        ${GENERATED_DIR}/jvmtifiles/*.?pp
+        ${GENERATED_DIR}/jvmtifiles/*.h
         )
+
+list(FILTER SHARED_JVM_SOURCES EXCLUDE REGEX ".*/jvmtiEnvStub.cpp$")
 
 add_library(jvm
         ${SHARED_JVM_SOURCES}
