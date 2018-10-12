@@ -11,6 +11,10 @@ set(HOTSPOT_SRC_ROOT ${HOTSPOT_ROOT}/src)
 if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif ()
+if (APPLE)
+    set(DARWIN TRUE)
+endif()
+
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
     add_definitions(-DPRODUCT)
@@ -55,6 +59,7 @@ set(SHARED_VM_SOURCES_DIR ${HOTSPOT_SRC_ROOT}/share${VM_DIR})
 if (${CMAKE_SYSTEM_PROCESSOR} STREQUAL "x86_64")
     set(HS_CPU x86)
     set(HS_ARCH amd64)
+    add_definitions(-DAMD64)
 endif()
 
 
@@ -67,6 +72,9 @@ file(GLOB CPU_JVM_SOURCES
 if (LINUX)
     add_definitions(-DLINUX -D_GNU_SOURCE -DTARGET_OS_FAMILY_linux)
     set(HS_OS linux)
+elseif(DARWIN)
+    add_definitions(-D_ALLBSD_SOURCE -D_GNU_SOURCE -DTARGET_OS_FAMILY_linux)
+    set(HS_OS bsd)
 endif()
 
 set(OS_VM_SOURCES_DIR ${HOTSPOT_SRC_ROOT}/os/${HS_OS}${VM_DIR})
