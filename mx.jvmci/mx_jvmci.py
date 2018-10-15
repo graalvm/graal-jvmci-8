@@ -1363,7 +1363,7 @@ def jniconfig(args):
 
     parser = ArgumentParser(prog='mx jniconfig')
     group = parser.add_mutually_exclusive_group()
-    group.add_argument('-c', '--compare',  metavar='oldfile', action='store', help='Compare the contents of oldfile against the the newly generated file')
+    group.add_argument('-c', '--compare', metavar='oldfile', action='store', help='Compare the contents of oldfile against the the newly generated file')
     group.add_argument('-g', '--generate', metavar='newfile', action='store', help='Generate the jni config for the current JVM')
 
     args = parser.parse_args(args)
@@ -1392,9 +1392,9 @@ def jniconfig(args):
     for classname in classes:
         c = classes[classname]
         if c.get('fields'):
-            c['fields'] = [{"name" : x } for x in sorted(c['fields'])]
+            c['fields'] = [{"name" : x} for x in sorted(c['fields'])]
         if c.get('methods'):
-            c['methods'] = [{"name" : x } for x in sorted(c['methods'])]
+            c['methods'] = [{"name" : x} for x in sorted(c['methods'])]
 
     # Convert toplevel dictionary into an ordered list since that's the output format
     newconfig = []
