@@ -1960,16 +1960,16 @@ C2V_VMENTRY(jobjectArray, getDeclaredConstructors, (JNIEnv* env, jobject, jobjec
     JVMCI_THROW_MSG_0(InternalError, err_msg("Class %s must be instance klass", klass->external_name()));
   }
   InstanceKlass* iklass = InstanceKlass::cast(klass);
-  GrowableArray<Method*> constructors;
+  GrowableArray<Method*> constructors_array;
   for (int i = 0; i < iklass->methods()->length(); i++) {
     Method* m = iklass->methods()->at(i);
     if (m->name() == vmSymbols::object_initializer_name()) {
-      constructors.append(m);
+      constructors_array.append(m);
     }
   }
-  JVMCIObjectArray methods = JVMCIENV->new_ResolvedJavaMethod_array(constructors.length(), JVMCI_CHECK_NULL);
-  for (int i = 0; i < constructors.length(); i++) {
-    JVMCIObject method = JVMCIENV->get_jvmci_method(constructors.at(i), JVMCI_CHECK_NULL);
+  JVMCIObjectArray methods = JVMCIENV->new_ResolvedJavaMethod_array(constructors_array.length(), JVMCI_CHECK_NULL);
+  for (int i = 0; i < constructors_array.length(); i++) {
+    JVMCIObject method = JVMCIENV->get_jvmci_method(constructors_array.at(i), JVMCI_CHECK_NULL);
     JVMCIENV->put_object_at(methods, i, method);
   }
   return JVMCIENV->get_jobjectArray(methods);
