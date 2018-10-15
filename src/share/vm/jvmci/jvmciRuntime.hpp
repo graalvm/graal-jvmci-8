@@ -60,7 +60,8 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
   JVMCINMethodData* _next;
 
   // Maintains a list of JVMCINMethodDatas that require cleanup on the
-  // next call to installCode.
+  // next call to installCode. This field must be updated under
+  // the JVMCI_lock.
   static JVMCINMethodData* volatile _for_release;
 
  public:

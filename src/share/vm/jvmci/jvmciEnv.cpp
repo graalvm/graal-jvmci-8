@@ -1187,11 +1187,11 @@ CodeBlob* JVMCIEnv::asCodeBlob(JVMCIObject obj) {
         }
         return cb;
       }
-      // Clear the state of this InstalledCode
-      set_InstalledCode_address(obj, 0);
-      set_InstalledCode_entryPoint(obj, 0);
-      return NULL;
     }
+    // Clear the InstalledCode fields of this HotSpotNmethodHandle
+    set_InstalledCode_address(obj, 0);
+    set_InstalledCode_entryPoint(obj, 0);
+    return NULL;
   }
   return (CodeBlob*) code;
 }
