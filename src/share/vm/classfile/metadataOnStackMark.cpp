@@ -33,7 +33,7 @@
 #include "services/threadService.hpp"
 #include "utilities/chunkedList.hpp"
 #if INCLUDE_JVMCI
-#include "jvmci/jvmciRuntime.hpp"
+#include "jvmci/jvmci.hpp"
 #endif
 
 volatile MetadataOnStackBuffer* MetadataOnStackMark::_used_buffers = NULL;
@@ -57,7 +57,7 @@ MetadataOnStackMark::MetadataOnStackMark(bool visit_code_cache) {
   JvmtiCurrentBreakpoints::metadata_do(Metadata::mark_on_stack);
   ThreadService::metadata_do(Metadata::mark_on_stack);
 #if INCLUDE_JVMCI
-  JVMCIRuntime::metadata_do(Metadata::mark_on_stack);
+  JVMCI::metadata_do(Metadata::mark_on_stack);
 #endif
 }
 

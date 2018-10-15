@@ -25,7 +25,6 @@
 #define SHARE_VM_JVMCI_JVMCI_COMPILER_HPP
 
 #include "compiler/abstractCompiler.hpp"
-#include "jvmci/jvmciEnv.hpp"
 
 class JVMCICompiler : public AbstractCompiler {
 private:
@@ -80,11 +79,13 @@ public:
   void bootstrap(TRAPS);
 
   bool is_bootstrapping() const { return _bootstrapping; }
+  void set_bootstrap_compilation_request_handled() {
+    _instance->_bootstrap_compilation_request_handled = true;
+  }
+
 
   // Compilation entry point for methods
   virtual void compile_method(ciEnv* env, ciMethod* target, int entry_bci);
-
-  void compile_method(const methodHandle& target, int entry_bci, JVMCIEnv* env);
 
   // Print compilation timers and statistics
   virtual void print_timers();
@@ -94,6 +95,10 @@ public:
    * a call to JVMCICompiler::compile_method().
    */
   int methods_compiled() { return _methods_compiled; }
+
+  void inc_methods_compiled() {
+    Atomic::inc(&_methods_compiled);
+  }
 
   // Print compilation timers and statistics
   static void print_compilation_timers();

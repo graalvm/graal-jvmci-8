@@ -65,7 +65,7 @@
 #include "utilities/macros.hpp"
 #include "utilities/ticks.hpp"
 #if INCLUDE_JVMCI
-#include "jvmci/jvmciRuntime.hpp"
+#include "jvmci/jvmci.hpp"
 #endif
 #if INCLUDE_TRACE
 #include "trace/tracing.hpp"
@@ -1887,14 +1887,6 @@ bool SystemDictionary::initialize_wk_klass(WKID id, int init_opt, TRAPS) {
   Symbol* symbol = vmSymbols::symbol_at((vmSymbols::SID)sid);
   Klass**    klassp = &_well_known_klasses[id];
   if ((*klassp) == NULL) {
-#if INCLUDE_JVMCI
-    if (EnableJVMCI && init_opt == SystemDictionary::Jvmci) {
-      assert(id >= (int)FIRST_JVMCI_WKID && id <= (int)LAST_JVMCI_WKID,
-          "JVMCI WKIDs must be contiguous and separate from non-JVMCI WKIDs");
-      (*klassp) = resolve_or_fail(symbol, _jvmci_loader, Handle(), true, CHECK_0); // load required JVMCI class
-      return ((*klassp) != NULL);
-    }
-#endif
     if (init_opt < SystemDictionary::Opt) {
       (*klassp) = resolve_or_fail(symbol, true, CHECK_0); // load required class
     } else {
@@ -1974,7 +1966,7 @@ void SystemDictionary::initialize_preloaded_classes(TRAPS) {
     scan = WKID(jsr292_group_end + 1);
   }
 
-  initialize_wk_klasses_until(NOT_JVMCI(WKID_LIMIT) JVMCI_ONLY(FIRST_JVMCI_WKID), scan, CHECK);
+  initialize_wk_klasses_until(WKID_LIMIT, scan, CHECK);
 
   _box_klasses[T_BOOLEAN] = WK_KLASS(Boolean_klass);
   _box_klasses[T_CHAR]    = WK_KLASS(Character_klass);

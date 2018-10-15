@@ -78,5 +78,4 @@ public class HotSpotCompilationRequest extends CompilationRequest {
     public int getId() {
         return id;
     }
-
 }

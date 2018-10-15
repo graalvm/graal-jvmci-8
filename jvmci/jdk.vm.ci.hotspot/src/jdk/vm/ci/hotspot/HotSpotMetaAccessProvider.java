@@ -22,10 +22,8 @@
  */
 package jdk.vm.ci.hotspot;
 
-import static jdk.vm.ci.hotspot.HotSpotResolvedObjectTypeImpl.fromObjectClass;
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
-import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -43,6 +41,8 @@ import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.meta.Signature;
 import jdk.vm.ci.meta.SpeculationLog;
+import jdk.vm.ci.meta.SpeculationLog.NoSpeculationReason;
+import jdk.vm.ci.meta.SpeculationLog.Speculation;
 
 // JaCoCo Exclude
 
@@ -62,7 +62,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider {
         if (clazz == null) {
             throw new IllegalArgumentException("Class parameter was null");
         }
-        return runtime.fromClass(clazz);
+        return HotSpotJVMCIMetaAccessContext.fromClass(clazz);
     }
 
     @Override
@@ -87,18 +87,19 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider {
     public ResolvedJavaField lookupJavaField(Field reflectionField) {
         Class<?> fieldHolder = reflectionField.getDeclaringClass();
 
-        HotSpotResolvedObjectType holder = fromObjectClass(fieldHolder);
+        HotSpotResolvedJavaType holder = HotSpotJVMCIMetaAccessContext.fromClass(fieldHolder);
+        assert holder != null : fieldHolder;
         if (Modifier.isStatic(reflectionField.getModifiers())) {
             final long offset = UNSAFE.staticFieldOffset(reflectionField);
             for (ResolvedJavaField field : holder.getStaticFields()) {
-                if (offset == ((HotSpotResolvedJavaField) field).getOffset()) {
+                if (offset == field.getOffset()) {
                     return field;
                 }
             }
         } else {
             final long offset = UNSAFE.objectFieldOffset(reflectionField);
             for (ResolvedJavaField field : holder.getInstanceFields(false)) {
-                if (offset == ((HotSpotResolvedJavaField) field).getOffset()) {
+                if (offset == field.getOffset()) {
                     return field;
                 }
             }
@@ -147,15 +148,15 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider {
     }
 
     @Override
-    public JavaConstant encodeSpeculation(SpeculationLog.Speculation speculation) {
-        if (speculation.getReason() instanceof SpeculationLog.NoSpeculationReason) {
+    public JavaConstant encodeSpeculation(Speculation speculation) {
+        if (speculation.getReason() instanceof NoSpeculationReason) {
             return JavaConstant.LONG_0;
         }
         return ((HotSpotSpeculationLog.HotSpotSpeculation) speculation).getEncoding();
     }
 
     @Override
-    public SpeculationLog.Speculation decodeSpeculation(JavaConstant constant, SpeculationLog speculationLog) {
+    public Speculation decodeSpeculation(JavaConstant constant, SpeculationLog speculationLog) {
         if (constant.equals(JavaConstant.LONG_0)) {
             return SpeculationLog.NO_SPECULATION;
         }
@@ -303,11 +304,11 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider {
                 return 0;
             } else {
                 if (lookupJavaType.isArray()) {
-                    int length = Array.getLength(((HotSpotObjectConstantImpl) constant).object());
+                    int length = runtime.getHostJVMCIBackend().getConstantReflection().readArrayLength(constant);
                     ResolvedJavaType elementType = lookupJavaType.getComponentType();
                     JavaKind elementKind = elementType.getJavaKind();
-                    final int headerSize = getArrayBaseOffset(elementKind);
-                    int sizeOfElement = getArrayIndexScale(elementKind);
+                    final int headerSize = runtime.getArrayBaseOffset(elementKind);
+                    int sizeOfElement = runtime.getArrayIndexScale(elementKind);
                     int log2ElementSize = CodeUtil.log2(sizeOfElement);
                     return computeArrayAllocationSize(length, headerSize, log2ElementSize);
                 }

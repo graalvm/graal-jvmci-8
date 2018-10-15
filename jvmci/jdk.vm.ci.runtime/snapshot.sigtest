@@ -18,9 +18,8 @@ meth public java.lang.String toString()
 CLSS public jdk.vm.ci.runtime.JVMCI
 cons public init()
 meth public static jdk.vm.ci.runtime.JVMCIRuntime getRuntime()
-meth public static void initialize()
 supr java.lang.Object
-hfds runtime
+hfds initializing,runtime
 
 CLSS public jdk.vm.ci.runtime.JVMCIBackend
 cons public init(jdk.vm.ci.meta.MetaAccessProvider,jdk.vm.ci.code.CodeCacheProvider,jdk.vm.ci.meta.ConstantReflectionProvider,jdk.vm.ci.code.stack.StackIntrospection)

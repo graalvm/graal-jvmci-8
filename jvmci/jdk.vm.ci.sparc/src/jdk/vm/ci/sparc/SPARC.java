@@ -315,7 +315,7 @@ public class SPARC extends Architecture {
             case Double:
                 return SPARCKind.DOUBLE;
             default:
-                throw new IllegalArgumentException("Unknown JavaKind: " + javaKind);
+                return null;
         }
     }
 

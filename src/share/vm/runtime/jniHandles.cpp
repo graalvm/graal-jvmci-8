@@ -29,6 +29,7 @@
 #include "runtime/jniHandles.hpp"
 #include "runtime/mutexLocker.hpp"
 #include "runtime/thread.inline.hpp"
+#include "jvmci/jvmci.hpp"
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
@@ -121,6 +122,7 @@ void JNIHandles::destroy_weak_global(jobject handle) {
 void JNIHandles::oops_do(OopClosure* f) {
   f->do_oop(&_deleted_handle);
   _global_handles->oops_do(f);
+  JVMCI::oops_do(f);
 }
 
 

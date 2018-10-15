@@ -54,6 +54,7 @@ public final class VMIntrinsicMethod {
      */
     public final int id;
 
+    @VMEntryPoint
     VMIntrinsicMethod(String declaringClass, String name, String descriptor, int id) {
         this.declaringClass = declaringClass;
         this.name = name;

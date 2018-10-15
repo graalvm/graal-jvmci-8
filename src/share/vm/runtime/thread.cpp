@@ -30,7 +30,7 @@
 #include "code/scopeDesc.hpp"
 #include "compiler/compileBroker.hpp"
 #if INCLUDE_JVMCI
-#include "jvmci/jvmciCompiler.hpp"
+#include "jvmci/jvmciEnv.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #endif
 #include "interpreter/interpreter.hpp"
@@ -1432,16 +1432,17 @@ bool jvmci_counters_include(JavaThread* thread) {
   return !JVMCICountersExcludeCompiler || !thread->is_Compiler_thread();
 }
 
-void JavaThread::collect_counters(typeArrayOop array) {
+void JavaThread::collect_counters(JVMCIEnv* jvmci_env, JVMCIPrimitiveArray array) {
   if (JVMCICounterSize > 0) {
     MutexLocker tl(Threads_lock);
-    for (int i = 0; i < array->length(); i++) {
-      array->long_at_put(i, _jvmci_old_thread_counters[i]);
+    int len = jvmci_env->get_length(array);
+    for (int i = 0; i < len; i++) {
+      jvmci_env->put_long_at(array, i, _jvmci_old_thread_counters[i]);
     }
     for (JavaThread* tp = Threads::first(); tp != NULL; tp = tp->next()) {
       if (jvmci_counters_include(tp)) {
-        for (int i = 0; i < array->length(); i++) {
-          array->long_at_put(i, array->long_at(i) + tp->_jvmci_counters[i]);
+        for (int i = 0; i < len; i++) {
+          jvmci_env->put_long_at(array, i, jvmci_env->get_long_at(array, i) + tp->_jvmci_counters[i]);
         }
       }
     }
@@ -4006,7 +4007,7 @@ void JavaThread::invoke_shutdown_hooks() {
     JavaValue result(T_VOID);
     JavaCalls::call_static(&result,
                            shutdown_klass,
-                           vmSymbols::shutdown_method_name(),
+                           vmSymbols::shutdown_name(),
                            vmSymbols::void_method_signature(),
                            THREAD);
   }

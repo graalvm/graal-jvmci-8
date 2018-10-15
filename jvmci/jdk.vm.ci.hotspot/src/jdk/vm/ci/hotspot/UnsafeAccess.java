@@ -31,21 +31,80 @@ import sun.misc.Unsafe;
  */
 class UnsafeAccess {
 
-    static final Unsafe UNSAFE = initUnsafe();
+    static final UnsafeAccess UNSAFE;
+    static final Unsafe PLATFORM_UNSAFE;
 
-    private static Unsafe initUnsafe() {
+    static {
+        Unsafe unsafe;
         try {
             // Fast path when we are trusted.
-            return Unsafe.getUnsafe();
+            unsafe = Unsafe.getUnsafe();
         } catch (SecurityException se) {
             // Slow path when we are not trusted.
             try {
                 Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
                 theUnsafe.setAccessible(true);
-                return (Unsafe) theUnsafe.get(Unsafe.class);
+                unsafe = (Unsafe) theUnsafe.get(Unsafe.class);
             } catch (Exception e) {
                 throw new RuntimeException("exception while trying to get Unsafe", e);
             }
         }
+        PLATFORM_UNSAFE = unsafe;
+        UNSAFE = new UnsafeAccess();
+    }
+
+    UnsafeAccess() {
+    }
+
+    long getAddress(long l) {
+        return PLATFORM_UNSAFE.getAddress(l);
+    }
+
+    int getByteVolatile(Object o, long l) {
+        return PLATFORM_UNSAFE.getByteVolatile(o, l);
+    }
+
+    int getInt(long l) {
+        return PLATFORM_UNSAFE.getInt(l);
+    }
+
+    long getLong(long l) {
+        return PLATFORM_UNSAFE.getLong(l);
+    }
+
+    double getDouble(long l) {
+        return PLATFORM_UNSAFE.getDouble(l);
+    }
+
+    float getFloat(long l) {
+        return PLATFORM_UNSAFE.getFloat(l);
+    }
+
+    int getByte(long l) {
+        return PLATFORM_UNSAFE.getByte(l);
+    }
+
+    int getShort(long l) {
+        return PLATFORM_UNSAFE.getShort(l);
+    }
+
+    void putInt(long l, int size) {
+        PLATFORM_UNSAFE.putInt(l, size);
+    }
+
+    int getChar(long l) {
+        return PLATFORM_UNSAFE.getChar(l);
+    }
+
+    long staticFieldOffset(Field reflectionField) {
+        return PLATFORM_UNSAFE.staticFieldOffset(reflectionField);
+    }
+
+    long objectFieldOffset(Field reflectionField) {
+        return PLATFORM_UNSAFE.objectFieldOffset(reflectionField);
+    }
+
+    void copyMemory(Object srcBase, long srcOffset, Object destBase, long destOffset, long bytes) {
+        PLATFORM_UNSAFE.copyMemory(srcBase, srcOffset, destBase, destOffset, bytes);
     }
 }

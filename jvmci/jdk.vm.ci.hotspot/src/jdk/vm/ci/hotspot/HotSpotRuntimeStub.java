@@ -27,7 +27,9 @@ import jdk.vm.ci.code.InvalidInstalledCodeException;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 
 /**
- * Implementation of {@link InstalledCode} for code installed as a RuntimeStub.
+ * Implementation of {@link InstalledCode} for code installed as a {@code RuntimeStub}. The address
+ * of the {@code RuntimeStub} is stored in {@link InstalledCode#address} and the value of
+ * {@code RuntimeStub::entry_point()} is in {@link InstalledCode#entryPoint}.
  */
 public class HotSpotRuntimeStub extends HotSpotInstalledCode {
 

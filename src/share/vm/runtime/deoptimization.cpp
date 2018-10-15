@@ -1537,33 +1537,10 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     methodHandle    trap_method = trap_scope->method();
     int             trap_bci    = trap_scope->bci();
 #if INCLUDE_JVMCI
-    long speculation = thread->pending_failed_speculation();
     if (nm->is_compiled_by_jvmci()) {
-      if (speculation != 0) {
-        oop speculation_log = nm->speculation_log();
-        if (speculation_log != NULL) {
-          if (TraceDeoptimization || TraceUncollectedSpeculations) {
-            if (HotSpotSpeculationLog::lastFailed(speculation_log) != 0) {
-              tty->print_cr("A speculation that was not collected by the compiler is being overwritten");
-            }
-          }
-          if (TraceDeoptimization) {
-            tty->print_cr("Saving speculation to speculation log");
-          }
-          HotSpotSpeculationLog::set_lastFailed(speculation_log, speculation);
-        } else {
-          if (TraceDeoptimization) {
-            tty->print_cr("Speculation present but no speculation log");
-          }
-        }
-        thread->set_pending_failed_speculation(0);
-      } else {
-        if (TraceDeoptimization) {
-          tty->print_cr("No speculation");
-        }
-      }
+      nm->update_speculation(thread);
     } else {
-      assert(speculation == 0, "There should not be a speculation for method compiled by non-JVMCI compilers");
+      assert(thread->pending_failed_speculation() == 0, "There should not be a speculation for methods compiled by non-JVMCI compilers");
     }
 
     if (trap_bci == SynchronizationEntryBCI) {
@@ -1657,7 +1634,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
         nm->method()->print_short_name(tty);
         tty->print(" compiler=%s compile_id=%d", nm->compiler() == NULL ? "" : nm->compiler()->name(), nm->compile_id());
 #if INCLUDE_JVMCI
-        char* installed_code_name = nm->jvmci_installed_code_name(buf, sizeof(buf));
+        const char* installed_code_name = nm->jvmci_nmethod_mirror_name();
         if (installed_code_name != NULL) {
           tty->print(" (JVMCI: installed code name=%s) ", installed_code_name);
         }

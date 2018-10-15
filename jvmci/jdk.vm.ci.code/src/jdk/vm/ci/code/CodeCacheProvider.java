@@ -46,6 +46,8 @@ public interface CodeCacheProvider {
      *            created.
      * @return a reference to the ready-to-run code
      * @throws BailoutException if the code installation failed
+     * @throws IllegalArgumentException if {@code installedCode != null} and this object does not
+     *             support a predefined {@link InstalledCode} object
      */
     default InstalledCode addCode(ResolvedJavaMethod method, CompiledCode compiledCode, SpeculationLog log, InstalledCode installedCode) {
         return installCode(method, compiledCode, installedCode, log, false);
@@ -60,6 +62,8 @@ public interface CodeCacheProvider {
      * @param compiledCode the compiled code to be added
      * @return a reference to the ready-to-run code
      * @throws BailoutException if the code installation failed
+     * @throws IllegalArgumentException if {@code installedCode != null} and this object does not
+     *             support a predefined {@link InstalledCode} object
      */
     default InstalledCode setDefaultCode(ResolvedJavaMethod method, CompiledCode compiledCode) {
         return installCode(method, compiledCode, null, null, true);

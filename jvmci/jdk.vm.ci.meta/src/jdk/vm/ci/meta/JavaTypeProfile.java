@@ -24,6 +24,7 @@
  */
 package jdk.vm.ci.meta;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 
 import jdk.vm.ci.meta.JavaTypeProfile.ProfiledType;
@@ -148,7 +149,7 @@ public final class JavaTypeProfile extends AbstractJavaProfile<ProfiledType, Res
 
         public ProfiledType(ResolvedJavaType type, double probability) {
             super(type, probability);
-            assert type.isArray() || type.isConcrete() : type;
+            assert type.isArray() || type.isConcrete() : type + " " + Modifier.toString(type.getModifiers());
         }
 
         /**

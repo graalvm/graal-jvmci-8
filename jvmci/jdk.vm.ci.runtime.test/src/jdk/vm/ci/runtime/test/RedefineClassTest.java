@@ -45,10 +45,10 @@ import java.util.jar.Manifest;
 
 import javax.tools.ToolProvider;
 
-import jdk.vm.ci.meta.ResolvedJavaMethod;
-
 import org.junit.Assert;
 import org.junit.Test;
+
+import jdk.vm.ci.meta.ResolvedJavaMethod;
 
 /**
  * Tests that {@link ResolvedJavaMethod}s are safe in the context of class redefinition being used

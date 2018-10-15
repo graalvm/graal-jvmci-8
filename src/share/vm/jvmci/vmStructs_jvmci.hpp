@@ -101,13 +101,13 @@
   volatile_nonstatic_field(ObjectMonitor,      _cxq,                                   ObjectWaiter*)                                \
   volatile_nonstatic_field(ObjectMonitor,      _EntryList,                             ObjectWaiter*)                                \
                                                                                                                                      \
+  nonstatic_field(Klass,                       _class_loader_data,                     ClassLoaderData*)                             \
+                                                                                                                                     \
   nonstatic_field(JavaThread,                  _pending_deoptimization,                int)                                          \
   nonstatic_field(JavaThread,                  _pending_failed_speculation,            long)                                         \
   nonstatic_field(JavaThread,                  _pending_transfer_to_interpreter,       bool)                                         \
   nonstatic_field(JavaThread,                  _jvmci_counters,                        jlong*)                                       \
   nonstatic_field(MethodData,                  _jvmci_ir_size,                         int)                                          \
-  nonstatic_field(JVMCIEnv,                    _task,                                  CompileTask*)                                 \
-  nonstatic_field(JVMCIEnv,                    _jvmti_can_hotswap_or_post_breakpoint,  bool)                                         \
 
 #define VM_TYPES_JVMCI(declare_type, declare_toplevel_type)                   \
   declare_toplevel_type(narrowKlass)                                          \
@@ -124,11 +124,11 @@
   declare_constant(Deoptimization::Reason_not_compiled_exception_handler)                         \
   declare_constant(Deoptimization::Reason_unresolved)                                             \
   declare_constant(Deoptimization::Reason_jsr_mismatch)                                           \
-  declare_constant(JVMCIEnv::ok)                                                                  \
-  declare_constant(JVMCIEnv::dependencies_failed)                                                 \
-  declare_constant(JVMCIEnv::dependencies_invalid)                                                \
-  declare_constant(JVMCIEnv::cache_full)                                                          \
-  declare_constant(JVMCIEnv::code_too_large)                                                      \
+  declare_preprocessor_constant("JVMCIEnv::ok",                   JVMCI::ok)                      \
+  declare_preprocessor_constant("JVMCIEnv::dependencies_failed",  JVMCI::dependencies_failed)     \
+  declare_preprocessor_constant("JVMCIEnv::dependencies_invalid", JVMCI::dependencies_invalid)    \
+  declare_preprocessor_constant("JVMCIEnv::cache_full",           JVMCI::cache_full)              \
+  declare_preprocessor_constant("JVMCIEnv::code_too_large",       JVMCI::code_too_large)          \
   declare_constant(JVMCIRuntime::none)                                                            \
   declare_constant(JVMCIRuntime::by_holder)                                                       \
   declare_constant(JVMCIRuntime::by_full_signature)                                               \
@@ -138,6 +138,7 @@
   declare_preprocessor_constant("JVM_ACC_ANNOTATION", JVM_ACC_ANNOTATION)                         \
   declare_preprocessor_constant("JVM_ACC_ENUM", JVM_ACC_ENUM)                                     \
   declare_preprocessor_constant("JVM_ACC_SYNTHETIC", JVM_ACC_SYNTHETIC)                           \
+  declare_preprocessor_constant("JVM_ACC_INTERFACE", JVM_ACC_INTERFACE)                           \
                                                                                                   \
   declare_constant(BitData::exception_seen_flag)                                                  \
   declare_constant(BitData::null_seen_flag)                                                       \

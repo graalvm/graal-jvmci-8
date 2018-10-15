@@ -107,24 +107,30 @@ void HandleArea::oops_do(OopClosure* f) {
 
 void HandleMark::initialize(Thread* thread) {
   _thread = thread;
-  // Save area
-  _area  = thread->handle_area();
-  // Save current top
-  _chunk = _area->_chunk;
-  _hwm   = _area->_hwm;
-  _max   = _area->_max;
-  _size_in_bytes = _area->_size_in_bytes;
-  debug_only(_area->_handle_mark_nesting++);
-  assert(_area->_handle_mark_nesting > 0, "must stack allocate HandleMarks");
-  debug_only(Atomic::inc(&_nof_handlemarks);)
+  // Hackery to allow calling JNI from thread_in_vm
+  if (thread != NULL) {
+    // Save area
+    _area  = thread->handle_area();
+    // Save current top
+    _chunk = _area->_chunk;
+    _hwm   = _area->_hwm;
+    _max   = _area->_max;
+    _size_in_bytes = _area->_size_in_bytes;
+    debug_only(_area->_handle_mark_nesting++);
+    assert(_area->_handle_mark_nesting > 0, "must stack allocate HandleMarks");
+    debug_only(Atomic::inc(&_nof_handlemarks);)
 
-  // Link this in the thread
-  set_previous_handle_mark(thread->last_handle_mark());
-  thread->set_last_handle_mark(this);
+    // Link this in the thread
+    set_previous_handle_mark(thread->last_handle_mark());
+    thread->set_last_handle_mark(this);
+  }
 }
 
 
 HandleMark::~HandleMark() {
+  if (_thread == NULL) {
+    return;
+  }
   HandleArea* area = _area;   // help compilers with poor alias analysis
   assert(area == _thread->handle_area(), "sanity check");
   assert(area->_handle_mark_nesting > 0, "must stack allocate HandleMarks" );

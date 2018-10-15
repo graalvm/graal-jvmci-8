@@ -70,10 +70,12 @@
           "Force eager initialization of the JVMCI compiler")               \
                                                                             \
   product(intx, JVMCIThreads, 1,                                            \
-          "Force number of JVMCI compiler threads to use")                  \
+          "Force number of JVMCI compiler threads to use. Ignored if "      \
+          "UseJVMCICompiler is false.")                                     \
                                                                             \
   product(intx, JVMCIHostThreads, 1,                                        \
-          "Force number of compiler threads for JVMCI host compiler")       \
+          "Force number of C1 compiler threads. Ignored if "                \
+          "UseJVMCICompiler is false.")                                     \
                                                                             \
   product(bool, CodeInstallSafepointChecks, true,                           \
           "Perform explicit safepoint checks while installing code")        \
@@ -106,21 +108,60 @@
           "Number of methods to record in call profile")                    \
                                                                             \
   develop(bool, TraceUncollectedSpeculations, false,                        \
-          "Print message when a failed speculation was not collected")
-
+          "Print message when a failed speculation was not collected")      \
+                                                                            \
+  product(ccstr, JVMCILibArgs, NULL,                                        \
+          "Arguments for JVMCI shared library VM separated by a space (use "\
+          "JVMCILibArgsSep for an alternative separator)")                  \
+                                                                            \
+  product(ccstr, JVMCILibArgsSep, " ",                                      \
+          "Single character separator between JVMCILibArgs")                \
+                                                                            \
+  product(ccstr, JVMCILibPath, NULL,                                        \
+          "LD path for loading the JVMCI shared library")                   \
+                                                                            \
+  product(ccstr, JVMCILibDumpJNIConfig, NULL,                               \
+          "Dumps to the given file a description of the classes, fields "   \
+          "and methods the JVMCI shared library must provide")              \
+                                                                            \
+  product(ccstr, JVMCIJavaMode, "HotSpot",                                  \
+          "Specifies the mode in which JVMCI Java code executes: \n"        \
+          "      HotSpot - Loaded from class files and "                    \
+          "                executed on the HotSpot heap\n"                  \
+          "SharedLibrary - Loaded from a shared library and used via JNI\n")\
 
 // Read default values for JVMCI globals
 
 JVMCI_FLAGS(DECLARE_DEVELOPER_FLAG, DECLARE_PD_DEVELOPER_FLAG, DECLARE_PRODUCT_FLAG, DECLARE_PD_PRODUCT_FLAG, DECLARE_NOTPRODUCT_FLAG)
 
+// The base name for the shared library containing the JVMCI based compiler
+#define JVMCI_SHARED_LIBRARY_NAME "jvmcicompiler"
 
 class JVMCIGlobals {
  public:
+  // Specifies where the JVMCI Java code is (i.e., jars or shared library)
+  enum JavaMode {
+    HotSpot,      // HotSpot heap, raw VM internal access
+    SharedLibrary // Shared library, JNI access
+  };
+ private:
+  static JavaMode _java_mode;
+  static fileStream* _jni_config_file;
+ public:
+  // Initializes the Java mode from the JVMCIJavaMode flag.
+  // Separated out from methods below as it can modify UseJVMCIClassLoader
+  // which is read before these methods are called. Same behavior as
+  // set_jvmci_specific_flags if JVMCIJavaMode value is invalid.
+  static bool init_java_mode_from_flags();
+
   static void set_jvmci_specific_flags();
-  // Return true if jvmci flags are consistent. If not consistent,
+  // Returns true if jvmci flags are consistent. If not consistent,
   // an error message describing the inconsistency is printed before
   // returning false.
   static bool check_jvmci_flags_are_consistent();
+
+  static JavaMode java_mode() { return _java_mode; }
+  static fileStream* get_jni_config_file() { return _jni_config_file; }
 };
 
 #endif // SHARE_VM_JVMCI_JVMCI_GLOBALS_HPP

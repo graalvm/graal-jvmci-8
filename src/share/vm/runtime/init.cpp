@@ -27,6 +27,7 @@
 #include "code/icBuffer.hpp"
 #include "gc_interface/collectedHeap.hpp"
 #include "interpreter/bytecodes.hpp"
+#include "jvmci/jvmci.hpp"
 #include "memory/universe.hpp"
 #include "prims/methodHandles.hpp"
 #include "runtime/handles.inline.hpp"
@@ -125,6 +126,9 @@ jint init_globals() {
   compilerOracle_init();
   compilationPolicy_init();
   compileBroker_init();
+  if (EnableJVMCI) {
+    JVMCI::initialize_globals();
+  }
   VMRegImpl::set_regName();
 
   if (!universe_post_init()) {

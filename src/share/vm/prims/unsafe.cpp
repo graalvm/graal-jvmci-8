@@ -294,6 +294,7 @@ UNSAFE_ENTRY(void, Unsafe_SetObject(JNIEnv *env, jobject unsafe, jobject obj, jl
   UnsafeWrapper("Unsafe_SetObject");
   oop x = JNIHandles::resolve(x_h);
   oop p = JNIHandles::resolve(obj);
+  assert(p != NULL, "must have oop");
   if (UseCompressedOops) {
     oop_store((narrowOop*)index_oop_from_field_offset_long(p, offset), x);
   } else {

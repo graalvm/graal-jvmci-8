@@ -290,6 +290,7 @@ class HandleMark {
   Chunk *_chunk;                // saved arena chunk
   char *_hwm, *_max;            // saved arena info
   size_t _size_in_bytes;        // size of handle area
+
   // Link to previous active HandleMark in thread
   HandleMark* _previous_handle_mark;
 
@@ -300,7 +301,9 @@ class HandleMark {
   size_t size_in_bytes() const { return _size_in_bytes; }
  public:
   HandleMark();                            // see handles_inline.hpp
-  HandleMark(Thread* thread)                      { initialize(thread); }
+  HandleMark(Thread* thread) {
+    initialize(thread);
+  }
   ~HandleMark();
 
   // Functions used by HandleMarkCleaner

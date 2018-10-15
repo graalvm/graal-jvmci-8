@@ -331,8 +331,7 @@
   template(vmAllowSuspension_name,                    "vmAllowSuspension")                        \
   template(nthreads_name,                             "nthreads")                                 \
   template(ngroups_name,                              "ngroups")                                  \
-  template(shutdown_method_name,                      "shutdown")                                 \
-  template(bootstrapFinished_method_name,             "bootstrapFinished")                        \
+  template(shutdown_name,                             "shutdown")                                 \
   template(finalize_method_name,                      "finalize")                                 \
   template(reference_lock_name,                       "lock")                                     \
   template(reference_discovered_name,                 "discovered")                               \

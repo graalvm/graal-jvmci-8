@@ -22,6 +22,8 @@
  */
 package jdk.vm.ci.hotspot.jfr.events;
 
+import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
+
 import java.net.URISyntaxException;
 
 import jdk.vm.ci.hotspot.EventProvider;
@@ -45,6 +47,11 @@ public final class JFREventProvider implements EventProvider {
 
         @Override
         public <S> S getProvider(Class<S> service) {
+            if (IS_IN_NATIVE_IMAGE) {
+                // Currently too many features unsupported by SVM such
+                // as Class.getDeclaredClasses0().
+                return null;
+            }
             if (service == EventProvider.class) {
                 return service.cast(new JFREventProvider());
             }
@@ -89,7 +96,7 @@ public final class JFREventProvider implements EventProvider {
      * Register an event class with the {@link com.oracle.jrockit.jfr.Producer}.
      *
      * @param c event class
-     * @return the {@link EventToken event token}
+     * @return the {@link com.oracle.jrockit.jfr.EventToken event token}
      */
     @SuppressWarnings({"javadoc", "unchecked"})
     private static com.oracle.jrockit.jfr.EventToken registerEvent(com.oracle.jrockit.jfr.Producer producer, Class<?> c) {

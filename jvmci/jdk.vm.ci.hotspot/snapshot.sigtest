@@ -375,8 +375,8 @@ meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime()
 meth public static jdk.vm.ci.meta.JavaKind getHostWordKind()
 meth public void registerNativeMethods(java.lang.Class<?>)
 supr java.lang.Object
-hfds backends,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,hostBackend,hsCompilerFactory,intrinsificationTrustPredicate,metaAccessContext,vmEventListeners
-hcls CompileLogStream,DelayedInit
+hfds SVM_JDK_REFLECTION,backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,metaAccessContext,reflection,serializableType,throwableType,vmEventListeners
+hcls CompileLogStream
 
 CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option
  outer jdk.vm.ci.hotspot.HotSpotJVMCIRuntime
@@ -447,7 +447,7 @@ meth public jdk.vm.ci.meta.ResolvedJavaMethod resolveLinkToTarget(jdk.vm.ci.meta
 meth public static jdk.vm.ci.meta.MethodHandleAccessProvider$IntrinsicMethod getMethodHandleIntrinsic(int)
 supr java.lang.Object
 hfds constantReflection
-hcls LazyInitialization
+hcls Internals
 
 CLSS public jdk.vm.ci.hotspot.HotSpotModifiers
 cons public init()
@@ -520,7 +520,7 @@ meth public boolean isDefault()
 
 CLSS public abstract jdk.vm.ci.hotspot.HotSpotResolvedJavaType
 intf jdk.vm.ci.meta.ResolvedJavaType
-meth public final boolean equals(java.lang.Object)
+meth public abstract boolean equals(java.lang.Object)
 meth public final int hashCode()
 supr jdk.vm.ci.hotspot.HotSpotJavaType
 
@@ -551,6 +551,7 @@ meth public jdk.vm.ci.meta.JavaKind getJavaKind()
 
 CLSS public final jdk.vm.ci.hotspot.HotSpotResolvedPrimitiveType
 meth public <%0 extends java.lang.annotation.Annotation> {%%0} getAnnotation(java.lang.Class<{%%0}>)
+meth public boolean equals(java.lang.Object)
 meth public boolean hasFinalizer()
 meth public boolean isArray()
 meth public boolean isAssignableFrom(jdk.vm.ci.meta.ResolvedJavaType)
@@ -593,7 +594,7 @@ meth public jdk.vm.ci.meta.ResolvedJavaType resolve(jdk.vm.ci.meta.ResolvedJavaT
 meth public jdk.vm.ci.meta.ResolvedJavaType[] getInterfaces()
 meth public void initialize()
 supr jdk.vm.ci.hotspot.HotSpotResolvedJavaType
-hfds kind
+hfds arrayClass,kind,mirror,primitives
 
 CLSS public jdk.vm.ci.hotspot.HotSpotRuntimeStub
 cons public init(java.lang.String)

@@ -37,6 +37,7 @@
 #include "gc_implementation/shared/gcTimer.hpp"
 #include "gc_implementation/shared/gcTrace.hpp"
 #include "gc_implementation/shared/gcTraceTime.hpp"
+#include "jvmci/jvmci.hpp"
 #include "memory/gcLocker.hpp"
 #include "memory/genCollectedHeap.hpp"
 #include "memory/modRefBarrierSet.hpp"
@@ -168,6 +169,8 @@ void G1MarkSweep::mark_sweep_phase1(bool& marked_for_unloading,
 
   // Prune dead klasses from subklass/sibling/implementor lists.
   Klass::clean_weak_klass_links(&GenMarkSweep::is_alive);
+
+  JVMCI::do_unloading(&GenMarkSweep::is_alive, purged_class);
 
   // Delete entries for dead interned string and clean up unreferenced symbols in symbol table.
   G1CollectedHeap::heap()->unlink_string_and_symbol_table(&GenMarkSweep::is_alive);

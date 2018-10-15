@@ -23,8 +23,9 @@
  */
 
 #include "precompiled.hpp"
-#include "jvmci/jvmci_globals.hpp"
 #include "utilities/defaultStream.hpp"
+#include "utilities/ostream.hpp"
+#include "jvmci/jvmci_globals.hpp"
 #include "runtime/globals_extension.hpp"
 #include "runtime/arguments.hpp"
 #ifdef TARGET_OS_FAMILY_linux
@@ -42,6 +43,9 @@
 #ifdef TARGET_OS_FAMILY_bsd
 # include "os_bsd.inline.hpp"
 #endif
+
+JVMCIGlobals::JavaMode JVMCIGlobals::_java_mode = HotSpot;
+fileStream* JVMCIGlobals::_jni_config_file = NULL;
 
 JVMCI_FLAGS(MATERIALIZE_DEVELOPER_FLAG, MATERIALIZE_PD_DEVELOPER_FLAG, MATERIALIZE_PRODUCT_FLAG, MATERIALIZE_PD_PRODUCT_FLAG, MATERIALIZE_NOTPRODUCT_FLAG)
 
@@ -170,6 +174,11 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
   CHECK_NOT_SET(MethodProfileWidth,           EnableJVMCI)
   CHECK_NOT_SET(JVMCIPrintProperties,         EnableJVMCI)
   CHECK_NOT_SET(TraceUncollectedSpeculations, EnableJVMCI)
+  CHECK_NOT_SET(JVMCIJavaMode,                EnableJVMCI)
+  CHECK_NOT_SET(JVMCILibPath,                 EnableJVMCI)
+  CHECK_NOT_SET(JVMCILibArgs,                 EnableJVMCI)
+  CHECK_NOT_SET(JVMCILibArgsSep,              EnableJVMCI)
+  CHECK_NOT_SET(JVMCILibDumpJNIConfig,        EnableJVMCI)
 
 #ifndef PRODUCT
 #define JVMCI_CHECK4(type, name, value, doc) assert(name##checked, #name " flag not checked");
@@ -182,13 +191,62 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 #undef JVMCI_CHECK3
 #undef JVMCI_CHECK4
 #undef JVMCI_FLAG_CHECKED
-#endif
+#endif // PRODUCT
 #undef CHECK_NOT_SET
+
   if (UseJVMCICompiler) {
-    if(JVMCIThreads < 1) {
+    if (JVMCIThreads < 1) {
       // Check the minimum number of JVMCI compiler threads
       jio_fprintf(defaultStream::error_stream(), "JVMCIThreads of " INTX_FORMAT " is invalid; must be at least 1\n", JVMCIThreads);
       return false;
+    }
+  }
+  if (JVMCILibDumpJNIConfig != NULL) {
+    _jni_config_file = new(ResourceObj::C_HEAP, mtInternal) fileStream(JVMCILibDumpJNIConfig);
+    if (_jni_config_file == NULL || !_jni_config_file->is_open()) {
+      jio_fprintf(defaultStream::error_stream(), "Could not open file for dumping JVMCI shared library JNI config: %s\n", JVMCILibDumpJNIConfig);
+      return false;
+    }
+  }
+  return true;
+}
+
+bool JVMCIGlobals::init_java_mode_from_flags() {
+  if (strcmp(JVMCIJavaMode, "HotSpot") == 0) {
+    _java_mode = HotSpot;
+  } else {
+    _java_mode = SharedLibrary;
+    if (strcmp(JVMCIJavaMode, "SharedLibrary") != 0) {
+      jio_fprintf(defaultStream::error_stream(),
+                  "Value of JVMCIJavaMode flag must be \"HotSpot\" or \"SharedLibrary\": \"%s\"\n", JVMCIJavaMode);
+      return false;
+    }
+
+    if (strlen(JVMCILibArgsSep) != 1) {
+      jio_fprintf(defaultStream::error_stream(),
+                  "Length of -XX:JVMCILibArgsSep must be 1: \"%s\"\n", JVMCILibArgsSep);
+      return false;
+    }
+
+    // Make JVMCI initialization eager loaded from a shared library
+    if (FLAG_IS_DEFAULT(EagerJVMCI)) {
+      FLAG_SET_DEFAULT(EagerJVMCI, true);
+    }
+
+    if (UseJVMCIClassLoader) {
+      if (!FLAG_IS_DEFAULT(UseJVMCIClassLoader)) {
+        jio_fprintf(defaultStream::error_stream(),
+                    "-XX:+UseJVMCIClassLoader is incompatible with -XX:JVMCIJavaMode=%s\n", JVMCIJavaMode);
+        return false;
+      }
+
+      // JVMCI classes are all in the shared library so there should
+      // not be any JVMCI class loading. However, currently it is still
+      // needed for reifying types used in Graal snippets. Since the JVMCI
+      // shared library can be entered without a Java method method on the stack,
+      // it's impossible to reliably get hold of the JVMCI class loader.
+      // As a workaround, we simply disable the JVMCI loader.
+      UseJVMCIClassLoader = false;
     }
   }
   return true;
@@ -210,6 +268,14 @@ void JVMCIGlobals::set_jvmci_specific_flags() {
     if (FLAG_IS_DEFAULT(InitialCodeCacheSize)) {
       FLAG_SET_DEFAULT(InitialCodeCacheSize, 16*M);
     }
+
+    // SVM compiled code requires more stack space
+    if (JVMCIGlobals::java_mode() == JVMCIGlobals::SharedLibrary) {
+      if (FLAG_IS_DEFAULT(CompilerThreadStackSize)) {
+        FLAG_SET_DEFAULT(CompilerThreadStackSize, 2*M);
+      }
+    }
+
   }
   if (!ScavengeRootsInCode) {
     warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");

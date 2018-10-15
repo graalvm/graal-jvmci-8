@@ -65,6 +65,10 @@ class ExceptionCache : public CHeapObj<mtCode> {
   bool    add_address_and_handler(address addr, address handler) ;
 };
 
+#if INCLUDE_JVMCI
+class JVMCINMethodData;
+#endif
+
 
 // cache pc descs found in earlier inquiries
 class PcDescCache VALUE_OBJ_CLASS_SPEC {
@@ -117,6 +121,7 @@ class nmethod : public CodeBlob {
   friend class VMStructs;
   friend class NMethodSweeper;
   friend class CodeCache;  // scavengable oops
+  friend class JVMCINMethodData;
  private:
 
   // GC support to help figure out if an nmethod has been
@@ -129,13 +134,7 @@ class nmethod : public CodeBlob {
   jmethodID _jmethod_id;       // Cache of method()->jmethod_id()
 
 #if INCLUDE_JVMCI
-  // A weak reference to an InstalledCode object associated with
-  // this nmethod.
-  jweak     _jvmci_installed_code;
-
-  // A weak reference to a SpeculationLog object associated with
-  // this nmethod.
-  jweak     _speculation_log;
+  JVMCINMethodData* _jvmci_nmethod_data;
 #endif
 
   // To support simple linked-list chaining of nmethods:
@@ -204,17 +203,6 @@ class nmethod : public CodeBlob {
   unsigned int _has_method_handle_invokes:1; // Has this method MethodHandle invokes?
   unsigned int _lazy_critical_native:1;      // Lazy JNI critical native
   unsigned int _has_wide_vectors:1;          // Preserve wide vectors at safepoints
-
-#if INCLUDE_JVMCI
-  // Determines whether this nmethod is invalidated when the
-  // referent in _jvmci_installed_code is cleared. This
-  // will be false if the referent is initialized to a
-  // HotSpotNMethod object whose isDefault field is true.
-  // That is, installed code other than a "default"
-  // HotSpotNMethod causes nmethod invalidation.
-  // This field is ignored once _jvmci_installed_code is NULL.
-  unsigned int _jvmci_installed_code_triggers_invalidation:1;
-#endif
 
   // Protected by Patching_lock
   volatile unsigned char _state;             // {alive, not_entrant, zombie, unloaded}
@@ -317,8 +305,7 @@ class nmethod : public CodeBlob {
           AbstractCompiler* compiler,
           int comp_level
 #if INCLUDE_JVMCI
-          , jweak installed_code,
-          jweak speculation_log
+          , JVMCINMethodData* jvmci_nmethod_data
 #endif
           );
 
@@ -358,8 +345,7 @@ class nmethod : public CodeBlob {
                               AbstractCompiler* compiler,
                               int comp_level
 #if INCLUDE_JVMCI
-                              , jweak installed_code = NULL,
-                              jweak speculation_log = NULL
+                              , JVMCINMethodData* jvmci_nmethod_data = NULL
 #endif
   );
 
@@ -650,47 +636,23 @@ public:
   void set_method(Method* method) { _method = method; }
 
 #if INCLUDE_JVMCI
-  // Gets the InstalledCode object associated with this nmethod
-  // which may be NULL if this nmethod was not compiled by JVMCI
-  // or the weak reference has been cleared.
-  oop jvmci_installed_code();
+  // Return the name of the HotSpotNmethod mirror (if any).
+  const char* jvmci_nmethod_mirror_name();
 
-  // Copies the value of the name field in the InstalledCode
-  // object (if any) associated with this nmethod into buf.
-  // Returns the value of buf if it was updated otherwise NULL.
-  char* jvmci_installed_code_name(char* buf, size_t buflen) const;
+  // Updates the state of the HotSpotNmethod and SpeculationLog
+  // references associated with this nmethod based on the current
+  // value of _state.
+  void maybe_invalidate_jvmci_mirror();
 
-  // Updates the state of the InstalledCode (if any) associated with
-  // this nmethod based on the current value of _state.
-  void maybe_invalidate_installed_code();
+  // Records the pending failed speculation in the
+  // JVMCI speculation log associated with this nmethod.
+  void update_speculation(JavaThread* thread);
   
-  // Deoptimizes the nmethod (if any) in the address field of a given
-  // InstalledCode object. The address field is zeroed upon return.
-  static void invalidate_installed_code(Handle installed_code, TRAPS);
-  
-  // Gets the SpeculationLog object associated with this nmethod
-  // which may be NULL if this nmethod was not compiled by JVMCI
-  // or the weak reference has been cleared.
-  oop speculation_log();
-  
- private:
-  // Deletes the weak reference (if any) to the InstalledCode object
-  // associated with this nmethod.
-  void clear_jvmci_installed_code();
-
-  // Deletes the weak reference (if any) to the SpeculationLog object
-  // associated with this nmethod.
-  void clear_speculation_log();
-  
- public:
+  JVMCINMethodData* jvmci_nmethod_data() { return _jvmci_nmethod_data; }
 #endif
 
   // GC support
   void do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred);
-#if INCLUDE_JVMCI
-  // See comment for _jvmci_installed_code_triggers_invalidation field.
-  void update_installed_code(BoolObjectClosure* is_alive, bool unloading_occurred);
-#endif
   //  The parallel versions are used by G1.
   bool do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_occurred);
   void do_unloading_parallel_postponed(BoolObjectClosure* is_alive, bool unloading_occurred);

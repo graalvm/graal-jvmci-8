@@ -36,10 +36,12 @@ abstract class HotSpotMethodDataAccessor {
 
     final int tag;
     final int staticSize;
+    final HotSpotMethodData.VMState state;
     final HotSpotVMConfig config;
 
-    protected HotSpotMethodDataAccessor(HotSpotVMConfig config, int tag, int staticSize) {
-        this.config = config;
+    protected HotSpotMethodDataAccessor(HotSpotMethodData.VMState state, int tag, int staticSize) {
+        this.state = state;
+        this.config = state.config;
         this.tag = tag;
         this.staticSize = staticSize;
     }

@@ -42,6 +42,7 @@
 #include "gc_implementation/shared/gcTraceTime.hpp"
 #include "gc_implementation/shared/isGCActiveMark.hpp"
 #include "gc_interface/collectedHeap.inline.hpp"
+#include "jvmci/jvmci.hpp"
 #include "memory/allocation.hpp"
 #include "memory/cardTableRS.hpp"
 #include "memory/collectorPolicy.hpp"
@@ -6281,6 +6282,8 @@ void CMSCollector::refProcessingWork(bool asynch, bool clear_all_soft_refs) {
 
       // Prune dead klasses from subklass/sibling/implementor lists.
       Klass::clean_weak_klass_links(&_is_alive_closure);
+
+      JVMCI::do_unloading(&_is_alive_closure, purged_class);
     }
 
     {

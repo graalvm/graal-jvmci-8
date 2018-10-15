@@ -25,9 +25,11 @@
 package jdk.vm.ci.services;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
@@ -43,28 +45,25 @@ import sun.reflect.Reflection;
 public final class Services {
 
     /**
-     * Guards code that should be run when building a native image but should be excluded from
-     * (being compiled into) the image. Such code must be directly guarded by an {@code if}
+     * Guards code that should be run when building an JVMCI shared library but should be excluded
+     * from (being compiled into) the library. Such code must be directly guarded by an {@code if}
      * statement on this field - the guard cannot be behind a method call.
      */
-    public static final boolean IS_BUILDING_NATIVE_IMAGE;
+    public static final boolean IS_BUILDING_NATIVE_IMAGE = Boolean.getBoolean("jdk.vm.ci.services.aot");
 
     /**
-     * Guards code that should only be run in native image. Such code must be directly guarded by an
-     * {@code if} statement on this field - the guard cannot be behind a method call.
+     * Guards code that should only be run in a JVMCI shared library. Such code must be directly
+     * guarded by an {@code if} statement on this field - the guard cannot be behind a method call.
      *
-     * The value of this field seen during analysis and compilation of an SVM image must be
-     * {@code true}.
+     * The value of this field in a JVMCI shared library runtime must be {@code true}.
      */
     public static final boolean IS_IN_NATIVE_IMAGE;
-
     static {
         /*
-         * Prevents javac from constant folding use of this field. It is set to true in the SVM
-         * image via substitution during image building.
+         * Prevents javac from constant folding use of this field. It is set to true by the process
+         * that builds the shared library.
          */
         IS_IN_NATIVE_IMAGE = false;
-        IS_BUILDING_NATIVE_IMAGE = false;
     }
 
     private Services() {
@@ -119,15 +118,45 @@ public final class Services {
         };
     }
 
+    private static ClassLoader findBootClassLoaderChild(ClassLoader start) {
+        ClassLoader cl = start;
+        while (cl.getParent() != null) {
+            cl = cl.getParent();
+        }
+        return cl;
+    }
+
+    private static final Map<Class<?>, List<?>> servicesCache = IS_BUILDING_NATIVE_IMAGE ? new HashMap<>() : null;
+
+    @SuppressWarnings("unchecked")
     private static <S> Iterable<S> load0(Class<S> service) {
+        if (IS_IN_NATIVE_IMAGE || IS_BUILDING_NATIVE_IMAGE) {
+            List<?> list = servicesCache.get(service);
+            if (list != null) {
+                return (Iterable<S>) list;
+            }
+            if (IS_IN_NATIVE_IMAGE) {
+                throw new InternalError(String.format("No %s providers found when building native image", service.getName()));
+            }
+        }
+
+        Iterable<S> providers = Collections.emptyList();
         if (jvmciEnabled) {
             ClassLoader cl = null;
             try {
                 cl = getJVMCIClassLoader();
                 if (cl == null) {
                     cl = LazyBootClassPath.bootClassPath;
+                    // JVMCI classes are loaded via the boot class loader.
+                    // If we use null as the second argument to ServiceLoader.load,
+                    // service loading will use the system class loader
+                    // and find classes on the application class path. Since we
+                    // don't want this, we use a loader that is as close to the
+                    // boot class loader as possible (since it is impossible
+                    // to force service loading to use only the boot class loader).
+                    cl = findBootClassLoaderChild(ClassLoader.getSystemClassLoader());
                 }
-                return ServiceLoader.load(service, cl);
+                providers = ServiceLoader.load(service, cl);
             } catch (UnsatisfiedLinkError e) {
                 jvmciEnabled = false;
             } catch (InternalError e) {
@@ -138,7 +167,17 @@ public final class Services {
                 }
             }
         }
-        return Collections.emptyList();
+        if (IS_BUILDING_NATIVE_IMAGE) {
+            synchronized (servicesCache) {
+                ArrayList<S> providersList = new ArrayList<>();
+                for (S provider : providers) {
+                    providersList.add(provider);
+                }
+                servicesCache.put(service, providersList);
+                providers = providersList;
+            }
+        }
+        return providers;
     }
 
     /**
@@ -215,5 +254,13 @@ public final class Services {
      * @throws InternalError with the {@linkplain Throwable#getMessage() message}
      *             {@code "JVMCI is not enabled"} iff JVMCI is not enabled
      */
-    private static native ClassLoader getJVMCIClassLoader();
+    private static ClassLoader getJVMCIClassLoader() {
+        if (IS_IN_NATIVE_IMAGE) {
+            return null;
+        }
+        return getJVMCIClassLoader0();
+    }
+
+    private static native ClassLoader getJVMCIClassLoader0();
+
 }
