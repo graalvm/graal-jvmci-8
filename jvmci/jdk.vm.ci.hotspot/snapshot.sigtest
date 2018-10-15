@@ -23,6 +23,15 @@ meth public static <%0 extends java.lang.Enum<{%%0}>> {%%0} valueOf(java.lang.Cl
 supr java.lang.Object
 hfds name,ordinal
 
+CLSS public java.lang.Error
+cons protected init(java.lang.String,java.lang.Throwable,boolean,boolean)
+cons public init()
+cons public init(java.lang.String)
+cons public init(java.lang.String,java.lang.Throwable)
+cons public init(java.lang.Throwable)
+supr java.lang.Throwable
+hfds serialVersionUID
+
 CLSS public java.lang.Object
 cons public init()
 meth protected java.lang.Object clone() throws java.lang.CloneNotSupportedException
@@ -36,6 +45,36 @@ meth public final void wait(long) throws java.lang.InterruptedException
 meth public final void wait(long,int) throws java.lang.InterruptedException
 meth public int hashCode()
 meth public java.lang.String toString()
+
+CLSS public java.lang.Throwable
+cons protected init(java.lang.String,java.lang.Throwable,boolean,boolean)
+cons public init()
+cons public init(java.lang.String)
+cons public init(java.lang.String,java.lang.Throwable)
+cons public init(java.lang.Throwable)
+intf java.io.Serializable
+meth public final java.lang.Throwable[] getSuppressed()
+meth public final void addSuppressed(java.lang.Throwable)
+meth public java.lang.StackTraceElement[] getStackTrace()
+meth public java.lang.String getLocalizedMessage()
+meth public java.lang.String getMessage()
+meth public java.lang.String toString()
+meth public java.lang.Throwable fillInStackTrace()
+meth public java.lang.Throwable getCause()
+meth public java.lang.Throwable initCause(java.lang.Throwable)
+meth public void printStackTrace()
+meth public void printStackTrace(java.io.PrintStream)
+meth public void printStackTrace(java.io.PrintWriter)
+meth public void setStackTrace(java.lang.StackTraceElement[])
+supr java.lang.Object
+hfds CAUSE_CAPTION,EMPTY_THROWABLE_ARRAY,NULL_CAUSE_MESSAGE,SELF_SUPPRESSION_MESSAGE,SUPPRESSED_CAPTION,SUPPRESSED_SENTINEL,UNASSIGNED_STACK,backtrace,cause,detailMessage,serialVersionUID,stackTrace,suppressedExceptions
+hcls PrintStreamOrWriter,SentinelHolder,WrappedPrintStream,WrappedPrintWriter
+
+CLSS public abstract interface java.lang.annotation.Annotation
+meth public abstract boolean equals(java.lang.Object)
+meth public abstract int hashCode()
+meth public abstract java.lang.Class<? extends java.lang.annotation.Annotation> annotationType()
+meth public abstract java.lang.String toString()
 
 CLSS public abstract interface java.lang.reflect.AnnotatedElement
 meth public <%0 extends java.lang.annotation.Annotation> {%%0} getDeclaredAnnotation(java.lang.Class<{%%0}>)
@@ -99,10 +138,10 @@ meth public !varargs java.lang.Object executeVarargs(java.lang.Object[]) throws 
 meth public boolean isAlive()
 meth public boolean isValid()
 meth public byte[] getCode()
-meth public final long getAddress()
-meth public final long getEntryPoint()
 meth public final long getVersion()
 meth public java.lang.String getName()
+meth public long getAddress()
+meth public long getEntryPoint()
 meth public long getStart()
 meth public void invalidate()
 supr java.lang.Object
@@ -250,7 +289,7 @@ fld protected final boolean hasUnsafeAccess
 fld protected final int entryBCI
 fld protected final int id
 fld protected final jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod method
-fld protected final long jvmciEnv
+fld protected final long compileTask
 meth public java.lang.String getInstallationFailureMessage()
 meth public java.lang.String toString()
 supr jdk.vm.ci.hotspot.HotSpotCompiledCode
@@ -359,6 +398,7 @@ fld protected final jdk.vm.ci.hotspot.HotSpotVMConfigStore configStore
 innr public final static !enum Option
 intf jdk.vm.ci.runtime.JVMCIRuntime
 meth public !varargs java.util.function.Predicate<jdk.vm.ci.meta.ResolvedJavaType> getIntrinsificationTrustPredicate(java.lang.Class<?>[])
+meth public <%0 extends java.lang.Object> {%%0} unhand(java.lang.Class<{%%0}>,long)
 meth public <%0 extends jdk.vm.ci.code.Architecture> jdk.vm.ci.runtime.JVMCIBackend getJVMCIBackend(java.lang.Class<{%%0}>)
 meth public int getArrayBaseOffset(jdk.vm.ci.meta.JavaKind)
 meth public int getArrayIndexScale(jdk.vm.ci.meta.JavaKind)
@@ -370,12 +410,13 @@ meth public jdk.vm.ci.hotspot.HotSpotVMConfigStore getConfigStore()
 meth public jdk.vm.ci.meta.JavaType lookupType(java.lang.String,jdk.vm.ci.hotspot.HotSpotResolvedObjectType,boolean)
 meth public jdk.vm.ci.runtime.JVMCIBackend getHostJVMCIBackend()
 meth public jdk.vm.ci.runtime.JVMCICompiler getCompiler()
+meth public long registerNativeMethods(java.lang.Class<?>)
+meth public long translate(java.lang.Object)
 meth public long[] collectCounters()
 meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime()
 meth public static jdk.vm.ci.meta.JavaKind getHostWordKind()
-meth public void registerNativeMethods(java.lang.Class<?>)
 supr java.lang.Object
-hfds SVM_JDK_REFLECTION,backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,metaAccessContext,reflection,serializableType,throwableType,vmEventListeners
+hfds SHARED_LIBRARY_JDK_REFLECTION,backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,metaAccessContext,reflection,serializableType,throwableType,vmEventListeners
 hcls CompileLogStream
 
 CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option
@@ -392,6 +433,12 @@ meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option[] values()
 meth public static void printProperties(java.io.PrintStream)
 supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option>
 hfds JVMCI_OPTION_PROPERTY_PREFIX,PROPERTY_HELP_INDENT,PROPERTY_LINE_WIDTH,UNINITIALIZED,defaultValue,helpLines,isDefault,type,value
+
+CLSS public jdk.vm.ci.hotspot.HotSpotJVMCIUnsupportedOperationError
+cons public init(java.lang.String)
+cons public init(java.lang.String,java.lang.Throwable)
+supr java.lang.Error
+hfds serialVersionUID
 
 CLSS public abstract jdk.vm.ci.hotspot.HotSpotJavaType
 cons public init(java.lang.String)
@@ -462,8 +509,6 @@ meth public static int jvmMethodModifiers()
 supr java.lang.Object
 
 CLSS public jdk.vm.ci.hotspot.HotSpotNmethod
-cons public init(jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod,java.lang.String,boolean)
-meth protected boolean checkThreeObjectArgs()
 meth public !varargs java.lang.Object executeVarargs(java.lang.Object[]) throws jdk.vm.ci.code.InvalidInstalledCodeException
 meth public boolean isDefault()
 meth public java.lang.String toString()
@@ -717,6 +762,10 @@ meth public void notifyBootstrapFinished()
 meth public void notifyInstall(jdk.vm.ci.hotspot.HotSpotCodeCacheProvider,jdk.vm.ci.code.InstalledCode,jdk.vm.ci.code.CompiledCode)
 meth public void notifyShutdown()
 
+CLSS public abstract interface !annotation jdk.vm.ci.hotspot.VMEntryPoint
+intf java.lang.annotation.Annotation
+meth public abstract !hasdefault java.lang.String value()
+
 CLSS public final jdk.vm.ci.hotspot.VMField
 fld public final java.lang.Object value
 fld public final java.lang.String name
@@ -896,7 +945,6 @@ intf java.lang.reflect.AnnotatedElement
 intf jdk.vm.ci.meta.InvokeTarget
 intf jdk.vm.ci.meta.JavaMethod
 intf jdk.vm.ci.meta.ModifiersProvider
-meth public !varargs jdk.vm.ci.meta.JavaConstant invoke(jdk.vm.ci.meta.JavaConstant,jdk.vm.ci.meta.JavaConstant[]) throws java.lang.IllegalAccessException,java.lang.reflect.InvocationTargetException
 meth public <%0 extends java.lang.annotation.Annotation> {%%0} getParameterAnnotation(java.lang.Class<{%%0}>,int)
 meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getParameterAnnotations(java.lang.Class<{%%0}>)
 meth public abstract boolean canBeInlined()

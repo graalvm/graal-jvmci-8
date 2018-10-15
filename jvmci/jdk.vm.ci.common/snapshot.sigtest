@@ -80,14 +80,12 @@ intf java.lang.annotation.Annotation
 meth public abstract java.lang.annotation.ElementType[] value()
 
 CLSS public final jdk.vm.ci.common.InitTimer
-fld public final static java.lang.String SPACES = "                                            "
-fld public final static java.util.concurrent.atomic.AtomicInteger nesting
 intf java.lang.AutoCloseable
 meth public static jdk.vm.ci.common.InitTimer timer(java.lang.String)
 meth public static jdk.vm.ci.common.InitTimer timer(java.lang.String,java.lang.Object)
 meth public void close()
 supr java.lang.Object
-hfds ENABLED,initializingThread,name,start
+hfds SPACES,enabledPropertyValue,initializingThread,name,nesting,start
 
 CLSS public jdk.vm.ci.common.JVMCIError
 cons public !varargs init(java.lang.String,java.lang.Object[])

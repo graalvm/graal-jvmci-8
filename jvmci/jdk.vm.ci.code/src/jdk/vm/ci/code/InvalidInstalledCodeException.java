@@ -29,10 +29,10 @@ package jdk.vm.ci.code;
  */
 public final class InvalidInstalledCodeException extends Exception {
 
-    InvalidInstalledCodeException() {
+    public InvalidInstalledCodeException() {
     }
 
-    InvalidInstalledCodeException(String message) {
+    public InvalidInstalledCodeException(String message) {
         super(message);
     }
 

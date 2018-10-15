@@ -30,10 +30,10 @@ import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
  * {@link HotSpotNmethod#isDefault} semantics of triggering unloading of the corresponding nmethod
  * when the instance is reclaimed.
  */
-public class HotSpotNmethodHandle extends HotSpotNmethod {
+class HotSpotNmethodHandle extends HotSpotNmethod {
     @SuppressFBWarnings(value = "UWF_UNWRITTEN_FIELD", justification = "field is set by the native part") private long compileId;
 
-    public HotSpotNmethodHandle(HotSpotResolvedJavaMethodImpl method, String name, boolean isDefault) {
+    HotSpotNmethodHandle(HotSpotResolvedJavaMethodImpl method, String name, boolean isDefault) {
         super(method, name, isDefault);
     }
 

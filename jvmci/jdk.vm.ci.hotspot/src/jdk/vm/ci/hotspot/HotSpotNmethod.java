@@ -61,7 +61,7 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
      */
     private final boolean isDefault;
 
-    public HotSpotNmethod(HotSpotResolvedJavaMethodImpl method, String name, boolean isDefault) {
+    HotSpotNmethod(HotSpotResolvedJavaMethodImpl method, String name, boolean isDefault) {
         super(name);
         this.method = method;
         this.isDefault = isDefault;
