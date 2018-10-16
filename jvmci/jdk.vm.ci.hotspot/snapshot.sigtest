@@ -416,7 +416,7 @@ meth public long[] collectCounters()
 meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime()
 meth public static jdk.vm.ci.meta.JavaKind getHostWordKind()
 supr java.lang.Object
-hfds SHARED_LIBRARY_JDK_REFLECTION,backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,metaAccessContext,reflection,serializableType,throwableType,vmEventListeners
+hfds backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,metaAccessContext,reflection,serializableType,throwableType,vmEventListeners
 hcls CompileLogStream
 
 CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option
