@@ -22,7 +22,6 @@
  */
 package jdk.vm.ci.hotspot;
 
-import static jdk.vm.ci.hotspot.HotSpotJDKReflection.NO_ANNOTATIONS;
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 
 import java.lang.annotation.Annotation;
@@ -158,7 +157,7 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     ResolvedJavaMethod.Parameter[] getParameters(HotSpotResolvedJavaMethodImpl javaMethod) {
-        return null;
+        throw new UnsupportedOperationException("unimplemented");
     }
 
     // Substituted by Target_jdk_vm_ci_hotspot_SharedLibraryJVMCIReflection
@@ -198,7 +197,7 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     Annotation[] getFieldAnnotations(HotSpotResolvedJavaFieldImpl javaField) {
-        return NO_ANNOTATIONS;
+        throw new UnsupportedOperationException("unimplemented");
     }
 
     @Override
@@ -227,17 +226,17 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     Annotation[] getMethodDeclaredAnnotations(HotSpotResolvedJavaMethodImpl javaMethod) {
-        return NO_ANNOTATIONS;
+        throw new UnsupportedOperationException("unimplemented");
     }
 
     @Override
     Annotation[] getFieldDeclaredAnnotations(HotSpotResolvedJavaFieldImpl javaMethod) {
-        return NO_ANNOTATIONS;
+        throw new UnsupportedOperationException("unimplemented");
     }
 
     @Override
     <T extends Annotation> T getFieldAnnotation(HotSpotResolvedJavaFieldImpl javaField, Class<T> annotationClass) {
-        return null;
+        throw new UnsupportedOperationException("unimplemented");
     }
 
     @Override
