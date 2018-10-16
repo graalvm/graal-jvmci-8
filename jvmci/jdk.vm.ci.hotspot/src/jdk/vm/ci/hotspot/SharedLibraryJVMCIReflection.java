@@ -25,6 +25,7 @@ package jdk.vm.ci.hotspot;
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -303,8 +304,15 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
     }
 
     @Override
-    Integer getLength(HotSpotObjectConstantImpl arrayObject) {
-        int length = runtime().compilerToVm.getArrayLength(arrayObject);
+    Integer getLength(HotSpotObjectConstantImpl object) {
+        if (object instanceof DirectHotSpotObjectConstantImpl) {
+            DirectHotSpotObjectConstantImpl direct = (DirectHotSpotObjectConstantImpl) object;
+            if (direct.object.getClass().isArray()) {
+                return Array.getLength(direct.object);
+            }
+            return null;
+        }
+        int length = runtime().compilerToVm.getArrayLength(object);
         if (length >= 0) {
             return length;
         }

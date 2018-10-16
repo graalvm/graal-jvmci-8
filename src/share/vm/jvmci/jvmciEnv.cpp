@@ -970,6 +970,7 @@ oop JVMCIEnv::asConstant(JVMCIObject constant, JVMCI_TRAPS) {
     assert(HotSpotJVMCI::DirectHotSpotObjectConstantImpl::is_instance(this, constant), "wrong type");
     return HotSpotJVMCI::DirectHotSpotObjectConstantImpl::object(this, HotSpotJVMCI::resolve(constant));
   } else {
+    assert(isa_IndirectHotSpotObjectConstantImpl(constant), "wrong type");
     jlong object_handle = get_IndirectHotSpotObjectConstantImpl_objectHandle(constant);
     oop result = resolve_handle(object_handle);
     if (result == NULL) {
