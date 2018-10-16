@@ -2251,14 +2251,6 @@ C2V_VMENTRY(jobject, getObject, (JNIEnv* env, jobject, jobject x, long displacem
   return JVMCIENV->get_jobject(result);
 }
 
-C2V_VMENTRY(jobject, resolveObject, (JNIEnv* env, jobject, jobject o))
-  if (o == NULL) {
-    JVMCI_THROW_0(NullPointerException);
-  }
-  Handle xobj = JVMCIENV->asConstant(JVMCIENV->wrap(o), JVMCI_CHECK_0);
-  return JNIHandles::make_local(xobj());
-}
-
 C2V_VMENTRY(jlong, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
   void* shared_library = JVMCIEnv::get_shared_library_handle();
   if (shared_library == NULL) {
@@ -2535,7 +2527,6 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getInt",                                       CC"("OBJECTCONSTANT"J)I",                                                         FN_PTR(getInt)},
   {CC"getLong",                                      CC"("OBJECTCONSTANT"J)J",                                                         FN_PTR(getLong)},
   {CC"getObject",                                    CC"("OBJECTCONSTANT"J)"OBJECTCONSTANT,                                            FN_PTR(getObject)},
-  {CC"resolveObject",                                CC"("HANDLECONSTANT")Ljava/lang/Object;",                                         FN_PTR(resolveObject)},
   {CC"registerNativeMethods",                        CC"("CLASS")J",                                                                   FN_PTR(registerNativeMethods)},
   {CC"translate",                                    CC"("OBJECT")J",                                                                  FN_PTR(translate)},
   {CC"unhand",                                       CC"(J)"OBJECT,                                                                    FN_PTR(unhand)},

@@ -318,7 +318,6 @@
     long_field(HotSpotConstantPool, metadataHandle)                                                           \
   end_class                                                                                                   \
   start_class(HotSpotJVMCIRuntime, jdk_vm_ci_hotspot_HotSpotJVMCIRuntime)                                     \
-    static_boolean_field(HotSpotJVMCIRuntime, SHARED_LIBRARY_JDK_REFLECTION)                                  \
     int_field(HotSpotJVMCIRuntime, compilationLevelAdjustment)                                                \
     jvmci_method(CallNonvirtualObjectMethod, GetMethodID, call_special, JVMCIObject, HotSpotJVMCIRuntime, compileMethod, compileMethod_signature, (JVMCIObject runtime, JVMCIObject method, int entry_bci, jlong env, int id)) \
     jvmci_method(CallNonvirtualIntMethod, GetMethodID, call_special, int, HotSpotJVMCIRuntime, adjustCompilationLevel, adjustCompilationLevel_signature, (JVMCIObject runtime, JVMCIObject declaringClass, JVMCIObject name, JVMCIObject signature, bool is_osr, int level)) \

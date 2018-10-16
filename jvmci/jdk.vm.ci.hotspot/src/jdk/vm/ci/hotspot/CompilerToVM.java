@@ -35,6 +35,7 @@ import jdk.vm.ci.code.TargetDescription;
 import jdk.vm.ci.code.stack.InspectedFrameVisitor;
 import jdk.vm.ci.common.InitTimer;
 import jdk.vm.ci.common.JVMCIError;
+import jdk.vm.ci.meta.Constant;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
@@ -53,6 +54,10 @@ final class CompilerToVM {
      */
     private static native void registerNatives();
 
+    /**
+     * These values mirror the equivalent values from {@link Unsafe} but are approriate for the JVM
+     * being compiled against.
+     */
     // Checkstyle: stop
     final int ARRAY_BOOLEAN_BASE_OFFSET;
     final int ARRAY_BYTE_BASE_OFFSET;
@@ -717,55 +722,129 @@ final class CompilerToVM {
      */
     native Object getObjectAtAddress(long oopAddress);
 
-    native HotSpotResolvedObjectTypeImpl[] getInterfaces(HotSpotResolvedObjectTypeImpl hotSpotResolvedObjectType);
+    /**
+     * @see ResolvedJavaType#getInterfaces()
+     */
+    native HotSpotResolvedObjectTypeImpl[] getInterfaces(HotSpotResolvedObjectTypeImpl type);
 
-    native HotSpotResolvedJavaType getComponentType(HotSpotResolvedObjectTypeImpl hotSpotResolvedObjectType);
+    /**
+     * @see ResolvedJavaType#getComponentType()
+     */
+    native HotSpotResolvedJavaType getComponentType(HotSpotResolvedObjectTypeImpl type);
 
-    native void ensureInitialized(HotSpotResolvedObjectTypeImpl hotSpotResolvedObjectType);
+    /**
+     * Force initialization of {@code type}
+     */
+    native void ensureInitialized(HotSpotResolvedObjectTypeImpl type);
 
+    /**
+     * Check if {@code object} is a String and is an interned string value.
+     */
     native boolean isInternedString(HotSpotObjectConstantImpl object);
 
+    /**
+     * Gets the {@linkplain System#identityHashCode(Object) identity} has code for the object
+     * represented by this constant.
+     */
     native int getIdentityHashCode(HotSpotObjectConstantImpl object);
 
+    /**
+     * Converts a constant object representing a boxed primitive into a boxed primitive.
+     */
     native Object unboxPrimitive(HotSpotObjectConstantImpl object);
 
+    /**
+     * Converts a boxed primitive into a JavaConstant representing the same value.
+     */
     native HotSpotObjectConstantImpl boxPrimitive(Object source);
 
+    /**
+     * Gets the {@link ResolvedJavaMethod}s for all the constructors of the type {@code holder].
+     */
     native ResolvedJavaMethod[] getDeclaredConstructors(HotSpotResolvedObjectTypeImpl holder);
 
+    /**
+     * Gets the {@link ResolvedJavaMethod}s for all the non-constructor methods of the type
+     * {@code holder].
+     */
     native ResolvedJavaMethod[] getDeclaredMethods(HotSpotResolvedObjectTypeImpl holder);
 
+    /**
+     * Read the current value of a static field.
+     */
     native JavaConstant readFieldValue(HotSpotResolvedObjectTypeImpl resolvedObjectType, HotSpotResolvedJavaField field, boolean isVolatile);
 
+    /**
+     * Read the current value of an instance field.
+     */
     native JavaConstant readFieldValue(HotSpotObjectConstantImpl object, HotSpotResolvedJavaField field, boolean isVolatile);
 
+    /**
+     * @see ResolvedJavaType#isInstance(JavaConstant)
+     */
     native boolean isInstance(HotSpotResolvedObjectTypeImpl holder, HotSpotObjectConstantImpl object);
 
+    /**
+     * @see ResolvedJavaType#isAssignableFrom(ResolvedJavaType)
+     */
     native boolean isAssignableFrom(HotSpotResolvedObjectTypeImpl holder, HotSpotResolvedObjectTypeImpl otherType);
 
+    /**
+     * @see jdk.vm.ci.meta.ConstantReflectionProvider#asJavaType(Constant)
+     */
     native HotSpotResolvedJavaType asJavaType(HotSpotObjectConstantImpl object);
 
+    /**
+     * Convert a String constant into a String.
+     */
     native String asString(HotSpotObjectConstantImpl object);
 
+    /**
+     * Compare the contents of {@code xHandle} and {@code yHandle} for pointer equality.
+     */
     native boolean equals(HotSpotObjectConstantImpl x, long xHandle, HotSpotObjectConstantImpl y, long yHandle);
 
+    /**
+     * Returns the {@link java.lang.Class} instance for the type.
+     */
     native HotSpotObjectConstantImpl getJavaMirror(HotSpotResolvedJavaType type);
 
+    /**
+     * Returns the length of the array if {@code object} represents an array or -1 otherwise.
+     */
     native int getArrayLength(HotSpotObjectConstantImpl object);
 
-    native Object readArrayElement(HotSpotObjectConstantImpl arrayObject, int index);
+    /**
+     * Read the element at {@code index} if {@code object} is an array. Elements of an object array
+     * are returned as {@link JavaConstant}s and primtives are return as boxed values. The value
+     * {@code null} is returned if the {@code index} is out of range or object is no an array.
+     */
+    native Object readArrayElement(HotSpotObjectConstantImpl object, int index);
 
+    /**
+     * Read a byte sized value from {@code displacement} in {@code object}
+     */
     native byte getByte(HotSpotObjectConstantImpl object, long displacement);
 
+    /**
+     * Read a short sized value from {@code displacement} in {@code object}
+     */
     native short getShort(HotSpotObjectConstantImpl object, long displacement);
 
+    /**
+     * Read an int sized value from {@code displacement} in {@code object}
+     */
     native int getInt(HotSpotObjectConstantImpl object, long displacement);
 
+    /**
+     * Read a long sized value from {@code displacement} in {@code object}
+     */
     native long getLong(HotSpotObjectConstantImpl object, long displacement);
 
-    native HotSpotObjectConstantImpl getObject(HotSpotObjectConstantImpl base, long displacement);
-
-    native Object resolveObject(IndirectHotSpotObjectConstantImpl objectHandle);
+    /**
+     * Read a Java object from {@code displacement} in {@code object}
+     */
+    native HotSpotObjectConstantImpl getObject(HotSpotObjectConstantImpl object, long displacement);
 
     /**
      * @see HotSpotJVMCIRuntime#registerNativeMethods

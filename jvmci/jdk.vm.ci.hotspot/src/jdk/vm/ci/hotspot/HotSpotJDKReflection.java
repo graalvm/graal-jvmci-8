@@ -23,7 +23,7 @@
 package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
-import static jdk.vm.ci.hotspot.UnsafeAccess.PLATFORM_UNSAFE;
+import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
@@ -386,22 +386,22 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
 
     @Override
     int getInt(HotSpotObjectConstantImpl object, long displacement) {
-        return PLATFORM_UNSAFE.getInt((resolveObject(object)), displacement);
+        return UNSAFE.getInt((resolveObject(object)), displacement);
     }
 
     @Override
     byte getByte(HotSpotObjectConstantImpl object, long displacement) {
-        return PLATFORM_UNSAFE.getByte(resolveObject(object), displacement);
+        return UNSAFE.getByte(resolveObject(object), displacement);
     }
 
     @Override
     short getShort(HotSpotObjectConstantImpl object, long displacement) {
-        return PLATFORM_UNSAFE.getShort(resolveObject(object), displacement);
+        return UNSAFE.getShort(resolveObject(object), displacement);
     }
 
     @Override
     long getLong(HotSpotObjectConstantImpl object, long displacement) {
-        return PLATFORM_UNSAFE.getLong(resolveObject(object), displacement);
+        return UNSAFE.getLong(resolveObject(object), displacement);
     }
 
     @Override
@@ -454,7 +454,7 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
             long size;
             if (object instanceof Class) {
                 int wordSize = runtime().getHostJVMCIBackend().getCodeCache().getTarget().wordSize;
-                size = PLATFORM_UNSAFE.getInt(object, oopSizeOffset()) * wordSize;
+                size = UNSAFE.getInt(object, oopSizeOffset()) * wordSize;
             } else {
                 size = Math.abs(type.instanceSize());
             }
@@ -499,23 +499,23 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
         JavaKind kind = field.getJavaKind();
         switch (kind) {
             case Boolean:
-                return JavaConstant.forBoolean(isVolatile ? PLATFORM_UNSAFE.getBooleanVolatile(obj, displacement) : PLATFORM_UNSAFE.getBoolean(obj, displacement));
+                return JavaConstant.forBoolean(isVolatile ? UNSAFE.getBooleanVolatile(obj, displacement) : UNSAFE.getBoolean(obj, displacement));
             case Byte:
-                return JavaConstant.forByte(isVolatile ? PLATFORM_UNSAFE.getByteVolatile(obj, displacement) : PLATFORM_UNSAFE.getByte(obj, displacement));
+                return JavaConstant.forByte(isVolatile ? UNSAFE.getByteVolatile(obj, displacement) : UNSAFE.getByte(obj, displacement));
             case Char:
-                return JavaConstant.forChar(isVolatile ? PLATFORM_UNSAFE.getCharVolatile(obj, displacement) : PLATFORM_UNSAFE.getChar(obj, displacement));
+                return JavaConstant.forChar(isVolatile ? UNSAFE.getCharVolatile(obj, displacement) : UNSAFE.getChar(obj, displacement));
             case Short:
-                return JavaConstant.forShort(isVolatile ? PLATFORM_UNSAFE.getShortVolatile(obj, displacement) : PLATFORM_UNSAFE.getShort(obj, displacement));
+                return JavaConstant.forShort(isVolatile ? UNSAFE.getShortVolatile(obj, displacement) : UNSAFE.getShort(obj, displacement));
             case Int:
-                return JavaConstant.forInt(isVolatile ? PLATFORM_UNSAFE.getIntVolatile(obj, displacement) : PLATFORM_UNSAFE.getInt(obj, displacement));
+                return JavaConstant.forInt(isVolatile ? UNSAFE.getIntVolatile(obj, displacement) : UNSAFE.getInt(obj, displacement));
             case Long:
-                return JavaConstant.forLong(isVolatile ? PLATFORM_UNSAFE.getLongVolatile(obj, displacement) : PLATFORM_UNSAFE.getLong(obj, displacement));
+                return JavaConstant.forLong(isVolatile ? UNSAFE.getLongVolatile(obj, displacement) : UNSAFE.getLong(obj, displacement));
             case Float:
-                return JavaConstant.forFloat(isVolatile ? PLATFORM_UNSAFE.getFloatVolatile(obj, displacement) : PLATFORM_UNSAFE.getFloat(obj, displacement));
+                return JavaConstant.forFloat(isVolatile ? UNSAFE.getFloatVolatile(obj, displacement) : UNSAFE.getFloat(obj, displacement));
             case Double:
-                return JavaConstant.forDouble(isVolatile ? PLATFORM_UNSAFE.getDoubleVolatile(obj, displacement) : PLATFORM_UNSAFE.getDouble(obj, displacement));
+                return JavaConstant.forDouble(isVolatile ? UNSAFE.getDoubleVolatile(obj, displacement) : UNSAFE.getDouble(obj, displacement));
             case Object:
-                return forObject(isVolatile ? PLATFORM_UNSAFE.getObjectVolatile(obj, displacement) : PLATFORM_UNSAFE.getObject(obj, displacement));
+                return forObject(isVolatile ? UNSAFE.getObjectVolatile(obj, displacement) : UNSAFE.getObject(obj, displacement));
             default:
                 throw new IllegalArgumentException("Unsupported kind: " + kind);
 

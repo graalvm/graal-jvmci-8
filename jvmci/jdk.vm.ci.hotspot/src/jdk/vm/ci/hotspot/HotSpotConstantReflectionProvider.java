@@ -164,13 +164,13 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
         if (hotspotField.isStatic()) {
             HotSpotResolvedObjectTypeImpl holder = (HotSpotResolvedObjectTypeImpl) hotspotField.getDeclaringClass();
             if (holder.isInitialized()) {
-                return memoryAccess.readFieldValue(hotspotField, holder, field.isVolatile());
+                return holder.readFieldValue(hotspotField, field.isVolatile());
             }
         } else {
             if (receiver.isNonNull() && receiver instanceof HotSpotObjectConstantImpl) {
                 HotSpotObjectConstantImpl object = ((HotSpotObjectConstantImpl) receiver);
                 if (hotspotField.isInObject(receiver)) {
-                    return memoryAccess.readFieldValue(hotspotField, object, field.isVolatile());
+                    return object.readFieldValue(hotspotField, field.isVolatile());
                 }
             }
         }

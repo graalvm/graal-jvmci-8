@@ -68,13 +68,6 @@ import sun.misc.VM;
  * HotSpot implementation of a JVMCI runtime.
  */
 public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
-
-    /**
-     * Determines whether {@link HotSpotJDKReflection} or {@link SharedLibraryJVMCIReflection} is
-     * used to access the runtime.
-     */
-    static final boolean SHARED_LIBRARY_JDK_REFLECTION = IS_IN_NATIVE_IMAGE || Boolean.getBoolean("jdk.vm.ci.hotspot.ForceSharedLibraryJVMCIReflection");
-
     /**
      * Singleton instance lazily initialized via double-checked locking.
      */
@@ -405,7 +398,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
             config = new HotSpotVMConfig(configStore);
         }
 
-        reflection = IS_IN_NATIVE_IMAGE || SHARED_LIBRARY_JDK_REFLECTION ? new SharedLibraryJVMCIReflection() : new HotSpotJDKReflection();
+        reflection = IS_IN_NATIVE_IMAGE ? new SharedLibraryJVMCIReflection() : new HotSpotJDKReflection();
 
         String hostArchitecture = config.getHostArchitectureName();
 

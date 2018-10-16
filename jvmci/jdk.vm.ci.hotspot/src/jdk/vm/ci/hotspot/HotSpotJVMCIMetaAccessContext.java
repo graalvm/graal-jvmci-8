@@ -23,6 +23,7 @@
 package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
 
 import java.lang.ref.ReferenceQueue;
@@ -105,8 +106,8 @@ class HotSpotJVMCIMetaAccessContext {
 
         void clearHandle() {
             remove(this);
-            long value = UnsafeAccess.PLATFORM_UNSAFE.getLong(null, handle);
-            UnsafeAccess.PLATFORM_UNSAFE.compareAndSwapLong(null, handle, value, 0);
+            long value = UNSAFE.getLong(null, handle);
+            UNSAFE.compareAndSwapLong(null, handle, value, 0);
         }
 
         /**

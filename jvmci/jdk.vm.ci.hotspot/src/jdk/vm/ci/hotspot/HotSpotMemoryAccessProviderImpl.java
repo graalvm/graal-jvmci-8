@@ -152,14 +152,6 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
         return ret;
     }
 
-    JavaConstant readFieldValue(HotSpotResolvedJavaField field, HotSpotObjectConstantImpl obj, boolean isVolatile) {
-        return obj.readFieldValue(field, isVolatile);
-    }
-
-    JavaConstant readFieldValue(HotSpotResolvedJavaField field, HotSpotResolvedObjectTypeImpl obj, boolean isVolatile) {
-        return obj.readFieldValue(field, isVolatile);
-    }
-
     @Override
     public JavaConstant readPrimitiveConstant(JavaKind kind, Constant baseConstant, long initialDisplacement, int bits) {
         try {

@@ -24,11 +24,8 @@ package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.HotSpotJDKReflection.NO_ANNOTATIONS;
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
-import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Executable;
-import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
@@ -48,14 +45,7 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     Object resolveObject(HotSpotObjectConstantImpl objectHandle) {
-        if (IS_IN_NATIVE_IMAGE) {
-            throw new HotSpotJVMCIUnsupportedOperationError("cannot resolve an object handle in a JVMCI shared library to a raw object");
-        }
-
-        if (objectHandle == null) {
-            return null;
-        }
-        return runtime().compilerToVm.resolveObject(((IndirectHotSpotObjectConstantImpl) objectHandle));
+        throw new HotSpotJVMCIUnsupportedOperationError("cannot resolve an object handle in a JVMCI shared library to a raw object");
     }
 
     @Override
@@ -109,11 +99,9 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
     @Override
     JavaConstant readFieldValue(HotSpotObjectConstantImpl object, HotSpotResolvedJavaField field, boolean isVolatile) {
         if (object instanceof DirectHotSpotObjectConstantImpl) {
-            if (IS_IN_NATIVE_IMAGE) {
-                // cannot read fields from objects due to lack of
-                // general reflection support in native image
-                return null;
-            }
+            // cannot read fields from objects due to lack of
+            // general reflection support in native image
+            return null;
         }
         JavaConstant javaConstant = runtime().compilerToVm.readFieldValue(object, field, isVolatile);
         if (javaConstant == null) {
@@ -150,24 +138,8 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
             return (xd.object == yd.object);
         }
         if (x instanceof DirectHotSpotObjectConstantImpl || y instanceof DirectHotSpotObjectConstantImpl) {
-            if (IS_IN_NATIVE_IMAGE) {
-                // Mixing of constant types is always inequal
-                return false;
-            }
-            Object xd = null;
-            if (x instanceof DirectHotSpotObjectConstantImpl) {
-                xd = ((DirectHotSpotObjectConstantImpl) x).object;
-            } else {
-                xd = resolveObject(x);
-            }
-            Object yd = null;
-            if (y instanceof DirectHotSpotObjectConstantImpl) {
-                yd = ((DirectHotSpotObjectConstantImpl) y).object;
-            } else {
-                yd = resolveObject(y);
-            }
-            return xd == yd;
-
+            // Mixing of constant types is always inequal
+            return false;
         }
         IndirectHotSpotObjectConstantImpl indirectX = (IndirectHotSpotObjectConstantImpl) x;
         IndirectHotSpotObjectConstantImpl indirectY = (IndirectHotSpotObjectConstantImpl) y;
@@ -186,17 +158,7 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     ResolvedJavaMethod.Parameter[] getParameters(HotSpotResolvedJavaMethodImpl javaMethod) {
-        if (IS_IN_NATIVE_IMAGE) {
-            return null;
-        }
-        java.lang.reflect.Parameter[] javaParameters = getMethod(javaMethod).getParameters();
-        ResolvedJavaMethod.Parameter[] res = new ResolvedJavaMethod.Parameter[javaParameters.length];
-        for (int i = 0; i < res.length; i++) {
-            java.lang.reflect.Parameter src = javaParameters[i];
-            String paramName = src.isNamePresent() ? src.getName() : null;
-            res[i] = new ResolvedJavaMethod.Parameter(paramName, src.getModifiers(), javaMethod, i);
-        }
-        return res;
+        return null;
     }
 
     // Substituted by Target_jdk_vm_ci_hotspot_SharedLibraryJVMCIReflection
@@ -216,63 +178,32 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     Annotation[] getDeclaredAnnotations(HotSpotResolvedObjectTypeImpl holder) {
-        if (IS_IN_NATIVE_IMAGE) {
-            throw new InternalError();
-        }
-        Class<?> javaMirror = getMirror(holder);
-        return javaMirror.getDeclaredAnnotations();
+        throw new UnsupportedOperationException("unimplemented");
     }
 
     @Override
     <T extends Annotation> T getAnnotation(HotSpotResolvedObjectTypeImpl holder, Class<T> annotationClass) {
-        if (IS_IN_NATIVE_IMAGE) {
-            throw new InternalError(annotationClass.getName());
-        }
-        Class<?> javaMirror = getMirror(holder);
-        return javaMirror.getAnnotation(annotationClass);
+        throw new UnsupportedOperationException("unimplemented");
     }
 
     @Override
     Annotation[][] getParameterAnnotations(HotSpotResolvedJavaMethodImpl javaMethod) {
-        if (IS_IN_NATIVE_IMAGE) {
-            return getParameterAnnotations(javaMethod.getDeclaringClass().getName(), javaMethod.getName());
-        }
-        return getMethod(javaMethod).getParameterAnnotations();
+        return getParameterAnnotations(javaMethod.getDeclaringClass().getName(), javaMethod.getName());
     }
 
     @Override
     Type[] getGenericParameterTypes(HotSpotResolvedJavaMethodImpl javaMethod) {
-        if (!IS_IN_NATIVE_IMAGE) {
-            throw new InternalError();
-        }
-        return getMethod(javaMethod).getGenericParameterTypes();
+        throw new UnsupportedOperationException("unimplemented");
     }
 
     @Override
     Annotation[] getFieldAnnotations(HotSpotResolvedJavaFieldImpl javaField) {
-        if (IS_IN_NATIVE_IMAGE) {
-            return NO_ANNOTATIONS;
-        }
-        if (javaField.isInternal()) {
-            return NO_ANNOTATIONS;
-        }
-        Field field = getField(javaField);
-        if (field == null) {
-            return NO_ANNOTATIONS;
-        }
-        return field.getAnnotations();
+        return NO_ANNOTATIONS;
     }
 
     @Override
     Annotation[] getMethodAnnotations(HotSpotResolvedJavaMethodImpl javaMethod) {
-        if (IS_IN_NATIVE_IMAGE) {
-            return getMethodAnnotationsInternal(javaMethod);
-        }
-        Executable method = getMethod(javaMethod);
-        if (method == null) {
-            return NO_ANNOTATIONS;
-        }
-        return method.getDeclaredAnnotations();
+        return getMethodAnnotationsInternal(javaMethod);
     }
 
     @Override
@@ -306,14 +237,7 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     <T extends Annotation> T getFieldAnnotation(HotSpotResolvedJavaFieldImpl javaField, Class<T> annotationClass) {
-        if (IS_IN_NATIVE_IMAGE) {
-            return null;
-        }
-        Field field = getField(javaField);
-        if (field == null) {
-            return null;
-        }
-        return field.getAnnotation(annotationClass);
+        return null;
     }
 
     @Override
@@ -324,11 +248,7 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
                 String name = theClass.getName().replace('.', '/');
                 HotSpotResolvedObjectTypeImpl type = (HotSpotResolvedObjectTypeImpl) lookupJavaType(name);
                 if (type == null) {
-                    if (IS_IN_NATIVE_IMAGE) {
-                        throw new InternalError(name);
-                    } else {
-                        return (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(theClass);
-                    }
+                    throw new InternalError(name);
                 }
                 return type;
             } catch (ClassNotFoundException e) {
@@ -380,15 +300,6 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
                 return (T) convertUnknownValue(type.cast(theObject));
             }
         }
-        if (!IS_IN_NATIVE_IMAGE) {
-            // This is occurs when HotSpotJVMCIRuntime.SHARED_LIBRARY_JDK_REFLECTION is true
-            if (object instanceof IndirectHotSpotObjectConstantImpl) {
-                Object theObject = runtime().compilerToVm.resolveObject((IndirectHotSpotObjectConstantImpl) object);
-                if (type.isInstance(theObject)) {
-                    return (T) convertUnknownValue(type.cast(theObject));
-                }
-            }
-        }
         return null;
     }
 
@@ -402,16 +313,9 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
     String formatString(HotSpotObjectConstantImpl object) {
         if (object instanceof DirectHotSpotObjectConstantImpl) {
             DirectHotSpotObjectConstantImpl direct = (DirectHotSpotObjectConstantImpl) object;
-            if (IS_IN_NATIVE_IMAGE) {
-                return "CompilerObject<" + direct.object.getClass().toString() + ">";
-            }
-            return "CompilerObject<" + JavaKind.Object.format(direct.object) + ">";
-
+            return "CompilerObject<" + direct.object.getClass().toString() + ">";
         }
-        if (IS_IN_NATIVE_IMAGE) {
-            return "Instance<" + object.getType().toString() + ">";
-        }
-        return "Instance<" + JavaKind.Object.format(resolveObject(object)) + ">";
+        return "Instance<" + object.getType().toString() + ">";
     }
 
     @Override
