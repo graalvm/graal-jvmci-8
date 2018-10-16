@@ -1957,13 +1957,18 @@ C2V_VMENTRY(jobjectArray, getDeclaredConstructors, (JNIEnv* env, jobject, jobjec
   }
   Klass* klass = JVMCIENV->asKlass(holder);
   if (!klass->oop_is_instance()) {
-    JVMCI_THROW_MSG_0(InternalError, err_msg("Class %s must be instance klass", klass->external_name()));
+    JVMCIObjectArray methods = JVMCIENV->new_ResolvedJavaMethod_array(0, JVMCI_CHECK_NULL);
+    return JVMCIENV->get_jobjectArray(methods);
   }
+
   InstanceKlass* iklass = InstanceKlass::cast(klass);
+  // Ensure class is linked
+  iklass->link_class(CHECK_NULL);
+
   GrowableArray<Method*> constructors_array;
   for (int i = 0; i < iklass->methods()->length(); i++) {
     Method* m = iklass->methods()->at(i);
-    if (m->name() == vmSymbols::object_initializer_name()) {
+    if (m->is_initializer() && !m->is_static()) {
       constructors_array.append(m);
     }
   }
@@ -1981,19 +1986,24 @@ C2V_VMENTRY(jobjectArray, getDeclaredMethods, (JNIEnv* env, jobject, jobject hol
   }
   Klass* klass = JVMCIENV->asKlass(holder);
   if (!klass->oop_is_instance()) {
-    JVMCI_THROW_MSG_0(InternalError, err_msg("Class %s must be instance klass", klass->external_name()));
+    JVMCIObjectArray methods = JVMCIENV->new_ResolvedJavaMethod_array(0, JVMCI_CHECK_NULL);
+    return JVMCIENV->get_jobjectArray(methods);
   }
+
   InstanceKlass* iklass = InstanceKlass::cast(klass);
-  GrowableArray<Method*> constructors;
+  // Ensure class is linked
+  iklass->link_class(CHECK_NULL);
+
+  GrowableArray<Method*> methods_array;
   for (int i = 0; i < iklass->methods()->length(); i++) {
     Method* m = iklass->methods()->at(i);
-    if (m->name() != vmSymbols::object_initializer_name()) {
-      constructors.append(m);
+    if (!m->is_initializer() && !m->is_overpass()) {
+      methods_array.append(m);
     }
   }
-  JVMCIObjectArray methods = JVMCIENV->new_ResolvedJavaMethod_array(constructors.length(), JVMCI_CHECK_NULL);
-  for (int i = 0; i < constructors.length(); i++) {
-    JVMCIObject method = JVMCIENV->get_jvmci_method(constructors.at(i), JVMCI_CHECK_NULL);
+  JVMCIObjectArray methods = JVMCIENV->new_ResolvedJavaMethod_array(methods_array.length(), JVMCI_CHECK_NULL);
+  for (int i = 0; i < methods_array.length(); i++) {
+    JVMCIObject method = JVMCIENV->get_jvmci_method(methods_array.at(i), JVMCI_CHECK_NULL);
     JVMCIENV->put_object_at(methods, i, method);
   }
   return JVMCIENV->get_jobjectArray(methods);

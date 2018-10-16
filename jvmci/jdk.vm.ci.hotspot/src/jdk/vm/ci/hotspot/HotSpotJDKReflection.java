@@ -27,10 +27,8 @@ import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -112,32 +110,6 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
     }
 
     @Override
-    ResolvedJavaMethod[] getDeclaredConstructors(HotSpotResolvedObjectTypeImpl holder) {
-        Class<?> javaMirror = getMirror(holder);
-
-        Constructor<?>[] constructors = javaMirror.getDeclaredConstructors();
-        ResolvedJavaMethod[] result = new ResolvedJavaMethod[constructors.length];
-        for (int i = 0; i < constructors.length; i++) {
-            result[i] = runtime().getHostJVMCIBackend().getMetaAccess().lookupJavaMethod(constructors[i]);
-            assert result[i].isConstructor();
-        }
-        return result;
-    }
-
-    @Override
-    ResolvedJavaMethod[] getDeclaredMethods(HotSpotResolvedObjectTypeImpl holder) {
-        Class<?> javaMirror = getMirror(holder);
-
-        Method[] methods = javaMirror.getDeclaredMethods();
-        ResolvedJavaMethod[] result = new ResolvedJavaMethod[methods.length];
-        for (int i = 0; i < methods.length; i++) {
-            result[i] = runtime().getHostJVMCIBackend().getMetaAccess().lookupJavaMethod(methods[i]);
-            assert !result[i].isConstructor();
-        }
-        return result;
-    }
-
-    @Override
     JavaConstant readFieldValue(HotSpotResolvedObjectTypeImpl holder, HotSpotResolvedJavaField field, boolean isVolatile) {
         Class<?> javaMirror = getMirror(holder);
         return readFieldValue(field, javaMirror, isVolatile);
@@ -180,11 +152,6 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
     @Override
     JavaConstant getJavaMirror(HotSpotResolvedPrimitiveType holder) {
         return holder.mirror;
-    }
-
-    @Override
-    JavaConstant getJavaMirror(HotSpotResolvedObjectTypeImpl holder) {
-        return DirectHotSpotObjectConstantImpl.forNonNullObject(getMirror(holder), false);
     }
 
     @Override

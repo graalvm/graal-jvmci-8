@@ -77,16 +77,6 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
     }
 
     @Override
-    ResolvedJavaMethod[] getDeclaredConstructors(HotSpotResolvedObjectTypeImpl holder) {
-        return runtime().compilerToVm.getDeclaredConstructors(holder);
-    }
-
-    @Override
-    ResolvedJavaMethod[] getDeclaredMethods(HotSpotResolvedObjectTypeImpl holder) {
-        return runtime().compilerToVm.getDeclaredMethods(holder);
-    }
-
-    @Override
     JavaConstant readFieldValue(HotSpotResolvedObjectTypeImpl holder, HotSpotResolvedJavaField field, boolean isVolatile) {
         JavaConstant javaConstant = runtime().compilerToVm.readFieldValue(holder, field, isVolatile);
         if (javaConstant == null) {
@@ -148,11 +138,6 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
     @Override
     JavaConstant getJavaMirror(HotSpotResolvedPrimitiveType hotSpotResolvedPrimitiveType) {
         return runtime().compilerToVm.getJavaMirror(hotSpotResolvedPrimitiveType);
-    }
-
-    @Override
-    JavaConstant getJavaMirror(HotSpotResolvedObjectTypeImpl hotSpotResolvedJavaType) {
-        return runtime().compilerToVm.getJavaMirror(hotSpotResolvedJavaType);
     }
 
     @Override

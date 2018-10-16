@@ -62,10 +62,6 @@ abstract class HotSpotJVMCIReflection {
 
     abstract HotSpotResolvedObjectType getEnclosingClass(HotSpotResolvedObjectTypeImpl holder);
 
-    abstract ResolvedJavaMethod[] getDeclaredConstructors(HotSpotResolvedObjectTypeImpl holder);
-
-    abstract ResolvedJavaMethod[] getDeclaredMethods(HotSpotResolvedObjectTypeImpl holder);
-
     abstract JavaConstant readFieldValue(HotSpotResolvedObjectTypeImpl holder, HotSpotResolvedJavaField field, boolean isVolatile);
 
     abstract JavaConstant readFieldValue(HotSpotObjectConstantImpl object, HotSpotResolvedJavaField field, boolean isVolatile);
@@ -75,8 +71,6 @@ abstract class HotSpotJVMCIReflection {
     abstract boolean equals(HotSpotObjectConstantImpl hotSpotResolvedJavaType, HotSpotObjectConstantImpl that);
 
     abstract JavaConstant getJavaMirror(HotSpotResolvedPrimitiveType hotSpotResolvedJavaType);
-
-    abstract JavaConstant getJavaMirror(HotSpotResolvedObjectTypeImpl hotSpotResolvedJavaType);
 
     abstract ResolvedJavaMethod.Parameter[] getParameters(HotSpotResolvedJavaMethodImpl javaMethod);
 
