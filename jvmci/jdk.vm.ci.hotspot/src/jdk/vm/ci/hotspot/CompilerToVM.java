@@ -759,13 +759,13 @@ final class CompilerToVM {
     native HotSpotObjectConstantImpl boxPrimitive(Object source);
 
     /**
-     * Gets the {@link ResolvedJavaMethod}s for all the constructors of the type {@code holder].
+     * Gets the {@link ResolvedJavaMethod}s for all the constructors of the type {@code holder}.
      */
     native ResolvedJavaMethod[] getDeclaredConstructors(HotSpotResolvedObjectTypeImpl holder);
 
     /**
      * Gets the {@link ResolvedJavaMethod}s for all the non-constructor methods of the type
-     * {@code holder].
+     * {@code holder}.
      */
     native ResolvedJavaMethod[] getDeclaredMethods(HotSpotResolvedObjectTypeImpl holder);
 
