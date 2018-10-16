@@ -1370,7 +1370,7 @@ C2V_VMENTRY(jobject, iterateFrames, (JNIEnv*, jobject compilerToVM, jobjectArray
                   }
                 }
               }
-              bool realloc_failures = Deoptimization::realloc_objects(thread, fst.current(), objects, CHECK_NULL);
+              bool realloc_failures = Deoptimization::realloc_objects(thread, fst.current(), NULL, objects, CHECK_NULL);
               Deoptimization::reassign_fields(fst.current(), fst.register_map(), objects, realloc_failures, false);
               realloc_called = true;
 
@@ -1601,7 +1601,7 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv*, jobject, jobject hs_frame
     return;
   }
 
-  bool realloc_failures = Deoptimization::realloc_objects(thread, fstAfterDeopt.current(), objects, CHECK);
+  bool realloc_failures = Deoptimization::realloc_objects(thread, fstAfterDeopt.current(), NULL, objects, CHECK);
   Deoptimization::reassign_fields(fstAfterDeopt.current(), fstAfterDeopt.register_map(), objects, realloc_failures, false);
 
   for (int frame_index = 0; frame_index < virtualFrames->length(); frame_index++) {
