@@ -733,7 +733,7 @@ final class CompilerToVM {
     native HotSpotResolvedJavaType getComponentType(HotSpotResolvedObjectTypeImpl type);
 
     /**
-     * Force initialization of {@code type}
+     * Force initialization of {@code type}.
      */
     native void ensureInitialized(HotSpotResolvedObjectTypeImpl type);
 
@@ -822,27 +822,27 @@ final class CompilerToVM {
     native Object readArrayElement(HotSpotObjectConstantImpl object, int index);
 
     /**
-     * Read a byte sized value from {@code displacement} in {@code object}
+     * Read a byte sized value from {@code displacement} in {@code object}.
      */
     native byte getByte(HotSpotObjectConstantImpl object, long displacement);
 
     /**
-     * Read a short sized value from {@code displacement} in {@code object}
+     * Read a short sized value from {@code displacement} in {@code object}.
      */
     native short getShort(HotSpotObjectConstantImpl object, long displacement);
 
     /**
-     * Read an int sized value from {@code displacement} in {@code object}
+     * Read an int sized value from {@code displacement} in {@code object}.
      */
     native int getInt(HotSpotObjectConstantImpl object, long displacement);
 
     /**
-     * Read a long sized value from {@code displacement} in {@code object}
+     * Read a long sized value from {@code displacement} in {@code object}.
      */
     native long getLong(HotSpotObjectConstantImpl object, long displacement);
 
     /**
-     * Read a Java object from {@code displacement} in {@code object}
+     * Read a Java object from {@code displacement} in {@code object}.
      */
     native HotSpotObjectConstantImpl getObject(HotSpotObjectConstantImpl object, long displacement);
 
