@@ -97,19 +97,18 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
 
     /**
      * Creates the JVMCI mirror for a {@link Class} object.
-     * <p>
-     * <p>
+     *
      * <b>NOTE</b>: Creating an instance of this class does not install the mirror for the
-     * {@link Class} type. {@link #fromMetaspace} instead.
+     * {@link Class} type.
      * </p>
      *
      * @param metadataPointer the Klass* to create the mirror for
      */
     HotSpotResolvedObjectTypeImpl(long metadataPointer, String name) {
         super(name);
+        assert metadataPointer != 0;
         this.metadataPointer = metadataPointer;
         this.mirror = runtime().compilerToVm.getJavaMirror(this);
-        assert metadataPointer != 0;
         assert getName().charAt(0) != '[' || isArray() : getName();
     }
 

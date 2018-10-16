@@ -71,7 +71,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     private byte[] code;
 
     /**
-     * Cache for {@link HotSpotJVMCIReflection#getMethod}. Set to {@link #signature} when resolving
+     * Cache for {@link HotSpotJDKReflection#getMethod}. Set to {@link #signature} when resolving
      * reflection object fails due to reflection filtering (see {@code Reflection.fieldFilterMap}
      * and {@code Reflection.methodFilterMap}).
      */

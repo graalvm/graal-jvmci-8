@@ -36,6 +36,7 @@ import jdk.vm.ci.code.stack.InspectedFrameVisitor;
 import jdk.vm.ci.common.InitTimer;
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.Constant;
+import jdk.vm.ci.meta.ConstantReflectionProvider;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
@@ -733,12 +734,12 @@ final class CompilerToVM {
     native HotSpotResolvedJavaType getComponentType(HotSpotResolvedObjectTypeImpl type);
 
     /**
-     * Force initialization of {@code type}.
+     * Forces initialization of {@code type}.
      */
     native void ensureInitialized(HotSpotResolvedObjectTypeImpl type);
 
     /**
-     * Check if {@code object} is a String and is an interned string value.
+     * Checks if {@code object} is a String and is an interned string value.
      */
     native boolean isInternedString(HotSpotObjectConstantImpl object);
 
@@ -770,12 +771,12 @@ final class CompilerToVM {
     native ResolvedJavaMethod[] getDeclaredMethods(HotSpotResolvedObjectTypeImpl holder);
 
     /**
-     * Read the current value of a static field.
+     * Reads the current value of a static field.
      */
     native JavaConstant readFieldValue(HotSpotResolvedObjectTypeImpl resolvedObjectType, HotSpotResolvedJavaField field, boolean isVolatile);
 
     /**
-     * Read the current value of an instance field.
+     * Reads the current value of an instance field.
      */
     native JavaConstant readFieldValue(HotSpotObjectConstantImpl object, HotSpotResolvedJavaField field, boolean isVolatile);
 
@@ -790,22 +791,22 @@ final class CompilerToVM {
     native boolean isAssignableFrom(HotSpotResolvedObjectTypeImpl holder, HotSpotResolvedObjectTypeImpl otherType);
 
     /**
-     * @see jdk.vm.ci.meta.ConstantReflectionProvider#asJavaType(Constant)
+     * @see ConstantReflectionProvider#asJavaType(Constant)
      */
     native HotSpotResolvedJavaType asJavaType(HotSpotObjectConstantImpl object);
 
     /**
-     * Convert a String constant into a String.
+     * Converts a String constant into a String.
      */
     native String asString(HotSpotObjectConstantImpl object);
 
     /**
-     * Compare the contents of {@code xHandle} and {@code yHandle} for pointer equality.
+     * Compares the contents of {@code xHandle} and {@code yHandle} for pointer equality.
      */
     native boolean equals(HotSpotObjectConstantImpl x, long xHandle, HotSpotObjectConstantImpl y, long yHandle);
 
     /**
-     * Returns the {@link java.lang.Class} instance for the type.
+     * Gets a {@link JavaConstant} wrapping the {@link java.lang.Class} mirror for {@code type}.
      */
     native HotSpotObjectConstantImpl getJavaMirror(HotSpotResolvedJavaType type);
 
@@ -815,34 +816,34 @@ final class CompilerToVM {
     native int getArrayLength(HotSpotObjectConstantImpl object);
 
     /**
-     * Read the element at {@code index} if {@code object} is an array. Elements of an object array
-     * are returned as {@link JavaConstant}s and primtives are return as boxed values. The value
-     * {@code null} is returned if the {@code index} is out of range or object is no an array.
+     * Reads the element at {@code index} if {@code object} is an array. Elements of an object array
+     * are returned as {@link JavaConstant}s and primitives are returned as boxed values. The value
+     * {@code null} is returned if the {@code index} is out of range or object is not an array.
      */
     native Object readArrayElement(HotSpotObjectConstantImpl object, int index);
 
     /**
-     * Read a byte sized value from {@code displacement} in {@code object}.
+     * Reads a byte sized value from {@code displacement} in {@code object}.
      */
     native byte getByte(HotSpotObjectConstantImpl object, long displacement);
 
     /**
-     * Read a short sized value from {@code displacement} in {@code object}.
+     * Reads a short sized value from {@code displacement} in {@code object}.
      */
     native short getShort(HotSpotObjectConstantImpl object, long displacement);
 
     /**
-     * Read an int sized value from {@code displacement} in {@code object}.
+     * Reads an int sized value from {@code displacement} in {@code object}.
      */
     native int getInt(HotSpotObjectConstantImpl object, long displacement);
 
     /**
-     * Read a long sized value from {@code displacement} in {@code object}.
+     * Reads a long sized value from {@code displacement} in {@code object}.
      */
     native long getLong(HotSpotObjectConstantImpl object, long displacement);
 
     /**
-     * Read a Java object from {@code displacement} in {@code object}.
+     * Reads a Java object from {@code displacement} in {@code object}.
      */
     native HotSpotObjectConstantImpl getObject(HotSpotObjectConstantImpl object, long displacement);
 
@@ -862,7 +863,7 @@ final class CompilerToVM {
     native Object unhand(long handle);
 
     /**
-     * Update the internal fields of the nmethodHandle based on the current state of the
+     * Updates the internal fields of the nmethodHandle based on the current state of the
      * corresponding nmethod.
      */
     native void updateHotSpotNmethodHandle(HotSpotNmethodHandle nmethodHandle);
