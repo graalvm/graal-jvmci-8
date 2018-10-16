@@ -157,6 +157,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     /**
      * Gets the singleton {@link HotSpotJVMCIRuntime} object.
      */
+    @VMEntryPoint
     @SuppressWarnings({"try"})
     public static HotSpotJVMCIRuntime runtime() {
         HotSpotJVMCIRuntime result = instance;
@@ -185,12 +186,14 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         return result;
     }
 
+    @VMEntryPoint
     static String formatException(Throwable t) {
         StringWriter string = new StringWriter();
         t.printStackTrace(new PrintWriter(string));
         return string.toString();
     }
 
+    @VMEntryPoint
     static String callToString(Object o) {
         return o.toString();
     }
@@ -400,6 +403,14 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
 
         reflection = IS_IN_NATIVE_IMAGE ? new SharedLibraryJVMCIReflection() : new HotSpotJDKReflection();
 
+        PrintStream vmLogStream = null;
+        if (IS_IN_NATIVE_IMAGE) {
+            // Redirect System.out and System.err to HotSpot's TTY stream
+            vmLogStream = new PrintStream(getLogStream());
+            System.setOut(vmLogStream);
+            System.setErr(vmLogStream);
+        }
+
         String hostArchitecture = config.getHostArchitectureName();
 
         HotSpotJVMCIBackendFactory factory;
@@ -436,9 +447,11 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         }
 
         if (config.getFlag("JVMCIPrintProperties", Boolean.class)) {
-            PrintStream out = new PrintStream(getLogStream());
-            Option.printProperties(out);
-            compilerFactory.printProperties(out);
+            if (vmLogStream == null) {
+                vmLogStream = new PrintStream(getLogStream());
+            }
+            Option.printProperties(vmLogStream);
+            compilerFactory.printProperties(vmLogStream);
             System.exit(0);
         }
 
