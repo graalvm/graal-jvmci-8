@@ -45,7 +45,7 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     Object resolveObject(HotSpotObjectConstantImpl objectHandle) {
-        throw new HotSpotJVMCIUnsupportedOperationError("cannot resolve an object handle in a JVMCI shared library to a raw object");
+        throw new HotSpotJVMCIUnsupportedOperationError("cannot resolve handle in a JVMCI shared library to a raw object: " + objectHandle);
     }
 
     @Override
@@ -143,7 +143,8 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     ResolvedJavaMethod.Parameter[] getParameters(HotSpotResolvedJavaMethodImpl javaMethod) {
-        throw new UnsupportedOperationException("unimplemented");
+        // ResolvedJavaMethod.getParameters allows a return value of null
+        return null;
     }
 
     // Substituted by Target_jdk_vm_ci_hotspot_SharedLibraryJVMCIReflection
@@ -163,12 +164,12 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     Annotation[] getDeclaredAnnotations(HotSpotResolvedObjectTypeImpl holder) {
-        throw new UnsupportedOperationException("unimplemented");
+        throw new HotSpotJVMCIUnsupportedOperationError("unimplemented");
     }
 
     @Override
     <T extends Annotation> T getAnnotation(HotSpotResolvedObjectTypeImpl holder, Class<T> annotationClass) {
-        throw new UnsupportedOperationException("unimplemented");
+        throw new HotSpotJVMCIUnsupportedOperationError("unimplemented");
     }
 
     @Override
@@ -178,12 +179,12 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     Type[] getGenericParameterTypes(HotSpotResolvedJavaMethodImpl javaMethod) {
-        throw new UnsupportedOperationException("unimplemented");
+        throw new HotSpotJVMCIUnsupportedOperationError("unimplemented");
     }
 
     @Override
     Annotation[] getFieldAnnotations(HotSpotResolvedJavaFieldImpl javaField) {
-        throw new UnsupportedOperationException("unimplemented");
+        throw new HotSpotJVMCIUnsupportedOperationError("unimplemented");
     }
 
     @Override
@@ -212,17 +213,17 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
 
     @Override
     Annotation[] getMethodDeclaredAnnotations(HotSpotResolvedJavaMethodImpl javaMethod) {
-        throw new UnsupportedOperationException("unimplemented");
+        throw new HotSpotJVMCIUnsupportedOperationError("unimplemented");
     }
 
     @Override
     Annotation[] getFieldDeclaredAnnotations(HotSpotResolvedJavaFieldImpl javaMethod) {
-        throw new UnsupportedOperationException("unimplemented");
+        throw new HotSpotJVMCIUnsupportedOperationError("unimplemented");
     }
 
     @Override
     <T extends Annotation> T getFieldAnnotation(HotSpotResolvedJavaFieldImpl javaField, Class<T> annotationClass) {
-        throw new UnsupportedOperationException("unimplemented");
+        throw new HotSpotJVMCIUnsupportedOperationError("unimplemented");
     }
 
     @Override
@@ -298,9 +299,9 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
     String formatString(HotSpotObjectConstantImpl object) {
         if (object instanceof DirectHotSpotObjectConstantImpl) {
             DirectHotSpotObjectConstantImpl direct = (DirectHotSpotObjectConstantImpl) object;
-            return "CompilerObject<" + direct.object.getClass().toString() + ">";
+            return "CompilerObject<" + direct.object.getClass().getName() + ">";
         }
-        return "Instance<" + object.getType().toString() + ">";
+        return "Instance<" + object.getType().toJavaName() + ">";
     }
 
     @Override

@@ -39,7 +39,7 @@ class HotSpotNmethodHandle extends HotSpotNmethod {
 
     @Override
     public Object executeVarargs(Object... args) {
-        throw new UnsupportedOperationException("unsupported from native image");
+        throw new HotSpotJVMCIUnsupportedOperationError("unsupported from native image");
     }
 
     @Override

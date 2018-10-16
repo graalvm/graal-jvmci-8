@@ -37,7 +37,7 @@ import jdk.vm.ci.services.Services;
  * for the {@link ResolvedJavaType} and call {@link Class#isLocalClass()}. In a native image, there
  * is no {@link Class} mirror available in the native image heap so implementing this would involve
  * a call into VM native code that in turn would make an upcall into Java code executing on the
- * HotSpot heap. We have opted defer implementing functionality such as this until there's a
+ * HotSpot heap. We have opted to defer implementing functionality such as this until there's a
  * demonstrated need for it.
  */
 public class HotSpotJVMCIUnsupportedOperationError extends Error {
