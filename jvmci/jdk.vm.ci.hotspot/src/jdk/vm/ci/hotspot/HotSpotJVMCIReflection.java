@@ -26,12 +26,7 @@ import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.function.Predicate;
 
@@ -149,80 +144,6 @@ abstract class HotSpotJVMCIReflection {
             return (Class<?>) resolveObject(((HotSpotResolvedPrimitiveType) type).mirror);
         } else {
             return getMirror((HotSpotResolvedObjectTypeImpl) type);
-        }
-    }
-
-    private static Method searchMethods(Method[] methods, String name, Class<?> returnType, Class<?>[] parameterTypes) {
-        for (Method m : methods) {
-            if (m.getName().equals(name) && returnType.equals(m.getReturnType()) && Arrays.equals(m.getParameterTypes(), parameterTypes)) {
-                return m;
-            }
-        }
-        return null;
-    }
-
-    Method getDeclaredMethod(HotSpotResolvedObjectTypeImpl holder, String name, HotSpotResolvedJavaType returnType, HotSpotResolvedJavaType[] parameterTypes) {
-        Class<?> javaMirror = getMirror(holder);
-        Class<?>[] types = new Class<?>[parameterTypes.length];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            types[i] = getMirror(parameterTypes[i]);
-        }
-        Method m = searchMethods(javaMirror.getDeclaredMethods(), name, getMirror(returnType), types);
-        if (m == null) {
-            return null;
-        }
-        return m;
-    }
-
-    Constructor<?> getDeclaredConstructor(HotSpotResolvedObjectTypeImpl holder, HotSpotResolvedJavaType[] parameterTypes) {
-        Class<?> javaMirror = getMirror(holder);
-        Class<?>[] types = new Class<?>[parameterTypes.length];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            types[i] = getMirror(parameterTypes[i]);
-        }
-        try {
-            Constructor<?> m = javaMirror.getDeclaredConstructor(types);
-            return m;
-        } catch (NoSuchMethodException e) {
-            return null;
-        }
-
-    }
-
-    Executable getMethod(HotSpotResolvedJavaMethodImpl method) {
-        if (method.toJavaCache != null) {
-            if (method.toJavaCache == method.signature) {
-                return null;
-            }
-            return (Executable) method.toJavaCache;
-        }
-
-        HotSpotResolvedObjectTypeImpl holder = method.getDeclaringClass();
-        HotSpotResolvedJavaType[] parameterTypes = method.signatureToTypes();
-        HotSpotResolvedJavaType returnType = ((HotSpotResolvedJavaType) method.getSignature().getReturnType(holder).resolve(holder));
-        assert returnType != null;
-
-        Executable result;
-        if (method.isConstructor()) {
-            result = getDeclaredConstructor(holder, parameterTypes);
-        } else {
-            // Do not use Method.getDeclaredMethod() as it can return a bridge method
-            // when this.isBridge() is false and vice versa.
-            result = getDeclaredMethod(holder, method.getName(), returnType, parameterTypes);
-        }
-        if (result == null) {
-            method.toJavaCache = method.signature;
-            return null;
-        }
-        method.toJavaCache = result;
-        return result;
-    }
-
-    Field getField(HotSpotResolvedJavaFieldImpl javaField) {
-        try {
-            return getMirror(javaField.getDeclaringClass()).getDeclaredField(javaField.getName());
-        } catch (NoSuchFieldException e) {
-            return null;
         }
     }
 }
