@@ -75,7 +75,7 @@ if (LINUX)
     add_definitions(-DLINUX -D_GNU_SOURCE)
     set(HS_OS linux)
 elseif(DARWIN)
-    add_definitions(-D_ALLBSD_SOURCE -D_GNU_SOURCE -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE)
+    add_definitions(-D_ALLBSD_SOURCE -D_GNU_SOURCE -D_XOPEN_SOURCE -D_DARWIN_C_SOURCE -DALLOW_OPERATOR_NEW_USAGE)
     set(HS_OS bsd)
 endif()
 
@@ -175,8 +175,7 @@ file(GLOB SHARED_JVM_SOURCES
         ${SHARED_VM_SOURCES_DIR}/utilities/*.cpp
         ${SHARED_VM_SOURCES_DIR}/utilities/*.c
         ${SHARED_VM_SOURCES_DIR}/utilities/*.s
-        ${GENERATED_DIR}/jvmtifiles/*.?pp
-        ${GENERATED_DIR}/jvmtifiles/*.h
+        ${GENERATED_DIR}/jvmtifiles/*.cpp
         )
 
 list(FILTER SHARED_JVM_SOURCES EXCLUDE REGEX ".*/jvmtiEnvStub.cpp$")
