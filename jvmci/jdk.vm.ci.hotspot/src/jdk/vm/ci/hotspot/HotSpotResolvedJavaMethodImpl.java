@@ -114,7 +114,6 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     @SuppressWarnings("unused")
     @VMEntryPoint
     private static HotSpotResolvedJavaMethod fromMetaspace(long metaspaceHandle) {
-        HotSpotJVMCIRuntime.checkForcedException("Method_fromMetaspace");
         HotSpotResolvedObjectTypeImpl holder = getHolder(metaspaceHandle);
         return holder.createMethod(metaspaceHandle);
     }

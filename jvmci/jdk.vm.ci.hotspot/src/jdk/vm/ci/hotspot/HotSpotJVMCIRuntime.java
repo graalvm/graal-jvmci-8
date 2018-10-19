@@ -169,7 +169,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                     try (InitTimer t = timer("HotSpotJVMCIRuntime.<init>")) {
                         instance = result = new HotSpotJVMCIRuntime();
 
-                        checkForcedException("runtime");
                         // Can only do eager initialization of the JVMCI compiler
                         // once the singleton instance is available.
                         if (instance.config.getFlag("EagerJVMCI", Boolean.class)) {
@@ -518,7 +517,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         throw new ClassNotFoundException(name);
     }
 
-    @VMEntryPoint
     @Override
     public JVMCICompiler getCompiler() {
         if (compiler == null) {
@@ -528,7 +526,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                     creatingCompiler = true;
                     compiler = compilerFactory.createCompiler(this);
                     creatingCompiler = false;
-                    checkForcedException("getCompiler");
                 }
             }
         }
@@ -607,8 +604,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
             throw JVMCIError.shouldNotReachHere();
         }
 
-        checkForcedException("adjustCompilationLevel");
-
         switch (hsCompilerFactory.adjustCompilationLevel(declaringClass, name, signature, isOsr, curLevel)) {
             case None:
                 return config.compilationLevelNone;
@@ -631,7 +626,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         CompilationRequestResult result = getCompiler().compileMethod(new HotSpotCompilationRequest(method, entryBCI, jvmciEnv, id));
         assert result != null : "compileMethod must always return something";
         HotSpotCompilationRequestResult hsResult;
-        checkForcedException("compileMethod");
         if (result instanceof HotSpotCompilationRequestResult) {
             hsResult = (HotSpotCompilationRequestResult) result;
         } else {
@@ -652,29 +646,9 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * Shuts down the runtime.
      */
     @VMEntryPoint
-    private void shutdown() {
-        try {
-            for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
-                vmEventListener.notifyShutdown();
-            }
-            checkForcedException("shutdown");
-        } catch (Throwable ex) {
-            try {
-                PrintStream ps = new PrintStream(getLogStream());
-                ps.print("Uncaught exception during JVMCI shutdown: ");
-                ex.printStackTrace(ps);
-            } catch (Throwable e) {
-                // Swallow recursive exception so as to not block VM shutdown
-            }
-        }
-    }
-
-    /**
-     * Support for testing exception handling.
-     */
-    static void checkForcedException(String context) {
-        if (context.equals(System.getenv("JVMCI_FORCED_EXCEPTION_CONTEXT"))) {
-            throw new RuntimeException("exception in " + context);
+    private void shutdown() throws Exception {
+        for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
+            vmEventListener.notifyShutdown();
         }
     }
 
@@ -685,7 +659,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     private void bootstrapFinished() throws Exception {
         for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
             vmEventListener.notifyBootstrapFinished();
-            checkForcedException("bootstrapFinished");
         }
     }
 

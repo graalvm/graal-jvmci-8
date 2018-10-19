@@ -211,7 +211,6 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceHandleObject {
     @SuppressWarnings("unused")
     @VMEntryPoint
     private static HotSpotConstantPool fromMetaspace(long metaspaceConstantPool) {
-        HotSpotJVMCIRuntime.checkForcedException("ConstantPool_fromMetaspace");
         return new HotSpotConstantPool(metaspaceConstantPool);
     }
 
