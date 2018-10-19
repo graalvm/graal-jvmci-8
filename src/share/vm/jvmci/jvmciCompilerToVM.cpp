@@ -856,16 +856,13 @@ C2V_VMENTRY(jobject, lookupClass, (JNIEnv* env, jobject, jclass mirror))
 
 C2V_VMENTRY(jobject, resolveConstantInPool, (JNIEnv* env, jobject, jobject jvmci_constant_pool, jint index))
   constantPoolHandle cp = JVMCIENV->asConstantPool(jvmci_constant_pool);
-  oop result = cp->resolve_constant_at(index, THREAD);
-  if (HAS_PENDING_EXCEPTION) {
-    JVMCIENV->throw_pending_hotspot_exception(CHECK_NULL);
-  }
+  oop result = cp->resolve_constant_at(index, CHECK_NULL);
   return JVMCIENV->get_jobject(JVMCIENV->get_object_constant(result));
 C2V_END
 
 C2V_VMENTRY(jobject, resolvePossiblyCachedConstantInPool, (JNIEnv* env, jobject, jobject jvmci_constant_pool, jint index))
   constantPoolHandle cp = JVMCIENV->asConstantPool(jvmci_constant_pool);
-  oop result = cp->resolve_possibly_cached_constant_at(index, JVMCI_RETHROW_CHECK_NULL);
+  oop result = cp->resolve_possibly_cached_constant_at(index, CHECK_NULL);
   return JVMCIENV->get_jobject(JVMCIENV->get_object_constant(result));
 C2V_END
 
@@ -893,7 +890,7 @@ C2V_END
 
 C2V_VMENTRY(jobject, resolveTypeInPool, (JNIEnv* env, jobject, jobject jvmci_constant_pool, jint index))
   constantPoolHandle cp = JVMCIENV->asConstantPool(jvmci_constant_pool);
-  Klass* resolved_klass = cp->klass_at(index, JVMCI_RETHROW_CHECK_NULL);
+  Klass* resolved_klass = cp->klass_at(index, CHECK_NULL);
   if (resolved_klass->oop_is_instance()) {
     InstanceKlass::cast(resolved_klass)->link_class_or_fail(THREAD);
   }
@@ -2325,7 +2322,7 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
   if (obj_handle == NULL) {
     return 0L;
   }
-  JVMCIEnv __peer_jvmci_env__(!JVMCIENV->is_hotspot());
+  JVMCIEnv __peer_jvmci_env__(!JVMCIENV->is_hotspot(), __FILE__, __LINE__);
   JVMCIEnv* peerEnv = &__peer_jvmci_env__;
   JVMCIEnv* thisEnv = JVMCIENV;
 

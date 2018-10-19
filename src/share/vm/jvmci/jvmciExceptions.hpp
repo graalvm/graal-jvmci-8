@@ -33,11 +33,11 @@ class JVMCIEnv;
 #define JVMCI_TRAPS  JVMCIEnv* JVMCIENV
 
 #define JNI_JVMCIENV(env, throw)                               \
-  JVMCIEnv __stack_jvmci_env__(env, throw);                    \
+  JVMCIEnv __stack_jvmci_env__(env, throw, __FILE__, __LINE__);\
   JVMCIEnv* JVMCIENV = &__stack_jvmci_env__
 
 #define THREAD_JVMCIENV(thread)                               \
-  JVMCIEnv __stack_jvmci_env__(thread);                       \
+  JVMCIEnv __stack_jvmci_env__(thread, __FILE__, __LINE__);   \
   JVMCIEnv* JVMCIENV = &__stack_jvmci_env__
 
 #define JVMCI_PENDING_EXCEPTION                        (JVMCIENV->pending_exception())
@@ -69,13 +69,5 @@ class JVMCIEnv;
 #define JVMCI_THROW_MSG_0(name, msg) { JVMCIENV->throw_##name(msg); return 0; }
 #define JVMCI_THROW_MSG(name, msg) { JVMCIENV->throw_##name(msg); return; }
 #define JVMCI_THROW_(name, value) { JVMCIENV->throw_##name(); return (value); }
-
-#define JVMCI_RETHROW_CHECK_NULL \
-  THREAD); \
-  if (HAS_PENDING_EXCEPTION) { \
-    JVMCIENV->throw_pending_hotspot_exception(THREAD); \
-    return NULL; \
-  } (void)(0
-
 
 #endif // SHARE_VM_JVMCI_JVMCIEXCEPTIONS_HPP

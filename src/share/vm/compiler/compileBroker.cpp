@@ -2218,7 +2218,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
       compilable = ciEnv::MethodCompilable_never;
     } else {
       JVMCICompileState compile_state(task, system_dictionary_modification_counter);
-      JVMCIEnv env(&compile_state);
+      JVMCIEnv env(&compile_state, __FILE__, __LINE__);
       methodHandle method(thread, target_handle);
       env.runtime()->compile_method(&env, jvmci, method, osr_bci);
 

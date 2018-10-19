@@ -102,6 +102,10 @@
   template(visitFrame_signature,                                  "(Ljdk/vm/ci/code/stack/InspectedFrame;)Ljava/lang/Object;")                                             \
   template(compileMethod_name,                                    "compileMethod")                                                                                         \
   template(compileMethod_signature,                               "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;IJI)Ljdk/vm/ci/hotspot/HotSpotCompilationRequestResult;") \
+  template(encodeThrowable_name,                                  "encodeThrowable")                                                                                       \
+  template(encodeThrowable_signature,                             "(Ljava/lang/Throwable;)Ljava/lang/String;")                                                             \
+  template(decodeThrowable_name,                                  "decodeThrowable")                                                                                       \
+  template(decodeThrowable_signature,                             "(Ljava/lang/String;)Ljava/lang/Throwable;")                                                             \
   template(fromMetaspace_name,                                    "fromMetaspace")                                                                                         \
   template(method_fromMetaspace_signature,                        "(J)Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;")                                                      \
   template(constantPool_fromMetaspace_signature,                  "(J)Ljdk/vm/ci/hotspot/HotSpotConstantPool;")                                                            \
@@ -116,8 +120,6 @@
   template(runtime_signature,                                     "()Ljdk/vm/ci/hotspot/HotSpotJVMCIRuntime;")                                                             \
   template(getCompiler_name,                                      "getCompiler")                                                                                           \
   template(getCompiler_signature,                                 "()Ljdk/vm/ci/runtime/JVMCICompiler;")                                                                   \
-  template(formatException_name,                                  "formatException")                                                                                       \
-  template(formatException_signature,                             "(Ljava/lang/Throwable;)Ljava/lang/String;")                                                             \
   template(callToString_name,                                     "callToString")                                                                                          \
   template(callToString_signature,                                "(Ljava/lang/Object;)Ljava/lang/String;")                                                                \
   template(getName_name,                                          "getName")                                                                                               \

@@ -287,13 +287,15 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
   /**
    * Exits the VM due to an unexpected exception.
    */
-  static void exit_on_pending_exception(Handle exception, const char* message);
+  static void exit_on_pending_exception(JVMCIEnv* JVMCIENV, const char* message);
+
+  static void describe_pending_hotspot_exception(JavaThread* THREAD, bool clear);
 
 #define CHECK_EXIT THREAD); \
   if (HAS_PENDING_EXCEPTION) { \
     char buf[256]; \
     jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
-    JVMCIRuntime::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
+    JVMCIRuntime::exit_on_pending_exception(NULL, buf); \
     return; \
   } \
   (void)(0
@@ -302,31 +304,25 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
   if (HAS_PENDING_EXCEPTION) { \
     char buf[256]; \
     jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
-    JVMCIRuntime::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
+    JVMCIRuntime::exit_on_pending_exception(NULL, buf); \
     return v; \
   } \
   (void)(0
 
 #define JVMCI_CHECK_EXIT JVMCIENV); \
   if (JVMCIENV->has_pending_exception()) {      \
-    Thread* THREAD = Thread::current(); \
     char buf[256]; \
     jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
-    JVMCIENV->rethrow_pending_exception(JVMCIENV); \
-    assert(HAS_PENDING_EXCEPTION, "must be"); \
-    JVMCIRuntime::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
+    JVMCIRuntime::exit_on_pending_exception(JVMCIENV, buf); \
     return; \
   } \
   (void)(0
 
 #define JVMCI_CHECK_EXIT_(result) JVMCIENV); \
   if (JVMCIENV->has_pending_exception()) {      \
-    Thread* THREAD = Thread::current(); \
     char buf[256]; \
     jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
-    JVMCIENV->rethrow_pending_exception(JVMCIENV); \
-    assert(HAS_PENDING_EXCEPTION, "must be"); \
-    JVMCIRuntime::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
+    JVMCIRuntime::exit_on_pending_exception(JVMCIENV, buf); \
     return result; \
   } \
   (void)(0

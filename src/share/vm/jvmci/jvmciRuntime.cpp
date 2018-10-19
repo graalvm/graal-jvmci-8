@@ -1045,7 +1045,7 @@ void JVMCINMethodData::invalidate_mirror(nmethod* nm) {
     return;
   }
   assert(_nmethod_mirror.is_hotspot(), "only HotSpot reference is supported");
-  JVMCIEnv jvmciEnv(_nmethod_mirror);
+  JVMCIEnv jvmciEnv(_nmethod_mirror, __FILE__, __LINE__);
   if (!_nmethod_mirror.is_null()) {
     // Check weak reference for null
     if (jvmciEnv.equals(_nmethod_mirror, JVMCIObject())) {
@@ -1086,7 +1086,7 @@ void JVMCINMethodData::update_speculation(JavaThread* thread, nmethod* nm) {
   long speculation = thread->pending_failed_speculation();
   if (speculation != 0) {
     if (!_speculation_log.is_null()) {
-      JVMCIEnv jvmciEnv(_speculation_log);
+      JVMCIEnv jvmciEnv(_speculation_log, __FILE__, __LINE__);
       if (jvmciEnv.equals(_speculation_log, JVMCIObject())) {
         // The weak reference has been cleared
         jvmciEnv.destroy_weak(_speculation_log);
@@ -1113,7 +1113,7 @@ void JVMCINMethodData::update_speculation(JavaThread* thread, nmethod* nm) {
 
 void JVMCINMethodData::clear_nmethod_mirror() {
   if (!_nmethod_mirror.is_null()) {
-    JVMCIEnv jvmciEnv(_nmethod_mirror);
+    JVMCIEnv jvmciEnv(_nmethod_mirror, __FILE__, __LINE__);
     jvmciEnv.destroy_weak(_nmethod_mirror);
     _nmethod_mirror = JVMCIObject();
   }
@@ -1126,7 +1126,7 @@ void JVMCINMethodData::clear_speculation_log(bool force) {
     if (!force && !_speculation_log.is_hotspot()) {
       return;
     }
-    JVMCIEnv jvmciEnv(_speculation_log);
+    JVMCIEnv jvmciEnv(_speculation_log, __FILE__, __LINE__);
     jvmciEnv.destroy_weak(_speculation_log);
     _speculation_log = JVMCIObject();
   }
@@ -1159,7 +1159,7 @@ void JVMCI::initialize_compiler(TRAPS) {
     ShouldNotReachHere();
   }
 
-  JVMCI::compiler_runtime()->call_getCompiler(THREAD);
+  JVMCI::compiler_runtime()->call_getCompiler(CHECK);
 }
 
 void JVMCI::initialize_globals() {
@@ -1243,20 +1243,12 @@ JVMCIObject JVMCIRuntime::create_jvmci_primitive_type(BasicType type, JVMCI_TRAP
 
     return JVMCIENV->wrap(JNIHandles::make_local((oop)result.get_jobject()));
   } else {
-    jobject result;
-    jboolean exception = false;
-    {
-      JNIAccessMark jni(JVMCIENV);
-
-      result = jni()->CallStaticObjectMethod(JNIJVMCI::HotSpotResolvedPrimitiveType::clazz(),
-                                             JNIJVMCI::HotSpotResolvedPrimitiveType_fromMetaspace_method(),
-                                             mirror.as_jobject(), type2char(type));
-      exception = jni()->ExceptionCheck();
-    }
-    if (exception) {
-      // Could describe it and reinstall it
-      // jni()->ExceptionDescribe();
-      JVMCIENV->throw_pending_jni_exception(CHECK_(JVMCIObject()));
+    JNIAccessMark jni(JVMCIENV);
+    jobject result = jni()->CallStaticObjectMethod(JNIJVMCI::HotSpotResolvedPrimitiveType::clazz(),
+                                           JNIJVMCI::HotSpotResolvedPrimitiveType_fromMetaspace_method(),
+                                           mirror.as_jobject(), type2char(type));
+    if (jni()->ExceptionCheck()) {
+      return JVMCIObject();
     }
     return JVMCIENV->wrap(result);
   }
@@ -1430,7 +1422,7 @@ void JVMCIRuntime::shutdown() {
     _shutdown_called = true;
 
     THREAD_JVMCIENV(JavaThread::current());
-    JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(_HotSpotJVMCIRuntime_instance, JVMCI_CHECK_EXIT);
+    JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(_HotSpotJVMCIRuntime_instance);
   }
 }
 
@@ -1505,17 +1497,41 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr
 #undef CHECK_RETURN
 }
 
-void JVMCIRuntime::exit_on_pending_exception(Handle exception, const char* message) {
+void JVMCIRuntime::describe_pending_hotspot_exception(JavaThread* THREAD, bool clear) {
+  if (HAS_PENDING_EXCEPTION) {
+    Handle exception(THREAD, PENDING_EXCEPTION);
+    const char* exception_file = THREAD->exception_file();
+    int exception_line = THREAD->exception_line();
+    CLEAR_PENDING_EXCEPTION;
+    if (exception->is_a(SystemDictionary::ThreadDeath_klass())) {
+      // Don't print anything if we are being killed.
+    } else {
+      java_lang_Throwable::print(exception(), tty);
+      tty->cr();
+      java_lang_Throwable::print_stack_trace(exception(), tty);
+
+      // Clear and ignore any exceptions raised during printing
+      CLEAR_PENDING_EXCEPTION;
+    }
+    if (!clear) {
+      THREAD->set_pending_exception(exception(), exception_file, exception_line);
+    }
+  }
+}
+
+
+void JVMCIRuntime::exit_on_pending_exception(JVMCIEnv* JVMCIENV, const char* message) {
   JavaThread* THREAD = JavaThread::current();
-  CLEAR_PENDING_EXCEPTION;
 
   static volatile int report_error = 0;
   if (!report_error && Atomic::cmpxchg(1, &report_error, 0) == 0) {
     // Only report an error once
     tty->print_raw_cr(message);
-    java_lang_Throwable::print(exception, tty);
-    tty->cr();
-    java_lang_Throwable::print_stack_trace(exception(), tty);
+    if (JVMCIENV != NULL) {
+      JVMCIENV->describe_pending_exception(true);
+    } else {
+      describe_pending_hotspot_exception(THREAD, true);
+    }
   } else {
     // Allow error reporting thread to print the stack trace.  Windows
     // doesn't allow uninterruptible wait for JavaThreads
@@ -1941,6 +1957,12 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
     } else {
       assert(false, "JVMCICompiler.compileMethod should always return non-null");
     }
+  } else {
+    // An uncaught exception was thrown during compilation. Generally these
+    // should be handled by the Java code in some useful way but if they leak
+    // through to here report them instead of dying or silently ignoring them.
+    JVMCIENV->describe_pending_exception(true);
+    compile_state->set_failure("unexpected exception thrown", false);
   }
   if (compiler->is_bootstrapping()) {
     compiler->set_bootstrap_compilation_request_handled();

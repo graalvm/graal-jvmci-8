@@ -490,7 +490,6 @@ void before_exit(JavaThread * thread) {
   }
 
 #if INCLUDE_JVMCI
-  // We are not using CATCH here because we want the exit to continue normally.
   JVMCI::shutdown();
 #endif
 

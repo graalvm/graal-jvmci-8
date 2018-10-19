@@ -108,27 +108,39 @@ class JVMCIEnv : public ResourceObj {
   // The current mode and JVMCIRuntime are returned in mode and runtime respectively.
   static JNIEnv* get_jni_env(JNIEnv* env, JVMCIGlobals::JavaMode& mode, JVMCIRuntime*& runtime);
 
-  void init(bool is_hotspot);
+  void init(bool is_hotspot, const char* file, int line);
 
   JNIEnv*                _env;     // JNI env for calling into shared library
   JVMCIRuntime*          _runtime; // Access to a HotSpotJVMCIRuntime
   JVMCIGlobals::JavaMode _mode;    // Which heap is the HotSpotJVMCIRuntime in
-  bool                   _throw_to_caller;
+  bool        _throw_to_caller;    // Propagate an exception raised in this env to the caller?
+  const char*            _file;    // The file and ...
+  int                    _line;    // ... line where this JNIEnv was created
+
+  // Translates an exception on the HotSpot heap to an exception on
+  // the shared library heap. The translation includes the stack and
+  // causes of `throwable`. The translated exception is pending in the
+  // shared library thread upon returning.
+  void translate_hotspot_exception_to_jni_exception(JavaThread* THREAD, Handle throwable);
 
 public:
-  JVMCIEnv(JVMCICompileState* compile_state);
+  // Opens a JVMCIEnv scope that expects the caller to handle any exception
+  // raised in the scope once the scope closes. That is, the caller should
+  // be a Java to VM boundary where the pending exception will be propagated
+  // upon returning to Java. The JVMCIEnv destructor ensures the exception
+  // object is pending in the appropriate runtime.
+  JVMCIEnv(JNIEnv* env, bool throw_to_caller, const char* file, int line_number);
 
-  JVMCIEnv(JNIEnv* env, bool throw_to_caller);
+  JVMCIEnv(JVMCICompileState* compile_state, const char* file, int line_number);
+  JVMCIEnv(JavaThread* env, const char* file, int line_number);
 
-  JVMCIEnv(JavaThread* env);
-
-  // Create the proper environment to allow access to this object
-  JVMCIEnv(JVMCIObject for_object) {
-    init(for_object.is_hotspot());
+  // Create the proper environment to allow access to `for_object`
+  JVMCIEnv(JVMCIObject for_object, const char* file, int line_number) {
+    init(for_object.is_hotspot(), file, line_number);
   }
 
-  JVMCIEnv(bool is_hotspot) {
-    init(is_hotspot);
+  JVMCIEnv(bool is_hotspot, const char* file, int line_number) {
+    init(is_hotspot, file, line_number);
   }
 
   ~JVMCIEnv();
@@ -138,27 +150,19 @@ public:
   }
 
   bool has_pending_exception() {
-    Thread* THREAD = Thread::current();
-    if (HAS_PENDING_EXCEPTION) {
-      return true;
-    }
     if (!is_hotspot()) {
       JNIAccessMark jni(this);
       return jni()->ExceptionCheck();
+    } else {
+      Thread* THREAD = Thread::current();
+      return HAS_PENDING_EXCEPTION;
     }
-    return false;
   }
 
-  void clear_pending_exception() {
-    Thread* THREAD = Thread::current();
-    if (HAS_PENDING_EXCEPTION) {
-      CLEAR_PENDING_EXCEPTION;
-    }
-    if (!is_hotspot()) {
-      JNIAccessMark jni(this);
-      jni()->ExceptionClear();
-    }
-  }
+  bool clear_pending_exception();
+
+  // Prints an exception and stack trace of a pending exception.
+  void describe_pending_exception(bool clear);
 
   int get_length(JVMCIArray array) {
     if (is_hotspot()) {
@@ -406,11 +410,14 @@ public:
   JVMCIPrimitiveArray wrap(typeArrayOop obj) { assert(is_hotspot(), "must be"); return (JVMCIPrimitiveArray) wrap(JNIHandles::make_local(obj)); }
 
  public:
+  // Compiles a method with the JVMIC compiler.
+  // Caller must handle pending exception.
   JVMCIObject call_HotSpotJVMCIRuntime_compileMethod(JVMCIObject runtime, JVMCIObject method, int entry_bci, jlong env, int id);
+
   int call_HotSpotJVMCIRuntime_adjustCompilationLevel(JVMCIObject runtime, InstanceKlass* declaringClass,
                                                       JVMCIObject name, JVMCIObject signature, bool is_osr, int level, JVMCI_TRAPS);
   void call_HotSpotJVMCIRuntime_bootstrapFinished(JVMCIObject runtime, JVMCI_TRAPS);
-  void call_HotSpotJVMCIRuntime_shutdown(JVMCIObject runtime, JVMCI_TRAPS);
+  void call_HotSpotJVMCIRuntime_shutdown(JVMCIObject runtime);
   JVMCIObject call_HotSpotJVMCIRuntime_runtime(JVMCI_TRAPS);
   JVMCIObject call_JVMCI_getRuntime(JVMCI_TRAPS);
   JVMCIObject call_HotSpotJVMCIRuntime_getCompiler(JVMCIObject runtime, JVMCI_TRAPS);
@@ -460,19 +467,6 @@ public:
     } else {
       JNIAccessMark jni(this);
       jni()->ThrowNew(JNIJVMCI::JVMCIError::clazz(), msg);
-    }
-  }
-  void throw_pending_jni_exception(TRAPS);
-  void throw_pending_hotspot_exception(TRAPS);
-
-  void rethrow_pending_exception(JVMCIEnv* JVMCIENV) {
-    JavaThread* THREAD = JavaThread::current();
-    if (HAS_PENDING_EXCEPTION) {
-      // Nothing to do
-    } else if (JVMCIENV->_env != NULL) {
-      if (JVMCIENV->_env->ExceptionOccurred()) {
-        throw_pending_jni_exception(THREAD);
-      }
     }
   }
 

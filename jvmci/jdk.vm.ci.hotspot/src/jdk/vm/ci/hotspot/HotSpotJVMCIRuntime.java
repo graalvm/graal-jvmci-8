@@ -29,9 +29,7 @@ import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
 import java.lang.invoke.MethodHandle;
@@ -187,10 +185,13 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     }
 
     @VMEntryPoint
-    static String formatException(Throwable t) {
-        StringWriter string = new StringWriter();
-        t.printStackTrace(new PrintWriter(string));
-        return string.toString();
+    static Throwable decodeThrowable(String encodedThrowable) throws Throwable {
+        return TranslatedException.decodeThrowable(encodedThrowable);
+    }
+
+    @VMEntryPoint
+    static String encodeThrowable(Throwable throwable) throws Throwable {
+        return TranslatedException.encodeThrowable(throwable);
     }
 
     @VMEntryPoint
