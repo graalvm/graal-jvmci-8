@@ -1362,7 +1362,7 @@ def jniconfig(args):
     """Generate or verify a JNI config file for use by SVM"""
 
     parser = ArgumentParser(prog='mx jniconfig')
-    group = parser.add_mutually_exclusive_group()
+    group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('-c', '--compare', metavar='oldfile', action='store', help='Compare the contents of oldfile against the the newly generated file')
     group.add_argument('-g', '--generate', metavar='newfile', action='store', help='Generate the jni config for the current JVM')
 
