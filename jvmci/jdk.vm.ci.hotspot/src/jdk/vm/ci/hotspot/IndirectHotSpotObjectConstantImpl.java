@@ -33,6 +33,7 @@ final class IndirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl 
     @VMEntryPoint
     private IndirectHotSpotObjectConstantImpl(long objectHandle, boolean compressed, boolean skipRegister) {
         super(compressed);
+        HotSpotJVMCIRuntime.checkForcedException("IndirectHotSpotObjectConstantImpl");
         assert objectHandle != 0 && UnsafeAccess.UNSAFE.getLong(objectHandle) != 0;
         this.objectHandle = objectHandle;
         this.base = null;

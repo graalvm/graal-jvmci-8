@@ -92,6 +92,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     @SuppressWarnings("unused")
     @VMEntryPoint
     private static HotSpotResolvedObjectTypeImpl fromMetaspace(long klassPointer, String signature) {
+        HotSpotJVMCIRuntime.checkForcedException("Type_fromMetaspace");
         return runtime().metaAccessContext.fromMetaspace(klassPointer, signature);
     }
 

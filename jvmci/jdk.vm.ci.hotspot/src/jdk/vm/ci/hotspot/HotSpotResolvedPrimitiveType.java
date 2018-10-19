@@ -68,6 +68,7 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
 
     @VMEntryPoint
     static HotSpotResolvedPrimitiveType fromMetaspace(HotSpotObjectConstantImpl mirror, char typeChar) {
+        HotSpotJVMCIRuntime.checkForcedException("PrimitiveType_fromMetaspace");
         JavaKind kind = JavaKind.fromPrimitiveOrVoidTypeChar(typeChar);
         if (primitives == null) {
             primitives = new HotSpotResolvedPrimitiveType[JavaKind.Void.getBasicType() + 1];
