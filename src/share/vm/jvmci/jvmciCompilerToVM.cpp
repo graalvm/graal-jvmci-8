@@ -75,7 +75,7 @@ class JVMCITraceMark : public StackObj {
   TRACE_CALL(result_type, jvmci_ ## name signature)      \
   JVMCI_VM_ENTRY_MARK;                                   \
   ResourceMark rm;                                       \
-  JNI_JVMCIENV(env, true);
+  JNI_JVMCIENV(env);
 
 
 #define C2V_END }

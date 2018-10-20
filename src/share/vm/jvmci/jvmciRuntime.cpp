@@ -913,7 +913,7 @@ JVM_END
 
 // private static JVMCIRuntime JVMCI.initializeRuntime()
 JVM_ENTRY_NO_ENV(jobject, JVM_GetJVMCIRuntime(JNIEnv *env, jclass c))
-  JNI_JVMCIENV(env, true);
+  JNI_JVMCIENV(env);
   if (!EnableJVMCI) {
     JVMCIENV->throw_InternalError("JVMCI is not enabled");
   }
@@ -924,7 +924,7 @@ JVM_END
 
 // private static ClassLoader Services.getJVMCIClassLoader()
 JVM_ENTRY_NO_ENV(jobject, JVM_GetJVMCIClassLoader(JNIEnv *env, jclass c))
-  JNI_JVMCIENV(env, true);
+  JNI_JVMCIENV(env);
   if (!EnableJVMCI) {
     // This message must not change - it is used by the Java code to
     // distinguish an InternalError due to -EnableJVMCI from other
@@ -1121,8 +1121,8 @@ void JVMCINMethodData::clear_nmethod_mirror() {
 
 void JVMCINMethodData::clear_speculation_log(bool force) {
   if (!_speculation_log.is_null()) {
-    // Non HotSpot speculations have to be cleaned up more carefully so the shouldn't be done by
-    // default.
+    // Non HotSpot speculations have to be cleaned up more carefully so
+    // they shouldn't be done by default.
     if (!force && !_speculation_log.is_hotspot()) {
       return;
     }
@@ -1333,7 +1333,7 @@ JVM_ENTRY_NO_ENV(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
   fatal("check TLAB allocation code for address space conflicts");
 #endif
 
-  JNI_JVMCIENV(env, true);
+  JNI_JVMCIENV(env);
 
   if (!EnableJVMCI) {
     JVMCIENV->throw_InternalError("JVMCI is not enabled");

@@ -124,23 +124,38 @@ class JVMCIEnv : public ResourceObj {
   void translate_hotspot_exception_to_jni_exception(JavaThread* THREAD, Handle throwable);
 
 public:
-  // Opens a JVMCIEnv scope that expects the caller to handle any exception
-  // raised in the scope once the scope closes. That is, the caller should
-  // be a Java to VM boundary where the pending exception will be propagated
-  // upon returning to Java. The JVMCIEnv destructor ensures the exception
-  // object is pending in the appropriate runtime.
-  JVMCIEnv(JNIEnv* env, bool throw_to_caller, const char* file, int line_number);
+  // Opens a JVMCIEnv scope for a Java to VM call (e.g., via CompilerToVM).
+  // An exception occurring within the scope is left pending when the
+  // scope closes so that it will be propagated back to Java.
+  // The JVMCIEnv destructor translates the exception object for the
+  // Java runtime if necessary.
+  JVMCIEnv(JNIEnv* env, const char* file, int line);
 
-  JVMCIEnv(JVMCICompileState* compile_state, const char* file, int line_number);
-  JVMCIEnv(JavaThread* env, const char* file, int line_number);
+  // Opens a JVMCIEnv scope for a compilation scheduled by the CompileBroker.
+  // An exception occurring within the scope must not be propagated back to
+  // the CompileBroker.
+  JVMCIEnv(JVMCICompileState* compile_state, const char* file, int line);
 
-  // Create the proper environment to allow access to `for_object`
-  JVMCIEnv(JVMCIObject for_object, const char* file, int line_number) {
-    init(for_object.is_hotspot(), file, line_number);
+  // Opens a JNIEnv scope for a call from within the VM. An exception occurring
+  // within the scope must not be propagated back to the caller.
+  JVMCIEnv(JavaThread* env, const char* file, int line);
+
+  // Opens a JNIEnv scope for accessing `for_object`. An exception occurring
+  // within the scope must not be propagated back to the caller.
+  JVMCIEnv(JVMCIObject for_object, const char* file, int line) {
+    // A JNI call to access an object in the shared library heap
+    // can block or take a long time so do not allow such access
+    // on the VM thread.
+    assert(for_object.is_hotspot() || !Thread::current()->is_VM_thread(),
+        "cannot open JVMCIEnv scope when in the VM thread for accessing a shared library heap object");
+    init(for_object.is_hotspot(), file, line);
   }
 
-  JVMCIEnv(bool is_hotspot, const char* file, int line_number) {
-    init(is_hotspot, file, line_number);
+  // Opens a JNIEnv scope for the HotSpot runtime if `is_hotspot` is true
+  // otherwise for the shared library runtime. An exception occurring
+  // within the scope must not be propagated back to the caller.
+  JVMCIEnv(bool is_hotspot, const char* file, int line) {
+    init(is_hotspot, file, line);
   }
 
   ~JVMCIEnv();

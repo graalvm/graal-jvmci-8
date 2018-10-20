@@ -213,8 +213,8 @@ JVMCIEnv::JVMCIEnv(JavaThread* thread, const char* file, int line):
   _env = get_jni_env(NULL, _mode, _runtime);
 }
 
-JVMCIEnv::JVMCIEnv(JNIEnv* env, bool throw_to_caller, const char* file, int line):
-    _throw_to_caller(throw_to_caller), _compile_state(NULL), _file(file), _line(line) {
+JVMCIEnv::JVMCIEnv(JNIEnv* env, const char* file, int line):
+    _throw_to_caller(true), _compile_state(NULL), _file(file), _line(line) {
   _env = get_jni_env(env, _mode, _runtime);
   assert(_env == NULL || env == _env, "mismatched JNIEnvironment");
 }
@@ -257,7 +257,7 @@ void JVMCIEnv::translate_hotspot_exception_to_jni_exception(JavaThread* THREAD, 
   // Resolve HotSpotJVMCIRuntime class explicitly as HotSpotJVMCI::compute_offsets
   // may not have been called.
   Klass* runtimeKlass = SystemDictionary::resolve_or_fail(vmSymbols::jdk_vm_ci_hotspot_HotSpotJVMCIRuntime(),
-      SystemDictionary::jvmci_loader(), Handle(), true, CHECK_NULL);
+      SystemDictionary::jvmci_loader(), Handle(), true, CHECK);
   JavaCallArguments jargs;
   jargs.push_oop(throwable());
   JavaValue result(T_OBJECT);
@@ -292,7 +292,7 @@ JVMCIEnv::~JVMCIEnv() {
         if (HAS_PENDING_EXCEPTION) {
           Handle throwable = PENDING_EXCEPTION;
           CLEAR_PENDING_EXCEPTION;
-          translate_hotspot_exception_to_jni_exception(THREAD, throwable, true);
+          translate_hotspot_exception_to_jni_exception(THREAD, throwable);
         }
       }
     }
