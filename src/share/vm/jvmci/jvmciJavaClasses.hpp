@@ -273,6 +273,7 @@ class JVMCIJavaClasses : AllStatic {
   end_class                                                                                                                                                    \
   start_class(VirtualObject)                                                                                                                                   \
     int_field(VirtualObject, id)                                                                                                                               \
+    oop_field(VirtualObject, baseObject, "Ljdk/vm/ci/meta/JavaValue;")                                                                                         \
     oop_field(VirtualObject, type, "Ljdk/vm/ci/meta/ResolvedJavaType;")                                                                                        \
     objArrayOop_field(VirtualObject, values, "[Ljdk/vm/ci/meta/JavaValue;")                                                                                    \
     objArrayOop_field(VirtualObject, slotKinds, "[Ljdk/vm/ci/meta/JavaKind;")                                                                                  \

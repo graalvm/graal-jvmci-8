@@ -388,7 +388,16 @@ void CodeInstaller::record_object_value(ObjectValue* sv, Handle value, GrowableA
     ScopeValue* cur_second = NULL;
     Handle object = values->obj_at(i);
     BasicType type = JVMCIRuntime::kindToBasicType(slotKinds->obj_at(i), CHECK);
-    ScopeValue* value = get_scope_value(object, type, objects, cur_second, CHECK);
+    ScopeValue* value;
+    if (object == Value::ILLEGAL()) {
+      // no value needs to be written
+      value = _illegal_value;
+      if (type == T_DOUBLE || type == T_LONG) {
+        cur_second = _illegal_value;
+      }
+    } else {
+      value = get_scope_value(object, type, objects, cur_second, CHECK);
+    }
 
     if (isLongArray && cur_second == NULL) {
       // we're trying to put ints into a long array... this isn't really valid, but it's used for some optimizations.
@@ -823,9 +832,17 @@ GrowableArray<ScopeValue*>* CodeInstaller::record_virtual_objects(Handle debug_i
   for (int i = 0; i < virtualObjects->length(); i++) {
     Handle value = virtualObjects->obj_at(i);
     int id = VirtualObject::id(value);
+    Handle base_object = VirtualObject::baseObject(value);
     Handle type = VirtualObject::type(value);
     oop javaMirror = HotSpotResolvedObjectTypeImpl::javaClass(type);
-    ObjectValue* sv = new ObjectValue(id, new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror)));
+    ScopeValue* baseObjectValue;
+    if (base_object.is_null()) {
+      baseObjectValue = _oop_null_scope_value;
+    } else {
+      ScopeValue* second = NULL;
+      baseObjectValue = get_scope_value(base_object, T_OBJECT, objects, second, CHECK_NULL);
+    }
+    ObjectValue* sv = new ObjectValue(id, new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror)), baseObjectValue);
     if (id < 0 || id >= objects->length()) {
       JVMCI_ERROR_NULL("virtual object id %d out of bounds", id);
     }

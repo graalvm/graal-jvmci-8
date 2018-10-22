@@ -42,15 +42,16 @@ import jdk.vm.ci.meta.ResolvedJavaType;
 public final class VirtualObject implements JavaValue {
 
     private final ResolvedJavaType type;
+    private JavaValue baseObject;
     private JavaValue[] values;
     private JavaKind[] slotKinds;
     private final int id;
 
     /**
-     * Creates a new {@link VirtualObject} for the given type, with the given fields. If
-     * {@code type} is an instance class then {@code values} provides the values for the fields
+     * Creates a new {@link VirtualObject} for the given type, with the given contents. If
+     * {@link #type} is an instance class then {@link #values} provides the values for the fields
      * returned by {@link ResolvedJavaType#getInstanceFields(boolean) getInstanceFields(true)}. If
-     * {@code type} is an array then the length of the values array determines the reallocated array
+     * {@link #type} is an array then the length of {@link #values} determines the reallocated array
      * length.
      *
      * @param type the type of the object whose allocation was removed during compilation. This can
@@ -60,11 +61,30 @@ public final class VirtualObject implements JavaValue {
      * @return a new {@link VirtualObject} instance.
      */
     public static VirtualObject get(ResolvedJavaType type, int id) {
-        return new VirtualObject(type, id);
+        return new VirtualObject(type, null, id);
     }
 
-    private VirtualObject(ResolvedJavaType type, int id) {
+    /**
+     * Creates a new {@link VirtualObject} based on the given existing object, with the given
+     * contents. If {@link #type} is an instance class then {@link #values} provides the values for
+     * the fields returned by {@link ResolvedJavaType#getInstanceFields(boolean)
+     * getInstanceFields(true)}. If {@link #type} is an array then the length of {@link #values}
+     * determines the array length.
+     *
+     * @param type the type of the object whose allocation was removed during compilation. This can
+     *            be either an instance of an array type.
+     * @param baseObject the pre-existing object to be used instead of allocating a new object.
+     * @param id a unique id that identifies the object within the debug information for one
+     *            position in the compiled code.
+     * @return a new {@link VirtualObject} instance.
+     */
+    public static VirtualObject get(ResolvedJavaType type, JavaValue baseObject, int id) {
+        return new VirtualObject(type, baseObject, id);
+    }
+
+    private VirtualObject(ResolvedJavaType type, JavaValue baseObject, int id) {
         this.type = type;
+        this.baseObject = baseObject;
         this.id = id;
     }
 
@@ -185,6 +205,17 @@ public final class VirtualObject implements JavaValue {
      */
     public ResolvedJavaType getType() {
         return type;
+    }
+
+    /**
+     * Returns the pre-existing object, or null if a new object needs to be allocated.
+     */
+    public JavaValue getBaseObject() {
+        return baseObject;
+    }
+
+    public void setBaseObject(JavaValue baseObject) {
+        this.baseObject = baseObject;
     }
 
     /**
