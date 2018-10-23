@@ -381,7 +381,16 @@ void CodeInstaller::record_object_value(ObjectValue* sv, JVMCIObject value, Grow
     ScopeValue* cur_second = NULL;
     JVMCIObject object = JVMCIENV->get_object_at(values, i);
     BasicType type = jvmci_env()->kindToBasicType(JVMCIENV->get_object_at(slotKinds, i), JVMCI_CHECK);
-    ScopeValue* value = get_scope_value(object, type, objects, cur_second, JVMCI_CHECK);
+    ScopeValue* value;
+    if (JVMCIENV->equals(object, jvmci_env()->get_Value_ILLEGAL())) {
+      // no value needs to be written
+      value = _illegal_value;
+      if (type == T_DOUBLE || type == T_LONG) {
+        cur_second = _illegal_value;
+      }
+    } else {
+      value = get_scope_value(object, type, objects, cur_second, JVMCI_CHECK);
+    }
 
     if (isLongArray && cur_second == NULL) {
       // we're trying to put ints into a long array... this isn't really valid, but it's used for some optimizations.
@@ -825,10 +834,18 @@ GrowableArray<ScopeValue*>* CodeInstaller::record_virtual_objects(JVMCIObject de
   for (int i = 0; i < JVMCIENV->get_length(virtualObjects); i++) {
     JVMCIObject value = JVMCIENV->get_object_at(virtualObjects, i);
     int id = jvmci_env()->get_VirtualObject_id(value);
+    JVMCIObject base_object = JVMCIENV->get_VirtualObject_baseObject(value);
     JVMCIObject type = jvmci_env()->get_VirtualObject_type(value);
     Klass* klass = jvmci_env()->asKlass(type);
     oop javaMirror = klass->java_mirror();
-    ObjectValue* sv = new ObjectValue(id, new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror)));
+    ScopeValue* baseObjectValue;
+    if (base_object.is_null()) {
+      baseObjectValue = _oop_null_scope_value;
+    } else {
+      ScopeValue* second = NULL;
+      baseObjectValue = get_scope_value(base_object, T_OBJECT, objects, second, JVMCI_CHECK_NULL);
+    }
+    ObjectValue* sv = new ObjectValue(id, new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror)), baseObjectValue);
     if (id < 0 || id >= objects->length()) {
       JVMCI_ERROR_NULL("virtual object id %d out of bounds", id);
     }

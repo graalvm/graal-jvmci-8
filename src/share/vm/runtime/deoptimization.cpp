@@ -255,7 +255,7 @@ Deoptimization::UnrollBlock* Deoptimization::fetch_unroll_info_helper(JavaThread
       }
       if (objects != NULL) {
         JRT_BLOCK
-          realloc_failures = realloc_objects(thread, &deoptee, objects, THREAD);
+          realloc_failures = realloc_objects(thread, &deoptee, &map, objects, THREAD);
         JRT_END
         reassign_fields(&deoptee, &map, objects, realloc_failures, skip_internal);
 #ifndef PRODUCT
@@ -794,7 +794,7 @@ int Deoptimization::deoptimize_dependents() {
 
 
 #if defined(COMPILER2) || INCLUDE_JVMCI
-bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, GrowableArray<ScopeValue*>* objects, TRAPS) {
+bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, RegisterMap* reg_map, GrowableArray<ScopeValue*>* objects, TRAPS) {
   Handle pending_exception(thread->pending_exception());
   const char* exception_file = thread->exception_file();
   int exception_line = thread->exception_line();
@@ -807,19 +807,25 @@ bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, GrowableArra
     ObjectValue* sv = (ObjectValue*) objects->at(i);
 
     KlassHandle k(java_lang_Class::as_Klass(sv->klass()->as_ConstantOopReadValue()->value()()));
-    oop obj = NULL;
+    if (reg_map == NULL && (!sv->base_object()->is_constant_oop() || !sv->base_object()->as_ConstantOopReadValue()->value().is_null())) {
+      // skip element with base object if we don't have a register map
+      continue;
+    }
+    oop obj = StackValue::create_stack_value(fr, reg_map, sv->base_object())->get_obj()();
 
-    if (k->oop_is_instance()) {
-      InstanceKlass* ik = InstanceKlass::cast(k());
-      obj = ik->allocate_instance(THREAD);
-    } else if (k->oop_is_typeArray()) {
-      TypeArrayKlass* ak = TypeArrayKlass::cast(k());
-      assert(sv->field_size() % type2size[ak->element_type()] == 0, "non-integral array length");
-      int len = sv->field_size() / type2size[ak->element_type()];
-      obj = ak->allocate(len, THREAD);
-    } else if (k->oop_is_objArray()) {
-      ObjArrayKlass* ak = ObjArrayKlass::cast(k());
-      obj = ak->allocate(sv->field_size(), THREAD);
+    if (obj == NULL) {
+      if (k->oop_is_instance()) {
+        InstanceKlass* ik = InstanceKlass::cast(k());
+        obj = ik->allocate_instance(THREAD);
+      } else if (k->oop_is_typeArray()) {
+        TypeArrayKlass* ak = TypeArrayKlass::cast(k());
+        assert(sv->field_size() % type2size[ak->element_type()] == 0, "non-integral array length");
+        int len = sv->field_size() / type2size[ak->element_type()];
+        obj = ak->allocate(len, THREAD);
+      } else if (k->oop_is_objArray()) {
+        ObjArrayKlass* ak = ObjArrayKlass::cast(k());
+        obj = ak->allocate(sv->field_size(), THREAD);
+      }
     }
 
     if (obj == NULL) {
@@ -848,6 +854,11 @@ void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_ma
 
   for (int i = 0; i < sv->field_size(); i++) {
     StackValue* value = StackValue::create_stack_value(fr, reg_map, sv->field_at(i));
+    if (value->type() == T_CONFLICT) {
+      // skip fields with no values
+      index += (type == T_LONG || type == T_DOUBLE) ? 2 : 1;
+      continue;
+    }
     switch(type) {
     case T_LONG: case T_DOUBLE: {
       assert(value->type() == T_INT, "Agreement.");
@@ -942,6 +953,10 @@ void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_ma
 void Deoptimization::reassign_object_array_elements(frame* fr, RegisterMap* reg_map, ObjectValue* sv, objArrayOop obj) {
   for (int i = 0; i < sv->field_size(); i++) {
     StackValue* value = StackValue::create_stack_value(fr, reg_map, sv->field_at(i));
+    if (value->type() == T_CONFLICT) {
+      // skip fields with no values
+      continue;
+    }
     assert(value->type() == T_OBJECT, "object element expected");
     obj->obj_at_put(i, value->get_obj()());
   }
@@ -985,6 +1000,11 @@ static int reassign_fields_by_klass(InstanceKlass* klass, frame* fr, RegisterMap
     StackValue* value = StackValue::create_stack_value(fr, reg_map, scope_field);
     int offset = fields->at(i)._offset;
     BasicType type = fields->at(i)._type;
+    if (value->type() == T_CONFLICT) {
+      // skip fields with no values
+      svIndex += (type == T_LONG || type == T_DOUBLE) ? 2 : 1;
+      continue;
+    }
     switch (type) {
       case T_OBJECT: case T_ARRAY:
         assert(value->type() == T_OBJECT, "Agreement.");

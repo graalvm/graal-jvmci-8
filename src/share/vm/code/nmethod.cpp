@@ -1072,7 +1072,9 @@ void nmethod::log_identity(xmlStream* log) const {
   if (_jvmci_nmethod_data != NULL) {
     const char* jvmci_name = _jvmci_nmethod_data->nmethod_mirror_name();
     if (jvmci_name != NULL) {
-      log->print(" jvmci_nmethod_mirror_name='%s'", jvmci_name);
+      log->print(" jvmci_nmethod_mirror_name='");
+      log->text("%s", jvmci_name);
+      log->print("'");
     }
   }
 #endif

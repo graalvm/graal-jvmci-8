@@ -214,12 +214,12 @@
     int_field(BytecodeFrame, numLocks)                                                                        \
     boolean_field(BytecodeFrame, rethrowException)                                                            \
     boolean_field(BytecodeFrame, duringCall)                                                                  \
-    static_int_field(BytecodeFrame, UNKNOWN_BCI)                                                                                                               \
-    static_int_field(BytecodeFrame, UNWIND_BCI)                                                                                                                \
+    static_int_field(BytecodeFrame, UNKNOWN_BCI)                                                              \
+    static_int_field(BytecodeFrame, UNWIND_BCI)                                                               \
     static_int_field(BytecodeFrame, BEFORE_BCI)                                                               \
-    static_int_field(BytecodeFrame, AFTER_BCI)                                                                                                                 \
-    static_int_field(BytecodeFrame, AFTER_EXCEPTION_BCI)                                                                                                       \
-    static_int_field(BytecodeFrame, INVALID_FRAMESTATE_BCI)                                                                                                    \
+    static_int_field(BytecodeFrame, AFTER_BCI)                                                                \
+    static_int_field(BytecodeFrame, AFTER_EXCEPTION_BCI)                                                      \
+    static_int_field(BytecodeFrame, INVALID_FRAMESTATE_BCI)                                                   \
   end_class                                                                                                   \
   start_class(BytecodePosition, jdk_vm_ci_code_BytecodePosition)                                              \
     object_field(BytecodePosition, caller, "Ljdk/vm/ci/code/BytecodePosition;")                               \
@@ -292,6 +292,7 @@
   end_class                                                                                                   \
   start_class(VirtualObject, jdk_vm_ci_code_VirtualObject)                                                    \
     int_field(VirtualObject, id)                                                                              \
+    object_field(VirtualObject, baseObject, "Ljdk/vm/ci/meta/JavaValue;")                                     \
     object_field(VirtualObject, type, "Ljdk/vm/ci/meta/ResolvedJavaType;")                                    \
     objectarray_field(VirtualObject, values, "[Ljdk/vm/ci/meta/JavaValue;")                                   \
     objectarray_field(VirtualObject, slotKinds, "[Ljdk/vm/ci/meta/JavaKind;")                                 \
@@ -302,7 +303,7 @@
     boolean_field(StackLockValue, eliminated)                                                                 \
   end_class                                                                                                   \
   start_class(HotSpotSpeculationLog, jdk_vm_ci_hotspot_HotSpotSpeculationLog)                                 \
-    long_field(HotSpotSpeculationLog, lastFailed)                                                              \
+    long_field(HotSpotSpeculationLog, lastFailed)                                                             \
   end_class                                                                                                   \
   start_class(HotSpotStackFrameReference, jdk_vm_ci_hotspot_HotSpotStackFrameReference)                       \
     object_field(HotSpotStackFrameReference, compilerToVM, "Ljdk/vm/ci/hotspot/CompilerToVM;")                \

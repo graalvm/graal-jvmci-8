@@ -96,14 +96,16 @@ class ObjectValue: public ScopeValue {
  private:
   int                        _id;
   ScopeValue*                _klass;
+  ScopeValue*                _base_object;
   GrowableArray<ScopeValue*> _field_values;
   Handle                     _value;
   bool                       _visited;
 
  public:
-  ObjectValue(int id, ScopeValue* klass)
+  ObjectValue(int id, ScopeValue* klass, ScopeValue* base_object)
      : _id(id)
      , _klass(klass)
+     , _base_object(base_object)
      , _field_values()
      , _value()
      , _visited(false) {
@@ -121,6 +123,7 @@ class ObjectValue: public ScopeValue {
   bool                        is_object() const         { return true; }
   int                         id() const                { return _id; }
   ScopeValue*                 klass() const             { return _klass; }
+  ScopeValue*                 base_object() const       { return _base_object; }
   GrowableArray<ScopeValue*>* field_values()            { return &_field_values; }
   ScopeValue*                 field_at(int i) const     { return _field_values.at(i); }
   int                         field_size()              { return _field_values.length(); }
