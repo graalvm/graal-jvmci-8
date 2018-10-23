@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1998, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1998, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1248,7 +1248,8 @@ JRT_ENTRY_NO_ASYNC(address, OptoRuntime::handle_exception_C_helper(JavaThread* t
 #ifdef ASSERT
         bool recursive_exception = false;
         address computed_address = SharedRuntime::compute_compiled_exc_handler(nm, pc, exception, force_unwind, true, recursive_exception);
-        assert(recursive_exception || (handler_address == computed_address), "Handler address inconsistency");
+        assert(recursive_exception || (handler_address == computed_address), err_msg("Handler address inconsistency: " PTR_FORMAT " != " PTR_FORMAT,
+                 p2i(handler_address), p2i(computed_address)));
 #endif
       }
     }

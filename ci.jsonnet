@@ -101,7 +101,7 @@
         downloads: {
             JAVA_HOME: {
                 name : "openjdk",
-                version : "8u172",
+                version : "8u192",
                 platformspecific: true
             }
         }
