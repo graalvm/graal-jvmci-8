@@ -796,48 +796,20 @@ def _hotspotGetVariant(vm=None):
     variant = {'client': 'compiler1', 'server': 'compiler2'}.get(vm, vm)
     return variant
 
-"""
-Represents a JDK HotSpot version derived from a build tag such as "jdk8u66-b16".
-"""
-class JDKHotSpotVersion:
-    def __init__(self, javaCompliance, update, build):
-        self.javaCompliance = javaCompliance
-        self.update = update
-        self.build = build
-
-    @staticmethod
-    def parse_tag(tag):
-        m = re.match(r'jdk8u(\d+)-b(\d+)', tag)
-        assert m, 'unrecognized jdk8 build tag: ' + tag
-        return JDKHotSpotVersion(mx.JavaCompliance('8'), m.group(1), m.group(2))
-
-    def __str__(self):
-        return '{}_{}_{}'.format(self.javaCompliance.value, self.update, self.build)
-
-    def __cmp__(self, other):
-        assert isinstance(other, JDKHotSpotVersion), 'cannot compare a JDKHotSpotVersion object with ' + type(other)
-        return cmp(str(self), str(other))
-
-def get_jvmci_hotspot_version():
+def get_hotspot_release_version(tag=mx.DEFAULT_JDK_TAG):
     """
-    Gets the upstream HotSpot version JVMCI is based on.
-    """
-    vc = mx.VC.get_vc(_suite.dir, abortOnError=False)
-    assert vc, 'expected jvmci-8 to be version controlled'
-    assert isinstance(vc, mx.HgConfig), 'expected jvmci-8 VC to be Mercurial, not ' + vc.proper_name
-    lines = vc.hg_command(_suite.dir, ['log', '-r', 'keyword("Added tag jdk8u")', '--template', '{desc}\\n'], quiet=True).strip().split('\n')
-    assert lines, 'no hg commits found that match "Added tag jdk8u..."'
-    versions = [line.split()[2] for line in lines]
-    return JDKHotSpotVersion.parse_tag(sorted(versions)[-1])
-
-def get_jdk_hotspot_version(tag=mx.DEFAULT_JDK_TAG):
-    """
-    Gets the HotSpot version in the JDK selected by `tag`.
+    Gets the value to use for the HOTSPOT_RELEASE_VERSION make variable for the output of ``java -version``.
     """
     jdk = mx.get_jdk(tag=tag)
-    output = subprocess.check_output([jdk.java, '-version'], stderr=subprocess.STDOUT)
-    m = re.search(r'Java\(TM\) SE Runtime Environment \(build 1.8.0_(\d+)-b(\d+)\)', output)
-    return JDKHotSpotVersion(jdk.javaCompliance, m.group(1), m.group(2))
+    output = subprocess.check_output([jdk.java, '-version'], stderr=subprocess.STDOUT).strip().split('\n')
+    # Last line of `java -version` output is the HotSpot version info. Here are some samples:
+    #   OpenJDK 64-Bit Server VM (build 25.71-b01-internal-jvmci-0.49-dev, mixed mode)
+    #   Java HotSpot(TM) 64-Bit Server VM (build 25.192-b12, mixed mode)
+    last = output[-1]
+    m = re.search(r'.* \(build (\d+.\d+-b\d+)', last)
+    if m is None:
+        mx.abort('Could not find HotSpot version in last line of `java -version` output:\n' + last)
+    return m.group(1)
 
 class HotSpotBuildTask(mx.NativeBuildTask):
     def __init__(self, project, args, vmbuild, vm):
@@ -858,6 +830,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             buildSuffix = '1'
 
         jvmci_version = 'jvmci-' + _suite.release_version()
+        hs_release_version = get_hotspot_release_version()
 
         if isWindows:
             t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "jvmciCompile.log"))
@@ -869,7 +842,8 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             project_file = jvmciHome + r'\build\vs-amd64\jvm.vcxproj'
             if exists(mx._cygpathW2U(project_file)):
                 _runInDebugShell('msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /target:clean', jvmciHome)
-            winCompileCmd = r'set USER_RELEASE_SUFFIX=' + jvmci_version + \
+            winCompileCmd = r'set HOTSPOT_RELEASE_VERSION=' + hs_release_version + \
+                            r'& set USER_RELEASE_SUFFIX=' + jvmci_version + \
                             r'& set HotSpotMksHome=' + mksHome + \
                             r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + \
                             r'& set path=!JAVA_HOME!\bin;%path%;!HotSpotMksHome!;' \
@@ -918,6 +892,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 setMakeVar('DISABLE_COMMERCIAL_FEATURES', 'true', env=env)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
+            setMakeVar('HOTSPOT_RELEASE_VERSION', hs_release_version)
             setMakeVar('USER_RELEASE_SUFFIX', jvmci_version)
             setMakeVar('INCLUDE_JVMCI', 'true')
             # setMakeVar('INSTALL', 'y', env=env)
