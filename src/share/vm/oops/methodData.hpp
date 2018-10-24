@@ -2145,6 +2145,7 @@ public:
 //
 
 CC_INTERP_ONLY(class BytecodeInterpreter;)
+class CleanExtraDataClosure;
 
 class MethodData : public Metadata {
   friend class VMStructs;
@@ -2304,9 +2305,9 @@ private:
   static bool profile_parameters_jsr292_only();
   static bool profile_all_parameters();
 
-  void clean_extra_data(BoolObjectClosure* is_alive);
+  void clean_extra_data(CleanExtraDataClosure* cl);
   void clean_extra_data_helper(DataLayout* dp, int shift, bool reset = false);
-  void verify_extra_data_clean(BoolObjectClosure* is_alive);
+  void verify_extra_data_clean(CleanExtraDataClosure* cl);
 
 public:
   static int header_size() {
