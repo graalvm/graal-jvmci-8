@@ -45,10 +45,11 @@ import java.util.jar.Manifest;
 
 import javax.tools.ToolProvider;
 
-import jdk.vm.ci.meta.ResolvedJavaMethod;
-
 import org.junit.Assert;
+import org.junit.AssumptionViolatedException;
 import org.junit.Test;
+
+import jdk.vm.ci.meta.ResolvedJavaMethod;
 
 /**
  * Tests that {@link ResolvedJavaMethod}s are safe in the context of class redefinition being used
@@ -62,9 +63,21 @@ public class RedefineClassTest extends TypeUniverse {
         }
     }
 
+    /**
+     * @see <a href="https://bugs.openjdk.java.net/browse/JDK-8076557">JDK-8076557</a>
+     */
+    protected static void assumeManagementLibraryIsLoadable() {
+        try {
+            // Trigger loading of the management library.
+            ManagementFactory.getRuntimeMXBean().getName();
+        } catch (UnsatisfiedLinkError | NoClassDefFoundError e) {
+            throw new AssumptionViolatedException("Management interface is unavailable: " + e);
+        }
+    }
+
     @Test
     public void test() throws Throwable {
-
+        assumeManagementLibraryIsLoadable();
         Method fooMethod = Foo.class.getDeclaredMethod("getName");
 
         ResolvedJavaMethod foo1 = metaAccess.lookupJavaMethod(fooMethod);

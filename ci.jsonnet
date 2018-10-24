@@ -1,4 +1,11 @@
 {
+    Windows:: {
+        capabilities+: ["windows"],
+        name+: "-windows",
+        environment+: {
+            CI_OS: "windows"
+        },
+    },
     Linux:: {
         packages+: {
             git: ">=1.8.3",
@@ -118,6 +125,7 @@
         logs: ["*.log"],
         targets: ["gate"],
         run: [
+            ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
 
             # Test on graal
@@ -140,6 +148,8 @@
             # with Eclipse on one platform.
             self.Linux + self.AMD64 + self.OracleJDK + self.Eclipse + self.JDT,
             self.Linux + self.AMD64 + self.OpenJDK,
+            self.Windows + self.AMD64 + self.OracleJDK,
+            self.Windows + self.AMD64 + self.OpenJDK,
             self.Darwin + self.AMD64 + self.OracleJDK,
             self.Darwin + self.AMD64 + self.OpenJDK,
             self.Solaris + self.SPARCv9 + self.OracleJDK,
