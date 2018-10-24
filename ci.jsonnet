@@ -124,11 +124,11 @@
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
 
             # Look for a well known branch that fixes a downstream failure caused by a JDK change
-            ["git", "-C", "graal", "checkout", "libgraal-compat", "||", "true"],
+            ["git", "-C", "graal", "checkout", "master", "||", "true"],
 
             ["mx", "-v", "-p", "graal/compiler",
                     "--java-home", ["mx", "--vm=server", "jdkhome"],
-                    "gate", "--tags", "build,ctw,test"
+                    "gate", "--tags", "build,test,bootstraplite"
             ]
         ],
     },
