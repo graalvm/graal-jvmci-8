@@ -1,4 +1,11 @@
 {
+    Windows:: {
+        capabilities+: ["windows"],
+        name+: "-windows",
+        environment+: {
+            CI_OS: "windows"
+        },
+    },
     Linux:: {
         packages+: {
             git: ">=1.8.3",
@@ -90,7 +97,7 @@
         downloads: {
             JAVA_HOME: {
                 name : "oraclejdk",
-                version : "8u171",
+                version : "8u192",
                 platformspecific: true
             }
         }
@@ -118,17 +125,18 @@
         logs: ["*.log"],
         targets: ["gate"],
         run: [
+            ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
 
             # Test on graal
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
 
             # Look for a well known branch that fixes a downstream failure caused by a JDK change
-            ["git", "-C", "graal", "checkout", "libgraal-compat", "||", "true"],
+            ["git", "-C", "graal", "checkout", "master", "||", "true"],
 
             ["mx", "-v", "-p", "graal/compiler",
                     "--java-home", ["mx", "--vm=server", "jdkhome"],
-                    "gate", "--tags", "build,ctw,test"
+                    "gate", "--tags", "build,test,bootstraplite"
             ]
         ],
     },
@@ -140,6 +148,8 @@
             # with Eclipse on one platform.
             self.Linux + self.AMD64 + self.OracleJDK + self.Eclipse + self.JDT,
             self.Linux + self.AMD64 + self.OpenJDK,
+            self.Windows + self.AMD64 + self.OracleJDK,
+            self.Windows + self.AMD64 + self.OpenJDK,
             self.Darwin + self.AMD64 + self.OracleJDK,
             self.Darwin + self.AMD64 + self.OpenJDK,
             self.Solaris + self.SPARCv9 + self.OracleJDK,
