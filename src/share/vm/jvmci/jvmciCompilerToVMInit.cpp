@@ -21,7 +21,7 @@
  * questions.
  */
 
-// no precompiled headers
+#include "precompiled.hpp"
 #include "gc_implementation/g1/heapRegion.hpp"
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #include "memory/oopFactory.hpp"
