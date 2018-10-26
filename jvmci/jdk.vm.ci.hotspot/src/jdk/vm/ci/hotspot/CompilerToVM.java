@@ -557,12 +557,11 @@ final class CompilerToVM {
     native boolean shouldDebugNonSafepoints();
 
     /**
-     * Writes {@code length} bytes from {@code bytes} starting at offset {@code offset} to the
-     * HotSpot's log stream.
+     * Writes {@code length} bytes from {@code bytes} starting at offset {@code offset} to HotSpot's
+     * log stream.
      *
-     * @exception NullPointerException if {@code bytes == null}
-     * @exception IndexOutOfBoundsException if copying would cause access of data outside array
-     *                bounds
+     * @throws NullPointerException if {@code bytes == null}
+     * @throws IndexOutOfBoundsException if copying would cause access of data outside array bounds
      */
     native void writeDebugOutput(byte[] bytes, int offset, int length);
 

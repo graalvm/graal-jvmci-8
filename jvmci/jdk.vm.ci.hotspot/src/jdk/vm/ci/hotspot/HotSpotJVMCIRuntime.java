@@ -239,16 +239,16 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         return runtime().getHostJVMCIBackend().getCodeCache().getTarget().wordJavaKind;
     }
 
-    protected final CompilerToVM compilerToVm;
+    final CompilerToVM compilerToVm;
 
     protected final HotSpotVMConfigStore configStore;
-    protected final HotSpotVMConfig config;
+    private final HotSpotVMConfig config;
     private final JVMCIBackend hostBackend;
 
     private final JVMCICompilerFactory compilerFactory;
     private final HotSpotJVMCICompilerFactory hsCompilerFactory;
     private volatile JVMCICompiler compiler;
-    protected final HotSpotJVMCIMetaAccessContext metaAccessContext;
+    final HotSpotJVMCIMetaAccessContext metaAccessContext;
 
     /**
      * Stores the result of {@link HotSpotJVMCICompilerFactory#getCompilationLevelAdjustment} so
@@ -342,11 +342,11 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         return configStore;
     }
 
-    public HotSpotVMConfig getConfig() {
+    HotSpotVMConfig getConfig() {
         return config;
     }
 
-    public CompilerToVM getCompilerToVM() {
+    CompilerToVM getCompilerToVM() {
         return compilerToVm;
     }
 
