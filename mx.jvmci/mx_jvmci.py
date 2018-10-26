@@ -797,48 +797,20 @@ def _hotspotGetVariant(vm=None):
     variant = {'client': 'compiler1', 'server': 'compiler2'}.get(vm, vm)
     return variant
 
-"""
-Represents a JDK HotSpot version derived from a build tag such as "jdk8u66-b16".
-"""
-class JDKHotSpotVersion:
-    def __init__(self, javaCompliance, update, build):
-        self.javaCompliance = javaCompliance
-        self.update = update
-        self.build = build
-
-    @staticmethod
-    def parse_tag(tag):
-        m = re.match(r'jdk8u(\d+)-b(\d+)', tag)
-        assert m, 'unrecognized jdk8 build tag: ' + tag
-        return JDKHotSpotVersion(mx.JavaCompliance('8'), m.group(1), m.group(2))
-
-    def __str__(self):
-        return '{}_{}_{}'.format(self.javaCompliance.value, self.update, self.build)
-
-    def __cmp__(self, other):
-        assert isinstance(other, JDKHotSpotVersion), 'cannot compare a JDKHotSpotVersion object with ' + type(other)
-        return cmp(str(self), str(other))
-
-def get_jvmci_hotspot_version():
+def get_hotspot_release_version(tag=mx.DEFAULT_JDK_TAG):
     """
-    Gets the upstream HotSpot version JVMCI is based on.
-    """
-    vc = mx.VC.get_vc(_suite.dir, abortOnError=False)
-    assert vc, 'expected jvmci-8 to be version controlled'
-    assert isinstance(vc, mx.HgConfig), 'expected jvmci-8 VC to be Mercurial, not ' + vc.proper_name
-    lines = vc.hg_command(_suite.dir, ['log', '-r', 'keyword("Added tag jdk8u")', '--template', '{desc}\\n'], quiet=True).strip().split('\n')
-    assert lines, 'no hg commits found that match "Added tag jdk8u..."'
-    versions = [line.split()[2] for line in lines]
-    return JDKHotSpotVersion.parse_tag(sorted(versions)[-1])
-
-def get_jdk_hotspot_version(tag=mx.DEFAULT_JDK_TAG):
-    """
-    Gets the HotSpot version in the JDK selected by `tag`.
+    Gets the value to use for the HOTSPOT_RELEASE_VERSION make variable for the output of ``java -version``.
     """
     jdk = mx.get_jdk(tag=tag)
-    output = subprocess.check_output([jdk.java, '-version'], stderr=subprocess.STDOUT)
-    m = re.search(r'Java\(TM\) SE Runtime Environment \(build 1.8.0_(\d+)-b(\d+)\)', output)
-    return JDKHotSpotVersion(jdk.javaCompliance, m.group(1), m.group(2))
+    output = subprocess.check_output([jdk.java, '-version'], stderr=subprocess.STDOUT).strip().split('\n')
+    # Last line of `java -version` output is the HotSpot version info. Here are some samples:
+    #   OpenJDK 64-Bit Server VM (build 25.71-b01-internal-jvmci-0.49-dev, mixed mode)
+    #   Java HotSpot(TM) 64-Bit Server VM (build 25.192-b12, mixed mode)
+    last = output[-1]
+    m = re.search(r'.* \(build (\d+.\d+-b\d+)', last)
+    if m is None:
+        mx.abort('Could not find HotSpot version in last line of `java -version` output:\n' + last)
+    return m.group(1)
 
 class HotSpotBuildTask(mx.NativeBuildTask):
     def __init__(self, project, args, vmbuild, vm):
@@ -859,6 +831,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             buildSuffix = '1'
 
         jvmci_version = 'jvmci-' + _suite.release_version()
+        hs_release_version = get_hotspot_release_version()
 
         if isWindows:
             t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "jvmciCompile.log"))
@@ -870,7 +843,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             project_file = jvmciHome + r'\build\vs-amd64\jvm.vcxproj'
             if exists(mx._cygpathW2U(project_file)):
                 _runInDebugShell('msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /target:clean', jvmciHome)
-            winCompileCmd = r'set USER_RELEASE_SUFFIX=' + jvmci_version + \
+            winCompileCmd = r'set HOTSPOT_RELEASE_VERSION=' + hs_release_version + '-' + jvmci_version + \
                             r'& set HotSpotMksHome=' + mksHome + \
                             r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + \
                             r'& set path=!JAVA_HOME!\bin;%path%;!HotSpotMksHome!;' \
@@ -919,6 +892,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 setMakeVar('DISABLE_COMMERCIAL_FEATURES', 'true', env=env)
 
             setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
+            setMakeVar('HOTSPOT_RELEASE_VERSION', hs_release_version)
             setMakeVar('USER_RELEASE_SUFFIX', jvmci_version)
             setMakeVar('INCLUDE_JVMCI', 'true')
             # setMakeVar('INSTALL', 'y', env=env)
@@ -1007,14 +981,19 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 shutil.rmtree(name, ignore_errors=False, onerror=handleRemoveReadonly)
             elif os.path.isfile(name):
                 os.unlink(name)
-        makeFiles = join(_suite.dir, 'make')
-        if mx._opts.verbose:
-            outCapture = None
+
+        isWindows = platform.system() == 'Windows' or "CYGWIN" in platform.system()
+        if isWindows:
+            rmIfExists(join(_suite.dir, 'build', 'vs-amd64'))
         else:
-            def _consume(s):
-                pass
-            outCapture = _consume
-        mx.run([mx.gmake_cmd(), 'ARCH_DATA_MODEL=64', 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'clean'], out=outCapture, cwd=makeFiles)
+            makeFiles = join(_suite.dir, 'make')
+            if mx._opts.verbose:
+                outCapture = None
+            else:
+                def _consume(s):
+                    pass
+                outCapture = _consume
+            mx.run([mx.gmake_cmd(), 'ARCH_DATA_MODEL=64', 'ALT_BOOTDIR=' + get_jvmci_bootstrap_jdk().home, 'clean'], out=outCapture, cwd=makeFiles)
         rmIfExists(_jdksDir())
         self._newestOutput = None
 
@@ -1134,13 +1113,13 @@ def buildvms(args):
 def _jvmci_gate_runner(args, tasks):
     unittest_vmbuild = None
     # Build server-jvmci now so we can run the unit tests
-    with Task('BuildHotSpotJVMCI: product', tasks) as t:
+    with Task('BuildHotSpotJVMCI: product', tasks, tags=[mx_gate.Tags.build]) as t:
         if t:
             buildvms(['--vms', 'server', '--builds', 'product'])
             unittest_vmbuild = 'product'
 
     # Build the fastdebug VM
-    with Task('BuildHotSpotJVMCI: fastdebug', tasks) as t:
+    with Task('BuildHotSpotJVMCI: fastdebug', tasks, tags=[mx_gate.Tags.build]) as t:
         if t:
             buildvms(['--vms', 'server', '--builds', 'fastdebug'])
             run_vm(['-XX:+ExecuteInternalVMTests', '-version'], vm='server', vmbuild='fastdebug')
@@ -1155,7 +1134,7 @@ def _jvmci_gate_runner(args, tasks):
 
     # Prevent JVMCI modifications from breaking the standard builds
     if args.buildNonJVMCI:
-        with Task('BuildHotSpotVarieties', tasks, disableJacoco=True) as t:
+        with Task('BuildHotSpotVarieties', tasks, disableJacoco=True, tags=[mx_gate.Tags.build]) as t:
             if t:
                 buildvms(['--vms', 'client,server', '--builds', 'fastdebug,product'])
 
@@ -1283,18 +1262,19 @@ def hsdis(args, copyToDir=None):
     libpattern = mx.add_lib_suffix('hsdis-' + mx.get_arch() + '-' + mx.get_os() + '-%s')
 
     sha1s = {
-        'att-hsdis-amd64-windows-%s.dll' : 'bcbd535a9568b5075ab41e96205e26a2bac64f72',
-        'att-hsdis-amd64-linux-%s.so' : '36a0b8e30fc370727920cc089f104bfb9cd508a0',
-        'att-hsdis-amd64-darwin-%s.dylib' : 'c1865e9a58ca773fdc1c5eea0a4dfda213420ffb',
-        'intel-hsdis-amd64-windows-%s.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
-        'intel-hsdis-amd64-linux-%s.so' : '0d031013db9a80d6c88330c42c983fbfa7053193',
-        'intel-hsdis-amd64-darwin-%s.dylib' : '67f6d23cbebd8998450a88b5bef362171f66f11a',
-        'hsdis-sparcv9-solaris-%s.so': '970640a9af0bd63641f9063c11275b371a59ee60',
-        'hsdis-sparcv9-linux-%s.so': '0c375986d727651dee1819308fbbc0de4927d5d9',
+        r'att\hsdis-amd64-windows-%s.dll' : 'bcbd535a9568b5075ab41e96205e26a2bac64f72',
+        r'att/hsdis-amd64-linux-%s.so' : '36a0b8e30fc370727920cc089f104bfb9cd508a0',
+        r'att/hsdis-amd64-darwin-%s.dylib' : 'c1865e9a58ca773fdc1c5eea0a4dfda213420ffb',
+        r'intel\hsdis-amd64-windows-%s.dll' : '6a388372cdd5fe905c1a26ced614334e405d1f30',
+        r'intel/hsdis-amd64-linux-%s.so' : '0d031013db9a80d6c88330c42c983fbfa7053193',
+        r'intel/hsdis-amd64-darwin-%s.dylib' : '67f6d23cbebd8998450a88b5bef362171f66f11a',
+        r'hsdis-sparcv9-solaris-%s.so': '970640a9af0bd63641f9063c11275b371a59ee60',
+        r'hsdis-sparcv9-linux-%s.so': '0c375986d727651dee1819308fbbc0de4927d5d9',
+        r'hsdis-aarch64-linux-%s.so': 'fcc9b70ac91c00db8a50b0d4345490a68e3743e1',
     }
 
     if flavor:
-        flavoredLib = flavor + "-" + libpattern
+        flavoredLib = join(flavor, libpattern)
     else:
         flavoredLib = libpattern
     if flavoredLib not in sha1s:
@@ -1306,7 +1286,7 @@ def hsdis(args, copyToDir=None):
     path = join(_suite.get_output_root(), lib)
     if not exists(path):
         sha1path = path + '.sha1'
-        mx.download_file_with_sha1('hsdis', path, ['https://lafo.ssw.uni-linz.ac.at/pub/graal-external-deps/hsdis/' + lib], sha1, sha1path, True, True, sources=False)
+        mx.download_file_with_sha1('hsdis', path, ['https://lafo.ssw.uni-linz.ac.at/pub/graal-external-deps/hsdis/' + lib.replace(os.sep, '/')], sha1, sha1path, True, True, sources=False)
     if copyToDir is not None and exists(copyToDir):
         destFileName = mx.add_lib_suffix('hsdis-' + mx.get_arch())
         shutil.copy(path, copyToDir + os.sep + destFileName)

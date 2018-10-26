@@ -56,7 +56,7 @@ class MemTracker;
 class NativeCallStack : public StackObj {
   friend class MemTracker;
 
-private:
+ private:
   address       _stack[NMT_TrackingStackDepth];
   unsigned int  _hash_value;
 
@@ -94,7 +94,7 @@ public:
   }
 
   // Hash code. Any better algorithm?
-  int hash() const;
+  unsigned int hash() const;
 
   void print_on(outputStream* out) const;
   void print_on(outputStream* out, int indent) const;

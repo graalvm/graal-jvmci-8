@@ -208,7 +208,7 @@ class CompilationLog : public StringEventLog {
   }
 
   void log_nmethod(JavaThread* thread, nmethod* nm) {
-    log(thread, "nmethod %d%s " INTPTR_FORMAT " code ["INTPTR_FORMAT ", " INTPTR_FORMAT "]",
+    log(thread, "nmethod %d%s " INTPTR_FORMAT " code [" INTPTR_FORMAT ", " INTPTR_FORMAT "]",
         nm->compile_id(), nm->is_osr_method() ? "%" : "",
         p2i(nm), p2i(nm->code_begin()), p2i(nm->code_end()));
   }
@@ -653,7 +653,10 @@ void CompileTask::log_task_done(CompileLog* log) {
   if (!_is_success) {
     assert(_failure_reason != NULL, "missing");
     const char* reason = _failure_reason != NULL ? _failure_reason : "unknown";
-    log->elem("failure reason='%s'", reason);
+    log->begin_elem("failure reason='");
+    log->text("%s", reason);
+    log->print("'");
+    log->end_elem();
   }
 
   // <task_done ... stamp='1.234'>  </task>

@@ -468,6 +468,12 @@ void Klass::clean_weak_klass_links(BoolObjectClosure* is_alive, bool clean_alive
     if (clean_alive_klasses && current->oop_is_instance()) {
       InstanceKlass* ik = InstanceKlass::cast(current);
       ik->clean_weak_instanceklass_links(is_alive);
+
+      // JVMTI RedefineClasses creates previous versions that are not in
+      // the class hierarchy, so process them here.
+      while ((ik = ik->previous_versions()) != NULL) {
+        ik->clean_weak_instanceklass_links(is_alive);
+      }
     }
   }
 }
@@ -589,7 +595,7 @@ void Klass::check_array_allocation_length(int length, int max_length, TRAPS) {
       THROW_OOP(Universe::out_of_memory_error_retry());
     }
   } else if (length < 0) {
-    THROW_MSG(vmSymbols::java_lang_NegativeArraySizeException(), err_msg("%d", length));
+    THROW(vmSymbols::java_lang_NegativeArraySizeException());
   }
 }
 
