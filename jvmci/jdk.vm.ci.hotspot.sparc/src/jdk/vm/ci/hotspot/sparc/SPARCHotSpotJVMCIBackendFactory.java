@@ -43,7 +43,7 @@ import jdk.vm.ci.sparc.SPARC.CPUFeature;
 
 public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFactory {
 
-    protected TargetDescription createTarget(SPARCHotSpotVMConfig config) {
+    private static TargetDescription createTarget(SPARCHotSpotVMConfig config) {
         final int stackFrameAlignment = 16;
         final int implicitNullCheckLimit = 4096;
         final boolean inlineObjects = false;
@@ -55,7 +55,7 @@ public class SPARCHotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         return new HotSpotCodeCacheProvider(runtime, target, regConfig);
     }
 
-    protected EnumSet<CPUFeature> computeFeatures(SPARCHotSpotVMConfig config) {
+    private static EnumSet<CPUFeature> computeFeatures(SPARCHotSpotVMConfig config) {
         EnumSet<CPUFeature> features = EnumSet.noneOf(CPUFeature.class);
         if ((config.vmVersionFeatures & config.sparcVis1Instructions) != 0) {
             features.add(CPUFeature.VIS1);
