@@ -136,6 +136,7 @@ fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature CLMUL
 fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature CMOV
 fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature CX8
 fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature ERMS
+fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature FMA
 fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature FXSR
 fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature HT
 fld public final static jdk.vm.ci.amd64.AMD64$CPUFeature LZCNT
