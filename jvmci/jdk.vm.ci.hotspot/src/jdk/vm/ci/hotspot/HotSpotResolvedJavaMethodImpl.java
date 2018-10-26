@@ -786,7 +786,8 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     @Override
     public int intrinsicId() {
         HotSpotVMConfig config = config();
-        return UNSAFE.getChar(metaspaceMethod + config.methodIntrinsicIdOffset);
+        // Important: Size of field changed, JDK8 has u1 and JDK9 u2
+        return UNSAFE.getByte(metaspaceMethod + config.methodIntrinsicIdOffset) & 0xff;
     }
 
     @Override

@@ -71,7 +71,7 @@ public class AArch64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFac
     }
 
     protected HotSpotCodeCacheProvider createCodeCache(HotSpotJVMCIRuntime runtime, TargetDescription target, RegisterConfig regConfig) {
-        return new HotSpotCodeCacheProvider(runtime, runtime.getConfig(), target, regConfig);
+        return new HotSpotCodeCacheProvider(runtime, target, regConfig);
     }
 
     protected HotSpotMetaAccessProvider createMetaAccess(HotSpotJVMCIRuntime runtime) {
