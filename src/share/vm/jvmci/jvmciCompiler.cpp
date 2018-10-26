@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -44,7 +44,7 @@ JVMCICompiler::JVMCICompiler() : AbstractCompiler(jvmci) {
 
 // Initialization
 void JVMCICompiler::initialize() {
-  if (!UseCompiler || !UseJVMCICompiler || !should_perform_init()) {
+  if (!UseCompiler || !EnableJVMCI || !UseJVMCICompiler || !should_perform_init()) {
     return;
   }
 
@@ -67,7 +67,6 @@ void JVMCICompiler::bootstrap(TRAPS) {
 #endif
 
   _bootstrapping = true;
-  // Allow bootstrap to perform JVMCI compilations of itself
   ResourceMark rm;
   HandleMark hm;
   if (PrintBootstrap) {
@@ -88,13 +87,15 @@ void JVMCICompiler::bootstrap(TRAPS) {
   }
 
   int qsize;
+  bool first_round = true;
   int z = 0;
   do {
     // Loop until there is something in the queue.
     do {
       os::sleep(THREAD, 100, true);
       qsize = CompileBroker::queue_size(CompLevel_full_optimization);
-    } while (!_bootstrap_compilation_request_handled);
+    } while (!_bootstrap_compilation_request_handled && first_round && qsize == 0);
+    first_round = false;
     if (PrintBootstrap) {
       while (z < (_methods_compiled / 100)) {
         ++z;
@@ -109,6 +110,15 @@ void JVMCICompiler::bootstrap(TRAPS) {
   _bootstrapping = false;
   JVMCIRuntime::bootstrap_finished(CHECK);
 }
+
+#define CHECK_EXIT THREAD); \
+if (HAS_PENDING_EXCEPTION) { \
+  char buf[256]; \
+  jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
+  JVMCICompiler::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
+  return; \
+} \
+(void)(0
 
 void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JVMCIEnv* env) {
   JVMCI_EXCEPTION_CONTEXT
@@ -134,7 +144,7 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
   if (!HAS_PENDING_EXCEPTION) {
     JavaCallArguments args;
     args.push_oop(receiver);
-    args.push_oop((oop)method_result.get_jobject());
+    args.push_oop(Handle(THREAD, (oop)method_result.get_jobject()));
     args.push_int(entry_bci);
     args.push_long((jlong) (address) env);
     args.push_int(env->task()->compile_id());
@@ -146,12 +156,12 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
   // should be handled by the Java code in some useful way but if they leak
   // through to here report them instead of dying or silently ignoring them.
   if (HAS_PENDING_EXCEPTION) {
-    Handle throwable = PENDING_EXCEPTION;
+    Handle exception(THREAD, PENDING_EXCEPTION);
     CLEAR_PENDING_EXCEPTION;
 
-    java_lang_Throwable::print(throwable, tty);
+    java_lang_Throwable::print(exception, tty);
     tty->cr();
-    java_lang_Throwable::print_stack_trace(throwable(), tty);
+    java_lang_Throwable::print_stack_trace(exception(), tty);
 
     env->set_failure("exception throw", false);
   } else {
@@ -178,6 +188,35 @@ void JVMCICompiler::compile_method(const methodHandle& method, int entry_bci, JV
   }
 }
 
+CompLevel JVMCIRuntime::adjust_comp_level(const methodHandle& method, bool is_osr, CompLevel level, JavaThread* thread) {
+  if (!thread->adjusting_comp_level()) {
+    thread->set_adjusting_comp_level(true);
+    level = adjust_comp_level_inner(method, is_osr, level, thread);
+    thread->set_adjusting_comp_level(false);
+  }
+  return level;
+}
+
+void JVMCICompiler::exit_on_pending_exception(oop exception, const char* message) {
+  JavaThread* THREAD = JavaThread::current();
+  CLEAR_PENDING_EXCEPTION;
+
+  static volatile int report_error = 0;
+  if (!report_error && Atomic::cmpxchg(1, &report_error, 0) == 0) {
+    // Only report an error once
+    tty->print_raw_cr(message);
+    Handle ex(THREAD, exception);
+    java_lang_Throwable::print_stack_trace(ex(), tty);
+  } else {
+    // Allow error reporting thread to print the stack trace.  Windows
+    // doesn't allow uninterruptible wait for JavaThreads
+    const bool interruptible = true;
+    os::sleep(THREAD, 200, interruptible);
+  }
+
+  before_exit(THREAD);
+  vm_exit(-1);
+}
 
 // Compilation entry point for methods
 void JVMCICompiler::compile_method(ciEnv* env, ciMethod* target, int entry_bci) {

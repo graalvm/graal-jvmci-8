@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,7 @@
 
 #include "compiler/abstractCompiler.hpp"
 #include "jvmci/jvmciEnv.hpp"
+#include "utilities/exceptions.hpp"
 
 class JVMCICompiler : public AbstractCompiler {
 private:
@@ -47,6 +48,11 @@ private:
   static elapsedTimer _codeInstallTimer;
 
 public:
+  /**
+   * Exits the VM due to an unexpected exception.
+   */
+  static void exit_on_pending_exception(oop exception, const char* message);
+
   JVMCICompiler();
 
   static JVMCICompiler* instance(bool require_non_null, TRAPS) {

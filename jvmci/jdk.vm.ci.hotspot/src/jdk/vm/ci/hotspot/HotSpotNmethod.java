@@ -51,6 +51,11 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
         this.isDefault = isDefault;
     }
 
+    /**
+     * Determines if the nmethod associated with this object is the compiled entry point for
+     * {@link #getMethod()}. If {@code false}, then the nmethod is unloaded when the VM determines
+     * this object has died.
+     */
     public boolean isDefault() {
         return isDefault;
     }

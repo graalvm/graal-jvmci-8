@@ -43,7 +43,7 @@ import jdk.vm.ci.runtime.JVMCIBackend;
 
 public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFactory {
 
-    private static EnumSet<AMD64.CPUFeature> computeFeatures(AMD64HotSpotVMConfig config) {
+    protected EnumSet<AMD64.CPUFeature> computeFeatures(AMD64HotSpotVMConfig config) {
         // Configure the feature set using the HotSpot flag settings.
         EnumSet<AMD64.CPUFeature> features = EnumSet.noneOf(AMD64.CPUFeature.class);
         if ((config.vmVersionFeatures & config.amd643DNOWPREFETCH) != 0) {
@@ -103,7 +103,7 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         return features;
     }
 
-    private static EnumSet<AMD64.Flag> computeFlags(AMD64HotSpotVMConfig config) {
+    protected EnumSet<AMD64.Flag> computeFlags(AMD64HotSpotVMConfig config) {
         EnumSet<AMD64.Flag> flags = EnumSet.noneOf(AMD64.Flag.class);
         if (config.useCountLeadingZerosInstruction) {
             flags.add(AMD64.Flag.UseCountLeadingZerosInstruction);
@@ -114,7 +114,7 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         return flags;
     }
 
-    private static TargetDescription createTarget(AMD64HotSpotVMConfig config) {
+    protected TargetDescription createTarget(AMD64HotSpotVMConfig config) {
         final int stackFrameAlignment = 16;
         final int implicitNullCheckLimit = 4096;
         final boolean inlineObjects = true;
@@ -126,12 +126,12 @@ public class AMD64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFacto
         return new HotSpotConstantReflectionProvider(runtime);
     }
 
-    private static RegisterConfig createRegisterConfig(AMD64HotSpotVMConfig config, TargetDescription target) {
+    protected RegisterConfig createRegisterConfig(AMD64HotSpotVMConfig config, TargetDescription target) {
         return new AMD64HotSpotRegisterConfig(target, config.useCompressedOops, config.windowsOs);
     }
 
     protected HotSpotCodeCacheProvider createCodeCache(HotSpotJVMCIRuntime runtime, TargetDescription target, RegisterConfig regConfig) {
-        return new HotSpotCodeCacheProvider(runtime, target, regConfig);
+        return new HotSpotCodeCacheProvider(runtime, runtime.getConfig(), target, regConfig);
     }
 
     protected HotSpotMetaAccessProvider createMetaAccess(HotSpotJVMCIRuntime runtime) {

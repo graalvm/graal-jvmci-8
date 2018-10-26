@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -52,6 +52,8 @@
 # include "vmreg_ppc.inline.hpp"
 #endif
 
+#define INCLUDE_AOT 0
+#define align_up(x, y) round_to(x, y)
 
 // frequently used constants
 // Allocate them with new so they are never destroyed (otherwise, a
@@ -59,7 +61,7 @@
 // use).
 ConstantOopWriteValue* CodeInstaller::_oop_null_scope_value = new (ResourceObj::C_HEAP, mtCompiler) ConstantOopWriteValue(NULL);
 ConstantIntValue*      CodeInstaller::_int_m1_scope_value = new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(-1);
-ConstantIntValue*      CodeInstaller::_int_0_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(0);
+ConstantIntValue*      CodeInstaller::_int_0_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue((jint)0);
 ConstantIntValue*      CodeInstaller::_int_1_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(1);
 ConstantIntValue*      CodeInstaller::_int_2_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(2);
 LocationValue*         CodeInstaller::_illegal_value = new (ResourceObj::C_HEAP, mtCompiler) LocationValue(Location());
@@ -74,7 +76,7 @@ VMReg getVMRegFromLocation(Handle location, int total_frame_size, TRAPS) {
     THROW_NULL(vmSymbols::java_lang_NullPointerException());
   }
 
-  Handle reg = code_Location::reg(location);
+  Handle reg(THREAD, code_Location::reg(location));
   jint offset = code_Location::offset(location);
 
   if (reg.not_null()) {
@@ -108,9 +110,35 @@ VMReg getVMRegFromLocation(Handle location, int total_frame_size, TRAPS) {
   }
 }
 
+objArrayOop CodeInstaller::sites() {
+  return (objArrayOop) JNIHandles::resolve(_sites_handle);
+}
+
+arrayOop CodeInstaller::code() {
+  return (arrayOop) JNIHandles::resolve(_code_handle);
+}
+
+arrayOop CodeInstaller::data_section() {
+  return (arrayOop) JNIHandles::resolve(_data_section_handle);
+}
+
+objArrayOop CodeInstaller::data_section_patches() {
+  return (objArrayOop) JNIHandles::resolve(_data_section_patches_handle);
+}
+
+#ifndef PRODUCT
+objArrayOop CodeInstaller::comments() {
+  return (objArrayOop) JNIHandles::resolve(_comments_handle);
+}
+#endif
+
+oop CodeInstaller::word_kind() {
+  return JNIHandles::resolve(_word_kind_handle);
+}
+
 // creates a HotSpot oop map out of the byte arrays provided by DebugInfo
 OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
-  Handle reference_map = DebugInfo::referenceMap(debug_info);
+  Handle reference_map(THREAD, DebugInfo::referenceMap(debug_info));
   if (reference_map.is_null()) {
     THROW_NULL(vmSymbols::java_lang_NullPointerException());
   }
@@ -124,9 +152,9 @@ OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
     _has_wide_vector = true;
   }
   OopMap* map = new OopMap(_total_frame_size, _parameter_count);
-  objArrayHandle objects = HotSpotReferenceMap::objects(reference_map);
-  objArrayHandle derivedBase = HotSpotReferenceMap::derivedBase(reference_map);
-  typeArrayHandle sizeInBytes = HotSpotReferenceMap::sizeInBytes(reference_map);
+  objArrayHandle objects(THREAD, HotSpotReferenceMap::objects(reference_map));
+  objArrayHandle derivedBase(THREAD, HotSpotReferenceMap::derivedBase(reference_map));
+  typeArrayHandle sizeInBytes(THREAD, HotSpotReferenceMap::sizeInBytes(reference_map));
   if (objects.is_null() || derivedBase.is_null() || sizeInBytes.is_null()) {
     THROW_NULL(vmSymbols::java_lang_NullPointerException());
   }
@@ -134,8 +162,8 @@ OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
     JVMCI_ERROR_NULL("arrays in reference map have different sizes: %d %d %d", objects->length(), derivedBase->length(), sizeInBytes->length());
   }
   for (int i = 0; i < objects->length(); i++) {
-    Handle location = objects->obj_at(i);
-    Handle baseLocation = derivedBase->obj_at(i);
+    Handle location(THREAD, objects->obj_at(i));
+    Handle baseLocation(THREAD, derivedBase->obj_at(i));
     int bytes = sizeInBytes->int_at(i);
 
     VMReg vmReg = getVMRegFromLocation(location, _total_frame_size, CHECK_NULL);
@@ -167,12 +195,12 @@ OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
     }
   }
 
-  Handle callee_save_info = (oop) DebugInfo::calleeSaveInfo(debug_info);
+  Handle callee_save_info(THREAD, (oop) DebugInfo::calleeSaveInfo(debug_info));
   if (callee_save_info.not_null()) {
-    objArrayHandle registers = RegisterSaveLayout::registers(callee_save_info);
-    typeArrayHandle slots = RegisterSaveLayout::slots(callee_save_info);
+    objArrayHandle registers(THREAD, RegisterSaveLayout::registers(callee_save_info));
+    typeArrayHandle slots(THREAD, RegisterSaveLayout::slots(callee_save_info));
     for (jint i = 0; i < slots->length(); i++) {
-      Handle jvmci_reg = registers->obj_at(i);
+      Handle jvmci_reg (THREAD, registers->obj_at(i));
       jint jvmci_reg_number = code_Register::number(jvmci_reg);
       VMReg hotspot_reg = CodeInstaller::get_hotspot_reg(jvmci_reg_number, CHECK_NULL);
       // HotSpot stack slots are 4 bytes
@@ -190,7 +218,67 @@ OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
   return map;
 }
 
-  void* CodeInstaller::record_metadata_reference(CodeSection* section, address dest, Handle constant, TRAPS) {
+AOTOopRecorder::AOTOopRecorder(Arena* arena, bool deduplicate) : OopRecorder(arena, deduplicate) {
+  _meta_refs = new GrowableArray<jobject>();
+}
+
+int AOTOopRecorder::nr_meta_refs() const {
+  return _meta_refs->length();
+}
+
+jobject AOTOopRecorder::meta_element(int pos) const {
+  return _meta_refs->at(pos);
+}
+
+int AOTOopRecorder::find_index(Metadata* h) {
+  JavaThread* THREAD = JavaThread::current();
+  int oldCount = metadata_count();
+  int index =  this->OopRecorder::find_index(h);
+  int newCount = metadata_count();
+
+  if (oldCount == newCount) {
+    // found a match
+    return index;
+  }
+
+  assert(index + 1 == newCount, "must be last");
+
+  JVMCIKlassHandle klass(THREAD);
+  oop result = NULL;
+  guarantee(h != NULL,
+            "If DebugInformationRecorder::describe_scope passes NULL oldCount == newCount must hold.");
+  if (h->is_klass()) {
+    klass = (Klass*) h;
+    result = CompilerToVM::get_jvmci_type(klass, CATCH);
+  } else if (h->is_method()) {
+    Method* method = (Method*) h;
+    methodHandle mh(method);
+    result = CompilerToVM::get_jvmci_method(method, CATCH);
+  }
+  jobject ref = JNIHandles::make_local(THREAD, result);
+  record_meta_ref(ref, index);
+
+  return index;
+}
+
+int AOTOopRecorder::find_index(jobject h) {
+  if (h == NULL) {
+    return 0;
+  }
+  oop javaMirror = JNIHandles::resolve(h);
+  Klass* klass = java_lang_Class::as_Klass(javaMirror);
+  return find_index(klass);
+}
+
+void AOTOopRecorder::record_meta_ref(jobject o, int index) {
+  assert(index > 0, "must be 1..n");
+  index -= 1; // reduce by one to convert to array index
+
+  assert(index == _meta_refs->length(), "must be last");
+  _meta_refs->append(o);
+}
+
+void* CodeInstaller::record_metadata_reference(CodeSection* section, address dest, Handle constant, TRAPS) {
   /*
    * This method needs to return a raw (untyped) pointer, since the value of a pointer to the base
    * class is in general not equal to the pointer of the subclass. When patching metaspace pointers,
@@ -220,7 +308,7 @@ OopMap* CodeInstaller::create_oop_map(Handle debug_info, TRAPS) {
 #ifdef _LP64
 narrowKlass CodeInstaller::record_narrow_metadata_reference(CodeSection* section, address dest, Handle constant, TRAPS) {
   oop obj = HotSpotMetaspaceConstantImpl::metaspaceObject(constant);
-  assert(HotSpotMetaspaceConstantImpl::compressed(constant), err_msg("unexpected uncompressed pointer"));
+  assert(HotSpotMetaspaceConstantImpl::compressed(constant), "unexpected uncompressed pointer");
 
   if (!obj->is_a(HotSpotResolvedObjectTypeImpl::klass())) {
     JVMCI_ERROR_0("unexpected compressed pointer of type %s", obj->klass()->signature_name());
@@ -234,9 +322,9 @@ narrowKlass CodeInstaller::record_narrow_metadata_reference(CodeSection* section
 }
 #endif
 
-Location::Type CodeInstaller::get_oop_type(Handle value) {
-  Handle valueKind = Value::valueKind(value);
-  Handle platformKind = ValueKind::platformKind(valueKind);
+Location::Type CodeInstaller::get_oop_type(Thread* thread, Handle value) {
+  Handle valueKind(thread, Value::valueKind(value));
+  Handle platformKind(thread, ValueKind::platformKind(valueKind));
 
   if (platformKind == word_kind()) {
     return Location::oop;
@@ -255,13 +343,13 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
     }
     return _illegal_value;
   } else if (value->is_a(RegisterValue::klass())) {
-    Handle reg = RegisterValue::reg(value);
+    Handle reg(THREAD, RegisterValue::reg(value));
     jint number = code_Register::number(reg);
     VMReg hotspotRegister = get_hotspot_reg(number, CHECK_NULL);
     if (is_general_purpose_reg(hotspotRegister)) {
       Location::Type locationType;
       if (type == T_OBJECT) {
-        locationType = get_oop_type(value);
+        locationType = get_oop_type(THREAD, value);
       } else if (type == T_LONG) {
         locationType = Location::lng;
       } else if (type == T_INT || type == T_FLOAT || type == T_SHORT || type == T_CHAR || type == T_BYTE || type == T_BOOLEAN) {
@@ -298,7 +386,7 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
 
     Location::Type locationType;
     if (type == T_OBJECT) {
-      locationType = get_oop_type(value);
+      locationType = get_oop_type(THREAD, value);
     } else if (type == T_LONG) {
       locationType = Location::lng;
     } else if (type == T_DOUBLE) {
@@ -319,7 +407,8 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
         jlong prim = PrimitiveConstant::primitive(value);
         return new ConstantLongValue(prim);
       } else {
-        BasicType constantType = JVMCIRuntime::kindToBasicType(PrimitiveConstant::kind(value), CHECK_NULL);
+        Handle primitive_constant_kind(THREAD, PrimitiveConstant::kind(value));
+        BasicType constantType = JVMCIRuntime::kindToBasicType(primitive_constant_kind, CHECK_NULL);
         if (type != constantType) {
           JVMCI_ERROR_NULL("primitive constant type doesn't match, expected %s but got %s", basictype_to_str(type), basictype_to_str(constantType));
         }
@@ -376,18 +465,21 @@ ScopeValue* CodeInstaller::get_scope_value(Handle value, BasicType type, Growabl
 }
 
 void CodeInstaller::record_object_value(ObjectValue* sv, Handle value, GrowableArray<ScopeValue*>* objects, TRAPS) {
-  Handle type = VirtualObject::type(value);
+  // Might want a HandleMark here.
+  Handle type(THREAD, VirtualObject::type(value));
   int id = VirtualObject::id(value);
   oop javaMirror = HotSpotResolvedObjectTypeImpl::javaClass(type);
   Klass* klass = java_lang_Class::as_Klass(javaMirror);
   bool isLongArray = klass == Universe::longArrayKlassObj();
 
-  objArrayHandle values = VirtualObject::values(value);
-  objArrayHandle slotKinds = VirtualObject::slotKinds(value);
+  objArrayHandle values(THREAD, VirtualObject::values(value));
+  objArrayHandle slotKinds(THREAD, VirtualObject::slotKinds(value));
   for (jint i = 0; i < values->length(); i++) {
+    HandleMark hm(THREAD);
     ScopeValue* cur_second = NULL;
-    Handle object = values->obj_at(i);
-    BasicType type = JVMCIRuntime::kindToBasicType(slotKinds->obj_at(i), CHECK);
+    Handle object(THREAD, values->obj_at(i));
+    Handle slot_kind (THREAD, slotKinds->obj_at(i));
+    BasicType type = JVMCIRuntime::kindToBasicType(slot_kind, CHECK);
     ScopeValue* value;
     if (object == Value::ILLEGAL()) {
       // no value needs to be written
@@ -422,10 +514,12 @@ MonitorValue* CodeInstaller::get_monitor_value(Handle value, GrowableArray<Scope
   }
 
   ScopeValue* second = NULL;
-  ScopeValue* owner_value = get_scope_value(StackLockValue::owner(value), T_OBJECT, objects, second, CHECK_NULL);
+  Handle stack_lock_owner(THREAD, StackLockValue::owner(value));
+  ScopeValue* owner_value = get_scope_value(stack_lock_owner, T_OBJECT, objects, second, CHECK_NULL);
   assert(second == NULL, "monitor cannot occupy two stack slots");
 
-  ScopeValue* lock_data_value = get_scope_value(StackLockValue::slot(value), T_LONG, objects, second, CHECK_NULL);
+  Handle stack_lock_slot(THREAD, StackLockValue::slot(value));
+  ScopeValue* lock_data_value = get_scope_value(stack_lock_slot, T_LONG, objects, second, CHECK_NULL);
   assert(second == lock_data_value, "monitor is LONG value that occupies two stack slots");
   assert(lock_data_value->is_location(), "invalid monitor location");
   Location lock_data_loc = ((LocationValue*)lock_data_value)->location();
@@ -438,27 +532,28 @@ MonitorValue* CodeInstaller::get_monitor_value(Handle value, GrowableArray<Scope
   return new MonitorValue(owner_value, lock_data_loc, eliminated);
 }
 
-void CodeInstaller::initialize_dependencies(oop compiled_code, TRAPS) {
+void CodeInstaller::initialize_dependencies(oop compiled_code, OopRecorder* recorder, TRAPS) {
   JavaThread* thread = JavaThread::current();
+  assert(THREAD == thread, "");
   CompilerThread* compilerThread = thread->is_Compiler_thread() ? thread->as_CompilerThread() : NULL;
-  _oop_recorder = new OopRecorder(&_arena, true);
+  _oop_recorder = recorder;
   _dependencies = new Dependencies(&_arena, _oop_recorder, compilerThread != NULL ? compilerThread->log() : NULL);
-  objArrayHandle assumptions = HotSpotCompiledCode::assumptions(compiled_code);
+  objArrayHandle assumptions(THREAD, HotSpotCompiledCode::assumptions(compiled_code));
   if (!assumptions.is_null()) {
     int length = assumptions->length();
     for (int i = 0; i < length; ++i) {
-      Handle assumption = assumptions->obj_at(i);
+      Handle assumption(THREAD, assumptions->obj_at(i));
       if (!assumption.is_null()) {
         if (assumption->klass() == Assumptions_NoFinalizableSubclass::klass()) {
-          assumption_NoFinalizableSubclass(assumption);
+          assumption_NoFinalizableSubclass(THREAD, assumption);
         } else if (assumption->klass() == Assumptions_ConcreteSubtype::klass()) {
-          assumption_ConcreteSubtype(assumption);
+          assumption_ConcreteSubtype(THREAD, assumption);
         } else if (assumption->klass() == Assumptions_LeafType::klass()) {
-          assumption_LeafType(assumption);
+          assumption_LeafType(THREAD, assumption);
         } else if (assumption->klass() == Assumptions_ConcreteMethod::klass()) {
-          assumption_ConcreteMethod(assumption);
+          assumption_ConcreteMethod(THREAD, assumption);
         } else if (assumption->klass() == Assumptions_CallSiteTargetValue::klass()) {
-          assumption_CallSiteTargetValue(assumption);
+          assumption_CallSiteTargetValue(THREAD, assumption);
         } else {
           JVMCI_ERROR("unexpected Assumption subclass %s", assumption->klass()->signature_name());
         }
@@ -466,11 +561,11 @@ void CodeInstaller::initialize_dependencies(oop compiled_code, TRAPS) {
     }
   }
   if (JvmtiExport::can_hotswap_or_post_breakpoint()) {
-    objArrayHandle methods = HotSpotCompiledCode::methods(compiled_code);
+    objArrayHandle methods(THREAD, HotSpotCompiledCode::methods(compiled_code));
     if (!methods.is_null()) {
       int length = methods->length();
       for (int i = 0; i < length; ++i) {
-        Handle method_handle = methods->obj_at(i);
+        Handle method_handle(THREAD, methods->obj_at(i));
         methodHandle method = getMethodFromHotSpotMethod(method_handle());
         _dependencies->assert_evol_method(method());
       }
@@ -478,18 +573,86 @@ void CodeInstaller::initialize_dependencies(oop compiled_code, TRAPS) {
   }
 }
 
-// constructor used to create a method
-JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Handle target, Handle compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log, TRAPS) {
-  CodeBuffer buffer("JVMCI Compiler CodeBuffer");
+RelocBuffer::~RelocBuffer() {
+  if (_buffer != NULL) {
+    FREE_C_HEAP_ARRAY(char, _buffer, mtCompiler);
+  }
+}
+
+address RelocBuffer::begin() const {
+  if (_buffer != NULL) {
+    return (address) _buffer;
+  }
+  return (address) _static_buffer;
+}
+
+void RelocBuffer::set_size(size_t bytes) {
+  assert(bytes <= _size, "can't grow in size!");
+  _size = bytes;
+}
+
+void RelocBuffer::ensure_size(size_t bytes) {
+  assert(_buffer == NULL, "can only be used once");
+  assert(_size == 0, "can only be used once");
+  if (bytes >= RelocBuffer::stack_size) {
+    _buffer = NEW_C_HEAP_ARRAY(char, bytes, mtInternal);
+  }
+  _size = bytes;
+}
+
+#if INCLUDE_AOT
+JVMCIEnv::CodeInstallResult CodeInstaller::gather_metadata(Handle target, Handle compiled_code, CodeMetadata& metadata, TRAPS) {
+  CodeBuffer buffer("JVMCI Compiler CodeBuffer for Metadata");
   jobject compiled_code_obj = JNIHandles::make_local(compiled_code());
-  initialize_dependencies(JNIHandles::resolve(compiled_code_obj), CHECK_OK);
+  AOTOopRecorder* recorder = new AOTOopRecorder(&_arena, true);
+  initialize_dependencies(JNIHandles::resolve(compiled_code_obj), recorder, CHECK_OK);
+
+  metadata.set_oop_recorder(recorder);
 
   // Get instructions and constants CodeSections early because we need it.
   _instructions = buffer.insts();
   _constants = buffer.consts();
+  buffer.set_immutable_PIC(_immutable_pic_compilation);
 
   initialize_fields(target(), JNIHandles::resolve(compiled_code_obj), CHECK_OK);
-  JVMCIEnv::CodeInstallResult result = initialize_buffer(buffer, CHECK_OK);
+  JVMCIEnv::CodeInstallResult result = initialize_buffer(buffer, false, CHECK_OK);
+  if (result != JVMCIEnv::ok) {
+    return result;
+  }
+
+  _debug_recorder->pcs_size(); // create the sentinel record
+
+  assert(_debug_recorder->pcs_length() >= 2, "must be at least 2");
+
+  metadata.set_pc_desc(_debug_recorder->pcs(), _debug_recorder->pcs_length());
+  metadata.set_scopes(_debug_recorder->stream()->buffer(), _debug_recorder->data_size());
+  metadata.set_exception_table(&_exception_handler_table);
+
+  RelocBuffer* reloc_buffer = metadata.get_reloc_buffer();
+
+  reloc_buffer->ensure_size(buffer.total_relocation_size());
+  size_t size = (size_t) buffer.copy_relocations_to(reloc_buffer->begin(), (CodeBuffer::csize_t) reloc_buffer->size(), true);
+  reloc_buffer->set_size(size);
+  return JVMCIEnv::ok;
+}
+#endif
+
+// constructor used to create a method
+JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Handle target, Handle compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log, TRAPS) {
+  CodeBuffer buffer("JVMCI Compiler CodeBuffer");
+  jobject compiled_code_obj = JNIHandles::make_local(compiled_code());
+  OopRecorder* recorder = new OopRecorder(&_arena, true);
+  initialize_dependencies(JNIHandles::resolve(compiled_code_obj), recorder, CHECK_OK);
+
+  // Get instructions and constants CodeSections early because we need it.
+  _instructions = buffer.insts();
+  _constants = buffer.consts();
+#if INCLUDE_AOT
+  buffer.set_immutable_PIC(_immutable_pic_compilation);
+#endif
+
+  initialize_fields(target(), JNIHandles::resolve(compiled_code_obj), CHECK_OK);
+  JVMCIEnv::CodeInstallResult result = initialize_buffer(buffer, true, CHECK_OK);
   if (result != JVMCIEnv::ok) {
     return result;
   }
@@ -498,6 +661,9 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Hand
 
   if (!compiled_code->is_a(HotSpotCompiledNmethod::klass())) {
     oop stubName = HotSpotCompiledCode::name(compiled_code_obj);
+    if (stubName == NULL) {
+      JVMCI_ERROR_OK("stub should have a name");
+    }
     char* name = strdup(java_lang_String::as_utf8_string(stubName));
     cb = RuntimeStub::new_runtime_stub(name,
                                        &buffer,
@@ -533,7 +699,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, Hand
 
 void CodeInstaller::initialize_fields(oop target, oop compiled_code, TRAPS) {
   if (compiled_code->is_a(HotSpotCompiledNmethod::klass())) {
-    Handle hotspotJavaMethod = HotSpotCompiledNmethod::method(compiled_code);
+    Handle hotspotJavaMethod(THREAD, HotSpotCompiledNmethod::method(compiled_code));
     methodHandle method = getMethodFromHotSpotMethod(hotspotJavaMethod());
     _parameter_count = method->size_of_parameters();
     TRACE_jvmci_2("installing code for %s", method->name_and_sig_as_C_string());
@@ -583,31 +749,60 @@ void CodeInstaller::initialize_fields(oop target, oop compiled_code, TRAPS) {
 }
 
 int CodeInstaller::estimate_stubs_size(TRAPS) {
-  // Estimate the number of static call stubs that might be emitted.
+  // Estimate the number of static and aot call stubs that might be emitted.
   int static_call_stubs = 0;
+  int aot_call_stubs = 0;
+  int trampoline_stubs = 0;
   objArrayOop sites = this->sites();
   for (int i = 0; i < sites->length(); i++) {
     oop site = sites->obj_at(i);
-    if (site != NULL && site->is_a(site_Mark::klass())) {
-      oop id_obj = site_Mark::id(site);
-      if (id_obj != NULL) {
-        if (!java_lang_boxing_object::is_instance(id_obj, T_INT)) {
-          JVMCI_ERROR_0("expected Integer id, got %s", id_obj->klass()->signature_name());
-        }
-        jint id = id_obj->int_field(java_lang_boxing_object::value_offset_in_bytes(T_INT));
-        if (id == INVOKESTATIC || id == INVOKESPECIAL) {
-          static_call_stubs++;
+    if (site != NULL) {
+      if (site->is_a(site_Mark::klass())) {
+        oop id_obj = site_Mark::id(site);
+        if (id_obj != NULL) {
+          if (!java_lang_boxing_object::is_instance(id_obj, T_INT)) {
+            JVMCI_ERROR_0("expected Integer id, got %s", id_obj->klass()->signature_name());
+          }
+          jint id = id_obj->int_field(java_lang_boxing_object::value_offset_in_bytes(T_INT));
+          switch (id) {
+          case INVOKEINTERFACE:
+          case INVOKEVIRTUAL:
+            trampoline_stubs++;
+            break;
+          case INVOKESTATIC:
+          case INVOKESPECIAL:
+            static_call_stubs++;
+            trampoline_stubs++;
+            break;
+          default:
+            break;
+          }
         }
       }
+#if INCLUDE_AOT
+      if (UseAOT && site->is_a(site_Call::klass())) {
+        oop target = site_Call::target(site);
+        InstanceKlass* target_klass = InstanceKlass::cast(target->klass());
+        if (!target_klass->is_subclass_of(SystemDictionary::HotSpotForeignCallTarget_klass())) {
+          // Add far aot trampolines.
+          aot_call_stubs++;
+        }
+      }
+#endif
     }
   }
-  return static_call_stubs * CompiledStaticCall::to_interp_stub_size();
+  int size = static_call_stubs * CompiledStaticCall::to_interp_stub_size();
+  // size += trampoline_stubs * CompiledStaticCall::to_trampoline_stub_size();
+#if INCLUDE_AOT
+  size += aot_call_stubs * CompiledStaticCall::to_aot_stub_size();
+#endif
+  return size;
 }
 
 // perform data and call relocation on the CodeBuffer
-JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, TRAPS) {
+JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, bool check_size, TRAPS) {
   HandleMark hm;
-  objArrayHandle sites = this->sites();
+  objArrayHandle sites(THREAD, this->sites());
   int locs_buffer_size = sites->length() * (relocInfo::length_limit + sizeof(relocInfo));
 
   // Allocate enough space in the stub section for the static call
@@ -615,9 +810,9 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
   // section itself so they don't need to be accounted for in the
   // locs_buffer above.
   int stubs_size = estimate_stubs_size(CHECK_OK);
-  int total_size = round_to(_code_size, buffer.insts()->alignment()) + round_to(_constants_size, buffer.consts()->alignment()) + round_to(stubs_size, buffer.stubs()->alignment());
+  int total_size = align_up(_code_size, buffer.insts()->alignment()) + align_up(_constants_size, buffer.consts()->alignment()) + align_up(stubs_size, buffer.stubs()->alignment());
 
-  if (total_size > JVMCINMethodSizeLimit) {
+  if (check_size && total_size > JVMCINMethodSizeLimit) {
     return JVMCIEnv::code_too_large;
   }
 
@@ -645,18 +840,19 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
   _instructions->set_end(end_pc);
 
   for (int i = 0; i < data_section_patches()->length(); i++) {
-    Handle patch = data_section_patches()->obj_at(i);
+    HandleMark hm(THREAD);
+    Handle patch(THREAD, data_section_patches()->obj_at(i));
     if (patch.is_null()) {
       THROW_(vmSymbols::java_lang_NullPointerException(), JVMCIEnv::ok);
     }
-    Handle reference = site_DataPatch::reference(patch);
+    Handle reference(THREAD, site_DataPatch::reference(patch));
     if (reference.is_null()) {
       THROW_(vmSymbols::java_lang_NullPointerException(), JVMCIEnv::ok);
     }
     if (!reference->is_a(site_ConstantReference::klass())) {
       JVMCI_ERROR_OK("invalid patch in data section: %s", reference->klass()->signature_name());
     }
-    Handle constant = site_ConstantReference::constant(reference);
+    Handle constant(THREAD, site_ConstantReference::constant(reference));
     if (constant.is_null()) {
       THROW_(vmSymbols::java_lang_NullPointerException(), JVMCIEnv::ok);
     }
@@ -672,7 +868,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
         *((void**) dest) = record_metadata_reference(_constants, dest, constant, CHECK_OK);
       }
     } else if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
-      Handle obj = HotSpotObjectConstantImpl::object(constant);
+      Handle obj(THREAD, HotSpotObjectConstantImpl::object(constant));
       jobject value = JNIHandles::make_local(obj());
       int oop_index = _oop_recorder->find_index(value);
 
@@ -691,7 +887,8 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
   }
   jint last_pc_offset = -1;
   for (int i = 0; i < sites->length(); i++) {
-    Handle site = sites->obj_at(i);
+    HandleMark hm(THREAD);
+    Handle site(THREAD, sites->obj_at(i));
     if (site.is_null()) {
       THROW_(vmSymbols::java_lang_NullPointerException(), JVMCIEnv::ok);
     }
@@ -704,9 +901,7 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
     } else if (site->is_a(site_Infopoint::klass())) {
       // three reasons for infopoints denote actual safepoints
       oop reason = site_Infopoint::reason(site);
-      if (site_InfopointReason::SAFEPOINT() == reason ||
-          site_InfopointReason::CALL() == reason ||
-          site_InfopointReason::IMPLICIT_EXCEPTION() == reason) {
+      if (site_InfopointReason::SAFEPOINT() == reason || site_InfopointReason::CALL() == reason || site_InfopointReason::IMPLICIT_EXCEPTION() == reason) {
         TRACE_jvmci_4("safepoint at %i", pc_offset);
         site_Safepoint(buffer, pc_offset, site, CHECK_OK);
         if (_orig_pc_offset < 0) {
@@ -734,9 +929,10 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
     }
     last_pc_offset = pc_offset;
 
-    if (CodeInstallSafepointChecks && SafepointSynchronize::do_call_back()) {
+    JavaThread* thread = JavaThread::current();
+    if (SafepointSynchronize::do_call_back()) {
       // this is a hacky way to force a safepoint check but nothing else was jumping out at me.
-      ThreadToNativeFromVM ttnfv(JavaThread::current());
+      ThreadToNativeFromVM ttnfv(thread);
     }
   }
 
@@ -754,15 +950,15 @@ JVMCIEnv::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer,
   return JVMCIEnv::ok;
 }
 
-void CodeInstaller::assumption_NoFinalizableSubclass(Handle assumption) {
-  Handle receiverType_handle = Assumptions_NoFinalizableSubclass::receiverType(assumption());
+void CodeInstaller::assumption_NoFinalizableSubclass(Thread* thread, Handle assumption) {
+  Handle receiverType_handle (thread, Assumptions_NoFinalizableSubclass::receiverType(assumption()));
   Klass* receiverType = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(receiverType_handle));
   _dependencies->assert_has_no_finalizable_subclasses(receiverType);
 }
 
-void CodeInstaller::assumption_ConcreteSubtype(Handle assumption) {
-  Handle context_handle = Assumptions_ConcreteSubtype::context(assumption());
-  Handle subtype_handle = Assumptions_ConcreteSubtype::subtype(assumption());
+void CodeInstaller::assumption_ConcreteSubtype(Thread* thread, Handle assumption) {
+  Handle context_handle (thread, Assumptions_ConcreteSubtype::context(assumption()));
+  Handle subtype_handle (thread, Assumptions_ConcreteSubtype::subtype(assumption()));
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
   Klass* subtype = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(subtype_handle));
 
@@ -770,16 +966,16 @@ void CodeInstaller::assumption_ConcreteSubtype(Handle assumption) {
   _dependencies->assert_abstract_with_unique_concrete_subtype(context, subtype);
 }
 
-void CodeInstaller::assumption_LeafType(Handle assumption) {
-  Handle context_handle = Assumptions_LeafType::context(assumption());
+void CodeInstaller::assumption_LeafType(Thread* thread, Handle assumption) {
+  Handle context_handle (thread, Assumptions_LeafType::context(assumption()));
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
 
   _dependencies->assert_leaf_type(context);
 }
 
-void CodeInstaller::assumption_ConcreteMethod(Handle assumption) {
-  Handle impl_handle = Assumptions_ConcreteMethod::impl(assumption());
-  Handle context_handle = Assumptions_ConcreteMethod::context(assumption());
+void CodeInstaller::assumption_ConcreteMethod(Thread* thread, Handle assumption) {
+  Handle impl_handle (thread, Assumptions_ConcreteMethod::impl(assumption()));
+  Handle context_handle (thread, Assumptions_ConcreteMethod::context(assumption()));
 
   methodHandle impl = getMethodFromHotSpotMethod(impl_handle());
   Klass* context = java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(context_handle));
@@ -787,11 +983,9 @@ void CodeInstaller::assumption_ConcreteMethod(Handle assumption) {
   _dependencies->assert_unique_concrete_method(context, impl());
 }
 
-void CodeInstaller::assumption_CallSiteTargetValue(Handle assumption) {
-  Handle callSiteConstant = Assumptions_CallSiteTargetValue::callSite(assumption());
-  Handle callSite = HotSpotObjectConstantImpl::object(callSiteConstant());
-  Handle methodHandleConstant = Assumptions_CallSiteTargetValue::methodHandle(assumption());
-  Handle methodHandle = HotSpotObjectConstantImpl::object(methodHandleConstant());
+void CodeInstaller::assumption_CallSiteTargetValue(Thread* thread, Handle assumption) {
+  Handle callSite(thread, HotSpotObjectConstantImpl::object(Assumptions_CallSiteTargetValue::callSite(assumption())));
+  Handle methodHandle(thread, HotSpotObjectConstantImpl::object(Assumptions_CallSiteTargetValue::methodHandle(assumption())));
 
   _dependencies->assert_call_site_target_value(callSite(), methodHandle());
 }
@@ -823,17 +1017,18 @@ static bool bytecode_should_reexecute(Bytecodes::Code code) {
 }
 
 GrowableArray<ScopeValue*>* CodeInstaller::record_virtual_objects(Handle debug_info, TRAPS) {
-  objArrayHandle virtualObjects = DebugInfo::virtualObjectMapping(debug_info);
+  objArrayHandle virtualObjects(THREAD, DebugInfo::virtualObjectMapping(debug_info));
   if (virtualObjects.is_null()) {
     return NULL;
   }
   GrowableArray<ScopeValue*>* objects = new GrowableArray<ScopeValue*>(virtualObjects->length(), virtualObjects->length(), NULL);
   // Create the unique ObjectValues
   for (int i = 0; i < virtualObjects->length(); i++) {
-    Handle value = virtualObjects->obj_at(i);
+    HandleMark hm(THREAD);
+    Handle value(THREAD, virtualObjects->obj_at(i));
     int id = VirtualObject::id(value);
     Handle base_object = VirtualObject::baseObject(value);
-    Handle type = VirtualObject::type(value);
+    Handle type(THREAD, VirtualObject::type(value));
     oop javaMirror = HotSpotResolvedObjectTypeImpl::javaClass(type);
     ScopeValue* baseObjectValue;
     if (base_object.is_null()) {
@@ -854,7 +1049,8 @@ GrowableArray<ScopeValue*>* CodeInstaller::record_virtual_objects(Handle debug_i
   // All the values which could be referenced by the VirtualObjects
   // exist, so now describe all the VirtualObjects themselves.
   for (int i = 0; i < virtualObjects->length(); i++) {
-    Handle value = virtualObjects->obj_at(i);
+    HandleMark hm(THREAD);
+    Handle value(THREAD, virtualObjects->obj_at(i));
     int id = VirtualObject::id(value);
     record_object_value(objects->at(id)->as_ObjectValue(), value, objects, CHECK_NULL);
   }
@@ -863,7 +1059,7 @@ GrowableArray<ScopeValue*>* CodeInstaller::record_virtual_objects(Handle debug_i
 }
 
 void CodeInstaller::record_scope(jint pc_offset, Handle debug_info, ScopeMode scope_mode, bool return_oop, TRAPS) {
-  Handle position = DebugInfo::bytecodePosition(debug_info);
+  Handle position(THREAD, DebugInfo::bytecodePosition(debug_info));
   if (position.is_null()) {
     // Stubs do not record scope info, just oop maps
     return;
@@ -906,12 +1102,12 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
     }
     frame = position;
   }
-  Handle caller_frame = BytecodePosition::caller(position);
+  Handle caller_frame (THREAD, BytecodePosition::caller(position));
   if (caller_frame.not_null()) {
     record_scope(pc_offset, caller_frame, scope_mode, objects, return_oop, CHECK);
   }
 
-  Handle hotspot_method = BytecodePosition::method(position);
+  Handle hotspot_method (THREAD, BytecodePosition::method(position));
   Method* method = getMethodFromHotSpotMethod(hotspot_method());
   jint bci = map_jvmci_bci(BytecodePosition::bci(position));
 
@@ -939,8 +1135,8 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
     jint local_count = BytecodeFrame::numLocals(frame);
     jint expression_count = BytecodeFrame::numStack(frame);
     jint monitor_count = BytecodeFrame::numLocks(frame);
-    objArrayHandle values = BytecodeFrame::values(frame);
-    objArrayHandle slotKinds = BytecodeFrame::slotKinds(frame);
+    objArrayHandle values(THREAD, BytecodeFrame::values(frame));
+    objArrayHandle slotKinds(THREAD, BytecodeFrame::slotKinds(frame));
 
     if (values.is_null() || slotKinds.is_null()) {
       THROW(vmSymbols::java_lang_NullPointerException());
@@ -960,17 +1156,18 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
     TRACE_jvmci_2("%d locals %d expressions, %d monitors", local_count, expression_count, monitor_count);
 
     for (jint i = 0; i < values->length(); i++) {
+      HandleMark hm(THREAD);
       ScopeValue* second = NULL;
-      Handle value = values->obj_at(i);
+      Handle value(THREAD, values->obj_at(i));
       if (i < local_count) {
-        BasicType type = JVMCIRuntime::kindToBasicType(slotKinds->obj_at(i), CHECK);
+        BasicType type = JVMCIRuntime::kindToBasicType(Handle(THREAD, slotKinds->obj_at(i)), CHECK);
         ScopeValue* first = get_scope_value(value, type, objects, second, CHECK);
         if (second != NULL) {
           locals->append(second);
         }
         locals->append(first);
       } else if (i < local_count + expression_count) {
-        BasicType type = JVMCIRuntime::kindToBasicType(slotKinds->obj_at(i), CHECK);
+        BasicType type = JVMCIRuntime::kindToBasicType(Handle(THREAD, slotKinds->obj_at(i)), CHECK);
         ScopeValue* first = get_scope_value(value, type, objects, second, CHECK);
         if (second != NULL) {
           expressions->append(second);
@@ -1000,7 +1197,7 @@ void CodeInstaller::record_scope(jint pc_offset, Handle position, ScopeMode scop
 }
 
 void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle debug_info = site_Infopoint::debugInfo(site);
+  Handle debug_info (THREAD, site_Infopoint::debugInfo(site));
   if (debug_info.is_null()) {
     JVMCI_ERROR("debug info expected at safepoint at %i", pc_offset);
   }
@@ -1014,7 +1211,7 @@ void CodeInstaller::site_Safepoint(CodeBuffer& buffer, jint pc_offset, Handle si
 }
 
 void CodeInstaller::site_Infopoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle debug_info = site_Infopoint::debugInfo(site);
+  Handle debug_info (THREAD, site_Infopoint::debugInfo(site));
   if (debug_info.is_null()) {
     JVMCI_ERROR("debug info expected at infopoint at %i", pc_offset);
   }
@@ -1029,7 +1226,7 @@ void CodeInstaller::site_Infopoint(CodeBuffer& buffer, jint pc_offset, Handle si
 }
 
 void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle target = site_Call::target(site);
+  Handle target(THREAD, site_Call::target(site));
   InstanceKlass* target_klass = InstanceKlass::cast(target->klass());
 
   Handle hotspot_method; // JavaMethod
@@ -1041,7 +1238,7 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
     hotspot_method = target;
   }
 
-  Handle debug_info = site_Call::debugInfo(site);
+  Handle debug_info (THREAD, site_Call::debugInfo(site));
 
   assert(hotspot_method.not_null() ^ foreign_call.not_null(), "Call site needs exactly one type");
 
@@ -1059,6 +1256,10 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
 
   if (foreign_call.not_null()) {
     jlong foreign_call_destination = HotSpotForeignCallTarget::address(foreign_call);
+    if (_immutable_pic_compilation) {
+      // Use fake short distance during PIC compilation.
+      foreign_call_destination = (jlong)(_instructions->start() + pc_offset);
+    }
     CodeInstaller::pd_relocate_ForeignCall(inst, foreign_call_destination, CHECK);
   } else { // method != NULL
     if (debug_info.is_null()) {
@@ -1066,14 +1267,15 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
     }
 
     TRACE_jvmci_3("method call");
-    CodeInstaller::pd_relocate_JavaMethod(hotspot_method, pc_offset, CHECK);
+    CodeInstaller::pd_relocate_JavaMethod(buffer, hotspot_method, pc_offset, CHECK);
     if (_next_call_type == INVOKESTATIC || _next_call_type == INVOKESPECIAL) {
       // Need a static call stub for transitions from compiled to interpreted.
-      address addr = CompiledStaticCall::emit_to_interp_stub(buffer, _instructions->start() + pc_offset);
-      if (addr == NULL) {
-        JVMCI_ERROR("Could not emit static call stub, was estimate_stubs_size wrong?");
-      }
+      CompiledStaticCall::emit_to_interp_stub(buffer, _instructions->start() + pc_offset);
     }
+#if INCLUDE_AOT
+    // Trampoline to far aot code.
+    CompiledStaticCall::emit_to_aot_stub(buffer, _instructions->start() + pc_offset);
+#endif
   }
 
   _next_call_type = INVOKE_INVALID;
@@ -1084,17 +1286,28 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, T
 }
 
 void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle reference = site_DataPatch::reference(site);
+  Handle reference(THREAD, site_DataPatch::reference(site));
   if (reference.is_null()) {
     THROW(vmSymbols::java_lang_NullPointerException());
   } else if (reference->is_a(site_ConstantReference::klass())) {
-    Handle constant = site_ConstantReference::constant(reference);
+    Handle constant(THREAD, site_ConstantReference::constant(reference));
     if (constant.is_null()) {
       THROW(vmSymbols::java_lang_NullPointerException());
     } else if (constant->is_a(HotSpotObjectConstantImpl::klass())) {
-      pd_patch_OopConstant(pc_offset, constant, CHECK);
+      if (!_immutable_pic_compilation) {
+        // Do not patch during PIC compilation.
+        pd_patch_OopConstant(pc_offset, constant, CHECK);
+      }
     } else if (constant->is_a(HotSpotMetaspaceConstantImpl::klass())) {
-      pd_patch_MetaspaceConstant(pc_offset, constant, CHECK);
+      if (!_immutable_pic_compilation) {
+        pd_patch_MetaspaceConstant(pc_offset, constant, CHECK);
+      }
+#if INCLUDE_AOT
+    } else if (constant->is_a(HotSpotSentinelConstant::klass())) {
+      if (!_immutable_pic_compilation) {
+        JVMCI_ERROR("sentinel constant not supported for normal compiles: %s", constant->klass()->signature_name());
+      }
+#endif
     } else {
       JVMCI_ERROR("unknown constant type in data patch: %s", constant->klass()->signature_name());
     }
@@ -1111,7 +1324,7 @@ void CodeInstaller::site_DataPatch(CodeBuffer& buffer, jint pc_offset, Handle si
 }
 
 void CodeInstaller::site_Mark(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS) {
-  Handle id_obj = site_Mark::id(site);
+  Handle id_obj (THREAD, site_Mark::id(site));
 
   if (id_obj.not_null()) {
     if (!java_lang_boxing_object::is_instance(id_obj(), T_INT)) {
@@ -1153,6 +1366,13 @@ void CodeInstaller::site_Mark(CodeBuffer& buffer, jint pc_offset, Handle site, T
         break;
       case CARD_TABLE_SHIFT:
       case CARD_TABLE_ADDRESS:
+      case HEAP_TOP_ADDRESS:
+      case HEAP_END_ADDRESS:
+      case NARROW_KLASS_BASE_ADDRESS:
+      case NARROW_OOP_BASE_ADDRESS:
+      case CRC_TABLE_ADDRESS:
+      case LOG_OF_HEAP_REGION_GRAIN_BYTES:
+      case INLINE_CONTIGUOUS_ALLOCATION_SUPPORTED:
         break;
       default:
         JVMCI_ERROR("invalid mark id: %d", id);
@@ -1160,4 +1380,3 @@ void CodeInstaller::site_Mark(CodeBuffer& buffer, jint pc_offset, Handle site, T
     }
   }
 }
-

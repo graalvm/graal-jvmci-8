@@ -85,6 +85,10 @@ class MethodHandles: AllStatic {
             iid <= vmIntrinsics::LAST_MH_SIG_POLY);
   }
 
+  static bool is_signature_polymorphic_method(Method* m) {
+    return is_signature_polymorphic(m->intrinsic_id());
+  }
+
   static bool is_signature_polymorphic_intrinsic(vmIntrinsics::ID iid) {
     assert(is_signature_polymorphic(iid), "");
     // Most sig-poly methods are intrinsics which do not require an

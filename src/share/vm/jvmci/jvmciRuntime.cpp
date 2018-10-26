@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -47,6 +47,7 @@
 
 jobject JVMCIRuntime::_HotSpotJVMCIRuntime_instance = NULL;
 bool JVMCIRuntime::_HotSpotJVMCIRuntime_initialized = false;
+bool JVMCIRuntime::_well_known_classes_initialized = false;
 JVMCIRuntime::CompLevelAdjustment JVMCIRuntime::_comp_level_adjustment = JVMCIRuntime::none;
 bool JVMCIRuntime::_shutdown_called = false;
 
@@ -137,23 +138,23 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance_common(JavaThread* thread, Klas
   JRT_BLOCK;
   assert(klass->is_klass(), "not a class");
   Handle holder(THREAD, klass->klass_holder()); // keep the klass alive
-  instanceKlassHandle h(thread, klass);
+  InstanceKlass* ik = InstanceKlass::cast(klass);
   {
     RetryableAllocationMark ram(thread, null_on_fail);
-    h->check_valid_for_instantiation(true, CHECK);
+    ik->check_valid_for_instantiation(true, CHECK);
     oop obj;
     if (null_on_fail) {
-      if (!h->is_initialized()) {
+      if (!ik->is_initialized()) {
         // Cannot re-execute class initialization without side effects
         // so return without attempting the initialization
         return;
       }
     } else {
       // make sure klass is initialized
-      h->initialize(CHECK);
+      ik->initialize(CHECK);
     }
     // allocate instance and return via TLS
-    obj = h->allocate_instance(CHECK);
+    obj = ik->allocate_instance(CHECK);
     thread->set_vm_result(obj);
   }
   JRT_BLOCK_END;
@@ -237,7 +238,7 @@ JRT_ENTRY(void, JVMCIRuntime::dynamic_new_array_common(JavaThread* thread, oopDe
 JRT_END
 
 JRT_ENTRY(void, JVMCIRuntime::dynamic_new_instance_common(JavaThread* thread, oopDesc* type_mirror, bool null_on_fail))
-  instanceKlassHandle klass(THREAD, java_lang_Class::as_Klass(type_mirror));
+  InstanceKlass* klass = InstanceKlass::cast(java_lang_Class::as_Klass(type_mirror));
 
   if (klass == NULL) {
     ResourceMark rm(THREAD);
@@ -298,7 +299,6 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
   }
 #ifdef ASSERT
   assert(exception.not_null(), "NULL exceptions should be handled by throw_exception");
-  assert(exception->is_oop(), "just checking");
   // Check that exception is a subclass of Throwable, otherwise we have a VerifyError
   if (!(exception->is_a(SystemDictionary::Throwable_klass()))) {
     if (ExitVMOnVerifyError) vm_exit(-1);
@@ -376,11 +376,10 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
     thread->set_exception_oop(exception());
     thread->set_exception_pc(pc);
 
-    // The exception cache is used only for non-implicit exceptions
-    // Update the exception cache only when another exception did
-    // occur during the computation of the compiled exception handler
-    // (e.g., when loading the class of the catch type).
-    // Checking for exception oop equality is not
+    // the exception cache is used only by non-implicit exceptions
+    // Update the exception cache only when there didn't happen
+    // another exception during the computation of the compiled
+    // exception handler. Checking for exception oop equality is not
     // sufficient because some exceptions are pre-allocated and reused.
     if (continuation != NULL && !recursive_exception && !SharedRuntime::deopt_blob()->contains(continuation)) {
       nm->add_handler_for_exception_and_pc(exception, pc, continuation);
@@ -437,11 +436,12 @@ JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc*
     TRACE_jvmci_3("%s: entered locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(mark), p2i(lock));
     tty->flush();
   }
+#ifdef ASSERT
   if (PrintBiasedLockingStatistics) {
     Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
   }
+#endif
   Handle h_obj(thread, obj);
-  assert(h_obj()->is_oop(), "must be NULL or an object");
   if (UseBiasedLocking) {
     // Retry fast entry if bias is revoked to avoid unnecessary inflation
     ObjectSynchronizer::fast_enter(h_obj, lock, true, CHECK);
@@ -561,8 +561,10 @@ JRT_ENTRY(void, JVMCIRuntime::vm_error(JavaThread* thread, jlong where, jlong fo
     size_t detail_msg_length = strlen(buf) * 2;
     detail_msg = (char *) NEW_RESOURCE_ARRAY(u_char, detail_msg_length);
     jio_snprintf(detail_msg, detail_msg_length, buf, value);
+    report_vm_error(__FILE__, __LINE__, error_msg, detail_msg);
+  } else {
+    report_vm_error(__FILE__, __LINE__, error_msg);
   }
-  report_vm_error(__FILE__, __LINE__, error_msg, detail_msg);
 JRT_END
 
 JRT_LEAF(oopDesc*, JVMCIRuntime::load_and_clear_exception(JavaThread* thread))
@@ -665,7 +667,7 @@ JRT_ENTRY(jboolean, JVMCIRuntime::thread_is_interrupted(JavaThread* thread, oopD
   }
 JRT_END
 
-JRT_ENTRY(jint, JVMCIRuntime::test_deoptimize_call_int(JavaThread* thread, int value))
+JRT_ENTRY(int, JVMCIRuntime::test_deoptimize_call_int(JavaThread* thread, int value))
   deopt_caller();
   return value;
 JRT_END
@@ -684,7 +686,8 @@ JVM_ENTRY(jobject, JVM_GetJVMCIRuntime(JNIEnv *env, jclass c))
     THROW_MSG_NULL(vmSymbols::java_lang_InternalError(), "JVMCI is not enabled")
   }
   JVMCIRuntime::initialize_HotSpotJVMCIRuntime(CHECK_NULL);
-  return JVMCIRuntime::get_HotSpotJVMCIRuntime_jobject(CHECK_NULL);
+  jobject ret = JVMCIRuntime::get_HotSpotJVMCIRuntime_jobject(CHECK_NULL);
+  return ret;
 JVM_END
 
 // private static ClassLoader Services.getJVMCIClassLoader()
@@ -701,7 +704,7 @@ JVM_END
 
 Handle JVMCIRuntime::callStatic(const char* className, const char* methodName, const char* signature, JavaCallArguments* args, TRAPS) {
   TempNewSymbol name = SymbolTable::new_symbol(className, CHECK_(Handle()));
-  KlassHandle klass = resolve_or_fail(name, CHECK_(Handle()));
+  Klass* klass = resolve_or_fail(name, CHECK_(Handle()));
   TempNewSymbol runtime = SymbolTable::new_symbol(methodName, CHECK_(Handle()));
   TempNewSymbol sig = SymbolTable::new_symbol(signature, CHECK_(Handle()));
   JavaValue result(T_OBJECT);
@@ -710,14 +713,19 @@ Handle JVMCIRuntime::callStatic(const char* className, const char* methodName, c
   } else {
     JavaCalls::call_static(&result, klass, runtime, sig, args, CHECK_(Handle()));
   }
-  return Handle((oop)result.get_jobject());
+  return Handle(THREAD, (oop)result.get_jobject());
+}
+
+Handle JVMCIRuntime::get_HotSpotJVMCIRuntime(TRAPS) {
+  initialize_JVMCI(CHECK_(Handle()));
+  return Handle(THREAD, JNIHandles::resolve_non_null(_HotSpotJVMCIRuntime_instance));
 }
 
 void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
   guarantee(!_HotSpotJVMCIRuntime_initialized, "cannot reinitialize HotSpotJVMCIRuntime");
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
   // This should only be called in the context of the JVMCI class being initialized
-  instanceKlassHandle klass = InstanceKlass::cast(SystemDictionary::JVMCI_klass());
+  InstanceKlass* klass = InstanceKlass::cast(SystemDictionary::JVMCI_klass());
   guarantee(klass->is_being_initialized() && klass->is_reentrant_initialization(THREAD),
          "HotSpotJVMCIRuntime initialization should only be triggered through JVMCI initialization");
 
@@ -730,7 +738,7 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(TRAPS) {
          "compilation level adjustment out of bounds");
   _comp_level_adjustment = (CompLevelAdjustment) adjustment;
   _HotSpotJVMCIRuntime_initialized = true;
-  _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result());
+  _HotSpotJVMCIRuntime_instance = JNIHandles::make_global(result);
 }
 
 void JVMCIRuntime::initialize_JVMCI(TRAPS) {
@@ -740,6 +748,17 @@ void JVMCIRuntime::initialize_JVMCI(TRAPS) {
                "()Ljdk/vm/ci/runtime/JVMCIRuntime;", NULL, CHECK);
   }
   assert(_HotSpotJVMCIRuntime_initialized == true, "what?");
+}
+
+bool JVMCIRuntime::can_initialize_JVMCI() {
+  // Initializing JVMCI requires the module system to be initialized past phase 3.
+  // The JVMCI API itself isn't available until phase 2 and ServiceLoader (which
+  // JVMCI initialization requires) isn't usable until after phase 3. Testing
+  // whether the system loader is initialized satisfies all these invariants.
+  if (SystemDictionary::java_system_loader() == NULL) {
+    return false;
+  }
+  return true;
 }
 
 void JVMCIRuntime::metadata_do(void f(Metadata*)) {
@@ -817,14 +836,14 @@ JVM_ENTRY(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
   }
 
 #ifdef _LP64
-#ifndef TARGET_ARCH_sparc
+#ifndef SPARC
   uintptr_t heap_end = (uintptr_t) Universe::heap()->reserved_region().end();
   uintptr_t allocation_end = heap_end + ((uintptr_t)16) * 1024 * 1024 * 1024;
   guarantee(heap_end < allocation_end, "heap end too close to end of address space (might lead to erroneous TLAB allocations)");
-#endif // TARGET_ARCH_sparc
+#endif // !SPARC
 #else
   fatal("check TLAB allocation code for address space conflicts");
-#endif
+#endif // _LP64
 
   JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
 
@@ -840,6 +859,15 @@ JVM_ENTRY(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
     env->RegisterNatives(c2vmClass, CompilerToVM::methods, CompilerToVM::methods_count());
   }
 JVM_END
+
+#define CHECK_EXIT THREAD); \
+if (HAS_PENDING_EXCEPTION) { \
+  char buf[256]; \
+  jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
+  JVMCICompiler::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
+  return; \
+} \
+(void)(0
 
 void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized() {
   // This initialization code is guarded by a static pointer to the Factory class.
@@ -883,27 +911,7 @@ void JVMCIRuntime::shutdown(TRAPS) {
   }
 }
 
-void JVMCIRuntime::bootstrap_finished(TRAPS) {
-  if (_HotSpotJVMCIRuntime_instance != NULL) {
-    HandleMark hm(THREAD);
-    Handle receiver = get_HotSpotJVMCIRuntime(CHECK_EXIT);
-    JavaValue result(T_VOID);
-    JavaCallArguments args;
-    args.push_oop(receiver);
-    JavaCalls::call_special(&result, receiver->klass(), vmSymbols::bootstrapFinished_method_name(), vmSymbols::void_method_signature(), &args, CHECK_EXIT);
-  }
-}
-
-CompLevel JVMCIRuntime::adjust_comp_level(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread) {
-  if (!thread->adjusting_comp_level()) {
-    thread->set_adjusting_comp_level(true);
-    level = adjust_comp_level_inner(method, is_osr, level, thread);
-    thread->set_adjusting_comp_level(false);
-  }
-  return level;
-}
-
-CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread) {
+CompLevel JVMCIRuntime::adjust_comp_level_inner(const methodHandle& method, bool is_osr, CompLevel level, JavaThread* thread) {
   JVMCICompiler* compiler = JVMCICompiler::instance(false, thread);
   if (compiler != NULL && compiler->is_bootstrapping()) {
     return level;
@@ -921,20 +929,21 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr
   \
     if (exception->is_a(SystemDictionary::ThreadDeath_klass())) { \
       /* In the special case of ThreadDeath, we need to reset the */ \
-      /* pending async exception so that it is propagated.         */ \
+      /* pending async exception so that it is propagated.        */ \
       thread->set_pending_async_exception(exception()); \
       return level; \
     } \
     tty->print("Uncaught exception while adjusting compilation level: "); \
     java_lang_Throwable::print(exception(), tty); \
     tty->cr(); \
-    java_lang_Throwable::print_stack_trace(exception(), tty); \
+    java_lang_Throwable::print_stack_trace(exception(), tty);   \
     if (HAS_PENDING_EXCEPTION) { \
       CLEAR_PENDING_EXCEPTION; \
     } \
     return level; \
   } \
   (void)(0
+
 
   Thread* THREAD = thread;
   HandleMark hm;
@@ -952,9 +961,9 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr
   JavaValue result(T_INT);
   JavaCallArguments args;
   args.push_oop(receiver);
-  args.push_oop(method->method_holder()->java_mirror());
-  args.push_oop(name());
-  args.push_oop(sig());
+  args.push_oop(Handle(THREAD, method->method_holder()->java_mirror()));
+  args.push_oop(name);
+  args.push_oop(sig);
   args.push_int(is_osr);
   args.push_int(level);
   JavaCalls::call_special(&result, receiver->klass(), vmSymbols::adjustCompilationLevel_name(),
@@ -969,41 +978,6 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr
 #undef CHECK_RETURN
 }
 
-void JVMCIRuntime::exit_on_pending_exception(Handle exception, const char* message) {
-  JavaThread* THREAD = JavaThread::current();
-  CLEAR_PENDING_EXCEPTION;
-
-  static volatile int report_error = 0;
-  if (!report_error && Atomic::cmpxchg(1, &report_error, 0) == 0) {
-    // Only report an error once
-    tty->print_raw_cr(message);
-    java_lang_Throwable::print(exception, tty);
-    tty->cr();
-    java_lang_Throwable::print_stack_trace(exception(), tty);
-  } else {
-    // Allow error reporting thread to print the stack trace.  Windows
-    // doesn't allow uninterruptible wait for JavaThreads
-    const bool interruptible = true;
-    os::sleep(THREAD, 200, interruptible);
-  }
-
-  before_exit(THREAD);
-  vm_exit(-1);
-}
-
-void JVMCIRuntime::fthrow_error(Thread* thread, const char* file, int line, const char* format, ...) {
-  const int max_msg_size = 1024;
-  va_list ap;
-  va_start(ap, format);
-  char msg[max_msg_size];
-  vsnprintf(msg, max_msg_size, format, ap);
-  msg[max_msg_size-1] = '\0';
-  va_end(ap);
-  Handle h_loader = Handle(thread, SystemDictionary::jvmci_loader());
-  Handle h_protection_domain = Handle();
-  Exceptions::_throw_msg(thread, file, line, vmSymbols::jdk_vm_ci_common_JVMCIError(), msg, h_loader, h_protection_domain);
-}
-
 Klass* JVMCIRuntime::resolve_or_null(Symbol* name, TRAPS) {
   assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
   return SystemDictionary::resolve_or_null(name, SystemDictionary::jvmci_loader(), Handle(), CHECK_NULL);
@@ -1012,4 +986,13 @@ Klass* JVMCIRuntime::resolve_or_null(Symbol* name, TRAPS) {
 Klass* JVMCIRuntime::resolve_or_fail(Symbol* name, TRAPS) {
   assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
   return SystemDictionary::resolve_or_fail(name, SystemDictionary::jvmci_loader(), Handle(), true, CHECK_NULL);
+}
+
+void JVMCIRuntime::bootstrap_finished(TRAPS) {
+  HandleMark hm(THREAD);
+  Handle receiver = get_HotSpotJVMCIRuntime(CHECK);
+  JavaValue result(T_VOID);
+  JavaCallArguments args;
+  args.push_oop(receiver);
+  JavaCalls::call_special(&result, receiver->klass(), vmSymbols::bootstrapFinished_method_name(), vmSymbols::void_method_signature(), &args, CHECK);
 }

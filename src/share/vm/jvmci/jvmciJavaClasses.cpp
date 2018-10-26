@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -26,6 +26,92 @@
 #include "jvmci/jvmciJavaClasses.hpp"
 #include "runtime/jniHandles.hpp"
 #include "classfile/symbolTable.hpp"
+
+
+// This macro expands for non-inline functions, in class declarations.
+
+#define START_CLASS(name)                                                                                                                                \
+    void name::check(oop obj, const char* field_name, int offset) {                                                                                          \
+      assert(obj != NULL, err_msg("NULL field access of %s.%s", #name, field_name)); \
+      assert(obj->is_a(SystemDictionary::name##_klass()), err_msg("wrong class, " #name " expected, found %s", obj->klass()->external_name()));              \
+      assert(offset != 0, "must be valid offset");                                                                                                           \
+    }
+
+#define END_CLASS
+
+#define FIELD(klass, name, type, accessor, cast)                                                                                                                                \
+    type klass::name(jobject obj)               { check(JNIHandles::resolve(obj), #name, _##name##_offset); return cast JNIHandles::resolve(obj)->accessor(_##name##_offset); }     \
+    void klass::set_##name(jobject obj, type x) { check(JNIHandles::resolve(obj), #name, _##name##_offset); JNIHandles::resolve(obj)->accessor##_put(_##name##_offset, x); }
+
+#define EMPTY_CAST
+#define CHAR_FIELD(klass, name) FIELD(klass, name, jchar, char_field, EMPTY_CAST)
+#define INT_FIELD(klass, name) FIELD(klass, name, jint, int_field, EMPTY_CAST)
+#define BOOLEAN_FIELD(klass, name) FIELD(klass, name, jboolean, bool_field, EMPTY_CAST)
+#define LONG_FIELD(klass, name) FIELD(klass, name, jlong, long_field, EMPTY_CAST)
+#define FLOAT_FIELD(klass, name) FIELD(klass, name, jfloat, float_field, EMPTY_CAST)
+#define OOP_FIELD(klass, name, signature) FIELD(klass, name, oop, obj_field, EMPTY_CAST)
+#define OBJARRAYOOP_FIELD(klass, name, signature) FIELD(klass, name, objArrayOop, obj_field, (objArrayOop))
+#define TYPEARRAYOOP_FIELD(klass, name, signature) FIELD(klass, name, typeArrayOop, obj_field, (typeArrayOop))
+#define STATIC_OOP_FIELD(klassName, name, signature) STATIC_OOPISH_FIELD(klassName, name, oop, signature)
+#define STATIC_OBJARRAYOOP_FIELD(klassName, name, signature) STATIC_OOPISH_FIELD(klassName, name, objArrayOop, signature)
+#define STATIC_OOPISH_FIELD(klassName, name, type, signature)                                                  \
+   type klassName::name() {                                                                            \
+     assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
+     InstanceKlass* ik = klassName::klass();                                                                  \
+     address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
+     if (UseCompressedOops) {                                                                                 \
+       return (type) oopDesc::load_decode_heap_oop((narrowOop *)addr);                                        \
+     } else {                                                                                                 \
+       return (type) oopDesc::load_decode_heap_oop((oop*)addr);                                               \
+     }                                                                                                        \
+   }                                                                                                          \
+   void klassName::set_##name(type x) {                                                                \
+     assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
+     assert(klassName::klass() != NULL, "Class not yet loaded: " #klassName);                                 \
+     InstanceKlass* ik = klassName::klass();                                                                  \
+     address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
+     if (UseCompressedOops) {                                                                                 \
+       oop_store((narrowOop *)addr, x);                                                                       \
+     } else {                                                                                                 \
+       oop_store((oop*)addr, x);                                                                              \
+     }                                                                                                        \
+   }
+#define STATIC_PRIMITIVE_FIELD(klassName, name, jtypename)                                                    \
+   jtypename klassName::name() {                                                                       \
+     assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
+     InstanceKlass* ik = klassName::klass();                                                                  \
+     address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
+     return *((jtypename *)addr);                                                                             \
+   }                                                                                                          \
+   void klassName::set_##name(jtypename x) {                                                           \
+     assert(klassName::klass() != NULL && klassName::klass()->is_linked(), "Class not yet linked: " #klassName); \
+     InstanceKlass* ik = klassName::klass();                                                                  \
+     address addr = ik->static_field_addr(_##name##_offset - InstanceMirrorKlass::offset_of_static_fields()); \
+     *((jtypename *)addr) = x;                                                                                \
+   }
+
+#define STATIC_INT_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, jint)
+#define STATIC_BOOLEAN_FIELD(klassName, name) STATIC_PRIMITIVE_FIELD(klassName, name, jboolean)
+
+COMPILER_CLASSES_DO(START_CLASS, END_CLASS, CHAR_FIELD, INT_FIELD, BOOLEAN_FIELD, LONG_FIELD, FLOAT_FIELD, OOP_FIELD, TYPEARRAYOOP_FIELD, OBJARRAYOOP_FIELD, STATIC_OOP_FIELD, STATIC_OBJARRAYOOP_FIELD, STATIC_INT_FIELD, STATIC_BOOLEAN_FIELD)
+#undef START_CLASS
+#undef END_CLASS
+#undef FIELD
+#undef CHAR_FIELD
+#undef INT_FIELD
+#undef BOOLEAN_FIELD
+#undef LONG_FIELD
+#undef FLOAT_FIELD
+#undef OOP_FIELD
+#undef TYPEARRAYOOP_FIELD
+#undef OBJARRAYOOP_FIELD
+#undef STATIC_OOPISH_FIELD
+#undef STATIC_OOP_FIELD
+#undef STATIC_OBJARRAYOOP_FIELD
+#undef STATIC_INT_FIELD
+#undef STATIC_BOOLEAN_FIELD
+#undef STATIC_PRIMITIVE_FIELD
+#undef EMPTY_CAST
 
 // This function is similar to javaClasses.cpp, it computes the field offset of a (static or instance) field.
 // It looks up the name and signature symbols without creating new ones, all the symbols of these classes need to be already loaded.
@@ -85,8 +171,4 @@ void JVMCIJavaClasses::compute_offsets(TRAPS) {
 #define FIELD3(klass, name, sig) FIELD2(klass, name)
 
 COMPILER_CLASSES_DO(EMPTY1, EMPTY0, FIELD2, FIELD2, FIELD2, FIELD2, FIELD2, FIELD3, FIELD3, FIELD3, FIELD3, FIELD3, FIELD2, FIELD2)
-
-
-
-
 

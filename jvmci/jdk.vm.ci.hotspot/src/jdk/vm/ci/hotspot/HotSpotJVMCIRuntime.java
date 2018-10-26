@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Predicate;
 
 import jdk.vm.ci.code.Architecture;
@@ -100,9 +101,9 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     public enum Option {
         // @formatter:off
         Compiler(String.class, null, "Selects the system compiler. This must match the getCompilerName() value returned " +
-                        "by a jdk.vm.ci.runtime.JVMCICompilerFactory provider. An empty string or the value \"null\" " +
-                        "selects a compiler that will raise an exception upon receiving a compilation request. This " +
-                        "property can also be defined by the contents of <java.home>/lib/jvmci/compiler-name."),
+                                     "by a jdk.vm.ci.runtime.JVMCICompilerFactory provider. " +
+                                     "An empty string or the value \"null\" selects a compiler " +
+                                     "that will raise an exception upon receiving a compilation request."),
         // Note: The following one is not used (see InitTimer.ENABLED). It is added here
         // so that -XX:+JVMCIPrintProperties shows the option.
         InitTimer(Boolean.class, false, "Specifies if initialization timing is enabled."),
@@ -110,7 +111,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         TraceMethodDataFilter(String.class, null,
                         "Enables tracing of profiling info when read by JVMCI.",
                         "Empty value: trace all methods",
-                        "Non-empty value: trace methods whose fully qualified name contains the value.");
+                        "Non-empty value: trace methods whose fully qualified name contains the value."),
+        UseProfilingInformation(Boolean.class, true, "");
         // @formatter:on
 
         /**
@@ -237,16 +239,16 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         return runtime().getHostJVMCIBackend().getCodeCache().getTarget().wordJavaKind;
     }
 
-    final CompilerToVM compilerToVm;
+    protected final CompilerToVM compilerToVm;
 
     protected final HotSpotVMConfigStore configStore;
-    private final HotSpotVMConfig config;
+    protected final HotSpotVMConfig config;
     private final JVMCIBackend hostBackend;
 
     private final JVMCICompilerFactory compilerFactory;
     private final HotSpotJVMCICompilerFactory hsCompilerFactory;
     private volatile JVMCICompiler compiler;
-    final HotSpotJVMCIMetaAccessContext metaAccessContext;
+    protected final HotSpotJVMCIMetaAccessContext metaAccessContext;
 
     /**
      * Stores the result of {@link HotSpotJVMCICompilerFactory#getCompilationLevelAdjustment} so
@@ -321,7 +323,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         }
 
         if (Option.PrintConfig.getBoolean()) {
-            configStore.printConfig();
+            printConfig(configStore, compilerToVm);
         }
     }
 
@@ -340,11 +342,11 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         return configStore;
     }
 
-    HotSpotVMConfig getConfig() {
+    public HotSpotVMConfig getConfig() {
         return config;
     }
 
-    CompilerToVM getCompilerToVM() {
+    public CompilerToVM getCompilerToVM() {
         return compilerToVm;
     }
 
@@ -387,7 +389,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                             loaders.add(extLoader);
                         } catch (Exception e) {
                             throw new JVMCIError(e);
-                        }
+                                }
                         for (Class<?> compilerLeafClass : compilerLeafClasses) {
                             ClassLoader cl = compilerLeafClass.getClassLoader();
                             while (cl != null) {
@@ -575,6 +577,41 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     void notifyInstall(HotSpotCodeCacheProvider hotSpotCodeCacheProvider, InstalledCode installedCode, CompiledCode compiledCode) {
         for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
             vmEventListener.notifyInstall(hotSpotCodeCacheProvider, installedCode, compiledCode);
+        }
+    }
+
+    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "no localization here please!")
+    private static void printConfigLine(CompilerToVM vm, String format, Object... args) {
+        String line = String.format(format, args);
+        byte[] lineBytes = line.getBytes();
+        vm.writeDebugOutput(lineBytes, 0, lineBytes.length);
+        vm.flushDebugOutput();
+    }
+
+    private static void printConfig(HotSpotVMConfigStore store, CompilerToVM vm) {
+        TreeMap<String, VMField> fields = new TreeMap<>(store.getFields());
+        for (VMField field : fields.values()) {
+            if (!field.isStatic()) {
+                printConfigLine(vm, "[vmconfig:instance field] %s %s {offset=%d[0x%x]}%n", field.type, field.name, field.offset, field.offset);
+            } else {
+                String value = field.value == null ? "null" : field.value instanceof Boolean ? field.value.toString() : String.format("%d[0x%x]", field.value, field.value);
+                printConfigLine(vm, "[vmconfig:static field] %s %s = %s {address=0x%x}%n", field.type, field.name, value, field.address);
+            }
+        }
+        TreeMap<String, VMFlag> flags = new TreeMap<>(store.getFlags());
+        for (VMFlag flag : flags.values()) {
+            printConfigLine(vm, "[vmconfig:flag] %s %s = %s%n", flag.type, flag.name, flag.value);
+        }
+        TreeMap<String, Long> addresses = new TreeMap<>(store.getAddresses());
+        for (Map.Entry<String, Long> e : addresses.entrySet()) {
+            printConfigLine(vm, "[vmconfig:address] %s = %d[0x%x]%n", e.getKey(), e.getValue(), e.getValue());
+        }
+        TreeMap<String, Long> constants = new TreeMap<>(store.getConstants());
+        for (Map.Entry<String, Long> e : constants.entrySet()) {
+            printConfigLine(vm, "[vmconfig:constant] %s = %d[0x%x]%n", e.getKey(), e.getValue(), e.getValue());
+        }
+        for (VMIntrinsicMethod e : store.getIntrinsics()) {
+            printConfigLine(vm, "[vmconfig:intrinsic] %d = %s.%s %s%n", e.id, e.declaringClass, e.name, e.descriptor);
         }
     }
 

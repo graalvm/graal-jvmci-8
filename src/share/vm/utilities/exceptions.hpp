@@ -213,6 +213,7 @@ class Exceptions {
 #define CHECK_NH                                 CHECK_(Handle())
 #define CHECK_NULL                               CHECK_(NULL)
 #define CHECK_false                              CHECK_(false)
+#define CHECK_JNI_ERR                            CHECK_(JNI_ERR)
 
 #define CHECK_AND_CLEAR                         THREAD); if (HAS_PENDING_EXCEPTION) { CLEAR_PENDING_EXCEPTION; return;        } (void)(0
 #define CHECK_AND_CLEAR_(result)                THREAD); if (HAS_PENDING_EXCEPTION) { CLEAR_PENDING_EXCEPTION; return result; } (void)(0

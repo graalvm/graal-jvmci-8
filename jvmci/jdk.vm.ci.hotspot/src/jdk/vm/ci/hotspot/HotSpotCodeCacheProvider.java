@@ -42,13 +42,13 @@ import jdk.vm.ci.meta.SpeculationLog;
 public class HotSpotCodeCacheProvider implements CodeCacheProvider {
 
     protected final HotSpotJVMCIRuntime runtime;
-    private final HotSpotVMConfig config;
+    protected final HotSpotVMConfig config;
     protected final TargetDescription target;
     protected final RegisterConfig regConfig;
 
-    public HotSpotCodeCacheProvider(HotSpotJVMCIRuntime runtime, TargetDescription target, RegisterConfig regConfig) {
+    public HotSpotCodeCacheProvider(HotSpotJVMCIRuntime runtime, HotSpotVMConfig config, TargetDescription target, RegisterConfig regConfig) {
         this.runtime = runtime;
-        this.config = runtime.getConfig();
+        this.config = config;
         this.target = target;
         this.regConfig = regConfig;
     }
@@ -91,7 +91,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
 
     @Override
     public int getMinimumOutgoingSize() {
-        return config.runtimeCallStackSize;
+        return runtime.getConfig().runtimeCallStackSize;
     }
 
     private InstalledCode logOrDump(InstalledCode installedCode, CompiledCode compiledCode) {

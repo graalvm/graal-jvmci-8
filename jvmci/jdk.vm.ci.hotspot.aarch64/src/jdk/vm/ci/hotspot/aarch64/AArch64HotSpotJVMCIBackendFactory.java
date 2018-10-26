@@ -43,18 +43,18 @@ import jdk.vm.ci.runtime.JVMCIBackend;
 
 public class AArch64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFactory {
 
-    private static EnumSet<AArch64.CPUFeature> computeFeatures(@SuppressWarnings("unused") AArch64HotSpotVMConfig config) {
+    protected EnumSet<AArch64.CPUFeature> computeFeatures(@SuppressWarnings("unused") AArch64HotSpotVMConfig config) {
         // Configure the feature set using the HotSpot flag settings.
         EnumSet<AArch64.CPUFeature> features = EnumSet.noneOf(AArch64.CPUFeature.class);
         return features;
     }
 
-    private static EnumSet<AArch64.Flag> computeFlags(@SuppressWarnings("unused") AArch64HotSpotVMConfig config) {
+    protected EnumSet<AArch64.Flag> computeFlags(@SuppressWarnings("unused") AArch64HotSpotVMConfig config) {
         EnumSet<AArch64.Flag> flags = EnumSet.noneOf(AArch64.Flag.class);
         return flags;
     }
 
-    private static TargetDescription createTarget(AArch64HotSpotVMConfig config) {
+    protected TargetDescription createTarget(AArch64HotSpotVMConfig config) {
         final int stackFrameAlignment = 16;
         final int implicitNullCheckLimit = 4096;
         final boolean inlineObjects = true;
@@ -66,12 +66,12 @@ public class AArch64HotSpotJVMCIBackendFactory implements HotSpotJVMCIBackendFac
         return new HotSpotConstantReflectionProvider(runtime);
     }
 
-    private static RegisterConfig createRegisterConfig(AArch64HotSpotVMConfig config, TargetDescription target) {
+    protected RegisterConfig createRegisterConfig(AArch64HotSpotVMConfig config, TargetDescription target) {
         return new AArch64HotSpotRegisterConfig(target, config.useCompressedOops);
     }
 
     protected HotSpotCodeCacheProvider createCodeCache(HotSpotJVMCIRuntime runtime, TargetDescription target, RegisterConfig regConfig) {
-        return new HotSpotCodeCacheProvider(runtime, target, regConfig);
+        return new HotSpotCodeCacheProvider(runtime, runtime.getConfig(), target, regConfig);
     }
 
     protected HotSpotMetaAccessProvider createMetaAccess(HotSpotJVMCIRuntime runtime) {

@@ -42,7 +42,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
 
     protected final HotSpotJVMCIRuntime runtime;
     protected final HotSpotMethodHandleAccessProvider methodHandleAccess;
-    private final HotSpotMemoryAccessProviderImpl memoryAccess;
+    protected final HotSpotMemoryAccessProviderImpl memoryAccess;
 
     public HotSpotConstantReflectionProvider(HotSpotJVMCIRuntime runtime) {
         this.runtime = runtime;
@@ -99,25 +99,7 @@ public class HotSpotConstantReflectionProvider implements ConstantReflectionProv
             Object element = ((Object[]) a)[index];
             return HotSpotObjectConstantImpl.forObject(element);
         } else {
-            if (a instanceof int[]) {
-                return JavaConstant.forInt(((int[]) a)[index]);
-            } else if (a instanceof char[]) {
-                return JavaConstant.forChar(((char[]) a)[index]);
-            } else if (a instanceof byte[]) {
-                return JavaConstant.forByte(((byte[]) a)[index]);
-            } else if (a instanceof long[]) {
-                return JavaConstant.forLong(((long[]) a)[index]);
-            } else if (a instanceof short[]) {
-                return JavaConstant.forShort(((short[]) a)[index]);
-            } else if (a instanceof float[]) {
-                return JavaConstant.forFloat(((float[]) a)[index]);
-            } else if (a instanceof double[]) {
-                return JavaConstant.forDouble(((double[]) a)[index]);
-            } else if (a instanceof boolean[]) {
-                return JavaConstant.forBoolean(((boolean[]) a)[index]);
-            } else {
-                throw new JVMCIError("Should not reach here");
-            }
+            return JavaConstant.forBoxedPrimitive(Array.get(a, index));
         }
     }
 

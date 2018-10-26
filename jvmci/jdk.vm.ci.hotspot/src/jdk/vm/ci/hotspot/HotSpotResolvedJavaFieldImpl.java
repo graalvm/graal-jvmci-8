@@ -52,11 +52,11 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
         this.holder = holder;
         this.type = type;
         this.index = (short) index;
-        this.offset = (int) offset;
-        this.modifiers = modifiers;
         assert this.index == index;
         assert offset != -1;
         assert offset == (int) offset : "offset larger than int";
+        this.offset = (int) offset;
+        this.modifiers = modifiers;
     }
 
     @Override

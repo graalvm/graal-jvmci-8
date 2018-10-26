@@ -124,7 +124,7 @@ class HotSpotJVMCIMetaAccessContext {
      * @param metaspaceObject
      */
 
-    synchronized void add(MetaspaceWrapperObject metaspaceObject) {
+    public synchronized void add(MetaspaceWrapperObject metaspaceObject) {
         clean();
         list.add(new WeakReference<>(metaspaceObject, queue));
         if (list.getHead() != metadataRoots) {
@@ -163,6 +163,11 @@ class HotSpotJVMCIMetaAccessContext {
             WeakReference<ResolvedJavaType> type = resolvedJavaType.get(javaClass);
             javaType = type.get();
             if (javaType == null) {
+                /*
+                 * If the referent has become null, clear out the current value and let computeValue
+                 * above create a new value. Reload the value in a loop because in theory the
+                 * WeakReference referent can be reclaimed at any point.
+                 */
                 resolvedJavaType.remove(javaClass);
             }
         }

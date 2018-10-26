@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -28,77 +28,108 @@
 #include "runtime/javaCalls.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 
+// Helper class to ensure that references to Klass* are kept alive for G1
+class JVMCIKlassHandle : public StackObj {
+ private:
+  Klass*     _klass;
+  Handle     _holder;
+  Thread*    _thread;
+
+  Klass*        klass() const                     { return _klass; }
+  Klass*        non_null_klass() const            { assert(_klass != NULL, "resolving NULL _klass"); return _klass; }
+
+ public:
+  /* Constructors */
+  JVMCIKlassHandle (Thread* thread) : _klass(NULL), _thread(thread) {}
+  JVMCIKlassHandle (Thread* thread, Klass* klass);
+
+  JVMCIKlassHandle (const JVMCIKlassHandle &h): _klass(h._klass), _holder(h._holder), _thread(h._thread) {}
+  JVMCIKlassHandle& operator=(const JVMCIKlassHandle &s);
+  JVMCIKlassHandle& operator=(Klass* klass);
+
+  /* Operators for ease of use */
+  Klass*        operator () () const            { return klass(); }
+  Klass*        operator -> () const            { return non_null_klass(); }
+
+  bool    operator == (Klass* o) const          { return klass() == o; }
+  bool    operator == (const JVMCIKlassHandle& h) const  { return klass() == h.klass(); }
+
+  /* Null checks */
+  bool    is_null() const                      { return _klass == NULL; }
+  bool    not_null() const                     { return _klass != NULL; }
+};
+
 class CompilerToVM {
  public:
-   class Data {
-     friend class VMStructs;
+  class Data {
+    friend class VMStructs;
 
-    private:
-     static int Klass_vtable_start_offset;
-     static int Klass_vtable_length_offset;
+   private:
+    static int Klass_vtable_start_offset;
+    static int Klass_vtable_length_offset;
 
-     static int Method_extra_stack_entries;
+    static int Method_extra_stack_entries;
 
-     static address SharedRuntime_ic_miss_stub;
-     static address SharedRuntime_handle_wrong_method_stub;
-     static address SharedRuntime_deopt_blob_unpack;
-     static address SharedRuntime_deopt_blob_uncommon_trap;
+    static address SharedRuntime_ic_miss_stub;
+    static address SharedRuntime_handle_wrong_method_stub;
+    static address SharedRuntime_deopt_blob_unpack;
+    static address SharedRuntime_deopt_blob_uncommon_trap;
 
-     static size_t ThreadLocalAllocBuffer_alignment_reserve;
+    static size_t ThreadLocalAllocBuffer_alignment_reserve;
 
-     static CollectedHeap* Universe_collectedHeap;
-     static int Universe_base_vtable_size;
-     static address Universe_narrow_oop_base;
-     static int Universe_narrow_oop_shift;
-     static address Universe_narrow_klass_base;
-     static int Universe_narrow_klass_shift;
-     static uintptr_t Universe_verify_oop_mask;
-     static uintptr_t Universe_verify_oop_bits;
-     static void* Universe_non_oop_bits;
+    static CollectedHeap* Universe_collectedHeap;
+    static int Universe_base_vtable_size;
+    static address Universe_narrow_oop_base;
+    static int Universe_narrow_oop_shift;
+    static address Universe_narrow_klass_base;
+    static int Universe_narrow_klass_shift;
+    static uintptr_t Universe_verify_oop_mask;
+    static uintptr_t Universe_verify_oop_bits;
+    static void* Universe_non_oop_bits;
 
-     static bool _supports_inline_contig_alloc;
-     static HeapWord** _heap_end_addr;
+    static bool _supports_inline_contig_alloc;
+    static HeapWord** _heap_end_addr;
      static HeapWord** _heap_top_addr;
-     static int _max_oop_map_stack_offset;
+    static int _max_oop_map_stack_offset;
 
-     static jbyte* cardtable_start_address;
-     static int cardtable_shift;
+    static jbyte* cardtable_start_address;
+    static int cardtable_shift;
      static int g1_young_card;
      static int dirty_card;
 
-     static int vm_page_size;
+    static int vm_page_size;
 
-     static int sizeof_vtableEntry;
-     static int sizeof_ExceptionTableElement;
-     static int sizeof_LocalVariableTableElement;
-     static int sizeof_ConstantPool;
-     static int sizeof_SymbolPointer;
-     static int sizeof_narrowKlass;
-     static int sizeof_arrayOopDesc;
-     static int sizeof_BasicLock;
+    static int sizeof_vtableEntry;
+    static int sizeof_ExceptionTableElement;
+    static int sizeof_LocalVariableTableElement;
+    static int sizeof_ConstantPool;
+    static int sizeof_SymbolPointer;
+    static int sizeof_narrowKlass;
+    static int sizeof_arrayOopDesc;
+    static int sizeof_BasicLock;
 
      static address CodeCache_low_bound;
      static address CodeCache_high_bound;
 
-     static address dsin;
-     static address dcos;
-     static address dtan;
-     static address dexp;
-     static address dlog;
-     static address dlog10;
-     static address dpow;
+    static address dsin;
+    static address dcos;
+    static address dtan;
+    static address dexp;
+    static address dlog;
+    static address dlog10;
+    static address dpow;
 
-     static address symbol_init;
-     static address symbol_clinit;
+    static address symbol_init;
+    static address symbol_clinit;
 
-    public:
-     static void initialize(TRAPS);
+   public:
+    static void initialize(TRAPS);
 
     static int max_oop_map_stack_offset() {
       assert(_max_oop_map_stack_offset > 0, "must be initialized");
       return Data::_max_oop_map_stack_offset;
     }
-   };
+  };
 
   static bool cstring_equals(const char* const& s0, const char* const& s1) {
     return strcmp(s0, s1) == 0;
@@ -117,7 +148,7 @@ class CompilerToVM {
   static JNINativeMethod methods[];
 
   static objArrayHandle initialize_intrinsics(TRAPS);
-
+ public:
   static int methods_count();
 
   static inline Method* asMethod(jobject jvmci_method) {
@@ -156,13 +187,17 @@ class CompilerToVM {
     return java_lang_Class::as_Klass(HotSpotResolvedObjectTypeImpl::javaClass(jvmci_type));
   }
 
+  static inline Klass* asKlass(jlong metaspaceKlass) {
+    return (Klass*) (address) metaspaceKlass;
+  }
+
   static inline MethodData* asMethodData(jlong metaspaceMethodData) {
     return (MethodData*) (address) metaspaceMethodData;
   }
 
   static oop get_jvmci_method(const methodHandle& method, TRAPS);
 
-  static oop get_jvmci_type(KlassHandle klass, TRAPS);
+  static oop get_jvmci_type(JVMCIKlassHandle& klass, TRAPS);
 };
 
 class JavaArgumentUnboxer : public SignatureIterator {
@@ -171,12 +206,7 @@ class JavaArgumentUnboxer : public SignatureIterator {
   arrayOop _args;
   int _index;
 
-  oop next_arg(BasicType expectedType) {
-    assert(_index < _args->length(), "out of bounds");
-    oop arg=((objArrayOop) (_args))->obj_at(_index++);
-    assert(expectedType == T_OBJECT || java_lang_boxing_object::is_instance(arg, expectedType), "arg type mismatch");
-    return arg;
-  }
+  Handle next_arg(BasicType expectedType);
 
  public:
   JavaArgumentUnboxer(Symbol* signature, JavaCallArguments*  jca, arrayOop args, bool is_static) : SignatureIterator(signature) {
@@ -205,6 +235,16 @@ class JavaArgumentUnboxer : public SignatureIterator {
   inline void do_object(int begin, int end) { if (!is_return_type()) _jca->push_oop(next_arg(T_OBJECT)); }
   inline void do_array(int begin, int end)  { if (!is_return_type()) _jca->push_oop(next_arg(T_OBJECT)); }
   inline void do_void()                     { }
+};
+
+class JNIHandleMark : public StackObj {
+  public:
+    JNIHandleMark() { push_jni_handle_block(); }
+    ~JNIHandleMark() { pop_jni_handle_block(); }
+
+  private:
+    static void push_jni_handle_block();
+    static void pop_jni_handle_block();
 };
 
 #endif // SHARE_VM_JVMCI_JVMCI_COMPILER_TO_VM_HPP

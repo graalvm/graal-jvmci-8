@@ -86,6 +86,10 @@ public class AArch64 extends Architecture {
 
     public static final Register lr = r30;
 
+    // Used by runtime code: cannot be compiler-allocated.
+    public static final Register rscratch1 = r8;
+    public static final Register rscratch2 = r9;
+
     // @formatter:off
     public static final RegisterArray cpuRegisters = new RegisterArray(
         r0,  r1,  r2,  r3,  r4,  r5,  r6,  r7,
@@ -169,6 +173,8 @@ public class AArch64 extends Architecture {
         SHA1,
         SHA2,
         CRC32,
+        LSE,
+        STXR_PREFETCH,
         A53MAC,
         DMB_ATOMICS
     }
@@ -181,7 +187,11 @@ public class AArch64 extends Architecture {
     public enum Flag {
         UseBarriersForVolatile,
         UseCRC32,
-        UseNeon
+        UseNeon,
+        UseSIMDForMemoryOps,
+        AvoidUnalignedAccesses,
+        UseLSE,
+        UseBlockZeroing
     }
 
     private final EnumSet<Flag> flags;

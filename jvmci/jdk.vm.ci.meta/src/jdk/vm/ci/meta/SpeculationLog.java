@@ -84,7 +84,8 @@ public interface SpeculationLog {
     void collectFailedSpeculations();
 
     /**
-     * Determines if the compiler is allowed to {@link #speculate} with the given reason.
+     * If this method returns true, the compiler is allowed to {@link #speculate} with the given
+     * reason.
      */
     boolean maySpeculate(SpeculationReason reason);
 

@@ -40,12 +40,8 @@ public class MetaUtil {
      * @return the simple name
      */
     public static String getSimpleName(Class<?> clazz, boolean withEnclosingClass) {
-        String simpleName = null;
-        try {
-            simpleName = clazz.getSimpleName();
-        } catch (InternalError e) {
-        }
-        if (simpleName != null && simpleName.length() != 0) {
+        final String simpleName = clazz.getSimpleName();
+        if (simpleName.length() != 0) {
             if (withEnclosingClass) {
                 String prefix = "";
                 Class<?> enclosingClass = clazz;
@@ -58,7 +54,14 @@ public class MetaUtil {
         }
         // Must be an anonymous or local class
         final String name = clazz.getName();
-        int index = name.lastIndexOf('.');
+        int index = name.indexOf('$');
+        if (index == -1) {
+            return name;
+        }
+        index = name.lastIndexOf('.', index);
+        if (index == -1) {
+            return name;
+        }
         return name.substring(index + 1);
     }
 

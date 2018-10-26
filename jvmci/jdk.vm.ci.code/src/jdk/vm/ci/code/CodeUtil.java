@@ -196,13 +196,7 @@ public class CodeUtil {
      */
     public static String tabulateValues(BytecodeFrame frame) {
         int cols = Math.max(frame.numLocals, Math.max(frame.numStack, frame.numLocks));
-        if (frame.values == null || frame.values.length == 0) {
-            assert cols == 0;
-            return null;
-        }
-        if (cols == 0) {
-            return null;
-        }
+        assert cols > 0;
         ArrayList<Object> cells = new ArrayList<>();
         cells.add("");
         for (int i = 0; i < cols; i++) {
@@ -310,9 +304,9 @@ public class CodeUtil {
         assert sb.charAt(sb.length() - 1) == ']';
         sb.deleteCharAt(sb.length() - 1);
         sb.append(", duringCall: ").append(frame.duringCall).append(", rethrow: ").append(frame.rethrowException).append(']');
-        String table = tabulateValues(frame);
-        if (table != null) {
+        if (frame.values != null && frame.values.length > 0) {
             sb.append(NEW_LINE);
+            String table = tabulateValues(frame);
             String[] rows = table.split(NEW_LINE);
             for (int i = 0; i < rows.length; i++) {
                 String row = rows[i];

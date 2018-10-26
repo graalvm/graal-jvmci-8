@@ -26,7 +26,7 @@ import jdk.vm.ci.hotspot.EmptyEventProvider.EmptyCompilationEvent;
 import jdk.vm.ci.hotspot.EmptyEventProvider.EmptyCompilerFailureEvent;
 
 /**
- * Service for logging compiler related events.
+ * Service-provider class for logging compiler related events.
  */
 public interface EventProvider {
 
@@ -91,7 +91,7 @@ public interface EventProvider {
      *
      * @return a compilation event
      */
-    CompilationEvent newCompilationEvent();
+    public abstract CompilationEvent newCompilationEvent();
 
     /**
      * A compilation event.
@@ -117,7 +117,7 @@ public interface EventProvider {
      *
      * @return a compiler failure event
      */
-    CompilerFailureEvent newCompilerFailureEvent();
+    public abstract CompilerFailureEvent newCompilerFailureEvent();
 
     /**
      * A compiler failure event.
