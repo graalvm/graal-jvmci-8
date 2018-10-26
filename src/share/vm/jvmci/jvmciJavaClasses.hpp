@@ -245,19 +245,19 @@ class JVMCIJavaClasses : AllStatic {
   end_class                                                                                                                                                    \
   start_class(JavaKind)                                                                                                                                        \
     char_field(JavaKind, typeChar)                                                                                                                             \
-    static_oop_field(JavaKind, Boolean, "Ljdk/vm/ci/meta/JavaKind;");                                                                                          \
-    static_oop_field(JavaKind, Byte, "Ljdk/vm/ci/meta/JavaKind;");                                                                                             \
-    static_oop_field(JavaKind, Char, "Ljdk/vm/ci/meta/JavaKind;");                                                                                             \
-    static_oop_field(JavaKind, Short, "Ljdk/vm/ci/meta/JavaKind;");                                                                                            \
-    static_oop_field(JavaKind, Int, "Ljdk/vm/ci/meta/JavaKind;");                                                                                              \
-    static_oop_field(JavaKind, Long, "Ljdk/vm/ci/meta/JavaKind;");                                                                                             \
+    static_oop_field(JavaKind, Boolean, "Ljdk/vm/ci/meta/JavaKind;")                                                                                           \
+    static_oop_field(JavaKind, Byte, "Ljdk/vm/ci/meta/JavaKind;")                                                                                              \
+    static_oop_field(JavaKind, Char, "Ljdk/vm/ci/meta/JavaKind;")                                                                                              \
+    static_oop_field(JavaKind, Short, "Ljdk/vm/ci/meta/JavaKind;")                                                                                             \
+    static_oop_field(JavaKind, Int, "Ljdk/vm/ci/meta/JavaKind;")                                                                                               \
+    static_oop_field(JavaKind, Long, "Ljdk/vm/ci/meta/JavaKind;")                                                                                              \
   end_class                                                                                                                                                    \
   start_class(ValueKind)                                                                                                                                       \
     oop_field(ValueKind, platformKind, "Ljdk/vm/ci/meta/PlatformKind;")                                                                                        \
   end_class                                                                                                                                                    \
   start_class(Value)                                                                                                                                           \
     oop_field(Value, valueKind, "Ljdk/vm/ci/meta/ValueKind;")                                                                                                  \
-    static_oop_field(Value, ILLEGAL, "Ljdk/vm/ci/meta/AllocatableValue;");                                                                                     \
+    static_oop_field(Value, ILLEGAL, "Ljdk/vm/ci/meta/AllocatableValue;")                                                                                      \
   end_class                                                                                                                                                    \
   start_class(RegisterValue)                                                                                                                                   \
     oop_field(RegisterValue, reg, "Ljdk/vm/ci/code/Register;")                                                                                                 \
