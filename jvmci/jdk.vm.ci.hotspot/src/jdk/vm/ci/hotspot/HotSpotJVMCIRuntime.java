@@ -389,7 +389,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                             loaders.add(extLoader);
                         } catch (Exception e) {
                             throw new JVMCIError(e);
-                                }
+                        }
                         for (Class<?> compilerLeafClass : compilerLeafClasses) {
                             ClassLoader cl = compilerLeafClass.getClassLoader();
                             while (cl != null) {

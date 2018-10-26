@@ -294,7 +294,7 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
         }
         if (!isValidObjectFieldDisplacement(base, displacement)) {
             return null;
-                 }
+        }
         return HotSpotObjectConstantImpl.forObject(readRawObject(base, displacement, false));
     }
 

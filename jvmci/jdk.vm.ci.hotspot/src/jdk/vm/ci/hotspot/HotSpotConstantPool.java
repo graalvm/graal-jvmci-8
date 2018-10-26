@@ -747,7 +747,7 @@ public final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapper
     }
 
     // Lazily initialized.
-    private static String[] signaturePolymorphicHolders;
+    private static volatile String[] signaturePolymorphicHolders;
 
     /**
      * Determines if {@code type} contains signature polymorphic methods.

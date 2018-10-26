@@ -652,7 +652,7 @@ final class CompilerToVM {
     native int methodDataProfileDataSize(long metaspaceMethodData, int position);
 
     /**
-     * Gets the fingerprint for a given Klass*
+     * Gets the fingerprint for a given Klass*.
      *
      * @param metaspaceKlass
      * @return the value of the fingerprint (zero for arrays and synthetic classes).
