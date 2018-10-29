@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$">
+    <contentRoot DIR="$PROJECT_DIR$/.." />
+  </component>
+  <component name="CidrRootsConfiguration">
+    <sourceRoots>
+      <file path="$PROJECT_DIR$/../src/cpu/ppc/vm" />
+      <file path="$PROJECT_DIR$/../src/cpu/sparc/vm" />
+      <file path="$PROJECT_DIR$/../src/cpu/x86/vm" />
+      <file path="$PROJECT_DIR$/../src/cpu/zero/vm" />
+      <file path="$PROJECT_DIR$/../src/os/aix/vm" />
+      <file path="$PROJECT_DIR$/../src/os/bsd/vm" />
+      <file path="$PROJECT_DIR$/../src/os/linux/vm" />
+      <file path="$PROJECT_DIR$/../src/os/posix/vm" />
+      <file path="$PROJECT_DIR$/../src/os/solaris/vm" />
+      <file path="$PROJECT_DIR$/../src/os/windows/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/aix_ppc/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/bsd_x86/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/bsd_zero/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/linux_ppc/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/linux_sparc/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/linux_x86/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/linux_zero/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/solaris_sparc/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/solaris_x86/vm" />
+      <file path="$PROJECT_DIR$/../src/os_cpu/windows_x86/vm" />
+      <file path="$PROJECT_DIR$/../src/share/vm" />
+      <file path="$PROJECT_DIR$/../src/share/vm/adlc" />
+    </sourceRoots>
+  </component>
+  <component name="JavaScriptSettings">
+    <option name="languageLevel" value="ES6" />
+  </component>
+</project>

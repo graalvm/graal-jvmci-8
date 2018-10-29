@@ -1,0 +1,6 @@
+/cmake-build-*/
+!/.idea/
+!/.idea/clion.iml
+/.idea/workspace.xml
+/.idea/codeStyles/
+
