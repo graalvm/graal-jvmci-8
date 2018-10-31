@@ -262,9 +262,9 @@ final class CompilerToVM {
 
     /**
      * If {@code cpi} denotes an entry representing a resolved dynamic adapter (see
-     * {@code resolveInvokeDynamicInPool} and {@code resolveInvokeHandleInPool}), return the opcode
-     * of the instruction for which the resolution was performed ({@code invokedynamic} or
-     * {@code invokevirtual}}, or {@code -1} otherwise.
+     * {@link #resolveInvokeDynamicInPool} and {@link #resolveInvokeHandleInPool}), return the
+     * opcode of the instruction for which the resolution was performed ({@code invokedynamic} or
+     * {@code invokevirtual}), or {@code -1} otherwise.
      */
     native int isResolvedInvokeHandleInPool(HotSpotConstantPool constantPool, int cpi);
 

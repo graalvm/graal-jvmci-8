@@ -638,7 +638,7 @@ public final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapper
         }
     }
 
-    /*
+    /**
      * Converts a raw index from the bytecodes to a constant pool index (not a cache index).
      *
      * @param rawIndex index from the bytecode
