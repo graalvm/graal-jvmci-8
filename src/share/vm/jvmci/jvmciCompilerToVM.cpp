@@ -51,8 +51,6 @@
 #include "runtime/vmStructs.hpp"
 #include "utilities/resourceHash.hpp"
 
-#define INCLUDE_AOT 0
-
 JVMCIKlassHandle::JVMCIKlassHandle(Thread* thread, Klass* klass) {
   _thread = thread;
   _klass = klass;

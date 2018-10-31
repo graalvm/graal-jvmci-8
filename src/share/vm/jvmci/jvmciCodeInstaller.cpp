@@ -52,7 +52,6 @@
 # include "vmreg_ppc.inline.hpp"
 #endif
 
-#define INCLUDE_AOT 0
 #define align_up(x, y) round_to(x, y)
 
 // frequently used constants

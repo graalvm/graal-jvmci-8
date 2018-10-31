@@ -168,6 +168,11 @@
 #define INCLUDE_JVMCI 1
 #endif
 
+// To ease cross porting changes between jvmci-8 and OpenJDK, some jaotc-only related code has been
+// included in jvmci-8. This macro is used to demark (and disable) such code.
+#undef INCLUDE_AOT
+#define INCLUDE_AOT 0
+
 #if INCLUDE_JVMCI
 #define JVMCI_ONLY(code) code
 #define NOT_JVMCI(code)

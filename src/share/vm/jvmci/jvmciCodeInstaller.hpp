@@ -26,7 +26,6 @@
 
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciEnv.hpp"
-// #include "code/nativeInst.hpp"
 
 #if INCLUDE_AOT
 class RelocBuffer : public StackObj {
