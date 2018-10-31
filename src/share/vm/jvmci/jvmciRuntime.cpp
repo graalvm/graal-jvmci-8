@@ -750,17 +750,6 @@ void JVMCIRuntime::initialize_JVMCI(TRAPS) {
   assert(_HotSpotJVMCIRuntime_initialized == true, "what?");
 }
 
-bool JVMCIRuntime::can_initialize_JVMCI() {
-  // Initializing JVMCI requires the module system to be initialized past phase 3.
-  // The JVMCI API itself isn't available until phase 2 and ServiceLoader (which
-  // JVMCI initialization requires) isn't usable until after phase 3. Testing
-  // whether the system loader is initialized satisfies all these invariants.
-  if (SystemDictionary::java_system_loader() == NULL) {
-    return false;
-  }
-  return true;
-}
-
 void JVMCIRuntime::metadata_do(void f(Metadata*)) {
   // For simplicity, the existence of HotSpotJVMCIMetaAccessContext in
   // the SystemDictionary well known classes should ensure the other
