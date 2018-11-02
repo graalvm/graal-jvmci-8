@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -128,37 +128,23 @@ public final class HotSpotVMConfigStore {
         // @formatter:on
 
         try (InitTimer t = timer("HotSpotVMConfigStore<init> fill maps")) {
-            for (int i = 0; i < vmFieldsInfo.length; i++) {
-                VMField vmField = vmFieldsInfo[i];
-                if (vmField.name == null) {
-                    throw new NullPointerException("missing name for vm field " + i + ": " + vmField);
-                }
+            for (VMField vmField : vmFieldsInfo) {
                 vmFields.put(vmField.name, vmField);
             }
 
             for (int i = 0; i < vmConstantsInfo.length / 2; i++) {
                 String name = (String) vmConstantsInfo[i * 2];
-                if (name == null) {
-                    throw new NullPointerException("missing name for vm constant " + i);
-                }
                 Long value = (Long) vmConstantsInfo[i * 2 + 1];
                 vmConstants.put(name, value);
             }
 
             for (int i = 0; i < vmAddressesInfo.length / 2; i++) {
                 String name = (String) vmAddressesInfo[i * 2];
-                if (name == null) {
-                    throw new NullPointerException("missing name for vm address " + i);
-                }
                 Long value = (Long) vmAddressesInfo[i * 2 + 1];
                 vmAddresses.put(name, value);
             }
 
-            for (int i = 0; i < vmFlagsInfo.length; i++) {
-                VMFlag vmFlag = vmFlagsInfo[i];
-                if (vmFlag.name == null) {
-                    throw new NullPointerException("missing name for vm flag " + i);
-                }
+            for (VMFlag vmFlag : vmFlagsInfo) {
                 vmFlags.put(vmFlag.name, vmFlag);
             }
         }

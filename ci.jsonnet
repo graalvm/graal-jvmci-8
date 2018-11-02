@@ -121,7 +121,7 @@
         },
         name: "gate",
         timelimit: "1:00:00",
-        diskspace_required: "17G",
+        diskspace_required: "10G",
         logs: ["*.log"],
         targets: ["gate"],
         run: [

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,6 +27,87 @@
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciEnv.hpp"
 
+#if INCLUDE_AOT
+class RelocBuffer : public StackObj {
+  enum { stack_size = 1024 };
+public:
+  RelocBuffer() : _size(0), _buffer(0) {}
+  ~RelocBuffer();
+  void ensure_size(size_t bytes);
+  void set_size(size_t bytes);
+  address begin() const;
+  size_t size() const { return _size; }
+private:
+  size_t _size;
+  char _static_buffer[stack_size];
+  char *_buffer;
+};
+
+class AOTOopRecorder : public OopRecorder {
+public:
+  AOTOopRecorder(Arena* arena = NULL, bool deduplicate = false);
+
+  virtual int find_index(Metadata* h);
+  virtual int find_index(jobject h);
+  int nr_meta_refs() const;
+  jobject meta_element(int pos) const;
+
+private:
+  void record_meta_ref(jobject ref, int index);
+
+  GrowableArray<jobject>* _meta_refs;
+};
+
+class CodeMetadata {
+public:
+  CodeMetadata() {}
+
+  CodeBlob* get_code_blob() const { return _cb; }
+
+  PcDesc* get_pc_desc() const { return _pc_desc; }
+  int get_nr_pc_desc() const { return _nr_pc_desc; }
+
+  u_char* get_scopes_desc() const { return _scopes_desc; }
+  int get_scopes_size() const { return _nr_scopes_desc; }
+
+  RelocBuffer* get_reloc_buffer() { return &_reloc_buffer; }
+
+  AOTOopRecorder* get_oop_recorder() { return _oop_recorder; }
+
+  ExceptionHandlerTable* get_exception_table() { return _exception_table; }
+
+  void set_pc_desc(PcDesc* desc, int count) {
+    _pc_desc = desc;
+    _nr_pc_desc = count;
+  }
+
+  void set_scopes(u_char* scopes, int size) {
+    _scopes_desc = scopes;
+    _nr_scopes_desc = size;
+  }
+
+  void set_oop_recorder(AOTOopRecorder* recorder) {
+    _oop_recorder = recorder;
+  }
+
+  void set_exception_table(ExceptionHandlerTable* table) {
+    _exception_table = table;
+  }
+
+private:
+  CodeBlob* _cb;
+  PcDesc* _pc_desc;
+  int _nr_pc_desc;
+
+  u_char* _scopes_desc;
+  int _nr_scopes_desc;
+
+  RelocBuffer _reloc_buffer;
+  AOTOopRecorder* _oop_recorder;
+  ExceptionHandlerTable* _exception_table;
+};
+#endif // INCLUDE_AOT
+
 /*
  * This class handles the conversion from a InstalledCode to a CodeBlob or an nmethod.
  */
@@ -34,23 +115,30 @@ class CodeInstaller : public StackObj {
   friend class VMStructs;
 private:
   enum MarkId {
-    VERIFIED_ENTRY             = 1,
-    UNVERIFIED_ENTRY           = 2,
-    OSR_ENTRY                  = 3,
-    EXCEPTION_HANDLER_ENTRY    = 4,
-    DEOPT_HANDLER_ENTRY        = 5,
-    INVOKEINTERFACE            = 6,
-    INVOKEVIRTUAL              = 7,
-    INVOKESTATIC               = 8,
-    INVOKESPECIAL              = 9,
-    INLINE_INVOKE              = 10,
-    POLL_NEAR                  = 11,
-    POLL_RETURN_NEAR           = 12,
-    POLL_FAR                   = 13,
-    POLL_RETURN_FAR            = 14,
-    CARD_TABLE_ADDRESS         = 15,
-    CARD_TABLE_SHIFT           = 16,
-    INVOKE_INVALID             = -1
+    VERIFIED_ENTRY                         = 1,
+    UNVERIFIED_ENTRY                       = 2,
+    OSR_ENTRY                              = 3,
+    EXCEPTION_HANDLER_ENTRY                = 4,
+    DEOPT_HANDLER_ENTRY                    = 5,
+    INVOKEINTERFACE                        = 6,
+    INVOKEVIRTUAL                          = 7,
+    INVOKESTATIC                           = 8,
+    INVOKESPECIAL                          = 9,
+    INLINE_INVOKE                          = 10,
+    POLL_NEAR                              = 11,
+    POLL_RETURN_NEAR                       = 12,
+    POLL_FAR                               = 13,
+    POLL_RETURN_FAR                        = 14,
+    CARD_TABLE_ADDRESS                     = 15,
+    CARD_TABLE_SHIFT                       = 16,
+    HEAP_TOP_ADDRESS                       = 17,
+    HEAP_END_ADDRESS                       = 18,
+    NARROW_KLASS_BASE_ADDRESS              = 19,
+    NARROW_OOP_BASE_ADDRESS                = 20,
+    CRC_TABLE_ADDRESS                      = 21,
+    LOG_OF_HEAP_REGION_GRAIN_BYTES         = 22,
+    INLINE_CONTIGUOUS_ALLOCATION_SUPPORTED = 23,
+    INVOKE_INVALID                         = -1
   };
 
   Arena         _arena;
@@ -85,6 +173,8 @@ private:
   ExceptionHandlerTable     _exception_handler_table;
   ImplicitExceptionTable    _implicit_exception_table;
 
+  bool _immutable_pic_compilation;  // Installer is called for Immutable PIC compilation.
+
   static ConstantOopWriteValue* _oop_null_scope_value;
   static ConstantIntValue*    _int_m1_scope_value;
   static ConstantIntValue*    _int_0_scope_value;
@@ -97,30 +187,36 @@ private:
   void pd_patch_MetaspaceConstant(int pc_offset, Handle constant, TRAPS);
   void pd_patch_DataSectionReference(int pc_offset, int data_offset, TRAPS);
   void pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination, TRAPS);
-  void pd_relocate_JavaMethod(Handle method, jint pc_offset, TRAPS);
+  void pd_relocate_JavaMethod(CodeBuffer &cbuf, Handle method, jint pc_offset, TRAPS);
   void pd_relocate_poll(address pc, jint mark, TRAPS);
 
-  objArrayOop sites() { return (objArrayOop) JNIHandles::resolve(_sites_handle); }
-  arrayOop code() { return (arrayOop) JNIHandles::resolve(_code_handle); }
-  arrayOop data_section() { return (arrayOop) JNIHandles::resolve(_data_section_handle); }
-  objArrayOop data_section_patches() { return (objArrayOop) JNIHandles::resolve(_data_section_patches_handle); }
+  objArrayOop sites();
+  arrayOop code();
+  arrayOop data_section();
+  objArrayOop data_section_patches();
 #ifndef PRODUCT
-  objArrayOop comments() { return (objArrayOop) JNIHandles::resolve(_comments_handle); }
+  objArrayOop comments();
 #endif
 
-  oop word_kind() { return (oop) JNIHandles::resolve(_word_kind_handle); }
+  oop word_kind();
 
 public:
 
-  CodeInstaller() : _arena(mtCompiler) {}
+  CodeInstaller(bool immutable_pic_compilation) : _arena(mtCompiler), _immutable_pic_compilation(immutable_pic_compilation) {}
+
+#if INCLUDE_AOT
+  JVMCIEnv::CodeInstallResult gather_metadata(Handle target, Handle compiled_code, CodeMetadata& metadata, TRAPS);
+#endif
   JVMCIEnv::CodeInstallResult install(JVMCICompiler* compiler, Handle target, Handle compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log, TRAPS);
 
   static address runtime_call_target_address(oop runtime_call);
   static VMReg get_hotspot_reg(jint jvmciRegisterNumber, TRAPS);
   static bool is_general_purpose_reg(VMReg hotspotRegister);
 
-private:
-  Location::Type get_oop_type(Handle value);
+  const OopMapSet* oopMapSet() const { return _debug_recorder->_oopmaps; }
+
+protected:
+  Location::Type get_oop_type(Thread* thread, Handle value);
   ScopeValue* get_scope_value(Handle value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, TRAPS);
   MonitorValue* get_monitor_value(Handle value, GrowableArray<ScopeValue*>* objects, TRAPS);
 
@@ -131,18 +227,18 @@ private:
 
   // extract the fields of the HotSpotCompiledCode
   void initialize_fields(oop target, oop target_method, TRAPS);
-  void initialize_dependencies(oop target_method, TRAPS);
-  
-  int estimate_stubs_size(TRAPS);
-  
-  // perform data and call relocation on the CodeBuffer
-  JVMCIEnv::CodeInstallResult initialize_buffer(CodeBuffer& buffer, TRAPS);
+  void initialize_dependencies(oop target_method, OopRecorder* oop_recorder, TRAPS);
 
-  void assumption_NoFinalizableSubclass(Handle assumption);
-  void assumption_ConcreteSubtype(Handle assumption);
-  void assumption_LeafType(Handle assumption);
-  void assumption_ConcreteMethod(Handle assumption);
-  void assumption_CallSiteTargetValue(Handle assumption);
+  int estimate_stubs_size(TRAPS);
+
+  // perform data and call relocation on the CodeBuffer
+  JVMCIEnv::CodeInstallResult initialize_buffer(CodeBuffer& buffer, bool check_size, TRAPS);
+
+  void assumption_NoFinalizableSubclass(Thread* thread, Handle assumption);
+  void assumption_ConcreteSubtype(Thread* thread, Handle assumption);
+  void assumption_LeafType(Thread* thread, Handle assumption);
+  void assumption_ConcreteMethod(Thread* thread, Handle assumption);
+  void assumption_CallSiteTargetValue(Thread* thread, Handle assumption);
 
   void site_Safepoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS);
   void site_Infopoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS);
@@ -165,7 +261,7 @@ private:
 
   int map_jvmci_bci(int bci);
   void record_scope(jint pc_offset, Handle debug_info, ScopeMode scope_mode, bool return_oop, TRAPS);
-  void record_scope(jint pc_offset, Handle debug_info, ScopeMode scope_mode, TRAPS) { 
+  void record_scope(jint pc_offset, Handle debug_info, ScopeMode scope_mode, TRAPS) {
     record_scope(pc_offset, debug_info, scope_mode, false /* return_oop */, THREAD);
   }
   void record_scope(jint pc_offset, Handle position, ScopeMode scope_mode, GrowableArray<ScopeValue*>* objects, bool return_oop, TRAPS);

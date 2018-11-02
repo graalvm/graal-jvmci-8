@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -167,6 +167,11 @@
 #ifndef INCLUDE_JVMCI
 #define INCLUDE_JVMCI 1
 #endif
+
+// To ease cross porting changes between jvmci-8 and OpenJDK, some jaotc-only related code has been
+// included in jvmci-8. This macro is used to demark (and disable) such code.
+#undef INCLUDE_AOT
+#define INCLUDE_AOT 0
 
 #if INCLUDE_JVMCI
 #define JVMCI_ONLY(code) code

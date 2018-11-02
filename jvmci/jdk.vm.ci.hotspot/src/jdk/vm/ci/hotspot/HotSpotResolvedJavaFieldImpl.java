@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -52,11 +52,11 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
         this.holder = holder;
         this.type = type;
         this.index = (short) index;
-        this.offset = (int) offset;
-        this.modifiers = modifiers;
         assert this.index == index;
         assert offset != -1;
         assert offset == (int) offset : "offset larger than int";
+        this.offset = (int) offset;
+        this.modifiers = modifiers;
     }
 
     @Override

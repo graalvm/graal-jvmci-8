@@ -284,6 +284,82 @@ meth public abstract boolean isCompressed()
 meth public abstract jdk.vm.ci.meta.Constant compress()
 meth public abstract jdk.vm.ci.meta.Constant uncompress()
 
+CLSS public final jdk.vm.ci.hotspot.HotSpotConstantPool
+innr public static Bytecodes
+intf jdk.vm.ci.meta.ConstantPool
+meth public boolean isRegistered()
+meth public boolean isResolvedDynamicInvoke(int,int)
+meth public int length()
+meth public int rawIndexToConstantPoolIndex(int,int)
+meth public java.lang.Object lookupConstant(int)
+meth public java.lang.String lookupUtf8(int)
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.JavaConstant lookupAppendix(int,int)
+meth public jdk.vm.ci.meta.JavaField lookupField(int,jdk.vm.ci.meta.ResolvedJavaMethod,int)
+meth public jdk.vm.ci.meta.JavaMethod lookupMethod(int,int)
+meth public jdk.vm.ci.meta.JavaType lookupType(int,int)
+meth public jdk.vm.ci.meta.Signature lookupSignature(int)
+meth public long getMetaspacePointer()
+meth public void loadReferencedType(int,int)
+meth public void loadReferencedType(int,int,boolean)
+supr java.lang.Object
+hfds lastLookupType,metaspaceConstantPool,signaturePolymorphicHolders
+hcls JVM_CONSTANT,LookupTypeCacheElement
+
+CLSS public static jdk.vm.ci.hotspot.HotSpotConstantPool$Bytecodes
+ outer jdk.vm.ci.hotspot.HotSpotConstantPool
+cons public init()
+fld public final static int ANEWARRAY = 189
+fld public final static int CHECKCAST = 192
+fld public final static int GETFIELD = 180
+fld public final static int GETSTATIC = 178
+fld public final static int INSTANCEOF = 193
+fld public final static int INVOKEDYNAMIC = 186
+fld public final static int INVOKEINTERFACE = 185
+fld public final static int INVOKESPECIAL = 183
+fld public final static int INVOKESTATIC = 184
+fld public final static int INVOKEVIRTUAL = 182
+fld public final static int LDC = 18
+fld public final static int LDC2_W = 20
+fld public final static int LDC_W = 19
+fld public final static int MULTIANEWARRAY = 197
+fld public final static int NEW = 187
+fld public final static int NEWARRAY = 188
+fld public final static int PUTFIELD = 181
+fld public final static int PUTSTATIC = 179
+supr java.lang.Object
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotConstantPoolObject
+intf jdk.vm.ci.hotspot.HotSpotObjectConstant
+meth public <%0 extends java.lang.Object> {%%0} asObject(java.lang.Class<{%%0}>)
+meth public boolean asBoolean()
+meth public boolean equals(java.lang.Object)
+meth public boolean isCompressed()
+meth public boolean isDefaultForKind()
+meth public boolean isInternedString()
+meth public boolean isNull()
+meth public double asDouble()
+meth public float asFloat()
+meth public int asInt()
+meth public int getCpi()
+meth public int getIdentityHashCode()
+meth public int hashCode()
+meth public java.lang.Object asBoxedPrimitive()
+meth public java.lang.Object asObject(jdk.vm.ci.meta.ResolvedJavaType)
+meth public java.lang.String toString()
+meth public java.lang.String toValueString()
+meth public jdk.vm.ci.hotspot.HotSpotResolvedObjectType getCpType()
+meth public jdk.vm.ci.hotspot.HotSpotResolvedObjectType getType()
+meth public jdk.vm.ci.meta.JavaConstant compress()
+meth public jdk.vm.ci.meta.JavaConstant getCallSiteTarget(jdk.vm.ci.meta.Assumptions)
+meth public jdk.vm.ci.meta.JavaConstant uncompress()
+meth public jdk.vm.ci.meta.JavaKind getJavaKind()
+meth public long asLong()
+meth public static jdk.vm.ci.meta.JavaConstant forBoxedValue(jdk.vm.ci.meta.JavaKind,java.lang.Object)
+meth public static jdk.vm.ci.meta.JavaConstant forObject(jdk.vm.ci.hotspot.HotSpotResolvedObjectType,int,jdk.vm.ci.meta.JavaConstant)
+supr java.lang.Object
+hfds cpi,type
+
 CLSS public jdk.vm.ci.hotspot.HotSpotConstantReflectionProvider
 cons public init(jdk.vm.ci.hotspot.HotSpotJVMCIRuntime)
 fld protected final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime
@@ -384,6 +460,7 @@ fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option Compiler
 fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option InitTimer
 fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option PrintConfig
 fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option TraceMethodDataFilter
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option UseProfilingInformation
 meth public boolean getBoolean()
 meth public java.lang.String getPropertyName()
 meth public java.lang.String getString()
@@ -431,6 +508,17 @@ meth public jdk.vm.ci.meta.Signature parseMethodDescriptor(java.lang.String)
 meth public jdk.vm.ci.meta.SpeculationLog$Speculation decodeSpeculation(jdk.vm.ci.meta.JavaConstant,jdk.vm.ci.meta.SpeculationLog)
 meth public long getMemorySize(jdk.vm.ci.meta.JavaConstant)
 supr java.lang.Object
+
+CLSS public jdk.vm.ci.hotspot.HotSpotMetaData
+cons public init(jdk.vm.ci.code.TargetDescription,jdk.vm.ci.hotspot.HotSpotCompiledCode)
+meth public byte[] exceptionBytes()
+meth public byte[] oopMaps()
+meth public byte[] pcDescBytes()
+meth public byte[] relocBytes()
+meth public byte[] scopesDescBytes()
+meth public java.lang.Object[] metadataEntries()
+supr java.lang.Object
+hfds exceptionBytes,metadata,oopMaps,pcDescBytes,relocBytes,scopesDescBytes
 
 CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotMetaspaceConstant
 intf jdk.vm.ci.hotspot.HotSpotConstant
@@ -512,6 +600,7 @@ meth public abstract boolean isForceInline()
 meth public abstract boolean isIntrinsicCandidate()
 meth public abstract int allocateCompileId(int)
 meth public abstract int intrinsicId()
+meth public abstract int methodIdnum()
 meth public abstract int vtableEntryOffset(jdk.vm.ci.meta.ResolvedJavaType)
 meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getDeclaringClass()
 meth public abstract jdk.vm.ci.meta.ResolvedJavaMethod uniqueConcreteMethod(jdk.vm.ci.hotspot.HotSpotResolvedObjectType)
@@ -746,6 +835,17 @@ supr java.lang.Object
 CLSS public abstract interface jdk.vm.ci.meta.Constant
 meth public abstract boolean isDefaultForKind()
 meth public abstract java.lang.String toValueString()
+
+CLSS public abstract interface jdk.vm.ci.meta.ConstantPool
+meth public abstract int length()
+meth public abstract java.lang.Object lookupConstant(int)
+meth public abstract java.lang.String lookupUtf8(int)
+meth public abstract jdk.vm.ci.meta.JavaConstant lookupAppendix(int,int)
+meth public abstract jdk.vm.ci.meta.JavaField lookupField(int,jdk.vm.ci.meta.ResolvedJavaMethod,int)
+meth public abstract jdk.vm.ci.meta.JavaMethod lookupMethod(int,int)
+meth public abstract jdk.vm.ci.meta.JavaType lookupType(int,int)
+meth public abstract jdk.vm.ci.meta.Signature lookupSignature(int)
+meth public abstract void loadReferencedType(int,int)
 
 CLSS public abstract interface jdk.vm.ci.meta.ConstantReflectionProvider
 meth public abstract java.lang.Boolean constantEquals(jdk.vm.ci.meta.Constant,jdk.vm.ci.meta.Constant)
@@ -1001,6 +1101,8 @@ meth public abstract void collectFailedSpeculations()
 CLSS public static jdk.vm.ci.meta.SpeculationLog$Speculation
  outer jdk.vm.ci.meta.SpeculationLog
 cons public init(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
 meth public java.lang.String toString()
 meth public jdk.vm.ci.meta.SpeculationLog$SpeculationReason getReason()
 supr java.lang.Object

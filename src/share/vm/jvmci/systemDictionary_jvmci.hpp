@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,8 +27,8 @@
 #if !INCLUDE_JVMCI
 #define JVMCI_WK_KLASSES_DO(do_klass)
 #else
-#define JVMCI_WK_KLASSES_DO(do_klass)                                                                                  \
-  /* JVMCI classes. These are loaded on-demand. */                                                                     \
+#define JVMCI_WK_KLASSES_DO(do_klass)                                                                                           \
+  /* JVMCI classes. These are loaded on-demand. */                                                                              \
   do_klass(JVMCI_klass,                                  jdk_vm_ci_runtime_JVMCI,                               Jvmci) \
   do_klass(HotSpotCompiledCode_klass,                    jdk_vm_ci_hotspot_HotSpotCompiledCode,                 Jvmci) \
   do_klass(HotSpotCompiledCode_Comment_klass,            jdk_vm_ci_hotspot_HotSpotCompiledCode_Comment,         Jvmci) \
@@ -42,7 +42,9 @@
   do_klass(HotSpotCompressedNullConstant_klass,          jdk_vm_ci_hotspot_HotSpotCompressedNullConstant,       Jvmci) \
   do_klass(HotSpotObjectConstantImpl_klass,              jdk_vm_ci_hotspot_HotSpotObjectConstantImpl,           Jvmci) \
   do_klass(HotSpotMetaspaceConstantImpl_klass,           jdk_vm_ci_hotspot_HotSpotMetaspaceConstantImpl,        Jvmci) \
+  do_klass(HotSpotSentinelConstant_klass,                jdk_vm_ci_hotspot_HotSpotSentinelConstant,             Jvmci) \
   do_klass(HotSpotStackFrameReference_klass,             jdk_vm_ci_hotspot_HotSpotStackFrameReference,          Jvmci) \
+  do_klass(HotSpotMetaData_klass,                        jdk_vm_ci_hotspot_HotSpotMetaData,                     Jvmci) \
   do_klass(HotSpotConstantPool_klass,                    jdk_vm_ci_hotspot_HotSpotConstantPool,                 Jvmci) \
   do_klass(HotSpotJVMCIMetaAccessContext_klass,          jdk_vm_ci_hotspot_HotSpotJVMCIMetaAccessContext,       Jvmci) \
   do_klass(HotSpotJVMCIRuntime_klass,                    jdk_vm_ci_hotspot_HotSpotJVMCIRuntime,                 Jvmci) \
@@ -90,4 +92,3 @@
 #endif
 
 #endif // SHARE_VM_JVMCI_SYSTEMDICTIONARY_JVMCI_HPP
-  

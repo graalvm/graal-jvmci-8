@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -45,7 +45,7 @@ import jdk.vm.ci.meta.UnresolvedJavaType;
 /**
  * Implementation of {@link ConstantPool} for HotSpot.
  */
-final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject {
+public final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject {
 
     /**
      * Subset of JVM bytecode opcodes used by {@link HotSpotConstantPool}.
@@ -218,14 +218,14 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
     }
 
     /**
-     * Converts a raw index from the bytecodes to a constant pool index by adding a
+     * Converts a raw index from the bytecodes to a constant pool cache index by adding a
      * {@link HotSpotVMConfig#constantPoolCpCacheIndexTag constant}.
      *
      * @param rawIndex index from the bytecode
      * @param opcode bytecode to convert the index for
-     * @return constant pool index
+     * @return constant pool cache index
      */
-    private static int rawIndexToConstantPoolIndex(int rawIndex, int opcode) {
+    private static int rawIndexToConstantPoolCacheIndex(int rawIndex, int opcode) {
         int index;
         if (opcode == Bytecodes.INVOKEDYNAMIC) {
             index = rawIndex;
@@ -514,7 +514,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
                 return lookupType(cpi, opcode);
             case String:
                 /*
-                 * Normally, we would expect a String here, but anonymous classes can have
+                 * Normally, we would expect a String here, but unsafe anonymous classes can have
                  * "pseudo strings" (arbitrary live objects) patched into a String entry. Such
                  * entries do not have a symbol in the constant pool slot.
                  */
@@ -545,7 +545,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
     @Override
     public JavaConstant lookupAppendix(int cpi, int opcode) {
         assert Bytecodes.isInvoke(opcode);
-        final int index = rawIndexToConstantPoolIndex(cpi, opcode);
+        final int index = rawIndexToConstantPoolCacheIndex(cpi, opcode);
         Object appendix = compilerToVM().lookupAppendixInPool(this, index);
         if (appendix == null) {
             return null;
@@ -570,7 +570,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
 
     @Override
     public JavaMethod lookupMethod(int cpi, int opcode) {
-        final int index = rawIndexToConstantPoolIndex(cpi, opcode);
+        final int index = rawIndexToConstantPoolCacheIndex(cpi, opcode);
         final HotSpotResolvedJavaMethod method = compilerToVM().lookupMethodInPool(this, index, (byte) opcode);
         if (method != null) {
             return method;
@@ -607,7 +607,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
 
     @Override
     public JavaField lookupField(int cpi, ResolvedJavaMethod method, int opcode) {
-        final int index = rawIndexToConstantPoolIndex(cpi, opcode);
+        final int index = rawIndexToConstantPoolCacheIndex(cpi, opcode);
         final int nameAndTypeIndex = getNameAndTypeRefIndexAt(index);
         final int typeIndex = getSignatureRefIndexAt(nameAndTypeIndex);
         String typeName = lookupUtf8(typeIndex);
@@ -620,7 +620,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
             int[] info = new int[3];
             HotSpotResolvedObjectTypeImpl resolvedHolder;
             try {
-                resolvedHolder = compilerToVM().resolveFieldInPool(this, index, (byte) opcode, info);
+                resolvedHolder = compilerToVM().resolveFieldInPool(this, index, (HotSpotResolvedJavaMethodImpl) method, (byte) opcode, info);
             } catch (Throwable t) {
                 /*
                  * If there was an exception resolving the field we give up and return an unresolved
@@ -636,6 +636,27 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
         } else {
             return new UnresolvedJavaField(holder, lookupUtf8(getNameRefIndexAt(nameAndTypeIndex)), type);
         }
+    }
+
+    /**
+     * Converts a raw index from the bytecodes to a constant pool index (not a cache index).
+     *
+     * @param rawIndex index from the bytecode
+     *
+     * @param opcode bytecode to convert the index for
+     *
+     * @return constant pool index
+     */
+    public int rawIndexToConstantPoolIndex(int rawIndex, int opcode) {
+        int index;
+        if (isInvokedynamicIndex(rawIndex)) {
+            assert opcode == Bytecodes.INVOKEDYNAMIC;
+            index = decodeInvokedynamicIndex(rawIndex) + config().constantPoolCpCacheIndexTag;
+        } else {
+            assert opcode != Bytecodes.INVOKEDYNAMIC;
+            index = rawIndexToConstantPoolCacheIndex(rawIndex, opcode);
+        }
+        return compilerToVM().constantPoolRemapInstructionOperandFromCache(this, index);
     }
 
     @Override
@@ -672,7 +693,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
             case Bytecodes.INVOKESTATIC:
             case Bytecodes.INVOKEINTERFACE: {
                 // invoke and field instructions point to a constant pool cache entry.
-                index = rawIndexToConstantPoolIndex(cpi, opcode);
+                index = rawIndexToConstantPoolCacheIndex(cpi, opcode);
                 index = compilerToVM().constantPoolRemapInstructionOperandFromCache(this, index);
                 break;
             }
@@ -698,15 +719,15 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
             case UnresolvedClass:
             case UnresolvedClassInError:
                 final HotSpotResolvedObjectTypeImpl type = compilerToVM().resolveTypeInPool(this, index);
-                Class<?> klass = type.mirror();
                 if (initialize) {
+                    Class<?> klass = type.mirror();
                     if (!klass.isPrimitive() && !klass.isArray()) {
                         UNSAFE.ensureClassInitialized(klass);
                     }
                 }
                 if (tag == JVM_CONSTANT.MethodRef) {
                     if (Bytecodes.isInvokeHandleAlias(opcode) && isSignaturePolymorphicHolder(type)) {
-                        final int methodRefCacheIndex = rawIndexToConstantPoolIndex(cpi, opcode);
+                        final int methodRefCacheIndex = rawIndexToConstantPoolCacheIndex(cpi, opcode);
                         assert checkTag(compilerToVM().constantPoolRemapInstructionOperandFromCache(this, methodRefCacheIndex), JVM_CONSTANT.MethodRef);
                         compilerToVM().resolveInvokeHandleInPool(this, methodRefCacheIndex);
                     }
@@ -726,7 +747,7 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
     }
 
     // Lazily initialized.
-    private static String[] signaturePolymorphicHolders;
+    private static volatile String[] signaturePolymorphicHolders;
 
     /**
      * Determines if {@code type} contains signature polymorphic methods.
@@ -742,6 +763,26 @@ final class HotSpotConstantPool implements ConstantPool, MetaspaceWrapperObject 
             if (name.equals(holder)) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    /**
+     * Check for a resolved dynamic adapter method at the specified index, resulting from either a
+     * resolved invokedynamic or invokevirtual on a signature polymorphic MethodHandle method
+     * (HotSpot invokehandle).
+     *
+     * @param cpi the constant pool index
+     * @param opcode the opcode of the instruction for which the lookup is being performed
+     * @return {@code true} if a signature polymorphic method reference was found, otherwise
+     *         {@code false}
+     */
+    public boolean isResolvedDynamicInvoke(int cpi, int opcode) {
+        if (Bytecodes.isInvokeHandleAlias(opcode)) {
+            final int methodRefCacheIndex = rawIndexToConstantPoolCacheIndex(cpi, opcode);
+            assert checkTag(compilerToVM().constantPoolRemapInstructionOperandFromCache(this, methodRefCacheIndex), JVM_CONSTANT.MethodRef);
+            int op = compilerToVM().isResolvedInvokeHandleInPool(this, methodRefCacheIndex);
+            return op == opcode;
         }
         return false;
     }

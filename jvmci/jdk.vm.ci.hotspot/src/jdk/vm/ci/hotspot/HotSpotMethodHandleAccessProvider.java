@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -59,13 +59,14 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
          *
          * @param declaringType the type declaring the field
          * @param fieldName name of the field to be searched
-         * @return resolved java field
+         * @param fieldType resolved Java type of the field
+         * @return resolved Java field
          * @throws NoSuchFieldError
          */
         private static ResolvedJavaField findFieldInClass(ResolvedJavaType declaringType, String fieldName, ResolvedJavaType fieldType) {
             ResolvedJavaField[] fields = declaringType.getInstanceFields(false);
             for (ResolvedJavaField field : fields) {
-                if (field.getName().equals(fieldName)) {
+                if (field.getName().equals(fieldName) && field.getType().equals(fieldType)) {
                     return field;
                 }
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -30,10 +30,10 @@
 #include "runtime/deoptimization.hpp"
 
 #define JVMCI_ERROR(...)       \
-  { JVMCIRuntime::fthrow_error(THREAD_AND_LOCATION, __VA_ARGS__); return; }
+  { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return; }
 
 #define JVMCI_ERROR_(ret, ...) \
-  { JVMCIRuntime::fthrow_error(THREAD_AND_LOCATION, __VA_ARGS__); return ret; }
+  { Exceptions::fthrow(THREAD_AND_LOCATION, vmSymbols::jdk_vm_ci_common_JVMCIError(), __VA_ARGS__); return ret; }
 
 #define JVMCI_ERROR_0(...)    JVMCI_ERROR_(0, __VA_ARGS__)
 #define JVMCI_ERROR_NULL(...) JVMCI_ERROR_(NULL, __VA_ARGS__)
@@ -54,12 +54,13 @@ class JVMCIRuntime: public AllStatic {
  private:
   static jobject _HotSpotJVMCIRuntime_instance;
   static bool _HotSpotJVMCIRuntime_initialized;
+  static bool _well_known_classes_initialized;
 
   static CompLevelAdjustment _comp_level_adjustment;
 
   static bool _shutdown_called;
 
-  static CompLevel adjust_comp_level_inner(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread);
+  static CompLevel adjust_comp_level_inner(const methodHandle& method, bool is_osr, CompLevel level, JavaThread* thread);
 
  public:
 
@@ -75,10 +76,7 @@ class JVMCIRuntime: public AllStatic {
   /**
    * Gets the singleton HotSpotJVMCIRuntime instance, initializing it if necessary
    */
-  static Handle get_HotSpotJVMCIRuntime(TRAPS) {
-    initialize_JVMCI(CHECK_(Handle()));
-    return Handle(JNIHandles::resolve_non_null(_HotSpotJVMCIRuntime_instance));
-  }
+  static Handle get_HotSpotJVMCIRuntime(TRAPS);
 
   static jobject get_HotSpotJVMCIRuntime_jobject(TRAPS) {
     initialize_JVMCI(CHECK_NULL);
@@ -109,6 +107,16 @@ class JVMCIRuntime: public AllStatic {
   }
 
   /**
+   * Same as SystemDictionary::resolve_or_null but uses the JVMCI loader.
+   */
+  static Klass* resolve_or_null(Symbol* name, TRAPS);
+
+  /**
+   * Same as SystemDictionary::resolve_or_fail but uses the JVMCI loader.
+   */
+  static Klass* resolve_or_fail(Symbol* name, TRAPS);
+
+  /**
    * Lets JVMCI modify the compilation level currently selected for a method by
    * the VM compilation policy.
    *
@@ -118,47 +126,7 @@ class JVMCIRuntime: public AllStatic {
    * @param thread the current thread
    * @return the compilation level to use for the compilation
    */
-  static CompLevel adjust_comp_level(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread);
-
-  /**
-   * Throws a JVMCIError with a formatted error message. Ideally we would use
-   * a variation of Exceptions::fthrow that takes a class loader argument but alas,
-   * no such variation exists.
-   */
-  static void fthrow_error(Thread* thread, const char* file, int line, const char* format, ...) ATTRIBUTE_PRINTF(4, 5);
-
-  /**
-   * Exits the VM due to an unexpected exception.
-   */
-  static void exit_on_pending_exception(Handle exception, const char* message);
-
-#define CHECK_EXIT THREAD); \
-  if (HAS_PENDING_EXCEPTION) { \
-    char buf[256]; \
-    jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
-    JVMCIRuntime::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
-    return; \
-  } \
-  (void)(0
-
-#define CHECK_EXIT_(result) THREAD); \
-  if (HAS_PENDING_EXCEPTION) { \
-    char buf[256]; \
-    jio_snprintf(buf, 256, "Uncaught exception at %s:%d", __FILE__, __LINE__); \
-    JVMCIRuntime::exit_on_pending_exception(PENDING_EXCEPTION, buf); \
-    return result; \
-  } \
-  (void)(0
-
-  /**
-   * Same as SystemDictionary::resolve_or_null but uses the JVMCI loader.
-   */
-  static Klass* resolve_or_null(Symbol* name, TRAPS);
-
-  /**
-   * Same as SystemDictionary::resolve_or_fail but uses the JVMCI loader.
-   */
-  static Klass* resolve_or_fail(Symbol* name, TRAPS);
+  static CompLevel adjust_comp_level(const methodHandle& method, bool is_osr, CompLevel level, JavaThread* thread);
 
   static BasicType kindToBasicType(Handle kind, TRAPS);
 

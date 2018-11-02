@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2009, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -42,11 +42,6 @@ public final class DebugInfo {
 
     private final BytecodePosition bytecodePosition;
     private ReferenceMap referenceMap;
-
-    public VirtualObject[] getVirtualObjectMapping() {
-        return virtualObjectMapping;
-    }
-
     private final VirtualObject[] virtualObjectMapping;
     private RegisterSaveLayout calleeSaveInfo;
 
@@ -107,6 +102,10 @@ public final class DebugInfo {
 
     public ReferenceMap getReferenceMap() {
         return referenceMap;
+    }
+
+    public VirtualObject[] getVirtualObjectMapping() {
+        return virtualObjectMapping;
     }
 
     /**

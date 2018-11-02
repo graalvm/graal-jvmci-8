@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2013, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2013, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,6 +25,9 @@
 #include "jvmci/jvmciRuntime.hpp"
 #include "jvmci/jvmciCompilerToVM.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
+#include "oops/oop.inline.hpp"
+#include "runtime/handles.inline.hpp"
+#include "runtime/sharedRuntime.hpp"
 #include "vmreg_sparc.inline.hpp"
 
 jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, Handle method, TRAPS) {
@@ -42,16 +45,12 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, Hand
 
 void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle constant, TRAPS) {
   address pc = _instructions->start() + pc_offset;
-  Handle obj = HotSpotObjectConstantImpl::object(constant);
+  Handle obj(THREAD, HotSpotObjectConstantImpl::object(constant));
   jobject value = JNIHandles::make_local(obj());
   if (HotSpotObjectConstantImpl::compressed(constant)) {
-#ifdef _LP64
     int oop_index = _oop_recorder->find_index(value);
     RelocationHolder rspec = oop_Relocation::spec(oop_index);
     _instructions->relocate(pc, rspec, 1);
-#else
-    JVMCI_ERROR("compressed oop on 32bit");
-#endif
   } else {
     NativeMovConstReg* move = nativeMovConstReg_at(pc);
     move->set_data((intptr_t) value);
@@ -67,14 +66,10 @@ void CodeInstaller::pd_patch_OopConstant(int pc_offset, Handle constant, TRAPS) 
 void CodeInstaller::pd_patch_MetaspaceConstant(int pc_offset, Handle constant, TRAPS) {
   address pc = _instructions->start() + pc_offset;
   if (HotSpotMetaspaceConstantImpl::compressed(constant)) {
-#ifdef _LP64
     NativeMovConstReg32* move = nativeMovConstReg32_at(pc);
     narrowKlass narrowOop = record_narrow_metadata_reference(_instructions, pc, constant, CHECK);
     move->set_data((intptr_t)narrowOop);
     TRACE_jvmci_3("relocating (narrow metaspace constant) at " PTR_FORMAT "/0x%x", p2i(pc), narrowOop);
-#else
-    JVMCI_ERROR("compressed Klass* on 32bit");
-#endif
   } else {
     NativeMovConstReg* move = nativeMovConstReg_at(pc);
     void* reference = record_metadata_reference(_instructions, pc, constant, CHECK);
@@ -120,7 +115,7 @@ void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong forei
   TRACE_jvmci_3("relocating (foreign call) at " PTR_FORMAT, p2i(inst));
 }
 
-void CodeInstaller::pd_relocate_JavaMethod(Handle hotspot_method, jint pc_offset, TRAPS) {
+void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &, Handle hotspot_method, jint pc_offset, TRAPS) {
 #ifdef ASSERT
   Method* method = NULL;
   // we need to check, this might also be an unresolved method
