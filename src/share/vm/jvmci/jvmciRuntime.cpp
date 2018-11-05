@@ -107,7 +107,7 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
   intptr_t        _free_list;                   // Handle free list
   int             _allocate_before_rebuild;     // Number of blocks to allocate before rebuilding free list
 
-  jmetadata allocate_handle(Metadata* metadata);
+  jmetadata allocate_metadata_handle(Metadata* metadata);
   void rebuild_free_list();
 
   MetadataHandleBlock() {
@@ -132,9 +132,9 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
   }
 
  public:
-  jmetadata allocate_handle(Klass* handle)             { return allocate_handle(handle); }
-  jmetadata allocate_handle(methodHandle handle)       { return allocate_handle(handle()); }
-  jmetadata allocate_handle(constantPoolHandle handle) { return allocate_handle(handle()); }
+  jmetadata allocate_handle(Klass* handle)             { return allocate_metadata_handle(handle); }
+  jmetadata allocate_handle(methodHandle handle)       { return allocate_metadata_handle(handle()); }
+  jmetadata allocate_handle(constantPoolHandle handle) { return allocate_metadata_handle(handle()); }
 
   static MetadataHandleBlock* allocate_block();
 
@@ -159,7 +159,7 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
 };
 
 
-jmetadata MetadataHandleBlock::allocate_handle(Metadata* obj) {
+jmetadata MetadataHandleBlock::allocate_metadata_handle(Metadata* obj) {
   assert(obj->is_valid() && obj->is_metadata(), "must be");
 
   // Try last block
@@ -180,7 +180,7 @@ jmetadata MetadataHandleBlock::allocate_handle(Metadata* obj) {
   if (_last->_next != NULL) {
     // update last and retry
     _last = _last->_next;
-    return allocate_handle(obj);
+    return allocate_metadata_handle(obj);
   }
 
   // No space available, we have to rebuild free list or expand
@@ -193,7 +193,7 @@ jmetadata MetadataHandleBlock::allocate_handle(Metadata* obj) {
     _last = _last->_next;
     _allocate_before_rebuild--;
   }
-  return allocate_handle(obj);  // retry
+  return allocate_metadata_handle(obj);  // retry
 }
 
 
@@ -1996,7 +1996,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
   char* failure_detail = NULL;
 
   assert(JVMCIENV->isa_HotSpotNmethod(nmethod_mirror), "must be");
-  bool install_default = JVMCIENV->get_HotSpotNmethod_isDefault(nmethod_mirror);
+  bool install_default = JVMCIENV->get_HotSpotNmethod_isDefault(nmethod_mirror) != 0;
   bool triggers_invalidation = !install_default;
 
   JVMCINMethodData* data = new JVMCINMethodData(JVMCIENV, nmethod_mirror, speculation_log, triggers_invalidation);

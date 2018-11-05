@@ -497,8 +497,8 @@ JVMCI_CLASSES_DO(EMPTY2, EMPTY0, FIELD2, FIELD2, FIELD2, FIELD2, FIELD2, FIELD3,
     /* should already be initialized */                                                                                           \
   }                                                                                                                               \
   bool JNIJVMCI::className::is_instance(JVMCIEnv* jvmciEnv, JVMCIObject object) {                                                 \
-    JNIAccessMark jni(jvmciEnv); \
-    return jni()->IsInstanceOf(object.as_jobject(), className::clazz());                                                \
+    JNIAccessMark jni(jvmciEnv);                                                                                                  \
+    return jni()->IsInstanceOf(object.as_jobject(), className::clazz()) != 0;                                                     \
   }                                                                                                                               \
   void JNIJVMCI::className::check(JVMCIEnv* jvmciEnv, JVMCIObject obj, const char* field_name, jfieldID offset) {                 \
     assert(obj.is_non_null(), err_msg("NULL field access of %s.%s", #className, field_name));                                     \

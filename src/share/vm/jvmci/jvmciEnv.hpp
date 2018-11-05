@@ -195,7 +195,7 @@ public:
     return _runtime;
   }
 
-  bool has_pending_exception() {
+  jboolean has_pending_exception() {
     if (!is_hotspot()) {
       JNIAccessMark jni(this);
       return jni()->ExceptionCheck();
@@ -205,7 +205,7 @@ public:
     }
   }
 
-  bool clear_pending_exception();
+  jboolean clear_pending_exception();
 
   // Prints an exception and stack trace of a pending exception.
   void describe_pending_exception(bool clear);
@@ -300,12 +300,12 @@ public:
       return HotSpotJVMCI::resolve(array)->long_at(index);
     } else {
       JNIAccessMark jni(this);
-      long result;
+      jlong result;
       jni()->GetLongArrayRegion(array.as_jlongArray(), index, 1, &result);
       return result;
     }
   }
-  void put_long_at(JVMCIPrimitiveArray array, int index, long value) {
+  void put_long_at(JVMCIPrimitiveArray array, int index, jlong value) {
     if (is_hotspot()) {
       HotSpotJVMCI::resolve(array)->long_at_put(index, value);
     } else {
@@ -339,7 +339,7 @@ public:
 
   JVMCIObjectArray initialize_intrinsics(JVMCI_TRAPS);
 
-  bool is_boxing_object(BasicType type, JVMCIObject object) {
+  jboolean is_boxing_object(BasicType type, JVMCIObject object) {
     if (is_hotspot()) {
       return java_lang_boxing_object::is_instance(HotSpotJVMCI::resolve(object), type);
     } else {
@@ -415,12 +415,12 @@ public:
     }
   }
 
-  char* as_utf8_string(JVMCIObject str, char* buf, size_t buflen) {
+  char* as_utf8_string(JVMCIObject str, char* buf, int buflen) {
     if (is_hotspot()) {
       return java_lang_String::as_utf8_string(HotSpotJVMCI::resolve(str), buf, buflen);
     } else {
       JNIAccessMark jni(this);
-      size_t length = jni()->GetStringLength(str.as_jstring());
+      int length = jni()->GetStringLength(str.as_jstring());
       if (length >= buflen) {
         length = buflen;
       }

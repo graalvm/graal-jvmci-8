@@ -72,7 +72,7 @@ char* JVMCIEnv::_shared_library_path = NULL;
 static void init_shared_library_options(JavaVMInitArgs& vm_args) {
   int n_options = 0;
   int args_len = 0;
-  const int len = JVMCILibArgs != NULL ? strlen(JVMCILibArgs) : 0;
+  const size_t len = JVMCILibArgs != NULL ? strlen(JVMCILibArgs) : 0;
   char sep = JVMCILibArgsSep[0];
   const char* p = JVMCILibArgs;
   const char* end = JVMCILibArgs + len;
@@ -712,7 +712,7 @@ JVMCIObject JVMCIEnv::get_jvmci_method(const methodHandle& method, JVMCI_TRAPS) 
 
   Thread* THREAD = Thread::current();
   jmetadata handle = JVMCI::allocate_handle(method);
-  bool exception = false;
+  jboolean exception = false;
   if (is_hotspot()) {
     JavaValue result(T_OBJECT);
     JavaCallArguments args;
@@ -762,7 +762,7 @@ JVMCIObject JVMCIEnv::get_jvmci_type(JVMCIKlassHandle& klass, JVMCI_TRAPS) {
   jlong pointer = (jlong) klass();
   JavaThread* THREAD = JavaThread::current();
   JVMCIObject signature = create_string(klass->signature_name(), JVMCI_CHECK_(JVMCIObject()));
-  bool exception = false;
+  jboolean exception = false;
   if (is_hotspot()) {
     JavaValue result(T_OBJECT);
     JavaCallArguments args;
@@ -798,7 +798,7 @@ JVMCIObject JVMCIEnv::get_jvmci_type(JVMCIKlassHandle& klass, JVMCI_TRAPS) {
 JVMCIObject JVMCIEnv::get_jvmci_constant_pool(constantPoolHandle cp, JVMCI_TRAPS) {
   JVMCIObject cp_object;
   jmetadata handle = JVMCI::allocate_handle(cp);
-  bool exception = false;
+  jboolean exception = false;
   if (is_hotspot()) {
     JavaThread* THREAD = JavaThread::current();
     JavaValue result(T_OBJECT);
@@ -1041,7 +1041,7 @@ bool JVMCIEnv::equals(JVMCIObject a, JVMCIObject b) {
     return HotSpotJVMCI::resolve(a) == HotSpotJVMCI::resolve(b);
   } else {
     JNIAccessMark jni(this);
-    return jni()->IsSameObject(a.as_jobject(), b.as_jobject());
+    return jni()->IsSameObject(a.as_jobject(), b.as_jobject()) != 0;
   }
 }
 

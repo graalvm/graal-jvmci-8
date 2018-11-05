@@ -1830,7 +1830,7 @@ C2V_VMENTRY(jobject, readFieldValue, (JNIEnv* env, jobject, jobject object, jobj
   }
   int displacement = JVMCIENV->get_HotSpotResolvedJavaFieldImpl_offset(field_object);
   fieldDescriptor fd;
-  if (!ik->find_local_field_from_offset(displacement, modifiers & JVM_ACC_STATIC, &fd)) {
+  if (!ik->find_local_field_from_offset(displacement, (modifiers & JVM_ACC_STATIC) != 0, &fd)) {
     JVMCI_THROW_MSG_0(InternalError, err_msg("Can't find field with displacement %d", displacement));
   }
   JVMCIObject base = JVMCIENV->wrap(object);
