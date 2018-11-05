@@ -44,6 +44,7 @@
 #include "gc_implementation/shared/gcTraceTime.hpp"
 #include "gc_implementation/shared/isGCActiveMark.hpp"
 #include "gc_interface/gcCause.hpp"
+#include "jvmci/jvmci.hpp"
 #include "memory/gcLocker.inline.hpp"
 #include "memory/referencePolicy.hpp"
 #include "memory/referenceProcessor.hpp"
@@ -2430,6 +2431,8 @@ void PSParallelCompact::marking_phase(ParCompactionManager* cm,
 
   // Prune dead klasses from subklass/sibling/implementor lists.
   Klass::clean_weak_klass_links(is_alive_closure());
+
+  JVMCI::do_unloading(&_is_alive_closure, purged_class);
 
   // Delete entries for dead interned strings.
   StringTable::unlink(is_alive_closure());

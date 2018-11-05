@@ -41,6 +41,7 @@
 #include "gc_implementation/shared/markSweep.hpp"
 #include "gc_implementation/shared/spaceDecorator.hpp"
 #include "gc_interface/gcCause.hpp"
+#include "jvmci/jvmci.hpp"
 #include "memory/gcLocker.inline.hpp"
 #include "memory/referencePolicy.hpp"
 #include "memory/referenceProcessor.hpp"
@@ -568,6 +569,8 @@ void PSMarkSweep::mark_sweep_phase1(bool clear_all_softrefs) {
 
   // Prune dead klasses from subklass/sibling/implementor lists.
   Klass::clean_weak_klass_links(is_alive_closure());
+
+  JVMCI::do_unloading(is_alive_closure(), purged_class);
 
   // Delete entries for dead interned strings.
   StringTable::unlink(is_alive_closure());

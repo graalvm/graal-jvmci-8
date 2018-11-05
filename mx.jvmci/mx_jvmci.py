@@ -29,6 +29,7 @@ from os.path import join, exists, basename
 from argparse import ArgumentParser, REMAINDER
 import xml.dom.minidom
 import json, textwrap
+import difflib
 from collections import OrderedDict
 
 import mx
@@ -1110,21 +1111,26 @@ def buildvms(args):
 
 
 def _jvmci_gate_runner(args, tasks):
+    unittest_vmbuild = None
     # Build server-jvmci now so we can run the unit tests
     with Task('BuildHotSpotJVMCI: product', tasks, tags=[mx_gate.Tags.build]) as t:
-        if t: buildvms(['--vms', 'server', '--builds', 'product'])
-
-    # Run unit tests on server-hosted-jvmci
-    with VM('server', 'product'):
-        with JVMCIMode('hosted'):
-            with Task('JVMCI UnitTests: hosted-product', tasks, tags=['test']) as t:
-                if t: unittest(['--suite', 'jvmci', '--enable-timing', '--verbose', '--fail-fast'])
+        if t:
+            buildvms(['--vms', 'server', '--builds', 'product'])
+            unittest_vmbuild = 'product'
 
     # Build the fastdebug VM
     with Task('BuildHotSpotJVMCI: fastdebug', tasks, tags=[mx_gate.Tags.build]) as t:
         if t:
             buildvms(['--vms', 'server', '--builds', 'fastdebug'])
             run_vm(['-XX:+ExecuteInternalVMTests', '-version'], vm='server', vmbuild='fastdebug')
+            unittest_vmbuild = unittest_vmbuild or 'fastdebug'
+
+    # Run unit tests
+    if unittest_vmbuild:
+        with VM('server', unittest_vmbuild):
+            with JVMCIMode('hosted'):
+                with Task('JVMCI UnitTests: hosted', tasks) as t:
+                    if t: unittest(['--suite', 'jvmci', '--enable-timing', '--verbose', '--fail-fast'])
 
     # Prevent JVMCI modifications from breaking the standard builds
     if args.buildNonJVMCI:
@@ -1332,6 +1338,93 @@ def hcfdis(args):
                     for l in lines:
                         print >> fp, l
 
+def jniconfig(args):
+    """Generate or verify a JNI config file for use by SVM"""
+
+    parser = ArgumentParser(prog='mx jniconfig')
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument('-c', '--compare', metavar='oldfile', action='store', help='Compare the contents of oldfile against the the newly generated file')
+    group.add_argument('-g', '--generate', metavar='newfile', action='store', help='Generate the jni config for the current JVM')
+
+    args = parser.parse_args(args)
+
+    run_vm(['-XX:JVMCILibDumpJNIConfig=libgraal.dump'])
+    with open('libgraal.dump') as fp:
+        lines = fp.read().splitlines()
+    os.unlink('libgraal.dump')
+
+    classes = {}
+    for l in lines:
+        w = l.split(' ')
+        classname = w[1].replace('/', '.')
+        classdict = classes.setdefault(classname, {})
+        classdict['name'] = classname
+        if w[0] == 'field':
+            classdict.setdefault('fields', set()).add(w[2])
+        if w[0] == 'method':
+            classdict.setdefault('methods', set()).add(w[2])
+        # include array types by default
+        arrayname = '[L' + classname + ';'
+        arraydict = classes.setdefault(arrayname, {})
+        arraydict['name'] = arrayname
+
+    # canonically order the field and method arrays
+    for classname in classes:
+        c = classes[classname]
+        if c.get('fields'):
+            c['fields'] = [{"name" : x} for x in sorted(c['fields'])]
+        if c.get('methods'):
+            c['methods'] = [{"name" : x} for x in sorted(c['methods'])]
+
+    # Convert toplevel dictionary into an ordered list since that's the output format
+    newconfig = []
+    for key in sorted(classes.keys()):
+        newconfig.append(classes[key])
+
+    if args.compare:
+        with open(args.compare) as fp:
+            oldconfig = json.load(fp)
+
+        oldconfig = sorted(oldconfig, key=lambda value: value['name'])
+        for c in oldconfig:
+            if c.get('fields'):
+                c['fields'] = sorted(c['fields'], key=lambda value: value['name'])
+            if c.get('methods'):
+                c['methods'] = sorted(c['methods'], key=lambda value: value['name'])
+
+        olddict = {}
+        for c in oldconfig:
+            olddict[c['name']] = c
+        oldnames = set(olddict.keys())
+
+        newdict = {}
+        for c in newconfig:
+            newdict[c['name']] = c
+        newnames = set(newdict.keys())
+
+        missing = (oldnames - newnames)
+        if missing:
+            print 'Missing types:\n  ' + '\n  '.join(missing)
+        added = (newnames - oldnames)
+        if added:
+            print 'Added types:'
+            for a in added:
+                print json.dumps(a, sort_keys=True, indent=2)
+
+        for name in oldnames & newnames:
+            o = olddict[name]
+            n = newdict[name]
+            old = json.dumps(o, sort_keys=True, indent=2)
+            new = json.dumps(n, sort_keys=True, indent=2)
+            diff = '\n'.join(difflib.unified_diff(old.split('\n'), new.split('\n')))
+            if diff:
+                print name
+                print diff
+    else:
+        with open(args.generate, 'w') as fp:
+            fp.write(json.dumps(newconfig, sort_keys=True, indent=2))
+        print 'Wrote new JNI config to ' + args.generate
+
 def jol(args):
     """Java Object Layout"""
     joljar = mx.library('JOL_CLI').get_path(resolve=True)
@@ -1371,6 +1464,7 @@ mx.update_commands(_suite, {
     'hcfdis': [hcfdis, ''],
     'igv' : [igv, ''],
     'jdkhome': [print_jdkhome, ''],
+    'jniconfig': [jniconfig, ''],
     'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
     'vm': [run_vm, '[-options] class [args...]'],
     'deoptalot' : [deoptalot, '[n]'],

@@ -50,7 +50,7 @@
 #include "c1/c1_Compiler.hpp"
 #endif
 #if INCLUDE_JVMCI
-#include "jvmci/jvmciJavaClasses.hpp"
+#include "jvmci/jvmciEnv.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "runtime/vframe.hpp"
 #endif
@@ -651,6 +651,7 @@ void CompileTask::log_task_done(CompileLog* log) {
   ResourceMark rm(thread);
 
   if (!_is_success) {
+    assert(_failure_reason != NULL, "missing");
     const char* reason = _failure_reason != NULL ? _failure_reason : "unknown";
     log->begin_elem("failure reason='");
     log->text("%s", reason);
@@ -947,13 +948,10 @@ void CompileBroker::compilation_init(TRAPS) {
 #if INCLUDE_JVMCI
   if (EnableJVMCI) {
     JVMCICompiler* jvmci = new JVMCICompiler();
-    if (EagerJVMCI || JVMCIPrintProperties) {
+    if (EagerJVMCI || JVMCIPrintProperties || JVMCILibDumpJNIConfig) {
       // Initialize JVMCI eagerly when it is explicitly requested
-      // or if JVMCIPrintProperties is enabled.
-      // The JVMCI Java initialization code will read this flag and
-      // do the printing if it's set.
-      JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-      JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
+      // or if JVMCILibDumpJNIConfig or JVMCIPrintProperties is enabled.
+      JVMCI::initialize_compiler(CHECK);
     }
     if (UseJVMCICompiler) {
       _compilers[1] = jvmci;
@@ -970,15 +968,13 @@ void CompileBroker::compilation_init(TRAPS) {
         c1_count = JVMCIHostThreads;
       }
       if (!UseInterpreter || !BackgroundCompilation) {
+        // Initialize JVMCI eagerly when it is explicitly requested
+        // or if JVMCIPrintProperties is enabled.
+        // The JVMCI Java initialization code will read this flag and
+        // do the printing if it's set.
         // Force initialization of JVMCI compiler otherwise JVMCI
         // compilations will not block until JVMCI is initialized
-        JVMCIRuntime::ensure_jvmci_class_loader_is_initialized();
-        ResourceMark rm;
-        TempNewSymbol getCompiler = SymbolTable::new_symbol("getCompiler", CHECK);
-        TempNewSymbol sig = SymbolTable::new_symbol("()Ljdk/vm/ci/runtime/JVMCICompiler;", CHECK);
-        Handle jvmciRuntime = JVMCIRuntime::get_HotSpotJVMCIRuntime(CHECK);
-        JavaValue result(T_OBJECT);
-        JavaCalls::call_virtual(&result, jvmciRuntime, HotSpotJVMCIRuntime::klass(), getCompiler, sig, CHECK);
+        JVMCI::initialize_compiler(CHECK);
       }
 #ifndef COMPILER2
     } else {
@@ -1401,14 +1397,14 @@ void CompileBroker::compile_method_base(methodHandle method,
 
       // Don't allow blocking compilation requests to JVMCI
       // if JVMCI itself is not yet initialized
-      if (!JVMCIRuntime::is_HotSpotJVMCIRuntime_initialized() && compiler(comp_level)->is_jvmci()) {
+      if (!JVMCI::is_compiler_initialized() && compiler(comp_level)->is_jvmci()) {
         blocking = false;
       }
 
       // Don't allow blocking compilation requests if we are in JVMCIRuntime::shutdown
       // to avoid deadlock between compiler thread(s) and threads run at shutdown
       // such as the DestroyJavaVM thread.
-      if (JVMCIRuntime::shutdown_called()) {
+      if (JVMCI::shutdown_called()) {
         blocking = false;
       }
     }
@@ -1870,6 +1866,7 @@ bool CompileBroker::init_compiler_runtime() {
 
   {
     // Must switch to native to allocate ci_env
+    HandleMark hm(thread);
     ThreadToNativeFromVM ttn(thread);
     ciEnv ci_env(NULL, system_dictionary_modification_counter);
     // Cache Jvmti state
@@ -2223,21 +2220,28 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
       retry_message = "not retryable";
       compilable = ciEnv::MethodCompilable_never;
     } else {
-      JVMCIEnv env(task, system_dictionary_modification_counter);
+      JVMCICompileState compile_state(task, system_dictionary_modification_counter);
+      JVMCIEnv env(&compile_state, __FILE__, __LINE__);
       methodHandle method(thread, target_handle);
-      jvmci->compile_method(method, osr_bci, &env);
+      env.runtime()->compile_method(&env, jvmci, method, osr_bci);
 
-      failure_reason = env.failure_reason();
-      if (!env.retryable()) {
+      failure_reason = compile_state.failure_reason();
+      if (!compile_state.retryable()) {
         retry_message = "not retryable";
         compilable = ciEnv::MethodCompilable_not_at_tier;
       }
+      if (task->code() == NULL) {
+        assert(failure_reason != NULL, "must specify failure_reason");
+      }
+    }
+    if (failure_reason != NULL) {
       task->set_failure_reason(failure_reason);
     }
     post_compile(thread, task, event, task->code() != NULL, NULL);
   } else
 #endif // INCLUDE_JVMCI
   {
+    HandleMark hm(thread);
     NoHandleMark  nhm;
     ThreadToNativeFromVM ttn(thread);
 

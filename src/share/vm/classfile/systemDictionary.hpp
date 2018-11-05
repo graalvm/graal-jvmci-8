@@ -33,7 +33,6 @@
 #include "runtime/reflectionUtils.hpp"
 #include "utilities/hashtable.hpp"
 #include "utilities/hashtable.inline.hpp"
-#include "jvmci/systemDictionary_jvmci.hpp"
 
 
 // The system dictionary stores all loaded classes and maps:
@@ -198,9 +197,6 @@ class Ticks;
   do_klass(Integer_klass,                               java_lang_Integer,                         Pre                 ) \
   do_klass(Long_klass,                                  java_lang_Long,                            Pre                 ) \
                                                                                                                          \
-  /* JVMCI classes. These are loaded on-demand. */                                                                       \
-  JVMCI_WK_KLASSES_DO(do_klass) \
-
   /*end*/
 
 
@@ -217,11 +213,6 @@ class SystemDictionary : AllStatic {
     #undef WK_KLASS_ENUM
 
     WKID_LIMIT,
-
-#if INCLUDE_JVMCI
-    FIRST_JVMCI_WKID = WK_KLASS_ENUM_NAME(JVMCI_klass),
-    LAST_JVMCI_WKID  = WK_KLASS_ENUM_NAME(Value_klass),
-#endif
 
     FIRST_WKID = NO_WKID + 1
   };

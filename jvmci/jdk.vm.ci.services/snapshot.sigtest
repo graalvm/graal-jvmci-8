@@ -67,6 +67,6 @@ meth public static java.util.Map<java.lang.String,java.lang.String> getSavedProp
 meth public static void exportJVMCITo(java.lang.Class<?>)
 meth public static void initializeJVMCI()
 supr java.lang.Object
-hfds jvmciEnabled
+hfds jvmciEnabled,servicesCache
 hcls LazyBootClassPath
 

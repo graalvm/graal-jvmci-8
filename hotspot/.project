@@ -91,11 +91,6 @@
 			<locationURI>PARENT-1-PROJECT_LOC/agent</locationURI>
 		</link>
 		<link>
-			<name>build</name>
-			<type>2</type>
-			<locationURI>PARENT-1-PROJECT_LOC/build</locationURI>
-		</link>
-		<link>
 			<name>make</name>
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/make</locationURI>

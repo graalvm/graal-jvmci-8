@@ -168,15 +168,17 @@ public class HotSpotSignature implements Signature {
                 type = (ResolvedJavaType) result;
                 parameterTypes[index] = type;
             } else {
+                assert result != null;
                 return result;
             }
         }
+        assert type != null;
         return type;
     }
 
     @Override
     public String toMethodDescriptor() {
-        assert originalString.equals(Signature.super.toMethodDescriptor());
+        assert originalString.equals(Signature.super.toMethodDescriptor()) : originalString + " != " + Signature.super.toMethodDescriptor();
         return originalString;
     }
 

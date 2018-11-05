@@ -3634,6 +3634,16 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
     scp_assembly_required = true;
   }
 
+  if (!JVMCIGlobals::init_java_mode_from_flags()) {
+    return JNI_ERR;
+  }
+
+  if (JVMCILibDumpJNIConfig) {
+    // When dumping, we need to resolve selected JVMCI classes before
+    // the JVMCI class loader can be created
+    UseJVMCIClassLoader = false;
+  }
+
   if (!UseJVMCIClassLoader) {
     // Append resolved entries from lib/jvmci/parentClassLoader.classpath to boot class path
     jio_snprintf(pathBuffer, sizeof(pathBuffer), "%s%slib%sjvmci%sparentClassLoader.classpath", Arguments::get_java_home(), fileSep, fileSep, fileSep);

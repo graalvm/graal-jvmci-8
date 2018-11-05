@@ -193,7 +193,9 @@ public abstract class Architecture {
     public abstract PlatformKind getLargestStorableKind(RegisterCategory category);
 
     /**
-     * Return the {@link PlatformKind} that is used to store values of a given {@link JavaKind}.
+     * Gets the {@link PlatformKind} that is used to store values of a given {@link JavaKind}.
+     *
+     * @return {@code null} if there no deterministic {@link PlatformKind} for {@code javaKind}
      */
     public abstract PlatformKind getPlatformKind(JavaKind javaKind);
 

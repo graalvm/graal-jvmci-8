@@ -42,6 +42,7 @@ public final class VMFlag {
      */
     public final Object value;
 
+    @VMEntryPoint
     VMFlag(String name, String type, Object value) {
         this.name = name;
         this.type = type;

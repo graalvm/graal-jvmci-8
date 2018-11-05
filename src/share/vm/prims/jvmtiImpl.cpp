@@ -76,6 +76,7 @@ JvmtiAgentThread::start_function_wrapper(JavaThread *thread, TRAPS) {
 
 void
 JvmtiAgentThread::call_start_function() {
+    HandleMark hm(this);
     ThreadToNativeFromVM transition(this);
     _start_fn(_env->jvmti_external(), jni_environment(), (void*)_start_arg);
 }

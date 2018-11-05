@@ -60,21 +60,32 @@ public final class InitTimer implements AutoCloseable {
     }
 
     public static InitTimer timer(String name) {
-        return ENABLED ? new InitTimer(name) : null;
+        return isEnabled() ? new InitTimer(name) : null;
     }
 
     public static InitTimer timer(String name, Object suffix) {
-        return ENABLED ? new InitTimer(name + suffix) : null;
+        return isEnabled() ? new InitTimer(name + suffix) : null;
     }
 
     /**
-     * Specifies if initialization timing is enabled. Note: This property cannot use
+     * Determines if initialization timing is enabled. Note: This property cannot use
      * {@code HotSpotJVMCIRuntime.Option} since that class is not visible from this package.
      */
-    private static final boolean ENABLED = Boolean.getBoolean("jvmci.InitTimer");
+    private static boolean isEnabled() {
+        if (enabledPropertyValue == null) {
+            enabledPropertyValue = Boolean.getBoolean("jvmci.InitTimer");
+            nesting = new AtomicInteger();
+        }
+        return enabledPropertyValue;
+    }
 
-    public static final AtomicInteger nesting = ENABLED ? new AtomicInteger() : null;
-    public static final String SPACES = "                                            ";
+    /**
+     * Cache for value of {@code jvmci.InitTimer} system property.
+     */
+    @NativeImageReinitialize private static Boolean enabledPropertyValue;
+
+    private static AtomicInteger nesting;
+    private static final String SPACES = "                                            ";
 
     /**
      * Used to assert the invariant that all related initialization happens on the same thread.

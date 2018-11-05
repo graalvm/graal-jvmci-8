@@ -138,6 +138,11 @@ Mutex*   JfrThreadGroups_lock         = NULL;
 Mutex*   UnsafeJlong_lock             = NULL;
 #endif
 
+#ifdef INCLUDE_JVMCI
+Monitor* JVMCI_lock                   = NULL;
+#endif
+
+
 #define MAX_NUM_MUTEX 128
 static Monitor * _mutex_array[MAX_NUM_MUTEX];
 static int _num_mutex;
@@ -290,6 +295,10 @@ void mutex_init() {
 
 #ifndef SUPPORTS_NATIVE_CX8
   def(UnsafeJlong_lock             , Mutex,   special,     false);
+#endif
+
+#ifdef INCLUDE_JVMCI
+  def(JVMCI_lock                   , Monitor, nonleaf+2,   true);
 #endif
 }
 

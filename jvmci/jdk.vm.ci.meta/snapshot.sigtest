@@ -593,7 +593,6 @@ intf java.lang.reflect.AnnotatedElement
 intf jdk.vm.ci.meta.InvokeTarget
 intf jdk.vm.ci.meta.JavaMethod
 intf jdk.vm.ci.meta.ModifiersProvider
-meth public !varargs jdk.vm.ci.meta.JavaConstant invoke(jdk.vm.ci.meta.JavaConstant,jdk.vm.ci.meta.JavaConstant[]) throws java.lang.IllegalAccessException,java.lang.reflect.InvocationTargetException
 meth public <%0 extends java.lang.annotation.Annotation> {%%0} getParameterAnnotation(java.lang.Class<{%%0}>,int)
 meth public <%0 extends java.lang.annotation.Annotation> {%%0}[] getParameterAnnotations(java.lang.Class<{%%0}>)
 meth public abstract boolean canBeInlined()

@@ -80,6 +80,9 @@ class GCTaskQueue;
 class ThreadClosure;
 class IdealGraphPrinter;
 
+class JVMCIEnv;
+class JVMCIPrimitiveArray;
+
 class Metadata;
 template <class T, MEMFLAGS F> class ChunkedList;
 typedef ChunkedList<Metadata*, mtInternal> MetadataOnStackBuffer;
@@ -958,7 +961,7 @@ class JavaThread: public Thread {
 
  public:
   static jlong* _jvmci_old_thread_counters;
-  static void collect_counters(typeArrayOop array);
+  static void collect_counters(JVMCIEnv* JVMCIENV, JVMCIPrimitiveArray array);
  private:
 #endif
 

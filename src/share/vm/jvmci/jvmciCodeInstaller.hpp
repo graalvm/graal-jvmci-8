@@ -24,8 +24,10 @@
 #ifndef SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP
 #define SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP
 
+#include "jvmci/jvmci.hpp"
 #include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciEnv.hpp"
+#include "jvmci/jvmciJavaClasses.hpp"
 
 #if INCLUDE_AOT
 class RelocBuffer : public StackObj {
@@ -43,6 +45,9 @@ private:
   char *_buffer;
 };
 
+#define INCLUDE_AOT 0
+
+#if INCLUDE_AOT
 class AOTOopRecorder : public OopRecorder {
 public:
   AOTOopRecorder(Arena* arena = NULL, bool deduplicate = false);
@@ -57,6 +62,7 @@ private:
 
   GrowableArray<jobject>* _meta_refs;
 };
+#endif
 
 class CodeMetadata {
 public:
@@ -72,7 +78,9 @@ public:
 
   RelocBuffer* get_reloc_buffer() { return &_reloc_buffer; }
 
+#if INCLUDE_AOT
   AOTOopRecorder* get_oop_recorder() { return _oop_recorder; }
+#endif
 
   ExceptionHandlerTable* get_exception_table() { return _exception_table; }
 
@@ -86,9 +94,11 @@ public:
     _nr_scopes_desc = size;
   }
 
+#if INCLUDE_AOT
   void set_oop_recorder(AOTOopRecorder* recorder) {
     _oop_recorder = recorder;
   }
+#endif
 
   void set_exception_table(ExceptionHandlerTable* table) {
     _exception_table = table;
@@ -103,7 +113,9 @@ private:
   int _nr_scopes_desc;
 
   RelocBuffer _reloc_buffer;
+#if INCLUDE_AOT
   AOTOopRecorder* _oop_recorder;
+#endif
   ExceptionHandlerTable* _exception_table;
 };
 #endif // INCLUDE_AOT
@@ -142,24 +154,26 @@ private:
   };
 
   Arena         _arena;
+  JVMCIEnv*     _jvmci_env;
 
-  jobject       _data_section_handle;
-  jobject       _data_section_patches_handle;
-  jobject       _sites_handle;
+  JVMCIPrimitiveArray    _data_section_handle;
+  JVMCIObjectArray       _data_section_patches_handle;
+  JVMCIObjectArray       _sites_handle;
+#ifndef PRODUCT
+  JVMCIObjectArray       _comments_handle;
+#endif
+  JVMCIPrimitiveArray    _code_handle;
+  JVMCIObject            _word_kind_handle;
+
   CodeOffsets   _offsets;
 
-  jobject       _code_handle;
   jint          _code_size;
   jint          _total_frame_size;
   jint          _orig_pc_offset;
   jint          _parameter_count;
   jint          _constants_size;
-#ifndef PRODUCT
-  jobject       _comments_handle;
-#endif
 
   bool          _has_wide_vector;
-  jobject       _word_kind_handle;
 
   MarkId        _next_call_type;
   address       _invoke_mark_pc;
@@ -182,72 +196,77 @@ private:
   static ConstantIntValue*    _int_2_scope_value;
   static LocationValue*       _illegal_value;
 
-  jint pd_next_offset(NativeInstruction* inst, jint pc_offset, Handle method, TRAPS);
-  void pd_patch_OopConstant(int pc_offset, Handle constant, TRAPS);
-  void pd_patch_MetaspaceConstant(int pc_offset, Handle constant, TRAPS);
-  void pd_patch_DataSectionReference(int pc_offset, int data_offset, TRAPS);
-  void pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination, TRAPS);
-  void pd_relocate_JavaMethod(CodeBuffer &cbuf, Handle method, jint pc_offset, TRAPS);
-  void pd_relocate_poll(address pc, jint mark, TRAPS);
+  jint pd_next_offset(NativeInstruction* inst, jint pc_offset, JVMCIObject method, JVMCI_TRAPS);
+  void pd_patch_OopConstant(int pc_offset, JVMCIObject constant, JVMCI_TRAPS);
+  void pd_patch_MetaspaceConstant(int pc_offset, JVMCIObject constant, JVMCI_TRAPS);
+  void pd_patch_DataSectionReference(int pc_offset, int data_offset, JVMCI_TRAPS);
+  void pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination, JVMCI_TRAPS);
+  void pd_relocate_JavaMethod(CodeBuffer &cbuf, JVMCIObject method, jint pc_offset, JVMCI_TRAPS);
+  void pd_relocate_poll(address pc, jint mark, JVMCI_TRAPS);
 
-  objArrayOop sites();
-  arrayOop code();
-  arrayOop data_section();
-  objArrayOop data_section_patches();
+  JVMCIObjectArray sites()                { return _sites_handle; }
+  JVMCIPrimitiveArray code()              { return _code_handle; }
+  JVMCIPrimitiveArray  data_section()     { return _data_section_handle; }
+  JVMCIObjectArray data_section_patches() { return _data_section_patches_handle; }
 #ifndef PRODUCT
-  objArrayOop comments();
+  JVMCIObjectArray comments()             { return _comments_handle; }
 #endif
-
-  oop word_kind();
+  JVMCIObject word_kind()                 { return _word_kind_handle; }
 
 public:
 
-  CodeInstaller(bool immutable_pic_compilation) : _arena(mtCompiler), _immutable_pic_compilation(immutable_pic_compilation) {}
+  CodeInstaller(JVMCIEnv* jvmci_env, bool immutable_pic_compilation) : _arena(mtCompiler), _jvmci_env(jvmci_env), _immutable_pic_compilation(immutable_pic_compilation) {}
 
 #if INCLUDE_AOT
-  JVMCIEnv::CodeInstallResult gather_metadata(Handle target, Handle compiled_code, CodeMetadata& metadata, TRAPS);
+  JVMCI::CodeInstallResult gather_metadata(Handle target, Handle compiled_code, CodeMetadata& metadata, TRAPS);
 #endif
-  JVMCIEnv::CodeInstallResult install(JVMCICompiler* compiler, Handle target, Handle compiled_code, CodeBlob*& cb, Handle installed_code, Handle speculation_log, TRAPS);
+  JVMCI::CodeInstallResult install(JVMCICompiler* compiler, JVMCIObject target, JVMCIObject compiled_code,
+                                   CodeBlob*& cb, JVMCIObject installed_code, JVMCIObject speculation_log, JVMCI_TRAPS);
+
+  JVMCIEnv* jvmci_env() { return _jvmci_env; }
+  JVMCIRuntime* runtime() { return _jvmci_env->runtime(); }
 
   static address runtime_call_target_address(oop runtime_call);
-  static VMReg get_hotspot_reg(jint jvmciRegisterNumber, TRAPS);
+  static VMReg get_hotspot_reg(jint jvmciRegisterNumber, JVMCI_TRAPS);
   static bool is_general_purpose_reg(VMReg hotspotRegister);
 
   const OopMapSet* oopMapSet() const { return _debug_recorder->_oopmaps; }
 
 protected:
-  Location::Type get_oop_type(Thread* thread, Handle value);
-  ScopeValue* get_scope_value(Handle value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, TRAPS);
-  MonitorValue* get_monitor_value(Handle value, GrowableArray<ScopeValue*>* objects, TRAPS);
+  Location::Type get_oop_type(JVMCIObject value);
+  ScopeValue* get_scope_value(JVMCIObject value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, JVMCI_TRAPS);
+  MonitorValue* get_monitor_value(JVMCIObject value, GrowableArray<ScopeValue*>* objects, JVMCI_TRAPS);
 
-  void* record_metadata_reference(CodeSection* section, address dest, Handle constant, TRAPS);
+  void* record_metadata_reference(CodeSection* section, address dest, JVMCIObject constant, JVMCI_TRAPS);
 #ifdef _LP64
-  narrowKlass record_narrow_metadata_reference(CodeSection* section, address dest, Handle constant, TRAPS);
+  narrowKlass record_narrow_metadata_reference(CodeSection* section, address dest, JVMCIObject constant, JVMCI_TRAPS);
 #endif
 
   // extract the fields of the HotSpotCompiledCode
-  void initialize_fields(oop target, oop target_method, TRAPS);
-  void initialize_dependencies(oop target_method, OopRecorder* oop_recorder, TRAPS);
+  void initialize_fields(JVMCIObject target, JVMCIObject compiled_code, JVMCI_TRAPS);
+  void initialize_dependencies(JVMCIObject compiled_code, OopRecorder* oop_recorder, JVMCI_TRAPS);
 
-  int estimate_stubs_size(TRAPS);
+  int estimate_stubs_size(JVMCI_TRAPS);
 
   // perform data and call relocation on the CodeBuffer
-  JVMCIEnv::CodeInstallResult initialize_buffer(CodeBuffer& buffer, bool check_size, TRAPS);
+  JVMCI::CodeInstallResult initialize_buffer(CodeBuffer& buffer, bool check_size, JVMCI_TRAPS);
 
-  void assumption_NoFinalizableSubclass(Thread* thread, Handle assumption);
-  void assumption_ConcreteSubtype(Thread* thread, Handle assumption);
-  void assumption_LeafType(Thread* thread, Handle assumption);
-  void assumption_ConcreteMethod(Thread* thread, Handle assumption);
-  void assumption_CallSiteTargetValue(Thread* thread, Handle assumption);
+  void assumption_NoFinalizableSubclass(JVMCIObject assumption);
+  void assumption_ConcreteSubtype(JVMCIObject assumption);
+  void assumption_LeafType(JVMCIObject assumption);
+  void assumption_ConcreteMethod(JVMCIObject assumption);
+  void assumption_CallSiteTargetValue(JVMCIObject assumption, JVMCI_TRAPS);
 
-  void site_Safepoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS);
-  void site_Infopoint(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS);
-  void site_Call(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS);
-  void site_DataPatch(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS);
-  void site_Mark(CodeBuffer& buffer, jint pc_offset, Handle site, TRAPS);
-  void site_ExceptionHandler(jint pc_offset, Handle site);
+  void site_Safepoint(CodeBuffer& buffer, jint pc_offset, JVMCIObject site, JVMCI_TRAPS);
+  void site_Infopoint(CodeBuffer& buffer, jint pc_offset, JVMCIObject site, JVMCI_TRAPS);
+  void site_Call(CodeBuffer& buffer, jint pc_offset, JVMCIObject site, JVMCI_TRAPS);
+  void site_DataPatch(CodeBuffer& buffer, jint pc_offset, JVMCIObject site, JVMCI_TRAPS);
+  void site_Mark(CodeBuffer& buffer, jint pc_offset, JVMCIObject site, JVMCI_TRAPS);
+  void site_ExceptionHandler(jint pc_offset, JVMCIObject site);
 
-  OopMap* create_oop_map(Handle debug_info, TRAPS);
+  OopMap* create_oop_map(JVMCIObject debug_info, JVMCI_TRAPS);
+
+  VMReg getVMRegFromLocation(JVMCIObject location, int total_frame_size, JVMCI_TRAPS);
 
   /**
    * Specifies the level of detail to record for a scope.
@@ -260,23 +279,17 @@ protected:
   };
 
   int map_jvmci_bci(int bci);
-  void record_scope(jint pc_offset, Handle debug_info, ScopeMode scope_mode, bool return_oop, TRAPS);
-  void record_scope(jint pc_offset, Handle debug_info, ScopeMode scope_mode, TRAPS) {
-    record_scope(pc_offset, debug_info, scope_mode, false /* return_oop */, THREAD);
+  
+  void record_scope(jint pc_offset, JVMCIObject debug_info, ScopeMode scope_mode, bool return_oop, JVMCI_TRAPS);
+  void record_scope(jint pc_offset, JVMCIObject debug_info, ScopeMode scope_mode, JVMCI_TRAPS) {
+    record_scope(pc_offset, debug_info, scope_mode, false /* return_oop */, JVMCIENV);
   }
-  void record_scope(jint pc_offset, Handle position, ScopeMode scope_mode, GrowableArray<ScopeValue*>* objects, bool return_oop, TRAPS);
-  void record_object_value(ObjectValue* sv, Handle value, GrowableArray<ScopeValue*>* objects, TRAPS);
+  void record_scope(jint pc_offset, JVMCIObject position, ScopeMode scope_mode, GrowableArray<ScopeValue*>* objects, bool return_oop, JVMCI_TRAPS);
+  void record_object_value(ObjectValue* sv, JVMCIObject value, GrowableArray<ScopeValue*>* objects, JVMCI_TRAPS);
 
-  GrowableArray<ScopeValue*>* record_virtual_objects(Handle debug_info, TRAPS);
+  GrowableArray<ScopeValue*>* record_virtual_objects(JVMCIObject debug_info, JVMCI_TRAPS);
 
   int estimateStubSpace(int static_call_stubs);
 };
-
-/**
- * Gets the Method metaspace object from a HotSpotResolvedJavaMethodImpl Java object.
- */
-Method* getMethodFromHotSpotMethod(oop hotspot_method);
-
-
 
 #endif // SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP

@@ -23,6 +23,7 @@
 package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
+
 import jdk.vm.ci.code.InstalledCode;
 import jdk.vm.ci.code.InvalidInstalledCodeException;
 import jdk.vm.ci.meta.JavaKind;
@@ -30,22 +31,37 @@ import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 
 /**
- * Implementation of {@link InstalledCode} for code installed as an nmethod.
- *
- * When a {@link HotSpotNmethod} dies, it triggers unloading of the nmethod unless
+ * Implementation of {@link InstalledCode} for code installed as an {@code nmethod}. The address of
+ * the {@code nmethod} is stored in {@link InstalledCode#address} and the value of
+ * {@code nmethod::verified_entry_point()} is in {@link InstalledCode#entryPoint}.
+ * <p>
+ * When a {@link HotSpotNmethod} dies, it triggers invalidation of the {@code nmethod} unless
  * {@link #isDefault() == true}.
+ * <p>
+ * The diagram below shows the relationship between an {@code nmethod} and its
+ * {@link HotSpotNmethod} mirrors:
+ * <p>
+ * <img src="doc-files/HotSpotNmethod Mirrors.jpg">
  */
 public class HotSpotNmethod extends HotSpotInstalledCode {
 
     /**
-     * This (indirect) Method* reference is safe since class redefinition preserves all methods
-     * associated with nmethods in the code cache.
+     * This (indirect) {@code Method*} reference is safe since class redefinition preserves all
+     * methods associated with nmethods in the code cache.
      */
-    private final HotSpotResolvedJavaMethod method;
+    private final HotSpotResolvedJavaMethodImpl method;
 
+    /**
+     * Specifies whether the {@code nmethod} associated with this object is the code executed by
+     * default HotSpot linkage when a normal Java call to {@link #method} is made. This true when
+     * {@code this.method.metadataHandle->_code == this.address}. If not, then the {@code nmethod}
+     * can only be invoked via a non-default mechanism based on a strong reference to this object
+     * (e.g., https://goo.gl/LX88rZ). As such, HotSpot will invalidate the {@code nmethod} once this
+     * object dies if {@code isDefault == false}.
+     */
     private final boolean isDefault;
 
-    public HotSpotNmethod(HotSpotResolvedJavaMethod method, String name, boolean isDefault) {
+    HotSpotNmethod(HotSpotResolvedJavaMethodImpl method, String name, boolean isDefault) {
         super(name);
         this.method = method;
         this.isDefault = isDefault;
@@ -66,20 +82,12 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
 
     @Override
     public void invalidate() {
-        compilerToVM().invalidateInstalledCode(this);
+        compilerToVM().invalidateHotSpotNmethod(this);
     }
 
     @Override
     public String toString() {
-        return String.format("InstalledNmethod[method=%s, codeBlob=0x%x, isDefault=%b, name=%s]", method, getAddress(), isDefault, name);
-    }
-
-    protected boolean checkThreeObjectArgs() {
-        assert method.getSignature().getParameterCount(!method.isStatic()) == 3;
-        assert method.getSignature().getParameterKind(0) == JavaKind.Object;
-        assert method.getSignature().getParameterKind(1) == JavaKind.Object;
-        assert !method.isStatic() || method.getSignature().getParameterKind(2) == JavaKind.Object;
-        return true;
+        return String.format("HotSpotNmethod[method=%s, codeBlob=0x%x, isDefault=%b, name=%s]", method, getAddress(), isDefault, name);
     }
 
     private boolean checkArgs(Object... args) {
@@ -99,7 +107,7 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
     @Override
     public Object executeVarargs(Object... args) throws InvalidInstalledCodeException {
         assert checkArgs(args);
-        return compilerToVM().executeInstalledCode(args, this);
+        return compilerToVM().executeHotSpotNmethod(args, this);
     }
 
     @Override

@@ -1870,37 +1870,29 @@ oop java_lang_Throwable::get_stack_trace_element(oop throwable, int index, TRAPS
   return element;
 }
 
-oop java_lang_StackTraceElement::create(Handle mirror, int method_id,
-                                        int version, int bci, int cpref, TRAPS) {
-  // Allocate java.lang.StackTraceElement instance
-  Klass* k = SystemDictionary::StackTraceElement_klass();
-  assert(k != NULL, "must be loaded in 1.4+");
-  instanceKlassHandle ik (THREAD, k);
-  if (ik->should_be_initialized()) {
-    ik->initialize(CHECK_0);
-  }
+void java_lang_StackTraceElement::decode(methodHandle method, int bci, Symbol*& methodName, Symbol*& fileName, int& lineNumber, TRAPS) {
+  Handle mirror (THREAD, method->method_holder()->java_mirror());
+  int method_id = method->orig_method_idnum();
+  int cpref = method->name_index();
 
-  Handle element = ik->allocate_instance_handle(CHECK_0);
+  decode(mirror, method_id, method->constants()->version(), bci, cpref, methodName, fileName, lineNumber, CHECK);
+}
+
+void java_lang_StackTraceElement::decode(Handle mirror, int method_id, int version, int bci, int cpref, Symbol*& methodName, Symbol*& fileName, int& lineNumber, TRAPS) {
   // Fill in class name
-  ResourceMark rm(THREAD);
   InstanceKlass* holder = InstanceKlass::cast(java_lang_Class::as_Klass(mirror()));
-  const char* str = holder->external_name();
-  oop classname = StringTable::intern((char*) str, CHECK_0);
-  java_lang_StackTraceElement::set_declaringClass(element(), classname);
-
   Method* method = holder->method_with_orig_idnum(method_id, version);
 
   // The method can be NULL if the requested class version is gone
   Symbol* sym = (method != NULL) ? method->name() : holder->constants()->symbol_at(cpref);
 
   // Fill in method name
-  oop methodname = StringTable::intern(sym, CHECK_0);
-  java_lang_StackTraceElement::set_methodName(element(), methodname);
+  methodName = sym;
 
   if (!version_matches(method, version)) {
-    // The method was redefined, accurate line number information isn't available
-    java_lang_StackTraceElement::set_fileName(element(), NULL);
-    java_lang_StackTraceElement::set_lineNumber(element(), -1);
+    // If the method was redefined, accurate line number information isn't available
+    fileName = NULL;
+    lineNumber = -1;
   } else {
     // Fill in source file name and line number.
     // Use a specific ik version as a holder since the mirror might
@@ -1911,12 +1903,44 @@ oop java_lang_StackTraceElement::create(Handle mirror, int method_id,
     Symbol* source = holder->source_file_name();
     if (ShowHiddenFrames && source == NULL)
       source = vmSymbols::unknown_class_name();
-    oop filename = StringTable::intern(source, CHECK_0);
-    java_lang_StackTraceElement::set_fileName(element(), filename);
 
-    int line_number = get_line_number(method, bci);
-    java_lang_StackTraceElement::set_lineNumber(element(), line_number);
+    fileName = source;
+    lineNumber = get_line_number(method, bci);
   }
+}
+
+oop java_lang_StackTraceElement::create(Handle mirror, int method_id,
+                                        int version, int bci, int cpref, TRAPS) {
+  ResourceMark rm;
+
+  // Fill in class name
+  InstanceKlass* holder = InstanceKlass::cast(java_lang_Class::as_Klass(mirror()));
+  const char* str = holder->external_name();
+  oop className = StringTable::intern((char*) str, CHECK_0);
+
+  Symbol* methodNameSym;
+  Symbol* fileNameSym;
+  int lineNumber;
+
+  decode(mirror, method_id, version, bci, cpref, methodNameSym, fileNameSym, lineNumber, CHECK_0);
+
+  oop methodName = StringTable::intern(methodNameSym, CHECK_0);
+  oop fileName = StringTable::intern(fileNameSym, CHECK_0);;
+
+  // Allocate java.lang.StackTraceElement instance
+  Klass* k = SystemDictionary::StackTraceElement_klass();
+  assert(k != NULL, "must be loaded in 1.4+");
+  instanceKlassHandle ik (THREAD, k);
+  if (ik->should_be_initialized()) {
+    ik->initialize(CHECK_0);
+  }
+
+  Handle element = ik->allocate_instance_handle(CHECK_0);
+  java_lang_StackTraceElement::set_declaringClass(element(), className);
+  java_lang_StackTraceElement::set_methodName(element(), methodName);
+  java_lang_StackTraceElement::set_fileName(element(), fileName);
+  java_lang_StackTraceElement::set_lineNumber(element(), lineNumber);
+
   return element();
 }
 

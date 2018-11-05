@@ -34,6 +34,7 @@
 #include "gc_implementation/shared/gcTrace.hpp"
 #include "gc_implementation/shared/gcTraceTime.hpp"
 #include "gc_interface/collectedHeap.inline.hpp"
+#include "jvmci/jvmci.hpp"
 #include "memory/genCollectedHeap.hpp"
 #include "memory/genMarkSweep.hpp"
 #include "memory/genOopClosures.inline.hpp"
@@ -238,6 +239,8 @@ void GenMarkSweep::mark_sweep_phase1(int level,
 
   // Prune dead klasses from subklass/sibling/implementor lists.
   Klass::clean_weak_klass_links(&is_alive);
+
+  JVMCI::do_unloading(&is_alive, purged_class);
 
   // Delete entries for dead interned strings.
   StringTable::unlink(&is_alive);

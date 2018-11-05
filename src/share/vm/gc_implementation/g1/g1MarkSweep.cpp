@@ -37,6 +37,7 @@
 #include "gc_implementation/shared/gcTimer.hpp"
 #include "gc_implementation/shared/gcTrace.hpp"
 #include "gc_implementation/shared/gcTraceTime.hpp"
+#include "jvmci/jvmci.hpp"
 #include "memory/gcLocker.hpp"
 #include "memory/genCollectedHeap.hpp"
 #include "memory/modRefBarrierSet.hpp"
@@ -174,6 +175,10 @@ void G1MarkSweep::mark_sweep_phase1(bool& marked_for_unloading,
 
      // Unload nmethods.
      CodeCache::do_unloading(&GenMarkSweep::is_alive, purged_class);
+
+#if INCLUDE_JVMCI
+     JVMCI::do_unloading(&GenMarkSweep::is_alive, purged_class);
+#endif
 
      // Prune dead klasses from subklass/sibling/implementor lists.
      Klass::clean_weak_klass_links(&GenMarkSweep::is_alive);

@@ -29,5 +29,12 @@ package jdk.vm.ci.code;
  */
 public final class InvalidInstalledCodeException extends Exception {
 
+    public InvalidInstalledCodeException() {
+    }
+
+    public InvalidInstalledCodeException(String message) {
+        super(message);
+    }
+
     private static final long serialVersionUID = -3540232440794244844L;
 }

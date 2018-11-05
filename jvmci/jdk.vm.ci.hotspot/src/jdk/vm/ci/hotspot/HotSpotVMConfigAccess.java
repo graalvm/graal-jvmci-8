@@ -198,7 +198,7 @@ public class HotSpotVMConfigAccess {
             return notPresent;
         }
         if (entry.value == null) {
-            throw new JVMCIError(name + " is not a static field");
+            throw new JVMCIError(name + " is not a static field ");
         }
         return type.cast(convertValue(name, type, entry.value, cppType));
     }

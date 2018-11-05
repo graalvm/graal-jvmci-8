@@ -22,12 +22,16 @@
  */
 package jdk.vm.ci.hotspot;
 
-import java.lang.ref.Reference;
+import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
+import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
+import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
+
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
-import java.util.Arrays;
-import java.util.Iterator;
+import java.util.HashMap;
 
+import jdk.vm.ci.common.JVMCIError;
+import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.ResolvedJavaType;
 
@@ -36,236 +40,165 @@ import jdk.vm.ci.meta.ResolvedJavaType;
  * Because of class redefinition Method* and ConstantPool* can be freed if they don't appear to be
  * in use so they must be tracked when there are live references to them from Java.
  *
- * The general theory of operation is that all {@link MetaspaceWrapperObject}s are created by
- * calling into the VM which calls back out to actually create the wrapper instance. During the call
- * the VM keeps the metadata reference alive through the use of metadata handles. Once the call
- * completes the wrapper object is registered here and will be scanned during metadata scanning. The
- * weakness of the reference to the wrapper object allows them to be reclaimed when they are no
- * longer used.
+ * The general theory of operation is that all {@link MetaspaceHandleObject}s are created by calling
+ * into the VM which calls back out to actually create the wrapper instance. During the call the VM
+ * keeps the metadata reference alive through the use of metadata handles. Once the call completes
+ * the wrapper object is registered here and will be scanned during metadata scanning. The weakness
+ * of the reference to the wrapper object allows them to be reclaimed when they are no longer used.
  *
  */
 class HotSpotJVMCIMetaAccessContext {
 
     /**
-     * The set of currently live contexts used for tracking of live metadata. Examined from the VM
-     * during garbage collection.
+     * This is like {@link sun.misc.Cleaner} but with weak semantics instead of phantom. Objects
+     * referenced by this might be referenced by {@link ResolvedJavaType} which is kept alive by a
+     * {@link WeakReference} so we need equivalent reference strength.
      */
-    private static WeakReference<?>[] allContexts = new WeakReference<?>[0];
+    static final class ReferenceCleaner extends WeakReference<Object> {
 
-    /**
-     * This is a chunked list of metadata roots. It can be read from VM native code so it's been
-     * marked volatile to ensure the order of updates are respected.
-     */
-    private volatile Object[] metadataRoots;
+        @NativeImageReinitialize private static ReferenceCleaner first = null;
 
-    private ChunkedList<WeakReference<MetaspaceWrapperObject>> list = new ChunkedList<>();
+        private ReferenceCleaner next = null;
+        private ReferenceCleaner prev = null;
 
-    /**
-     * The number of weak references freed since the last time the list was shrunk.
-     */
-    private int freed;
+        private final long handle;
 
-    /**
-     * The {@link ReferenceQueue} tracking the weak references created by this context.
-     */
-    private final ReferenceQueue<MetaspaceWrapperObject> queue = new ReferenceQueue<>();
+        private static synchronized ReferenceCleaner add(ReferenceCleaner cl) {
+            if (first != null) {
+                cl.next = first;
+                first.prev = cl;
+            }
+            first = cl;
+            return cl;
+        }
 
-    static synchronized void add(HotSpotJVMCIMetaAccessContext context) {
-        for (int i = 0; i < allContexts.length; i++) {
-            if (allContexts[i] == null || allContexts[i].get() == null) {
-                allContexts[i] = new WeakReference<>(context);
+        private static synchronized boolean remove(ReferenceCleaner cl) {
+            // If already removed, do nothing
+            if (cl.next == cl) {
+                return false;
+            }
+
+            // Update list
+            if (first == cl) {
+                if (cl.next != null) {
+                    first = cl.next;
+                } else {
+                    first = cl.prev;
+                }
+            }
+            if (cl.next != null) {
+                cl.next.prev = cl.prev;
+            }
+            if (cl.prev != null) {
+                cl.prev.next = cl.next;
+            }
+
+            // Indicate removal by pointing the cleaner to itself
+            cl.next = cl;
+            cl.prev = cl;
+            return true;
+        }
+
+        ReferenceCleaner(Object o, long handle) {
+            super(o, queue);
+            this.handle = handle;
+        }
+
+        void clearHandle() {
+            remove(this);
+            long value = UNSAFE.getLong(null, handle);
+            UNSAFE.compareAndSwapLong(null, handle, value, 0);
+        }
+
+        /**
+         * Periodically trim the list of tracked metadata. A new list is created to replace the old
+         * to avoid concurrent scanning issues.
+         */
+        private static synchronized void clean() {
+            ReferenceCleaner ref = (ReferenceCleaner) queue.poll();
+            if (ref == null) {
                 return;
             }
+            while (ref != null) {
+                ref.clearHandle();
+                ref = (ReferenceCleaner) queue.poll();
+            }
         }
-        int index = allContexts.length;
-        allContexts = Arrays.copyOf(allContexts, index + 2);
-        allContexts[index] = new WeakReference<>(context);
+
+        /**
+         * The {@link ReferenceQueue} tracking the weak references created by this context.
+         */
+        private static final ReferenceQueue<Object> queue = new ReferenceQueue<>();
+
+        private static void create(Object object, long handle) {
+            clean();
+            add(new ReferenceCleaner(object, handle));
+        }
+
     }
 
     HotSpotJVMCIMetaAccessContext() {
-        add(this);
     }
 
     /**
-     * Periodically trim the list of tracked metadata. A new list is created to replace the old to
-     * avoid concurrent scanning issues.
-     */
-    private void clean() {
-        Reference<?> ref = queue.poll();
-        if (ref == null) {
-            return;
-        }
-        while (ref != null) {
-            freed++;
-            ref = queue.poll();
-        }
-        if (freed > list.size() / 2) {
-            ChunkedList<WeakReference<MetaspaceWrapperObject>> newList = new ChunkedList<>();
-            for (WeakReference<MetaspaceWrapperObject> element : list) {
-                /*
-                 * The referent could become null anywhere in here but it doesn't matter. It will
-                 * get cleaned up next time.
-                 */
-                if (element != null && element.get() != null) {
-                    newList.add(element);
-                }
-            }
-            list = newList;
-            metadataRoots = list.getHead();
-            freed = 0;
-        }
-    }
-
-    /**
-     * Add a {@link MetaspaceWrapperObject} to tracked by the GC. It's assumed that the caller is
+     * Add a {@link MetaspaceHandleObject} to be tracked by the GC. It's assumed that the caller is
      * responsible for keeping the reference alive for the duration of the call. Once registration
      * is complete then the VM will ensure it's kept alive.
      *
      * @param metaspaceObject
      */
 
-    public synchronized void add(MetaspaceWrapperObject metaspaceObject) {
-        clean();
-        list.add(new WeakReference<>(metaspaceObject, queue));
-        if (list.getHead() != metadataRoots) {
-            /*
-             * The list enlarged so update the head.
-             */
-            metadataRoots = list.getHead();
-        }
-        assert isRegistered(metaspaceObject);
+    void add(MetaspaceHandleObject metaspaceObject) {
+        ReferenceCleaner.create(metaspaceObject, metaspaceObject.getMetadataHandle());
     }
 
-    protected ResolvedJavaType createClass(Class<?> javaClass) {
-        if (javaClass.isPrimitive()) {
-            JavaKind kind = JavaKind.fromJavaClass(javaClass);
-            return new HotSpotResolvedPrimitiveType(kind);
-        } else {
-            return new HotSpotResolvedObjectTypeImpl(javaClass, this);
-        }
+    void add(IndirectHotSpotObjectConstantImpl constantObject) {
+        ReferenceCleaner.create(constantObject, constantObject.objectHandle);
     }
 
-    private final ClassValue<WeakReference<ResolvedJavaType>> resolvedJavaType = new ClassValue<WeakReference<ResolvedJavaType>>() {
-        @Override
-        protected WeakReference<ResolvedJavaType> computeValue(Class<?> type) {
-            return new WeakReference<>(createClass(type));
-        }
-    };
+    @NativeImageReinitialize private static HashMap<Long, WeakReference<ResolvedJavaType>> resolvedJavaTypes;
 
     /**
      * Gets the JVMCI mirror for a {@link Class} object.
      *
      * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
      */
-    public ResolvedJavaType fromClass(Class<?> javaClass) {
-        ResolvedJavaType javaType = null;
-        while (javaType == null) {
-            WeakReference<ResolvedJavaType> type = resolvedJavaType.get(javaClass);
-            javaType = type.get();
-            if (javaType == null) {
-                /*
-                 * If the referent has become null, clear out the current value and let computeValue
-                 * above create a new value. Reload the value in a loop because in theory the
-                 * WeakReference referent can be reclaimed at any point.
-                 */
-                resolvedJavaType.remove(javaClass);
+    static HotSpotResolvedJavaType fromClass(Class<?> javaClass) {
+        if (javaClass == null) {
+            /*
+             * If the referent has become null, clear out the current value and let computeValue
+             * above create a new value. Reload the value in a loop because in theory the
+             * WeakReference referent can be reclaimed at any point.
+             */
+            return null;
+        }
+        if (javaClass.isPrimitive()) {
+            return HotSpotResolvedPrimitiveType.forKind(JavaKind.fromJavaClass(javaClass));
+        }
+        if (IS_IN_NATIVE_IMAGE) {
+            try {
+                return runtime().compilerToVm.lookupType(javaClass.getName().replace('.', '/'), null, true);
+            } catch (ClassNotFoundException e) {
+                throw new JVMCIError(e);
             }
+        }
+        return runtime().compilerToVm.lookupClass(javaClass);
+    }
+
+    synchronized HotSpotResolvedObjectTypeImpl fromMetaspace(long klassPointer, String signature) {
+        if (resolvedJavaTypes == null) {
+            resolvedJavaTypes = new HashMap<>();
+        }
+        assert klassPointer != 0;
+        WeakReference<ResolvedJavaType> klassReference = resolvedJavaTypes.get(klassPointer);
+        HotSpotResolvedObjectTypeImpl javaType = null;
+        if (klassReference != null) {
+            javaType = (HotSpotResolvedObjectTypeImpl) klassReference.get();
+        }
+        if (javaType == null) {
+            javaType = new HotSpotResolvedObjectTypeImpl(klassPointer, signature);
+            resolvedJavaTypes.put(klassPointer, new WeakReference<>(javaType));
         }
         return javaType;
-    }
-
-    /**
-     * A very simple append only chunked list implementation.
-     */
-    static class ChunkedList<T> implements Iterable<T> {
-        private static final int CHUNK_SIZE = 32;
-
-        private static final int NEXT_CHUNK_INDEX = CHUNK_SIZE - 1;
-
-        private Object[] head;
-        private int index;
-        private int size;
-
-        ChunkedList() {
-            head = new Object[CHUNK_SIZE];
-            index = 0;
-        }
-
-        void add(T element) {
-            if (index == NEXT_CHUNK_INDEX) {
-                Object[] newHead = new Object[CHUNK_SIZE];
-                newHead[index] = head;
-                head = newHead;
-                index = 0;
-            }
-            head[index++] = element;
-            size++;
-        }
-
-        Object[] getHead() {
-            return head;
-        }
-
-        @Override
-        public Iterator<T> iterator() {
-            return new ChunkIterator<>();
-        }
-
-        int size() {
-            return size;
-        }
-
-        class ChunkIterator<V> implements Iterator<V> {
-
-            ChunkIterator() {
-                currentChunk = head;
-                currentIndex = -1;
-                next = findNext();
-            }
-
-            Object[] currentChunk;
-            int currentIndex;
-            V next;
-
-            @SuppressWarnings("unchecked")
-            V findNext() {
-                V result;
-                do {
-                    currentIndex++;
-                    if (currentIndex == NEXT_CHUNK_INDEX) {
-                        currentChunk = (Object[]) currentChunk[currentIndex];
-                        currentIndex = 0;
-                        if (currentChunk == null) {
-                            return null;
-                        }
-                    }
-                    result = (V) currentChunk[currentIndex];
-                } while (result == null);
-                return result;
-            }
-
-            @Override
-            public boolean hasNext() {
-                return next != null;
-            }
-
-            @Override
-            public V next() {
-                V result = next;
-                next = findNext();
-                return result;
-            }
-
-        }
-
-    }
-
-    synchronized boolean isRegistered(MetaspaceWrapperObject wrapper) {
-        for (WeakReference<MetaspaceWrapperObject> m : list) {
-            if (m != null && m.get() == wrapper) {
-                return true;
-            }
-        }
-        return false;
     }
 }

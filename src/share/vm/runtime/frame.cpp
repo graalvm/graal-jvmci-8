@@ -735,7 +735,7 @@ void frame::print_on_error(outputStream* st, char* buf, int buflen, bool verbose
                   ((nm->compiler() != NULL) ? nm->compiler()->name() : ""),
                   buf, m->code_size(), _pc, _cb->code_begin(), _pc - _cb->code_begin());
 #if INCLUDE_JVMCI
-        char* jvmciName = nm->jvmci_installed_code_name(buf, buflen);
+        const char* jvmciName = nm->jvmci_nmethod_mirror_name();
         if (jvmciName != NULL) {
           st->print(" (%s)", jvmciName);
         }

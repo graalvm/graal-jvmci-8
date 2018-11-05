@@ -23,6 +23,7 @@
 package jdk.vm.ci.hotspot;
 
 import java.util.Map;
+import java.util.Objects;
 
 import jdk.vm.ci.code.BailoutException;
 import jdk.vm.ci.code.BytecodeFrame;
@@ -102,15 +103,14 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
     @Override
     public InstalledCode installCode(ResolvedJavaMethod method, CompiledCode compiledCode, InstalledCode installedCode, SpeculationLog log, boolean isDefault) {
         InstalledCode resultInstalledCode;
-        if (installedCode == null) {
-            if (method == null) {
-                // Must be a stub
-                resultInstalledCode = new HotSpotRuntimeStub(((HotSpotCompiledCode) compiledCode).getName());
-            } else {
-                resultInstalledCode = new HotSpotNmethod((HotSpotResolvedJavaMethod) method, ((HotSpotCompiledCode) compiledCode).getName(), isDefault);
-            }
+        if (installedCode != null) {
+            throw new IllegalArgumentException("InstalledCode argument must be null");
+        }
+        if (method == null) {
+            // Must be a stub
+            resultInstalledCode = new HotSpotRuntimeStub(((HotSpotCompiledCode) compiledCode).getName());
         } else {
-            resultInstalledCode = installedCode;
+            resultInstalledCode = new HotSpotNmethod((HotSpotResolvedJavaMethodImpl) method, ((HotSpotCompiledCode) compiledCode).getName(), isDefault);
         }
 
         HotSpotSpeculationLog speculationLog = (log != null && log.hasSpeculations()) ? (HotSpotSpeculationLog) log : null;
@@ -139,7 +139,11 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
 
     @Override
     public void invalidateInstalledCode(InstalledCode installedCode) {
-        runtime.getCompilerToVM().invalidateInstalledCode(installedCode);
+        if (installedCode instanceof HotSpotNmethod) {
+            runtime.getCompilerToVM().invalidateHotSpotNmethod((HotSpotNmethod) installedCode);
+        } else {
+            throw new IllegalArgumentException("Cannot invalidate a " + Objects.requireNonNull(installedCode).getClass().getName());
+        }
     }
 
     @Override

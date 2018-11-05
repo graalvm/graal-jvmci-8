@@ -48,6 +48,10 @@ public class PrimitiveConstant implements JavaConstant, SerializableConstant {
         assert kind.isPrimitive() || kind == JavaKind.Illegal;
     }
 
+    static PrimitiveConstant forTypeChar(char kind, long i) {
+        return JavaConstant.forIntegerKind(JavaKind.fromPrimitiveOrVoidTypeChar(kind), i);
+    }
+
     @Override
     public JavaKind getJavaKind() {
         return kind;
