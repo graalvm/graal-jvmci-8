@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2017, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -69,6 +69,37 @@ class JVMCICompileState;
       return; \
     } \
   } while(0)
+
+// Helper class to ensure that references to Klass* are kept alive for G1
+class JVMCIKlassHandle : public StackObj {
+ private:
+  Klass*     _klass;
+  Handle     _holder;
+  Thread*    _thread;
+
+  Klass*        klass() const                     { return _klass; }
+  Klass*        non_null_klass() const            { assert(_klass != NULL, "resolving NULL _klass"); return _klass; }
+
+ public:
+  /* Constructors */
+  JVMCIKlassHandle (Thread* thread) : _klass(NULL), _thread(thread) {}
+  JVMCIKlassHandle (Thread* thread, Klass* klass);
+
+  JVMCIKlassHandle (const JVMCIKlassHandle &h): _klass(h._klass), _holder(h._holder), _thread(h._thread) {}
+  JVMCIKlassHandle& operator=(const JVMCIKlassHandle &s);
+  JVMCIKlassHandle& operator=(Klass* klass);
+
+  /* Operators for ease of use */
+  Klass*        operator () () const            { return klass(); }
+  Klass*        operator -> () const            { return non_null_klass(); }
+
+  bool    operator == (Klass* o) const          { return klass() == o; }
+  bool    operator == (const JVMCIKlassHandle& h) const  { return klass() == h.klass(); }
+
+  /* Null checks */
+  bool    is_null() const                      { return _klass == NULL; }
+  bool    not_null() const                     { return _klass != NULL; }
+};
 
 // Wrapper for a JNI call into the JVMCI shared library.
 // This performs a ThreadToNativeFromVM transition so that the VM
@@ -514,7 +545,7 @@ public:
 
   JVMCIObject get_jvmci_method(const methodHandle& method, JVMCI_TRAPS);
 
-  JVMCIObject get_jvmci_type(KlassHandle klass, JVMCI_TRAPS);
+  JVMCIObject get_jvmci_type(JVMCIKlassHandle& klass, JVMCI_TRAPS);
 
   // Unpack an instance of HotSpotConstantPool into the original ConstantPool*
   ConstantPool* asConstantPool(JVMCIObject constant_pool);

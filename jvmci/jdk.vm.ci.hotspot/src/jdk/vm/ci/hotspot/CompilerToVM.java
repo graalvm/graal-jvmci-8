@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -289,6 +289,8 @@ final class CompilerToVM {
      */
     native HotSpotResolvedJavaMethodImpl lookupMethodInPool(HotSpotConstantPool constantPool, int cpi, byte opcode);
 
+    // TODO resolving JVM_CONSTANT_Dynamic
+
     /**
      * Ensures that the type referenced by the specified {@code JVM_CONSTANT_InvokeDynamic} entry at
      * index {@code cpi} in {@code constantPool} is loaded and initialized.
@@ -308,6 +310,14 @@ final class CompilerToVM {
     native void resolveInvokeHandleInPool(HotSpotConstantPool constantPool, int cpi);
 
     /**
+     * If {@code cpi} denotes an entry representing a resolved dynamic adapter (see
+     * {@link #resolveInvokeDynamicInPool} and {@link #resolveInvokeHandleInPool}), return the
+     * opcode of the instruction for which the resolution was performed ({@code invokedynamic} or
+     * {@code invokevirtual}), or {@code -1} otherwise.
+     */
+    native int isResolvedInvokeHandleInPool(HotSpotConstantPool constantPool, int cpi);
+
+    /**
      * Gets the list of type names (in the format of {@link JavaType#getName()}) denoting the
      * classes that define signature polymorphic methods.
      */
@@ -324,8 +334,10 @@ final class CompilerToVM {
     native HotSpotResolvedObjectTypeImpl resolveTypeInPool(HotSpotConstantPool constantPool, int cpi) throws LinkageError;
 
     /**
-     * Looks up and attempts to resolve the {@code JVM_CONSTANT_Field} entry at index {@code cpi} in
-     * {@code constantPool}. The values returned in {@code info} are:
+     * Looks up and attempts to resolve the {@code JVM_CONSTANT_Field} entry for at index
+     * {@code cpi} in {@code constantPool}. For some opcodes, checks are performed that require the
+     * {@code method} that contains {@code opcode} to be specified. The values returned in
+     * {@code info} are:
      *
      * <pre>
      *     [ flags,  // fieldDescriptor::access_flags()
@@ -334,13 +346,13 @@ final class CompilerToVM {
      *     ]
      * </pre>
      *
-     * The values encoded in {@code info} are only valid if the field is resolved. The behavior of
-     * this method is undefined if {@code cpi} does not denote a {@code JVM_CONSTANT_Field} entry.
+     * The behavior of this method is undefined if {@code cpi} does not denote a
+     * {@code JVM_CONSTANT_Field} entry.
      *
      * @param info an array in which the details of the field are returned
      * @return the type defining the field if resolution is successful, 0 otherwise
      */
-    native HotSpotResolvedObjectTypeImpl resolveFieldInPool(HotSpotConstantPool constantPool, int cpi, byte opcode, int[] info);
+    native HotSpotResolvedObjectTypeImpl resolveFieldInPool(HotSpotConstantPool constantPool, int cpi, HotSpotResolvedJavaMethodImpl method, byte opcode, int[] info);
 
     /**
      * Converts {@code cpci} from an index into the cache for {@code constantPool} to an index
@@ -375,6 +387,23 @@ final class CompilerToVM {
     native int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, HotSpotSpeculationLog speculationLog);
 
     /**
+     * Generates the VM metadata for some compiled code and copies them into {@code metaData}. This
+     * method does not install anything into the code cache.
+     *
+     * @param target the target where this code would be installed
+     * @param compiledCode the result of a compilation
+     * @param metaData the metadata is written to this object
+     * @return the outcome of the installation which will be one of
+     *         {@link HotSpotVMConfig#codeInstallResultOk},
+     *         {@link HotSpotVMConfig#codeInstallResultCacheFull},
+     *         {@link HotSpotVMConfig#codeInstallResultCodeTooLarge},
+     *         {@link HotSpotVMConfig#codeInstallResultDependenciesFailed} or
+     *         {@link HotSpotVMConfig#codeInstallResultDependenciesInvalid}.
+     * @throws JVMCIError if there is something wrong with the compiled code or the metadata
+     */
+    native int getMetadata(TargetDescription target, HotSpotCompiledCode compiledCode, HotSpotMetaData metaData);
+
+    /**
      * Resets all compilation statistics.
      */
     native void resetCompilationStatistics();
@@ -404,8 +433,8 @@ final class CompilerToVM {
      * {@code exactReceiver}.
      *
      * @param caller the caller or context type used to perform access checks
-     * @return the link-time resolved method (might be abstract) or {@code 0} if it can not be
-     *         linked
+     * @return the link-time resolved method (might be abstract) or {@code null} if it is either a
+     *         signature polymorphic method or can not be linked.
      */
     native HotSpotResolvedJavaMethodImpl resolveMethod(HotSpotResolvedObjectTypeImpl exactReceiver, HotSpotResolvedJavaMethodImpl method, HotSpotResolvedObjectTypeImpl caller);
 
@@ -505,7 +534,8 @@ final class CompilerToVM {
     native HotSpotObjectConstantImpl readUncompressedOop(long address);
 
     /**
-     * Sets flags on {@code method} indicating that it should never be inlined or compiled.
+     * Sets flags on {@code method} indicating that it should never be inlined or compiled by the
+     * VM.
      */
     native void setNotInlinableOrCompilable(HotSpotResolvedJavaMethodImpl method);
 
@@ -552,7 +582,6 @@ final class CompilerToVM {
     /**
      * @see jdk.vm.ci.code.stack.StackIntrospection#iterateFrames
      */
-
     native <T> T iterateFrames(ResolvedJavaMethod[] initialMethods, ResolvedJavaMethod[] matchingMethods, int initialSkip, InspectedFrameVisitor<T> visitor);
 
     /**
@@ -683,6 +712,14 @@ final class CompilerToVM {
      * @throws IllegalArgumentException if an out of range position is given
      */
     native int methodDataProfileDataSize(long metaspaceMethodData, int position);
+
+    /**
+     * Gets the fingerprint for a given Klass*.
+     *
+     * @param metaspaceKlass
+     * @return the value of the fingerprint (zero for arrays and synthetic classes).
+     */
+    native long getFingerprint(long metaspaceKlass);
 
     /**
      * Return the amount of native stack required for the interpreter frames represented by

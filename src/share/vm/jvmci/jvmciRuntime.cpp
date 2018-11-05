@@ -132,7 +132,7 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
   }
 
  public:
-  jmetadata allocate_handle(KlassHandle handle)        { return allocate_handle(handle()); }
+  jmetadata allocate_handle(Klass* handle)             { return allocate_handle(handle); }
   jmetadata allocate_handle(methodHandle handle)       { return allocate_handle(handle()); }
   jmetadata allocate_handle(constantPoolHandle handle) { return allocate_handle(handle()); }
 
@@ -369,7 +369,7 @@ JRT_BLOCK_ENTRY(void, JVMCIRuntime::new_instance_common(JavaThread* thread, Klas
   JRT_BLOCK;
   assert(klass->is_klass(), "not a class");
   Handle holder(THREAD, klass->klass_holder()); // keep the klass alive
-  instanceKlassHandle h(thread, klass);
+  InstanceKlass* h = InstanceKlass::cast(klass);
   {
     RetryableAllocationMark ram(thread, null_on_fail);
     h->check_valid_for_instantiation(true, CHECK);
@@ -469,7 +469,7 @@ JRT_ENTRY(void, JVMCIRuntime::dynamic_new_array_common(JavaThread* thread, oopDe
 JRT_END
 
 JRT_ENTRY(void, JVMCIRuntime::dynamic_new_instance_common(JavaThread* thread, oopDesc* type_mirror, bool null_on_fail))
-  instanceKlassHandle klass(THREAD, java_lang_Class::as_Klass(type_mirror));
+  InstanceKlass* klass = InstanceKlass::cast(java_lang_Class::as_Klass(type_mirror));
 
   if (klass == NULL) {
     ResourceMark rm(THREAD);
@@ -1274,7 +1274,7 @@ jobject JVMCI::make_global(Handle obj) {
   return _jvmci_handles->allocate_handle(obj());
 }
 
-jmetadata JVMCI::allocate_handle(const KlassHandle& handle) {
+jmetadata JVMCI::allocate_handle(Klass* handle) {
   assert(_metadata_handles != NULL, "uninitialized");
   MutexLocker ml(JVMCI_lock);
   return _metadata_handles->allocate_handle(handle);
@@ -1375,7 +1375,7 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized(JVMCIEnv* JVMCIENV) 
   if (JVMCIENV->is_hotspot() && _FactoryKlass == NULL) {
     JavaThread* THREAD = JavaThread::current();
     TempNewSymbol name = SymbolTable::new_symbol("jdk/vm/ci/services/JVMCIClassLoaderFactory", CHECK_EXIT);
-    KlassHandle klass = SystemDictionary::resolve_or_fail(name, true, CHECK_EXIT);
+    Klass* klass = SystemDictionary::resolve_or_fail(name, true, CHECK_EXIT);
 
     // We cannot use jvmciJavaClasses for this because we are currently in the
     // process of initializing that mechanism.
@@ -1386,11 +1386,11 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized(JVMCIEnv* JVMCIENV) 
       fatal(err_msg("Invalid layout of %s at %s", field_name->as_C_string(), klass->external_name()));
     }
 
-    InstanceKlass* ik = InstanceKlass::cast(klass());
+    InstanceKlass* ik = InstanceKlass::cast(klass);
     address addr = ik->static_field_addr(field_desc.offset() - InstanceMirrorKlass::offset_of_static_fields());
     *((jboolean *) addr) = (jboolean) UseJVMCIClassLoader;
     klass->initialize(CHECK_EXIT);
-    _FactoryKlass = klass();
+    _FactoryKlass = klass;
     assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
   }
   initialize(JVMCIENV);
@@ -1557,9 +1557,9 @@ Klass* JVMCIRuntime::resolve_or_fail(Symbol* name, TRAPS) {
 // ------------------------------------------------------------------
 // Note: the logic of this method should mirror the logic of
 // constantPoolOopDesc::verify_constant_pool_resolve.
-bool JVMCIRuntime::check_klass_accessibility(KlassHandle accessing_klass, KlassHandle resolved_klass) {
+bool JVMCIRuntime::check_klass_accessibility(Klass* accessing_klass, Klass* resolved_klass) {
   if (accessing_klass->oop_is_objArray()) {
-    accessing_klass = ObjArrayKlass::cast(accessing_klass())->bottom_klass();
+    accessing_klass = ObjArrayKlass::cast(accessing_klass)->bottom_klass();
   }
   if (!accessing_klass->oop_is_instance()) {
     return true;
@@ -1567,16 +1567,16 @@ bool JVMCIRuntime::check_klass_accessibility(KlassHandle accessing_klass, KlassH
 
   if (resolved_klass->oop_is_objArray()) {
     // Find the element klass, if this is an array.
-    resolved_klass = ObjArrayKlass::cast(resolved_klass())->bottom_klass();
+    resolved_klass = ObjArrayKlass::cast(resolved_klass)->bottom_klass();
   }
   if (resolved_klass->oop_is_instance()) {
-    return Reflection::verify_class_access(accessing_klass(), resolved_klass(), true);
+    return Reflection::verify_class_access(accessing_klass, resolved_klass, true);
   }
   return true;
 }
 
 // ------------------------------------------------------------------
-KlassHandle JVMCIRuntime::get_klass_by_name_impl(KlassHandle& accessing_klass,
+Klass* JVMCIRuntime::get_klass_by_name_impl(Klass*& accessing_klass,
                                           const constantPoolHandle& cpool,
                                           Symbol* sym,
                                           bool require_local) {
@@ -1589,28 +1589,26 @@ KlassHandle JVMCIRuntime::get_klass_by_name_impl(KlassHandle& accessing_klass,
     // Call recursive to keep scope of strippedsym.
     TempNewSymbol strippedsym = SymbolTable::new_symbol(sym->as_utf8()+1,
                     sym->utf8_length()-2,
-                    CHECK_(KlassHandle()));
+                    CHECK_NULL);
     return get_klass_by_name_impl(accessing_klass, cpool, strippedsym, require_local);
   }
 
   Handle loader(THREAD, (oop)NULL);
   Handle domain(THREAD, (oop)NULL);
-  if (!accessing_klass.is_null()) {
+  if (accessing_klass != NULL) {
     loader = Handle(THREAD, accessing_klass->class_loader());
     domain = Handle(THREAD, accessing_klass->protection_domain());
   }
 
-  KlassHandle found_klass;
+  Klass* found_klass;
   {
     ttyUnlocker ttyul;  // release tty lock to avoid ordering problems
     MutexLocker ml(Compile_lock);
-    Klass*  kls;
     if (!require_local) {
-      kls = SystemDictionary::find_constrained_instance_or_array_klass(sym, loader, CHECK_(KlassHandle()));
+      found_klass = SystemDictionary::find_constrained_instance_or_array_klass(sym, loader, CHECK_NULL);
     } else {
-      kls = SystemDictionary::find_instance_or_array_klass(sym, loader, domain, CHECK_(KlassHandle()));
+      found_klass = SystemDictionary::find_instance_or_array_klass(sym, loader, domain, CHECK_NULL);
     }
-    found_klass = KlassHandle(THREAD, kls);
   }
 
   // If we fail to find an array klass, look again for its element type.
@@ -1625,21 +1623,21 @@ KlassHandle JVMCIRuntime::get_klass_by_name_impl(KlassHandle& accessing_klass,
     // Build it on the fly if the element class exists.
     TempNewSymbol elem_sym = SymbolTable::new_symbol(sym->as_utf8()+1,
                                                  sym->utf8_length()-1,
-                                                 CHECK_(KlassHandle()));
+                                                 CHECK_NULL);
 
     // Get element Klass recursively.
-    KlassHandle elem_klass =
+    Klass* elem_klass =
       get_klass_by_name_impl(accessing_klass,
                              cpool,
                              elem_sym,
                              require_local);
-    if (!elem_klass.is_null()) {
+    if (elem_klass != NULL) {
       // Now make an array for it
-      return elem_klass->array_klass(CHECK_(KlassHandle()));
+      return elem_klass->array_klass(CHECK_NULL);
     }
   }
 
-  if (found_klass.is_null() && !cpool.is_null() && cpool->has_preresolution()) {
+  if (found_klass == NULL && !cpool.is_null() && cpool->has_preresolution()) {
     // Look inside the constant pool for pre-resolved class entries.
     for (int i = cpool->length() - 1; i >= 1; i--) {
       if (cpool->tag_at(i).is_klass()) {
@@ -1651,11 +1649,11 @@ KlassHandle JVMCIRuntime::get_klass_by_name_impl(KlassHandle& accessing_klass,
     }
   }
 
-  return found_klass();
+  return found_klass;
 }
 
 // ------------------------------------------------------------------
-KlassHandle JVMCIRuntime::get_klass_by_name(KlassHandle accessing_klass,
+Klass* JVMCIRuntime::get_klass_by_name(Klass* accessing_klass,
                                   Symbol* klass_name,
                                   bool require_local) {
   ResourceMark rm;
@@ -1668,28 +1666,28 @@ KlassHandle JVMCIRuntime::get_klass_by_name(KlassHandle accessing_klass,
 
 // ------------------------------------------------------------------
 // Implementation of get_klass_by_index.
-KlassHandle JVMCIRuntime::get_klass_by_index_impl(const constantPoolHandle& cpool,
+Klass* JVMCIRuntime::get_klass_by_index_impl(const constantPoolHandle& cpool,
                                         int index,
                                         bool& is_accessible,
-                                        KlassHandle accessor) {
+                                        Klass* accessor) {
   JVMCI_EXCEPTION_CONTEXT;
-  KlassHandle klass (THREAD, ConstantPool::klass_at_if_loaded(cpool, index));
+  Klass* klass = ConstantPool::klass_at_if_loaded(cpool, index);
   Symbol* klass_name = NULL;
-  if (klass.is_null()) {
+  if (klass == NULL) {
     klass_name = cpool->klass_name_at(index);
   }
 
-  if (klass.is_null()) {
+  if (klass == NULL) {
     // Not found in constant pool.  Use the name to do the lookup.
-    KlassHandle k = get_klass_by_name_impl(accessor,
+    Klass* k = get_klass_by_name_impl(accessor,
                                         cpool,
                                         klass_name,
                                         false);
     // Calculate accessibility the hard way.
-    if (k.is_null()) {
+    if (k == NULL) {
       is_accessible = false;
     } else if (k->class_loader() != accessor->class_loader() &&
-               get_klass_by_name_impl(accessor, cpool, k->name(), true).is_null()) {
+               get_klass_by_name_impl(accessor, cpool, k->name(), true) == NULL) {
       // Loaded only remotely.  Not linked yet.
       is_accessible = false;
     } else {
@@ -1697,7 +1695,7 @@ KlassHandle JVMCIRuntime::get_klass_by_index_impl(const constantPoolHandle& cpoo
       is_accessible = check_klass_accessibility(accessor, k);
     }
     if (!is_accessible) {
-      return KlassHandle();
+      return NULL;
     }
     return k;
   }
@@ -1709,12 +1707,12 @@ KlassHandle JVMCIRuntime::get_klass_by_index_impl(const constantPoolHandle& cpoo
 
 // ------------------------------------------------------------------
 // Get a klass from the constant pool.
-KlassHandle JVMCIRuntime::get_klass_by_index(const constantPoolHandle& cpool,
+Klass* JVMCIRuntime::get_klass_by_index(const constantPoolHandle& cpool,
                                    int index,
                                    bool& is_accessible,
-                                   KlassHandle accessor) {
+                                   Klass* accessor) {
   ResourceMark rm;
-  KlassHandle result = get_klass_by_index_impl(cpool, index, is_accessible, accessor);
+  Klass* result = get_klass_by_index_impl(cpool, index, is_accessible, accessor);
   return result;
 }
 
@@ -1723,7 +1721,7 @@ KlassHandle JVMCIRuntime::get_klass_by_index(const constantPoolHandle& cpool,
 //
 // Implementation note: the results of field lookups are cached
 // in the accessor klass.
-void JVMCIRuntime::get_field_by_index_impl(instanceKlassHandle klass, fieldDescriptor& field_desc,
+void JVMCIRuntime::get_field_by_index_impl(InstanceKlass* klass, fieldDescriptor& field_desc,
                                         int index) {
   JVMCI_EXCEPTION_CONTEXT;
 
@@ -1741,7 +1739,7 @@ void JVMCIRuntime::get_field_by_index_impl(instanceKlassHandle klass, fieldDescr
   // Get the field's declared holder.
   int holder_index = cpool->klass_ref_index_at(index);
   bool holder_is_accessible;
-  KlassHandle declared_holder = get_klass_by_index(cpool, holder_index,
+  Klass* declared_holder = get_klass_by_index(cpool, holder_index,
                                                holder_is_accessible,
                                                klass);
 
@@ -1754,7 +1752,7 @@ void JVMCIRuntime::get_field_by_index_impl(instanceKlassHandle klass, fieldDescr
 
   // Perform the field lookup.
   Klass*  canonical_holder =
-    InstanceKlass::cast(declared_holder())->find_field(name, signature, &field_desc);
+    InstanceKlass::cast(declared_holder)->find_field(name, signature, &field_desc);
   if (canonical_holder == NULL) {
     return;
   }
@@ -1764,7 +1762,7 @@ void JVMCIRuntime::get_field_by_index_impl(instanceKlassHandle klass, fieldDescr
 
 // ------------------------------------------------------------------
 // Get a field by index from a klass's constant pool.
-void JVMCIRuntime::get_field_by_index(instanceKlassHandle accessor, fieldDescriptor& fd, int index) {
+void JVMCIRuntime::get_field_by_index(InstanceKlass* accessor, fieldDescriptor& fd, int index) {
   ResourceMark rm;
   return get_field_by_index_impl(accessor, fd, index);
 }
@@ -1772,8 +1770,8 @@ void JVMCIRuntime::get_field_by_index(instanceKlassHandle accessor, fieldDescrip
 // ------------------------------------------------------------------
 // Perform an appropriate method lookup based on accessor, holder,
 // name, signature, and bytecode.
-methodHandle JVMCIRuntime::lookup_method(instanceKlassHandle h_accessor,
-                               instanceKlassHandle h_holder,
+methodHandle JVMCIRuntime::lookup_method(InstanceKlass* h_accessor,
+                               InstanceKlass* h_holder,
                                Symbol*       name,
                                Symbol*       sig,
                                Bytecodes::Code bc) {
@@ -1809,7 +1807,7 @@ methodHandle JVMCIRuntime::lookup_method(instanceKlassHandle h_accessor,
 // ------------------------------------------------------------------
 methodHandle JVMCIRuntime::get_method_by_index_impl(const constantPoolHandle& cpool,
                                           int index, Bytecodes::Code bc,
-                                          instanceKlassHandle accessor) {
+                                          InstanceKlass* accessor) {
   if (bc == Bytecodes::_invokedynamic) {
     ConstantPoolCacheEntry* cpce = cpool->invokedynamic_cp_cache_entry_at(index);
     bool is_resolved = !cpce->is_f1_null();
@@ -1825,15 +1823,15 @@ methodHandle JVMCIRuntime::get_method_by_index_impl(const constantPoolHandle& cp
 
   int holder_index = cpool->klass_ref_index_at(index);
   bool holder_is_accessible;
-  KlassHandle holder = get_klass_by_index_impl(cpool, holder_index, holder_is_accessible, accessor);
+  Klass* holder = get_klass_by_index_impl(cpool, holder_index, holder_is_accessible, accessor);
 
   // Get the method's name and signature.
   Symbol* name_sym = cpool->name_ref_at(index);
   Symbol* sig_sym  = cpool->signature_ref_at(index);
 
   if (cpool->has_preresolution()
-      || (holder() == SystemDictionary::MethodHandle_klass() &&
-          MethodHandles::is_signature_polymorphic_name(holder(), name_sym))) {
+      || (holder == SystemDictionary::MethodHandle_klass() &&
+          MethodHandles::is_signature_polymorphic_name(holder, name_sym))) {
     // Short-circuit lookups for JSR 292-related call sites.
     // That is, do not rely only on name-based lookups, because they may fail
     // if the names are not resolvable in the boot class loader (7056328).
@@ -1853,7 +1851,7 @@ methodHandle JVMCIRuntime::get_method_by_index_impl(const constantPoolHandle& cp
   }
 
   if (holder_is_accessible) { // Our declared holder is loaded.
-    instanceKlassHandle lookup = get_instance_klass_for_declared_method_holder(holder);
+    InstanceKlass* lookup = get_instance_klass_for_declared_method_holder(holder);
     methodHandle m = lookup_method(accessor, lookup, name_sym, sig_sym, bc);
     if (!m.is_null()) {
       // We found the method.
@@ -1868,14 +1866,14 @@ methodHandle JVMCIRuntime::get_method_by_index_impl(const constantPoolHandle& cp
 }
 
 // ------------------------------------------------------------------
-instanceKlassHandle JVMCIRuntime::get_instance_klass_for_declared_method_holder(KlassHandle method_holder) {
+InstanceKlass* JVMCIRuntime::get_instance_klass_for_declared_method_holder(Klass* method_holder) {
   // For the case of <array>.clone(), the method holder can be an ArrayKlass*
   // instead of an InstanceKlass*.  For that case simply pretend that the
   // declared holder is Object.clone since that's where the call will bottom out.
   if (method_holder->oop_is_instance()) {
-    return instanceKlassHandle(method_holder());
+    return InstanceKlass::cast(method_holder);
   } else if (method_holder->oop_is_array()) {
-    return instanceKlassHandle(SystemDictionary::Object_klass());
+    return InstanceKlass::cast(SystemDictionary::Object_klass());
   } else {
     ShouldNotReachHere();
   }
@@ -1886,7 +1884,7 @@ instanceKlassHandle JVMCIRuntime::get_instance_klass_for_declared_method_holder(
 // ------------------------------------------------------------------
 methodHandle JVMCIRuntime::get_method_by_index(const constantPoolHandle& cpool,
                                      int index, Bytecodes::Code bc,
-                                     instanceKlassHandle accessor) {
+                                     InstanceKlass* accessor) {
   ResourceMark rm;
   return get_method_by_index_impl(cpool, index, bc, accessor);
 }

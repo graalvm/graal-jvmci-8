@@ -730,6 +730,8 @@ supr java.lang.Object
 CLSS public static jdk.vm.ci.meta.SpeculationLog$Speculation
  outer jdk.vm.ci.meta.SpeculationLog
 cons public init(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
 meth public java.lang.String toString()
 meth public jdk.vm.ci.meta.SpeculationLog$SpeculationReason getReason()
 supr java.lang.Object

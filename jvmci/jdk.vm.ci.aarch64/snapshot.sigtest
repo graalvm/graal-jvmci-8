@@ -72,6 +72,8 @@ fld public final static jdk.vm.ci.code.Register r6
 fld public final static jdk.vm.ci.code.Register r7
 fld public final static jdk.vm.ci.code.Register r8
 fld public final static jdk.vm.ci.code.Register r9
+fld public final static jdk.vm.ci.code.Register rscratch1
+fld public final static jdk.vm.ci.code.Register rscratch2
 fld public final static jdk.vm.ci.code.Register sp
 fld public final static jdk.vm.ci.code.Register v0
 fld public final static jdk.vm.ci.code.Register v1
@@ -130,18 +132,24 @@ fld public final static jdk.vm.ci.aarch64.AArch64$CPUFeature CRC32
 fld public final static jdk.vm.ci.aarch64.AArch64$CPUFeature DMB_ATOMICS
 fld public final static jdk.vm.ci.aarch64.AArch64$CPUFeature EVTSTRM
 fld public final static jdk.vm.ci.aarch64.AArch64$CPUFeature FP
+fld public final static jdk.vm.ci.aarch64.AArch64$CPUFeature LSE
 fld public final static jdk.vm.ci.aarch64.AArch64$CPUFeature PMULL
 fld public final static jdk.vm.ci.aarch64.AArch64$CPUFeature SHA1
 fld public final static jdk.vm.ci.aarch64.AArch64$CPUFeature SHA2
+fld public final static jdk.vm.ci.aarch64.AArch64$CPUFeature STXR_PREFETCH
 meth public static jdk.vm.ci.aarch64.AArch64$CPUFeature valueOf(java.lang.String)
 meth public static jdk.vm.ci.aarch64.AArch64$CPUFeature[] values()
 supr java.lang.Enum<jdk.vm.ci.aarch64.AArch64$CPUFeature>
 
 CLSS public final static !enum jdk.vm.ci.aarch64.AArch64$Flag
  outer jdk.vm.ci.aarch64.AArch64
+fld public final static jdk.vm.ci.aarch64.AArch64$Flag AvoidUnalignedAccesses
 fld public final static jdk.vm.ci.aarch64.AArch64$Flag UseBarriersForVolatile
+fld public final static jdk.vm.ci.aarch64.AArch64$Flag UseBlockZeroing
 fld public final static jdk.vm.ci.aarch64.AArch64$Flag UseCRC32
+fld public final static jdk.vm.ci.aarch64.AArch64$Flag UseLSE
 fld public final static jdk.vm.ci.aarch64.AArch64$Flag UseNeon
+fld public final static jdk.vm.ci.aarch64.AArch64$Flag UseSIMDForMemoryOps
 meth public static jdk.vm.ci.aarch64.AArch64$Flag valueOf(java.lang.String)
 meth public static jdk.vm.ci.aarch64.AArch64$Flag[] values()
 supr java.lang.Enum<jdk.vm.ci.aarch64.AArch64$Flag>

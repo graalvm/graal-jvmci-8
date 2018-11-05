@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -95,6 +95,7 @@
     primarray_field(HotSpotCompiledCode, dataSection, "[B")                                                   \
     int_field(HotSpotCompiledCode, dataSectionAlignment)                                                      \
     objectarray_field(HotSpotCompiledCode, dataSectionPatches, "[Ljdk/vm/ci/code/site/DataPatch;")            \
+    boolean_field(HotSpotCompiledCode, isImmutablePIC)                                                        \
     int_field(HotSpotCompiledCode, totalFrameSize)                                                            \
     object_field(HotSpotCompiledCode, deoptRescueSlot, "Ljdk/vm/ci/code/StackSlot;")                          \
   end_class                                                                                                   \
@@ -259,6 +260,8 @@
     object_field(HotSpotMetaspaceConstantImpl, metaspaceObject, "Ljdk/vm/ci/hotspot/MetaspaceObject;")        \
     boolean_field(HotSpotMetaspaceConstantImpl, compressed)                                                   \
   end_class                                                                                                   \
+  start_class(HotSpotSentinelConstant, jdk_vm_ci_hotspot_HotSpotSentinelConstant)                             \
+  end_class                                                                                                   \
   start_class(JavaKind, jdk_vm_ci_meta_JavaKind)                                                              \
     char_field(JavaKind, typeChar)                                                                            \
     static_object_field(JavaKind, Boolean, "Ljdk/vm/ci/meta/JavaKind;")                                       \
@@ -315,6 +318,14 @@
     objectarray_field(HotSpotStackFrameReference, locals, "[Ljava/lang/Object;")                              \
     primarray_field(HotSpotStackFrameReference, localIsVirtual, "[Z")                                         \
   end_class                                                                                                   \
+  start_class(HotSpotMetaData, jdk_vm_ci_hotspot_HotSpotMetaData)                                             \
+    primarray_field(HotSpotMetaData, pcDescBytes, "[B")                                                                                                     \
+    primarray_field(HotSpotMetaData, scopesDescBytes, "[B")                                                                                                 \
+    primarray_field(HotSpotMetaData, relocBytes, "[B")                                                                                                      \
+    primarray_field(HotSpotMetaData, exceptionBytes, "[B")                                                                                                  \
+    primarray_field(HotSpotMetaData, oopMaps, "[B")                                                                                                         \
+    object_field(HotSpotMetaData, metadata, "[Ljava/lang/Object;")                                                                                        \
+  end_class                                                                                                                                                    \
   start_class(HotSpotConstantPool, jdk_vm_ci_hotspot_HotSpotConstantPool)                                     \
     long_field(HotSpotConstantPool, metadataHandle)                                                           \
   end_class                                                                                                   \
@@ -527,7 +538,6 @@ inline JVMCIObject::operator JVMCIObjectArray() { return JVMCIObjectArray(_objec
  *     static bool is_instance(JVMCIEnv* env, JVMCIObject object);
  *    private:
  *     static void check(oop obj, const char *field_name, int offset);
- *     static InstanceKlass *_klass;
  *    public:
  *     static InstanceKlass *klass() { ... }
  *     static Symbol *symbol() { return vmSymbols::jdk_vm_ci_code_Architecture(); }
@@ -704,6 +714,7 @@ class JNIJVMCI {
 #undef STATIC_OBJECTARRAY_FIELD
 #undef STATIC_INT_FIELD
 #undef STATIC_BOOLEAN_FIELD
+#undef STATIC_PRIMITIVE_FIELD
 #undef EMPTY_CAST
 
 #endif // SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2012 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -291,14 +291,14 @@ void JNIJVMCI::initialize_field_id(JNIEnv* env, jfieldID &fieldid, jclass clazz,
 #define STATIC_BOOLEAN_FIELD(className, name) FIELD(className, name, "Z", true)
 
 #define GET_JNI_METHOD(jniGetMethod, dst, clazz, methodName, signature)                        \
-	  if (JVMCILibDumpJNIConfig != NULL) {                                                       \
-	    fileStream* st = JVMCIGlobals::get_jni_config_file();                                    \
-	    st->print_cr("method %s %s %s", current_class_name, methodName, signature);              \
-	  } else {                                                                                   \
-		  dst = env->jniGetMethod(clazz, methodName, signature);                                   \
-		  JVMCI_EXCEPTION_CHECK(env, #jniGetMethod "(%s.%s%s)", current_class_name, methodName, signature); \
+          if (JVMCILibDumpJNIConfig != NULL) {                                                       \
+            fileStream* st = JVMCIGlobals::get_jni_config_file();                                    \
+            st->print_cr("method %s %s %s", current_class_name, methodName, signature);              \
+          } else {                                                                                   \
+                  dst = env->jniGetMethod(clazz, methodName, signature);                                   \
+                  JVMCI_EXCEPTION_CHECK(env, #jniGetMethod "(%s.%s%s)", current_class_name, methodName, signature); \
                 assert(dst != NULL, "uninitialized");                                          \
-	  }
+          }
 
 #define GET_JNI_CONSTRUCTOR(clazz, signature) \
   GET_JNI_METHOD(GetMethodID, JNIJVMCI::clazz::_constructor, clazz::_class, "<init>", signature) \

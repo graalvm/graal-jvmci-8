@@ -49,7 +49,7 @@
             ac_cv_func_mkostemps: "no",
             MACOSX_DEPLOYMENT_TARGET: "10.11"
         },
-        capabilities+: ["darwin_sierra"],
+        capabilities+: ["darwin_sierra", "macmini_late_2014_8gb"],
         name+: "-darwin",
     },
 
@@ -121,7 +121,7 @@
         },
         name: "gate",
         timelimit: "1:00:00",
-        diskspace_required: "17G",
+        diskspace_required: "10G",
         logs: ["*.log"],
         targets: ["gate"],
         run: [

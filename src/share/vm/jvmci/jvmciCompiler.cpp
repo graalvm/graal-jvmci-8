@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -43,7 +43,7 @@ JVMCICompiler::JVMCICompiler() : AbstractCompiler(jvmci) {
 
 // Initialization
 void JVMCICompiler::initialize() {
-  if (!UseCompiler || !UseJVMCICompiler || !should_perform_init()) {
+  if (!UseCompiler || !EnableJVMCI || !UseJVMCICompiler || !should_perform_init()) {
     return;
   }
 
@@ -66,7 +66,6 @@ void JVMCICompiler::bootstrap(TRAPS) {
 #endif
 
   _bootstrapping = true;
-  // Allow bootstrap to perform JVMCI compilations of itself
   ResourceMark rm;
   HandleMark hm;
   if (PrintBootstrap) {
@@ -87,13 +86,15 @@ void JVMCICompiler::bootstrap(TRAPS) {
   }
 
   int qsize;
+  bool first_round = true;
   int z = 0;
   do {
     // Loop until there is something in the queue.
     do {
       os::sleep(THREAD, 100, true);
       qsize = CompileBroker::queue_size(CompLevel_full_optimization);
-    } while (!_bootstrap_compilation_request_handled);
+    } while (!_bootstrap_compilation_request_handled && first_round && qsize == 0);
+    first_round = false;
     if (PrintBootstrap) {
       while (z < (_methods_compiled / 100)) {
         ++z;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2008, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -83,6 +83,10 @@ class MethodHandles: AllStatic {
   static bool is_signature_polymorphic(vmIntrinsics::ID iid) {
     return (iid >= vmIntrinsics::FIRST_MH_SIG_POLY &&
             iid <= vmIntrinsics::LAST_MH_SIG_POLY);
+  }
+
+  static bool is_signature_polymorphic_method(Method* m) {
+    return is_signature_polymorphic(m->intrinsic_id());
   }
 
   static bool is_signature_polymorphic_intrinsic(vmIntrinsics::ID iid) {

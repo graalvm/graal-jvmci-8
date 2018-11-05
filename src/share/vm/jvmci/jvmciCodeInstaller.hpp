@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -29,6 +29,97 @@
 #include "jvmci/jvmciEnv.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 
+#if INCLUDE_AOT
+class RelocBuffer : public StackObj {
+  enum { stack_size = 1024 };
+public:
+  RelocBuffer() : _size(0), _buffer(0) {}
+  ~RelocBuffer();
+  void ensure_size(size_t bytes);
+  void set_size(size_t bytes);
+  address begin() const;
+  size_t size() const { return _size; }
+private:
+  size_t _size;
+  char _static_buffer[stack_size];
+  char *_buffer;
+};
+
+#define INCLUDE_AOT 0
+
+#if INCLUDE_AOT
+class AOTOopRecorder : public OopRecorder {
+public:
+  AOTOopRecorder(Arena* arena = NULL, bool deduplicate = false);
+
+  virtual int find_index(Metadata* h);
+  virtual int find_index(jobject h);
+  int nr_meta_refs() const;
+  jobject meta_element(int pos) const;
+
+private:
+  void record_meta_ref(jobject ref, int index);
+
+  GrowableArray<jobject>* _meta_refs;
+};
+#endif
+
+class CodeMetadata {
+public:
+  CodeMetadata() {}
+
+  CodeBlob* get_code_blob() const { return _cb; }
+
+  PcDesc* get_pc_desc() const { return _pc_desc; }
+  int get_nr_pc_desc() const { return _nr_pc_desc; }
+
+  u_char* get_scopes_desc() const { return _scopes_desc; }
+  int get_scopes_size() const { return _nr_scopes_desc; }
+
+  RelocBuffer* get_reloc_buffer() { return &_reloc_buffer; }
+
+#if INCLUDE_AOT
+  AOTOopRecorder* get_oop_recorder() { return _oop_recorder; }
+#endif
+
+  ExceptionHandlerTable* get_exception_table() { return _exception_table; }
+
+  void set_pc_desc(PcDesc* desc, int count) {
+    _pc_desc = desc;
+    _nr_pc_desc = count;
+  }
+
+  void set_scopes(u_char* scopes, int size) {
+    _scopes_desc = scopes;
+    _nr_scopes_desc = size;
+  }
+
+#if INCLUDE_AOT
+  void set_oop_recorder(AOTOopRecorder* recorder) {
+    _oop_recorder = recorder;
+  }
+#endif
+
+  void set_exception_table(ExceptionHandlerTable* table) {
+    _exception_table = table;
+  }
+
+private:
+  CodeBlob* _cb;
+  PcDesc* _pc_desc;
+  int _nr_pc_desc;
+
+  u_char* _scopes_desc;
+  int _nr_scopes_desc;
+
+  RelocBuffer _reloc_buffer;
+#if INCLUDE_AOT
+  AOTOopRecorder* _oop_recorder;
+#endif
+  ExceptionHandlerTable* _exception_table;
+};
+#endif // INCLUDE_AOT
+
 /*
  * This class handles the conversion from a InstalledCode to a CodeBlob or an nmethod.
  */
@@ -36,23 +127,30 @@ class CodeInstaller : public StackObj {
   friend class VMStructs;
 private:
   enum MarkId {
-    VERIFIED_ENTRY             = 1,
-    UNVERIFIED_ENTRY           = 2,
-    OSR_ENTRY                  = 3,
-    EXCEPTION_HANDLER_ENTRY    = 4,
-    DEOPT_HANDLER_ENTRY        = 5,
-    INVOKEINTERFACE            = 6,
-    INVOKEVIRTUAL              = 7,
-    INVOKESTATIC               = 8,
-    INVOKESPECIAL              = 9,
-    INLINE_INVOKE              = 10,
-    POLL_NEAR                  = 11,
-    POLL_RETURN_NEAR           = 12,
-    POLL_FAR                   = 13,
-    POLL_RETURN_FAR            = 14,
-    CARD_TABLE_ADDRESS         = 15,
-    CARD_TABLE_SHIFT           = 16,
-    INVOKE_INVALID             = -1
+    VERIFIED_ENTRY                         = 1,
+    UNVERIFIED_ENTRY                       = 2,
+    OSR_ENTRY                              = 3,
+    EXCEPTION_HANDLER_ENTRY                = 4,
+    DEOPT_HANDLER_ENTRY                    = 5,
+    INVOKEINTERFACE                        = 6,
+    INVOKEVIRTUAL                          = 7,
+    INVOKESTATIC                           = 8,
+    INVOKESPECIAL                          = 9,
+    INLINE_INVOKE                          = 10,
+    POLL_NEAR                              = 11,
+    POLL_RETURN_NEAR                       = 12,
+    POLL_FAR                               = 13,
+    POLL_RETURN_FAR                        = 14,
+    CARD_TABLE_ADDRESS                     = 15,
+    CARD_TABLE_SHIFT                       = 16,
+    HEAP_TOP_ADDRESS                       = 17,
+    HEAP_END_ADDRESS                       = 18,
+    NARROW_KLASS_BASE_ADDRESS              = 19,
+    NARROW_OOP_BASE_ADDRESS                = 20,
+    CRC_TABLE_ADDRESS                      = 21,
+    LOG_OF_HEAP_REGION_GRAIN_BYTES         = 22,
+    INLINE_CONTIGUOUS_ALLOCATION_SUPPORTED = 23,
+    INVOKE_INVALID                         = -1
   };
 
   Arena         _arena;
@@ -89,6 +187,8 @@ private:
   ExceptionHandlerTable     _exception_handler_table;
   ImplicitExceptionTable    _implicit_exception_table;
 
+  bool _immutable_pic_compilation;  // Installer is called for Immutable PIC compilation.
+
   static ConstantOopWriteValue* _oop_null_scope_value;
   static ConstantIntValue*    _int_m1_scope_value;
   static ConstantIntValue*    _int_0_scope_value;
@@ -101,7 +201,7 @@ private:
   void pd_patch_MetaspaceConstant(int pc_offset, JVMCIObject constant, JVMCI_TRAPS);
   void pd_patch_DataSectionReference(int pc_offset, int data_offset, JVMCI_TRAPS);
   void pd_relocate_ForeignCall(NativeInstruction* inst, jlong foreign_call_destination, JVMCI_TRAPS);
-  void pd_relocate_JavaMethod(JVMCIObject method, jint pc_offset, JVMCI_TRAPS);
+  void pd_relocate_JavaMethod(CodeBuffer &cbuf, JVMCIObject method, jint pc_offset, JVMCI_TRAPS);
   void pd_relocate_poll(address pc, jint mark, JVMCI_TRAPS);
 
   JVMCIObjectArray sites()                { return _sites_handle; }
@@ -115,8 +215,11 @@ private:
 
 public:
 
-  CodeInstaller(JVMCIEnv* jvmci_env) : _arena(mtCompiler), _jvmci_env(jvmci_env) {}
+  CodeInstaller(JVMCIEnv* jvmci_env, bool immutable_pic_compilation) : _arena(mtCompiler), _jvmci_env(jvmci_env), _immutable_pic_compilation(immutable_pic_compilation) {}
 
+#if INCLUDE_AOT
+  JVMCI::CodeInstallResult gather_metadata(Handle target, Handle compiled_code, CodeMetadata& metadata, TRAPS);
+#endif
   JVMCI::CodeInstallResult install(JVMCICompiler* compiler, JVMCIObject target, JVMCIObject compiled_code,
                                    CodeBlob*& cb, JVMCIObject installed_code, JVMCIObject speculation_log, JVMCI_TRAPS);
 
@@ -127,7 +230,9 @@ public:
   static VMReg get_hotspot_reg(jint jvmciRegisterNumber, JVMCI_TRAPS);
   static bool is_general_purpose_reg(VMReg hotspotRegister);
 
-private:
+  const OopMapSet* oopMapSet() const { return _debug_recorder->_oopmaps; }
+
+protected:
   Location::Type get_oop_type(JVMCIObject value);
   ScopeValue* get_scope_value(JVMCIObject value, BasicType type, GrowableArray<ScopeValue*>* objects, ScopeValue* &second, JVMCI_TRAPS);
   MonitorValue* get_monitor_value(JVMCIObject value, GrowableArray<ScopeValue*>* objects, JVMCI_TRAPS);
@@ -139,12 +244,12 @@ private:
 
   // extract the fields of the HotSpotCompiledCode
   void initialize_fields(JVMCIObject target, JVMCIObject compiled_code, JVMCI_TRAPS);
-  void initialize_dependencies(JVMCIObject compiled_code, JVMCI_TRAPS);
-  
+  void initialize_dependencies(JVMCIObject compiled_code, OopRecorder* oop_recorder, JVMCI_TRAPS);
+
   int estimate_stubs_size(JVMCI_TRAPS);
-  
+
   // perform data and call relocation on the CodeBuffer
-  JVMCI::CodeInstallResult initialize_buffer(CodeBuffer& buffer, JVMCI_TRAPS);
+  JVMCI::CodeInstallResult initialize_buffer(CodeBuffer& buffer, bool check_size, JVMCI_TRAPS);
 
   void assumption_NoFinalizableSubclass(JVMCIObject assumption);
   void assumption_ConcreteSubtype(JVMCIObject assumption);

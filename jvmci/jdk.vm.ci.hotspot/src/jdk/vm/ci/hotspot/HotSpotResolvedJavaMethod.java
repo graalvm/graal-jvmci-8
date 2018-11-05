@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -58,7 +58,8 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
     boolean hasReservedStackAccess();
 
     /**
-     * Sets flags on {@code method} indicating that it should never be inlined or compiled.
+     * Sets flags on {@code method} indicating that it should never be inlined or compiled by the
+     * VM.
      */
     void setNotInlinableOrCompilable();
 
@@ -107,7 +108,7 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
     int intrinsicId();
 
     /**
-     * Determines if this method denotes itself as a candidate for intrinsification. As of JDK9,
+     * Determines if this method denotes itself as a candidate for intrinsification. As of JDK 9,
      * this is denoted by the {@code HotSpotIntrinsicCandidate} annotation. In earlier JDK versions,
      * this method returns true.
      *
@@ -124,4 +125,6 @@ public interface HotSpotResolvedJavaMethod extends ResolvedJavaMethod {
     int allocateCompileId(int entryBCI);
 
     boolean hasCodeAtLevel(int entryBCI, int level);
+
+    int methodIdnum();
 }

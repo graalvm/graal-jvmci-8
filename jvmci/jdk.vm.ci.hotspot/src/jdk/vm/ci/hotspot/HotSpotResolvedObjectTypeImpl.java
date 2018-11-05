@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -333,7 +333,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
 
     @Override
     public boolean hasFinalizer() {
-        return (getAccessFlags() & config().klassHasFinalizerFlag) != 0;
+        return (getAccessFlags() & config().jvmAccHasFinalizer) != 0;
     }
 
     @Override
@@ -482,6 +482,11 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         HotSpotVMConfig config = config();
         assert getMetaspaceKlass() != 0 : getName();
         return UNSAFE.getInt(getMetaspaceKlass() + config.klassLayoutHelperOffset);
+    }
+
+    @Override
+    public long getFingerprint() {
+        return compilerToVM().getFingerprint(getMetaspaceKlass());
     }
 
     synchronized HotSpotResolvedJavaMethod createMethod(long metaspaceHandle) {
@@ -943,11 +948,6 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     }
 
     @Override
-    public boolean isCloneableWithAllocation() {
-        return (getAccessFlags() & config().jvmAccIsCloneable) != 0;
-    }
-
-    @Override
     public ResolvedJavaType lookupType(UnresolvedJavaType unresolvedJavaType, boolean resolve) {
         JavaType javaType = HotSpotJVMCIRuntime.runtime().lookupType(unresolvedJavaType.getName(), this, resolve);
         if (javaType instanceof ResolvedJavaType) {
@@ -972,8 +972,8 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     }
 
     @Override
-    public long getFingerprint() {
-        return 0L;
+    public boolean isCloneableWithAllocation() {
+        return (getAccessFlags() & config().jvmAccIsCloneable) != 0;
     }
 
     JavaConstant readFieldValue(HotSpotResolvedJavaField field, boolean isVolatile) {

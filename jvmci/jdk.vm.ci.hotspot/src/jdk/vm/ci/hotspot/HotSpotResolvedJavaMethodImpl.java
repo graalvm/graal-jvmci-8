@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2015, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -339,7 +339,8 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     }
 
     /**
-     * Sets flags on {@code method} indicating that it should never be inlined or compiled.
+     * Sets flags on {@code method} indicating that it should never be inlined or compiled by the
+     * VM.
      */
     @Override
     public void setNotInlinableOrCompilable() {
@@ -469,7 +470,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     public ProfilingInfo getProfilingInfo(boolean includeNormal, boolean includeOSR) {
         ProfilingInfo info;
 
-        if (methodData == null) {
+        if (Option.UseProfilingInformation.getBoolean() && methodData == null) {
             long metaspaceMethodData = UNSAFE.getAddress(getMetaspaceMethod() + config().methodDataOffset);
             if (metaspaceMethodData != 0) {
                 methodData = new HotSpotMethodData(metaspaceMethodData, this);
@@ -741,5 +742,10 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
             return hasCompiledCodeAtLevel(level);
         }
         return compilerToVM().hasCompiledCodeForOSR(this, entryBCI, level);
+    }
+
+    @Override
+    public int methodIdnum() {
+        return UNSAFE.getChar(getConstMethod() + config().constMethodMethodIdnumOffset);
     }
 }

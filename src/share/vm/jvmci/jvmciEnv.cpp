@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2011, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -746,7 +746,7 @@ JVMCIObject JVMCIEnv::get_jvmci_method(const methodHandle& method, JVMCI_TRAPS) 
   return method_object;
 }
 
-JVMCIObject JVMCIEnv::get_jvmci_type(KlassHandle klass, JVMCI_TRAPS) {
+JVMCIObject JVMCIEnv::get_jvmci_type(JVMCIKlassHandle& klass, JVMCI_TRAPS) {
   JVMCIObject type;
   if (klass.is_null()) {
     return type;
@@ -1288,7 +1288,6 @@ CodeBlob* JVMCIEnv::asCodeBlob(JVMCIObject obj) {
       JNIJVMCI::className::set_##name(this, x);                       \
     }                                                                 \
   }
-
 #define STATIC_INT_FIELD(className, name) STATIC_PRIMITIVE_FIELD(className, name, jint, Int, EMPTY_CAST)
 #define STATIC_BOOLEAN_FIELD(className, name) STATIC_PRIMITIVE_FIELD(className, name, jboolean, Boolean, EMPTY_CAST)
 #define METHOD(jniCallType, jniGetMethod, hsCallType, returnType, className, methodName, signatureSymbolName, args)

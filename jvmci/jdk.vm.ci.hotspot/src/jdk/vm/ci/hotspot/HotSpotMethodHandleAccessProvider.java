@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2014, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -27,8 +27,8 @@ import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 
 import java.lang.invoke.MethodHandle;
 
-import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.common.JVMCIError;
+import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.hotspot.HotSpotMethodData.VMState;
 import jdk.vm.ci.meta.ConstantReflectionProvider;
 import jdk.vm.ci.meta.JavaConstant;
@@ -61,13 +61,14 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
          *
          * @param declaringType the type declaring the field
          * @param fieldName name of the field to be searched
-         * @return resolved java field
+         * @param fieldType resolved Java type of the field
+         * @return resolved Java field
          * @throws NoSuchFieldError
          */
-        private static ResolvedJavaField findFieldInClass(ResolvedJavaType declaringType, String fieldName) {
+        private static ResolvedJavaField findFieldInClass(ResolvedJavaType declaringType, String fieldName, ResolvedJavaType fieldType) {
             ResolvedJavaField[] fields = declaringType.getInstanceFields(false);
             for (ResolvedJavaField field : fields) {
-                if (field.getName().equals(fieldName)) {
+                if (field.getName().equals(fieldName) && field.getType().equals(fieldType)) {
                     return field;
                 }
             }
@@ -83,11 +84,11 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
                 ResolvedJavaType methodHandleType = resolveType("Ljava/lang/invoke/MethodHandle;");
                 ResolvedJavaType memberNameType = resolveType("Ljava/lang/invoke/MemberName;");
                 lambdaFormType = resolveType("Ljava/lang/invoke/LambdaForm;");
-                methodHandleFormField = findFieldInClass(methodHandleType, "form");
-                lambdaFormVmentryField = findFieldInClass(lambdaFormType, "vmentry");
-                memberNameVmtargetField = (HotSpotResolvedJavaField) findFieldInClass(memberNameType, "vmtarget");
+                methodHandleFormField = findFieldInClass(methodHandleType, "form", lambdaFormType);
+                lambdaFormVmentryField = findFieldInClass(lambdaFormType, "vmentry", memberNameType);
+                memberNameVmtargetField = (HotSpotResolvedJavaField) findFieldInClass(memberNameType, "vmtarget", resolveType("J"));
                 ResolvedJavaType callSiteType = resolveType("Ljava/lang/invoke/CallSite;");
-                callSiteTargetField = (HotSpotResolvedJavaField) findFieldInClass(callSiteType, "target");
+                callSiteTargetField = (HotSpotResolvedJavaField) findFieldInClass(callSiteType, "target", methodHandleType);
             } catch (Throwable ex) {
                 throw new JVMCIError(ex);
             }

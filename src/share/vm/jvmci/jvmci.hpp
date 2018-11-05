@@ -93,7 +93,7 @@ class JVMCI : public AllStatic {
 
   static jobject make_global(Handle obj);
 
-  static jmetadata allocate_handle(const KlassHandle& handle);
+  static jmetadata allocate_handle(Klass* handle);
   static jmetadata allocate_handle(const methodHandle& handle);
   static jmetadata allocate_handle(const constantPoolHandle& handle);
 

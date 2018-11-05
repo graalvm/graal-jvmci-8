@@ -481,13 +481,16 @@ meth public int getId()
 meth public int hashCode()
 meth public java.lang.String toString()
 meth public jdk.vm.ci.meta.JavaKind getSlotKind(int)
+meth public jdk.vm.ci.meta.JavaValue getBaseObject()
 meth public jdk.vm.ci.meta.JavaValue[] getValues()
 meth public jdk.vm.ci.meta.ResolvedJavaType getType()
 meth public static jdk.vm.ci.code.VirtualObject get(jdk.vm.ci.meta.ResolvedJavaType,int)
+meth public static jdk.vm.ci.code.VirtualObject get(jdk.vm.ci.meta.ResolvedJavaType,jdk.vm.ci.meta.JavaValue,int)
+meth public void setBaseObject(jdk.vm.ci.meta.JavaValue)
 meth public void setValues(jdk.vm.ci.meta.JavaValue[],jdk.vm.ci.meta.JavaKind[])
 meth public void verifyLayout(jdk.vm.ci.code.VirtualObject$LayoutVerifier)
 supr java.lang.Object
-hfds id,slotKinds,type,values
+hfds baseObject,id,slotKinds,type,values
 
 CLSS public abstract interface static jdk.vm.ci.code.VirtualObject$LayoutVerifier
  outer jdk.vm.ci.code.VirtualObject

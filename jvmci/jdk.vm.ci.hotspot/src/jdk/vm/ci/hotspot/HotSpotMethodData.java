@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -652,6 +652,14 @@ final class HotSpotMethodData {
             }
 
             totalCount += getMethodsNotRecordedExecutionCount(data, position);
+
+            // Fixup the case of C1's inability to optimize profiling of a statically bindable call
+            // site. If it's a monomorphic call site, attribute all the counts to the first type (if
+            // any is recorded).
+            if (entries == 1) {
+                counts[0] = totalCount;
+            }
+
             return new RawItemProfile<>(entries, methods, counts, totalCount);
         }
 
