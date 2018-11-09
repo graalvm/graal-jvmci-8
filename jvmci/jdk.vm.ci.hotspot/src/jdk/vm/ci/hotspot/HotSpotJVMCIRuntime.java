@@ -857,8 +857,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * @see "https://docs.oracle.com/javase/10/docs/specs/jni/design.html#resolving-native-method-names"
      * @see "https://docs.oracle.com/javase/10/docs/specs/jni/invocation.html#jni_createjavavm"
      *
-     * @return the JavaVM* value returned by calling the {@code JNI_CreateJavaVM} symbol in the
-     *         JVMCI shared library
+     * @return the JNIEnv* value taken from {@code JavaVM*} obtained by calling the
+     *         {@code JNI_CreateJavaVM} symbol in the JVMCI shared library
      * @throws NullPointerException if {@code clazz == null}
      * @throws IllegalArgumentException if the current execution context is the JVMCI shared library
      *             or if {@code clazz} is {@link Class#isPrimitive()}

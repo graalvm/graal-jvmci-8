@@ -2121,7 +2121,7 @@ C2V_VMENTRY(jlong, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
       }
     }
   }
-  return (jlong) (address) JVMCIEnv::get_shared_library_javavm();
+  return (jlong) (address) JVMCIEnv::get_shared_library_javavm()->functions->reserved0;
 }
 
 C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
