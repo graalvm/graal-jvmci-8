@@ -2064,7 +2064,7 @@ C2V_VMENTRY(jobject, getObject, (JNIEnv* env, jobject, jobject x, long displacem
   return JVMCIENV->get_jobject(result);
 }
 
-C2V_VMENTRY(jlong, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
+C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
   void* shared_library = JVMCIEnv::get_shared_library_handle();
   if (shared_library == NULL) {
     JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "JVMCI shared library is unavailable");
@@ -2121,7 +2121,14 @@ C2V_VMENTRY(jlong, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
       }
     }
   }
-  return (jlong) (address) JVMCIEnv::get_shared_library_javavm();
+
+  JavaVM* javaVM = JVMCIEnv::get_shared_library_javavm();
+  JVMCIPrimitiveArray result = JVMCIENV->new_longArray(4, JVMCI_CHECK_NULL);
+  JVMCIENV->put_long_at(result, 0, (jlong) (address) javaVM);
+  JVMCIENV->put_long_at(result, 1, (jlong) (address) javaVM->functions->reserved0);
+  JVMCIENV->put_long_at(result, 2, (jlong) (address) javaVM->functions->reserved1);
+  JVMCIENV->put_long_at(result, 3, (jlong) (address) javaVM->functions->reserved2);
+  return (jlongArray) JVMCIENV->get_jobject(result);
 }
 
 C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
@@ -2345,7 +2352,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"getInt",                                       CC"("OBJECTCONSTANT"J)I",                                                         FN_PTR(getInt)},
   {CC"getLong",                                      CC"("OBJECTCONSTANT"J)J",                                                         FN_PTR(getLong)},
   {CC"getObject",                                    CC"("OBJECTCONSTANT"J)"OBJECTCONSTANT,                                            FN_PTR(getObject)},
-  {CC"registerNativeMethods",                        CC"("CLASS")J",                                                                   FN_PTR(registerNativeMethods)},
+  {CC"registerNativeMethods",                        CC"("CLASS")[J",                                                                  FN_PTR(registerNativeMethods)},
   {CC"translate",                                    CC"("OBJECT")J",                                                                  FN_PTR(translate)},
   {CC"unhand",                                       CC"(J)"OBJECT,                                                                    FN_PTR(unhand)},
   {CC"updateHotSpotNmethodHandle",                   CC"("HS_NMETHOD_HANDLE")V",                                                       FN_PTR(updateHotSpotNmethodHandle)},

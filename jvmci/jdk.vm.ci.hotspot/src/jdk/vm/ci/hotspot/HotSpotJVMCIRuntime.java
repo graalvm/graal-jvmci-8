@@ -854,11 +854,14 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * Java_com_jcompile_JCompile_compile0
      * </pre>
      *
-     * @see "https://docs.oracle.com/javase/10/docs/specs/jni/design.html#resolving-native-method-names"
-     * @see "https://docs.oracle.com/javase/10/docs/specs/jni/invocation.html#jni_createjavavm"
+     * @see "https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html#resolving_native_method_names"
+     * @see "https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/invocation.html#creating_the_vm"
+     * @see "https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/invocation.html#invocation_api_functions"
      *
-     * @return the JavaVM* value returned by calling the {@code JNI_CreateJavaVM} symbol in the
-     *         JVMCI shared library
+     *
+     * @return an array of 4 longs where the first value is the {@code JavaVM*} value representing
+     *         the Java VM in the JVMCI shared library, and the remaining values are the first 3
+     *         pointers in the Invocation API function table (i.e., {@code JNIInvokeInterface})
      * @throws NullPointerException if {@code clazz == null}
      * @throws IllegalArgumentException if the current execution context is the JVMCI shared library
      *             or if {@code clazz} is {@link Class#isPrimitive()}
@@ -866,7 +869,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *             {@code clazz} is already linked or the JVMCI shared library does not contain a
      *             JNI-compatible symbol for a native method in {@code clazz}
      */
-    public long registerNativeMethods(Class<?> clazz) {
+    public long[] registerNativeMethods(Class<?> clazz) {
         return compilerToVm.registerNativeMethods(clazz);
     }
 
@@ -890,7 +893,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * @return a JNI global reference to the mirror of {@code obj} in the peer runtime
      * @throws IllegalArgumentException if {@code obj} is not of a translatable type
      *
-     * @see "https://docs.oracle.com/javase/10/docs/specs/jni/design.html#global-and-local-references"
+     * @see "https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html#global_and_local_references"
      */
     public long translate(Object obj) {
         return compilerToVm.translate(obj);
@@ -905,7 +908,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * @return the object referred to by {@code handle}
      * @throws ClassCastException if the returned object cannot be case to {@code type}
      *
-     * @see "https://docs.oracle.com/javase/10/docs/specs/jni/design.html#global-and-local-references"
+     * @see "https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html#global_and_local_references"
      *
      */
     public <T> T unhand(Class<T> type, long handle) {
