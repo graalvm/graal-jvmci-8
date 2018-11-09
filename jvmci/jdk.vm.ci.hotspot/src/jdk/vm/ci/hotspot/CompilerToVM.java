@@ -887,7 +887,7 @@ final class CompilerToVM {
     /**
      * @see HotSpotJVMCIRuntime#registerNativeMethods
      */
-    native long registerNativeMethods(Class<?> clazz);
+    native long[] registerNativeMethods(Class<?> clazz);
 
     /**
      * @see HotSpotJVMCIRuntime#translate(Object)
