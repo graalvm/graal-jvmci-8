@@ -158,20 +158,7 @@ class HotSpotJVMCIMetaAccessContext {
 
     @NativeImageReinitialize private static HashMap<Long, WeakReference<ResolvedJavaType>> resolvedJavaTypes;
 
-    /**
-     * Gets the JVMCI mirror for a {@link Class} object.
-     *
-     * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
-     */
-    static HotSpotResolvedJavaType fromClass(Class<?> javaClass) {
-        if (javaClass == null) {
-            /*
-             * If the referent has become null, clear out the current value and let computeValue
-             * above create a new value. Reload the value in a loop because in theory the
-             * WeakReference referent can be reclaimed at any point.
-             */
-            return null;
-        }
+    HotSpotResolvedJavaType createClass(Class<?> javaClass) {
         if (javaClass.isPrimitive()) {
             return HotSpotResolvedPrimitiveType.forKind(JavaKind.fromJavaClass(javaClass));
         }
@@ -183,6 +170,52 @@ class HotSpotJVMCIMetaAccessContext {
             }
         }
         return runtime().compilerToVm.lookupClass(javaClass);
+    }
+
+    /**
+     * Cache for speeding up {@link #fromClass(Class)}.
+     */
+    @NativeImageReinitialize private volatile ClassValue<WeakReference<HotSpotResolvedJavaType>> resolvedJavaType;
+
+    private HotSpotResolvedJavaType fromClass0(Class<?> javaClass) {
+        if (resolvedJavaType == null) {
+            synchronized (this) {
+                if (resolvedJavaType == null) {
+                    resolvedJavaType = new ClassValue<WeakReference<HotSpotResolvedJavaType>>() {
+                        @Override
+                        protected WeakReference<HotSpotResolvedJavaType> computeValue(Class<?> type) {
+                            return new WeakReference<>(createClass(type));
+                        }
+                    };
+                }
+            }
+        }
+        HotSpotResolvedJavaType javaType = null;
+        while (javaType == null) {
+            WeakReference<HotSpotResolvedJavaType> type = resolvedJavaType.get(javaClass);
+            javaType = type.get();
+            if (javaType == null) {
+                /*
+                 * If the referent has become null, clear out the current value and let computeValue
+                 * above create a new value. Reload the value in a loop because in theory the
+                 * WeakReference referent can be reclaimed at any point.
+                 */
+                resolvedJavaType.remove(javaClass);
+            }
+        }
+        return javaType;
+    }
+
+    /**
+     * Gets the JVMCI mirror for a {@link Class} object.
+     *
+     * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
+     */
+    static HotSpotResolvedJavaType fromClass(Class<?> javaClass) {
+        if (javaClass == null) {
+            return null;
+        }
+        return runtime().metaAccessContext.fromClass0(javaClass);
     }
 
     synchronized HotSpotResolvedObjectTypeImpl fromMetaspace(long klassPointer, String signature) {
