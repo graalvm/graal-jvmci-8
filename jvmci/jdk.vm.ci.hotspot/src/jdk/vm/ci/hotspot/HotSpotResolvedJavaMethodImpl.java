@@ -139,7 +139,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
         final int signatureIndex = UNSAFE.getChar(constMethod + config.constMethodSignatureIndexOffset);
         this.signature = (HotSpotSignature) constantPool.lookupSignature(signatureIndex);
-        runtime().metaAccessContext.add(this);
+        HotSpotJVMCIMetaAccessContext.add(this);
     }
 
     /**

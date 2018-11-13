@@ -47,7 +47,7 @@ import jdk.vm.ci.meta.ResolvedJavaType;
  * of the reference to the wrapper object allows them to be reclaimed when they are no longer used.
  *
  */
-class HotSpotJVMCIMetaAccessContext {
+final class HotSpotJVMCIMetaAccessContext {
 
     /**
      * This is like {@link sun.misc.Cleaner} but with weak semantics instead of phantom. Objects
@@ -148,17 +148,17 @@ class HotSpotJVMCIMetaAccessContext {
      * @param metaspaceObject
      */
 
-    void add(MetaspaceHandleObject metaspaceObject) {
+    static void add(MetaspaceHandleObject metaspaceObject) {
         ReferenceCleaner.create(metaspaceObject, metaspaceObject.getMetadataHandle());
     }
 
-    void add(IndirectHotSpotObjectConstantImpl constantObject) {
+    static void add(IndirectHotSpotObjectConstantImpl constantObject) {
         ReferenceCleaner.create(constantObject, constantObject.objectHandle);
     }
 
     @NativeImageReinitialize private static HashMap<Long, WeakReference<ResolvedJavaType>> resolvedJavaTypes;
 
-    HotSpotResolvedJavaType createClass(Class<?> javaClass) {
+    static HotSpotResolvedJavaType createClass(Class<?> javaClass) {
         if (javaClass.isPrimitive()) {
             return HotSpotResolvedPrimitiveType.forKind(JavaKind.fromJavaClass(javaClass));
         }
@@ -218,7 +218,7 @@ class HotSpotJVMCIMetaAccessContext {
         return runtime().metaAccessContext.fromClass0(javaClass);
     }
 
-    synchronized HotSpotResolvedObjectTypeImpl fromMetaspace(long klassPointer, String signature) {
+    static synchronized HotSpotResolvedObjectTypeImpl fromMetaspace(long klassPointer, String signature) {
         if (resolvedJavaTypes == null) {
             resolvedJavaTypes = new HashMap<>();
         }
