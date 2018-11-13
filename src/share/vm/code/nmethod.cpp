@@ -2926,7 +2926,7 @@ void nmethod::verify() {
     }
   }
 
-#ifdef INCLUDE_JVMCI
+#if INCLUDE_JVMCI
   {
     // Verify that implicit exceptions that deoptimize have a PcDesc and OopMap
     OopMapSet* oms = oop_maps();
@@ -3404,7 +3404,7 @@ void nmethod::print_code_comment_on(outputStream* st, int column, u_char* begin,
       OopMap* om = oms->at(i);
       address pc = base + om->offset();
       if (pc >= begin) {
-#ifdef INCLUDE_JVMCI
+#if INCLUDE_JVMCI
         bool is_implicit_deopt = implicit_table.continuation_offset(om->offset()) == (uint) om->offset();
 #else
         bool is_implicit_deopt = false;

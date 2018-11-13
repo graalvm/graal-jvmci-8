@@ -153,7 +153,7 @@ public:
   void set_size( uint size );
   void append( uint exec_off, uint cont_off );
 
-#ifdef INCLUDE_JVMCI
+#if INCLUDE_JVMCI
   void add_deoptimize(uint exec_off) {
     // Use the same offset as a marker value for deoptimization
     append(exec_off, exec_off);
