@@ -75,6 +75,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     private HotSpotConstantPool constantPool;
     private HotSpotResolvedObjectType arrayOfType;
     private final JavaConstant mirror;
+    private HotSpotResolvedObjectTypeImpl superClass;
 
     static HotSpotResolvedObjectTypeImpl getJavaLangObject() {
         return runtime().getJavaLangObject();
@@ -257,10 +258,19 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         if (isInterface()) {
             return null;
         }
-        if (isArray()) {
-            return runtime().getJavaLangObject();
+        HotSpotResolvedObjectTypeImpl javaLangObject = runtime().getJavaLangObject();
+        if (this.equals(javaLangObject)) {
+            return null;
         }
-        return compilerToVM().getResolvedJavaType(this, config().superOffset, false);
+        if (isArray()) {
+            return javaLangObject;
+        }
+
+        // Cache result of native call
+        if (superClass == null) {
+            superClass = compilerToVM().getResolvedJavaType(this, config().superOffset, false);
+        }
+        return superClass;
     }
 
     @Override
