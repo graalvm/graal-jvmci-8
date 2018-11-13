@@ -92,17 +92,53 @@ void JNIHandleMark::pop_jni_handle_block() {
     JNIHandleBlock::release_block(compile_handles, thread); // may block
   }
 }
-  
+
+static volatile jint _jvmci_calls = 0;
+static elapsedTimer _jvmci_calls_timer;
+static volatile jint _jvmci_calls_length = 0;
+static elapsedTimer** _jvmci_call_timers = new elapsedTimer*[200]();
+static jint* _jvmci_call_counts = new jint[200]();
+static const char** _jvmci_call_names = new const char*[200]();
+
+static bool register_timer(elapsedTimer* timer, const char* name, jint index) {
+  _jvmci_call_names[index] = name;
+  _jvmci_call_timers[index] = timer;
+  _jvmci_call_counts[index] = 0;
+  return false;
+}
+
 class JVMCITraceMark : public StackObj {
   const char* _msg;
+  jint _index;
  public:
-  JVMCITraceMark(const char* msg) {
+  JVMCITraceMark(const char* msg, jint index) {
     _msg = msg;
     if (JVMCITraceLevel >= 1) {
       tty->print_cr(PTR_FORMAT " JVMCITrace-1: Enter %s", p2i(JavaThread::current()), _msg);
     }
+    _index = index;
+    _jvmci_call_timers[index]->start();
+    _jvmci_calls_timer.start();
   }
   ~JVMCITraceMark() {
+    elapsedTimer* t = _jvmci_call_timers[_index];
+    t->stop();
+    _jvmci_calls_timer.stop();
+    jint total = Atomic::add(1, &_jvmci_calls);
+    Atomic::inc(_jvmci_call_counts +_index);
+    if ((total % 1000000) == 0) {
+      tty->print_cr("\n\n JVMCI calls: %d (%6.3f s)", total, _jvmci_calls_timer.seconds());
+      for (int i = 0; i < _jvmci_calls_length; i++) {
+        const char* name = _jvmci_call_names[i];
+        if (name != NULL) {
+          jint count = _jvmci_call_counts[i];
+          if (count > 100000) {
+            elapsedTimer* timer = _jvmci_call_timers[i];
+            tty->print_cr("%6.3f s\t%d\t%s", timer->seconds(), count, name);
+          }
+        }
+      }
+    }
     if (JVMCITraceLevel >= 1) {
       tty->print_cr(PTR_FORMAT " JVMCITrace-1: Exit %s", p2i(JavaThread::current()), _msg);
     }
@@ -119,8 +155,11 @@ Handle JavaArgumentUnboxer::next_arg(BasicType expectedType) {
 
 // Entry to native method implementation that transitions current thread to '_thread_in_vm'.
 #define C2V_VMENTRY(result_type, name, signature)        \
+  static jint _index_ ## name = Atomic::add(1, &_jvmci_calls_length);\
+  static elapsedTimer _timer_ ## name;\
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
-  JVMCITraceMark jtm("CompilerToVM::" #name);            \
+  static bool ignore = register_timer(&(_timer_ ## name), "" #name, _index_ ## name);\
+  JVMCITraceMark jtm("CompilerToVM::" #name, _index_ ## name);  \
   TRACE_CALL(result_type, jvmci_ ## name signature)      \
   JVMCI_VM_ENTRY_MARK;                                   \
   ResourceMark rm;                                       \
