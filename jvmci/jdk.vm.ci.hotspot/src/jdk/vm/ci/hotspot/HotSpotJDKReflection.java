@@ -615,4 +615,17 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
             return null;
         }
     }
+
+    Class<?> getMirror(HotSpotResolvedObjectTypeImpl holder) {
+        return (Class<?>) resolveObject((HotSpotObjectConstantImpl) holder.getJavaMirror());
+    }
+
+    Class<?> getMirror(HotSpotResolvedJavaType type) {
+        assert type != null;
+        if (type instanceof HotSpotResolvedPrimitiveType) {
+            return (Class<?>) resolveObject(((HotSpotResolvedPrimitiveType) type).mirror);
+        } else {
+            return getMirror((HotSpotResolvedObjectTypeImpl) type);
+        }
+    }
 }
