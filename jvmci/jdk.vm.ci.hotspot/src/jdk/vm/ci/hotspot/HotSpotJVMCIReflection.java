@@ -22,9 +22,6 @@
  */
 package jdk.vm.ci.hotspot;
 
-import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
-import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -132,18 +129,4 @@ abstract class HotSpotJVMCIReflection {
      *             another heap
      */
     abstract Object resolveObject(HotSpotObjectConstantImpl objectHandle);
-
-    Class<?> getMirror(HotSpotResolvedObjectTypeImpl holder) {
-        long oopAddress = holder.getMetaspaceKlass() + config().javaMirrorOffset;
-        return (Class<?>) runtime().compilerToVm.getObjectAtAddress(oopAddress);
-    }
-
-    Class<?> getMirror(HotSpotResolvedJavaType type) {
-        assert type != null;
-        if (type instanceof HotSpotResolvedPrimitiveType) {
-            return (Class<?>) resolveObject(((HotSpotResolvedPrimitiveType) type).mirror);
-        } else {
-            return getMirror((HotSpotResolvedObjectTypeImpl) type);
-        }
-    }
 }

@@ -154,7 +154,7 @@ extern Mutex*   JfrThreadGroups_lock;            // protects JFR access to Threa
 extern Mutex*   UnsafeJlong_lock;                // provides Unsafe atomic updates to jlongs on platforms that don't support cx8
 #endif
 
-#ifdef INCLUDE_JVMCI
+#if INCLUDE_JVMCI
 extern Monitor* JVMCI_lock;                      // Monitor to control initialization of JVMCI
 #endif
 

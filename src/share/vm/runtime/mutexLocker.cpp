@@ -138,7 +138,7 @@ Mutex*   JfrThreadGroups_lock         = NULL;
 Mutex*   UnsafeJlong_lock             = NULL;
 #endif
 
-#ifdef INCLUDE_JVMCI
+#if INCLUDE_JVMCI
 Monitor* JVMCI_lock                   = NULL;
 #endif
 
@@ -297,7 +297,7 @@ void mutex_init() {
   def(UnsafeJlong_lock             , Mutex,   special,     false);
 #endif
 
-#ifdef INCLUDE_JVMCI
+#if INCLUDE_JVMCI
   def(JVMCI_lock                   , Monitor, nonleaf+2,   true);
 #endif
 }

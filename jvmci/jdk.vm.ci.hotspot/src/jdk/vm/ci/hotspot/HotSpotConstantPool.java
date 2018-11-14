@@ -217,7 +217,7 @@ public final class HotSpotConstantPool implements ConstantPool, MetaspaceHandleO
     private HotSpotConstantPool(long metadataHandle) {
         this.metadataHandle = metadataHandle;
         this.constants = JvmConstants.instance();
-        runtime().metaAccessContext.add(this);
+        HotSpotJVMCIMetaAccessContext.add(this);
     }
 
     /**
