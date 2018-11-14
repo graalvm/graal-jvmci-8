@@ -39,7 +39,15 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
 
     private final HotSpotResolvedObjectTypeImpl holder;
     private JavaType type;
+
+    /**
+     * Value of {@code fieldDescriptor::access_flags()}.
+     */
     private final int offset;
+
+    /**
+     * Value of {@code fieldDescriptor::index()}.
+     */
     private final short index;
 
     /**
@@ -134,6 +142,14 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
     @Override
     public int getOffset() {
         return offset;
+    }
+
+    /**
+     * Gets the value of this field's index (i.e. {@code fieldDescriptor::index()} in the encoded
+     * fields of the declaring class.
+     */
+    int getIndex() {
+        return index;
     }
 
     @Override

@@ -2226,6 +2226,40 @@ C2V_VMENTRY(jbyteArray, getCode, (JNIEnv* env, jobject, jobject code_handle))
   return JVMCIENV->get_jbyteArray(result);
 }
 
+C2V_VMENTRY(jobject, asReflectionExecutable, (JNIEnv* env, jobject, jobject jvmci_method))
+  if (env != JavaThread::current()->jni_environment()) {
+    JVMCI_THROW_MSG_NULL(InternalError, "Only supported when running in HotSpot");
+  }
+  methodHandle m = JVMCIENV->asMethod(jvmci_method);
+  oop executable;
+  if (m->is_initializer()) {
+    executable = Reflection::new_constructor(m, CHECK_NULL);
+  } else {
+    executable = Reflection::new_method(m, true, false, CHECK_NULL);
+  }
+  return JNIHandles::make_local(thread, executable);
+}
+
+C2V_VMENTRY(jobject, asReflectionField, (JNIEnv* env, jobject, jobject jvmci_type, jint index))
+  if (env != JavaThread::current()->jni_environment()) {
+    JVMCI_THROW_MSG_NULL(InternalError, "Only supported when running in HotSpot");
+  }
+  Klass* klass = JVMCIENV->asKlass(jvmci_type);
+  if (!klass->oop_is_instance()) {
+    THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
+        err_msg("Expected non-primitive type, got %s", klass->external_name()));
+  }
+  InstanceKlass* iklass = InstanceKlass::cast(klass);
+  Array<u2>* fields = iklass->fields();
+  if (index < 0 ||index > fields->length()) {
+    THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
+        err_msg("Field index %d out of bounds for %s", index, klass->external_name()));
+  }
+  fieldDescriptor fd(iklass, index);
+  oop reflected = Reflection::new_field(&fd, true, CHECK_NULL);
+  return JNIHandles::make_local(env, reflected);
+}
+
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
 
@@ -2256,6 +2290,8 @@ C2V_VMENTRY(jbyteArray, getCode, (JNIEnv* env, jobject, jobject code_handle))
 #define HS_STACK_FRAME_REF      "Ljdk/vm/ci/hotspot/HotSpotStackFrameReference;"
 #define HS_SPECULATION_LOG      "Ljdk/vm/ci/hotspot/HotSpotSpeculationLog;"
 #define METASPACE_OBJECT        "Ljdk/vm/ci/hotspot/MetaspaceObject;"
+#define REFLECTION_EXECUTABLE   "Ljava/lang/reflect/Executable;"
+#define REFLECTION_FIELD        "Ljava/lang/reflect/Field;"
 #define METASPACE_METHOD_DATA   "J"
 
 JNINativeMethod CompilerToVM::methods[] = {
@@ -2357,6 +2393,9 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC"unhand",                                       CC"(J)"OBJECT,                                                                    FN_PTR(unhand)},
   {CC"updateHotSpotNmethodHandle",                   CC"("HS_NMETHOD_HANDLE")V",                                                       FN_PTR(updateHotSpotNmethodHandle)},
   {CC"getCode",                                      CC"("HS_INSTALLED_CODE")[B",                                                      FN_PTR(getCode)},
+  {CC"getCode",                                      CC"("HS_INSTALLED_CODE")[B",                                                      FN_PTR(getCode)},
+  {CC"asReflectionExecutable",                       CC"("HS_RESOLVED_METHOD")"REFLECTION_EXECUTABLE,                                  FN_PTR(asReflectionExecutable)},
+  {CC"asReflectionField",                            CC"("HS_RESOLVED_KLASS"I)"REFLECTION_FIELD,                                       FN_PTR(asReflectionField)},
 };
 
 int CompilerToVM::methods_count() {

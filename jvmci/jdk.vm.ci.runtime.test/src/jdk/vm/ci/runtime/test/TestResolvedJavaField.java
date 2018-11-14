@@ -36,6 +36,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -44,10 +48,13 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
+import jdk.vm.ci.meta.ResolvedJavaType;
+import jdk.vm.ci.runtime.test.TestResolvedJavaField.TestClassLoader;
 
 /**
  * Tests for {@link ResolvedJavaField}.
@@ -133,4 +140,94 @@ public class TestResolvedJavaField extends FieldUniverse {
             }
         }
     }
+
+    private static final String NON_EXISTENT_CLASS_NAME = "XXXXXXXXXXX";
+
+    static class TestClassLoader extends ClassLoader {
+
+        @Override
+        protected Class<?> findClass(final String name) throws ClassNotFoundException {
+            if (!name.equals(TypeWithUnresolvedFieldType.class.getName())) {
+                return super.findClass(name);
+            }
+            // copy classfile to byte array
+            byte[] classData = null;
+            try {
+                String simpleName = TypeWithUnresolvedFieldType.class.getSimpleName();
+                InputStream is = TypeWithUnresolvedFieldType.class.getResourceAsStream(simpleName + ".class");
+                assert is != null;
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+                byte[] buf = new byte[1024];
+                int size;
+                while ((size = is.read(buf, 0, buf.length)) != -1) {
+                    baos.write(buf, 0, size);
+                }
+                baos.flush();
+                classData = baos.toByteArray();
+            } catch (IOException e) {
+                Assert.fail("can't access class: " + name);
+            }
+
+            // replace all occurrences of "PrintStream" in classfile
+            int index = -1;
+
+            while ((index = indexOf(classData, index + 1, "PrintStream")) != -1) {
+                replace(classData, index, NON_EXISTENT_CLASS_NAME);
+            }
+
+            Class<?> c = defineClass(null, classData, 0, classData.length);
+            return c;
+        }
+
+        private static int indexOf(byte[] b, int index, String find) {
+            for (int i = index; i < b.length; i++) {
+                boolean match = true;
+                for (int j = i; j < i + find.length(); j++) {
+                    if (b[j] != (byte) find.charAt(j - i)) {
+                        match = false;
+                        break;
+                    }
+                }
+                if (match) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        private static void replace(byte[] b, int index, String replace) {
+            for (int i = index; i < index + replace.length(); i++) {
+                b[i] = (byte) replace.charAt(i - index);
+            }
+        }
+    }
+
+    /**
+     * Tests that calling {@link ResolvedJavaField#getType()} does not cause a linkage error if the
+     * type of the field is not resolvable.
+     */
+    @Test
+    public void testGetType() throws ClassNotFoundException {
+        Class<?> c = new TestClassLoader().findClass(TypeWithUnresolvedFieldType.class.getName());
+        ResolvedJavaType type = metaAccess.lookupJavaType(c);
+        for (ResolvedJavaField field : type.getInstanceFields(false)) {
+            assertTrue(field.getName().equals("fieldWithUnresolvableType"));
+            field.getType();
+            field.toString();
+            try {
+                field.getAnnotations();
+                throw new AssertionError("Expected " + NoClassDefFoundError.class.getName());
+            } catch (NoClassDefFoundError e) {
+                assertTrue(e.toString(), e.toString().contains(NON_EXISTENT_CLASS_NAME));
+            }
+        }
+    }
+}
+
+class TypeWithUnresolvedFieldType {
+    /**
+     * {@link TestClassLoader} will rewrite the type of this field to "Ljava/io/XXXXXXXXXXX;".
+     */
+    PrintStream fieldWithUnresolvableType;
 }
