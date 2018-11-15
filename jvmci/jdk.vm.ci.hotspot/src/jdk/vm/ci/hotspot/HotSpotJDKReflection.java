@@ -567,12 +567,12 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
      */
     private static Field getField(HotSpotResolvedJavaFieldImpl field) {
         HotSpotResolvedObjectTypeImpl declaringClass = field.getDeclaringClass();
-        HashMap<HotSpotResolvedJavaFieldImpl, Field> cache = declaringClass.reflectionFieldCache;
-        if (cache == null) {
-            cache = new HashMap<>();
-            declaringClass.reflectionFieldCache = cache;
-        }
-        synchronized (cache) {
+        synchronized (declaringClass) {
+            HashMap<HotSpotResolvedJavaFieldImpl, Field> cache = declaringClass.reflectionFieldCache;
+            if (cache == null) {
+                cache = new HashMap<>();
+                declaringClass.reflectionFieldCache = cache;
+            }
             Field reflect = cache.get(field);
             if (reflect == null) {
                 reflect = compilerToVM().asReflectionField(field.getDeclaringClass(), field.getIndex());
