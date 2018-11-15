@@ -128,21 +128,42 @@
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
 
+            ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
+
             # Test on graal
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
 
             # Look for a well known branch that fixes a downstream failure caused by a JDK change
-            ["git", "-C", "graal", "checkout", "master", "||", "true"],
-
-            ["mx", "-v", "-p", "graal/compiler",
-                    "--java-home", ["mx", "--vm=server", "jdkhome"],
-                    "gate", "--tags", "build,test,bootstraplite"
-            ]
+            ["git", "-C", "graal", "checkout", "master", "||", "true"]
         ],
     },
 
+    GraalTest:: {
+        name+: "-graal-gate",
+        run+: [
+            ["mx", "-v", "-p", "graal/compiler",
+                    "gate", "--tags", "build,test,bootstraplite"
+            ]
+        ]
+    },
+
+    # Builds a JavaScript images and runs a basic fibonacci script
+    NativeImageTest:: {
+        name+: "-native-image",
+        run+: [
+            ["mx", "-p", "graal/vm",
+                    "--dy", "/substratevm,/graal-js",
+                    "--force-bash-launchers=true",
+                    "--disable-libpolyglot", "build"
+            ],
+            ["./graal/vm/latest_graalvm_home/bin/gu", "rebuild-images", "js"],
+            ["./graal/vm/latest_graalvm_home/bin/js", "-e", "var f = function(n) { return (n <= 1) ? 1 : f(n-1)+f(n-1); }; print(f(10));"],
+            ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "-e", "var f = function(n) { return (n <= 1) ? 1 : f(n-1)+f(n-1); }; print(f(10));"]
+        ]
+    },
+
     builds: [
-        self.Build + mach
+        self.Build + self.GraalTest + mach
         for mach in [
             # Only need to test formatting and building
             # with Eclipse on one platform.
@@ -154,5 +175,7 @@
             self.Darwin + self.AMD64 + self.OpenJDK,
             self.Solaris + self.SPARCv9 + self.OracleJDK,
         ]
+    ] + [
+        self.Build + self.NativeImageTest + self.Linux + self.AMD64 + self.OracleJDK,
     ]
 }
