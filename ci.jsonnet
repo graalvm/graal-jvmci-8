@@ -139,7 +139,7 @@
     },
 
     GraalTest:: {
-        name+: "-graal-gate",
+        name+: "-graal",
         run+: [
             ["mx", "-v", "-p", "graal/compiler",
                     "gate", "--tags", "build,test,bootstraplite"
@@ -147,9 +147,9 @@
         ]
     },
 
-    # Builds a JavaScript images and runs a basic fibonacci script
-    NativeImageTest:: {
-        name+: "-native-image",
+    # Build a basic GraalVM and run some simple tests.
+    GraalVMTest:: {
+        name+: "-graalvm",
         run+: [
             ["mx", "-p", "graal/vm",
                     "--dy", "/substratevm,/graal-js",
@@ -157,8 +157,8 @@
                     "--disable-libpolyglot", "build"
             ],
             ["./graal/vm/latest_graalvm_home/bin/gu", "rebuild-images", "js"],
-            ["./graal/vm/latest_graalvm_home/bin/js", "-e", "var f = function(n) { return (n <= 1) ? 1 : f(n-1)+f(n-1); }; print(f(10));"],
-            ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "-e", "var f = function(n) { return (n <= 1) ? 1 : f(n-1)+f(n-1); }; print(f(10));"]
+            ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
+            ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
         ]
     },
 
@@ -167,15 +167,14 @@
         for mach in [
             # Only need to test formatting and building
             # with Eclipse on one platform.
-            self.Linux + self.AMD64 + self.OracleJDK + self.Eclipse + self.JDT,
-            self.Linux + self.AMD64 + self.OpenJDK,
+            self.GraalVMTest + self.Linux + self.AMD64 + self.OracleJDK + self.Eclipse + self.JDT,
+            self.GraalVMTest + self.Linux + self.AMD64 + self.OpenJDK,
+            self.GraalVMTest + self.Darwin + self.AMD64 + self.OracleJDK,
+            self.GraalVMTest + self.Darwin + self.AMD64 + self.OpenJDK,
+            # GraalVM not (yet) supported on these platforms
             self.Windows + self.AMD64 + self.OracleJDK,
             self.Windows + self.AMD64 + self.OpenJDK,
-            self.Darwin + self.AMD64 + self.OracleJDK,
-            self.Darwin + self.AMD64 + self.OpenJDK,
             self.Solaris + self.SPARCv9 + self.OracleJDK,
         ]
-    ] + [
-        self.Build + self.NativeImageTest + self.Linux + self.AMD64 + self.OracleJDK,
     ]
 }
