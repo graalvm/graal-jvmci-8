@@ -71,7 +71,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof HotSpotResolvedJavaField) {
+        if (obj instanceof HotSpotResolvedJavaFieldImpl) {
             HotSpotResolvedJavaFieldImpl that = (HotSpotResolvedJavaFieldImpl) obj;
             if (that.offset != this.offset || that.isStatic() != this.isStatic()) {
                 return false;

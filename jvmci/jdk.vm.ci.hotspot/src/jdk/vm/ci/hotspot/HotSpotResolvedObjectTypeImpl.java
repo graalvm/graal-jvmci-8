@@ -31,6 +31,7 @@ import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteOrder;
 import java.util.HashMap;
@@ -76,6 +77,11 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     private HotSpotResolvedObjectType arrayOfType;
     private final JavaConstant mirror;
     private HotSpotResolvedObjectTypeImpl superClass;
+
+    /**
+     * Managed exclusively by {@link HotSpotJDKReflection#getField}.
+     */
+    HashMap<HotSpotResolvedJavaFieldImpl, Field> reflectionFieldCache;
 
     static HotSpotResolvedObjectTypeImpl getJavaLangObject() {
         return runtime().getJavaLangObject();

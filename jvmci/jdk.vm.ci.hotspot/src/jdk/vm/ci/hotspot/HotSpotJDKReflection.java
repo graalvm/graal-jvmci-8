@@ -557,8 +557,29 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
         return result;
     }
 
-    private static Field getField(HotSpotResolvedJavaFieldImpl javaField) {
-        return compilerToVM().asReflectionField(javaField.getDeclaringClass(), javaField.getIndex());
+    /**
+     * Gets a {@link Field} object corresponding to {@code field}. This method guarantees the same
+     * {@link Field} object is returned if called twice on the same {@code field} value. This is
+     * required to ensure the results of {@link HotSpotResolvedJavaFieldImpl#getAnnotations()} and
+     * {@link HotSpotResolvedJavaFieldImpl#getAnnotation(Class)} are stable (i.e., for a given field
+     * {@code f} and annotation class {@code a}, the same object is returned for each call to
+     * {@code f.getAnnotation(a)}).
+     */
+    private static Field getField(HotSpotResolvedJavaFieldImpl field) {
+        HotSpotResolvedObjectTypeImpl declaringClass = field.getDeclaringClass();
+        HashMap<HotSpotResolvedJavaFieldImpl, Field> cache = declaringClass.reflectionFieldCache;
+        if (cache == null) {
+            cache = new HashMap<>();
+            declaringClass.reflectionFieldCache = cache;
+        }
+        synchronized (cache) {
+            Field reflect = cache.get(field);
+            if (reflect == null) {
+                reflect = compilerToVM().asReflectionField(field.getDeclaringClass(), field.getIndex());
+                cache.put(field, reflect);
+            }
+            return reflect;
+        }
     }
 
     Class<?> getMirror(HotSpotResolvedObjectTypeImpl holder) {
