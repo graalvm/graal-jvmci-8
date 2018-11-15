@@ -22,17 +22,15 @@
  */
 package jdk.vm.ci.hotspot;
 
+import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -542,44 +540,7 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
         return intrinsificationTrustPredicate;
     }
 
-    private static Method searchMethods(Method[] methods, String name, Class<?> returnType, Class<?>[] parameterTypes) {
-        for (Method m : methods) {
-            if (m.getName().equals(name) && returnType.equals(m.getReturnType()) && Arrays.equals(m.getParameterTypes(), parameterTypes)) {
-                return m;
-            }
-        }
-        return null;
-    }
-
-    private Method getDeclaredMethod(HotSpotResolvedObjectTypeImpl holder, String name, HotSpotResolvedJavaType returnType, HotSpotResolvedJavaType[] parameterTypes) {
-        Class<?> javaMirror = getMirror(holder);
-        Class<?>[] types = new Class<?>[parameterTypes.length];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            types[i] = getMirror(parameterTypes[i]);
-        }
-        Method m = searchMethods(javaMirror.getDeclaredMethods(), name, getMirror(returnType), types);
-        if (m == null) {
-            return null;
-        }
-        return m;
-    }
-
-    private Constructor<?> getDeclaredConstructor(HotSpotResolvedObjectTypeImpl holder, HotSpotResolvedJavaType[] parameterTypes) {
-        Class<?> javaMirror = getMirror(holder);
-        Class<?>[] types = new Class<?>[parameterTypes.length];
-        for (int i = 0; i < parameterTypes.length; i++) {
-            types[i] = getMirror(parameterTypes[i]);
-        }
-        try {
-            Constructor<?> m = javaMirror.getDeclaredConstructor(types);
-            return m;
-        } catch (NoSuchMethodException e) {
-            return null;
-        }
-
-    }
-
-    private Executable getMethod(HotSpotResolvedJavaMethodImpl method) {
+    private static Executable getMethod(HotSpotResolvedJavaMethodImpl method) {
         if (method.toJavaCache != null) {
             if (method.toJavaCache == method.signature) {
                 return null;
@@ -587,19 +548,7 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
             return (Executable) method.toJavaCache;
         }
 
-        HotSpotResolvedObjectTypeImpl holder = method.getDeclaringClass();
-        HotSpotResolvedJavaType[] parameterTypes = method.signatureToTypes();
-        HotSpotResolvedJavaType returnType = ((HotSpotResolvedJavaType) method.getSignature().getReturnType(holder).resolve(holder));
-        assert returnType != null;
-
-        Executable result;
-        if (method.isConstructor()) {
-            result = getDeclaredConstructor(holder, parameterTypes);
-        } else {
-            // Do not use Method.getDeclaredMethod() as it can return a bridge method
-            // when this.isBridge() is false and vice versa.
-            result = getDeclaredMethod(holder, method.getName(), returnType, parameterTypes);
-        }
+        Executable result = compilerToVM().asReflectionExecutable(method);
         if (result == null) {
             method.toJavaCache = method.signature;
             return null;
@@ -608,11 +557,28 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
         return result;
     }
 
-    private Field getField(HotSpotResolvedJavaFieldImpl javaField) {
-        try {
-            return getMirror(javaField.getDeclaringClass()).getDeclaredField(javaField.getName());
-        } catch (NoSuchFieldException e) {
-            return null;
+    /**
+     * Gets a {@link Field} object corresponding to {@code field}. This method guarantees the same
+     * {@link Field} object is returned if called twice on the same {@code field} value. This is
+     * required to ensure the results of {@link HotSpotResolvedJavaFieldImpl#getAnnotations()} and
+     * {@link HotSpotResolvedJavaFieldImpl#getAnnotation(Class)} are stable (i.e., for a given field
+     * {@code f} and annotation class {@code a}, the same object is returned for each call to
+     * {@code f.getAnnotation(a)}).
+     */
+    private static Field getField(HotSpotResolvedJavaFieldImpl field) {
+        HotSpotResolvedObjectTypeImpl declaringClass = field.getDeclaringClass();
+        synchronized (declaringClass) {
+            HashMap<HotSpotResolvedJavaFieldImpl, Field> cache = declaringClass.reflectionFieldCache;
+            if (cache == null) {
+                cache = new HashMap<>();
+                declaringClass.reflectionFieldCache = cache;
+            }
+            Field reflect = cache.get(field);
+            if (reflect == null) {
+                reflect = compilerToVM().asReflectionField(field.getDeclaringClass(), field.getIndex());
+                cache.put(field, reflect);
+            }
+            return reflect;
         }
     }
 

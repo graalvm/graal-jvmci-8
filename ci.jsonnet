@@ -128,30 +128,52 @@
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
 
+            ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
+
             # Test on graal
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
 
             # Look for a well known branch that fixes a downstream failure caused by a JDK change
-            ["git", "-C", "graal", "checkout", "master", "||", "true"],
-
-            ["mx", "-v", "-p", "graal/compiler",
-                    "--java-home", ["mx", "--vm=server", "jdkhome"],
-                    "gate", "--tags", "build,test,bootstraplite"
-            ]
+            ["git", "-C", "graal", "checkout", "master", "||", "true"]
         ],
     },
 
+    GraalTest:: {
+        name+: "-graal",
+        run+: [
+            ["mx", "-v", "-p", "graal/compiler",
+                    "gate", "--tags", "build,test,bootstraplite"
+            ]
+        ]
+    },
+
+    # Build a basic GraalVM and run some simple tests.
+    GraalVMTest:: {
+        name+: "-graalvm",
+        run+: [
+            ["mx", "-p", "graal/vm",
+                    "--dy", "/substratevm,/graal-js",
+                    "--force-bash-launchers=true",
+                    "--disable-libpolyglot", "build"
+            ],
+            ["./graal/vm/latest_graalvm_home/bin/gu", "rebuild-images", "js"],
+            ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
+            ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
+        ]
+    },
+
     builds: [
-        self.Build + mach
+        self.Build + self.GraalTest + mach
         for mach in [
             # Only need to test formatting and building
             # with Eclipse on one platform.
-            self.Linux + self.AMD64 + self.OracleJDK + self.Eclipse + self.JDT,
-            self.Linux + self.AMD64 + self.OpenJDK,
+            self.GraalVMTest + self.Linux + self.AMD64 + self.OracleJDK + self.Eclipse + self.JDT,
+            self.GraalVMTest + self.Linux + self.AMD64 + self.OpenJDK,
+            self.GraalVMTest + self.Darwin + self.AMD64 + self.OracleJDK,
+            self.GraalVMTest + self.Darwin + self.AMD64 + self.OpenJDK,
+            # GraalVM not (yet) supported on these platforms
             self.Windows + self.AMD64 + self.OracleJDK,
             self.Windows + self.AMD64 + self.OpenJDK,
-            self.Darwin + self.AMD64 + self.OracleJDK,
-            self.Darwin + self.AMD64 + self.OpenJDK,
             self.Solaris + self.SPARCv9 + self.OracleJDK,
         ]
     ]
