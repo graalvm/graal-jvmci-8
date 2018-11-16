@@ -2233,6 +2233,10 @@ C2V_VMENTRY(jobject, asReflectionExecutable, (JNIEnv* env, jobject, jobject jvmc
   methodHandle m = JVMCIENV->asMethod(jvmci_method);
   oop executable;
   if (m->is_initializer()) {
+    if (m->is_static_initializer()) {
+      THROW_MSG_0(vmSymbols::java_lang_IllegalArgumentException(),
+          "Cannot create java.lang.reflect.Method for class initializer");
+    }
     executable = Reflection::new_constructor(m, CHECK_NULL);
   } else {
     executable = Reflection::new_method(m, true, false, CHECK_NULL);

@@ -32,6 +32,7 @@ import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.Map;
@@ -71,11 +72,9 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
     private byte[] code;
 
     /**
-     * Cache for {@link HotSpotJDKReflection#getMethod}. Set to {@link #signature} when resolving
-     * reflection object fails due to reflection filtering (see {@code Reflection.fieldFilterMap}
-     * and {@code Reflection.methodFilterMap}).
+     * Cache for {@link HotSpotJDKReflection#getMethod}.
      */
-    volatile Object toJavaCache;
+    volatile Executable toJavaCache;
 
     /**
      * Only 30% of {@link HotSpotResolvedJavaMethodImpl}s have their name accessed so compute it

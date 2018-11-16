@@ -1132,11 +1132,11 @@ def _jvmci_gate_runner(args, tasks):
                 with Task('JVMCI UnitTests: hosted', tasks) as t:
                     if t: unittest(['--suite', 'jvmci', '--enable-timing', '--verbose', '--fail-fast'])
 
-    # Prevent JVMCI modifications from breaking the standard builds
+    # Prevent JVMCI modifications from breaking the client build
     if args.buildNonJVMCI:
         with Task('BuildHotSpotVarieties', tasks, disableJacoco=True, tags=[mx_gate.Tags.build]) as t:
             if t:
-                buildvms(['--vms', 'client,server', '--builds', 'fastdebug,product'])
+                buildvms(['--vms', 'client', '--builds', 'fastdebug'])
 
     with Task('JVMCI Signature Tests', tasks) as t:
         if t: sigtest(['--check', 'binary'])
