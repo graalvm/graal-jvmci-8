@@ -156,28 +156,40 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
     }
 
     @Override
-    ResolvedJavaMethod.Parameter[] getParameters(HotSpotResolvedJavaMethodImpl method) {
-        java.lang.reflect.Parameter[] javaParameters = getMethod(method).getParameters();
+    ResolvedJavaMethod.Parameter[] getParameters(HotSpotResolvedJavaMethodImpl javaMethod) {
+        Executable method = getMethod(javaMethod);
+        if (method == null) {
+            return new ResolvedJavaMethod.Parameter[0];
+        }
+        java.lang.reflect.Parameter[] javaParameters = method.getParameters();
         ResolvedJavaMethod.Parameter[] res = new ResolvedJavaMethod.Parameter[javaParameters.length];
         for (int i = 0; i < res.length; i++) {
             java.lang.reflect.Parameter src = javaParameters[i];
             String paramName = src.isNamePresent() ? src.getName() : null;
-            res[i] = new ResolvedJavaMethod.Parameter(paramName, src.getModifiers(), method, i);
+            res[i] = new ResolvedJavaMethod.Parameter(paramName, src.getModifiers(), javaMethod, i);
         }
         return res;
     }
 
     @Override
     Annotation[][] getParameterAnnotations(HotSpotResolvedJavaMethodImpl javaMethod) {
-        return getMethod(javaMethod).getParameterAnnotations();
+        Executable method = getMethod(javaMethod);
+        if (method == null) {
+            return new Annotation[0][];
+        }
+        return method.getParameterAnnotations();
     }
 
     @Override
     Type[] getGenericParameterTypes(HotSpotResolvedJavaMethodImpl javaMethod) {
-        return getMethod(javaMethod).getGenericParameterTypes();
+        Executable method = getMethod(javaMethod);
+        if (method == null) {
+            return new Type[0];
+        }
+        return method.getGenericParameterTypes();
     }
 
-    static final Annotation[] NO_ANNOTATIONS = new Annotation[0];
+    static final Annotation[] NO_ANNOTATIONS = {};
 
     @Override
     Annotation[] getFieldAnnotations(HotSpotResolvedJavaFieldImpl javaField) {
@@ -541,20 +553,17 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
     }
 
     private static Executable getMethod(HotSpotResolvedJavaMethodImpl method) {
-        if (method.toJavaCache != null) {
-            if (method.toJavaCache == method.signature) {
-                return null;
-            }
-            return (Executable) method.toJavaCache;
-        }
-
-        Executable result = compilerToVM().asReflectionExecutable(method);
-        if (result == null) {
-            method.toJavaCache = method.signature;
+        if (method.isClassInitializer()) {
             return null;
         }
-        method.toJavaCache = result;
-        return result;
+        if (method.toJavaCache == null) {
+            synchronized (method) {
+                if (method.toJavaCache == null) {
+                    method.toJavaCache = compilerToVM().asReflectionExecutable(method);
+                }
+            }
+        }
+        return method.toJavaCache;
     }
 
     /**
