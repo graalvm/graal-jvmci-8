@@ -43,7 +43,7 @@ typedef Array<u1> AnnotationArray;
 // a type_annotation instance.
 
 class Annotations: public MetaspaceObj {
-
+  friend class VMStructs;
   // Annotations for this class, or null if none.
   AnnotationArray*             _class_annotations;
   // Annotation objects (byte arrays) for fields, or null if no annotations.

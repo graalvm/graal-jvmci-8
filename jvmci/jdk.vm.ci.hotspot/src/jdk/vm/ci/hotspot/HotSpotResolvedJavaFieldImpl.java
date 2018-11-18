@@ -24,6 +24,7 @@ package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
+import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
 import java.lang.annotation.Annotation;
 
@@ -172,18 +173,42 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
         return (config().jvmAccFieldStable & modifiers) != 0;
     }
 
+    private boolean hasAnnotations() {
+        if (!isInternal()) {
+            HotSpotVMConfig config = config();
+            final long metaspaceAnnotations = UNSAFE.getAddress(holder.getMetaspaceKlass() + config.instanceKlassAnnotationsOffset);
+            if (metaspaceAnnotations != 0) {
+                long fieldsAnnotations = UNSAFE.getAddress(metaspaceAnnotations + config.annotationsFieldAnnotationsOffset);
+                if (fieldsAnnotations != 0) {
+                    long fieldAnnotations = UNSAFE.getAddress(fieldsAnnotations + config.fieldsAnnotationsBaseOffset + (config.annotationArrayPointerSize * index));
+                    return fieldAnnotations != 0;
+                }
+            }
+        }
+        return false;
+    }
+
     @Override
     public Annotation[] getAnnotations() {
+        if (!hasAnnotations()) {
+            return new Annotation[0];
+        }
         return runtime().reflection.getFieldAnnotations(this);
     }
 
     @Override
     public Annotation[] getDeclaredAnnotations() {
+        if (!hasAnnotations()) {
+            return new Annotation[0];
+        }
         return runtime().reflection.getFieldDeclaredAnnotations(this);
     }
 
     @Override
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        if (!hasAnnotations()) {
+            return null;
+        }
         return runtime().reflection.getFieldAnnotation(this, annotationClass);
     }
 }

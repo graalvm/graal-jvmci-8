@@ -57,13 +57,14 @@ class CompilerToVM {
 
     static bool _supports_inline_contig_alloc;
     static HeapWord** _heap_end_addr;
-     static HeapWord** _heap_top_addr;
+    static HeapWord** _heap_top_addr;
     static int _max_oop_map_stack_offset;
+    static int _fields_annotations_base_offset;
 
     static jbyte* cardtable_start_address;
     static int cardtable_shift;
-     static int g1_young_card;
-     static int dirty_card;
+    static int g1_young_card;
+    static int dirty_card;
 
     static int vm_page_size;
 
@@ -75,9 +76,10 @@ class CompilerToVM {
     static int sizeof_narrowKlass;
     static int sizeof_arrayOopDesc;
     static int sizeof_BasicLock;
+    static int sizeof_AnnotationArrayPointer;
 
-     static address CodeCache_low_bound;
-     static address CodeCache_high_bound;
+    static address CodeCache_low_bound;
+    static address CodeCache_high_bound;
 
     static address dsin;
     static address dcos;
