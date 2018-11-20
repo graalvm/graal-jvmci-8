@@ -72,11 +72,9 @@ class CompilerToVM {
     static int sizeof_ExceptionTableElement;
     static int sizeof_LocalVariableTableElement;
     static int sizeof_ConstantPool;
-    static int sizeof_SymbolPointer;
     static int sizeof_narrowKlass;
     static int sizeof_arrayOopDesc;
     static int sizeof_BasicLock;
-    static int sizeof_AnnotationArrayPointer;
 
     static address CodeCache_low_bound;
     static address CodeCache_high_bound;

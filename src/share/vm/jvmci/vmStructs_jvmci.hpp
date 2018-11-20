@@ -71,11 +71,9 @@
   static_field(CompilerToVM::Data,             sizeof_ExceptionTableElement,           int)                                          \
   static_field(CompilerToVM::Data,             sizeof_LocalVariableTableElement,       int)                                          \
   static_field(CompilerToVM::Data,             sizeof_ConstantPool,                    int)                                          \
-  static_field(CompilerToVM::Data,             sizeof_SymbolPointer,                   int)                                          \
   static_field(CompilerToVM::Data,             sizeof_narrowKlass,                     int)                                          \
   static_field(CompilerToVM::Data,             sizeof_arrayOopDesc,                    int)                                          \
   static_field(CompilerToVM::Data,             sizeof_BasicLock,                       int)                                          \
-  static_field(CompilerToVM::Data,             sizeof_AnnotationArrayPointer,          int)                                          \
                                                                                                                                      \
   static_field(CompilerToVM::Data,             CodeCache_low_bound,                    address)                                      \
   static_field(CompilerToVM::Data,             CodeCache_high_bound,                   address)                                      \

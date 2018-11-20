@@ -25,6 +25,7 @@ package jdk.vm.ci.hotspot;
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.vm.ci.hotspot.HotSpotVMConfig.config;
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
+import static sun.misc.Unsafe.ADDRESS_SIZE;
 
 import java.lang.annotation.Annotation;
 
@@ -180,7 +181,7 @@ class HotSpotResolvedJavaFieldImpl implements HotSpotResolvedJavaField {
             if (metaspaceAnnotations != 0) {
                 long fieldsAnnotations = UNSAFE.getAddress(metaspaceAnnotations + config.annotationsFieldAnnotationsOffset);
                 if (fieldsAnnotations != 0) {
-                    long fieldAnnotations = UNSAFE.getAddress(fieldsAnnotations + config.fieldsAnnotationsBaseOffset + (config.annotationArrayPointerSize * index));
+                    long fieldAnnotations = UNSAFE.getAddress(fieldsAnnotations + config.fieldsAnnotationsBaseOffset + (ADDRESS_SIZE * index));
                     return fieldAnnotations != 0;
                 }
             }

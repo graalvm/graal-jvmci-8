@@ -107,7 +107,6 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
 
     final int annotationsFieldAnnotationsOffset = getFieldOffset("Annotations::_fields_annotations", Integer.class, "Array<AnnotationArray*>*");
     final int fieldsAnnotationsBaseOffset = getFieldValue("CompilerToVM::Data::_fields_annotations_base_offset", Integer.class, "int");
-    final int annotationArrayPointerSize = getFieldValue("CompilerToVM::Data::sizeof_AnnotationArrayPointer", Integer.class, "int");
 
     final int arrayU1LengthOffset = getFieldOffset("Array<int>::_length", Integer.class, "int");
     final int arrayU1DataOffset = getFieldOffset("Array<u1>::_data", Integer.class);
@@ -251,8 +250,6 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
 
     final int heapWordSize = getConstant("HeapWordSize", Integer.class);
 
-    final int symbolPointerSize = getFieldValue("CompilerToVM::Data::sizeof_SymbolPointer", Integer.class, "int");
-
     final long vmSymbolsSymbols = getFieldAddress("vmSymbols::_symbols[0]", "Symbol*");
     final int vmSymbolsFirstSID = getConstant("vmSymbols::FIRST_SID", Integer.class);
     final int vmSymbolsSIDLimit = getConstant("vmSymbols::SID_LIMIT", Integer.class);
@@ -270,8 +267,7 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     String symbolAt(int index) {
         HotSpotJVMCIRuntime runtime = runtime();
         assert vmSymbolsFirstSID <= index && index < vmSymbolsSIDLimit : "index " + index + " is out of bounds";
-        assert symbolPointerSize == Unsafe.ADDRESS_SIZE : "the following address read is broken";
-        int offset = index * symbolPointerSize;
+        int offset = index * Unsafe.ADDRESS_SIZE;
         return runtime.getCompilerToVM().getSymbol(UNSAFE.getAddress(vmSymbolsSymbols + offset));
     }
 

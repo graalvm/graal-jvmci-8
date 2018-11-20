@@ -74,12 +74,9 @@ int CompilerToVM::Data::sizeof_vtableEntry = sizeof(vtableEntry);
 int CompilerToVM::Data::sizeof_ExceptionTableElement = sizeof(ExceptionTableElement);
 int CompilerToVM::Data::sizeof_LocalVariableTableElement = sizeof(LocalVariableTableElement);
 int CompilerToVM::Data::sizeof_ConstantPool = sizeof(ConstantPool);
-int CompilerToVM::Data::sizeof_SymbolPointer = sizeof(Symbol*);
 int CompilerToVM::Data::sizeof_narrowKlass = sizeof(narrowKlass);
 int CompilerToVM::Data::sizeof_arrayOopDesc = sizeof(arrayOopDesc);
 int CompilerToVM::Data::sizeof_BasicLock = sizeof(BasicLock);
-int CompilerToVM::Data::sizeof_AnnotationArrayPointer = sizeof (AnnotationArray*);
-
 
 address CompilerToVM::Data::CodeCache_low_bound;
 address CompilerToVM::Data::CodeCache_high_bound;
