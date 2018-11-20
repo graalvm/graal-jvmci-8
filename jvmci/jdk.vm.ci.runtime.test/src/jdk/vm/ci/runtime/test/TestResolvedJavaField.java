@@ -215,12 +215,7 @@ public class TestResolvedJavaField extends FieldUniverse {
             assertTrue(field.getName().equals("fieldWithUnresolvableType"));
             field.getType();
             field.toString();
-            try {
-                field.getAnnotations();
-                throw new AssertionError("Expected " + NoClassDefFoundError.class.getName());
-            } catch (NoClassDefFoundError e) {
-                assertTrue(e.toString(), e.toString().contains(NON_EXISTENT_CLASS_NAME));
-            }
+            field.getAnnotations();
         }
     }
 }

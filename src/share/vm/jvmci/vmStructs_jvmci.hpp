@@ -58,6 +58,7 @@
   static_field(CompilerToVM::Data,             _heap_top_addr,                         HeapWord**)                                   \
                                                                                                                                      \
   static_field(CompilerToVM::Data,             _max_oop_map_stack_offset,              int)                                          \
+  static_field(CompilerToVM::Data,             _fields_annotations_base_offset,        int)                                          \
                                                                                                                                      \
   static_field(CompilerToVM::Data,             cardtable_start_address,                jbyte*)                                       \
   static_field(CompilerToVM::Data,             cardtable_shift,                        int)                                          \
@@ -70,7 +71,6 @@
   static_field(CompilerToVM::Data,             sizeof_ExceptionTableElement,           int)                                          \
   static_field(CompilerToVM::Data,             sizeof_LocalVariableTableElement,       int)                                          \
   static_field(CompilerToVM::Data,             sizeof_ConstantPool,                    int)                                          \
-  static_field(CompilerToVM::Data,             sizeof_SymbolPointer,                   int)                                          \
   static_field(CompilerToVM::Data,             sizeof_narrowKlass,                     int)                                          \
   static_field(CompilerToVM::Data,             sizeof_arrayOopDesc,                    int)                                          \
   static_field(CompilerToVM::Data,             sizeof_BasicLock,                       int)                                          \
@@ -109,6 +109,7 @@
   nonstatic_field(JavaThread,                  _jvmci_counters,                        jlong*)                                       \
   nonstatic_field(MethodData,                  _jvmci_ir_size,                         int)                                          \
   nonstatic_field(ConstantPool,                _flags,                                 int)                                          \
+  nonstatic_field(Annotations,                 _fields_annotations,                    Array<AnnotationArray*>*)                     \
 
 #define VM_TYPES_JVMCI(declare_type, declare_toplevel_type)                   \
   declare_toplevel_type(narrowKlass)                                          \

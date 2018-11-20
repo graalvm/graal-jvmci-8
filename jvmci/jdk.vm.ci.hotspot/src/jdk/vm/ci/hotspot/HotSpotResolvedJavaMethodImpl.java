@@ -502,26 +502,41 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     @Override
     public Parameter[] getParameters() {
+        if (signature.getParameterCount(false) == 0) {
+            return new ResolvedJavaMethod.Parameter[0];
+        }
         return runtime().reflection.getParameters(this);
     }
 
     @Override
     public Annotation[][] getParameterAnnotations() {
+        if ((getConstMethodFlags() & config().constMethodHasParameterAnnotations) == 0) {
+            return new Annotation[signature.getParameterCount(false)][0];
+        }
         return runtime().reflection.getParameterAnnotations(this);
     }
 
     @Override
     public Annotation[] getAnnotations() {
+        if ((getConstMethodFlags() & config().constMethodHasMethodAnnotations) == 0) {
+            return new Annotation[0];
+        }
         return runtime().reflection.getMethodAnnotations(this);
     }
 
     @Override
     public Annotation[] getDeclaredAnnotations() {
+        if ((getConstMethodFlags() & config().constMethodHasMethodAnnotations) == 0) {
+            return new Annotation[0];
+        }
         return runtime().reflection.getMethodDeclaredAnnotations(this);
     }
 
     @Override
     public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
+        if ((getConstMethodFlags() & config().constMethodHasMethodAnnotations) == 0) {
+            return null;
+        }
         return runtime().reflection.getMethodAnnotation(this, annotationClass);
     }
 
@@ -549,6 +564,9 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     @Override
     public Type[] getGenericParameterTypes() {
+        if (isClassInitializer()) {
+            return new Type[0];
+        }
         return runtime().reflection.getGenericParameterTypes(this);
     }
 

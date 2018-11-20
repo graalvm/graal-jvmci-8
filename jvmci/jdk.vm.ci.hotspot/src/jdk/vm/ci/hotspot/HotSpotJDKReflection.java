@@ -30,6 +30,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -157,11 +158,7 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
 
     @Override
     ResolvedJavaMethod.Parameter[] getParameters(HotSpotResolvedJavaMethodImpl javaMethod) {
-        Executable method = getMethod(javaMethod);
-        if (method == null) {
-            return new ResolvedJavaMethod.Parameter[0];
-        }
-        java.lang.reflect.Parameter[] javaParameters = method.getParameters();
+        java.lang.reflect.Parameter[] javaParameters = getMethod(javaMethod).getParameters();
         ResolvedJavaMethod.Parameter[] res = new ResolvedJavaMethod.Parameter[javaParameters.length];
         for (int i = 0; i < res.length; i++) {
             java.lang.reflect.Parameter src = javaParameters[i];
@@ -173,79 +170,42 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
 
     @Override
     Annotation[][] getParameterAnnotations(HotSpotResolvedJavaMethodImpl javaMethod) {
-        Executable method = getMethod(javaMethod);
-        if (method == null) {
-            return new Annotation[0][];
-        }
-        return method.getParameterAnnotations();
+        return getMethod(javaMethod).getParameterAnnotations();
     }
 
     @Override
     Type[] getGenericParameterTypes(HotSpotResolvedJavaMethodImpl javaMethod) {
-        Executable method = getMethod(javaMethod);
-        if (method == null) {
-            return new Type[0];
-        }
-        return method.getGenericParameterTypes();
+        return getMethod(javaMethod).getGenericParameterTypes();
     }
-
-    static final Annotation[] NO_ANNOTATIONS = {};
 
     @Override
     Annotation[] getFieldAnnotations(HotSpotResolvedJavaFieldImpl javaField) {
-        if (javaField.isInternal()) {
-            return NO_ANNOTATIONS;
-        }
-        Field field = getField(javaField);
-        if (field == null) {
-            return NO_ANNOTATIONS;
-        }
-        return field.getAnnotations();
+        return getField(javaField).getAnnotations();
     }
 
     @Override
     Annotation[] getMethodAnnotations(HotSpotResolvedJavaMethodImpl javaMethod) {
-        Executable method = getMethod(javaMethod);
-        if (method == null) {
-            return NO_ANNOTATIONS;
-        }
-        return method.getAnnotations();
+        return getMethod(javaMethod).getAnnotations();
     }
 
     @Override
     Annotation[] getMethodDeclaredAnnotations(HotSpotResolvedJavaMethodImpl javaMethod) {
-        Executable method = getMethod(javaMethod);
-        if (method == null) {
-            return NO_ANNOTATIONS;
-        }
-        return method.getDeclaredAnnotations();
+        return getMethod(javaMethod).getDeclaredAnnotations();
     }
 
     @Override
     Annotation[] getFieldDeclaredAnnotations(HotSpotResolvedJavaFieldImpl javaField) {
-        Field field = getField(javaField);
-        if (field == null) {
-            return NO_ANNOTATIONS;
-        }
-        return field.getDeclaredAnnotations();
+        return getField(javaField).getDeclaredAnnotations();
     }
 
     @Override
     <T extends Annotation> T getMethodAnnotation(HotSpotResolvedJavaMethodImpl javaMethod, Class<T> annotationClass) {
-        Executable method = getMethod(javaMethod);
-        if (method == null) {
-            return null;
-        }
-        return method.getAnnotation(annotationClass);
+        return getMethod(javaMethod).getAnnotation(annotationClass);
     }
 
     @Override
     <T extends Annotation> T getFieldAnnotation(HotSpotResolvedJavaFieldImpl javaField, Class<T> annotationClass) {
-        Field field = getField(javaField);
-        if (field == null) {
-            return null;
-        }
-        return field.getAnnotation(annotationClass);
+        return getField(javaField).getAnnotation(annotationClass);
     }
 
     @Override
@@ -552,10 +512,12 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
         return intrinsificationTrustPredicate;
     }
 
+    /**
+     * Gets a {@link Method} object corresponding to {@code method}. This method guarantees the same
+     * {@link Method} object is returned if called twice on the same {@code method} value.
+     */
     private static Executable getMethod(HotSpotResolvedJavaMethodImpl method) {
-        if (method.isClassInitializer()) {
-            return null;
-        }
+        assert !method.isClassInitializer() : method;
         if (method.toJavaCache == null) {
             synchronized (method) {
                 if (method.toJavaCache == null) {
