@@ -47,7 +47,9 @@
 #define strtoll _strtoi64
 #endif
 
-// #define METADATA_TRACK_NAMES
+#ifdef ASSERT
+#define METADATA_TRACK_NAMES
+#endif
 
 struct _jmetadata {
  private:
@@ -69,24 +71,32 @@ struct _jmetadata {
 
   void set_handle(Metadata* value) {
     _handle = value;
-#ifdef METADATA_TRACK_NAMES
-    _name = strdup(value->print_value_string());
-#endif
   }
+
+#ifdef METADATA_TRACK_NAMES
+  const char* name() { return _name; }
+  void set_name(const char* name) {
+    if (_name != NULL) {
+      os::free((void*) _name);
+    }
+    if (name != NULL) {
+      _name = strdup(name);
+    }
+  }
+#endif
 };
 typedef struct _jmetadata HandleRecord;
 
-
-// JVMCI maintains direct references to metadata and these references have to be safe in the face of
-// redefinition so they have to be held in handles so they can be scanned during GC.  They are
-// managed in a cooperative way between the Java code and HotSpot.  The handles are filled in and
-// passed back to the Java code which is responsible for clearing the handle with NULL when it it's
-// no longer in use.  This is done by the ReferenceCleaner in HotSpotJVMCIMetaAccessContext.  The
-// rebuild_free_list function will notice that the handle is no clear and reclaim it for use later.
+// JVMCI maintains direct references to metadata. To make these references safe in the face of
+// class redefinition, they are held in handles so they can be scanned during GC. They are
+// managed in a cooperative way between the Java code and HotSpot. A handle is filled in and
+// passed back to the Java code which is responsible for setting the handle to NULL when it
+// is no longer in use. This is done by HotSpotJVMCIRuntime.ReferenceCleaner. The
+// rebuild_free_list function notices when the handle is clear and reclaims it for re-use.
 class MetadataHandleBlock : public CHeapObj<mtInternal> {
  private:
   enum SomeConstants {
-    block_size_in_oops  = 32,                    // Number of handles per handle block
+    block_size_in_handles  = 32,      // Number of handles per handle block
     ptr_tag = 1,
     ptr_mask = ~((intptr_t)ptr_tag)
   };
@@ -97,7 +107,7 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
   // clear that the handle has been reclaimed.  The _free_list is
   // always a real pointer to a handle.
 
-  HandleRecord    _handles[block_size_in_oops]; // The handles
+  HandleRecord    _handles[block_size_in_handles]; // The handles
   int             _top;                         // Index of next unused handle
   MetadataHandleBlock* _next;                   // Link to next block
 
@@ -117,7 +127,7 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
     _free_list = 0;
     _allocate_before_rebuild = 0;
 #ifdef METADATA_TRACK_NAMES
-    for (int i = 0; i < block_size_in_oops; i++) {
+    for (int i = 0; i < block_size_in_handles; i++) {
       _handles[i].initialize();
     }
 #endif
@@ -125,7 +135,7 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
 
   const char* get_name(int index) {
 #ifdef METADATA_TRACK_NAMES
-    return _handles[index].name;
+    return _handles[index].name();
 #else
     return "<missing>";
 #endif
@@ -141,6 +151,9 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
   // Adds `handle` to the free list in this block
   void chain_free_list(HandleRecord* handle) {
     handle->set_handle((Metadata*) (ptr_tag | _free_list));
+#ifdef METADATA_TRACK_NAMES
+    handle->set_name(NULL);
+#endif
     _free_list = (intptr_t) handle;
   }
 
@@ -158,13 +171,12 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
   void do_unloading(BoolObjectClosure* is_alive);
 };
 
-
 jmetadata MetadataHandleBlock::allocate_metadata_handle(Metadata* obj) {
   assert(obj->is_valid() && obj->is_metadata(), "must be");
 
   // Try last block
   HandleRecord* handle = NULL;
-  if (_last->_top < block_size_in_oops) {
+  if (_last->_top < block_size_in_handles) {
     handle = &(_last->_handles)[_last->_top++];
   } else if (_free_list != 0) {
     // Try free list
@@ -173,6 +185,9 @@ jmetadata MetadataHandleBlock::allocate_metadata_handle(Metadata* obj) {
 
   if (handle != NULL) {
     handle->set_handle(obj);
+#ifdef METADATA_TRACK_NAMES
+    handle->set_name(obj->print_value_string());
+#endif
     return (jmetadata) handle;
   }
 
@@ -196,7 +211,6 @@ jmetadata MetadataHandleBlock::allocate_metadata_handle(Metadata* obj) {
   return allocate_metadata_handle(obj);  // retry
 }
 
-
 void MetadataHandleBlock::rebuild_free_list() {
   assert(_allocate_before_rebuild == 0 && _free_list == 0, "just checking");
   int free = 0;
@@ -211,26 +225,23 @@ void MetadataHandleBlock::rebuild_free_list() {
       }
     }
     // we should not rebuild free list if there are unused handles at the end
-    assert(current->_top == block_size_in_oops, "just checking");
+    assert(current->_top == block_size_in_handles, "just checking");
     blocks++;
   }
   // Heuristic: if more than half of the handles are free we rebuild next time
   // as well, otherwise we append a corresponding number of new blocks before
   // attempting a free list rebuild again.
-  int total = blocks * block_size_in_oops;
+  int total = blocks * block_size_in_handles;
   int extra = total - 2*free;
   if (extra > 0) {
     // Not as many free handles as we would like - compute number of new blocks to append
-    _allocate_before_rebuild = (extra + block_size_in_oops - 1) / block_size_in_oops;
+    _allocate_before_rebuild = (extra + block_size_in_handles - 1) / block_size_in_handles;
   }
   if (TraceJNIHandleAllocation) {
     tty->print_cr("Rebuild free list MetadataHandleBlock " PTR_FORMAT " blocks=%d used=%d free=%d add=%d",
                   p2i(this), blocks, total-free, free, _allocate_before_rebuild);
   }
 }
-
-
-
 
 MetadataHandleBlock* MetadataHandleBlock::allocate_block() {
   return new MetadataHandleBlock();
@@ -249,7 +260,7 @@ void MetadataHandleBlock::metadata_do(void f(Metadata*)) {
       }
     }
     // the next handle block is valid only if current block is full
-    if (current->_top < block_size_in_oops) {
+    if (current->_top < block_size_in_handles) {
       break;
     }
   }
@@ -292,7 +303,7 @@ void MetadataHandleBlock::do_unloading(BoolObjectClosure* is_alive) {
       }
     }
     // the next handle block is valid only if current block is full
-    if (current->_top < block_size_in_oops) {
+    if (current->_top < block_size_in_handles) {
       break;
     }
   }
