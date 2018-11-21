@@ -559,18 +559,18 @@ JVMCIObject JVMCIEnv::new_StackTraceElement(methodHandle method, int bci, JVMCI_
   const char* declaringClassStr = holder->external_name();
 
   if (is_hotspot()) {
-    oop declaringClass = StringTable::intern((char*) declaringClassStr, CHECK_(JVMCIObject()));
-    oop methodName = StringTable::intern(methodNameSym, CHECK_(JVMCIObject()));
-    oop fileName = NULL;
+    Handle declaringClass = StringTable::intern((char*) declaringClassStr, CHECK_(JVMCIObject()));
+    Handle methodName = StringTable::intern(methodNameSym, CHECK_(JVMCIObject()));
+    Handle fileName;
     if (fileNameSym != NULL) {
       fileName = StringTable::intern(fileNameSym, CHECK_(JVMCIObject()));
     }
 
     HotSpotJVMCI::StackTraceElement::klass()->initialize(CHECK_(JVMCIObject()));
     oop obj = HotSpotJVMCI::StackTraceElement::klass()->allocate_instance(CHECK_(JVMCIObject()));
-    HotSpotJVMCI::StackTraceElement::set_declaringClass(this, obj, declaringClass);
-    HotSpotJVMCI::StackTraceElement::set_methodName(this, obj, methodName);
-    HotSpotJVMCI::StackTraceElement::set_fileName(this, obj, fileName);
+    HotSpotJVMCI::StackTraceElement::set_declaringClass(this, obj, declaringClass());
+    HotSpotJVMCI::StackTraceElement::set_methodName(this, obj, methodName());
+    HotSpotJVMCI::StackTraceElement::set_fileName(this, obj, fileName());
     HotSpotJVMCI::StackTraceElement::set_lineNumber(this, obj, lineNumber);
     return wrap(obj);
   } else {

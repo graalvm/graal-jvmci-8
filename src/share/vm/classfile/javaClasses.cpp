@@ -1916,7 +1916,7 @@ oop java_lang_StackTraceElement::create(Handle mirror, int method_id,
   // Fill in class name
   InstanceKlass* holder = InstanceKlass::cast(java_lang_Class::as_Klass(mirror()));
   const char* str = holder->external_name();
-  oop className = StringTable::intern((char*) str, CHECK_0);
+  Handle className = StringTable::intern((char*) str, CHECK_0);
 
   Symbol* methodNameSym;
   Symbol* fileNameSym;
@@ -1924,8 +1924,8 @@ oop java_lang_StackTraceElement::create(Handle mirror, int method_id,
 
   decode(mirror, method_id, version, bci, cpref, methodNameSym, fileNameSym, lineNumber, CHECK_0);
 
-  oop methodName = StringTable::intern(methodNameSym, CHECK_0);
-  oop fileName = StringTable::intern(fileNameSym, CHECK_0);;
+  Handle methodName = StringTable::intern(methodNameSym, CHECK_0);
+  Handle fileName = StringTable::intern(fileNameSym, CHECK_0);
 
   // Allocate java.lang.StackTraceElement instance
   Klass* k = SystemDictionary::StackTraceElement_klass();
@@ -1936,9 +1936,9 @@ oop java_lang_StackTraceElement::create(Handle mirror, int method_id,
   }
 
   Handle element = ik->allocate_instance_handle(CHECK_0);
-  java_lang_StackTraceElement::set_declaringClass(element(), className);
-  java_lang_StackTraceElement::set_methodName(element(), methodName);
-  java_lang_StackTraceElement::set_fileName(element(), fileName);
+  java_lang_StackTraceElement::set_declaringClass(element(), className());
+  java_lang_StackTraceElement::set_methodName(element(), methodName());
+  java_lang_StackTraceElement::set_fileName(element(), fileName());
   java_lang_StackTraceElement::set_lineNumber(element(), lineNumber);
 
   return element();
