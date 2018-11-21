@@ -550,42 +550,44 @@ JVMCIObject JVMCIEnv::get_jvmci_primitive_type(BasicType type) {
 
 JVMCIObject JVMCIEnv::new_StackTraceElement(methodHandle method, int bci, JVMCI_TRAPS) {
   JavaThread* THREAD = JavaThread::current();
-  Symbol* methodNameSym;
-  Symbol* fileNameSym;
-  int lineNumber;
-  java_lang_StackTraceElement::decode(method, bci, methodNameSym, fileNameSym, lineNumber, CHECK_(JVMCIObject()));
+  Symbol* method_name_sym;
+  Symbol* file_name_sym;
+  int line_number;
+  Handle mirror (THREAD, method->method_holder()->java_mirror());
+  java_lang_StackTraceElement::decode(mirror, method, bci, method_name_sym, file_name_sym, line_number);
 
   InstanceKlass* holder = method->method_holder();
-  const char* declaringClassStr = holder->external_name();
+  const char* declaring_class_str = holder->external_name();
 
   if (is_hotspot()) {
-    Handle declaringClass = StringTable::intern((char*) declaringClassStr, CHECK_(JVMCIObject()));
-    Handle methodName = StringTable::intern(methodNameSym, CHECK_(JVMCIObject()));
-    Handle fileName;
-    if (fileNameSym != NULL) {
-      fileName = StringTable::intern(fileNameSym, CHECK_(JVMCIObject()));
-    }
-
     HotSpotJVMCI::StackTraceElement::klass()->initialize(CHECK_(JVMCIObject()));
-    oop obj = HotSpotJVMCI::StackTraceElement::klass()->allocate_instance(CHECK_(JVMCIObject()));
-    HotSpotJVMCI::StackTraceElement::set_declaringClass(this, obj, declaringClass());
-    HotSpotJVMCI::StackTraceElement::set_methodName(this, obj, methodName());
-    HotSpotJVMCI::StackTraceElement::set_fileName(this, obj, fileName());
-    HotSpotJVMCI::StackTraceElement::set_lineNumber(this, obj, lineNumber);
-    return wrap(obj);
+    Handle obj = HotSpotJVMCI::StackTraceElement::klass()->allocate_instance(CHECK_(JVMCIObject()));
+
+    oop declaring_class = StringTable::intern((char*) declaring_class_str, CHECK_(JVMCIObject()));
+    HotSpotJVMCI::StackTraceElement::set_declaringClass(this, obj(), declaring_class);
+
+    oop method_name = StringTable::intern(method_name_sym, CHECK_(JVMCIObject()));
+    HotSpotJVMCI::StackTraceElement::set_methodName(this, obj(), method_name);
+
+    if (file_name_sym != NULL) {
+      oop file_name = StringTable::intern(file_name_sym, CHECK_(JVMCIObject()));
+      HotSpotJVMCI::StackTraceElement::set_fileName(this, obj(), file_name);
+    }
+    HotSpotJVMCI::StackTraceElement::set_lineNumber(this, obj(), line_number);
+    return wrap(obj());
   } else {
     JNIAccessMark jni(this);
-    jobject declaringClass = jni()->NewStringUTF(declaringClassStr);
+    jobject declaring_class = jni()->NewStringUTF(declaring_class_str);
     if (jni()->ExceptionCheck()) {
       return JVMCIObject();
     }
-    jobject methodName = jni()->NewStringUTF(methodNameSym->as_C_string());
+    jobject method_name = jni()->NewStringUTF(method_name_sym->as_C_string());
     if (jni()->ExceptionCheck()) {
       return JVMCIObject();
     }
-    jobject fileName = NULL;
-    if (fileName != NULL) {
-      fileName = jni()->NewStringUTF(fileNameSym->as_C_string());
+    jobject file_name = NULL;
+    if (file_name != NULL) {
+      file_name = jni()->NewStringUTF(file_name_sym->as_C_string());
       if (jni()->ExceptionCheck()) {
         return JVMCIObject();
       }
@@ -593,7 +595,7 @@ JVMCIObject JVMCIEnv::new_StackTraceElement(methodHandle method, int bci, JVMCI_
 
     jobject result = jni()->NewObject(JNIJVMCI::StackTraceElement::clazz(),
                                       JNIJVMCI::StackTraceElement::constructor(),
-                                      declaringClass, methodName, fileName, lineNumber);
+                                      declaring_class, method_name, file_name, line_number);
     return wrap(result);
   }
 }
