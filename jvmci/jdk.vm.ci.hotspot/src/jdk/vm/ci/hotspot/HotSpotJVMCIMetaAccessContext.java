@@ -23,10 +23,8 @@
 package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
-import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
 
-import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
@@ -36,9 +34,9 @@ import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.ResolvedJavaType;
 
 /**
- * This class manages the set of metadata roots that must be scanned during garbage collection.
- * Because of class redefinition Method* and ConstantPool* can be freed if they don't appear to be
- * in use so they must be tracked when there are live references to them from Java.
+ * This class manages the set of {@code Metadata*} values that must be scanned during garbage
+ * collection. Because of class redefinition Method* and ConstantPool* can be freed if they don't
+ * appear to be in use so they must be tracked when there are live references to them from Java.
  *
  * The general theory of operation is that all {@link MetaspaceHandleObject}s are created by calling
  * into the VM which calls back out to actually create the wrapper instance. During the call the VM
@@ -48,94 +46,6 @@ import jdk.vm.ci.meta.ResolvedJavaType;
  *
  */
 final class HotSpotJVMCIMetaAccessContext {
-
-    /**
-     * This is like {@link sun.misc.Cleaner} but with weak semantics instead of phantom. Objects
-     * referenced by this might be referenced by {@link ResolvedJavaType} which is kept alive by a
-     * {@link WeakReference} so we need equivalent reference strength.
-     */
-    static final class ReferenceCleaner extends WeakReference<Object> {
-
-        @NativeImageReinitialize private static ReferenceCleaner first = null;
-
-        private ReferenceCleaner next = null;
-        private ReferenceCleaner prev = null;
-
-        private final long handle;
-
-        private static synchronized ReferenceCleaner add(ReferenceCleaner cl) {
-            if (first != null) {
-                cl.next = first;
-                first.prev = cl;
-            }
-            first = cl;
-            return cl;
-        }
-
-        private static synchronized boolean remove(ReferenceCleaner cl) {
-            // If already removed, do nothing
-            if (cl.next == cl) {
-                return false;
-            }
-
-            // Update list
-            if (first == cl) {
-                if (cl.next != null) {
-                    first = cl.next;
-                } else {
-                    first = cl.prev;
-                }
-            }
-            if (cl.next != null) {
-                cl.next.prev = cl.prev;
-            }
-            if (cl.prev != null) {
-                cl.prev.next = cl.next;
-            }
-
-            // Indicate removal by pointing the cleaner to itself
-            cl.next = cl;
-            cl.prev = cl;
-            return true;
-        }
-
-        ReferenceCleaner(Object o, long handle) {
-            super(o, queue);
-            this.handle = handle;
-        }
-
-        void clearHandle() {
-            remove(this);
-            long value = UNSAFE.getLong(null, handle);
-            UNSAFE.compareAndSwapLong(null, handle, value, 0);
-        }
-
-        /**
-         * Periodically trim the list of tracked metadata. A new list is created to replace the old
-         * to avoid concurrent scanning issues.
-         */
-        private static synchronized void clean() {
-            ReferenceCleaner ref = (ReferenceCleaner) queue.poll();
-            if (ref == null) {
-                return;
-            }
-            while (ref != null) {
-                ref.clearHandle();
-                ref = (ReferenceCleaner) queue.poll();
-            }
-        }
-
-        /**
-         * The {@link ReferenceQueue} tracking the weak references created by this context.
-         */
-        private static final ReferenceQueue<Object> queue = new ReferenceQueue<>();
-
-        private static void create(Object object, long handle) {
-            clean();
-            add(new ReferenceCleaner(object, handle));
-        }
-
-    }
 
     HotSpotJVMCIMetaAccessContext() {
     }
@@ -149,11 +59,11 @@ final class HotSpotJVMCIMetaAccessContext {
      */
 
     static void add(MetaspaceHandleObject metaspaceObject) {
-        ReferenceCleaner.create(metaspaceObject, metaspaceObject.getMetadataHandle());
+        HandleCleaner.create(metaspaceObject, metaspaceObject.getMetadataHandle());
     }
 
     static void add(IndirectHotSpotObjectConstantImpl constantObject) {
-        ReferenceCleaner.create(constantObject, constantObject.objectHandle);
+        HandleCleaner.create(constantObject, constantObject.objectHandle);
     }
 
     @NativeImageReinitialize private static HashMap<Long, WeakReference<ResolvedJavaType>> resolvedJavaTypes;

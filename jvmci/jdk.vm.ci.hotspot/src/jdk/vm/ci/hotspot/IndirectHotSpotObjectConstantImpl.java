@@ -25,7 +25,11 @@ package jdk.vm.ci.hotspot;
 import jdk.vm.ci.meta.JavaConstant;
 
 final class IndirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl {
+    /**
+     * An object handle allocated from {@code JVMCI::_jvmci_handles}.
+     */
     final long objectHandle;
+
     final IndirectHotSpotObjectConstantImpl base;
 
     @VMEntryPoint

@@ -91,7 +91,7 @@ typedef struct _jmetadata HandleRecord;
 // class redefinition, they are held in handles so they can be scanned during GC. They are
 // managed in a cooperative way between the Java code and HotSpot. A handle is filled in and
 // passed back to the Java code which is responsible for setting the handle to NULL when it
-// is no longer in use. This is done by HotSpotJVMCIRuntime.ReferenceCleaner. The
+// is no longer in use. This is done by jdk.vm.ci.hotspot.HandleCleaner. The
 // rebuild_free_list function notices when the handle is clear and reclaims it for re-use.
 class MetadataHandleBlock : public CHeapObj<mtInternal> {
  private:
