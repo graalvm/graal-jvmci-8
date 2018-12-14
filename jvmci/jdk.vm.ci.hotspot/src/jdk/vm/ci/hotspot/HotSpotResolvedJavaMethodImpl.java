@@ -61,7 +61,8 @@ import jdk.vm.ci.meta.TriState;
 final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSpotResolvedJavaMethod, MetaspaceHandleObject {
 
     /**
-     * Reference to metaspace Method object.
+     * Handle to the metaspace {@code Method} object. The handle is in
+     * {@code JVMCI::_metadata_handles}.
      */
     private final long metadataHandle;
 
@@ -138,7 +139,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
         final int signatureIndex = UNSAFE.getChar(constMethod + config.constMethodSignatureIndexOffset);
         this.signature = (HotSpotSignature) constantPool.lookupSignature(signatureIndex);
-        HotSpotJVMCIMetaAccessContext.add(this);
+        HandleCleaner.create(this, metaspaceHandle);
     }
 
     /**

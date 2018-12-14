@@ -33,37 +33,9 @@ import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.ResolvedJavaType;
 
-/**
- * This class manages the set of {@code Metadata*} values that must be scanned during garbage
- * collection. Because of class redefinition Method* and ConstantPool* can be freed if they don't
- * appear to be in use so they must be tracked when there are live references to them from Java.
- *
- * The general theory of operation is that all {@link MetaspaceHandleObject}s are created by calling
- * into the VM which calls back out to actually create the wrapper instance. During the call the VM
- * keeps the metadata reference alive through the use of metadata handles. Once the call completes
- * the wrapper object is registered here and will be scanned during metadata scanning. The weakness
- * of the reference to the wrapper object allows them to be reclaimed when they are no longer used.
- *
- */
 final class HotSpotJVMCIMetaAccessContext {
 
     HotSpotJVMCIMetaAccessContext() {
-    }
-
-    /**
-     * Add a {@link MetaspaceHandleObject} to be tracked by the GC. It's assumed that the caller is
-     * responsible for keeping the reference alive for the duration of the call. Once registration
-     * is complete then the VM will ensure it's kept alive.
-     *
-     * @param metaspaceObject
-     */
-
-    static void add(MetaspaceHandleObject metaspaceObject) {
-        HandleCleaner.create(metaspaceObject, metaspaceObject.getMetadataHandle());
-    }
-
-    static void add(IndirectHotSpotObjectConstantImpl constantObject) {
-        HandleCleaner.create(constantObject, constantObject.objectHandle);
     }
 
     @NativeImageReinitialize private static HashMap<Long, WeakReference<ResolvedJavaType>> resolvedJavaTypes;

@@ -98,13 +98,13 @@ final class HandleCleaner extends WeakReference<Object> {
         return true;
     }
 
-    HandleCleaner(Object wrapper, long handle, boolean isJObject) {
+    private HandleCleaner(Object wrapper, long handle, boolean isJObject) {
         super(wrapper, queue);
         this.handle = handle;
         this.isJObject = isJObject;
     }
 
-    void clearHandle() {
+    private void clearHandle() {
         remove(this);
         if (isJObject) {
             CompilerToVM.compilerToVM().deleteGlobalHandle(handle);

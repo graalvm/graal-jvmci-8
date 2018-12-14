@@ -191,7 +191,8 @@ public final class HotSpotConstantPool implements ConstantPool, MetaspaceHandleO
     }
 
     /**
-     * Reference to the C++ ConstantPool object.
+     * Handle to the {@code ConstantPool} VM object. The handle is in
+     * {@code JVMCI::_metadata_handles}.
      */
     private final long metadataHandle;
 
@@ -217,7 +218,7 @@ public final class HotSpotConstantPool implements ConstantPool, MetaspaceHandleO
     private HotSpotConstantPool(long metadataHandle) {
         this.metadataHandle = metadataHandle;
         this.constants = JvmConstants.instance();
-        HotSpotJVMCIMetaAccessContext.add(this);
+        HandleCleaner.create(this, metadataHandle);
     }
 
     /**
