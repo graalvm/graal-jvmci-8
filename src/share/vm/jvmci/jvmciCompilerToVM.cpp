@@ -1896,6 +1896,24 @@ C2V_VMENTRY(jboolean, isAssignableFrom, (JNIEnv* env, jobject, jobject holder, j
   return otherKlass->is_subtype_of(klass);
 C2V_END
 
+C2V_VMENTRY(jboolean, isTrustedForIntrinsics, (JNIEnv* env, jobject, jobject holder))
+  if (holder == NULL) {
+    JVMCI_THROW_0(NullPointerException);
+  }
+  InstanceKlass* ik = InstanceKlass::cast(JVMCIENV->asKlass(JVMCIENV->wrap(holder)));
+  oop cl = ik->class_loader();
+  if (cl == NULL || SystemDictionary::is_ext_class_loader(cl)) {
+    return true;
+  }
+  oop trusted_loader = SystemDictionary::jvmci_loader();
+  while (trusted_loader != NULL) {
+    if (cl == trusted_loader) {
+      return true;
+    }
+    trusted_loader = java_lang_ClassLoader::parent(trusted_loader);
+  }
+  return false;
+C2V_END
 
 C2V_VMENTRY(jobject, asJavaType, (JNIEnv* env, jobject, jobject object))
   if (object == NULL) {
@@ -2379,6 +2397,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "readFieldValue",                               CC "(" OBJECTCONSTANT HS_RESOLVED_FIELD "Z)" JAVACONSTANT,                            FN_PTR(readFieldValue)},
   {CC "isInstance",                                   CC "(" HS_RESOLVED_KLASS OBJECTCONSTANT ")Z",                                         FN_PTR(isInstance)},
   {CC "isAssignableFrom",                             CC "(" HS_RESOLVED_KLASS HS_RESOLVED_KLASS ")Z",                                      FN_PTR(isAssignableFrom)},
+  {CC "isTrustedForIntrinsics",                       CC "(" HS_RESOLVED_KLASS ")Z",                                                        FN_PTR(isTrustedForIntrinsics)},
   {CC "asJavaType",                                   CC "(" OBJECTCONSTANT ")" HS_RESOLVED_TYPE,                                           FN_PTR(asJavaType)},
   {CC "asString",                                     CC "(" OBJECTCONSTANT ")" STRING,                                                     FN_PTR(asString)},
   {CC "equals",                                       CC "(" OBJECTCONSTANT "J" OBJECTCONSTANT "J)Z",                                       FN_PTR(equals)},

@@ -33,10 +33,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Predicate;
 
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.JavaConstant;
@@ -460,56 +457,6 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
                 throw new IllegalArgumentException("Unsupported kind: " + kind);
 
         }
-    }
-
-    // Non-volatile since multi-initialization is harmless
-    private Predicate<ResolvedJavaType> intrinsificationTrustPredicate;
-
-    @Override
-    Predicate<ResolvedJavaType> getIntrinsificationTrustPredicate(Class<?>... compilerLeafClasses) {
-        if (intrinsificationTrustPredicate == null) {
-            intrinsificationTrustPredicate = new Predicate<ResolvedJavaType>() {
-                @Override
-                public boolean test(ResolvedJavaType type) {
-                    if (type instanceof HotSpotResolvedJavaType) {
-                        Class<?> mirror = getMirror((HotSpotResolvedJavaType) type);
-                        ClassLoader cl = mirror.getClassLoader();
-                        return cl == null || getTrustedLoaders().contains(cl);
-                    } else {
-                        return false;
-                    }
-                }
-
-                // Non-volatile since initialization is idempotent
-                private Set<ClassLoader> trustedLoaders;
-
-                private Set<ClassLoader> getTrustedLoaders() {
-                    Set<ClassLoader> loaders = trustedLoaders;
-                    if (loaders == null) {
-                        loaders = new HashSet<>();
-                        try {
-                            Object launcher = Class.forName("sun.misc.Launcher").getMethod("getLauncher").invoke(null);
-                            ClassLoader appLoader = (ClassLoader) launcher.getClass().getMethod("getClassLoader").invoke(launcher);
-                            ClassLoader extLoader = appLoader.getParent();
-                            assert extLoader.getClass().getName().equals("sun.misc.Launcher$ExtClassLoader") : extLoader;
-                            loaders.add(extLoader);
-                        } catch (Exception e) {
-                            throw new JVMCIError(e);
-                        }
-                        for (Class<?> compilerLeafClass : compilerLeafClasses) {
-                            ClassLoader cl = compilerLeafClass.getClassLoader();
-                            while (cl != null) {
-                                loaders.add(cl);
-                                cl = cl.getParent();
-                            }
-                        }
-                        trustedLoaders = loaders;
-                    }
-                    return loaders;
-                }
-            };
-        }
-        return intrinsificationTrustPredicate;
     }
 
     /**

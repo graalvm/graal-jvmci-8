@@ -29,7 +29,6 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.meta.JavaConstant;
@@ -375,11 +374,6 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
     @Override
     void checkRead(HotSpotObjectConstantImpl constant, JavaKind kind, long displacement, HotSpotResolvedObjectType type) {
 
-    }
-
-    @Override
-    Predicate<ResolvedJavaType> getIntrinsificationTrustPredicate(Class<?>... compilerLeafClasses) {
-        return resolvedJavaType -> true;
     }
 
     public ResolvedJavaType lookupJavaType(String name) throws ClassNotFoundException {

@@ -923,4 +923,9 @@ final class CompilerToVM {
      * @param fieldIndex the {@code fieldDescriptor::index()} denoting the field
      */
     native Field asReflectionField(HotSpotResolvedObjectTypeImpl holder, int fieldIndex);
+
+    /**
+     * @see HotSpotJVMCIRuntime#getIntrinsificationTrustPredicate(Class...)
+     */
+    native boolean isTrustedForIntrinsics(HotSpotResolvedObjectTypeImpl type);
 }

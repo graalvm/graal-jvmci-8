@@ -25,7 +25,6 @@ package jdk.vm.ci.hotspot;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaKind;
@@ -116,11 +115,6 @@ abstract class HotSpotJVMCIReflection {
     abstract void checkRead(HotSpotObjectConstantImpl constant, JavaKind kind, long displacement, HotSpotResolvedObjectType type);
 
     abstract <T extends Annotation> T getFieldAnnotation(HotSpotResolvedJavaFieldImpl javaField, Class<T> annotationClass);
-
-    /**
-     * @see HotSpotJVMCIRuntime#getIntrinsificationTrustPredicate(Class...)
-     */
-    abstract Predicate<ResolvedJavaType> getIntrinsificationTrustPredicate(Class<?>... compilerLeafClasses);
 
     /**
      * Resolves {@code objectHandle} to a raw object if possible.
