@@ -103,8 +103,8 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     /**
      * Gets the JVMCI mirror from a HotSpot method. The VM is responsible for ensuring that the
-     * Method* is kept alive for the duration of this call and the
-     * {@link HotSpotJVMCIMetaAccessContext} keeps it alive after that.
+     * Method* is kept alive for the duration of this call and the {@link HotSpotJVMCIRuntime} keeps
+     * it alive after that.
      * <p>
      * Called from the VM.
      *

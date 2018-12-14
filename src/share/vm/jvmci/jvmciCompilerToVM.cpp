@@ -2082,8 +2082,12 @@ C2V_VMENTRY(jobject, getObject, (JNIEnv* env, jobject, jobject x, long displacem
   return JVMCIENV->get_jobject(result);
 }
 
-C2V_VMENTRY(void, deleteGlobalHandle, (JNIEnv* env, jobject, jlong handle))
-  JNIHandles::destroy_global((jobject)(address) handle);
+C2V_VMENTRY(void, deleteGlobalHandle, (JNIEnv* env, jobject, jlong h))
+  jobject handle = (jobject)(address)h;
+  if (handle != NULL) {
+    assert(JVMCI::is_global_handle(handle), "Invalid delete of global JNI handle");
+    *((oop*)handle) = JNIHandles::deleted_handle(); // Mark the handle as deleted, allocate will reuse it
+  }
 }
 
 C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))

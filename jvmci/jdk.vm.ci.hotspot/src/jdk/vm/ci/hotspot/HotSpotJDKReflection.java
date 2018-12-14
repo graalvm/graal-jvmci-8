@@ -105,7 +105,7 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
     @Override
     HotSpotResolvedObjectType getEnclosingClass(HotSpotResolvedObjectTypeImpl holder) {
         Class<?> javaMirror = getMirror(holder);
-        return (HotSpotResolvedObjectType) HotSpotJVMCIMetaAccessContext.fromClass(javaMirror.getEnclosingClass());
+        return (HotSpotResolvedObjectType) runtime().fromClass(javaMirror.getEnclosingClass());
     }
 
     @Override
@@ -209,7 +209,7 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
     HotSpotResolvedObjectTypeImpl getType(HotSpotObjectConstantImpl object) {
         Object value = resolveObject(object);
         Class<?> theClass = value.getClass();
-        return (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(theClass);
+        return (HotSpotResolvedObjectTypeImpl) runtime().fromClass(theClass);
     }
 
     @Override
@@ -226,7 +226,7 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
         Object value = resolveObject(object);
         if (value instanceof Class) {
             Class<?> javaClass = (Class<?>) value;
-            return HotSpotJVMCIMetaAccessContext.fromClass(javaClass);
+            return runtime().fromClass(javaClass);
         }
         if (value instanceof ResolvedJavaType) {
             return (ResolvedJavaType) value;
@@ -404,7 +404,7 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
             ResolvedJavaField field = null;
             if (object instanceof Class) {
                 // Read of a static field
-                HotSpotResolvedJavaType hotSpotResolvedJavaType = HotSpotJVMCIMetaAccessContext.fromClass((Class<?>) object);
+                HotSpotResolvedJavaType hotSpotResolvedJavaType = runtime().fromClass((Class<?>) object);
                 if (hotSpotResolvedJavaType instanceof HotSpotResolvedObjectTypeImpl) {
                     HotSpotResolvedObjectTypeImpl staticFieldsHolder = (HotSpotResolvedObjectTypeImpl) hotSpotResolvedJavaType;
                     field = staticFieldsHolder.findStaticFieldWithOffset(displacement, JavaKind.Object);

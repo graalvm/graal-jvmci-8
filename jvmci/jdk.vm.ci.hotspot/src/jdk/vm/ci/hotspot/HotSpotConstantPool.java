@@ -202,7 +202,7 @@ public final class HotSpotConstantPool implements ConstantPool, MetaspaceHandleO
     /**
      * Gets the JVMCI mirror from a HotSpot constant pool.The VM is responsible for ensuring that
      * the ConstantPool is kept alive for the duration of this call and the
-     * {@link HotSpotJVMCIMetaAccessContext} keeps it alive after that.
+     * {@link HotSpotJVMCIRuntime} keeps it alive after that.
      *
      * Called from the VM.
      *

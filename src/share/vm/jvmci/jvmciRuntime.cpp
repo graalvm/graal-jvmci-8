@@ -78,9 +78,10 @@ struct _jmetadata {
   void set_name(const char* name) {
     if (_name != NULL) {
       os::free((void*) _name);
+      _name = NULL;
     }
     if (name != NULL) {
-      _name = strdup(name);
+      _name = os::strdup(name);
     }
   }
 #endif
@@ -142,7 +143,6 @@ class MetadataHandleBlock : public CHeapObj<mtInternal> {
   }
 
  public:
-  jmetadata allocate_handle(Klass* handle)             { return allocate_metadata_handle(handle); }
   jmetadata allocate_handle(methodHandle handle)       { return allocate_metadata_handle(handle()); }
   jmetadata allocate_handle(constantPoolHandle handle) { return allocate_metadata_handle(handle()); }
 
@@ -1285,10 +1285,8 @@ jobject JVMCI::make_global(Handle obj) {
   return _jvmci_handles->allocate_handle(obj());
 }
 
-jmetadata JVMCI::allocate_handle(Klass* handle) {
-  assert(_metadata_handles != NULL, "uninitialized");
-  MutexLocker ml(JVMCI_lock);
-  return _metadata_handles->allocate_handle(handle);
+bool JVMCI::is_global_handle(jobject handle) {
+  return _jvmci_handles->chain_contains(handle);
 }
 
 jmetadata JVMCI::allocate_handle(const methodHandle& handle) {

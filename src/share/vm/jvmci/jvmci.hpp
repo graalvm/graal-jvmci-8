@@ -92,8 +92,8 @@ class JVMCI : public AllStatic {
   // JVMCIRuntime::call_getCompiler(CHECK);
 
   static jobject make_global(Handle obj);
+  static bool is_global_handle(jobject handle);
 
-  static jmetadata allocate_handle(Klass* handle);
   static jmetadata allocate_handle(const methodHandle& handle);
   static jmetadata allocate_handle(const constantPoolHandle& handle);
 

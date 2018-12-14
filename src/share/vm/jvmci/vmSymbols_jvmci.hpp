@@ -52,7 +52,6 @@
   template(jdk_vm_ci_hotspot_HotSpotStackFrameReference,          "jdk/vm/ci/hotspot/HotSpotStackFrameReference")                                                          \
   template(jdk_vm_ci_hotspot_HotSpotMetaData,                     "jdk/vm/ci/hotspot/HotSpotMetaData")                     \
   template(jdk_vm_ci_hotspot_HotSpotConstantPool,                 "jdk/vm/ci/hotspot/HotSpotConstantPool")                                \
-  template(jdk_vm_ci_hotspot_HotSpotJVMCIMetaAccessContext,       "jdk/vm/ci/hotspot/HotSpotJVMCIMetaAccessContext")                      \
   template(jdk_vm_ci_hotspot_HotSpotJVMCIRuntime,                 "jdk/vm/ci/hotspot/HotSpotJVMCIRuntime")                                \
   template(jdk_vm_ci_hotspot_HotSpotSpeculationLog,               "jdk/vm/ci/hotspot/HotSpotSpeculationLog")                              \
   template(jdk_vm_ci_hotspot_HotSpotCompilationRequestResult,     "jdk/vm/ci/hotspot/HotSpotCompilationRequestResult")                    \

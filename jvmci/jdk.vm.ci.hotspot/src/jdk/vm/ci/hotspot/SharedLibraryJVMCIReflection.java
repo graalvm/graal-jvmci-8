@@ -261,7 +261,7 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
             DirectHotSpotObjectConstantImpl direct = (DirectHotSpotObjectConstantImpl) object;
             if (direct.object instanceof Class) {
                 Class<?> javaClass = (Class<?>) direct.object;
-                return HotSpotJVMCIMetaAccessContext.fromClass(javaClass);
+                return runtime().fromClass(javaClass);
             }
             if (direct.object instanceof ResolvedJavaType) {
                 return (ResolvedJavaType) convertUnknownValue(direct.object);

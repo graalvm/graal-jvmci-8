@@ -88,9 +88,8 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     }
 
     /**
-     * Gets the JVMCI mirror from a HotSpot type. Since {@link Class} is already a proxy for the
-     * underlying Klass*, it is used instead of the raw Klass*.
-     * <p>
+     * Gets the JVMCI mirror from a HotSpot type.
+     *
      * Called from the VM.
      *
      * @param klassPointer a native pointer to the Klass*
@@ -99,7 +98,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     @SuppressWarnings("unused")
     @VMEntryPoint
     private static HotSpotResolvedObjectTypeImpl fromMetaspace(long klassPointer, String signature) {
-        return HotSpotJVMCIMetaAccessContext.fromMetaspace(klassPointer, signature);
+        return runtime().fromMetaspace(klassPointer, signature);
     }
 
     /**
