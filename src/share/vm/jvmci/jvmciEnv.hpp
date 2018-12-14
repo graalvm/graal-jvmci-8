@@ -134,10 +134,8 @@ class JVMCIEnv : public ResourceObj {
   // call to this method.
   static JNIEnv* attach_shared_library();
 
-  // Gets the JNIEnv* to be used for calls into the shared library.
-  // or NULL if no
-  // The current mode and JVMCIRuntime are returned in mode and runtime respectively.
-  static JNIEnv* get_jni_env(JNIEnv* env, JVMCIGlobals::JavaMode& mode, JVMCIRuntime*& runtime);
+  // Initializes the _env, _mode and _runtime fields.
+  void init_env_mode_runtime(JNIEnv* parent_env);
 
   void init(bool is_hotspot, const char* file, int line);
 
