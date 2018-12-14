@@ -493,7 +493,17 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *            compiler.
      */
     public Predicate<ResolvedJavaType> getIntrinsificationTrustPredicate(Class<?>... compilerLeafClasses) {
-        return reflection.getIntrinsificationTrustPredicate(compilerLeafClasses);
+        return new Predicate<ResolvedJavaType>() {
+            @Override
+            public boolean test(ResolvedJavaType type) {
+                if (type instanceof HotSpotResolvedObjectTypeImpl) {
+                    HotSpotResolvedObjectTypeImpl hsType = (HotSpotResolvedObjectTypeImpl) type;
+                    return compilerToVm.isTrustedForIntrinsics(hsType);
+                } else {
+                    return false;
+                }
+            }
+        };
     }
 
     /**
