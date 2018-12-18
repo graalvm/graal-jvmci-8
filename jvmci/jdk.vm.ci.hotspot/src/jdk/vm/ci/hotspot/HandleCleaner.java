@@ -47,8 +47,14 @@ import jdk.vm.ci.meta.ResolvedJavaType;
  */
 final class HandleCleaner extends WeakReference<Object> {
 
+    /**
+     * Head of linked list of cleaners.
+     */
     @NativeImageReinitialize private static HandleCleaner first = null;
 
+    /**
+     * Linked list pointers.
+     */
     private HandleCleaner next = null;
     private HandleCleaner prev = null;
 
@@ -71,6 +77,9 @@ final class HandleCleaner extends WeakReference<Object> {
         return cl;
     }
 
+    /**
+     * Removes {@code cl} from the linked list of cleaners.
+     */
     private static synchronized boolean remove(HandleCleaner cl) {
         // If already removed, do nothing
         if (cl.next == cl) {
@@ -104,40 +113,49 @@ final class HandleCleaner extends WeakReference<Object> {
         this.isJObject = isJObject;
     }
 
-    private void clearHandle() {
+    /**
+     * Releases the resource associated with {@code this.handle}.
+     */
+    private void deleteHandle() {
         remove(this);
         if (isJObject) {
+            // The sentinel value used to denote a free handle is
+            // an object on the HotSpot heap so we call into the
+            // VM to set the target of an object handle to this value.
             CompilerToVM.compilerToVM().deleteGlobalHandle(handle);
         } else {
+            // Setting the target of a jmetadata handle to 0 enables
+            // the handle to be reused. See MetadataHandleBlock in
+            // jvmciRuntime.cpp for more info.
             long value = UNSAFE.getLong(null, handle);
             UNSAFE.compareAndSwapLong(null, handle, value, 0);
         }
     }
 
     /**
-     * Periodically trim the list of tracked metadata. A new list is created to replace the old to
-     * avoid concurrent scanning issues.
+     * Cleans the handles who wrappers have been garbage collected.
      */
-    private static synchronized void clean() {
+    private static void clean() {
         HandleCleaner ref = (HandleCleaner) queue.poll();
-        if (ref == null) {
-            return;
-        }
         while (ref != null) {
-            ref.clearHandle();
+            ref.deleteHandle();
             ref = (HandleCleaner) queue.poll();
         }
     }
 
     /**
-     * The {@link ReferenceQueue} tracking the weak references created by this context.
+     * The {@link ReferenceQueue} to which handle wrappers are enqueued once they become
+     * unreachable.
      */
     private static final ReferenceQueue<Object> queue = new ReferenceQueue<>();
 
+    /**
+     * Registers a cleaner for {@code handle}. The cleaner will release the handle some time after
+     * {@code wrapper} is detected as unreachable by the garbage collector.
+     */
     static void create(Object wrapper, long handle) {
         clean();
         assert wrapper instanceof IndirectHotSpotObjectConstantImpl || wrapper instanceof MetaspaceHandleObject;
         add(new HandleCleaner(wrapper, handle, wrapper instanceof IndirectHotSpotObjectConstantImpl));
     }
-
 }

@@ -42,7 +42,10 @@ class JVMCI : public AllStatic {
   friend class JVMCIEnv;
 
  private:
-  static JNIHandleBlock* _jvmci_handles;
+  // Handles to objects in the HotSpot heap.
+  static JNIHandleBlock* _object_handles;
+
+  // Handles to Metadata objects.
   static MetadataHandleBlock* _metadata_handles;
 
   // Access to the HotSpotJVMCIRuntime used by the CompileBroker.

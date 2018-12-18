@@ -309,7 +309,7 @@ void MetadataHandleBlock::do_unloading(BoolObjectClosure* is_alive) {
   }
 }
 
-JNIHandleBlock* JVMCI::_jvmci_handles = NULL;
+JNIHandleBlock* JVMCI::_object_handles = NULL;
 MetadataHandleBlock* JVMCI::_metadata_handles = NULL;
 JVMCIRuntime* JVMCI::_compiler_runtime = NULL;
 JVMCIRuntime* JVMCI::_java_runtime = NULL;
@@ -1174,7 +1174,7 @@ void JVMCI::initialize_compiler(TRAPS) {
 }
 
 void JVMCI::initialize_globals() {
-  _jvmci_handles = JNIHandleBlock::allocate_block();
+  _object_handles = JNIHandleBlock::allocate_block();
   _metadata_handles = MetadataHandleBlock::allocate_block();
   if (JVMCIGlobals::java_mode() == JVMCIGlobals::SharedLibrary) {
     // There are two runtimes.
@@ -1280,13 +1280,13 @@ JVMCIObject JVMCIRuntime::get_HotSpotJVMCIRuntime(JVMCI_TRAPS) {
 }
 
 jobject JVMCI::make_global(Handle obj) {
-  assert(_jvmci_handles != NULL, "uninitialized");
+  assert(_object_handles != NULL, "uninitialized");
   MutexLocker ml(JVMCI_lock);
-  return _jvmci_handles->allocate_handle(obj());
+  return _object_handles->allocate_handle(obj());
 }
 
 bool JVMCI::is_global_handle(jobject handle) {
-  return _jvmci_handles->chain_contains(handle);
+  return _object_handles->chain_contains(handle);
 }
 
 jmetadata JVMCI::allocate_handle(const methodHandle& handle) {
@@ -1307,8 +1307,8 @@ void JVMCI::release_handle(jmetadata handle) {
 }
 
 void JVMCI::oops_do(OopClosure* f) {
-  if (_jvmci_handles != NULL) {
-    _jvmci_handles->oops_do(f);
+  if (_object_handles != NULL) {
+    _object_handles->oops_do(f);
   }
 }
 
