@@ -61,7 +61,8 @@ import jdk.vm.ci.meta.TriState;
 final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSpotResolvedJavaMethod, MetaspaceHandleObject {
 
     /**
-     * Reference to metaspace Method object.
+     * Handle to the metaspace {@code Method} object. The handle is in
+     * {@code JVMCI::_metadata_handles}.
      */
     private final long metadataHandle;
 
@@ -102,8 +103,8 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     /**
      * Gets the JVMCI mirror from a HotSpot method. The VM is responsible for ensuring that the
-     * Method* is kept alive for the duration of this call and the
-     * {@link HotSpotJVMCIMetaAccessContext} keeps it alive after that.
+     * Method* is kept alive for the duration of this call and the {@link HotSpotJVMCIRuntime} keeps
+     * it alive after that.
      * <p>
      * Called from the VM.
      *
@@ -138,7 +139,7 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
         final int signatureIndex = UNSAFE.getChar(constMethod + config.constMethodSignatureIndexOffset);
         this.signature = (HotSpotSignature) constantPool.lookupSignature(signatureIndex);
-        HotSpotJVMCIMetaAccessContext.add(this);
+        HandleCleaner.create(this, metaspaceHandle);
     }
 
     /**

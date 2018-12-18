@@ -111,8 +111,6 @@
     long_field(HotSpotCompiledNmethod, compileTask)                                                           \
     boolean_field(HotSpotCompiledNmethod, hasUnsafeAccess)                                                    \
   end_class                                                                                                   \
-  start_class(HotSpotJVMCIMetaAccessContext, jdk_vm_ci_hotspot_HotSpotJVMCIMetaAccessContext)                 \
-  end_class                                                                                                   \
   start_class(HotSpotForeignCallTarget, jdk_vm_ci_hotspot_HotSpotForeignCallTarget)                           \
     long_field(HotSpotForeignCallTarget, address)                                                             \
   end_class                                                                                                   \

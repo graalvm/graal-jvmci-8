@@ -33,6 +33,7 @@ import java.io.Serializable;
 import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
 import java.lang.invoke.MethodHandle;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -70,7 +71,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * Singleton instance lazily initialized via double-checked locking.
      */
     @NativeImageReinitialize private static volatile HotSpotJVMCIRuntime instance;
-    HotSpotJVMCIReflection reflection;
+
     private HotSpotResolvedObjectTypeImpl javaLangObject;
     private HotSpotResolvedObjectTypeImpl javaLangInvokeMethodHandle;
     private HotSpotResolvedObjectTypeImpl constantCallSiteType;
@@ -84,70 +85,70 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
 
     HotSpotResolvedObjectTypeImpl getJavaLangObject() {
         if (javaLangObject == null) {
-            javaLangObject = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(Object.class);
+            javaLangObject = (HotSpotResolvedObjectTypeImpl) fromClass(Object.class);
         }
         return javaLangObject;
     }
 
     HotSpotResolvedObjectTypeImpl getJavaLangString() {
         if (javaLangString == null) {
-            javaLangString = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(String.class);
+            javaLangString = (HotSpotResolvedObjectTypeImpl) fromClass(String.class);
         }
         return javaLangString;
     }
 
     HotSpotResolvedObjectTypeImpl getJavaLangClass() {
         if (javaLangClass == null) {
-            javaLangClass = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(Class.class);
+            javaLangClass = (HotSpotResolvedObjectTypeImpl) fromClass(Class.class);
         }
         return javaLangClass;
     }
 
     HotSpotResolvedObjectTypeImpl getJavaLangCloneable() {
         if (cloneableType == null) {
-            cloneableType = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(Cloneable.class);
+            cloneableType = (HotSpotResolvedObjectTypeImpl) fromClass(Cloneable.class);
         }
         return cloneableType;
     }
 
     HotSpotResolvedObjectTypeImpl getJavaLangSerializable() {
         if (serializableType == null) {
-            serializableType = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(Serializable.class);
+            serializableType = (HotSpotResolvedObjectTypeImpl) fromClass(Serializable.class);
         }
         return serializableType;
     }
 
     HotSpotResolvedObjectTypeImpl getJavaLangThrowable() {
         if (throwableType == null) {
-            throwableType = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(Throwable.class);
+            throwableType = (HotSpotResolvedObjectTypeImpl) fromClass(Throwable.class);
         }
         return throwableType;
     }
 
     HotSpotResolvedObjectTypeImpl getJavaLangEnum() {
         if (enumType == null) {
-            enumType = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(Enum.class);
+            enumType = (HotSpotResolvedObjectTypeImpl) fromClass(Enum.class);
         }
         return enumType;
     }
 
     HotSpotResolvedObjectTypeImpl getConstantCallSite() {
         if (constantCallSiteType == null) {
-            constantCallSiteType = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(ConstantCallSite.class);
+            constantCallSiteType = (HotSpotResolvedObjectTypeImpl) fromClass(ConstantCallSite.class);
         }
         return constantCallSiteType;
     }
 
     HotSpotResolvedObjectTypeImpl getCallSite() {
         if (callSiteType == null) {
-            callSiteType = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(CallSite.class);
+            callSiteType = (HotSpotResolvedObjectTypeImpl) fromClass(CallSite.class);
         }
         return callSiteType;
     }
 
     HotSpotResolvedObjectType getMethodHandleClass() {
         if (javaLangInvokeMethodHandle == null) {
-            javaLangInvokeMethodHandle = (HotSpotResolvedObjectTypeImpl) HotSpotJVMCIMetaAccessContext.fromClass(MethodHandle.class);
+            javaLangInvokeMethodHandle = (HotSpotResolvedObjectTypeImpl) fromClass(MethodHandle.class);
         }
         return javaLangInvokeMethodHandle;
     }
@@ -370,8 +371,15 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     private final JVMCICompilerFactory compilerFactory;
     private final HotSpotJVMCICompilerFactory hsCompilerFactory;
     private volatile JVMCICompiler compiler;
+    protected final HotSpotJVMCIReflection reflection;
     @NativeImageReinitialize private volatile boolean creatingCompiler;
-    final HotSpotJVMCIMetaAccessContext metaAccessContext;
+
+    /**
+     * Cache for speeding up {@link #fromClass(Class)}.
+     */
+    @NativeImageReinitialize private volatile ClassValue<WeakReference<HotSpotResolvedJavaType>> resolvedJavaType;
+
+    @NativeImageReinitialize private HashMap<Long, WeakReference<ResolvedJavaType>> resolvedJavaTypes;
 
     /**
      * Stores the result of {@link HotSpotJVMCICompilerFactory#getCompilationLevelAdjustment} so
@@ -424,8 +432,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
             hostBackend = registerBackend(factory.createJVMCIBackend(this, null));
         }
 
-        metaAccessContext = new HotSpotJVMCIMetaAccessContext();
-
         compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory();
         if (compilerFactory instanceof HotSpotJVMCICompilerFactory) {
             hsCompilerFactory = (HotSpotJVMCICompilerFactory) compilerFactory;
@@ -460,6 +466,78 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         if (Option.PrintConfig.getBoolean()) {
             configStore.printConfig();
         }
+    }
+
+    HotSpotResolvedJavaType createClass(Class<?> javaClass) {
+        if (javaClass.isPrimitive()) {
+            return HotSpotResolvedPrimitiveType.forKind(JavaKind.fromJavaClass(javaClass));
+        }
+        if (IS_IN_NATIVE_IMAGE) {
+            try {
+                return compilerToVm.lookupType(javaClass.getName().replace('.', '/'), null, true);
+            } catch (ClassNotFoundException e) {
+                throw new JVMCIError(e);
+            }
+        }
+        return compilerToVm.lookupClass(javaClass);
+    }
+
+    private HotSpotResolvedJavaType fromClass0(Class<?> javaClass) {
+        if (resolvedJavaType == null) {
+            synchronized (this) {
+                if (resolvedJavaType == null) {
+                    resolvedJavaType = new ClassValue<WeakReference<HotSpotResolvedJavaType>>() {
+                        @Override
+                        protected WeakReference<HotSpotResolvedJavaType> computeValue(Class<?> type) {
+                            return new WeakReference<>(createClass(type));
+                        }
+                    };
+                }
+            }
+        }
+        HotSpotResolvedJavaType javaType = null;
+        while (javaType == null) {
+            WeakReference<HotSpotResolvedJavaType> type = resolvedJavaType.get(javaClass);
+            javaType = type.get();
+            if (javaType == null) {
+                /*
+                 * If the referent has become null, clear out the current value and let computeValue
+                 * above create a new value. Reload the value in a loop because in theory the
+                 * WeakReference referent can be reclaimed at any point.
+                 */
+                resolvedJavaType.remove(javaClass);
+            }
+        }
+        return javaType;
+    }
+
+    /**
+     * Gets the JVMCI mirror for a {@link Class} object.
+     *
+     * @return the {@link ResolvedJavaType} corresponding to {@code javaClass}
+     */
+    HotSpotResolvedJavaType fromClass(Class<?> javaClass) {
+        if (javaClass == null) {
+            return null;
+        }
+        return fromClass0(javaClass);
+    }
+
+    synchronized HotSpotResolvedObjectTypeImpl fromMetaspace(long klassPointer, String signature) {
+        if (resolvedJavaTypes == null) {
+            resolvedJavaTypes = new HashMap<>();
+        }
+        assert klassPointer != 0;
+        WeakReference<ResolvedJavaType> klassReference = resolvedJavaTypes.get(klassPointer);
+        HotSpotResolvedObjectTypeImpl javaType = null;
+        if (klassReference != null) {
+            javaType = (HotSpotResolvedObjectTypeImpl) klassReference.get();
+        }
+        if (javaType == null) {
+            javaType = new HotSpotResolvedObjectTypeImpl(klassPointer, signature);
+            resolvedJavaTypes.put(klassPointer, new WeakReference<>(javaType));
+        }
+        return javaType;
     }
 
     private JVMCIBackend registerBackend(JVMCIBackend backend) {

@@ -62,7 +62,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider {
         if (clazz == null) {
             throw new IllegalArgumentException("Class parameter was null");
         }
-        return HotSpotJVMCIMetaAccessContext.fromClass(clazz);
+        return runtime.fromClass(clazz);
     }
 
     @Override
@@ -87,7 +87,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider {
     public ResolvedJavaField lookupJavaField(Field reflectionField) {
         Class<?> fieldHolder = reflectionField.getDeclaringClass();
 
-        HotSpotResolvedJavaType holder = HotSpotJVMCIMetaAccessContext.fromClass(fieldHolder);
+        HotSpotResolvedJavaType holder = runtime.fromClass(fieldHolder);
         assert holder != null : fieldHolder;
         if (Modifier.isStatic(reflectionField.getModifiers())) {
             final long offset = UNSAFE.staticFieldOffset(reflectionField);

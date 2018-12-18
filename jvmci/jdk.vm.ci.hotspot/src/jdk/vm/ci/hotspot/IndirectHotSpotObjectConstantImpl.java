@@ -25,7 +25,11 @@ package jdk.vm.ci.hotspot;
 import jdk.vm.ci.meta.JavaConstant;
 
 final class IndirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl {
+    /**
+     * An object handle in {@code JVMCI::_jvmci_handles}.
+     */
     final long objectHandle;
+
     final IndirectHotSpotObjectConstantImpl base;
 
     @VMEntryPoint
@@ -35,7 +39,7 @@ final class IndirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl 
         this.objectHandle = objectHandle;
         this.base = null;
         if (!skipRegister) {
-            HotSpotJVMCIMetaAccessContext.add(this);
+            HandleCleaner.create(this, objectHandle);
         }
     }
 

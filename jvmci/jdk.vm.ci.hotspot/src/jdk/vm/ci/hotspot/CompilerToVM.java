@@ -928,4 +928,10 @@ final class CompilerToVM {
      * @see HotSpotJVMCIRuntime#getIntrinsificationTrustPredicate(Class...)
      */
     native boolean isTrustedForIntrinsics(HotSpotResolvedObjectTypeImpl type);
+
+    /**
+     * Releases the resources backing the global JNI {@code handle}. This is equivalent to the
+     * {@code DeleteGlobalRef} JNI function.
+     */
+    native void deleteGlobalHandle(long handle);
 }

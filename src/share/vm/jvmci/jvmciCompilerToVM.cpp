@@ -2082,6 +2082,14 @@ C2V_VMENTRY(jobject, getObject, (JNIEnv* env, jobject, jobject x, long displacem
   return JVMCIENV->get_jobject(result);
 }
 
+C2V_VMENTRY(void, deleteGlobalHandle, (JNIEnv* env, jobject, jlong h))
+  jobject handle = (jobject)(address)h;
+  if (handle != NULL) {
+    assert(JVMCI::is_global_handle(handle), "Invalid delete of global JNI handle");
+    *((oop*)handle) = JNIHandles::deleted_handle(); // Mark the handle as deleted, allocate will reuse it
+  }
+}
+
 C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
   void* shared_library = JVMCIEnv::get_shared_library_handle();
   if (shared_library == NULL) {
@@ -2170,10 +2178,8 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
   } else if (thisEnv->isa_HotSpotResolvedPrimitiveType(obj)) {
     BasicType type = JVMCIENV->kindToBasicType(JVMCIENV->get_HotSpotResolvedPrimitiveType_kind(obj), JVMCI_CHECK_0);
     result = peerEnv->get_jvmci_primitive_type(type);
-  } else if (thisEnv->isa_IndirectHotSpotObjectConstantImpl(obj)) {
-    oop constant = thisEnv->asConstant(obj, JVMCI_CHECK_0);
-    result = peerEnv->get_object_constant(constant);
-  } else if (thisEnv->isa_DirectHotSpotObjectConstantImpl(obj)) {
+  } else if (thisEnv->isa_IndirectHotSpotObjectConstantImpl(obj) ||
+             thisEnv->isa_DirectHotSpotObjectConstantImpl(obj)) {
     oop constant = thisEnv->asConstant(obj, JVMCI_CHECK_0);
     result = peerEnv->get_object_constant(constant);
   } else if (thisEnv->isa_HotSpotNmethod(obj)) {
@@ -2222,6 +2228,7 @@ C2V_VMENTRY(jobject, unhand, (JNIEnv* env, jobject, jlong obj_handle))
   jobject global_handle = (jobject) obj_handle;
   JVMCIObject global_handle_obj = JVMCIENV->wrap((jobject) obj_handle);
   jobject result = JVMCIENV->make_local(global_handle_obj).as_jobject();
+
   JVMCIENV->destroy_global(global_handle_obj);
   return result;
 }
@@ -2411,6 +2418,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "getInt",                                       CC "(" OBJECTCONSTANT "J)I",                                                          FN_PTR(getInt)},
   {CC "getLong",                                      CC "(" OBJECTCONSTANT "J)J",                                                          FN_PTR(getLong)},
   {CC "getObject",                                    CC "(" OBJECTCONSTANT "J)" OBJECTCONSTANT,                                            FN_PTR(getObject)},
+  {CC "deleteGlobalHandle",                           CC "(J)V",                                                                            FN_PTR(deleteGlobalHandle)},
   {CC "registerNativeMethods",                        CC "(" CLASS ")[J",                                                                   FN_PTR(registerNativeMethods)},
   {CC "translate",                                    CC "(" OBJECT ")J",                                                                   FN_PTR(translate)},
   {CC "unhand",                                       CC "(J)" OBJECT,                                                                      FN_PTR(unhand)},
