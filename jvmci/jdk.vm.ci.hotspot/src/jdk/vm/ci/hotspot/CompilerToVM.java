@@ -200,7 +200,8 @@ final class CompilerToVM {
      * Converts a name to a type.
      *
      * @param name a well formed Java type in {@linkplain JavaType#getName() internal} format
-     * @param accessingClass the context of resolution (must not be null)
+     * @param accessingClass the context of resolution. A value of {@code null} implies that the
+     *            class should be resolved with the JVMCI class loader.
      * @param resolve force resolution to a {@link ResolvedJavaType}. If true, this method will
      *            either return a {@link ResolvedJavaType} or throw an exception
      * @return the type for {@code name} or 0 if resolution failed and {@code resolve == false}

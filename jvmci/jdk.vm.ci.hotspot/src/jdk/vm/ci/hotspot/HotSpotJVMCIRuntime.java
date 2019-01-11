@@ -599,13 +599,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         return null;
     }
 
-    ResolvedJavaType lookupJavaType(String name) throws ClassNotFoundException {
-        if (reflection instanceof SharedLibraryJVMCIReflection) {
-            return ((SharedLibraryJVMCIReflection) reflection).lookupJavaType("L" + name.replace('.', '/') + ";");
-        }
-        throw new ClassNotFoundException(name);
-    }
-
     @Override
     public JVMCICompiler getCompiler() {
         if (compiler == null) {

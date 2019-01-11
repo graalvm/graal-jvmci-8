@@ -48,18 +48,12 @@ import sun.misc.VM;
 class JVMCIClassLoaderFactory {
 
     /**
-     * Copy of the {@code UseJVMCIClassLoader} VM option. Set by the VM before the static
-     * initializer is called.
-     */
-    private static boolean useJVMCIClassLoader;
-
-    /**
      * Registers the JVMCI class loader in the VM.
      */
     private static native void init(ClassLoader loader);
 
     static {
-        init(useJVMCIClassLoader ? newClassLoader() : null);
+        init(newClassLoader());
     }
 
     /**

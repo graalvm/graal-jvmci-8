@@ -462,6 +462,10 @@ C2V_VMENTRY(jobject, lookupType, (JNIEnv* env, jobject, jstring jname, jclass ac
     accessing_klass = JVMCIENV->asKlass(accessing_class);
     class_loader = Handle(THREAD, accessing_klass->class_loader());
     protection_domain = Handle(THREAD, accessing_klass->protection_domain());
+  } else {
+    // Use the JVMCI class loader
+    JVMCIENV->runtime()->ensure_jvmci_class_loader_is_initialized(JVMCIENV);
+    class_loader = Handle(THREAD, SystemDictionary::jvmci_loader());
   }
 
   if (resolve) {
