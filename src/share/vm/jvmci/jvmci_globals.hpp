@@ -124,11 +124,10 @@
           "Dumps to the given file a description of the classes, fields "   \
           "and methods the JVMCI shared library must provide")              \
                                                                             \
-  product(ccstr, JVMCIJavaMode, "HotSpot",                                  \
-          "Specifies the mode in which JVMCI Java code executes: \n"        \
-          "      HotSpot - Loaded from class files and "                    \
-          "                executed on the HotSpot heap\n"                  \
-          "SharedLibrary - Loaded from a shared library and used via JNI\n")\
+  product(bool, UseJVMCINativeLibrary, false,                               \
+          "Execute JVMCI Java code from a shared library "                  \
+          "instead of loading it from class files and executing it "        \
+          "on the HotSpot heap")                                            \
 
 // Read default values for JVMCI globals
 
@@ -148,10 +147,9 @@ class JVMCIGlobals {
   static JavaMode _java_mode;
   static fileStream* _jni_config_file;
  public:
-  // Initializes the Java mode from the JVMCIJavaMode flag.
+  // Initializes the Java mode from the UseJVMCINativeLibrary flag.
   // Separated out from methods below as it can modify UseJVMCIClassLoader
-  // which is read before these methods are called. Same behavior as
-  // set_jvmci_specific_flags if JVMCIJavaMode value is invalid.
+  // which is read before these methods are called.
   static bool init_java_mode_from_flags();
 
   static void set_jvmci_specific_flags();

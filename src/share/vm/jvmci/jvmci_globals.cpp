@@ -174,7 +174,7 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
   CHECK_NOT_SET(MethodProfileWidth,           EnableJVMCI)
   CHECK_NOT_SET(JVMCIPrintProperties,         EnableJVMCI)
   CHECK_NOT_SET(TraceUncollectedSpeculations, EnableJVMCI)
-  CHECK_NOT_SET(JVMCIJavaMode,                EnableJVMCI)
+  CHECK_NOT_SET(UseJVMCINativeLibrary,        EnableJVMCI)
   CHECK_NOT_SET(JVMCILibPath,                 EnableJVMCI)
   CHECK_NOT_SET(JVMCILibArgs,                 EnableJVMCI)
   CHECK_NOT_SET(JVMCILibArgsSep,              EnableJVMCI)
@@ -212,15 +212,10 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 }
 
 bool JVMCIGlobals::init_java_mode_from_flags() {
-  if (strcmp(JVMCIJavaMode, "HotSpot") == 0) {
+  if (!UseJVMCINativeLibrary) {
     _java_mode = HotSpot;
   } else {
     _java_mode = SharedLibrary;
-    if (strcmp(JVMCIJavaMode, "SharedLibrary") != 0) {
-      jio_fprintf(defaultStream::error_stream(),
-                  "Value of JVMCIJavaMode flag must be \"HotSpot\" or \"SharedLibrary\": \"%s\"\n", JVMCIJavaMode);
-      return false;
-    }
 
     if (strlen(JVMCILibArgsSep) != 1) {
       jio_fprintf(defaultStream::error_stream(),
@@ -236,14 +231,14 @@ bool JVMCIGlobals::init_java_mode_from_flags() {
     if (UseJVMCIClassLoader) {
       if (!FLAG_IS_DEFAULT(UseJVMCIClassLoader)) {
         jio_fprintf(defaultStream::error_stream(),
-                    "-XX:+UseJVMCIClassLoader is incompatible with -XX:JVMCIJavaMode=%s\n", JVMCIJavaMode);
+                    "-XX:+UseJVMCIClassLoader is incompatible with -XX:+UseJVMCINativeLibrary\n");
         return false;
       }
 
       // JVMCI classes are all in the shared library so there should
       // not be any JVMCI class loading. However, currently it is still
       // needed for reifying types used in Graal snippets. Since the JVMCI
-      // shared library can be entered without a Java method method on the stack,
+      // shared library can be entered without a Java method on the stack,
       // it's impossible to reliably get hold of the JVMCI class loader.
       // As a workaround, we simply disable the JVMCI loader.
       UseJVMCIClassLoader = false;
