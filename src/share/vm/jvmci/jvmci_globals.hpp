@@ -148,11 +148,11 @@ class JVMCIGlobals {
   static fileStream* _jni_config_file;
  public:
   // Initializes the Java mode from the UseJVMCINativeLibrary flag.
-  // Separated out from methods below as it can modify UseJVMCIClassLoader
-  // which is read before these methods are called.
+  // Same behavior as set_jvmci_specific_flags if JVMCIJavaMode value is invalid.
   static bool init_java_mode_from_flags();
 
   static void set_jvmci_specific_flags();
+
   // Returns true if jvmci flags are consistent. If not consistent,
   // an error message describing the inconsistency is printed before
   // returning false.

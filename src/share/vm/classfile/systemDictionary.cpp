@@ -134,7 +134,7 @@ ClassLoaderData* SystemDictionary::register_loader(Handle class_loader, TRAPS) {
 
 #if INCLUDE_JVMCI
 void SystemDictionary::init_jvmci_loader(oop loader) {
-  assert(UseJVMCIClassLoader == (loader != NULL), "must be");
+  assert(UseJVMCIClassLoader, "must be");
   _jvmci_loader = loader;
   if (loader != NULL) {
     _jvmci_loader_parent = java_lang_ClassLoader::parent(loader);

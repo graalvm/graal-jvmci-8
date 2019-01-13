@@ -1375,32 +1375,20 @@ JVM_ENTRY_NO_ENV(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
 JVM_END
 
 void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized(JVMCIEnv* JVMCIENV) {
-  // This initialization code is guarded by a static pointer to the Factory class.
-  // Once it is non-null, the JVMCI class loader and well known JVMCI classes are
-  // guaranteed to have been initialized. By going through the static
-  // initializer of Factory, we can rely on class initialization semantics to
-  // synchronize threads racing to do the initialization.
-  static Klass* _FactoryKlass = NULL;
-  if (JVMCIENV->is_hotspot() && _FactoryKlass == NULL) {
-    JavaThread* THREAD = JavaThread::current();
-    TempNewSymbol name = SymbolTable::new_symbol("jdk/vm/ci/services/JVMCIClassLoaderFactory", CHECK_EXIT);
-    Klass* klass = SystemDictionary::resolve_or_fail(name, true, CHECK_EXIT);
-
-    // We cannot use jvmciJavaClasses for this because we are currently in the
-    // process of initializing that mechanism.
-    TempNewSymbol field_name = SymbolTable::new_symbol("useJVMCIClassLoader", CHECK_EXIT);
-    fieldDescriptor field_desc;
-    if (klass->find_field(field_name, vmSymbols::bool_signature(), &field_desc) == NULL) {
-      ResourceMark rm;
-      fatal(err_msg("Invalid layout of %s at %s", field_name->as_C_string(), klass->external_name()));
+  if (UseJVMCIClassLoader) {
+    // This initialization code is guarded by a static pointer to the Factory class.
+    // Once it is non-null, the JVMCI class loader is guaranteed to have been
+    // initialized. By going through the static initializer of Factory, we can rely
+    // on class initialization semantics to synchronize racing threads.
+    static Klass* _FactoryKlass = NULL;
+    if (_FactoryKlass == NULL) {
+      JavaThread* THREAD = JavaThread::current();
+      TempNewSymbol name = SymbolTable::new_symbol("jdk/vm/ci/services/JVMCIClassLoaderFactory", CHECK_EXIT);
+      Klass* klass = SystemDictionary::resolve_or_fail(name, true, CHECK_EXIT);
+      klass->initialize(CHECK_EXIT);
+      _FactoryKlass = klass;
+      assert(SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
     }
-
-    InstanceKlass* ik = InstanceKlass::cast(klass);
-    address addr = ik->static_field_addr(field_desc.offset() - InstanceMirrorKlass::offset_of_static_fields());
-    *((jboolean *) addr) = (jboolean) UseJVMCIClassLoader;
-    klass->initialize(CHECK_EXIT);
-    _FactoryKlass = klass;
-    assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
   }
   initialize(JVMCIENV);
 }

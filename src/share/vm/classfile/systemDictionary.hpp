@@ -489,7 +489,7 @@ public:
 
 #if INCLUDE_JVMCI
   // Returns the JVMCI loader. This will be NULL if !UseJVMCIClassLoader
-  // in which case it's equivalent to the boot loader
+  // in which case it is equivalent to the boot loader (i.e. NULL)
   static oop jvmci_loader()                 { return _jvmci_loader; }
 
   // Determines if loader is in the JVMCI class loader hierarchy
