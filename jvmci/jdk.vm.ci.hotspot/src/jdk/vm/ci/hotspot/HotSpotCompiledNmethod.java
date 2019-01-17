@@ -42,9 +42,9 @@ public final class HotSpotCompiledNmethod extends HotSpotCompiledCode {
     protected final int id;
 
     /**
-     * Address of a native compile task object or 0L if no such object exists.
+     * Address of a native {@code JVMCICompileState} object or 0L if no such object exists.
      */
-    protected final long compileTask;
+    protected final long compileState;
 
     protected final boolean hasUnsafeAccess;
 
@@ -56,12 +56,12 @@ public final class HotSpotCompiledNmethod extends HotSpotCompiledCode {
 
     public HotSpotCompiledNmethod(String name, byte[] targetCode, int targetCodeSize, Site[] sites, Assumption[] assumptions, ResolvedJavaMethod[] methods, Comment[] comments, byte[] dataSection,
                     int dataSectionAlignment, DataPatch[] dataSectionPatches, boolean isImmutablePIC, int totalFrameSize, StackSlot deoptRescueSlot, HotSpotResolvedJavaMethod method, int entryBCI,
-                    int id, long compileTask, boolean hasUnsafeAccess) {
+                    int id, long compileState, boolean hasUnsafeAccess) {
         super(name, targetCode, targetCodeSize, sites, assumptions, methods, comments, dataSection, dataSectionAlignment, dataSectionPatches, isImmutablePIC, totalFrameSize, deoptRescueSlot);
         this.method = method;
         this.entryBCI = entryBCI;
         this.id = id;
-        this.compileTask = compileTask;
+        this.compileState = compileState;
         this.hasUnsafeAccess = hasUnsafeAccess;
     }
 

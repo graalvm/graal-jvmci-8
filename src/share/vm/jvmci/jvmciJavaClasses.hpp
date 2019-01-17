@@ -108,7 +108,7 @@
     object_field(HotSpotCompiledNmethod, installationFailureMessage, "Ljava/lang/String;")                    \
     int_field(HotSpotCompiledNmethod, entryBCI)                                                               \
     int_field(HotSpotCompiledNmethod, id)                                                                     \
-    long_field(HotSpotCompiledNmethod, compileTask)                                                           \
+    long_field(HotSpotCompiledNmethod, compileState)                                                          \
     boolean_field(HotSpotCompiledNmethod, hasUnsafeAccess)                                                    \
   end_class                                                                                                   \
   start_class(HotSpotForeignCallTarget, jdk_vm_ci_hotspot_HotSpotForeignCallTarget)                           \

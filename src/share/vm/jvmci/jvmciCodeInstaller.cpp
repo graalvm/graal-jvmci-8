@@ -633,7 +633,7 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, JVMCIOb
                                        false);
     result = JVMCI::ok;
   } else {
-    JVMCICompileState* compile_state = (JVMCICompileState*) (address) jvmci_env()->get_HotSpotCompiledNmethod_compileTask(compiled_code);
+    JVMCICompileState* compile_state = (JVMCICompileState*) (address) jvmci_env()->get_HotSpotCompiledNmethod_compileState(compiled_code);
     if (compile_state != NULL) {
       jvmci_env()->set_compile_state(compile_state);
     }

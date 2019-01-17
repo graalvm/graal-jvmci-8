@@ -1891,11 +1891,9 @@ methodHandle JVMCIRuntime::get_method_by_index(const constantPoolHandle& cpool,
 // class loads, evolution, breakpoints
 JVMCI::CodeInstallResult JVMCIRuntime::validate_compile_task_dependencies(Dependencies* dependencies, JVMCICompileState* compile_state, char** failure_detail) {
   // If JVMTI capabilities were enabled during compile, the compilation is invalidated.
-  if (compile_state != NULL) {
-    if (!compile_state->jvmti_can_hotswap_or_post_breakpoint() && JvmtiExport::can_hotswap_or_post_breakpoint()) {
-      *failure_detail = (char*) "Hotswapping or breakpointing was enabled during compilation";
-      return JVMCI::dependencies_failed;
-    }
+  if (compile_state != NULL && compile_state->jvmti_state_changed()) {
+    *failure_detail = (char*) "Jvmti state change during compilation invalidated dependencies";
+    return JVMCI::dependencies_failed;
   }
 
   // Dependencies must be checked when the system dictionary changes
@@ -1934,7 +1932,7 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
   JVMCIObject receiver = get_HotSpotJVMCIRuntime(JVMCI_CHECK_EXIT);
   JVMCIObject jvmci_method = JVMCIENV->get_jvmci_method(method, JVMCI_CHECK);
   JVMCIObject result_object = JVMCIENV->call_HotSpotJVMCIRuntime_compileMethod(receiver, jvmci_method, entry_bci,
-                                                                     (jlong)compile_state, compile_state->task()->compile_id());
+                                                                     (jlong) compile_state, compile_state->task()->compile_id());
   if (!JVMCIENV->has_pending_exception()) {
     if (result_object.is_non_null()) {
       JVMCIObject failure_message = JVMCIENV->get_HotSpotCompilationRequestResult_failureMessage(result_object);

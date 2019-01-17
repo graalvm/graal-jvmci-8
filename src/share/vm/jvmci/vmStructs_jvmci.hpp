@@ -103,10 +103,16 @@
                                                                                                                                      \
   nonstatic_field(Klass,                       _class_loader_data,                     ClassLoaderData*)                             \
                                                                                                                                      \
+  nonstatic_field(JVMCICompileState,           _jvmti_can_hotswap_or_post_breakpoint,  jbyte)                                        \
+  nonstatic_field(JVMCICompileState,           _jvmti_can_access_local_variables,      jbyte)                                        \
+  nonstatic_field(JVMCICompileState,           _jvmti_can_post_on_exceptions,          jbyte)                                        \
+  nonstatic_field(JVMCICompileState,           _jvmti_can_pop_frame,                   jbyte)                                        \
+                                                                                                                                     \
   nonstatic_field(JavaThread,                  _pending_deoptimization,                int)                                          \
   nonstatic_field(JavaThread,                  _pending_failed_speculation,            long)                                         \
   nonstatic_field(JavaThread,                  _pending_transfer_to_interpreter,       bool)                                         \
   nonstatic_field(JavaThread,                  _jvmci_counters,                        jlong*)                                       \
+  nonstatic_field(JavaThread,                  _should_post_on_exceptions_flag,        int)                                          \
   nonstatic_field(MethodData,                  _jvmci_ir_size,                         int)                                          \
   nonstatic_field(ConstantPool,                _flags,                                 int)                                          \
   nonstatic_field(Annotations,                 _fields_annotations,                    Array<AnnotationArray*>*)                     \
