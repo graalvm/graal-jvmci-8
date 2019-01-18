@@ -59,11 +59,31 @@ JVMCICompileState::JVMCICompileState(CompileTask* task, int system_dictionary_mo
   _failure_reason[0] = '\0';
   // Get Jvmti capabilities under lock to get consistent values.
   MutexLocker mu(JvmtiThreadState_lock);
-  _jvmti_can_hotswap_or_post_breakpoint = JvmtiExport::can_hotswap_or_post_breakpoint();
-  _jvmti_can_access_local_variables     = JvmtiExport::can_access_local_variables();
-  _jvmti_can_post_on_exceptions         = JvmtiExport::can_post_on_exceptions();
+  _jvmti_can_hotswap_or_post_breakpoint = JvmtiExport::can_hotswap_or_post_breakpoint() ? 1 : 0;
+  _jvmti_can_access_local_variables     = JvmtiExport::can_access_local_variables() ? 1 : 0;
+  _jvmti_can_post_on_exceptions         = JvmtiExport::can_post_on_exceptions() ? 1 : 0;
+  _jvmti_can_pop_frame                  = JvmtiExport::can_pop_frame() ? 1 : 0;
 }
 
+bool JVMCICompileState::jvmti_state_changed() const {
+  if (!jvmti_can_access_local_variables() &&
+      JvmtiExport::can_access_local_variables()) {
+    return true;
+  }
+  if (!jvmti_can_hotswap_or_post_breakpoint() &&
+      JvmtiExport::can_hotswap_or_post_breakpoint()) {
+    return true;
+  }
+  if (!jvmti_can_post_on_exceptions() &&
+      JvmtiExport::can_post_on_exceptions()) {
+    return true;
+  }
+  if (!jvmti_can_pop_frame() &&
+      JvmtiExport::can_pop_frame()) {
+    return true;
+  }
+  return false;
+}
 
 JavaVM* JVMCIEnv::_shared_library_javavm = NULL;
 void* JVMCIEnv::_shared_library_handle = NULL;
@@ -327,14 +347,14 @@ JVMCIEnv::~JVMCIEnv() {
 }
 
 JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_compileMethod (JVMCIObject runtime, JVMCIObject method, int entry_bci,
-                                                              jlong env, int id) {
+                                                              jlong compile_state, int id) {
   if (is_hotspot()) {
     Thread* THREAD = Thread::current();
     JavaCallArguments jargs;
     jargs.push_oop(HotSpotJVMCI::resolve(runtime));
     jargs.push_oop(HotSpotJVMCI::resolve(method));
     jargs.push_int(entry_bci);
-    jargs.push_long(env);
+    jargs.push_long(compile_state);
     jargs.push_int(id);
     JavaValue result(T_OBJECT);
     JavaCalls::call_special(&result,
@@ -347,7 +367,7 @@ JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_compileMethod (JVMCIObject runtim
     jobject result = jni()->CallNonvirtualObjectMethod(runtime.as_jobject(),
                                                      JNIJVMCI::HotSpotJVMCIRuntime::clazz(),
                                                      JNIJVMCI::HotSpotJVMCIRuntime::compileMethod_method(),
-                                                     method.as_jobject(), entry_bci, env, id);
+                                                     method.as_jobject(), entry_bci, compile_state, id);
     if (jni()->ExceptionCheck()) {
       return JVMCIObject();
     }

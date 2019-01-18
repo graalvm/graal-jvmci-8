@@ -456,7 +456,8 @@ public:
  public:
   // Compiles a method with the JVMIC compiler.
   // Caller must handle pending exception.
-  JVMCIObject call_HotSpotJVMCIRuntime_compileMethod(JVMCIObject runtime, JVMCIObject method, int entry_bci, jlong env, int id);
+  JVMCIObject call_HotSpotJVMCIRuntime_compileMethod(JVMCIObject runtime, JVMCIObject method, int entry_bci,
+                                                     jlong compile_state, int id);
 
   int call_HotSpotJVMCIRuntime_adjustCompilationLevel(JVMCIObject runtime, InstanceKlass* declaringClass,
                                                       JVMCIObject name, JVMCIObject signature, bool is_osr, int level, JVMCI_TRAPS);
@@ -685,19 +686,23 @@ inline JNIAccessMark::JNIAccessMark(JVMCIEnv* jvmci_env): ThreadToNativeFromVM(J
 // by the CompileBroker.  It is created in the broker and passed through
 // into the code installation step.
 class JVMCICompileState : public ResourceObj {
+  friend class VMStructs;
  private:
   CompileTask*     _task;
   int              _system_dictionary_modification_counter;
 
+  // Cache JVMTI state. Defined as bytes so that reading them from Java
+  // via Unsafe is well defined (the C++ type for bool is implementation
+  // defined and may not be the same as a Java boolean).
+  jbyte  _jvmti_can_hotswap_or_post_breakpoint;
+  jbyte  _jvmti_can_access_local_variables;
+  jbyte  _jvmti_can_post_on_exceptions;
+  jbyte  _jvmti_can_pop_frame;
+
   // Compilation result values.  The failure message might be resource
   // allocated so preallocate a buffer for the message instead.
-  char             _failure_reason[O_BUFLEN];
   bool             _retryable;
-
-  // Cache JVMTI state
-  bool  _jvmti_can_hotswap_or_post_breakpoint;
-  bool  _jvmti_can_access_local_variables;
-  bool  _jvmti_can_post_on_exceptions;
+  char             _failure_reason[O_BUFLEN];
 
  public:
   JVMCICompileState(CompileTask* task, int system_dictionary_modification_counter);
@@ -705,9 +710,11 @@ class JVMCICompileState : public ResourceObj {
   CompileTask* task() { return _task; }
 
   int system_dictionary_modification_counter() { return _system_dictionary_modification_counter; }
-  bool  jvmti_can_hotswap_or_post_breakpoint() { return  _jvmti_can_hotswap_or_post_breakpoint; }
-  bool  jvmti_can_access_local_variables()     { return  _jvmti_can_access_local_variables; }
-  bool  jvmti_can_post_on_exceptions()         { return  _jvmti_can_post_on_exceptions; }
+  bool  jvmti_state_changed() const;
+  bool  jvmti_can_hotswap_or_post_breakpoint() const { return  _jvmti_can_hotswap_or_post_breakpoint != 0; }
+  bool  jvmti_can_access_local_variables() const     { return  _jvmti_can_access_local_variables != 0; }
+  bool  jvmti_can_post_on_exceptions() const         { return  _jvmti_can_post_on_exceptions != 0; }
+  bool  jvmti_can_pop_frame() const                  { return  _jvmti_can_pop_frame != 0; }
 
   const char* failure_reason() { return (_failure_reason[0] == '\0') ? NULL : _failure_reason; }
   bool retryable() { return _retryable; }

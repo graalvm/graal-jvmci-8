@@ -703,9 +703,9 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     }
 
     @VMEntryPoint
-    private HotSpotCompilationRequestResult compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long jvmciEnv, int id) {
+    private HotSpotCompilationRequestResult compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long compileState, int id) {
         Thread.currentThread().setContextClassLoader(HotSpotJVMCIRuntime.class.getClassLoader());
-        CompilationRequestResult result = getCompiler().compileMethod(new HotSpotCompilationRequest(method, entryBCI, jvmciEnv, id));
+        CompilationRequestResult result = getCompiler().compileMethod(new HotSpotCompilationRequest(method, entryBCI, compileState, id));
         assert result != null : "compileMethod must always return something";
         HotSpotCompilationRequestResult hsResult;
         if (result instanceof HotSpotCompilationRequestResult) {
