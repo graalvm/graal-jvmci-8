@@ -919,6 +919,13 @@ JRT_END
 
 // private static void JVMCIClassLoaderFactory.init(ClassLoader loader)
 JVM_ENTRY_NO_ENV(void, JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader_handle))
+  if (!UseJVMCIClassLoader) {
+    JNI_JVMCIENV(env);
+    // This happens when JVMCIClassLoaderFactory is initialized by something
+    // (e.g. Class.forName) other than ensure_jvmci_class_loader_is_initialized.
+    JVMCIENV->throw_InternalError("JVMCIClassLoaderFactory must only be initialized from the VM");
+    return;
+  }
   SystemDictionary::init_jvmci_loader(JNIHandles::resolve(loader_handle));
 JVM_END
 
