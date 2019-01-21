@@ -699,10 +699,13 @@ class JVMCICompileState : public ResourceObj {
   jbyte  _jvmti_can_post_on_exceptions;
   jbyte  _jvmti_can_pop_frame;
 
-  // Compilation result values.  The failure message might be resource
-  // allocated so preallocate a buffer for the message instead.
+  // Compilation result values.
   bool             _retryable;
-  char             _failure_reason[O_BUFLEN];
+  const char*      _failure_reason;
+
+  // Specifies if _failure_reason is on the C heap. If so, it is allocated
+  // with the mtCompiler NMT flag.
+  bool             _failure_reason_on_C_heap;
 
  public:
   JVMCICompileState(CompileTask* task, int system_dictionary_modification_counter);
@@ -716,11 +719,13 @@ class JVMCICompileState : public ResourceObj {
   bool  jvmti_can_post_on_exceptions() const         { return  _jvmti_can_post_on_exceptions != 0; }
   bool  jvmti_can_pop_frame() const                  { return  _jvmti_can_pop_frame != 0; }
 
-  const char* failure_reason() { return (_failure_reason[0] == '\0') ? NULL : _failure_reason; }
+  const char* failure_reason() { return _failure_reason; }
+  bool failure_reason_on_C_heap() { return _failure_reason_on_C_heap; }
   bool retryable() { return _retryable; }
 
-  void set_failure(const char* reason, bool retryable) {
-    strncpy(_failure_reason, reason, sizeof(_failure_reason) - 1);
+  void set_failure(bool retryable, const char* reason, bool reason_on_C_heap = false) {
+    _failure_reason = reason;
+    _failure_reason_on_C_heap = reason_on_C_heap;
     _retryable = retryable;
   }
 };
