@@ -1931,7 +1931,7 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
   if (compiler->is_bootstrapping() && is_osr) {
     // no OSR compilations during bootstrap - the compiler is just too slow at this point,
     // and we know that there are no endless loops
-    compile_state->set_failure("No OSR during boostrap", true);
+    compile_state->set_failure(true, "No OSR during boostrap");
     return;
   }
 
@@ -1944,11 +1944,15 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
     if (result_object.is_non_null()) {
       JVMCIObject failure_message = JVMCIENV->get_HotSpotCompilationRequestResult_failureMessage(result_object);
       if (failure_message.is_non_null()) {
+        // Copy failure reason into resource memory first ...
         const char* failure_reason = JVMCIENV->as_utf8_string(failure_message);
-        compile_state->set_failure(failure_reason, JVMCIENV->get_HotSpotCompilationRequestResult_retry(result_object) != 0);
+        // ... and then into the C heap.
+        failure_reason = os::strdup(failure_reason, mtCompiler);
+        bool retryable = JVMCIENV->get_HotSpotCompilationRequestResult_retry(result_object) != 0;
+        compile_state->set_failure(retryable, failure_reason, true);
       } else {
         if (compile_state->task()->code() == NULL) {
-          compile_state->set_failure("no nmethod produced", true);
+          compile_state->set_failure(true, "no nmethod produced");
         } else {
           compile_state->task()->set_num_inlined_bytecodes(JVMCIENV->get_HotSpotCompilationRequestResult_inlinedBytecodes(result_object));
           compiler->inc_methods_compiled();
@@ -1962,7 +1966,7 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
     // should be handled by the Java code in some useful way but if they leak
     // through to here report them instead of dying or silently ignoring them.
     JVMCIENV->describe_pending_exception(true);
-    compile_state->set_failure("unexpected exception thrown", false);
+    compile_state->set_failure(false, "unexpected exception thrown");
   }
   if (compiler->is_bootstrapping()) {
     compiler->set_bootstrap_compilation_request_handled();

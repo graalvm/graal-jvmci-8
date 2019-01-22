@@ -74,9 +74,12 @@ class CompileTask : public CHeapObj<mtCompiler> {
   int          _hot_count;    // information about its invocation counter
   const char*  _comment;      // more info about the task
   const char*  _failure_reason;
+  // Specifies if _failure_reason is on the C heap. If so, it is allocated
+  // with the mtCompiler NMT flag.
+  bool         _failure_reason_on_C_heap;
 
  public:
-  CompileTask() {
+  CompileTask() : _failure_reason(NULL), _failure_reason_on_C_heap(false) {
     _lock = new Monitor(Mutex::nonleaf+2, "CompileTaskLock");
   }
 
@@ -160,8 +163,9 @@ public:
   void         log_task_start(CompileLog* log);
   void         log_task_done(CompileLog* log);
 
-  void         set_failure_reason(const char* reason) {
+  void         set_failure_reason(const char* reason, bool on_C_heap = false) {
     _failure_reason = reason;
+    _failure_reason_on_C_heap = on_C_heap;
   }
 };
 

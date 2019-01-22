@@ -55,8 +55,9 @@
 JVMCICompileState::JVMCICompileState(CompileTask* task, int system_dictionary_modification_counter):
   _task(task),
   _system_dictionary_modification_counter(system_dictionary_modification_counter),
+  _failure_reason(NULL),
+  _failure_reason_on_C_heap(false),
   _retryable(true) {
-  _failure_reason[0] = '\0';
   // Get Jvmti capabilities under lock to get consistent values.
   MutexLocker mu(JvmtiThreadState_lock);
   _jvmti_can_hotswap_or_post_breakpoint = JvmtiExport::can_hotswap_or_post_breakpoint() ? 1 : 0;

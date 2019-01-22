@@ -324,6 +324,12 @@ void CompileTask::free(CompileTask* task) {
     JNIHandles::destroy_global(task->_method_holder);
     JNIHandles::destroy_global(task->_hot_method_holder);
 
+    if (task->_failure_reason_on_C_heap && task->_failure_reason != NULL) {
+      os::free((void*) task->_failure_reason, mtCompiler);
+    }
+    task->_failure_reason = NULL;
+    task->_failure_reason_on_C_heap = false;
+
     task->set_is_free(true);
     task->set_next(_task_free_list);
     _task_free_list = task;
@@ -362,6 +368,7 @@ void CompileTask::initialize(int compile_id,
   _time_queued = 0;  // tidy
   _comment = comment;
   _failure_reason = NULL;
+  _failure_reason_on_C_heap = false;
 
   if (LogCompilation) {
     _time_queued = os::elapsed_counter();
@@ -2199,6 +2206,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   Method* target_handle = task->method();
   int compilable = ciEnv::MethodCompilable;
   const char* failure_reason = NULL;
+  bool failure_reason_on_C_heap = false;
   const char* retry_message = NULL;
   AbstractCompiler *comp = compiler(task_level);
 
@@ -2226,6 +2234,8 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
       env.runtime()->compile_method(&env, jvmci, method, osr_bci);
 
       failure_reason = compile_state.failure_reason();
+      failure_reason_on_C_heap = compile_state.failure_reason_on_C_heap();
+
       if (!compile_state.retryable()) {
         retry_message = "not retryable";
         compilable = ciEnv::MethodCompilable_not_at_tier;
@@ -2235,7 +2245,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
       }
     }
     if (failure_reason != NULL) {
-      task->set_failure_reason(failure_reason);
+      task->set_failure_reason(failure_reason, failure_reason_on_C_heap);
     }
     post_compile(thread, task, event, task->code() != NULL, NULL);
   } else
