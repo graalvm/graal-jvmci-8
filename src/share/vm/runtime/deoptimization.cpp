@@ -1557,10 +1557,11 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     methodHandle    trap_method = trap_scope->method();
     int             trap_bci    = trap_scope->bci();
 #if INCLUDE_JVMCI
+    long            speculation = thread->pending_failed_speculation();
     if (nm->is_compiled_by_jvmci()) {
       nm->update_speculation(thread);
     } else {
-      assert(thread->pending_failed_speculation() == 0, "There should not be a speculation for methods compiled by non-JVMCI compilers");
+      assert(speculation == 0, "There should not be a speculation for methods compiled by non-JVMCI compilers");
     }
 
     if (trap_bci == SynchronizationEntryBCI) {
@@ -1610,6 +1611,11 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
         xtty->begin_head("uncommon_trap thread='" UINTX_FORMAT "' %s",
                          os::current_thread_id(),
                          format_trap_request(buf, sizeof(buf), trap_request));
+#if INCLUDE_JVMCI
+        if (speculation != 0) {
+          xtty->print(" speculation='%d'", speculation);
+        }
+#endif
         nm->log_identity(xtty);
       }
       Symbol* class_name = NULL;
