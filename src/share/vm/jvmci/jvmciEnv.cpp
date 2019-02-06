@@ -1153,8 +1153,12 @@ void JVMCIEnv::invalidate_nmethod_mirror(JVMCIObject nmethod_mirror, JVMCI_TRAPS
     return;
   }
 
-  if (!nmethod_mirror.is_hotspot()) {
-    JVMCI_THROW_MSG(IllegalArgumentException, "Cannot invalidate HotSpotNmethod object in shared library VM heap");
+  Thread* THREAD = Thread::current();
+  if (!nmethod_mirror.is_hotspot() && !THREAD->is_Java_thread()) {
+    // Calling back into native might cause the execution to block, so only allow this when calling
+    // from a JavaThread, which is the normal case anyway.
+    JVMCI_THROW_MSG(IllegalArgumentException,
+                    "Cannot invalidate HotSpotNmethod object in shared library VM heap from non-JavaThread");
   }
 
   nmethodLocker nml(nm);

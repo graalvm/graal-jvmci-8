@@ -920,10 +920,7 @@ JRT_END
 // private static void JVMCIClassLoaderFactory.init(ClassLoader loader)
 JVM_ENTRY_NO_ENV(void, JVM_InitJVMCIClassLoader(JNIEnv *env, jclass c, jobject loader_handle))
   if (!UseJVMCIClassLoader) {
-    JNI_JVMCIENV(env);
-    // This happens when JVMCIClassLoaderFactory is initialized by something
-    // (e.g. Class.forName) other than ensure_jvmci_class_loader_is_initialized.
-    JVMCIENV->throw_InternalError("JVMCIClassLoaderFactory must only be initialized from the VM");
+    // It's possible JVMCIClassLoaderFactory is forcibly initialized, so just ignore it.
     return;
   }
   SystemDictionary::init_jvmci_loader(JNIHandles::resolve(loader_handle));
@@ -1000,8 +997,9 @@ void JVMCINMethodData::release(JVMCINMethodData* data) {
   if (data->_speculation_log.is_null() || data->_speculation_log.is_hotspot()) {
     delete data;
   } else {
-    // Queue the data for release.
-    MutexLocker locker(JVMCI_lock);
+    // Queue the data for release.  Reuse the patching lock since we need a non-safepoint locking
+    // and the JVMCI_lock must permit safepoint.
+    MutexLockerEx pl(Patching_lock, Mutex::_no_safepoint_check_flag);
     data->_next = _for_release;
     _for_release = data;
   }
@@ -1013,7 +1011,7 @@ void JVMCINMethodData::cleanup() {
   }
   JVMCINMethodData* current = NULL;
   {
-    MutexLocker locker(JVMCI_lock);
+    MutexLockerEx pl(Patching_lock, Mutex::_no_safepoint_check_flag);
     current = _for_release;
     _for_release = NULL;
   }
