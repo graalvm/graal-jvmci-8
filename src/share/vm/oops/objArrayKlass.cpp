@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -188,7 +188,7 @@ objArrayOop ObjArrayKlass::allocate(int length, TRAPS) {
   check_array_allocation_length(length, arrayOopDesc::max_array_length(T_OBJECT), CHECK_NULL);
   int size = objArrayOopDesc::object_size(length);
   KlassHandle h_k(THREAD, this);
-  return (objArrayOop)CollectedHeap::array_allocate(h_k, size, length, CHECK_NULL);
+  return (objArrayOop)CollectedHeap::array_allocate(h_k, size, length, THREAD);
 }
 
 static int multi_alloc_counter = 0;
@@ -353,11 +353,11 @@ Klass* ObjArrayKlass::array_klass_impl(bool or_null, int n, TRAPS) {
   if (or_null) {
     return ak->array_klass_or_null(n);
   }
-  return ak->array_klass(n, CHECK_NULL);
+  return ak->array_klass(n, THREAD);
 }
 
 Klass* ObjArrayKlass::array_klass_impl(bool or_null, TRAPS) {
-  return array_klass_impl(or_null, dimension() +  1, CHECK_NULL);
+  return array_klass_impl(or_null, dimension() +  1, THREAD);
 }
 
 bool ObjArrayKlass::can_be_primary_super_slow() const {
