@@ -960,10 +960,9 @@ void JVMCIRuntime::call_getCompiler(TRAPS) {
 
 JVMCINMethodData* volatile JVMCINMethodData::_for_release = NULL;
 
-JVMCINMethodData::JVMCINMethodData(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirror, JVMCIObject speculation_log, bool triggers_invalidation) {
+JVMCINMethodData::JVMCINMethodData(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirror, bool triggers_invalidation) {
   _next = NULL;
   _triggers_invalidation = triggers_invalidation;
-  _speculation_log = jvmciEnv->make_weak(speculation_log);
   if (jvmciEnv->is_hotspot()) {
     _nmethod_mirror = jvmciEnv->make_weak(nmethod_mirror);
   } else {
@@ -985,8 +984,6 @@ JVMCINMethodData::JVMCINMethodData(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirro
 JVMCINMethodData::~JVMCINMethodData() {
   clear_nmethod_mirror();
   guarantee(_nmethod_mirror.is_null(), "must be clear now");
-  clear_speculation_log(true);
-  guarantee(_speculation_log.is_null(), "must be clear now");
   if (_nmethod_mirror_name != NULL) {
     FREE_C_HEAP_ARRAY(char, _nmethod_mirror_name, mtCompiler);
     _nmethod_mirror_name = NULL;
@@ -994,7 +991,7 @@ JVMCINMethodData::~JVMCINMethodData() {
 }
 
 void JVMCINMethodData::release(JVMCINMethodData* data) {
-  if (data->_speculation_log.is_null() || data->_speculation_log.is_hotspot()) {
+  if (data->_nmethod_mirror.is_null() || data->_nmethod_mirror.is_hotspot()) {
     delete data;
   } else {
     // Queue the data for release.  Reuse the patching lock since we need a non-safepoint locking
@@ -1027,7 +1024,7 @@ JVMCIObject JVMCINMethodData::get_nmethod_mirror() {
 }
 
 void JVMCINMethodData::add_nmethod_mirror(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirror, JVMCI_TRAPS) {
-  // Only HotSpotNmethod instances are tracking directly by the runtime.  HotSpotNMethodHandle
+  // Only HotSpotNmethod instances are tracking directly by the runtime. HotSpotNMethodHandle
   // instances are updated cooperatively.
   if (!jvmciEnv->is_hotspot()) {
     return;
@@ -1093,38 +1090,6 @@ void JVMCINMethodData::invalidate_mirror(nmethod* nm) {
     // relevant fields in the HotSpotNmethod have been zeroed.
     clear_nmethod_mirror();
   }
-  if (!nm->is_alive()) {
-    clear_speculation_log();
-  }
-}
-
-void JVMCINMethodData::update_speculation(JavaThread* thread, nmethod* nm) {
-  long speculation = thread->pending_failed_speculation();
-  if (speculation != 0) {
-    if (!_speculation_log.is_null()) {
-      JVMCIEnv jvmciEnv(_speculation_log, __FILE__, __LINE__);
-      if (jvmciEnv.equals(_speculation_log, JVMCIObject())) {
-        // The weak reference has been cleared
-        jvmciEnv.destroy_weak(_speculation_log);
-        _speculation_log = JVMCIObject();
-        return;
-      }
-      if (TraceDeoptimization || TraceUncollectedSpeculations) {
-        if (!jvmciEnv.get_HotSpotSpeculationLog_lastFailed(_speculation_log) != 0) {
-          tty->print_cr("A speculation that was not collected by the compiler is being overwritten");
-        }
-      }
-      if (TraceDeoptimization) {
-        tty->print_cr("Saving speculation to speculation log");
-      }
-      jvmciEnv.set_HotSpotSpeculationLog_lastFailed(_speculation_log, speculation);
-    } else {
-      if (TraceDeoptimization) {
-        tty->print_cr("Speculation present but no speculation log");
-      }
-    }
-    thread->set_pending_failed_speculation(0);
-  }
 }
 
 void JVMCINMethodData::clear_nmethod_mirror() {
@@ -1132,19 +1097,6 @@ void JVMCINMethodData::clear_nmethod_mirror() {
     JVMCIEnv jvmciEnv(_nmethod_mirror, __FILE__, __LINE__);
     jvmciEnv.destroy_weak(_nmethod_mirror);
     _nmethod_mirror = JVMCIObject();
-  }
-}
-
-void JVMCINMethodData::clear_speculation_log(bool force) {
-  if (!_speculation_log.is_null()) {
-    // Non HotSpot speculations have to be cleaned up more carefully so
-    // they shouldn't be done by default.
-    if (!force && !_speculation_log.is_hotspot()) {
-      return;
-    }
-    JVMCIEnv jvmciEnv(_speculation_log, __FILE__, __LINE__);
-    jvmciEnv.destroy_weak(_speculation_log);
-    _speculation_log = JVMCIObject();
   }
 }
 
@@ -1992,7 +1944,9 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                                 bool has_wide_vector,
                                 JVMCIObject compiled_code,
                                 JVMCIObject nmethod_mirror,
-                                JVMCIObject speculation_log) {
+                                FailedSpeculation** failed_speculations,
+                                char* speculations,
+                                int speculations_len) {
   JVMCI_EXCEPTION_CONTEXT;
   NMethodSweeper::possibly_sweep();
   nm = NULL;
@@ -2003,7 +1957,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
   bool install_default = JVMCIENV->get_HotSpotNmethod_isDefault(nmethod_mirror) != 0;
   bool triggers_invalidation = !install_default;
 
-  JVMCINMethodData* data = new JVMCINMethodData(JVMCIENV, nmethod_mirror, speculation_log, triggers_invalidation);
+  JVMCINMethodData* data = new JVMCINMethodData(JVMCIENV, nmethod_mirror, triggers_invalidation);
 
   JVMCI::CodeInstallResult result;
   {
@@ -2053,6 +2007,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                                  frame_words, oop_map_set,
                                  handler_table, implicit_exception_table,
                                  compiler, comp_level,
+                                 failed_speculations, speculations, speculations_len,
                                  data);
 
       // Free codeBlobs

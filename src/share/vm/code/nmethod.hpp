@@ -116,6 +116,9 @@ class ExceptionHandlerTable;
 class ImplicitExceptionTable;
 class AbstractCompiler;
 class xmlStream;
+#if INCLUDE_JVMCI
+class FailedSpeculation;
+#endif
 
 class nmethod : public CodeBlob {
   friend class VMStructs;
@@ -134,6 +137,7 @@ class nmethod : public CodeBlob {
   jmethodID _jmethod_id;       // Cache of method()->jmethod_id()
 
 #if INCLUDE_JVMCI
+  FailedSpeculation** _failed_speculations;
   JVMCINMethodData* _jvmci_nmethod_data;
 #endif
 
@@ -180,6 +184,9 @@ class nmethod : public CodeBlob {
   int _dependencies_offset;
   int _handler_table_offset;
   int _nul_chk_table_offset;
+#if INCLUDE_JVMCI
+  int _speculations_offset;
+#endif
   int _nmethod_end_offset;
 
   // location in frame (offset for sp) that deopt can store the original
@@ -305,7 +312,10 @@ class nmethod : public CodeBlob {
           AbstractCompiler* compiler,
           int comp_level
 #if INCLUDE_JVMCI
-          , JVMCINMethodData* jvmci_nmethod_data
+          , FailedSpeculation** failed_speculations,
+          char* speculations,
+          int speculations_len,
+          JVMCINMethodData* jvmci_nmethod_data
 #endif
           );
 
@@ -345,7 +355,10 @@ class nmethod : public CodeBlob {
                               AbstractCompiler* compiler,
                               int comp_level
 #if INCLUDE_JVMCI
-                              , JVMCINMethodData* jvmci_nmethod_data = NULL
+                              , FailedSpeculation** failed_speculations = NULL,
+                              char* speculations = NULL,
+                              int speculations_len = 0,
+                              JVMCINMethodData* jvmci_nmethod_data = NULL
 #endif
   );
 
@@ -415,6 +428,9 @@ class nmethod : public CodeBlob {
   address dependencies_end      () const          { return           header_begin() + _handler_table_offset ; }
   address handler_table_begin   () const          { return           header_begin() + _handler_table_offset ; }
   address handler_table_end     () const          { return           header_begin() + _nul_chk_table_offset ; }
+#if INCLUDE_JVMCI
+  char*   speculations          () const          { return   (char*)(header_begin() + _speculations_offset) ; }
+#endif
   address nul_chk_table_begin   () const          { return           header_begin() + _nul_chk_table_offset ; }
   address nul_chk_table_end     () const          { return           header_begin() + _nmethod_end_offset;    }
 

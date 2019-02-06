@@ -29,6 +29,7 @@
 #include "oops/generateOopMap.hpp"
 #include "oops/fieldStreams.hpp"
 #include "oops/oop.inline.hpp"
+#include "oops/methodData.hpp"
 #include "prims/nativeLookup.hpp"
 #include "runtime/fieldDescriptor.hpp"
 #include "runtime/javaCalls.hpp"
@@ -734,7 +735,7 @@ C2V_VMENTRY(void, setNotInlinableOrCompilable,(JNIEnv* env, jobject,  jobject jv
   method->set_dont_inline(true);
 C2V_END
 
-C2V_VMENTRY(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject compiled_code, jobject installed_code, jobject speculation_log))
+C2V_VMENTRY(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject compiled_code, jobject installed_code, jlong failed_speculations_address, jbyteArray speculations_obj))
   HandleMark hm;
   JNIHandleMark jni_hm;
 
@@ -742,7 +743,11 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject co
   JVMCIObject compiled_code_handle = JVMCIENV->wrap(compiled_code);
   CodeBlob* cb = NULL;
   JVMCIObject installed_code_handle = JVMCIENV->wrap(installed_code);
-  JVMCIObject speculation_log_handle = JVMCIENV->wrap(speculation_log);
+  JVMCIPrimitiveArray speculations_handle = JVMCIENV->wrap(speculations_obj);
+
+  int speculations_len = JVMCIENV->get_length(speculations_handle);
+  char* speculations = NEW_RESOURCE_ARRAY(char, speculations_len);
+  JVMCIENV->copy_bytes_to(speculations_handle, (jbyte*) speculations, 0, speculations_len);
 
   JVMCICompiler* compiler = JVMCICompiler::instance(true, CHECK_JNI_ERR);
 
@@ -751,7 +756,15 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject co
   JVMCINMethodData::cleanup();
 
   CodeInstaller installer(JVMCIENV, is_immutable_PIC);
-  JVMCI::CodeInstallResult result = installer.install(compiler, target_handle, compiled_code_handle, cb, installed_code_handle, speculation_log_handle, JVMCI_CHECK_0);
+  JVMCI::CodeInstallResult result = installer.install(compiler,
+      target_handle,
+      compiled_code_handle,
+      cb,
+      installed_code_handle,
+      (FailedSpeculation**)(address) failed_speculations_address,
+      speculations,
+      speculations_len,
+      JVMCI_CHECK_0);
 
   if (PrintCodeCacheOnCompilation) {
     stringStream s;
@@ -2304,6 +2317,38 @@ C2V_VMENTRY(jobject, asReflectionField, (JNIEnv* env, jobject, jobject jvmci_typ
   return JNIHandles::make_local(env, reflected);
 }
 
+C2V_VMENTRY(jobject, getFailedSpeculations, (JNIEnv* env, jobject, jlong failed_speculations_address))
+  FailedSpeculation* head = *((FailedSpeculation**)(address) failed_speculations_address);
+  int index = 0;
+  for (FailedSpeculation* fs = head; fs != NULL; fs = fs->next()) {
+    index++;
+  }
+
+  JVMCIObjectArray result = JVMCIENV->new_Object_array(index, JVMCI_CHECK_NULL);
+  index = 0;
+  for (FailedSpeculation* fs = head; fs != NULL; fs = fs->next()) {
+    JVMCIPrimitiveArray entry = JVMCIENV->new_byteArray(fs->data_len(), JVMCI_CHECK_NULL);
+    JVMCIENV->copy_bytes_from((jbyte*) fs->data(), entry, 0, fs->data_len());
+    JVMCIENV->put_object_at(result, index++, entry);
+  }
+  return JVMCIENV->get_jobjectArray(result);
+}
+
+C2V_VMENTRY(jlong, getFailedSpeculationsAddress, (JNIEnv* env, jobject, jobject jvmci_method))
+  methodHandle method = JVMCIENV->asMethod(jvmci_method);
+  MethodData* method_data = method->method_data();
+  if (method_data == NULL) {
+    ClassLoaderData* loader_data = method->method_holder()->class_loader_data();
+    method_data = MethodData::allocate(loader_data, method, CHECK_0);
+    method->set_method_data(method_data);
+  }
+  return (jlong) method_data->get_failed_speculations_address();
+}
+
+C2V_VMENTRY(void, releaseFailedSpeculations, (JNIEnv* env, jobject, jlong failed_speculations_address))
+  FailedSpeculation::free_failed_speculations((FailedSpeculation**)(address) failed_speculations_address);
+}
+
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
 
@@ -2378,7 +2423,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "getConstantPool",                              CC "(" METASPACE_OBJECT ")" HS_CONSTANT_POOL,                                         FN_PTR(getConstantPool)},
   {CC "getResolvedJavaType0",                         CC "(Ljava/lang/Object;JZ)" HS_RESOLVED_KLASS,                                        FN_PTR(getResolvedJavaType0)},
   {CC "readConfiguration",                            CC "()[" OBJECT,                                                                      FN_PTR(readConfiguration)},
-  {CC "installCode",                                  CC "(" TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE HS_SPECULATION_LOG ")I",    FN_PTR(installCode)},
+  {CC "installCode",                                  CC "(" TARGET_DESCRIPTION HS_COMPILED_CODE INSTALLED_CODE "J[B)I",                    FN_PTR(installCode)},
   {CC "getMetadata",                                  CC "(" TARGET_DESCRIPTION HS_COMPILED_CODE HS_METADATA ")I",                          FN_PTR(getMetadata)},
   {CC "resetCompilationStatistics",                   CC "()V",                                                                             FN_PTR(resetCompilationStatistics)},
   {CC "disassembleCodeBlob",                          CC "(" INSTALLED_CODE ")" STRING,                                                     FN_PTR(disassembleCodeBlob)},
@@ -2442,6 +2487,9 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "getCode",                                      CC "(" HS_INSTALLED_CODE ")[B",                                                       FN_PTR(getCode)},
   {CC "asReflectionExecutable",                       CC "(" HS_RESOLVED_METHOD ")" REFLECTION_EXECUTABLE,                                  FN_PTR(asReflectionExecutable)},
   {CC "asReflectionField",                            CC "(" HS_RESOLVED_KLASS "I)" REFLECTION_FIELD,                                       FN_PTR(asReflectionField)},
+  {CC "getFailedSpeculations",                        CC "(J)[[B",                                                                          FN_PTR(getFailedSpeculations)},
+  {CC "getFailedSpeculationsAddress",                 CC "(" HS_RESOLVED_METHOD ")J",                                                       FN_PTR(getFailedSpeculationsAddress)},
+  {CC "releaseFailedSpeculations",                    CC "(J)V",                                                                            FN_PTR(releaseFailedSpeculations)},
 };
 
 int CompilerToVM::methods_count() {

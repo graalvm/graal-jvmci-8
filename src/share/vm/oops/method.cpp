@@ -115,6 +115,11 @@ void Method::deallocate_contents(ClassLoaderData* loader_data) {
   clear_jmethod_id(loader_data);
   MetadataFactory::free_metadata(loader_data, constMethod());
   set_constMethod(NULL);
+#if INCLUDE_JVMCI
+  if (method_data()) {
+    FailedSpeculation::free_failed_speculations(method_data()->get_failed_speculations_address());
+  }
+#endif
   MetadataFactory::free_metadata(loader_data, method_data());
   set_method_data(NULL);
   MetadataFactory::free_metadata(loader_data, method_counters());

@@ -582,6 +582,7 @@ void nmethod::init_defaults() {
 #endif
 #if INCLUDE_JVMCI
   _jvmci_nmethod_data     = NULL;
+  _failed_speculations    = NULL;
 #endif
 #ifdef HAVE_DTRACE_H
   _trap_offset             = 0;
@@ -678,7 +679,10 @@ nmethod* nmethod::new_nmethod(methodHandle method,
   AbstractCompiler* compiler,
   int comp_level
 #if INCLUDE_JVMCI
- , JVMCINMethodData* jvmci_nmethod_data
+  , FailedSpeculation** failed_speculations,
+  char* speculations,
+  int speculations_len,
+  JVMCINMethodData* jvmci_nmethod_data
 #endif
 )
 {
@@ -693,6 +697,9 @@ nmethod* nmethod::new_nmethod(methodHandle method,
       + round_to(dependencies->size_in_bytes() , oopSize)
       + round_to(handler_table->size_in_bytes(), oopSize)
       + round_to(nul_chk_table->size_in_bytes(), oopSize)
+#if INCLUDE_JVMCI
+      + round_to(speculations_len              , oopSize)
+#endif
       + round_to(debug_info->data_size()       , oopSize);
 
     nm = new (nmethod_size)
@@ -704,7 +711,10 @@ nmethod* nmethod::new_nmethod(methodHandle method,
             compiler,
             comp_level
 #if INCLUDE_JVMCI
-            , jvmci_nmethod_data
+            , failed_speculations,
+            speculations,
+            speculations_len,
+            jvmci_nmethod_data
 #endif
             );
 
@@ -764,6 +774,7 @@ nmethod::nmethod(
 
     init_defaults();
     _method                  = method;
+    _failed_speculations     = NULL;
     _entry_bci               = InvocationEntryBci;
     // We have no exception handler or deopt handler make the
     // values something that will never match a pc like the nmethod vtable entry
@@ -781,7 +792,12 @@ nmethod::nmethod(
     _dependencies_offset     = _scopes_pcs_offset;
     _handler_table_offset    = _dependencies_offset;
     _nul_chk_table_offset    = _handler_table_offset;
+#if INCLUDE_JVMCI
+    _speculations_offset     = _nul_chk_table_offset;
+    _nmethod_end_offset      = _speculations_offset;
+#else
     _nmethod_end_offset      = _nul_chk_table_offset;
+#endif
     _compile_id              = compile_id;
     _comp_level              = CompLevel_none;
     _entry_point             = code_begin()          + offsets->value(CodeOffsets::Entry);
@@ -939,7 +955,10 @@ nmethod::nmethod(
   AbstractCompiler* compiler,
   int comp_level
 #if INCLUDE_JVMCI
- , JVMCINMethodData* jvmci_nmethod_data
+  , FailedSpeculation** failed_speculations,
+  char* speculations,
+  int speculations_len,
+  JVMCINMethodData* jvmci_nmethod_data
 #endif
   )
   : CodeBlob("nmethod", code_buffer, sizeof(nmethod),
@@ -967,6 +986,7 @@ nmethod::nmethod(
 
 #if INCLUDE_JVMCI
     _jvmci_nmethod_data = jvmci_nmethod_data;
+    _failed_speculations = failed_speculations;
     if (compiler->is_jvmci()) {
       // JVMCI might not produce any stub sections
       if (offsets->value(CodeOffsets::Exceptions) != -1) {
@@ -1014,7 +1034,12 @@ nmethod::nmethod(
     _dependencies_offset     = _scopes_pcs_offset    + adjust_pcs_size(debug_info->pcs_size());
     _handler_table_offset    = _dependencies_offset  + round_to(dependencies->size_in_bytes (), oopSize);
     _nul_chk_table_offset    = _handler_table_offset + round_to(handler_table->size_in_bytes(), oopSize);
+#if INCLUDE_JVMCI
+    _speculations_offset     = _nul_chk_table_offset + round_to(nul_chk_table->size_in_bytes(), oopSize);
+    _nmethod_end_offset      = _speculations_offset  + round_to(speculations_len, oopSize);
+#else
     _nmethod_end_offset      = _nul_chk_table_offset + round_to(nul_chk_table->size_in_bytes(), oopSize);
+#endif
 
     _entry_point             = code_begin()          + offsets->value(CodeOffsets::Entry);
     _verified_entry_point    = code_begin()          + offsets->value(CodeOffsets::Verified_Entry);
@@ -3575,8 +3600,16 @@ void nmethod::maybe_invalidate_jvmci_mirror() {
 }
 
 void nmethod::update_speculation(JavaThread* thread) {
-  if (_jvmci_nmethod_data != NULL) {
-    _jvmci_nmethod_data->update_speculation(thread, this);
+  jlong speculation = thread->pending_failed_speculation();
+  if (speculation != 0) {
+    int index = (speculation >> 32) & 0xFFFFFFFF;
+    int length = (int) speculation;
+    char* data = speculations() + index;
+    if (TraceDeoptimization) {
+      tty->print_cr("Failed speculation %d (length: %d)", index, length);
+    }
+    FailedSpeculation::add_failed_speculation(_failed_speculations, data, length);
+    thread->set_pending_failed_speculation(0);
   }
 }
 

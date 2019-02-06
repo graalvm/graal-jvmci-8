@@ -944,7 +944,7 @@ class JavaThread: public Thread {
 
   // An id of a speculation that JVMCI compiled code can use to further describe and
   // uniquely identify the  speculative optimization guarded by the uncommon trap
-  long       _pending_failed_speculation;
+  jlong      _pending_failed_speculation;
 
   // These fields are mutually exclusive in terms of live ranges.
   union {
@@ -1340,7 +1340,7 @@ class JavaThread: public Thread {
 
 #if INCLUDE_JVMCI
   int  pending_deoptimization() const             { return _pending_deoptimization; }
-  long pending_failed_speculation() const         { return _pending_failed_speculation; }
+  jlong pending_failed_speculation() const        { return _pending_failed_speculation; }
   bool adjusting_comp_level() const               { return _adjusting_comp_level; }
   void set_adjusting_comp_level(bool b)           { _adjusting_comp_level = b; }
   bool has_pending_monitorenter() const           { return _pending_monitorenter; }

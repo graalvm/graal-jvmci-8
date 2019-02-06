@@ -386,7 +386,7 @@ final class CompilerToVM {
      * @throws JVMCIError if there is something wrong with the compiled code or the associated
      *             metadata.
      */
-    native int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, HotSpotSpeculationLog speculationLog);
+    native int installCode(TargetDescription target, HotSpotCompiledCode compiledCode, InstalledCode code, long failedSpeculationsAddress, byte[] speculations);
 
     /**
      * Generates the VM metadata for some compiled code and copies them into {@code metaData}. This
@@ -935,4 +935,24 @@ final class CompilerToVM {
      * {@code DeleteGlobalRef} JNI function.
      */
     native void deleteGlobalHandle(long handle);
+
+    /**
+     * Gets the failed speculations pointed to by {@code *failedSpeculationsAddress}.
+     *
+     * @return the list of failed speculations with each entry being a single speculation in the
+     *         format emitted by {@link HotSpotSpeculationEncoding#toByteArray()}
+     */
+    native byte[][] getFailedSpeculations(long failedSpeculationsAddress);
+
+    /**
+     * Gets the address of the {@code MethodData::_failed_speculations} field in the
+     * {@code MethodData} associated with {@code method}. This will create and install the
+     * {@code MethodData} if it didn't already exist.
+     */
+    native long getFailedSpeculationsAddress(HotSpotResolvedJavaMethodImpl method);
+
+    /**
+     * Frees the failed speculations pointed to by {@code *failedSpeculationsAddress}.
+     */
+    native void releaseFailedSpeculations(long failedSpeculationsAddress);
 }

@@ -33,7 +33,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.Map;
 
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.JavaConstant;
@@ -42,7 +41,6 @@ import jdk.vm.ci.meta.MetaAccessProvider;
 import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
-import jdk.vm.ci.meta.SpeculationLog;
 
 /**
  * Implementation of {@link HotSpotJVMCIReflection} in terms of standard JDK reflection API. This is
@@ -118,29 +116,6 @@ final class HotSpotJDKReflection extends HotSpotJVMCIReflection {
     JavaConstant readFieldValue(HotSpotObjectConstantImpl object, HotSpotResolvedJavaField field, boolean isVolatile) {
         Object value = resolveObject(object);
         return readFieldValue(field, value, isVolatile);
-    }
-
-    /**
-     * The {@link SpeculationLog} for methods compiled by JVMCI hang off this per-declaring-type
-     * {@link ClassValue}. The raw Method* value is safe to use as a key in the map as a) it is
-     * never moves and b) we never read from it.
-     * <p>
-     * One implication is that we will preserve {@link SpeculationLog}s for methods that have been
-     * redefined via class redefinition. It's tempting to periodically flush such logs but we cannot
-     * read the JVM_ACC_IS_OBSOLETE bit (or anything else) via the raw pointer as obsoleted methods
-     * are subject to clean up and deletion (see InstanceKlass::purge_previous_versions_internal).
-     */
-    private static final ClassValue<Map<Long, SpeculationLog>> SpeculationLogs = new ClassValue<Map<Long, SpeculationLog>>() {
-        @Override
-        protected Map<Long, SpeculationLog> computeValue(java.lang.Class<?> type) {
-            return new HashMap<>(4);
-        }
-    };
-
-    @Override
-    Map<Long, SpeculationLog> getSpeculationLogs(HotSpotResolvedObjectTypeImpl holder) {
-        Class<?> javaMirror = getMirror(holder);
-        return SpeculationLogs.get(javaMirror);
     }
 
     @Override

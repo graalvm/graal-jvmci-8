@@ -2147,6 +2147,35 @@ public:
 CC_INTERP_ONLY(class BytecodeInterpreter;)
 class CleanExtraDataClosure;
 
+#if INCLUDE_JVMCI
+// Encapsulates an encoded speculation reason. These are linked together in
+// a list that is atomically appended to during deoptimization. Entries are
+// never removed from the list.
+// @see jdk.vm.ci.hotspot.HotSpotSpeculationLog.HotSpotSpeculationEncoding
+class FailedSpeculation: public CHeapObj<mtCompiler> {
+ private:
+  // The result of HotSpotSpeculationEncoding.toByteArray()
+  char* _data;
+  int   _data_len;
+
+  // Next entry in a linked list.
+  FailedSpeculation* _next;
+
+  FailedSpeculation(char* data, int data_len) : _data(data), _data_len(data_len), _next(NULL) { }
+  FailedSpeculation** next_adr() { return &_next; }
+ public:
+  char* data() const { return _data; }
+  int data_len() const { return _data_len; }
+  FailedSpeculation* next() const { return _next; }
+
+  // Atomically appends a speculation to the list whose head is at (*failed_speculations_address).
+  static bool add_failed_speculation(FailedSpeculation** failed_speculations_address, char* speculation, int speculation_len);
+
+  // Frees all entries in the linked list whose head is at (*failed_speculations_address).
+  static void free_failed_speculations(FailedSpeculation** failed_speculations_address);
+};
+#endif
+
 class MethodData : public Metadata {
   friend class VMStructs;
   CC_INTERP_ONLY(friend class BytecodeInterpreter;)
@@ -2221,7 +2250,8 @@ private:
 
 #if INCLUDE_JVMCI
   // Support for HotSpotMethodData.setCompiledIRSize(int)
-  int               _jvmci_ir_size;
+  int                _jvmci_ir_size;
+  FailedSpeculation* _failed_speculations;
 #endif
 
   // Size of _data array in bytes.  (Excludes header and extra_data fields.)
@@ -2374,6 +2404,12 @@ public:
 
   InvocationCounter* invocation_counter()     { return &_invocation_counter; }
   InvocationCounter* backedge_counter()       { return &_backedge_counter;   }
+
+#if INCLUDE_JVMCI
+  FailedSpeculation** get_failed_speculations_address() {
+    return &_failed_speculations;
+  }
+#endif
 
 #if INCLUDE_RTM_OPT
   int rtm_state() const {

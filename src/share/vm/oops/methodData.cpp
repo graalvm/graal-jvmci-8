@@ -870,6 +870,39 @@ bool MethodData::is_speculative_trap_bytecode(Bytecodes::Code code) {
 }
 
 #if INCLUDE_JVMCI
+
+bool FailedSpeculation::add_failed_speculation(FailedSpeculation** failed_speculations_address, char* speculation, int speculation_len) {
+  assert(failed_speculations_address != NULL, "must be");
+  FailedSpeculation* fs = new (std::nothrow) FailedSpeculation(speculation, speculation_len);
+  if (fs == NULL) {
+    // no memory -> ignore failed speculation
+    return false;
+  }
+  FailedSpeculation** cursor = failed_speculations_address;
+  do {
+    if (*cursor == NULL) {
+      FailedSpeculation* new_end = (FailedSpeculation*) Atomic::cmpxchg_ptr(fs, cursor, NULL);
+      if (new_end == fs) {
+        // Successfully appended fs to end of the list
+        return true;
+      }
+      cursor = new_end->next_adr();
+    } else {
+      cursor = (*cursor)->next_adr();
+    }
+  } while (true);
+}
+
+void FailedSpeculation::free_failed_speculations(FailedSpeculation** failed_speculations_address) {
+  assert(failed_speculations_address != NULL, "must be");
+  FailedSpeculation* fs = (*failed_speculations_address);
+  while (fs != NULL) {
+    FailedSpeculation* next = fs->next();
+    delete fs;
+    fs = next;
+  }
+}
+
 int MethodData::compute_extra_data_count(int data_size, int empty_bc_count, bool needs_speculative_traps) {
   if (!ProfileTraps) return 0;
 
@@ -1240,6 +1273,7 @@ void MethodData::init() {
 
 #if INCLUDE_JVMCI
   _jvmci_ir_size = 0;
+  _failed_speculations = NULL;
 #endif
 
 #if INCLUDE_RTM_OPT

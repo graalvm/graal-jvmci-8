@@ -303,9 +303,6 @@
     object_field(StackLockValue, slot, "Ljdk/vm/ci/meta/AllocatableValue;")                                   \
     boolean_field(StackLockValue, eliminated)                                                                 \
   end_class                                                                                                   \
-  start_class(HotSpotSpeculationLog, jdk_vm_ci_hotspot_HotSpotSpeculationLog)                                 \
-    long_field(HotSpotSpeculationLog, lastFailed)                                                             \
-  end_class                                                                                                   \
   start_class(HotSpotStackFrameReference, jdk_vm_ci_hotspot_HotSpotStackFrameReference)                       \
     object_field(HotSpotStackFrameReference, compilerToVM, "Ljdk/vm/ci/hotspot/CompilerToVM;")                \
     boolean_field(HotSpotStackFrameReference, objectsMaterialized)                                            \
@@ -317,13 +314,13 @@
     primarray_field(HotSpotStackFrameReference, localIsVirtual, "[Z")                                         \
   end_class                                                                                                   \
   start_class(HotSpotMetaData, jdk_vm_ci_hotspot_HotSpotMetaData)                                             \
-    primarray_field(HotSpotMetaData, pcDescBytes, "[B")                                                                                                     \
-    primarray_field(HotSpotMetaData, scopesDescBytes, "[B")                                                                                                 \
-    primarray_field(HotSpotMetaData, relocBytes, "[B")                                                                                                      \
-    primarray_field(HotSpotMetaData, exceptionBytes, "[B")                                                                                                  \
-    primarray_field(HotSpotMetaData, oopMaps, "[B")                                                                                                         \
-    object_field(HotSpotMetaData, metadata, "[Ljava/lang/Object;")                                                                                        \
-  end_class                                                                                                                                                    \
+    primarray_field(HotSpotMetaData, pcDescBytes, "[B")                                                       \
+    primarray_field(HotSpotMetaData, scopesDescBytes, "[B")                                                   \
+    primarray_field(HotSpotMetaData, relocBytes, "[B")                                                        \
+    primarray_field(HotSpotMetaData, exceptionBytes, "[B")                                                    \
+    primarray_field(HotSpotMetaData, oopMaps, "[B")                                                           \
+    object_field(HotSpotMetaData, metadata, "[Ljava/lang/Object;")                                            \
+  end_class                                                                                                   \
   start_class(HotSpotConstantPool, jdk_vm_ci_hotspot_HotSpotConstantPool)                                     \
     long_field(HotSpotConstantPool, metadataHandle)                                                           \
   end_class                                                                                                   \

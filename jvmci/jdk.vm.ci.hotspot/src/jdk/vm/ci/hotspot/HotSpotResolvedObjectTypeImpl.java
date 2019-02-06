@@ -35,7 +35,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteOrder;
 import java.util.HashMap;
-import java.util.Map;
 
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.Assumptions.AssumptionResult;
@@ -50,7 +49,6 @@ import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaField;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
-import jdk.vm.ci.meta.SpeculationLog;
 import jdk.vm.ci.meta.UnresolvedJavaField;
 import jdk.vm.ci.meta.UnresolvedJavaType;
 
@@ -595,10 +593,6 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
 
     public void ensureInitialized() {
         runtime().compilerToVm.ensureInitialized(this);
-    }
-
-    public Map<Long, SpeculationLog> getSpeculationLogs() {
-        return runtime().reflection.getSpeculationLogs(this);
     }
 
     @Override
