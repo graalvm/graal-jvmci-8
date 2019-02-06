@@ -5,6 +5,9 @@
         environment+: {
             CI_OS: "windows"
         },
+        packages+: {
+            msvc: "==10.0",
+        },
     },
     Linux:: {
         packages+: {
