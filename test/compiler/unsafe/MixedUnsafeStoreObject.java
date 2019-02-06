@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2016, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,17 +24,20 @@
 /*
  * @test
  * @bug 8155635
- * @modules java.base/jdk.internal.misc
+ * @library /testlibrary
  * @run main/othervm -XX:+IgnoreUnrecognizedVMOptions -Xbatch -XX:-TieredCompilation compiler.unsafe.MixedUnsafeStoreObject
  * @run main/othervm -Xbatch compiler.unsafe.MixedUnsafeStoreObject
+ * @comment Testcase currently only known to reproduce when run with -XX:+UseG1GC.
  */
 
 package compiler.unsafe;
 
-import jdk.internal.misc.Unsafe;
+import sun.misc.Unsafe;
+
+import com.oracle.java.testlibrary.Utils;
 
 public class MixedUnsafeStoreObject {
-    static final Unsafe UNSAFE = Unsafe.getUnsafe();
+    static final Unsafe UNSAFE = Utils.getUnsafe();
 
     static final long F_OFFSET;
 

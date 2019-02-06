@@ -56,7 +56,7 @@ class MemTracker;
 class NativeCallStack : public StackObj {
   friend class MemTracker;
 
- private:
+private:
   address       _stack[NMT_TrackingStackDepth];
   unsigned int  _hash_value;
 

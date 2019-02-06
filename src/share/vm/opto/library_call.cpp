@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -2635,6 +2635,9 @@ bool LibraryCallKit::inline_unsafe_access(bool is_native_ptr, bool is_store, Bas
 
   // Can base be NULL? Otherwise, always on-heap access.
   bool can_access_non_heap = TypePtr::NULL_PTR->higher_equal(_gvn.type(heap_base_oop));
+  if (can_access_non_heap && type == T_OBJECT) {
+    return false; // off-heap oop accesses are not supported
+  }
 
   const TypePtr *adr_type = _gvn.type(adr)->isa_ptr();
 
@@ -6204,10 +6207,16 @@ bool LibraryCallKit::inline_updateBytesCRC32() {
   // Call the stub.
   address stubAddr = StubRoutines::updateBytesCRC32();
   const char *stubName = "updateBytesCRC32";
-
-  Node* call = make_runtime_call(RC_LEAF|RC_NO_FP, OptoRuntime::updateBytesCRC32_Type(),
-                                 stubAddr, stubName, TypePtr::BOTTOM,
-                                 crc, src_start, length);
+  Node* call;
+  if (CCallingConventionRequiresIntsAsLongs) {
+   call =  make_runtime_call(RC_LEAF|RC_NO_FP, OptoRuntime::updateBytesCRC32_Type(),
+                             stubAddr, stubName, TypePtr::BOTTOM,
+                             crc XTOP, src_start, length XTOP);
+  } else {
+    call = make_runtime_call(RC_LEAF|RC_NO_FP, OptoRuntime::updateBytesCRC32_Type(),
+                             stubAddr, stubName, TypePtr::BOTTOM,
+                             crc, src_start, length);
+  }
   Node* result = _gvn.transform(new (C) ProjNode(call, TypeFunc::Parms));
   set_result(result);
   return true;
@@ -6236,10 +6245,16 @@ bool LibraryCallKit::inline_updateByteBufferCRC32() {
   // Call the stub.
   address stubAddr = StubRoutines::updateBytesCRC32();
   const char *stubName = "updateBytesCRC32";
-
-  Node* call = make_runtime_call(RC_LEAF|RC_NO_FP, OptoRuntime::updateBytesCRC32_Type(),
-                                 stubAddr, stubName, TypePtr::BOTTOM,
-                                 crc, src_start, length);
+  Node* call;
+  if (CCallingConventionRequiresIntsAsLongs) {
+    call = make_runtime_call(RC_LEAF|RC_NO_FP, OptoRuntime::updateBytesCRC32_Type(),
+                      stubAddr, stubName, TypePtr::BOTTOM,
+                      crc XTOP, src_start, length XTOP);
+  } else {
+    call = make_runtime_call(RC_LEAF|RC_NO_FP, OptoRuntime::updateBytesCRC32_Type(),
+                             stubAddr, stubName, TypePtr::BOTTOM,
+                             crc, src_start, length);
+  }
   Node* result = _gvn.transform(new (C) ProjNode(call, TypeFunc::Parms));
   set_result(result);
   return true;
