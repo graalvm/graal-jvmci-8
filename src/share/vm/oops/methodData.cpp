@@ -871,13 +871,35 @@ bool MethodData::is_speculative_trap_bytecode(Bytecodes::Code code) {
 
 #if INCLUDE_JVMCI
 
-bool FailedSpeculation::add_failed_speculation(FailedSpeculation** failed_speculations_address, char* speculation, int speculation_len) {
+void* FailedSpeculation::operator new(size_t size, int fs_size) throw() {
+  return CHeapObj<mtCompiler>::operator new(fs_size, std::nothrow);
+}
+
+FailedSpeculation::FailedSpeculation(char* speculation, int speculation_len) : _data_len(speculation_len), _next(NULL) {
+  memcpy(speculation, data(), speculation_len);
+}
+
+bool FailedSpeculation::add_failed_speculation(nmethod* nm, FailedSpeculation** failed_speculations_address, char* speculation, int speculation_len) {
   assert(failed_speculations_address != NULL, "must be");
-  FailedSpeculation* fs = new (std::nothrow) FailedSpeculation(speculation, speculation_len);
+  size_t size = sizeof(FailedSpeculation) + speculation_len;
+  FailedSpeculation* fs = new (size) FailedSpeculation(speculation, speculation_len);
   if (fs == NULL) {
     // no memory -> ignore failed speculation
     return false;
   }
+
+  // The code below is a best effort attempt to detect nmethods that outlive the
+  // failed speculations list. This will never happen if `nm->method()->code() == nm`
+  // as a Method always outlives its executable nmethod and the failed speculations
+  // list is owned by the Method.
+  guarantee(is_ptr_aligned(fs, sizeof(FailedSpeculation*)), "FailedSpeculation objects must be pointer aligned");
+  long head = (long)(address) *failed_speculations_address;
+  if ((head & 0x1) != 0x1) {
+    stringStream st;
+    nm->print_value_on(&st);
+    fatal(err_msg("Adding to failed speculations list that appears to have been freed. Source nmethod: %s", st.as_string()));
+  }
+
   FailedSpeculation** cursor = failed_speculations_address;
   do {
     if (*cursor == NULL) {
@@ -895,12 +917,18 @@ bool FailedSpeculation::add_failed_speculation(FailedSpeculation** failed_specul
 
 void FailedSpeculation::free_failed_speculations(FailedSpeculation** failed_speculations_address) {
   assert(failed_speculations_address != NULL, "must be");
-  FailedSpeculation* fs = (*failed_speculations_address);
+  FailedSpeculation* fs = *failed_speculations_address;
   while (fs != NULL) {
     FailedSpeculation* next = fs->next();
     delete fs;
     fs = next;
   }
+  // Write an unaligned value to failed_speculations_address to denote
+  // that it is no longer a valid pointer. This is allows for the check
+  // in add_failed_speculation against adding to a freed failed
+  // speculations list.
+  long* head = (long*) failed_speculations_address;
+  (*head) = (*head) | 0x1;
 }
 
 int MethodData::compute_extra_data_count(int data_size, int empty_bc_count, bool needs_speculative_traps) {

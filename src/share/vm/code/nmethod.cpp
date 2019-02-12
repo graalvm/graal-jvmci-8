@@ -3604,11 +3604,11 @@ void nmethod::update_speculation(JavaThread* thread) {
   if (speculation != 0) {
     int index = (speculation >> 32) & 0xFFFFFFFF;
     int length = (int) speculation;
-    char* data = speculations() + index;
     if (TraceDeoptimization) {
       tty->print_cr("Failed speculation %d (length: %d)", index, length);
     }
-    FailedSpeculation::add_failed_speculation(_failed_speculations, data, length);
+    char* data = speculations() + index;
+    FailedSpeculation::add_failed_speculation(this, _failed_speculations, data, length);
     thread->set_pending_failed_speculation(0);
   }
 }
