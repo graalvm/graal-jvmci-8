@@ -24,8 +24,6 @@ package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
 
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +57,8 @@ public class HotSpotSpeculationLog implements SpeculationLog {
      */
     public HotSpotSpeculationLog() {
         failedSpeculationsAddress = UnsafeAccess.UNSAFE.allocateMemory(HotSpotJVMCIRuntime.getHostWordKind().getByteCount());
-        Cleaner c = new Cleaner(this, failedSpeculationsAddress);
+        UnsafeAccess.UNSAFE.putAddress(failedSpeculationsAddress, 0L);
+        LogCleaner c = new LogCleaner(this, failedSpeculationsAddress);
         assert c.address == failedSpeculationsAddress;
         failedSpeculations = NO_SPECULATIONS;
         managesFailedSpeculations = true;
@@ -244,26 +243,20 @@ public class HotSpotSpeculationLog implements SpeculationLog {
      * Frees the native memory resources associated with {@link HotSpotSpeculationLog}s once they
      * become reclaimable.
      */
-    private static final class Cleaner extends WeakReference<HotSpotSpeculationLog> {
+    private static final class LogCleaner extends Cleaner {
 
-        private static final ReferenceQueue<HotSpotSpeculationLog> queue = new ReferenceQueue<>();
-
-        Cleaner(HotSpotSpeculationLog referent, long address) {
-            super(referent, cleanedQueue());
+        LogCleaner(HotSpotSpeculationLog referent, long address) {
+            super(referent);
             this.address = address;
         }
 
-        /**
-         * Frees resources with all {@link HotSpotSpeculationLog}s that have been reclaimed.
-         */
-        private static ReferenceQueue<HotSpotSpeculationLog> cleanedQueue() {
-            Cleaner c = (Cleaner) queue.poll();
-            while (c != null) {
-                compilerToVM().releaseFailedSpeculations(c.address);
-                UnsafeAccess.UNSAFE.freeMemory(c.address);
-                c = (Cleaner) queue.poll();
+        @Override
+        void doCleanup() {
+            long pointer = UnsafeAccess.UNSAFE.getAddress(address);
+            if (pointer != 0) {
+                compilerToVM().releaseFailedSpeculations(address);
             }
-            return queue;
+            UnsafeAccess.UNSAFE.freeMemory(address);
         }
 
         final long address;
