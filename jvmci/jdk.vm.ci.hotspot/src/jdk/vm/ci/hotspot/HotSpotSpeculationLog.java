@@ -195,16 +195,16 @@ public class HotSpotSpeculationLog implements SpeculationLog {
             speculations.add(encoding);
         } else {
             id = null;
-            int index = 0;
+            int flattenedIndex = 0;
             for (byte[] fs : speculations) {
                 if (Arrays.equals(fs, encoding)) {
-                    id = JavaConstant.forLong(encodeIndexAndLength(index, fs.length));
+                    id = JavaConstant.forLong(encodeIndexAndLength(flattenedIndex, fs.length));
                     break;
                 }
-                index++;
+                flattenedIndex += fs.length;
             }
             if (id == null) {
-                id = JavaConstant.forLong(encodeIndexAndLength(index, encoding.length));
+                id = JavaConstant.forLong(encodeIndexAndLength(flattenedIndex, encoding.length));
                 speculations.add(encoding);
             }
         }
