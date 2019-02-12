@@ -33,11 +33,13 @@ import java.util.function.Supplier;
 import org.junit.Assert;
 import org.junit.Test;
 
+import jdk.vm.ci.code.CodeCacheProvider;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.meta.SpeculationLog;
 import jdk.vm.ci.meta.SpeculationLog.SpeculationReasonEncoding;
+import jdk.vm.ci.runtime.JVMCI;
 
 public class TestSpeculationLog extends MethodUniverse {
 
@@ -122,10 +124,11 @@ public class TestSpeculationLog extends MethodUniverse {
     }
 
     @Test
-    public void testSpeculationIdentity() {
+    public synchronized void testSpeculationIdentity() {
+        CodeCacheProvider codeCache = JVMCI.getRuntime().getHostJVMCIBackend().getCodeCache();
+        SpeculationLog log = codeCache.createSpeculationLog();
         Dummy spec1 = new Dummy(true);
         Dummy spec2 = new Dummy(false);
-        SpeculationLog log = methods.entrySet().iterator().next().getValue().getSpeculationLog();
         Assert.assertTrue(log.maySpeculate(spec1));
         Assert.assertTrue(log.maySpeculate(spec2));
         SpeculationLog.Speculation s1 = log.speculate(spec1);
