@@ -163,6 +163,9 @@ struct java_nmethod_stats_struct {
   int dependencies_size;
   int handler_table_size;
   int nul_chk_table_size;
+#if INCLUDE_JVMCI
+  int speculations_size;
+#endif
   int oops_size;
   int metadata_size;
 
@@ -180,6 +183,9 @@ struct java_nmethod_stats_struct {
     dependencies_size   += nm->dependencies_size();
     handler_table_size  += nm->handler_table_size();
     nul_chk_table_size  += nm->nul_chk_table_size();
+#if INCLUDE_JVMCI
+    speculations_size   += nm->speculations_size();
+#endif
   }
   void print_nmethod_stats(const char* name) {
     if (nmethod_count == 0)  return;
@@ -197,6 +203,9 @@ struct java_nmethod_stats_struct {
     if (dependencies_size != 0)   tty->print_cr(" dependencies   = %d", dependencies_size);
     if (handler_table_size != 0)  tty->print_cr(" handler table  = %d", handler_table_size);
     if (nul_chk_table_size != 0)  tty->print_cr(" nul chk table  = %d", nul_chk_table_size);
+#if INCLUDE_JVMCI
+    if (speculations_size != 0)   tty->print_cr(" speculations   = %d", speculations_size);
+#endif
   }
 };
 
@@ -3164,7 +3173,7 @@ void nmethod::print() const {
                                               nul_chk_table_end(),
                                               nul_chk_table_size());
 #if INCLUDE_JVMCI
-  if (speculations_size () > 0) tty->print(" speculations   [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d data=[",
+  if (speculations_size () > 0) tty->print(" speculations   [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
                                               speculations_begin(),
                                               speculations_end(),
                                               speculations_size());
