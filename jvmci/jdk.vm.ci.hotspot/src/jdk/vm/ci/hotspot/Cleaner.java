@@ -41,7 +41,7 @@ abstract class Cleaner extends WeakReference<Object> {
     /**
      * Head of linked list of cleaners.
      */
-    @NativeImageReinitialize private static Cleaner first = null;
+    @NativeImageReinitialize private static Cleaner first;
 
     /**
      * Linked list pointers.
@@ -57,6 +57,8 @@ abstract class Cleaner extends WeakReference<Object> {
     private static synchronized Cleaner add(Cleaner cl) {
         if (first != null) {
             clean();
+        }
+        if (first != null) {
             cl.next = first;
             first.prev = cl;
         }
