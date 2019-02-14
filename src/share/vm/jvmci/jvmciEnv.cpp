@@ -239,18 +239,17 @@ void JVMCIEnv::init_env_mode_runtime(JNIEnv* parent_env) {
 }
 
 JVMCIEnv::JVMCIEnv(JVMCICompileState* compile_state, const char* file, int line):
-    _throw_to_caller(false), _file(file), _line(line) {
-  _compile_state = compile_state;
+    _throw_to_caller(false), _file(file), _line(line), _compile_state(compile_state) {
   init_env_mode_runtime(NULL);
 }
 
 JVMCIEnv::JVMCIEnv(JavaThread* thread, const char* file, int line):
-    _compile_state(NULL), _throw_to_caller(false), _file(file), _line(line) {
+    _throw_to_caller(false), _file(file), _line(line), _compile_state(NULL) {
   init_env_mode_runtime(NULL);
 }
 
 JVMCIEnv::JVMCIEnv(JNIEnv* parent_env, const char* file, int line):
-    _throw_to_caller(true), _compile_state(NULL), _file(file), _line(line) {
+    _throw_to_caller(true), _file(file), _line(line), _compile_state(NULL) {
   init_env_mode_runtime(parent_env);
   assert(_env == NULL || parent_env == _env, "mismatched JNIEnvironment");
 }

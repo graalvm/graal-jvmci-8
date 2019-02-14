@@ -1557,7 +1557,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     methodHandle    trap_method = trap_scope->method();
     int             trap_bci    = trap_scope->bci();
 #if INCLUDE_JVMCI
-    long            speculation = thread->pending_failed_speculation();
+    jlong           speculation = thread->pending_failed_speculation();
     if (nm->is_compiled_by_jvmci()) {
       nm->update_speculation(thread);
     } else {
@@ -1613,7 +1613,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
                          format_trap_request(buf, sizeof(buf), trap_request));
 #if INCLUDE_JVMCI
         if (speculation != 0) {
-          xtty->print(" speculation='%d'", speculation);
+          xtty->print(" speculation='" JLONG_FORMAT "'", speculation);
         }
 #endif
         nm->log_identity(xtty);
