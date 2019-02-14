@@ -2349,6 +2349,14 @@ C2V_VMENTRY(void, releaseFailedSpeculations, (JNIEnv* env, jobject, jlong failed
   FailedSpeculation::free_failed_speculations((FailedSpeculation**)(address) failed_speculations_address);
 }
 
+C2V_VMENTRY(bool, addFailedSpeculation, (JNIEnv* env, jobject, jlong failed_speculations_address, jbyteArray speculation_obj))
+  JVMCIPrimitiveArray speculation_handle = JVMCIENV->wrap(speculation_obj);
+  int speculation_len = JVMCIENV->get_length(speculation_handle);
+  char* speculation = NEW_RESOURCE_ARRAY(char, speculation_len);
+  JVMCIENV->copy_bytes_to(speculation_handle, (jbyte*) speculation, 0, speculation_len);
+  return FailedSpeculation::add_failed_speculation(NULL, (FailedSpeculation**)(address) failed_speculations_address, (address) speculation, speculation_len);
+}
+
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
 
@@ -2490,6 +2498,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "getFailedSpeculations",                        CC "(J)[[B",                                                                          FN_PTR(getFailedSpeculations)},
   {CC "getFailedSpeculationsAddress",                 CC "(" HS_RESOLVED_METHOD ")J",                                                       FN_PTR(getFailedSpeculationsAddress)},
   {CC "releaseFailedSpeculations",                    CC "(J)V",                                                                            FN_PTR(releaseFailedSpeculations)},
+  {CC "addFailedSpeculation",                         CC "(J[B)Z",                                                                          FN_PTR(addFailedSpeculation)},
 };
 
 int CompilerToVM::methods_count() {

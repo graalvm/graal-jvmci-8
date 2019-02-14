@@ -34,9 +34,6 @@ import java.util.function.Supplier;
  * speculations associated with the method. A subsequent compilation of the method can query the
  * failed speculations via a {@link SpeculationLog} to avoid making a speculation based on
  * invalidated reasons. This avoids repeated deoptimizations.
- *
- * All methods of this interface are called by the compiler. There is no need for API to register
- * failed speculations during deoptimization, since every VM has different needs there.
  */
 public interface SpeculationLog {
     /**
@@ -55,14 +52,12 @@ public interface SpeculationLog {
     public interface SpeculationReason {
 
         /**
-         * Encodes the attributes of this reason using a {@link SpeculationReasonEncoding}. A
-         * {@link SpeculationReason} implementation should cache the returned value and return it
-         * for all subsequent calls to this method. Upon returning, the caller close the returned
-         * {@link SpeculationReasonEncoding} object such that all subsequent calls to its
-         * {@code add...} method will result in an error.
+         * Encodes the attributes of this reason using a {@link SpeculationReasonEncoding}. For
+         * efficiency, a {@link SpeculationReason} implementation should cache the returned value
+         * and return it for all subsequent calls to this method. This also underlines the
+         * requirement that the encoding for a specific reason instance should be stable.
          *
-         * @param encodingSupplier source of a {@link SpeculationReasonEncoding}. The same supplier
-         *            will be passed to all invocations of this method.
+         * @param encodingSupplier source of a {@link SpeculationReasonEncoding}
          * @return a {@link SpeculationReasonEncoding} that encodes all the attributes that uniquely
          *         identify this reason
          */
@@ -72,10 +67,8 @@ public interface SpeculationLog {
     }
 
     /**
-     * Provides a facility for encoding the attributes of a {@link SpeculationReason}.
-     * <p>
-     * A {@link SpeculationReasonEncoding} object starts out empty and attribute data is added to it
-     * using the {@code add...} methods.
+     * Provides a facility for encoding the attributes of a {@link SpeculationReason}. The encoding
+     * format is determined by the implementation of this interface.
      */
     public interface SpeculationReasonEncoding {
         void addMethod(ResolvedJavaMethod method);
@@ -86,9 +79,30 @@ public interface SpeculationLog {
 
         void addLong(long value);
 
-        void addEnum(Enum<?> e);
-
         void addString(String value);
+
+        default void addNonNullObject(Object o) {
+            Class<? extends Object> c = o.getClass();
+            if (c == String.class) {
+                addString((String) o);
+            } else if (c == Integer.class) {
+                addInt((Integer) o);
+            } else if (c == Long.class) {
+                addLong((Long) o);
+            } else if (c == Float.class) {
+                addInt(Float.floatToRawIntBits((Float) o));
+            } else if (c == Double.class) {
+                addLong(Double.doubleToRawLongBits((Double) o));
+            } else if (o instanceof Enum) {
+                addInt(((Enum<?>) o).ordinal());
+            } else if (o instanceof ResolvedJavaMethod) {
+                addMethod((ResolvedJavaMethod) o);
+            } else if (o instanceof ResolvedJavaType) {
+                addType((ResolvedJavaType) o);
+            } else {
+                throw new IllegalArgumentException("Unsupported type for encoding: " + c.getName());
+            }
+        }
     }
 
     /**
@@ -98,7 +112,7 @@ public interface SpeculationLog {
     }
 
     class Speculation {
-        private SpeculationReason reason;
+        private final SpeculationReason reason;
 
         public Speculation(SpeculationReason reason) {
             this.reason = reason;
@@ -131,7 +145,8 @@ public interface SpeculationLog {
     Speculation NO_SPECULATION = new Speculation(new NoSpeculationReason());
 
     /**
-     * Must be called before compilation, i.e., before a compiler calls {@link #maySpeculate}.
+     * Updates the set of failed speculations recorded in this log. This must be called before
+     * compilation.
      */
     void collectFailedSpeculations();
 

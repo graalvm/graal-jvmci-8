@@ -26,6 +26,7 @@ import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Formatter;
 import java.util.List;
 
 import jdk.vm.ci.meta.JavaConstant;
@@ -56,11 +57,6 @@ public class HotSpotSpeculationLog implements SpeculationLog {
      * @see #getFailedSpeculationsAddress()
      */
     public HotSpotSpeculationLog() {
-        failedSpeculationsAddress = UnsafeAccess.UNSAFE.allocateMemory(HotSpotJVMCIRuntime.getHostWordKind().getByteCount());
-        UnsafeAccess.UNSAFE.putAddress(failedSpeculationsAddress, 0L);
-        LogCleaner c = new LogCleaner(this, failedSpeculationsAddress);
-        assert c.address == failedSpeculationsAddress;
-        failedSpeculations = NO_SPECULATIONS;
         managesFailedSpeculations = true;
     }
 
@@ -76,11 +72,6 @@ public class HotSpotSpeculationLog implements SpeculationLog {
             throw new IllegalArgumentException("failedSpeculationsAddress cannot be 0");
         }
         this.failedSpeculationsAddress = failedSpeculationsAddress;
-        if (UnsafeAccess.UNSAFE.getLong(failedSpeculationsAddress) == 0) {
-            failedSpeculations = new byte[0][];
-        } else {
-            failedSpeculations = compilerToVM().getFailedSpeculations(failedSpeculationsAddress);
-        }
         managesFailedSpeculations = false;
     }
 
@@ -90,7 +81,31 @@ public class HotSpotSpeculationLog implements SpeculationLog {
      * @see #managesFailedSpeculations()
      */
     public long getFailedSpeculationsAddress() {
+        if (managesFailedSpeculations) {
+            synchronized (this) {
+                if (failedSpeculationsAddress == 0L) {
+                    failedSpeculationsAddress = UnsafeAccess.UNSAFE.allocateMemory(HotSpotJVMCIRuntime.getHostWordKind().getByteCount());
+                    UnsafeAccess.UNSAFE.putAddress(failedSpeculationsAddress, 0L);
+                    LogCleaner c = new LogCleaner(this, failedSpeculationsAddress);
+                    assert c.address == failedSpeculationsAddress;
+                }
+            }
+        }
         return failedSpeculationsAddress;
+    }
+
+    /**
+     * Adds {@code speculation} to the native list of failed speculations. To update this object's
+     * view of the failed speculations, {@link #collectFailedSpeculations()} must be called after
+     * this method returns.
+     *
+     * This method exists primarily for testing purposes. Speculations are normally only added to
+     * the list by HotSpot during deoptimization.
+     *
+     * @return {@code false} if the speculation could not be appended to the list
+     */
+    public boolean addFailedSpeculation(Speculation speculation) {
+        return compilerToVM().addFailedSpeculation(getFailedSpeculationsAddress(), ((HotSpotSpeculation) speculation).encoding);
     }
 
     /**
@@ -105,20 +120,30 @@ public class HotSpotSpeculationLog implements SpeculationLog {
 
         /**
          * A speculation id is a long encoding an offset (high 32 bits) and a length (low 32 bts).
-         * Combined, the index and length denote where the
-         * {@linkplain HotSpotSpeculationEncoding#toByteArray() encoded speculation} is in a
-         * {@linkplain HotSpotSpeculationLog#getFlattenedSpeculations() flattened} speculations
-         * array.
+         * Combined, the index and length denote where the {@linkplain #encoding encoded
+         * speculation} is in a {@linkplain HotSpotSpeculationLog#getFlattenedSpeculations()
+         * flattened} speculations array.
          */
-        private JavaConstant offsetAndLength;
+        private final JavaConstant id;
 
-        HotSpotSpeculation(SpeculationReason reason, JavaConstant offsetAndLength) {
+        private final byte[] encoding;
+
+        HotSpotSpeculation(SpeculationReason reason, JavaConstant id, byte[] encoding) {
             super(reason);
-            this.offsetAndLength = offsetAndLength;
+            this.id = id;
+            this.encoding = encoding;
         }
 
-        JavaConstant getOffsetAndLength() {
-            return offsetAndLength;
+        JavaConstant getId() {
+            return id;
+        }
+
+        @Override
+        public String toString() {
+            long indexAndLength = id.asLong();
+            int index = decodeIndex(indexAndLength);
+            int length = decodeLength(indexAndLength);
+            return String.format("{0x%016x[index: %d, len: %d, hash: 0x%x]: %s}", indexAndLength, index, length, Arrays.hashCode(encoding), getReason());
         }
     }
 
@@ -127,15 +152,15 @@ public class HotSpotSpeculationLog implements SpeculationLog {
      * compiled with this speculation log such that when it fails a speculation, the speculation is
      * added to the list.
      */
-    private final long failedSpeculationsAddress;
+    private long failedSpeculationsAddress;
 
     private final boolean managesFailedSpeculations;
 
     /**
-     * The list of failed speculations (i.e. cause a deoptimization) that were read from native
-     * memory with {@link CompilerToVM#getFailedSpeculations(long)} when this log was initialized.
+     * The list of failed speculations read from native memory via
+     * {@link CompilerToVM#getFailedSpeculations(long)}.
      */
-    private final byte[][] failedSpeculations;
+    private byte[][] failedSpeculations = NO_SPECULATIONS;
 
     /**
      * Speculations made during the compilation associated with this log.
@@ -145,6 +170,9 @@ public class HotSpotSpeculationLog implements SpeculationLog {
 
     @Override
     public void collectFailedSpeculations() {
+        if (failedSpeculationsAddress != 0 && UnsafeAccess.UNSAFE.getLong(failedSpeculationsAddress) != 0) {
+            failedSpeculations = compilerToVM().getFailedSpeculations(failedSpeculationsAddress);
+        }
     }
 
     byte[] getFlattenedSpeculations() {
@@ -166,7 +194,10 @@ public class HotSpotSpeculationLog implements SpeculationLog {
 
     @Override
     public boolean maySpeculate(SpeculationReason reason) {
-        if (failedSpeculations != null) {
+        if (failedSpeculations == null) {
+            collectFailedSpeculations();
+        }
+        if (failedSpeculations != null && failedSpeculations.length != 0) {
             byte[] encoding = encode(reason);
             for (byte[] fs : failedSpeculations) {
                 if (Arrays.equals(fs, encoding)) {
@@ -185,14 +216,20 @@ public class HotSpotSpeculationLog implements SpeculationLog {
         return (int) (indexAndLength >>> 32);
     }
 
+    private static int decodeLength(long indexAndLength) {
+        return (int) indexAndLength & 0xFFFFFFFF;
+    }
+
     @Override
     public Speculation speculate(SpeculationReason reason) {
         byte[] encoding = encode(reason);
         JavaConstant id;
         if (speculations == null) {
             speculations = new ArrayList<>();
+            speculationReasons = new ArrayList<>();
             id = JavaConstant.forLong(encodeIndexAndLength(0, encoding.length));
             speculations.add(encoding);
+            speculationReasons.add(reason);
         } else {
             id = null;
             int flattenedIndex = 0;
@@ -206,10 +243,11 @@ public class HotSpotSpeculationLog implements SpeculationLog {
             if (id == null) {
                 id = JavaConstant.forLong(encodeIndexAndLength(flattenedIndex, encoding.length));
                 speculations.add(encoding);
+                speculationReasons.add(reason);
             }
         }
 
-        return new HotSpotSpeculation(reason, id);
+        return new HotSpotSpeculation(reason, id, encoding);
     }
 
     private static byte[] encode(SpeculationReason reason) {
@@ -231,12 +269,46 @@ public class HotSpotSpeculationLog implements SpeculationLog {
         if (constant.isDefaultForKind()) {
             return NO_SPECULATION;
         }
-        int index = decodeIndex(constant.asLong());
-        if (index >= 0 && index < speculationReasons.size()) {
-            SpeculationReason reason = speculationReasons.get(index);
-            return new HotSpotSpeculation(reason, constant);
+        int flattenedIndex = decodeIndex(constant.asLong());
+        int index = 0;
+        for (byte[] s : speculations) {
+            if (flattenedIndex == 0) {
+                SpeculationReason reason = speculationReasons.get(index);
+                return new HotSpotSpeculation(reason, constant, s);
+            }
+            index++;
+            flattenedIndex -= s.length;
         }
         throw new IllegalArgumentException("Unknown encoded speculation: " + constant);
+    }
+
+    @Override
+    public String toString() {
+        Formatter buf = new Formatter();
+        buf.format("{managed:%s, failedSpeculationsAddress:0x%x, failedSpeculations:[", managesFailedSpeculations, failedSpeculationsAddress);
+
+        String sep = "";
+        if (failedSpeculations != null) {
+            for (int i = 0; i < failedSpeculations.length; i++) {
+                buf.format("%s{len:%d, hash:0x%x}", sep, failedSpeculations[i].length, Arrays.hashCode(failedSpeculations[i]));
+                sep = ", ";
+            }
+        }
+
+        buf.format("], speculations:[");
+
+        int size = 0;
+        if (speculations != null) {
+            sep = "";
+            for (int i = 0; i < speculations.size(); i++) {
+                byte[] s = speculations.get(i);
+                size += s.length;
+                buf.format("%s{len:%d, hash:0x%x, reason:{%s}}", sep, s.length, Arrays.hashCode(s), speculationReasons.get(i));
+                sep = ", ";
+            }
+        }
+        buf.format("], len:%d, hash:0x%x}", size, Arrays.hashCode(getFlattenedSpeculations()));
+        return buf.toString();
     }
 
     /**

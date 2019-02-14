@@ -113,7 +113,12 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
             resultInstalledCode = new HotSpotNmethod((HotSpotResolvedJavaMethodImpl) method, ((HotSpotCompiledCode) compiledCode).getName(), isDefault);
         }
 
-        HotSpotSpeculationLog speculationLog = (log != null && log.hasSpeculations()) ? (HotSpotSpeculationLog) log : null;
+        HotSpotSpeculationLog speculationLog = null;
+        if (log != null) {
+            if (log.hasSpeculations()) {
+                speculationLog = (HotSpotSpeculationLog) log;
+            }
+        }
 
         byte[] speculations;
         long failedSpeculationsAddress;

@@ -875,40 +875,56 @@ void* FailedSpeculation::operator new(size_t size, int fs_size) throw() {
   return CHeapObj<mtCompiler>::operator new(fs_size, std::nothrow);
 }
 
-FailedSpeculation::FailedSpeculation(char* speculation, int speculation_len) : _data_len(speculation_len), _next(NULL) {
-  memcpy(speculation, data(), speculation_len);
+FailedSpeculation::FailedSpeculation(address speculation, int speculation_len) : _data_len(speculation_len), _next(NULL) {
+  memcpy(data(), speculation, speculation_len);
 }
 
-bool FailedSpeculation::add_failed_speculation(nmethod* nm, FailedSpeculation** failed_speculations_address, char* speculation, int speculation_len) {
+// A heuristic check to detect nmethods that outlive a failed speculations list.
+static void guarantee_failed_speculations_alive(nmethod* nm, FailedSpeculation** failed_speculations_address) {
+  long head = (long)(address) *failed_speculations_address;
+  if ((head & 0x1) == 0x1) {
+    stringStream st;
+    if (nm != NULL) {
+      st.print("%d", nm->compile_id());
+      Method* method = nm->method();
+      st.print_raw("{");
+      if (method != NULL) {
+        method->print_name(&st);
+      } else {
+        const char* jvmci_name = nm->jvmci_nmethod_mirror_name();
+        if (jvmci_name != NULL) {
+          st.print_raw(jvmci_name);
+        }
+      }
+      st.print_raw("}");
+    } else {
+      st.print("<unknown>");
+    }
+    fatal(err_msg("Adding to failed speculations list that appears to have been freed. Source: %s", st.as_string()));
+  }
+}
+
+bool FailedSpeculation::add_failed_speculation(nmethod* nm, FailedSpeculation** failed_speculations_address, address speculation, int speculation_len) {
   assert(failed_speculations_address != NULL, "must be");
-  size_t size = sizeof(FailedSpeculation) + speculation_len;
-  FailedSpeculation* fs = new (size) FailedSpeculation(speculation, speculation_len);
+  size_t fs_size = sizeof(FailedSpeculation) + speculation_len;
+  FailedSpeculation* fs = new (fs_size) FailedSpeculation(speculation, speculation_len);
   if (fs == NULL) {
     // no memory -> ignore failed speculation
     return false;
   }
 
-  // The code below is a best effort attempt to detect nmethods that outlive the
-  // failed speculations list. This will never happen if `nm->method()->code() == nm`
-  // as a Method always outlives its executable nmethod and the failed speculations
-  // list is owned by the Method.
   guarantee(is_ptr_aligned(fs, sizeof(FailedSpeculation*)), "FailedSpeculation objects must be pointer aligned");
-  long head = (long)(address) *failed_speculations_address;
-  if ((head & 0x1) != 0x1) {
-    stringStream st;
-    nm->print_value_on(&st);
-    fatal(err_msg("Adding to failed speculations list that appears to have been freed. Source nmethod: %s", st.as_string()));
-  }
+  guarantee_failed_speculations_alive(nm, failed_speculations_address);
 
   FailedSpeculation** cursor = failed_speculations_address;
   do {
     if (*cursor == NULL) {
-      FailedSpeculation* new_end = (FailedSpeculation*) Atomic::cmpxchg_ptr(fs, cursor, NULL);
-      if (new_end == fs) {
+      FailedSpeculation* old_fs = (FailedSpeculation*) Atomic::cmpxchg_ptr(fs, cursor, NULL);
+      if (old_fs == NULL) {
         // Successfully appended fs to end of the list
         return true;
       }
-      cursor = new_end->next_adr();
+      cursor = old_fs->next_adr();
     } else {
       cursor = (*cursor)->next_adr();
     }
@@ -923,6 +939,7 @@ void FailedSpeculation::free_failed_speculations(FailedSpeculation** failed_spec
     delete fs;
     fs = next;
   }
+
   // Write an unaligned value to failed_speculations_address to denote
   // that it is no longer a valid pointer. This is allows for the check
   // in add_failed_speculation against adding to a freed failed

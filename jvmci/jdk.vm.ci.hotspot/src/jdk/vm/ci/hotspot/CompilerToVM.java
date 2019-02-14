@@ -955,4 +955,13 @@ final class CompilerToVM {
      * Frees the failed speculations pointed to by {@code *failedSpeculationsAddress}.
      */
     native void releaseFailedSpeculations(long failedSpeculationsAddress);
+
+    /**
+     * Adds a speculation to the failed speculations pointed to by
+     * {@code *failedSpeculationsAddress}.
+     *
+     * @return {@code false} if the speculation could not be appended to the list
+     */
+    native boolean addFailedSpeculation(long failedSpeculationsAddress, byte[] speculation);
+
 }

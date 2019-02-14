@@ -44,8 +44,7 @@ final class HotSpotSpeculationEncoding implements SpeculationReasonEncoding {
 
     private static final int NULL_METHOD = -1;
     private static final int NULL_TYPE = -2;
-    private static final int NULL_ENUM = -3;
-    private static final int NULL_STRING = -4;
+    private static final int NULL_STRING = -3;
 
     @Override
     public void addMethod(ResolvedJavaMethod method) {
@@ -76,14 +75,6 @@ final class HotSpotSpeculationEncoding implements SpeculationReasonEncoding {
             } else {
                 throw new IllegalArgumentException("Cannot encode unsupported type " + type.getClass().getName() + ": " + type.toClassName());
             }
-        }
-    }
-
-    @Override
-    public void addEnum(Enum<?> e) {
-        if (!addNull(e, NULL_ENUM)) {
-            checkOpen();
-            addInt(e == null ? NULL_METHOD : e.ordinal());
         }
     }
 

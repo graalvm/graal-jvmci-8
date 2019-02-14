@@ -110,6 +110,8 @@ class PcDescCache VALUE_OBJ_CLASS_SPEC {
 //  - handler entry point array
 //  [Implicit Null Pointer exception table]
 //  - implicit null table array
+//  [Speculations]
+//  - encoded speculations array
 
 class Dependencies;
 class ExceptionHandlerTable;
@@ -428,11 +430,14 @@ class nmethod : public CodeBlob {
   address dependencies_end      () const          { return           header_begin() + _handler_table_offset ; }
   address handler_table_begin   () const          { return           header_begin() + _handler_table_offset ; }
   address handler_table_end     () const          { return           header_begin() + _nul_chk_table_offset ; }
-#if INCLUDE_JVMCI
-  char*   speculations          () const          { return   (char*)(header_begin() + _speculations_offset) ; }
-#endif
   address nul_chk_table_begin   () const          { return           header_begin() + _nul_chk_table_offset ; }
+#if INCLUDE_JVMCI
+  address nul_chk_table_end     () const          { return           header_begin() + _speculations_offset  ; }
+  address speculations_begin    () const          { return           header_begin() + _speculations_offset  ; }
+  address speculations_end      () const          { return           header_begin() + _nmethod_end_offset   ; }
+#else
   address nul_chk_table_end     () const          { return           header_begin() + _nmethod_end_offset;    }
+#endif
 
   // Sizes
   int consts_size       () const                  { return            consts_end       () -            consts_begin       (); }
@@ -445,6 +450,9 @@ class nmethod : public CodeBlob {
   int dependencies_size () const                  { return            dependencies_end () -            dependencies_begin (); }
   int handler_table_size() const                  { return            handler_table_end() -            handler_table_begin(); }
   int nul_chk_table_size() const                  { return            nul_chk_table_end() -            nul_chk_table_begin(); }
+#if INCLUDE_JVMCI
+  int speculations_size () const                  { return            speculations_end () -            speculations_begin (); }
+#endif
 
   int total_size        () const;
 

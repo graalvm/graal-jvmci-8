@@ -2155,13 +2155,13 @@ class CleanExtraDataClosure;
 class FailedSpeculation: public CHeapObj<mtCompiler> {
  private:
   // The length of HotSpotSpeculationEncoding.toByteArray(). The data itself
-  // is the variab
+  // is an array embedded at the end of this object.
   int   _data_len;
 
   // Next entry in a linked list.
   FailedSpeculation* _next;
 
-  FailedSpeculation(char* data, int data_len);
+  FailedSpeculation(address data, int data_len);
 
   FailedSpeculation** next_adr() { return &_next; }
 
@@ -2175,7 +2175,8 @@ class FailedSpeculation: public CHeapObj<mtCompiler> {
   FailedSpeculation* next() const { return _next; }
 
   // Atomically appends a speculation from nm to the list whose head is at (*failed_speculations_address).
-  static bool add_failed_speculation(nmethod* nm, FailedSpeculation** failed_speculations_address, char* speculation, int speculation_len);
+  // Returns false if the FailedSpeculation object could not be allocated.
+  static bool add_failed_speculation(nmethod* nm, FailedSpeculation** failed_speculations_address, address speculation, int speculation_len);
 
   // Frees all entries in the linked list whose head is at (*failed_speculations_address).
   static void free_failed_speculations(FailedSpeculation** failed_speculations_address);

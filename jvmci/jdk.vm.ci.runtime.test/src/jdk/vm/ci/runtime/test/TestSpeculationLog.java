@@ -24,7 +24,6 @@
  */
 package jdk.vm.ci.runtime.test;
 
-import java.nio.file.FileVisitOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,7 +46,6 @@ public class TestSpeculationLog extends MethodUniverse {
 
         final int[] ints = {Integer.MIN_VALUE, -42, -1, 0, 1, 42, Integer.MAX_VALUE};
         final long[] longs = {Long.MIN_VALUE, -42, -1, 0, 1, 42, Long.MAX_VALUE};
-        final Enum<?>[] enums = {null, FileVisitOption.FOLLOW_LINKS};
         final String[] strings = {null, "non-empty string", ""};
         final Collection<ResolvedJavaMethod> methods = new ArrayList<>(MethodUniverse.methods.values()).subList(0, 10);
         final Collection<ResolvedJavaMethod> constructors = new ArrayList<>(MethodUniverse.constructors.values()).subList(0, 10);
@@ -71,9 +69,6 @@ public class TestSpeculationLog extends MethodUniverse {
                 for (long l : longs) {
                     encoding.addLong(l);
                 }
-                for (Enum<?> e : enums) {
-                    encoding.addEnum(e);
-                }
                 for (String s : strings) {
                     encoding.addString(s);
                 }
@@ -86,7 +81,6 @@ public class TestSpeculationLog extends MethodUniverse {
                 for (ResolvedJavaType t : types) {
                     encoding.addType(t);
                 }
-                encoding.addEnum(null);
                 encoding.addMethod(null);
                 encoding.addType(null);
             }
@@ -102,7 +96,6 @@ public class TestSpeculationLog extends MethodUniverse {
                 Dummy that = (Dummy) obj;
                 return Arrays.equals(this.ints, that.ints) &&
                                 Arrays.equals(this.longs, that.longs) &&
-                                Arrays.equals(this.enums, that.enums) &&
                                 Arrays.equals(this.strings, that.strings) &&
                                 this.methods.equals(that.methods) &&
                                 this.constructors.equals(that.constructors) &&
@@ -115,7 +108,6 @@ public class TestSpeculationLog extends MethodUniverse {
         public int hashCode() {
             return 31 * Arrays.hashCode(ints) ^
                             Arrays.hashCode(longs) ^
-                            Arrays.hashCode(enums) ^
                             Arrays.hashCode(strings) ^
                             methods.hashCode() ^
                             constructors.hashCode() ^

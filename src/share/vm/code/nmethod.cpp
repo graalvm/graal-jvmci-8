@@ -1065,6 +1065,13 @@ nmethod::nmethod(
     handler_table->copy_to(this);
     nul_chk_table->copy_to(this);
 
+#if INCLUDE_JVMCI
+    // Copy speculations to nmethod
+    if (speculations_size() != 0) {
+      memcpy(speculations_begin(), speculations, speculations_len);
+    }
+#endif
+
     // we use the information of entry points to find out if a method is
     // static or non static
     assert(compiler->is_c2() || compiler->is_jvmci() ||
@@ -3162,6 +3169,12 @@ void nmethod::print() const {
                                               nul_chk_table_begin(),
                                               nul_chk_table_end(),
                                               nul_chk_table_size());
+#if INCLUDE_JVMCI
+  if (speculations_size () > 0) tty->print(" speculations   [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d data=[",
+                                              speculations_begin(),
+                                              speculations_end(),
+                                              speculations_size());
+#endif
 }
 
 void nmethod::print_code() {
@@ -3602,12 +3615,12 @@ void nmethod::maybe_invalidate_jvmci_mirror() {
 void nmethod::update_speculation(JavaThread* thread) {
   jlong speculation = thread->pending_failed_speculation();
   if (speculation != 0) {
-    int index = (speculation >> 32) & 0xFFFFFFFF;
+    uint index = (speculation >> 32) & 0xFFFFFFFF;
     int length = (int) speculation;
-    if (TraceDeoptimization) {
-      tty->print_cr("Failed speculation %d (length: %d)", index, length);
+    if (index + length > (uint) speculations_size()) {
+      fatal(err_msg(INTPTR_FORMAT "[index: %d, length: %d] out of bounds wrt encoded speculations of length %u", speculation, index, length, speculations_size()));
     }
-    char* data = speculations() + index;
+    address data = speculations_begin() + index;
     FailedSpeculation::add_failed_speculation(this, _failed_speculations, data, length);
     thread->set_pending_failed_speculation(0);
   }
