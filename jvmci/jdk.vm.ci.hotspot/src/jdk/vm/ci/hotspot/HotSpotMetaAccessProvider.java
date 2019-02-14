@@ -152,7 +152,7 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider {
         if (speculation.getReason() instanceof NoSpeculationReason) {
             return JavaConstant.LONG_0;
         }
-        return ((HotSpotSpeculationLog.HotSpotSpeculation) speculation).getId();
+        return ((HotSpotSpeculationLog.HotSpotSpeculation) speculation).getEncoding();
     }
 
     @Override

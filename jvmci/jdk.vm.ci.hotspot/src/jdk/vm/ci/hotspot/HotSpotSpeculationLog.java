@@ -116,7 +116,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
         return managesFailedSpeculations;
     }
 
-    static final class HotSpotSpeculation extends Speculation {
+    public static final class HotSpotSpeculation extends Speculation {
 
         /**
          * A speculation id is a long encoding an offset (high 32 bits) and a length (low 32 bts).
@@ -134,7 +134,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
             this.encoding = encoding;
         }
 
-        JavaConstant getId() {
+        public JavaConstant getEncoding() {
             return id;
         }
 

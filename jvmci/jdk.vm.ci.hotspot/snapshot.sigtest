@@ -241,7 +241,7 @@ meth public int getId()
 meth public jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod getMethod()
 meth public long getJvmciEnv()
 supr jdk.vm.ci.code.CompilationRequest
-hfds id,jvmciEnv
+hfds compileState,id
 
 CLSS public final jdk.vm.ci.hotspot.HotSpotCompilationRequestResult
 intf jdk.vm.ci.code.CompilationRequestResult
@@ -289,7 +289,7 @@ fld protected final boolean hasUnsafeAccess
 fld protected final int entryBCI
 fld protected final int id
 fld protected final jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod method
-fld protected final long compileTask
+fld protected final long compileState
 meth public java.lang.String getInstallationFailureMessage()
 meth public java.lang.String toString()
 supr jdk.vm.ci.hotspot.HotSpotCompiledCode
@@ -460,6 +460,7 @@ meth public static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLeve
 supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory$CompilationLevelAdjustment>
 
 CLSS public final jdk.vm.ci.hotspot.HotSpotJVMCIRuntime
+fld protected final java.lang.Object reflection
 fld protected final jdk.vm.ci.hotspot.HotSpotVMConfigStore configStore
 innr public final static !enum Option
 intf jdk.vm.ci.runtime.JVMCIRuntime
@@ -476,13 +477,13 @@ meth public jdk.vm.ci.hotspot.HotSpotVMConfigStore getConfigStore()
 meth public jdk.vm.ci.meta.JavaType lookupType(java.lang.String,jdk.vm.ci.hotspot.HotSpotResolvedObjectType,boolean)
 meth public jdk.vm.ci.runtime.JVMCIBackend getHostJVMCIBackend()
 meth public jdk.vm.ci.runtime.JVMCICompiler getCompiler()
-meth public long[] registerNativeMethods(java.lang.Class<?>)
 meth public long translate(java.lang.Object)
 meth public long[] collectCounters()
+meth public long[] registerNativeMethods(java.lang.Class<?>)
 meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime()
 meth public static jdk.vm.ci.meta.JavaKind getHostWordKind()
 supr java.lang.Object
-hfds backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,metaAccessContext,reflection,serializableType,throwableType,vmEventListeners
+hfds backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,resolvedJavaType,resolvedJavaTypes,serializableType,throwableType,vmEventListeners
 hcls CompileLogStream
 
 CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option
@@ -767,21 +768,28 @@ hfds originalString,parameterTypes,parameters,returnType,returnTypeCache,runtime
 
 CLSS public jdk.vm.ci.hotspot.HotSpotSpeculationLog
 cons public init()
+cons public init(long)
 innr public final static HotSpotSpeculation
 intf jdk.vm.ci.meta.SpeculationLog
+meth public boolean addFailedSpeculation(jdk.vm.ci.meta.SpeculationLog$Speculation)
 meth public boolean hasSpeculations()
+meth public boolean managesFailedSpeculations()
 meth public boolean maySpeculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public java.lang.String toString()
 meth public jdk.vm.ci.meta.SpeculationLog$Speculation lookupSpeculation(jdk.vm.ci.meta.JavaConstant)
 meth public jdk.vm.ci.meta.SpeculationLog$Speculation speculate(jdk.vm.ci.meta.SpeculationLog$SpeculationReason)
+meth public long getFailedSpeculationsAddress()
 meth public void collectFailedSpeculations()
 supr java.lang.Object
-hfds currentSpeculationID,failedSpeculations,lastFailed,speculations
+hfds NO_FLATTENED_SPECULATIONS,NO_SPECULATIONS,failedSpeculations,failedSpeculationsAddress,managesFailedSpeculations,speculationReasons,speculations
+hcls LogCleaner
 
 CLSS public final static jdk.vm.ci.hotspot.HotSpotSpeculationLog$HotSpotSpeculation
  outer jdk.vm.ci.hotspot.HotSpotSpeculationLog
+meth public java.lang.String toString()
 meth public jdk.vm.ci.meta.JavaConstant getEncoding()
 supr jdk.vm.ci.meta.SpeculationLog$Speculation
-hfds encoding
+hfds encoding,id
 
 CLSS public jdk.vm.ci.hotspot.HotSpotStackFrameReference
 cons public init()
@@ -1129,6 +1137,7 @@ meth public jdk.vm.ci.meta.JavaType[] toParameterTypes(jdk.vm.ci.meta.JavaType)
 CLSS public abstract interface jdk.vm.ci.meta.SpeculationLog
 fld public final static jdk.vm.ci.meta.SpeculationLog$Speculation NO_SPECULATION
 innr public abstract interface static SpeculationReason
+innr public abstract interface static SpeculationReasonEncoding
 innr public final static NoSpeculationReason
 innr public static Speculation
 meth public abstract boolean hasSpeculations()

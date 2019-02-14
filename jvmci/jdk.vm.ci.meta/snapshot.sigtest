@@ -713,6 +713,7 @@ meth public jdk.vm.ci.meta.JavaType[] toParameterTypes(jdk.vm.ci.meta.JavaType)
 CLSS public abstract interface jdk.vm.ci.meta.SpeculationLog
 fld public final static jdk.vm.ci.meta.SpeculationLog$Speculation NO_SPECULATION
 innr public abstract interface static SpeculationReason
+innr public abstract interface static SpeculationReasonEncoding
 innr public final static NoSpeculationReason
 innr public static Speculation
 meth public abstract boolean hasSpeculations()
@@ -739,6 +740,18 @@ hfds reason
 
 CLSS public abstract interface static jdk.vm.ci.meta.SpeculationLog$SpeculationReason
  outer jdk.vm.ci.meta.SpeculationLog
+meth public jdk.vm.ci.meta.SpeculationLog$SpeculationReasonEncoding encode(java.util.function.Supplier<jdk.vm.ci.meta.SpeculationLog$SpeculationReasonEncoding>)
+
+CLSS public abstract interface static jdk.vm.ci.meta.SpeculationLog$SpeculationReasonEncoding
+ outer jdk.vm.ci.meta.SpeculationLog
+meth public abstract void addByte(int)
+meth public abstract void addInt(int)
+meth public abstract void addLong(long)
+meth public abstract void addMethod(jdk.vm.ci.meta.ResolvedJavaMethod)
+meth public abstract void addShort(int)
+meth public abstract void addString(java.lang.String)
+meth public abstract void addType(jdk.vm.ci.meta.ResolvedJavaType)
+meth public void addField(jdk.vm.ci.meta.ResolvedJavaField)
 
 CLSS public final !enum jdk.vm.ci.meta.TriState
 fld public final static jdk.vm.ci.meta.TriState FALSE
