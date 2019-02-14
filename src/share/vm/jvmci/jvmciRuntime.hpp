@@ -44,6 +44,10 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
   // Weak reference to the HotSpotNmethod mirror in the HotSpot heap.
   JVMCIObject _nmethod_mirror;
 
+  // Address of the failed speculations list potentially appended
+  // to when deoptimizing the nmethod.
+  FailedSpeculation** _failed_speculations;
+
   // Determines whether the associated nmethod is invalidated when the
   // referent in _nmethod_mirror is cleared.  This will be false if
   // the referent is initialized to a HotSpotNmethod object whose
@@ -61,10 +65,13 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
   static JVMCINMethodData* volatile _for_release;
 
  public:
-  JVMCINMethodData(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirror, bool triggers_invalidation);
+  JVMCINMethodData(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirror, bool triggers_invalidation, FailedSpeculation** failed_speculations);
 
   // Releases all resources held by this object.
   ~JVMCINMethodData();
+
+  // Adds `speculation` to the failed speculations list.
+  void add_failed_speculation(nmethod* nm, jlong speculation);
 
   // Release the data object or queue it for lazy cleanup.
   // If the data object contains non-null references to objects

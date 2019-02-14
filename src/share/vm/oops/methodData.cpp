@@ -871,7 +871,7 @@ bool MethodData::is_speculative_trap_bytecode(Bytecodes::Code code) {
 
 #if INCLUDE_JVMCI
 
-void* FailedSpeculation::operator new(size_t size, int fs_size) throw() {
+void* FailedSpeculation::operator new(size_t size, size_t fs_size) throw() {
   return CHeapObj<mtCompiler>::operator new(fs_size, std::nothrow);
 }
 

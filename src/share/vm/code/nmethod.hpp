@@ -139,7 +139,6 @@ class nmethod : public CodeBlob {
   jmethodID _jmethod_id;       // Cache of method()->jmethod_id()
 
 #if INCLUDE_JVMCI
-  FailedSpeculation** _failed_speculations;
   JVMCINMethodData* _jvmci_nmethod_data;
 #endif
 
@@ -314,8 +313,7 @@ class nmethod : public CodeBlob {
           AbstractCompiler* compiler,
           int comp_level
 #if INCLUDE_JVMCI
-          , FailedSpeculation** failed_speculations,
-          char* speculations,
+          , char* speculations,
           int speculations_len,
           JVMCINMethodData* jvmci_nmethod_data
 #endif
@@ -357,8 +355,7 @@ class nmethod : public CodeBlob {
                               AbstractCompiler* compiler,
                               int comp_level
 #if INCLUDE_JVMCI
-                              , FailedSpeculation** failed_speculations = NULL,
-                              char* speculations = NULL,
+                              , char* speculations = NULL,
                               int speculations_len = 0,
                               JVMCINMethodData* jvmci_nmethod_data = NULL
 #endif

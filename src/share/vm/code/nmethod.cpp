@@ -582,7 +582,6 @@ void nmethod::init_defaults() {
 #endif
 #if INCLUDE_JVMCI
   _jvmci_nmethod_data     = NULL;
-  _failed_speculations    = NULL;
 #endif
 #ifdef HAVE_DTRACE_H
   _trap_offset             = 0;
@@ -679,8 +678,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
   AbstractCompiler* compiler,
   int comp_level
 #if INCLUDE_JVMCI
-  , FailedSpeculation** failed_speculations,
-  char* speculations,
+  , char* speculations,
   int speculations_len,
   JVMCINMethodData* jvmci_nmethod_data
 #endif
@@ -711,8 +709,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
             compiler,
             comp_level
 #if INCLUDE_JVMCI
-            , failed_speculations,
-            speculations,
+            , speculations,
             speculations_len,
             jvmci_nmethod_data
 #endif
@@ -774,7 +771,6 @@ nmethod::nmethod(
 
     init_defaults();
     _method                  = method;
-    _failed_speculations     = NULL;
     _entry_bci               = InvocationEntryBci;
     // We have no exception handler or deopt handler make the
     // values something that will never match a pc like the nmethod vtable entry
@@ -955,8 +951,7 @@ nmethod::nmethod(
   AbstractCompiler* compiler,
   int comp_level
 #if INCLUDE_JVMCI
-  , FailedSpeculation** failed_speculations,
-  char* speculations,
+  , char* speculations,
   int speculations_len,
   JVMCINMethodData* jvmci_nmethod_data
 #endif
@@ -986,7 +981,6 @@ nmethod::nmethod(
 
 #if INCLUDE_JVMCI
     _jvmci_nmethod_data = jvmci_nmethod_data;
-    _failed_speculations = failed_speculations;
     if (compiler->is_jvmci()) {
       // JVMCI might not produce any stub sections
       if (offsets->value(CodeOffsets::Exceptions) != -1) {
@@ -3615,13 +3609,9 @@ void nmethod::maybe_invalidate_jvmci_mirror() {
 void nmethod::update_speculation(JavaThread* thread) {
   jlong speculation = thread->pending_failed_speculation();
   if (speculation != 0) {
-    uint index = (speculation >> 32) & 0xFFFFFFFF;
-    int length = (int) speculation;
-    if (index + length > (uint) speculations_size()) {
-      fatal(err_msg(INTPTR_FORMAT "[index: %d, length: %d] out of bounds wrt encoded speculations of length %u", speculation, index, length, speculations_size()));
+    if (_jvmci_nmethod_data != NULL) {
+      _jvmci_nmethod_data->add_failed_speculation(this, speculation);
     }
-    address data = speculations_begin() + index;
-    FailedSpeculation::add_failed_speculation(this, _failed_speculations, data, length);
     thread->set_pending_failed_speculation(0);
   }
 }

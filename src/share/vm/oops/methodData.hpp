@@ -2167,7 +2167,7 @@ class FailedSpeculation: public CHeapObj<mtCompiler> {
 
   // Placement new operator for inlining the speculation data into
   // the FailedSpeculation object.
-  void* operator new(size_t size, int fs_size) throw();
+  void* operator new(size_t size, size_t fs_size) throw();
 
  public:
   char* data()         { return (char*)(((address) this) + sizeof(FailedSpeculation)); }

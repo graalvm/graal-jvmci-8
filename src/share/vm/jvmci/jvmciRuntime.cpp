@@ -960,9 +960,15 @@ void JVMCIRuntime::call_getCompiler(TRAPS) {
 
 JVMCINMethodData* volatile JVMCINMethodData::_for_release = NULL;
 
-JVMCINMethodData::JVMCINMethodData(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirror, bool triggers_invalidation) {
+JVMCINMethodData::JVMCINMethodData(
+  JVMCIEnv* jvmciEnv,
+  JVMCIObject nmethod_mirror,
+  bool triggers_invalidation,
+  FailedSpeculation** failed_speculations)
+{
   _next = NULL;
   _triggers_invalidation = triggers_invalidation;
+  _failed_speculations = failed_speculations;
   if (jvmciEnv->is_hotspot()) {
     _nmethod_mirror = jvmciEnv->make_weak(nmethod_mirror);
   } else {
@@ -988,6 +994,16 @@ JVMCINMethodData::~JVMCINMethodData() {
     FREE_C_HEAP_ARRAY(char, _nmethod_mirror_name, mtCompiler);
     _nmethod_mirror_name = NULL;
   }
+}
+
+void JVMCINMethodData::add_failed_speculation(nmethod* nm, jlong speculation) {
+  uint index = (speculation >> 32) & 0xFFFFFFFF;
+  int length = (int) speculation;
+  if (index + length > (uint) nm->speculations_size()) {
+    fatal(err_msg(INTPTR_FORMAT "[index: %d, length: %d] out of bounds wrt encoded speculations of length %u", speculation, index, length, nm->speculations_size()));
+  }
+  address data = nm->speculations_begin() + index;
+  FailedSpeculation::add_failed_speculation(nm, _failed_speculations, data, length);
 }
 
 void JVMCINMethodData::release(JVMCINMethodData* data) {
@@ -1957,7 +1973,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
   bool install_default = JVMCIENV->get_HotSpotNmethod_isDefault(nmethod_mirror) != 0;
   bool triggers_invalidation = !install_default;
 
-  JVMCINMethodData* data = new JVMCINMethodData(JVMCIENV, nmethod_mirror, triggers_invalidation);
+  JVMCINMethodData* data = new JVMCINMethodData(JVMCIENV, nmethod_mirror, triggers_invalidation, failed_speculations);
 
   JVMCI::CodeInstallResult result;
   {
@@ -2007,7 +2023,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                                  frame_words, oop_map_set,
                                  handler_table, implicit_exception_table,
                                  compiler, comp_level,
-                                 failed_speculations, speculations, speculations_len,
+                                 speculations, speculations_len,
                                  data);
 
       // Free codeBlobs
