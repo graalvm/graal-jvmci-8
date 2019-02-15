@@ -63,9 +63,7 @@ abstract class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
     }
 
     @Override
-    public int getIdentityHashCode() {
-        return runtime().compilerToVm.getIdentityHashCode(this);
-    }
+    public abstract int getIdentityHashCode();
 
     @Override
     public JavaConstant getCallSiteTarget(Assumptions assumptions) {
@@ -151,7 +149,7 @@ abstract class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
 
     @Override
     public int hashCode() {
-        return runtime().reflection.hashCode();
+        return getIdentityHashCode();
     }
 
     @Override

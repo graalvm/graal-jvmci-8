@@ -60,4 +60,9 @@ final class DirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl {
         assert compressed;
         return new DirectHotSpotObjectConstantImpl(object, false);
     }
+
+    @Override
+    public int getIdentityHashCode() {
+        return System.identityHashCode(object);
+    }
 }
