@@ -22,6 +22,9 @@
  */
 package jdk.vm.ci.hotspot;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import jdk.vm.ci.common.JVMCIError;
 
 /**
@@ -50,8 +53,8 @@ public class HotSpotVMConfigAccess {
             if (notPresent != null) {
                 return notPresent;
             }
-            store.printConfig();
-            throw new JVMCIError("expected VM symbol not found in " + store + ": " + name);
+            throw missingEntry("address", name, store.vmFlags.keySet());
+
         }
         return entry;
     }
@@ -82,8 +85,7 @@ public class HotSpotVMConfigAccess {
             if (notPresent != null) {
                 return notPresent;
             }
-            store.printConfig();
-            throw new JVMCIError("expected VM constant not found in " + store + ": " + name);
+            throw missingEntry("constant", name, store.vmConstants.keySet());
         }
         return type.cast(convertValue(name, type, c, null));
     }
@@ -243,8 +245,7 @@ public class HotSpotVMConfigAccess {
             if (!required) {
                 return null;
             }
-            store.printConfig();
-            throw new JVMCIError("expected VM field not found in " + store + ": " + name);
+            throw missingEntry("field", name, store.vmFields.keySet());
         }
 
         // Make sure the native type is still the type we expect.
@@ -288,8 +289,7 @@ public class HotSpotVMConfigAccess {
                 if (notPresent != null) {
                     return notPresent;
                 }
-                store.printConfig();
-                throw new JVMCIError("expected VM flag not found in " + store + ": " + name);
+                throw missingEntry("flag", name, store.vmFlags.keySet());
             } else {
                 cppType = null;
             }
@@ -298,6 +298,11 @@ public class HotSpotVMConfigAccess {
             cppType = entry.type;
         }
         return type.cast(convertValue(name, type, value, cppType));
+    }
+
+    private JVMCIError missingEntry(String category, String name, Set<String> keys) {
+        throw new JVMCIError("expected VM %s not found in %s: %s%nAvailable values:%n    %s", category, store, name,
+                        keys.stream().sorted().collect(Collectors.joining(System.lineSeparator() + "    ")));
     }
 
     private static <T> Object convertValue(String name, Class<T> toType, Object value, String cppType) throws JVMCIError {
