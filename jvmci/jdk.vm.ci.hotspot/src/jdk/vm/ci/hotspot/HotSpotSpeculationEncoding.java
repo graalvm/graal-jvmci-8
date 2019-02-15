@@ -25,6 +25,8 @@ package jdk.vm.ci.hotspot;
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
@@ -118,9 +120,35 @@ final class HotSpotSpeculationEncoding implements SpeculationReasonEncoding {
         return false;
     }
 
+    /**
+     * Prototype SHA1 digest that is cloned before use.
+     */
+    private static final MessageDigest SHA1 = getSHA1();
+    private static final int SHA1_LENGTH = SHA1 == null ? -1 : SHA1.getDigestLength();
+
+    private static MessageDigest getSHA1() {
+        try {
+            MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+            sha1.clone();
+            return sha1;
+        } catch (CloneNotSupportedException | NoSuchAlgorithmException e) {
+            // Should never happen given that SHA-1 is mandated in a
+            // compliant Java platform implementation.
+            return null;
+        }
+    }
+
     byte[] toByteArray() {
         if (result == null) {
             result = baos.toByteArray();
+            if (result.length > SHA1_LENGTH) {
+                try {
+                    MessageDigest md = (MessageDigest) SHA1.clone();
+                    result = md.digest(result);
+                } catch (CloneNotSupportedException e) {
+                    throw new InternalError(e);
+                }
+            }
             dos = null;
             baos = null;
         }
