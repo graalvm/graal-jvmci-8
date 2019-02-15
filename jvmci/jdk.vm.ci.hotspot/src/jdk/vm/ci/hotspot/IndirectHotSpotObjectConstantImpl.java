@@ -31,6 +31,7 @@ final class IndirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl 
      * An object handle in {@code JVMCI::_jvmci_handles}.
      */
     final long objectHandle;
+    private int hashCode;
 
     final IndirectHotSpotObjectConstantImpl base;
 
@@ -69,6 +70,14 @@ final class IndirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl 
 
     @Override
     public int getIdentityHashCode() {
-        return runtime().compilerToVm.getIdentityHashCode(this);
+        int hash = hashCode;
+        if (hash == 0) {
+            hash = runtime().compilerToVm.getIdentityHashCode(this);
+            if (hash == 0) {
+                hash = 31;
+            }
+            hashCode = hash;
+        }
+        return hash;
     }
 }
