@@ -38,15 +38,15 @@ import java.util.function.Supplier;
 public interface SpeculationLog {
     /**
      * The specific attributes of a speculation that a compiler uses to denote a speculation in a
-     * compiled method. Typical attributes of a speculation can include a bytecode position, type
-     * information about a variable being speculated, an enum denoting the type of operation to
-     * which the speculation applies. A {@link SpeculationLog} a {@link SpeculationReason} can be
-     * used as a key in a {@link Map} and so a {@link SpeculationReason} must implement
-     * {@link Object#equals(Object)} and {@link Object#hashCode()} in terms of its attributes.
+     * compiled method. Typical attributes of a speculation are a bytecode position, type
+     * information about a variable being speculated on and an enum denoting the type of operation
+     * to which the speculation applies. A {@link SpeculationReason} is used as a key in a
+     * {@link Map} and so it must implement {@link Object#equals(Object)} and
+     * {@link Object#hashCode()} in terms of its attributes.
      *
-     * A JVMCI implementation may want to serialize speculations for storage off heap (e.g. in
-     * native memory associated with an nmethod). For this reason, the attributes of a
-     * {@link SpeculationReason} are restricted to those supported by the {@code add...} methods of
+     * A JVMCI implementation may serialize speculations for storage off heap (e.g. in native memory
+     * associated with an nmethod). For this reason, the attributes of a {@link SpeculationReason}
+     * are restricted to those supported by the {@code add...} methods of
      * {@link SpeculationReasonEncoding}.
      */
     public interface SpeculationReason {
