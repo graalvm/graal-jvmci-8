@@ -71,37 +71,24 @@ public interface SpeculationLog {
      * format is determined by the implementation of this interface.
      */
     public interface SpeculationReasonEncoding {
-        void addMethod(ResolvedJavaMethod method);
+        void addByte(int value);
 
-        void addType(ResolvedJavaType type);
+        void addShort(int value);
 
         void addInt(int value);
 
         void addLong(long value);
 
+        void addMethod(ResolvedJavaMethod method);
+
+        void addType(ResolvedJavaType type);
+
         void addString(String value);
 
-        default void addNonNullObject(Object o) {
-            Class<? extends Object> c = o.getClass();
-            if (c == String.class) {
-                addString((String) o);
-            } else if (c == Integer.class) {
-                addInt((Integer) o);
-            } else if (c == Long.class) {
-                addLong((Long) o);
-            } else if (c == Float.class) {
-                addInt(Float.floatToRawIntBits((Float) o));
-            } else if (c == Double.class) {
-                addLong(Double.doubleToRawLongBits((Double) o));
-            } else if (o instanceof Enum) {
-                addInt(((Enum<?>) o).ordinal());
-            } else if (o instanceof ResolvedJavaMethod) {
-                addMethod((ResolvedJavaMethod) o);
-            } else if (o instanceof ResolvedJavaType) {
-                addType((ResolvedJavaType) o);
-            } else {
-                throw new IllegalArgumentException("Unsupported type for encoding: " + c.getName());
-            }
+        default void addField(ResolvedJavaField field) {
+            addType(field.getDeclaringClass());
+            addInt(field.getModifiers());
+            addInt(field.getOffset());
         }
     }
 

@@ -49,6 +49,26 @@ final class HotSpotSpeculationEncoding implements SpeculationReasonEncoding {
     private static final int NULL_STRING = -3;
 
     @Override
+    public void addByte(int value) {
+        checkOpen();
+        try {
+            dos.writeByte(value);
+        } catch (IOException e) {
+            throw new InternalError(e);
+        }
+    }
+
+    @Override
+    public void addShort(int value) {
+        checkOpen();
+        try {
+            dos.writeShort(value);
+        } catch (IOException e) {
+            throw new InternalError(e);
+        }
+    }
+
+    @Override
     public void addMethod(ResolvedJavaMethod method) {
         if (!addNull(method, NULL_METHOD)) {
             checkOpen();
