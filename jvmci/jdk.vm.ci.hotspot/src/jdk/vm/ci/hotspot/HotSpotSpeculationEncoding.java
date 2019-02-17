@@ -27,16 +27,27 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 
+import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
 import jdk.vm.ci.meta.SpeculationLog.SpeculationReasonEncoding;
 
-final class HotSpotSpeculationEncoding implements SpeculationReasonEncoding {
+/**
+ * Implements a {@link SpeculationReasonEncoding} that {@linkplain #getByteArray() produces} a byte
+ * array. Data is added via a {@link DataOutputStream}. When producing the final byte array, if the
+ * total length of data exceeds the length of a SHA-1 digest, then a SHA-1 digest of the data is
+ * produced instead.
+ */
+final class HotSpotSpeculationEncoding extends ByteArrayOutputStream implements SpeculationReasonEncoding {
 
-    private ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    private DataOutputStream dos = new DataOutputStream(baos);
+    private DataOutputStream dos = new DataOutputStream(this);
     private byte[] result;
+
+    HotSpotSpeculationEncoding() {
+        super(SHA1_LENGTH);
+    }
 
     private void checkOpen() {
         if (result != null) {
@@ -144,7 +155,7 @@ final class HotSpotSpeculationEncoding implements SpeculationReasonEncoding {
      * Prototype SHA1 digest that is cloned before use.
      */
     private static final MessageDigest SHA1 = getSHA1();
-    private static final int SHA1_LENGTH = SHA1 == null ? -1 : SHA1.getDigestLength();
+    private static final int SHA1_LENGTH = SHA1.getDigestLength();
 
     private static MessageDigest getSHA1() {
         try {
@@ -154,23 +165,32 @@ final class HotSpotSpeculationEncoding implements SpeculationReasonEncoding {
         } catch (CloneNotSupportedException | NoSuchAlgorithmException e) {
             // Should never happen given that SHA-1 is mandated in a
             // compliant Java platform implementation.
-            return null;
+            throw new JVMCIError("Expect a cloneable implementation of a SHA-1 message digest to be available", e);
         }
     }
 
-    byte[] toByteArray() {
+    /**
+     * Gets the final encoded byte array and closes this encoding such that any further attempts to
+     * update it result in an {@link IllegalArgumentException}.
+     */
+    byte[] getByteArray() {
         if (result == null) {
-            result = baos.toByteArray();
-            if (result.length > SHA1_LENGTH) {
+            if (count > SHA1_LENGTH) {
                 try {
                     MessageDigest md = (MessageDigest) SHA1.clone();
-                    result = md.digest(result);
+                    md.update(buf, 0, count);
+                    result = md.digest();
                 } catch (CloneNotSupportedException e) {
                     throw new InternalError(e);
                 }
+            } else {
+                if (buf.length == count) {
+                    // No need to copy the byte array
+                    return buf;
+                }
+                result = Arrays.copyOf(buf, count);
             }
             dos = null;
-            baos = null;
         }
         return result;
     }

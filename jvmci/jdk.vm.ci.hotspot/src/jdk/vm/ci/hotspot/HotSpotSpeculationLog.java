@@ -252,7 +252,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
 
     private static byte[] encode(SpeculationReason reason) {
         HotSpotSpeculationEncoding encoding = (HotSpotSpeculationEncoding) reason.encode(HotSpotSpeculationEncoding::new);
-        byte[] result = encoding == null ? null : encoding.toByteArray();
+        byte[] result = encoding == null ? null : encoding.getByteArray();
         if (result == null) {
             throw new IllegalArgumentException(HotSpotSpeculationLog.class.getName() + " expects " + reason.getClass().getName() + ".encode() to return a non-empty encoding");
         }
