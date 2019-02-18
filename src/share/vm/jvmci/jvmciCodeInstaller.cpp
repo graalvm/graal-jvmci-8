@@ -599,7 +599,16 @@ JVMCIEnv::CodeInstallResult CodeInstaller::gather_metadata(Handle target, Handle
 #endif // INCLUDE_AOT
 
 // constructor used to create a method
-JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, JVMCIObject target, JVMCIObject compiled_code, CodeBlob*& cb, JVMCIObject installed_code, JVMCIObject speculation_log, JVMCI_TRAPS) {
+JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
+    JVMCIObject target,
+    JVMCIObject compiled_code,
+    CodeBlob*& cb,
+    JVMCIObject installed_code,
+    FailedSpeculation** failed_speculations,
+    char* speculations,
+    int speculations_len,
+    JVMCI_TRAPS) {
+
   CodeBuffer buffer("JVMCI Compiler CodeBuffer");
   OopRecorder* recorder = new OopRecorder(&_arena, true);
   initialize_dependencies(compiled_code, recorder, JVMCI_CHECK_OK);
@@ -656,7 +665,8 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler, JVMCIOb
     result = runtime()->register_method(jvmci_env(), method, nm, entry_bci, &_offsets, _orig_pc_offset, &buffer,
                                         stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table, &_implicit_exception_table,
                                         compiler, _debug_recorder, _dependencies, id,
-                                        has_unsafe_access, _has_wide_vector, compiled_code, nmethod_mirror, speculation_log);
+                                        has_unsafe_access, _has_wide_vector, compiled_code, nmethod_mirror,
+                                        failed_speculations, speculations, speculations_len);
     cb = nm;
   }
 

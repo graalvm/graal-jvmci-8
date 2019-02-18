@@ -160,7 +160,9 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider {
         if (constant.equals(JavaConstant.LONG_0)) {
             return SpeculationLog.NO_SPECULATION;
         }
-        assert speculationLog != null : "Must have a speculation log";
+        if (speculationLog == null) {
+            throw new IllegalArgumentException("A speculation log is required to decode the speculation denoted by " + constant);
+        }
         return speculationLog.lookupSpeculation(constant);
     }
 

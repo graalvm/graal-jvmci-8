@@ -35,7 +35,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Executable;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.Map;
 
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
@@ -720,15 +719,8 @@ final class HotSpotResolvedJavaMethodImpl extends HotSpotMethod implements HotSp
 
     @Override
     public SpeculationLog getSpeculationLog() {
-        Map<Long, SpeculationLog> map = holder.getSpeculationLogs();
-        synchronized (map) {
-            SpeculationLog log = map.get(getMetaspaceMethod());
-            if (log == null) {
-                log = new HotSpotSpeculationLog();
-                map.put(getMetaspaceMethod(), log);
-            }
-            return log;
-        }
+        long address = compilerToVM().getFailedSpeculationsAddress(this);
+        return new HotSpotSpeculationLog(address);
     }
 
     @Override

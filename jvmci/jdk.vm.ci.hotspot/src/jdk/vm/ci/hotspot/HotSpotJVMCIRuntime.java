@@ -729,6 +729,10 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      */
     @VMEntryPoint
     private void shutdown() throws Exception {
+        // Cleaners are normally only processed when a new Cleaner is
+        // instantiated so process all remaining cleaners now.
+        Cleaner.clean();
+
         for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
             vmEventListener.notifyShutdown();
         }

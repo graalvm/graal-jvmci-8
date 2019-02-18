@@ -38,15 +38,15 @@ class JVMCICompileState;
 
 // Encapsulates the JVMCI metadata associated with an nmethod.
 class JVMCINMethodData: public CHeapObj<mtCompiler> {
-  // Weak reference to the SpeculationLog mirror in either
-  // the HotSpot or JVMCI shared library heap.
-  JVMCIObject _speculation_log;
-
   // Value of HotSpotNmethod.name converted to a C string.
   const char* _nmethod_mirror_name;
 
   // Weak reference to the HotSpotNmethod mirror in the HotSpot heap.
   JVMCIObject _nmethod_mirror;
+
+  // Address of the failed speculations list potentially appended
+  // to when deoptimizing the nmethod.
+  FailedSpeculation** _failed_speculations;
 
   // Determines whether the associated nmethod is invalidated when the
   // referent in _nmethod_mirror is cleared.  This will be false if
@@ -65,10 +65,13 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
   static JVMCINMethodData* volatile _for_release;
 
  public:
-  JVMCINMethodData(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirror, JVMCIObject speculation_log, bool triggers_invalidation);
+  JVMCINMethodData(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirror, bool triggers_invalidation, FailedSpeculation** failed_speculations);
 
   // Releases all resources held by this object.
   ~JVMCINMethodData();
+
+  // Adds `speculation` to the failed speculations list.
+  void add_failed_speculation(nmethod* nm, jlong speculation);
 
   // Release the data object or queue it for lazy cleanup.
   // If the data object contains non-null references to objects
@@ -84,19 +87,14 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
   const char* nmethod_mirror_name() { return _nmethod_mirror_name; }
 
   // Clears the `address` field in the HotSpotNmethod mirror. If the nmethod
-  // is no longer alive, the `entryPoint` field is also cleared, the weak
-  // reference to the mirror is released (e.g., JNI DeleteWeakGlobalRef)
-  // and the speculation log is cleared.
+  // is no longer alive, the `entryPoint` field is also cleared and the weak
+  // reference to the mirror is released (e.g., JNI DeleteWeakGlobalRef).
   void invalidate_mirror(nmethod* nm);
 
   // Process the HotSpotNmethod mirror during the nmethod unloading
   // phase of a HotSpot GC. If the weak reference to the mirror is
   // null and _triggers_invalidation is true, then the nmethod is made non-entrant.
   void update_nmethod_mirror_in_gc(nmethod* nm, BoolObjectClosure* is_alive);
-
-  // Records the pending failed speculation (if any) in the
-  // speculation log (if it exists).
-  void update_speculation(JavaThread* thread, nmethod* nm);
 
   // Gets the HotSpotNmethod mirror in the HotSpot heap
   JVMCIObject get_nmethod_mirror();
@@ -107,10 +105,6 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
   // Deletes the weak reference (if any) to the HotSpotNmethod object
   // associated with this nmethod.
   void clear_nmethod_mirror();
-
-  // Deletes the weak reference (if any) to the SpeculationLog object
-  // associated with this nmethod.
-  void clear_speculation_log(bool force = false);
 };
 
 
@@ -281,9 +275,11 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
                        int                       compile_id,
                        bool                      has_unsafe_access,
                        bool                      has_wide_vector,
-                       JVMCIObject              compiled_code,
-                       JVMCIObject              nmethod_mirror,
-                       JVMCIObject              speculation_log);
+                       JVMCIObject               compiled_code,
+                       JVMCIObject               nmethod_mirror,
+                       FailedSpeculation**       failed_speculations,
+                       char*                     speculations,
+                       int                       speculations_len);
 
   /**
    * Exits the VM due to an unexpected exception.

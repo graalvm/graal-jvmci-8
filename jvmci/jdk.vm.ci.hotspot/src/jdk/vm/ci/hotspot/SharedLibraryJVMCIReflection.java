@@ -27,15 +27,11 @@ import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Type;
-import java.util.HashMap;
-import java.util.Map;
 
-import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
-import jdk.vm.ci.meta.SpeculationLog;
 
 /**
  * Implementation of {@link HotSpotJVMCIReflection} when running in a JVMCI shared library.
@@ -97,20 +93,6 @@ class SharedLibraryJVMCIReflection extends HotSpotJVMCIReflection {
             return JavaConstant.NULL_POINTER;
         }
         return javaConstant;
-    }
-
-    @NativeImageReinitialize private static HashMap<Long, HashMap<Long, SpeculationLog>> speculationLogs;
-
-    @Override
-    synchronized Map<Long, SpeculationLog> getSpeculationLogs(HotSpotResolvedObjectTypeImpl holder) {
-        if (speculationLogs == null) {
-            speculationLogs = new HashMap<>();
-        }
-        Map<Long, SpeculationLog> log = speculationLogs.get(holder.getMetaspaceKlass());
-        if (log == null) {
-            log = new HashMap<>(4);
-        }
-        return log;
     }
 
     @Override

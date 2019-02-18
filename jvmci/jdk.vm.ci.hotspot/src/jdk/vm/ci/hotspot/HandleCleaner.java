@@ -24,12 +24,6 @@ package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
-import java.lang.ref.ReferenceQueue;
-import java.lang.ref.WeakReference;
-
-import jdk.vm.ci.common.NativeImageReinitialize;
-import jdk.vm.ci.meta.ResolvedJavaType;
-
 /**
  * This class manages a set of {@code jobject} and {@code jmetadata} handles whose lifetimes are
  * dependent on associated {@link IndirectHotSpotObjectConstantImpl} and
@@ -40,23 +34,8 @@ import jdk.vm.ci.meta.ResolvedJavaType;
  * or metadata reference alive through the use of handles. Once the call completes the wrapper
  * object is registered here and will be scanned during metadata scanning. The weakness of the
  * reference to the wrapper object allows the handles to be reclaimed when they are no longer used.
- *
- * This is like {@link sun.misc.Cleaner} but with weak semantics instead of phantom. Objects
- * referenced by this might be referenced by {@link ResolvedJavaType} which is kept alive by a
- * {@link WeakReference} so we need equivalent reference strength.
  */
-final class HandleCleaner extends WeakReference<Object> {
-
-    /**
-     * Head of linked list of cleaners.
-     */
-    @NativeImageReinitialize private static HandleCleaner first = null;
-
-    /**
-     * Linked list pointers.
-     */
-    private HandleCleaner next = null;
-    private HandleCleaner prev = null;
+final class HandleCleaner extends Cleaner {
 
     /**
      * A {@code jmetadata} or {@code jobject} handle.
@@ -68,47 +47,8 @@ final class HandleCleaner extends WeakReference<Object> {
      */
     private final boolean isJObject;
 
-    private static synchronized HandleCleaner add(HandleCleaner cl) {
-        if (first != null) {
-            cl.next = first;
-            first.prev = cl;
-        }
-        first = cl;
-        return cl;
-    }
-
-    /**
-     * Removes {@code cl} from the linked list of cleaners.
-     */
-    private static synchronized boolean remove(HandleCleaner cl) {
-        // If already removed, do nothing
-        if (cl.next == cl) {
-            return false;
-        }
-
-        // Update list
-        if (first == cl) {
-            if (cl.next != null) {
-                first = cl.next;
-            } else {
-                first = cl.prev;
-            }
-        }
-        if (cl.next != null) {
-            cl.next.prev = cl.prev;
-        }
-        if (cl.prev != null) {
-            cl.prev.next = cl.next;
-        }
-
-        // Indicate removal by pointing the cleaner to itself
-        cl.next = cl;
-        cl.prev = cl;
-        return true;
-    }
-
     private HandleCleaner(Object wrapper, long handle, boolean isJObject) {
-        super(wrapper, queue);
+        super(wrapper);
         this.handle = handle;
         this.isJObject = isJObject;
     }
@@ -116,8 +56,8 @@ final class HandleCleaner extends WeakReference<Object> {
     /**
      * Releases the resource associated with {@code this.handle}.
      */
-    private void deleteHandle() {
-        remove(this);
+    @Override
+    void doCleanup() {
         if (isJObject) {
             // The sentinel value used to denote a free handle is
             // an object on the HotSpot heap so we call into the
@@ -133,29 +73,12 @@ final class HandleCleaner extends WeakReference<Object> {
     }
 
     /**
-     * Cleans the handles who wrappers have been garbage collected.
-     */
-    private static void clean() {
-        HandleCleaner ref = (HandleCleaner) queue.poll();
-        while (ref != null) {
-            ref.deleteHandle();
-            ref = (HandleCleaner) queue.poll();
-        }
-    }
-
-    /**
-     * The {@link ReferenceQueue} to which handle wrappers are enqueued once they become
-     * unreachable.
-     */
-    private static final ReferenceQueue<Object> queue = new ReferenceQueue<>();
-
-    /**
      * Registers a cleaner for {@code handle}. The cleaner will release the handle some time after
      * {@code wrapper} is detected as unreachable by the garbage collector.
      */
+    @SuppressWarnings("unused")
     static void create(Object wrapper, long handle) {
-        clean();
         assert wrapper instanceof IndirectHotSpotObjectConstantImpl || wrapper instanceof MetaspaceHandleObject;
-        add(new HandleCleaner(wrapper, handle, wrapper instanceof IndirectHotSpotObjectConstantImpl));
+        new HandleCleaner(wrapper, handle, wrapper instanceof IndirectHotSpotObjectConstantImpl);
     }
 }

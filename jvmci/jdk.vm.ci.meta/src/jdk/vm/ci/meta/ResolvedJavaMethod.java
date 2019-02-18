@@ -465,5 +465,11 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
         return getDeclaringClass().isJavaLangObject() && getName().equals("<init>");
     }
 
+    /**
+     * Gets a speculation log that can be used when compiling this method to make new speculations
+     * and query previously failed speculations. The implementation may return a new
+     * {@link SpeculationLog} object each time this method is called so its the caller's
+     * responsibility to ensure the same speculation log is used throughout a compilation.
+     */
     SpeculationLog getSpeculationLog();
 }

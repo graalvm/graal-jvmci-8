@@ -163,6 +163,9 @@ struct java_nmethod_stats_struct {
   int dependencies_size;
   int handler_table_size;
   int nul_chk_table_size;
+#if INCLUDE_JVMCI
+  int speculations_size;
+#endif
   int oops_size;
   int metadata_size;
 
@@ -180,6 +183,9 @@ struct java_nmethod_stats_struct {
     dependencies_size   += nm->dependencies_size();
     handler_table_size  += nm->handler_table_size();
     nul_chk_table_size  += nm->nul_chk_table_size();
+#if INCLUDE_JVMCI
+    speculations_size   += nm->speculations_size();
+#endif
   }
   void print_nmethod_stats(const char* name) {
     if (nmethod_count == 0)  return;
@@ -197,6 +203,9 @@ struct java_nmethod_stats_struct {
     if (dependencies_size != 0)   tty->print_cr(" dependencies   = %d", dependencies_size);
     if (handler_table_size != 0)  tty->print_cr(" handler table  = %d", handler_table_size);
     if (nul_chk_table_size != 0)  tty->print_cr(" nul chk table  = %d", nul_chk_table_size);
+#if INCLUDE_JVMCI
+    if (speculations_size != 0)   tty->print_cr(" speculations   = %d", speculations_size);
+#endif
   }
 };
 
@@ -678,7 +687,9 @@ nmethod* nmethod::new_nmethod(methodHandle method,
   AbstractCompiler* compiler,
   int comp_level
 #if INCLUDE_JVMCI
- , JVMCINMethodData* jvmci_nmethod_data
+  , char* speculations,
+  int speculations_len,
+  JVMCINMethodData* jvmci_nmethod_data
 #endif
 )
 {
@@ -693,6 +704,9 @@ nmethod* nmethod::new_nmethod(methodHandle method,
       + round_to(dependencies->size_in_bytes() , oopSize)
       + round_to(handler_table->size_in_bytes(), oopSize)
       + round_to(nul_chk_table->size_in_bytes(), oopSize)
+#if INCLUDE_JVMCI
+      + round_to(speculations_len              , oopSize)
+#endif
       + round_to(debug_info->data_size()       , oopSize);
 
     nm = new (nmethod_size)
@@ -704,7 +718,9 @@ nmethod* nmethod::new_nmethod(methodHandle method,
             compiler,
             comp_level
 #if INCLUDE_JVMCI
-            , jvmci_nmethod_data
+            , speculations,
+            speculations_len,
+            jvmci_nmethod_data
 #endif
             );
 
@@ -781,7 +797,12 @@ nmethod::nmethod(
     _dependencies_offset     = _scopes_pcs_offset;
     _handler_table_offset    = _dependencies_offset;
     _nul_chk_table_offset    = _handler_table_offset;
+#if INCLUDE_JVMCI
+    _speculations_offset     = _nul_chk_table_offset;
+    _nmethod_end_offset      = _speculations_offset;
+#else
     _nmethod_end_offset      = _nul_chk_table_offset;
+#endif
     _compile_id              = compile_id;
     _comp_level              = CompLevel_none;
     _entry_point             = code_begin()          + offsets->value(CodeOffsets::Entry);
@@ -939,7 +960,9 @@ nmethod::nmethod(
   AbstractCompiler* compiler,
   int comp_level
 #if INCLUDE_JVMCI
- , JVMCINMethodData* jvmci_nmethod_data
+  , char* speculations,
+  int speculations_len,
+  JVMCINMethodData* jvmci_nmethod_data
 #endif
   )
   : CodeBlob("nmethod", code_buffer, sizeof(nmethod),
@@ -1014,7 +1037,12 @@ nmethod::nmethod(
     _dependencies_offset     = _scopes_pcs_offset    + adjust_pcs_size(debug_info->pcs_size());
     _handler_table_offset    = _dependencies_offset  + round_to(dependencies->size_in_bytes (), oopSize);
     _nul_chk_table_offset    = _handler_table_offset + round_to(handler_table->size_in_bytes(), oopSize);
+#if INCLUDE_JVMCI
+    _speculations_offset     = _nul_chk_table_offset + round_to(nul_chk_table->size_in_bytes(), oopSize);
+    _nmethod_end_offset      = _speculations_offset  + round_to(speculations_len, oopSize);
+#else
     _nmethod_end_offset      = _nul_chk_table_offset + round_to(nul_chk_table->size_in_bytes(), oopSize);
+#endif
 
     _entry_point             = code_begin()          + offsets->value(CodeOffsets::Entry);
     _verified_entry_point    = code_begin()          + offsets->value(CodeOffsets::Verified_Entry);
@@ -1039,6 +1067,13 @@ nmethod::nmethod(
     // Copy contents of ExceptionHandlerTable to nmethod
     handler_table->copy_to(this);
     nul_chk_table->copy_to(this);
+
+#if INCLUDE_JVMCI
+    // Copy speculations to nmethod
+    if (speculations_size() != 0) {
+      memcpy(speculations_begin(), speculations, speculations_len);
+    }
+#endif
 
     // we use the information of entry points to find out if a method is
     // static or non static
@@ -3137,6 +3172,12 @@ void nmethod::print() const {
                                               nul_chk_table_begin(),
                                               nul_chk_table_end(),
                                               nul_chk_table_size());
+#if INCLUDE_JVMCI
+  if (speculations_size () > 0) tty->print(" speculations   [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
+                                              speculations_begin(),
+                                              speculations_end(),
+                                              speculations_size());
+#endif
 }
 
 void nmethod::print_code() {
@@ -3575,8 +3616,12 @@ void nmethod::maybe_invalidate_jvmci_mirror() {
 }
 
 void nmethod::update_speculation(JavaThread* thread) {
-  if (_jvmci_nmethod_data != NULL) {
-    _jvmci_nmethod_data->update_speculation(thread, this);
+  jlong speculation = thread->pending_failed_speculation();
+  if (speculation != 0) {
+    if (_jvmci_nmethod_data != NULL) {
+      _jvmci_nmethod_data->add_failed_speculation(this, speculation);
+    }
+    thread->set_pending_failed_speculation(0);
   }
 }
 

@@ -24,13 +24,11 @@ package jdk.vm.ci.hotspot;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Map;
 
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.ResolvedJavaMethod;
 import jdk.vm.ci.meta.ResolvedJavaType;
-import jdk.vm.ci.meta.SpeculationLog;
 
 /**
  * Reflection interface for reflecting on the internals of HotSpot JVMCI types and objects.
@@ -56,8 +54,6 @@ abstract class HotSpotJVMCIReflection {
     abstract JavaConstant readFieldValue(HotSpotResolvedObjectTypeImpl holder, HotSpotResolvedJavaField field, boolean isVolatile);
 
     abstract JavaConstant readFieldValue(HotSpotObjectConstantImpl object, HotSpotResolvedJavaField field, boolean isVolatile);
-
-    abstract Map<Long, SpeculationLog> getSpeculationLogs(HotSpotResolvedObjectTypeImpl holder);
 
     abstract boolean equals(HotSpotObjectConstantImpl hotSpotResolvedJavaType, HotSpotObjectConstantImpl that);
 

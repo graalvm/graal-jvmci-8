@@ -89,7 +89,11 @@ public class BytecodePosition {
 
     @Override
     public int hashCode() {
-        return getBCI();
+        int hc = method.hashCode() * 31 + bci;
+        if (caller != null) {
+            hc = (hc * 31) + caller.hashCode();
+        }
+        return hc;
     }
 
     /**

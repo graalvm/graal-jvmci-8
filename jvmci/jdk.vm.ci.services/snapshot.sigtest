@@ -70,3 +70,5 @@ supr java.lang.Object
 hfds jvmciEnabled,servicesCache
 hcls LazyBootClassPath
 
+CLSS abstract interface jdk.vm.ci.services.package-info
+

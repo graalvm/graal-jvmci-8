@@ -113,9 +113,23 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
             resultInstalledCode = new HotSpotNmethod((HotSpotResolvedJavaMethodImpl) method, ((HotSpotCompiledCode) compiledCode).getName(), isDefault);
         }
 
-        HotSpotSpeculationLog speculationLog = (log != null && log.hasSpeculations()) ? (HotSpotSpeculationLog) log : null;
+        HotSpotSpeculationLog speculationLog = null;
+        if (log != null) {
+            if (log.hasSpeculations()) {
+                speculationLog = (HotSpotSpeculationLog) log;
+            }
+        }
 
-        int result = runtime.getCompilerToVM().installCode(target, (HotSpotCompiledCode) compiledCode, resultInstalledCode, speculationLog);
+        byte[] speculations;
+        long failedSpeculationsAddress;
+        if (speculationLog != null) {
+            speculations = speculationLog.getFlattenedSpeculations();
+            failedSpeculationsAddress = speculationLog.getFailedSpeculationsAddress();
+        } else {
+            speculations = new byte[0];
+            failedSpeculationsAddress = 0L;
+        }
+        int result = runtime.getCompilerToVM().installCode(target, (HotSpotCompiledCode) compiledCode, resultInstalledCode, failedSpeculationsAddress, speculations);
         if (result != config.codeInstallResultOk) {
             String resultDesc = config.getCodeInstallResultDescription(result);
             if (compiledCode instanceof HotSpotCompiledNmethod) {

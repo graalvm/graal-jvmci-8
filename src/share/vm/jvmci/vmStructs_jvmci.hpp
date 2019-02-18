@@ -109,7 +109,7 @@
   nonstatic_field(JVMCICompileState,           _jvmti_can_pop_frame,                   jbyte)                                        \
                                                                                                                                      \
   nonstatic_field(JavaThread,                  _pending_deoptimization,                int)                                          \
-  nonstatic_field(JavaThread,                  _pending_failed_speculation,            long)                                         \
+  nonstatic_field(JavaThread,                  _pending_failed_speculation,            jlong)                                        \
   nonstatic_field(JavaThread,                  _pending_transfer_to_interpreter,       bool)                                         \
   nonstatic_field(JavaThread,                  _jvmci_counters,                        jlong*)                                       \
   nonstatic_field(JavaThread,                  _should_post_on_exceptions_flag,        int)                                          \

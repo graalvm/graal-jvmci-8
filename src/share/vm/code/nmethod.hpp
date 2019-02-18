@@ -110,12 +110,17 @@ class PcDescCache VALUE_OBJ_CLASS_SPEC {
 //  - handler entry point array
 //  [Implicit Null Pointer exception table]
 //  - implicit null table array
+//  [Speculations]
+//  - encoded speculations array
 
 class Dependencies;
 class ExceptionHandlerTable;
 class ImplicitExceptionTable;
 class AbstractCompiler;
 class xmlStream;
+#if INCLUDE_JVMCI
+class FailedSpeculation;
+#endif
 
 class nmethod : public CodeBlob {
   friend class VMStructs;
@@ -180,6 +185,9 @@ class nmethod : public CodeBlob {
   int _dependencies_offset;
   int _handler_table_offset;
   int _nul_chk_table_offset;
+#if INCLUDE_JVMCI
+  int _speculations_offset;
+#endif
   int _nmethod_end_offset;
 
   // location in frame (offset for sp) that deopt can store the original
@@ -305,7 +313,9 @@ class nmethod : public CodeBlob {
           AbstractCompiler* compiler,
           int comp_level
 #if INCLUDE_JVMCI
-          , JVMCINMethodData* jvmci_nmethod_data
+          , char* speculations,
+          int speculations_len,
+          JVMCINMethodData* jvmci_nmethod_data
 #endif
           );
 
@@ -345,7 +355,9 @@ class nmethod : public CodeBlob {
                               AbstractCompiler* compiler,
                               int comp_level
 #if INCLUDE_JVMCI
-                              , JVMCINMethodData* jvmci_nmethod_data = NULL
+                              , char* speculations = NULL,
+                              int speculations_len = 0,
+                              JVMCINMethodData* jvmci_nmethod_data = NULL
 #endif
   );
 
@@ -416,7 +428,13 @@ class nmethod : public CodeBlob {
   address handler_table_begin   () const          { return           header_begin() + _handler_table_offset ; }
   address handler_table_end     () const          { return           header_begin() + _nul_chk_table_offset ; }
   address nul_chk_table_begin   () const          { return           header_begin() + _nul_chk_table_offset ; }
+#if INCLUDE_JVMCI
+  address nul_chk_table_end     () const          { return           header_begin() + _speculations_offset  ; }
+  address speculations_begin    () const          { return           header_begin() + _speculations_offset  ; }
+  address speculations_end      () const          { return           header_begin() + _nmethod_end_offset   ; }
+#else
   address nul_chk_table_end     () const          { return           header_begin() + _nmethod_end_offset;    }
+#endif
 
   // Sizes
   int consts_size       () const                  { return            consts_end       () -            consts_begin       (); }
@@ -429,6 +447,9 @@ class nmethod : public CodeBlob {
   int dependencies_size () const                  { return            dependencies_end () -            dependencies_begin (); }
   int handler_table_size() const                  { return            handler_table_end() -            handler_table_begin(); }
   int nul_chk_table_size() const                  { return            nul_chk_table_end() -            nul_chk_table_begin(); }
+#if INCLUDE_JVMCI
+  int speculations_size () const                  { return            speculations_end () -            speculations_begin (); }
+#endif
 
   int total_size        () const;
 
