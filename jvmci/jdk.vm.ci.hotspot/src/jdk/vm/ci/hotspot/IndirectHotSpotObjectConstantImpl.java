@@ -22,6 +22,8 @@
  */
 package jdk.vm.ci.hotspot;
 
+import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
+
 import jdk.vm.ci.meta.JavaConstant;
 
 final class IndirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl {
@@ -29,6 +31,7 @@ final class IndirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl 
      * An object handle in {@code JVMCI::_jvmci_handles}.
      */
     final long objectHandle;
+    private int hashCode;
 
     final IndirectHotSpotObjectConstantImpl base;
 
@@ -63,5 +66,18 @@ final class IndirectHotSpotObjectConstantImpl extends HotSpotObjectConstantImpl 
     public JavaConstant uncompress() {
         assert compressed;
         return new IndirectHotSpotObjectConstantImpl(this, false);
+    }
+
+    @Override
+    public int getIdentityHashCode() {
+        int hash = hashCode;
+        if (hash == 0) {
+            hash = runtime().compilerToVm.getIdentityHashCode(this);
+            if (hash == 0) {
+                hash = 31;
+            }
+            hashCode = hash;
+        }
+        return hash;
     }
 }
