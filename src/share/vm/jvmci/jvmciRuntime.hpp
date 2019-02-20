@@ -38,75 +38,50 @@ class JVMCICompileState;
 
 // Encapsulates the JVMCI metadata associated with an nmethod.
 class JVMCINMethodData: public CHeapObj<mtCompiler> {
+  // Index for the HotSpotNmethod mirror in the nmethod's oop table.
+  int _mirror_index;
+
+  // Determines whether the nmethod is made unloadable when its
+  // mirror dies. This will be false if the mirror's
+  // isDefault field is true.
+  // See HotSpotNmethod.isDefault for more detail.
+  bool _mirror_triggers_unloading;
+
   // Value of HotSpotNmethod.name converted to a C string.
-  const char* _nmethod_mirror_name;
+  const char* _mirror_name;
 
-  // Weak reference to the HotSpotNmethod mirror in the HotSpot heap.
-  JVMCIObject _nmethod_mirror;
-
-  // Address of the failed speculations list potentially appended
-  // to when deoptimizing the nmethod.
+  // Address of the failed speculations list to which a speculation
+  // is appended when it causes a deoptimization.
   FailedSpeculation** _failed_speculations;
 
-  // Determines whether the associated nmethod is invalidated when the
-  // referent in _nmethod_mirror is cleared.  This will be false if
-  // the referent is initialized to a HotSpotNmethod object whose
-  // isDefault field is true.  That is, a mirror other than a
-  // "default" HotSpotNmethod causes nmethod invalidation.  See
-  // HotSpotNmethod.isDefault for more detail.
-  bool _triggers_invalidation;
-
-  // Used to maintain the linked list held by the _for_release field
-  JVMCINMethodData* _next;
-
-  // Maintains a list of JVMCINMethodDatas that require cleanup on the
-  // next call to installCode. This field must be updated under
-  // the JVMCI_lock.
-  static JVMCINMethodData* volatile _for_release;
-
  public:
-  JVMCINMethodData(JVMCIEnv* jvmciEnv, JVMCIObject nmethod_mirror, bool triggers_invalidation, FailedSpeculation** failed_speculations);
+  JVMCINMethodData(JVMCIEnv* jvmciEnv,
+      DebugInformationRecorder* debug_info,
+      JVMCIObject mirror,
+      bool mirror_triggers_unloading,
+      FailedSpeculation** failed_speculations);
 
   // Releases all resources held by this object.
   ~JVMCINMethodData();
 
+  bool mirror_triggers_unloading() const { return _mirror_triggers_unloading; }
+
   // Adds `speculation` to the failed speculations list.
   void add_failed_speculation(nmethod* nm, jlong speculation);
 
-  // Release the data object or queue it for lazy cleanup.
-  // If the data object contains non-null references to objects
-  // in the shared library heap, cleanup is deferred since
-  // processing these references can block on the ThreadToNativeFromVM
-  // transition calling into the shared library.
-  static void release(JVMCINMethodData* data);
-
-  // Release any instances which require lazy cleanup.
-  static void cleanup();
-
   // Gets the value of HotSpotNmethod.name converted to a C string (which may be NULL).
-  const char* nmethod_mirror_name() { return _nmethod_mirror_name; }
+  const char* mirror_name() { return _mirror_name; }
 
-  // Clears the `address` field in the HotSpotNmethod mirror. If the nmethod
-  // is no longer alive, the `entryPoint` field is also cleared and the weak
-  // reference to the mirror is released (e.g., JNI DeleteWeakGlobalRef).
+  // Clears the HotSpotNmethod.address field in the  mirror. If nm
+  // is dead, the HotSpotNmethod.entryPoint field is also cleared.
   void invalidate_mirror(nmethod* nm);
 
-  // Process the HotSpotNmethod mirror during the nmethod unloading
-  // phase of a HotSpot GC. If the weak reference to the mirror is
-  // null and _triggers_invalidation is true, then the nmethod is made non-entrant.
-  void update_nmethod_mirror_in_gc(nmethod* nm, BoolObjectClosure* is_alive);
+  // Gets the mirror from nm's oops table.
+  oop get_mirror(nmethod* nm);
 
-  // Gets the HotSpotNmethod mirror in the HotSpot heap
-  JVMCIObject get_nmethod_mirror();
-
-  // Adds a HotSpotNmethod mirror.
-  void add_nmethod_mirror(JVMCIEnv* jvmciEnv, JVMCIObject mirror, JVMCI_TRAPS);
-
-  // Deletes the weak reference (if any) to the HotSpotNmethod object
-  // associated with this nmethod.
-  void clear_nmethod_mirror();
+  // Sets the mirror in nm's oops table.
+  void set_mirror(nmethod* nm, oop mirror);
 };
-
 
 // A top level class that represents an initialized JVMCI runtime.
 // There is one instance of this class per HotSpotJVMCIRuntime object.
@@ -276,7 +251,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
                        bool                      has_unsafe_access,
                        bool                      has_wide_vector,
                        JVMCIObject               compiled_code,
-                       JVMCIObject               nmethod_mirror,
+                       JVMCIObject               mirror,
                        FailedSpeculation**       failed_speculations,
                        char*                     speculations,
                        int                       speculations_len);

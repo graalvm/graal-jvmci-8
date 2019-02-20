@@ -1153,12 +1153,12 @@ void JVMCIEnv::initialize_installed_code(JVMCIObject installed_code, CodeBlob* c
 }
 
 
-void JVMCIEnv::invalidate_nmethod_mirror(JVMCIObject nmethod_mirror, JVMCI_TRAPS) {
-  if (nmethod_mirror.is_null()) {
+void JVMCIEnv::invalidate_nmethod_mirror(JVMCIObject mirror, JVMCI_TRAPS) {
+  if (mirror.is_null()) {
     JVMCI_THROW(NullPointerException);
   }
 
-  jlong nativeMethod = get_InstalledCode_address(nmethod_mirror);
+  jlong nativeMethod = get_InstalledCode_address(mirror);
   nmethod* nm = (nmethod*)nativeMethod;
   if (nm == NULL) {
     // Nothing to do
@@ -1166,7 +1166,7 @@ void JVMCIEnv::invalidate_nmethod_mirror(JVMCIObject nmethod_mirror, JVMCI_TRAPS
   }
 
   Thread* THREAD = Thread::current();
-  if (!nmethod_mirror.is_hotspot() && !THREAD->is_Java_thread()) {
+  if (!mirror.is_hotspot() && !THREAD->is_Java_thread()) {
     // Calling back into native might cause the execution to block, so only allow this when calling
     // from a JavaThread, which is the normal case anyway.
     JVMCI_THROW_MSG(IllegalArgumentException,
@@ -1184,7 +1184,7 @@ void JVMCIEnv::invalidate_nmethod_mirror(JVMCIObject nmethod_mirror, JVMCI_TRAPS
 
   // A HotSpotNmethod instance can only reference a single nmethod
   // during its lifetime so simply clear it here.
-  set_InstalledCode_address(nmethod_mirror, 0);
+  set_InstalledCode_address(mirror, 0);
 }
 
 Klass* JVMCIEnv::asKlass(JVMCIObject obj) {

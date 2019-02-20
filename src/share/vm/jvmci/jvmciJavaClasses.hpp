@@ -559,7 +559,7 @@ class HotSpotJVMCI {
   static typeArrayOop resolve(JVMCIPrimitiveArray obj) { return (typeArrayOop) JNIHandles::resolve(obj.as_jobject()); }
 
   static JVMCIObject wrap(jobject obj) { return JVMCIObject(obj, true); }
-  static JVMCIObject wrap(oop obj) { return JVMCIObject(JNIHandles::make_local(obj), true); }
+  static JVMCIObject wrap(oop obj) { assert(Thread::current()->is_Java_thread(), "must be"); return JVMCIObject(JNIHandles::make_local(obj), true); }
 
   static inline Method* asMethod(JVMCIEnv* env, oop jvmci_method) {
     return *(Method**) HotSpotResolvedJavaMethodImpl::metadataHandle(env, jvmci_method);

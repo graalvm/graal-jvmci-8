@@ -1105,9 +1105,9 @@ void nmethod::log_identity(xmlStream* log) const {
   }
 #if INCLUDE_JVMCI
   if (_jvmci_nmethod_data != NULL) {
-    const char* jvmci_name = _jvmci_nmethod_data->nmethod_mirror_name();
+    const char* jvmci_name = _jvmci_nmethod_data->mirror_name();
     if (jvmci_name != NULL) {
-      log->print(" jvmci_nmethod_mirror_name='");
+      log->print(" jvmci_mirror_name='");
       log->text("%s", jvmci_name);
       log->print("'");
     }
@@ -1554,12 +1554,8 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
   // Log the unloading.
   log_state_change(cause);
 
-#if INCLUDE_JVMCI
-  // The method can only be unloaded after the HotSpotNmethod mirror
-  // are no longer alive. Here we need to clear out the weak
-  // references to the dead objects.
-  maybe_invalidate_jvmci_mirror();
-#endif
+  // Clear the link between this nmethod and a HotSpotNmethod mirror
+  JVMCI_ONLY(invalidate_mirror();)
 
   // The Method* is gone at this point
   assert(_method == NULL, "Tautology");
@@ -1692,7 +1688,7 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
   } // leave critical region under Patching_lock
 
   // Invalidate can't occur while holding the Patching lock
-  JVMCI_ONLY(maybe_invalidate_jvmci_mirror());
+  JVMCI_ONLY(invalidate_mirror());
 
   // When the nmethod becomes zombie it is no longer alive so the
   // dependencies must be flushed.  nmethods in the not_entrant
@@ -1827,6 +1823,17 @@ bool nmethod::can_unload(BoolObjectClosure* is_alive, oop* root, bool unloading_
   if (obj == NULL || is_alive->do_object_b(obj)) {
       return false;
   }
+
+#if INCLUDE_JVMCI
+  if (_jvmci_nmethod_data != NULL &&
+      _jvmci_nmethod_data->get_mirror(this) == obj &&
+      !_jvmci_nmethod_data->mirror_triggers_unloading()) {
+    // Don't unload this nmethod in the special case of
+    // its "non-invalidation-triggering" mirror
+    *root = NULL;
+    return false;
+  }
+#endif
 
   // If ScavengeRootsInCode is true, an nmethod might be unloaded
   // simply because one of its constant oops has gone dead.
@@ -2041,12 +2048,6 @@ void nmethod::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred)
     }
   }
 
-#if INCLUDE_JVMCI
-  if (_jvmci_nmethod_data != NULL) {
-    _jvmci_nmethod_data->update_nmethod_mirror_in_gc(this, is_alive);
-  }
-#endif
-
   // Ensure that all metadata is still alive
   verify_metadata_loaders(low_boundary, is_alive);
 }
@@ -2224,12 +2225,6 @@ bool nmethod::do_unloading_parallel(BoolObjectClosure* is_alive, bool unloading_
   if (is_unloaded) {
     return postponed;
   }
-
-#if INCLUDE_JVMCI
-  if (_jvmci_nmethod_data != NULL) {
-      _jvmci_nmethod_data->update_nmethod_mirror_in_gc(this, is_alive);
-  }
-#endif
 
   // Ensure that all metadata is still alive
   verify_metadata_loaders(low_boundary, is_alive);
@@ -3605,11 +3600,11 @@ void nmethod::print_statistics() {
 }
 
 #if INCLUDE_JVMCI
-void nmethod::maybe_invalidate_jvmci_mirror() {
+void nmethod::invalidate_mirror() {
   if (_jvmci_nmethod_data != NULL) {
     _jvmci_nmethod_data->invalidate_mirror(this);
     if (!is_alive()) {
-      JVMCINMethodData::release(_jvmci_nmethod_data);
+      delete _jvmci_nmethod_data;
       _jvmci_nmethod_data = NULL;
     }
   }
@@ -3625,9 +3620,9 @@ void nmethod::update_speculation(JavaThread* thread) {
   }
 }
 
-const char* nmethod::jvmci_nmethod_mirror_name() {
+const char* nmethod::mirror_name() {
   if (_jvmci_nmethod_data != NULL) {
-    return _jvmci_nmethod_data->nmethod_mirror_name();
+    return _jvmci_nmethod_data->mirror_name();
   }
   return NULL;
 }

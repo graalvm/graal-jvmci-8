@@ -35,7 +35,7 @@ import jdk.vm.ci.meta.ResolvedJavaMethod;
  * the {@code nmethod} is stored in {@link InstalledCode#address} and the value of
  * {@code nmethod::verified_entry_point()} is in {@link InstalledCode#entryPoint}.
  * <p>
- * When a {@link HotSpotNmethod} dies, it triggers invalidation of the {@code nmethod} unless
+ * When a {@link HotSpotNmethod} dies, it triggers unloading of the {@code nmethod} unless
  * {@link #isDefault() == true}.
  * <p>
  * The diagram below shows the relationship between an {@code nmethod} and its

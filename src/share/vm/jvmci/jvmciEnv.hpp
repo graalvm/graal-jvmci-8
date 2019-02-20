@@ -600,9 +600,9 @@ public:
   void destroy_global(JVMCIObject object);
   void destroy_weak(JVMCIObject object);
 
-  // Deoptimizes the nmethod (if any) in the address field of a given
-  // HotSpotNmethod object. The address field is also zeroed.
-  void invalidate_nmethod_mirror(JVMCIObject nmethod_mirror, JVMCI_TRAPS);
+  // Deoptimizes the nmethod (if any) in the HotSpotNmethod.address
+  // field of mirror. The field is subsequently zeroed.
+  void invalidate_nmethod_mirror(JVMCIObject mirror, JVMCI_TRAPS);
 
   void initialize_installed_code(JVMCIObject installed_code, CodeBlob* cb, JVMCI_TRAPS);
 

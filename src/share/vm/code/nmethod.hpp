@@ -657,13 +657,16 @@ public:
   void set_method(Method* method) { _method = method; }
 
 #if INCLUDE_JVMCI
-  // Return the name of the HotSpotNmethod mirror (if any).
-  const char* jvmci_nmethod_mirror_name();
+  // Gets the name of the mirror (if any).
+  const char* mirror_name();
 
-  // Updates the state of the HotSpotNmethod and SpeculationLog
-  // references associated with this nmethod based on the current
-  // value of _state.
-  void maybe_invalidate_jvmci_mirror();
+  // Updates the state of this nmethod's HotSpotNmethod mirror
+  // based on the current value of _state. If this nmethod is
+  // not alive, all references from the mirror to this nmethod
+  // are cleared and _jvmci_nmethod_data is freed. If this
+  // nmethod is non-entrant, the HotSpotNmethod.entryPoint field
+  // is zeroed so that new activations cannot be created.
+  void invalidate_mirror();
 
   // Records the pending failed speculation in the
   // JVMCI speculation log associated with this nmethod.
