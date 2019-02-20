@@ -114,15 +114,23 @@ public class HotSpotVMConfigAccess {
      * @throws JVMCIError if the field is static or not present and {@code notPresent} is null
      */
     public <T> T getFieldOffset(String name, Class<T> type, String cppType, T notPresent) {
-        assert type == Integer.class || type == Long.class;
-        VMField entry = getField(name, cppType, notPresent == null);
-        if (entry == null) {
-            return notPresent;
-        }
-        if (entry.address != 0) {
-            throw new JVMCIError("cannot get offset of static field " + name);
-        }
-        return type.cast(convertValue(name, type, entry.offset, cppType));
+        return getFieldOffset0(name, type, notPresent, cppType, null);
+    }
+
+    /**
+     * Gets the offset of a non-static C++ field.
+     *
+     * @param name fully qualified name of the field
+     * @param type the boxed type to which the offset value will be converted (must be
+     *            {@link Integer} or {@link Long})
+     * @param notPresent if non-null and the field is not present then this value is returned
+     * @param outCppType if non-null, the C++ type of the field (e.g., {@code "HeapWord*"}) is
+     *            returned in element 0 of this array
+     * @return the offset in bytes of the requested field
+     * @throws JVMCIError if the field is static or not present and {@code notPresent} is null
+     */
+    public <T> T getFieldOffset(String name, Class<T> type, T notPresent, String[] outCppType) {
+        return getFieldOffset0(name, type, notPresent, null, outCppType);
     }
 
     /**
@@ -136,7 +144,7 @@ public class HotSpotVMConfigAccess {
      * @throws JVMCIError if the field is static or not present
      */
     public <T> T getFieldOffset(String name, Class<T> type, String cppType) {
-        return getFieldOffset(name, type, cppType, null);
+        return getFieldOffset0(name, type, null, cppType, null);
     }
 
     /**
@@ -149,7 +157,22 @@ public class HotSpotVMConfigAccess {
      * @throws JVMCIError if the field is static or not present
      */
     public <T> T getFieldOffset(String name, Class<T> type) {
-        return getFieldOffset(name, type, null, null);
+        return getFieldOffset0(name, type, null, null, null);
+    }
+
+    private <T> T getFieldOffset0(String name, Class<T> type, T notPresent, String inCppType, String[] outCppType) {
+        assert type == Integer.class || type == Long.class;
+        VMField entry = getField(name, inCppType, notPresent == null);
+        if (entry == null) {
+            return notPresent;
+        }
+        if (entry.address != 0) {
+            throw new JVMCIError("cannot get offset of static field " + name);
+        }
+        if (outCppType != null) {
+            outCppType[0] = entry.type;
+        }
+        return type.cast(convertValue(name, type, entry.offset, inCppType));
     }
 
     /**
@@ -162,14 +185,21 @@ public class HotSpotVMConfigAccess {
      * @throws JVMCIError if the field is not static or not present and {@code notPresent} is null
      */
     public long getFieldAddress(String name, String cppType, Long notPresent) {
-        VMField entry = getField(name, cppType, notPresent == null);
-        if (entry == null) {
-            return notPresent;
-        }
-        if (entry.address == 0) {
-            throw new JVMCIError(name + " is not a static field");
-        }
-        return entry.address;
+        return getFieldAddress0(name, notPresent, cppType, null);
+    }
+
+    /**
+     * Gets the address of a static C++ field.
+     *
+     * @param name fully qualified name of the field
+     * @param notPresent if non-null and the field is not present then this value is returned
+     * @param outCppType if non-null, the C++ type of the field (e.g., {@code "HeapWord*"}) is
+     *            returned in element 0 of this array
+     * @return the address of the requested field
+     * @throws JVMCIError if the field is not static or not present and {@code notPresent} is null
+     */
+    public long getFieldAddress(String name, Long notPresent, String[] outCppType) {
+        return getFieldAddress0(name, notPresent, null, outCppType);
     }
 
     /**
@@ -181,7 +211,21 @@ public class HotSpotVMConfigAccess {
      * @throws JVMCIError if the field is not static or not present
      */
     public long getFieldAddress(String name, String cppType) {
-        return getFieldAddress(name, cppType, null);
+        return getFieldAddress0(name, null, cppType, null);
+    }
+
+    private long getFieldAddress0(String name, Long notPresent, String inCppType, String[] outCppType) {
+        VMField entry = getField(name, inCppType, notPresent == null);
+        if (entry == null) {
+            return notPresent;
+        }
+        if (entry.address == 0) {
+            throw new JVMCIError(name + " is not a static field");
+        }
+        if (outCppType != null) {
+            outCppType[0] = entry.type;
+        }
+        return entry.address;
     }
 
     /**
@@ -195,14 +239,7 @@ public class HotSpotVMConfigAccess {
      * @throws JVMCIError if the field is not static or not present and {@code notPresent} is null
      */
     public <T> T getFieldValue(String name, Class<T> type, String cppType, T notPresent) {
-        VMField entry = getField(name, cppType, notPresent == null);
-        if (entry == null) {
-            return notPresent;
-        }
-        if (entry.value == null) {
-            throw new JVMCIError(name + " is not a static field ");
-        }
-        return type.cast(convertValue(name, type, entry.value, cppType));
+        return getFieldValue0(name, type, notPresent, cppType, null);
     }
 
     /**
@@ -215,7 +252,22 @@ public class HotSpotVMConfigAccess {
      * @throws JVMCIError if the field is not static or not present
      */
     public <T> T getFieldValue(String name, Class<T> type, String cppType) {
-        return getFieldValue(name, type, cppType, null);
+        return getFieldValue0(name, type, null, cppType, null);
+    }
+
+    /**
+     * Gets the value of a static C++ field.
+     *
+     * @param name fully qualified name of the field
+     * @param type the boxed type to which the constant value will be converted
+     * @param notPresent if non-null and the field is not present then this value is returned
+     * @param outCppType if non-null, the C++ type of the field (e.g., {@code "HeapWord*"}) is
+     *            returned in element 0 of this array
+     * @return the value of the requested field
+     * @throws JVMCIError if the field is not static or not present and {@code notPresent} is null
+     */
+    public <T> T getFieldValue(String name, Class<T> type, T notPresent, String[] outCppType) {
+        return getFieldValue0(name, type, notPresent, null, outCppType);
     }
 
     /**
@@ -227,7 +279,21 @@ public class HotSpotVMConfigAccess {
      * @throws JVMCIError if the field is not static or not present
      */
     public <T> T getFieldValue(String name, Class<T> type) {
-        return getFieldValue(name, type, null, null);
+        return getFieldValue0(name, type, null, null, null);
+    }
+
+    private <T> T getFieldValue0(String name, Class<T> type, T notPresent, String inCppType, String[] outCppType) {
+        VMField entry = getField(name, inCppType, notPresent == null);
+        if (entry == null) {
+            return notPresent;
+        }
+        if (entry.value == null) {
+            throw new JVMCIError(name + " is not a static field ");
+        }
+        if (outCppType != null) {
+            outCppType[0] = entry.type;
+        }
+        return type.cast(convertValue(name, type, entry.value, inCppType));
     }
 
     /**
