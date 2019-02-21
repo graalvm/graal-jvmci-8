@@ -1020,6 +1020,19 @@ oop JVMCINMethodData::get_mirror(nmethod* nm) {
 void JVMCINMethodData::set_mirror(nmethod* nm, oop new_mirror) {
   oop* addr = nm->oop_addr_at(_mirror_index);
   assert(*addr == NULL || new_mirror == NULL || *addr == new_mirror, "cannot overwrite non-null mirror");
+
+  // Patching in an oop so make sure nm is on the scavenge list.
+  if (ScavengeRootsInCode && (new_mirror != NULL && new_mirror->is_scavengable())) {
+    MutexLockerEx ml_code (CodeCache_lock, Mutex::_no_safepoint_check_flag);
+    if (!nm->on_scavenge_root_list()) {
+      CodeCache::add_scavenge_root_nmethod(nm);
+    }
+
+    // Since we've patched some oops in the nmethod,
+    // (re)register it with the heap.
+    Universe::heap()->register_nmethod(nm);
+  }
+
   *addr = new_mirror;
 }
 
