@@ -958,34 +958,48 @@ void JVMCIRuntime::call_getCompiler(TRAPS) {
   JVMCIENV->call_HotSpotJVMCIRuntime_getCompiler(jvmciRuntime, JVMCI_CHECK);
 }
 
-JVMCINMethodData::JVMCINMethodData(
+void* JVMCINMethodData::operator new(size_t size, size_t data_size) throw() {
+  return CHeapObj<mtCompiler>::operator new(data_size);
+}
+
+JVMCINMethodData* JVMCINMethodData::new_JVMCINMethodData(
   JVMCIEnv* jvmciEnv,
   DebugInformationRecorder* debug_info,
   JVMCIObject mirror,
   bool mirror_triggers_unloading,
   FailedSpeculation** failed_speculations)
 {
+  const char* name = NULL;
+  size_t data_size = sizeof(JVMCINMethodData);
+  JVMCIObject mirror_name = jvmciEnv->get_InstalledCode_name(mirror);
+  if (!mirror_name.is_null()) {
+    name = jvmciEnv->as_utf8_string(mirror_name);
+    data_size += strlen(name) + 1;
+  }
+  return new (data_size) JVMCINMethodData(jvmciEnv, debug_info, mirror, name, mirror_triggers_unloading, failed_speculations);
+}
+
+JVMCINMethodData::JVMCINMethodData(
+  JVMCIEnv* jvmciEnv,
+  DebugInformationRecorder* debug_info,
+  JVMCIObject mirror,
+  const char* mirror_name,
+  bool mirror_triggers_unloading,
+  FailedSpeculation** failed_speculations)
+{
   _mirror_triggers_unloading = mirror_triggers_unloading;
   _failed_speculations = failed_speculations;
-  _mirror_name = NULL;
 
   // Reserve or initialize mirror slot in the oops table.
   OopRecorder* oop_recorder = debug_info->oop_recorder();
   _mirror_index = oop_recorder->allocate_oop_index(mirror.is_hotspot() ? mirror.as_jobject() : NULL);
 
-  JVMCIObject mirror_name = jvmciEnv->get_InstalledCode_name(mirror);
-  if (!mirror_name.is_null()) {
-    const char* name = jvmciEnv->as_utf8_string(mirror_name);
-    char* name_copy = NEW_C_HEAP_ARRAY(char, strlen(name) + 1, mtCompiler);
-    strcpy(name_copy, name);
-    _mirror_name = name_copy;
-  }
-}
-
-JVMCINMethodData::~JVMCINMethodData() {
-  if (_mirror_name != NULL) {
-    FREE_C_HEAP_ARRAY(char, _mirror_name, mtCompiler);
-    _mirror_name = NULL;
+  if (mirror_name != NULL) {
+    _has_name = true;
+    char* dest = (char*) this->mirror_name();
+    strcpy(dest, mirror_name);
+  } else {
+    _has_name = false;
   }
 }
 
@@ -1899,7 +1913,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
   bool install_default = JVMCIENV->get_HotSpotNmethod_isDefault(mirror) != 0;
   bool mirror_triggers_unloading = !install_default;
 
-  JVMCINMethodData* data = new JVMCINMethodData(JVMCIENV, debug_info, mirror, mirror_triggers_unloading, failed_speculations);
+  JVMCINMethodData* data = JVMCINMethodData::new_JVMCINMethodData(JVMCIENV, debug_info, mirror, mirror_triggers_unloading, failed_speculations);
 
   JVMCI::CodeInstallResult result;
   {

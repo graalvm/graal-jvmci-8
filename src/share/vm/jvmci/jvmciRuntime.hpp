@@ -47,30 +47,38 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
   // See HotSpotNmethod.isDefault for more detail.
   bool _mirror_triggers_unloading;
 
-  // Value of HotSpotNmethod.name converted to a C string.
-  const char* _mirror_name;
+  // Is HotSpotNmethod.name non-null? If so, the value is
+  // embedded in the end of this object.
+  bool _has_name;
 
   // Address of the failed speculations list to which a speculation
   // is appended when it causes a deoptimization.
   FailedSpeculation** _failed_speculations;
 
- public:
+  // Placement new operator for inlining the mirror name.
+  void* operator new(size_t size, size_t data_size) throw();
+
   JVMCINMethodData(JVMCIEnv* jvmciEnv,
+      DebugInformationRecorder* debug_info,
+      JVMCIObject mirror,
+      const char* name,
+      bool mirror_triggers_unloading,
+      FailedSpeculation** failed_speculations);
+ public:
+
+  static JVMCINMethodData* new_JVMCINMethodData(JVMCIEnv* jvmciEnv,
       DebugInformationRecorder* debug_info,
       JVMCIObject mirror,
       bool mirror_triggers_unloading,
       FailedSpeculation** failed_speculations);
-
-  // Releases all resources held by this object.
-  ~JVMCINMethodData();
 
   bool mirror_triggers_unloading() const { return _mirror_triggers_unloading; }
 
   // Adds `speculation` to the failed speculations list.
   void add_failed_speculation(nmethod* nm, jlong speculation);
 
-  // Gets the value of HotSpotNmethod.name converted to a C string (which may be NULL).
-  const char* mirror_name() { return _mirror_name; }
+  // Gets the value of HotSpotNmethod.name (which may be NULL).
+  const char* mirror_name() { return _has_name ? (char*)(((address) this) + sizeof(JVMCINMethodData)) : NULL; }
 
   // Clears the HotSpotNmethod.address field in the  mirror. If nm
   // is dead, the HotSpotNmethod.entryPoint field is also cleared.
