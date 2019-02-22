@@ -100,7 +100,7 @@
         downloads: {
             JAVA_HOME: {
                 name : "oraclejdk",
-                version : "8u192",
+                version : "8u202",
                 platformspecific: true
             }
         }
@@ -111,7 +111,7 @@
         downloads: {
             JAVA_HOME: {
                 name : "openjdk",
-                version : "8u192",
+                version : "8u202",
                 platformspecific: true
             }
         }
