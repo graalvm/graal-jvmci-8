@@ -1734,7 +1734,9 @@ C2V_VMENTRY(jobject, unboxPrimitive, (JNIEnv* env, jobject, jobject object))
   Handle box = JVMCIENV->asConstant(JVMCIENV->wrap(object), JVMCI_CHECK_NULL);
   BasicType type = java_lang_boxing_object::basic_type(box());
   jvalue result;
-  java_lang_boxing_object::get_value(box(), &result);
+  if (java_lang_boxing_object::get_value(box(), &result) == T_ILLEGAL) {
+    return NULL;
+  }
   JVMCIObject boxResult = JVMCIENV->create_box(type, &result, JVMCI_CHECK_NULL);
   return JVMCIENV->get_jobject(boxResult);
 C2V_END
@@ -1745,6 +1747,9 @@ C2V_VMENTRY(jobject, boxPrimitive, (JNIEnv* env, jobject, jobject object))
   }
   JVMCIObject box = JVMCIENV->wrap(object);
   BasicType type = JVMCIENV->get_box_type(box);
+  if (type == T_ILLEGAL) {
+    return NULL;
+  }
   jvalue value = JVMCIENV->get_boxed_value(type, box);
   JavaValue box_result(T_OBJECT);
   JavaCallArguments jargs;

@@ -346,10 +346,14 @@ public:
     }
   }
 
+  // Get the primitive value from a Java boxing object.  It's hard error to
+  // pass a non-primitive BasicType.
   jvalue get_boxed_value(BasicType type, JVMCIObject object) {
     jvalue result;
     if (is_hotspot()) {
-      java_lang_boxing_object::get_value(HotSpotJVMCI::resolve(object), &result);
+      if (java_lang_boxing_object::get_value(HotSpotJVMCI::resolve(object), &result) == T_ILLEGAL) {
+        ShouldNotReachHere();
+      }
     } else {
       JNIAccessMark jni(this);
       jfieldID field = JNIJVMCI::box_field(type);
@@ -369,6 +373,7 @@ public:
     return result;
   }
 
+  // Return the BasicType of the object if it's a boxing object, otherwise return T_ILLEGAL.
   BasicType get_box_type(JVMCIObject object) {
     if (is_hotspot()) {
       return java_lang_boxing_object::basic_type(HotSpotJVMCI::resolve(object));
@@ -383,12 +388,25 @@ public:
       if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_LONG))) return T_LONG;
       if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_FLOAT))) return T_FLOAT;
       if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_DOUBLE))) return T_DOUBLE;
-      ShouldNotReachHere();
-      return T_CONFLICT;
+      return T_ILLEGAL;
     }
   }
 
+  // Create a boxing object of the appropriate primitive type.
   JVMCIObject create_box(BasicType type, jvalue* value, JVMCI_TRAPS) {
+    switch (type) {
+      case T_BOOLEAN:
+      case T_BYTE:
+      case T_CHAR:
+      case T_SHORT:
+      case T_INT:
+      case T_LONG:
+      case T_FLOAT:
+      case T_DOUBLE:
+        break;
+      default:
+        JVMCI_THROW_MSG_(IllegalArgumentException, "Only boxes for primitive values can be created", JVMCIObject());
+    }
     if (is_hotspot()) {
       JavaThread* THREAD = JavaThread::current();
       oop box = java_lang_boxing_object::create(type, value, CHECK_(JVMCIObject()));
