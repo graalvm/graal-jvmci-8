@@ -1824,17 +1824,6 @@ bool nmethod::can_unload(BoolObjectClosure* is_alive, oop* root, bool unloading_
       return false;
   }
 
-#if INCLUDE_JVMCI
-  if (_jvmci_nmethod_data != NULL &&
-      _jvmci_nmethod_data->get_mirror(this) == obj &&
-      !_jvmci_nmethod_data->mirror_triggers_unloading()) {
-    // Don't unload this nmethod in the special case of
-    // its "non-invalidation-triggering" mirror
-    *root = NULL;
-    return false;
-  }
-#endif
-
   // If ScavengeRootsInCode is true, an nmethod might be unloaded
   // simply because one of its constant oops has gone dead.
   // No actual classes need to be unloaded in order for this to occur.

@@ -902,10 +902,11 @@ final class CompilerToVM {
     native Object unhand(long handle);
 
     /**
-     * Updates the internal fields of the nmethodHandle based on the current state of the
-     * corresponding nmethod.
+     * Updates {@code address} and {@code entryPoint} fields of {@code nmethodMirror} based on the
+     * current state of the {@code nmethod} identified by {@code address} and
+     * {@code nmethodMirror.compileId} in the code cache.
      */
-    native void updateHotSpotNmethodHandle(HotSpotNmethodHandle nmethodHandle);
+    native void updateHotSpotNmethod(HotSpotNmethod nmethodMirror);
 
     /**
      * @see InstalledCode#getCode()

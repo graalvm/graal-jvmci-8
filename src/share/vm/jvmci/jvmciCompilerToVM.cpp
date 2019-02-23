@@ -925,12 +925,7 @@ C2V_VMENTRY(jobject, getStackTraceElement, (JNIEnv* env, jobject, jobject jvmci_
 C2V_END
 
 C2V_VMENTRY(jobject, executeHotSpotNmethod, (JNIEnv* env, jobject, jobject args, jobject hs_nmethod))
-  bool wrap_objects = false;
   if (env != JavaThread::current()->jni_environment()) {
-    wrap_objects = true;
-  }
-
-  if (wrap_objects) {
     // The incoming arguments array would have to contain JavaConstants instead of regular objects
     // and the return value would have to be wrapped as a JavaConstant.
     JVMCI_THROW_MSG_NULL(InternalError, "Wrapping of arguments is currently unsupported");
@@ -2233,10 +2228,11 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
       JVMCIObject methodObject = thisEnv->get_HotSpotNmethod_method(obj);
       methodHandle mh = thisEnv->asMethod(methodObject);
       jboolean isDefault = thisEnv->get_HotSpotNmethod_isDefault(obj);
+      jlong compileIdSnapshot = thisEnv->get_HotSpotNmethod_compileIdSnapshot(obj);
       JVMCIObject name_string = thisEnv->get_InstalledCode_name(obj);
       const char* cstring = name_string.is_null() ? NULL : thisEnv->as_utf8_string(name_string);
       // Create a new HotSpotNmethod instance in the peer runtime
-      result = peerEnv->new_HotSpotNmethod(mh(), cstring, isDefault, JVMCI_CHECK_0);
+      result = peerEnv->new_HotSpotNmethod(mh(), cstring, isDefault, compileIdSnapshot, JVMCI_CHECK_0);
       if (nm == NULL) {
         // nmethod must have been unloaded
       } else {
@@ -2273,7 +2269,7 @@ C2V_VMENTRY(jobject, unhand, (JNIEnv* env, jobject, jlong obj_handle))
   return result;
 }
 
-C2V_VMENTRY(void, updateHotSpotNmethodHandle, (JNIEnv* env, jobject, jobject code_handle))
+C2V_VMENTRY(void, updateHotSpotNmethod, (JNIEnv* env, jobject, jobject code_handle))
   JVMCIObject code = JVMCIENV->wrap(code_handle);
   // Execute this operation for the side effect of updating the InstalledCode state
   JVMCIENV->asNmethod(code);
@@ -2391,7 +2387,6 @@ C2V_VMENTRY(bool, addFailedSpeculation, (JNIEnv* env, jobject, jlong failed_spec
 #define HS_RESOLVED_FIELD       "Ljdk/vm/ci/hotspot/HotSpotResolvedJavaField;"
 #define HS_INSTALLED_CODE       "Ljdk/vm/ci/hotspot/HotSpotInstalledCode;"
 #define HS_NMETHOD              "Ljdk/vm/ci/hotspot/HotSpotNmethod;"
-#define HS_NMETHOD_HANDLE       "Ljdk/vm/ci/hotspot/HotSpotNmethodHandle;"
 #define HS_CONSTANT_POOL        "Ljdk/vm/ci/hotspot/HotSpotConstantPool;"
 #define HS_COMPILED_CODE        "Ljdk/vm/ci/hotspot/HotSpotCompiledCode;"
 #define HS_CONFIG               "Ljdk/vm/ci/hotspot/HotSpotVMConfig;"
@@ -2502,7 +2497,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "registerNativeMethods",                        CC "(" CLASS ")[J",                                                                   FN_PTR(registerNativeMethods)},
   {CC "translate",                                    CC "(" OBJECT ")J",                                                                   FN_PTR(translate)},
   {CC "unhand",                                       CC "(J)" OBJECT,                                                                      FN_PTR(unhand)},
-  {CC "updateHotSpotNmethodHandle",                   CC "(" HS_NMETHOD_HANDLE ")V",                                                        FN_PTR(updateHotSpotNmethodHandle)},
+  {CC "updateHotSpotNmethod",                         CC "(" HS_NMETHOD ")V",                                                               FN_PTR(updateHotSpotNmethod)},
   {CC "getCode",                                      CC "(" HS_INSTALLED_CODE ")[B",                                                       FN_PTR(getCode)},
   {CC "getCode",                                      CC "(" HS_INSTALLED_CODE ")[B",                                                       FN_PTR(getCode)},
   {CC "asReflectionExecutable",                       CC "(" HS_RESOLVED_METHOD ")" REFLECTION_EXECUTABLE,                                  FN_PTR(asReflectionExecutable)},

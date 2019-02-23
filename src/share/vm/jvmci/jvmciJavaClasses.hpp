@@ -39,8 +39,17 @@
  * Java code executing in the JVMCI shared library.
  */
 
-#define JVMCI_CLASSES_DO(start_class, end_class, char_field, int_field, boolean_field, long_field, float_field, object_field, \
-                         primarray_field, objectarray_field, static_object_field, static_objectarray_field, static_int_field, static_boolean_field, jvmci_method, jvmci_constructor) \
+#define JVMCI_CLASSES_DO(start_class, \
+                         end_class, \
+                         char_field, \
+                         int_field, \
+                         boolean_field, \
+                         long_field, \
+                         float_field, \
+                         object_field, \
+                         primarray_field, \
+                         objectarray_field, \
+                         static_object_field, static_objectarray_field, static_int_field, static_boolean_field, jvmci_method, jvmci_constructor) \
   start_class(Architecture, jdk_vm_ci_code_Architecture)                                                      \
     object_field(Architecture, wordKind, "Ljdk/vm/ci/meta/PlatformKind;")                                     \
   end_class                                                                                                   \
@@ -77,12 +86,9 @@
   end_class                                                                                                   \
   start_class(HotSpotNmethod, jdk_vm_ci_hotspot_HotSpotNmethod)                                               \
     boolean_field(HotSpotNmethod, isDefault)                                                                  \
+    long_field(HotSpotNmethod, compileIdSnapshot)                                                                     \
     object_field(HotSpotNmethod, method, "Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;")                 \
-    jvmci_constructor(HotSpotNmethod, "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;Ljava/lang/String;Z)V")              \
-  end_class                                                                                                   \
-  start_class(HotSpotNmethodHandle, jdk_vm_ci_hotspot_HotSpotNmethodHandle)                                   \
-    long_field(HotSpotNmethodHandle, compileId)                                                               \
-    jvmci_constructor(HotSpotNmethodHandle, "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;Ljava/lang/String;Z)V") \
+    jvmci_constructor(HotSpotNmethod, "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;Ljava/lang/String;ZJ)V") \
   end_class                                                                                                   \
   start_class(HotSpotCompiledCode, jdk_vm_ci_hotspot_HotSpotCompiledCode)                                     \
     object_field(HotSpotCompiledCode, name, "Ljava/lang/String;")                                             \

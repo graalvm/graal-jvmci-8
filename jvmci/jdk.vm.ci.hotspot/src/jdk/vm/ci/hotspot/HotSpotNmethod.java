@@ -23,6 +23,7 @@
 package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
+import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
 
 import jdk.vm.ci.code.InstalledCode;
 import jdk.vm.ci.code.InvalidInstalledCodeException;
@@ -37,11 +38,6 @@ import jdk.vm.ci.meta.ResolvedJavaMethod;
  * <p>
  * When a {@link HotSpotNmethod} dies, it triggers unloading of the {@code nmethod} unless
  * {@link #isDefault() == true}.
- * <p>
- * The diagram below shows the relationship between an {@code nmethod} and its
- * {@link HotSpotNmethod} mirrors:
- * <p>
- * <img src="doc-files/HotSpotNmethod Mirrors.jpg">
  */
 public class HotSpotNmethod extends HotSpotInstalledCode {
 
@@ -53,18 +49,29 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
 
     /**
      * Specifies whether the {@code nmethod} associated with this object is the code executed by
-     * default HotSpot linkage when a normal Java call to {@link #method} is made. This true when
-     * {@code this.method.metadataHandle->_code == this.address}. If not, then the {@code nmethod}
-     * can only be invoked via a non-default mechanism based on a strong reference to this object
-     * (e.g., https://goo.gl/LX88rZ). As such, HotSpot will invalidate the {@code nmethod} once this
-     * object dies if {@code isDefault == false}.
+     * default HotSpot linkage when a normal Java call to {@link #method} is made. That is, does
+     * {@code this.method.metadataHandle->_code} == {@code this.address}. If not, then the
+     * {@code nmethod} can only be invoked via a reference to this object. An example of this is the
+     * trampoline mechanism used by Truffle: https://goo.gl/LX88rZ.
+     *
+     * HotSpot will unload the {@code nmethod} once this object dies if {@code isDefault == false}.
      */
     private final boolean isDefault;
 
-    HotSpotNmethod(HotSpotResolvedJavaMethodImpl method, String name, boolean isDefault) {
+    /**
+     * A snapshot of the nmethod's compile identifier when this object was created. This is non-zero
+     * iff a reference to this object is not in the oops table of the nmethod. In that case, every
+     * VM call for this object resolves the nmethod in the code cache based on {@link #getAddress()}
+     * and {@link #compileIdSnapshot}. If this field is 0, the {@code address} and {@code} fields of
+     * this object are updated by the VM if the nmethod dies or is made non-entrant.
+     */
+    private final long compileIdSnapshot;
+
+    HotSpotNmethod(HotSpotResolvedJavaMethodImpl method, String name, boolean isDefault, long compileId) {
         super(name);
         this.method = method;
         this.isDefault = isDefault;
+        this.compileIdSnapshot = isDefault ? compileId : 0L;
     }
 
     /**
@@ -76,6 +83,14 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
         return isDefault;
     }
 
+    @Override
+    public boolean isValid() {
+        if (compileIdSnapshot != 0L) {
+            compilerToVM().updateHotSpotNmethod(this);
+        }
+        return super.isValid();
+    }
+
     public ResolvedJavaMethod getMethod() {
         return method;
     }
@@ -83,6 +98,22 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
     @Override
     public void invalidate() {
         compilerToVM().invalidateHotSpotNmethod(this);
+    }
+
+    @Override
+    public long getAddress() {
+        if (compileIdSnapshot != 0L) {
+            compilerToVM().updateHotSpotNmethod(this);
+        }
+        return super.getAddress();
+    }
+
+    @Override
+    public long getEntryPoint() {
+        if (compileIdSnapshot != 0L) {
+            return 0;
+        }
+        return super.getEntryPoint();
     }
 
     @Override
@@ -106,6 +137,9 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
 
     @Override
     public Object executeVarargs(Object... args) throws InvalidInstalledCodeException {
+        if (IS_IN_NATIVE_IMAGE) {
+            throw new HotSpotJVMCIUnsupportedOperationError("Cannot execute nmethod via mirror in native image");
+        }
         assert checkArgs(args);
         return compilerToVM().executeHotSpotNmethod(args, this);
     }

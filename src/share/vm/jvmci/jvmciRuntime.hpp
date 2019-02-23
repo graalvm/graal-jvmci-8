@@ -41,12 +41,6 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
   // Index for the HotSpotNmethod mirror in the nmethod's oop table.
   int _mirror_index;
 
-  // Determines whether the nmethod is made unloadable when its
-  // mirror dies. This will be false if the mirror's
-  // isDefault field is true.
-  // See HotSpotNmethod.isDefault for more detail.
-  bool _mirror_triggers_unloading;
-
   // Is HotSpotNmethod.name non-null? If so, the value is
   // embedded in the end of this object.
   bool _has_name;
@@ -62,17 +56,13 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
       DebugInformationRecorder* debug_info,
       JVMCIObject mirror,
       const char* name,
-      bool mirror_triggers_unloading,
       FailedSpeculation** failed_speculations);
  public:
 
   static JVMCINMethodData* new_JVMCINMethodData(JVMCIEnv* jvmciEnv,
       DebugInformationRecorder* debug_info,
       JVMCIObject mirror,
-      bool mirror_triggers_unloading,
       FailedSpeculation** failed_speculations);
-
-  bool mirror_triggers_unloading() const { return _mirror_triggers_unloading; }
 
   // Adds `speculation` to the failed speculations list.
   void add_failed_speculation(nmethod* nm, jlong speculation);
