@@ -137,7 +137,7 @@
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
 
             # Look for a well known branch that fixes a downstream failure caused by a JDK change
-            ["git", "-C", "graal", "checkout", "ds/GR-13934", "||", "true"]
+            ["git", "-C", "graal", "checkout", "master", "||", "true"]
         ],
     },
 
@@ -162,6 +162,9 @@
             ["./graal/vm/latest_graalvm_home/bin/gu", "rebuild-images", "js"],
             ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
             ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
+
+            ["mx", "-p", "graal/vm", "--env", "libgraal", "--extra-image-builder-argument=-ea", "--extra-image-builder-argument=-J-esa", "build"],
+            ["mx", "-p", "graal/vm", "--env", "libgraal", "gate", "--task", "LibGraal"]
         ]
     },
 
