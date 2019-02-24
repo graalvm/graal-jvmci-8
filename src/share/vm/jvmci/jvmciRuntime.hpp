@@ -36,8 +36,9 @@ class JVMCIObject;
 class JVMCIEnv;
 class JVMCICompileState;
 
-// Encapsulates the JVMCI metadata associated with an nmethod.
-class JVMCINMethodData: public CHeapObj<mtCompiler> {
+// Encapsulates the JVMCI metadata for an nmethod.
+// JVMCINMethodData objects are inlined into nmethods.
+class JVMCINMethodData VALUE_OBJ_CLASS_SPEC {
   // Index for the HotSpotNmethod mirror in the nmethod's oop table.
   int _mirror_index;
 
@@ -49,19 +50,13 @@ class JVMCINMethodData: public CHeapObj<mtCompiler> {
   // is appended when it causes a deoptimization.
   FailedSpeculation** _failed_speculations;
 
-  // Placement new operator for inlining the mirror name.
-  void* operator new(size_t size, size_t data_size) throw();
+public:
+  // A JVMCINMethodData is inlined in an nmethod
+  void* operator new(size_t size, nmethod* nm) throw();
 
   JVMCINMethodData(JVMCIEnv* jvmciEnv,
-      DebugInformationRecorder* debug_info,
-      JVMCIObject mirror,
+      int mirror_index,
       const char* name,
-      FailedSpeculation** failed_speculations);
- public:
-
-  static JVMCINMethodData* new_JVMCINMethodData(JVMCIEnv* jvmciEnv,
-      DebugInformationRecorder* debug_info,
-      JVMCIObject mirror,
       FailedSpeculation** failed_speculations);
 
   // Adds `speculation` to the failed speculations list.

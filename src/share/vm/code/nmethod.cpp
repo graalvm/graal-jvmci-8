@@ -165,6 +165,7 @@ struct java_nmethod_stats_struct {
   int nul_chk_table_size;
 #if INCLUDE_JVMCI
   int speculations_size;
+  int jvmci_data_size;
 #endif
   int oops_size;
   int metadata_size;
@@ -185,6 +186,7 @@ struct java_nmethod_stats_struct {
     nul_chk_table_size  += nm->nul_chk_table_size();
 #if INCLUDE_JVMCI
     speculations_size   += nm->speculations_size();
+    jvmci_data_size     += nm->jvmci_data_size();
 #endif
   }
   void print_nmethod_stats(const char* name) {
@@ -205,6 +207,7 @@ struct java_nmethod_stats_struct {
     if (nul_chk_table_size != 0)  tty->print_cr(" nul chk table  = %d", nul_chk_table_size);
 #if INCLUDE_JVMCI
     if (speculations_size != 0)   tty->print_cr(" speculations   = %d", speculations_size);
+    if (jvmci_data_size != 0)     tty->print_cr(" JVMCI data     = %d", jvmci_data_size);
 #endif
   }
 };
@@ -589,9 +592,6 @@ void nmethod::init_defaults() {
 #if INCLUDE_RTM_OPT
   _rtm_state               = NoRTM;
 #endif
-#if INCLUDE_JVMCI
-  _jvmci_nmethod_data     = NULL;
-#endif
 #ifdef HAVE_DTRACE_H
   _trap_offset             = 0;
 #endif // def HAVE_DTRACE_H
@@ -689,7 +689,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
 #if INCLUDE_JVMCI
   , char* speculations,
   int speculations_len,
-  JVMCINMethodData* jvmci_nmethod_data
+  int jvmci_data_size
 #endif
 )
 {
@@ -706,6 +706,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
       + round_to(nul_chk_table->size_in_bytes(), oopSize)
 #if INCLUDE_JVMCI
       + round_to(speculations_len              , oopSize)
+      + round_to(jvmci_data_size               , oopSize)
 #endif
       + round_to(debug_info->data_size()       , oopSize);
 
@@ -720,7 +721,7 @@ nmethod* nmethod::new_nmethod(methodHandle method,
 #if INCLUDE_JVMCI
             , speculations,
             speculations_len,
-            jvmci_nmethod_data
+            jvmci_data_size
 #endif
             );
 
@@ -799,7 +800,8 @@ nmethod::nmethod(
     _nul_chk_table_offset    = _handler_table_offset;
 #if INCLUDE_JVMCI
     _speculations_offset     = _nul_chk_table_offset;
-    _nmethod_end_offset      = _speculations_offset;
+    _jvmci_data_offset       = _speculations_offset;
+    _nmethod_end_offset      = _jvmci_data_offset;
 #else
     _nmethod_end_offset      = _nul_chk_table_offset;
 #endif
@@ -962,7 +964,7 @@ nmethod::nmethod(
 #if INCLUDE_JVMCI
   , char* speculations,
   int speculations_len,
-  JVMCINMethodData* jvmci_nmethod_data
+  int jvmci_data_size
 #endif
   )
   : CodeBlob("nmethod", code_buffer, sizeof(nmethod),
@@ -989,7 +991,6 @@ nmethod::nmethod(
     _stub_offset             = content_offset()      + code_buffer->total_offset_of(code_buffer->stubs());
 
 #if INCLUDE_JVMCI
-    _jvmci_nmethod_data = jvmci_nmethod_data;
     if (compiler->is_jvmci()) {
       // JVMCI might not produce any stub sections
       if (offsets->value(CodeOffsets::Exceptions) != -1) {
@@ -1039,7 +1040,8 @@ nmethod::nmethod(
     _nul_chk_table_offset    = _handler_table_offset + round_to(handler_table->size_in_bytes(), oopSize);
 #if INCLUDE_JVMCI
     _speculations_offset     = _nul_chk_table_offset + round_to(nul_chk_table->size_in_bytes(), oopSize);
-    _nmethod_end_offset      = _speculations_offset  + round_to(speculations_len, oopSize);
+    _jvmci_data_offset       = _speculations_offset  + round_to(speculations_len, oopSize);
+    _nmethod_end_offset      = _jvmci_data_offset    + round_to(jvmci_data_size, oopSize);
 #else
     _nmethod_end_offset      = _nul_chk_table_offset + round_to(nul_chk_table->size_in_bytes(), oopSize);
 #endif
@@ -1104,8 +1106,8 @@ void nmethod::log_identity(xmlStream* log) const {
     log->print(" level='%d'", comp_level());
   }
 #if INCLUDE_JVMCI
-  if (_jvmci_nmethod_data != NULL) {
-    const char* jvmci_name = _jvmci_nmethod_data->mirror_name();
+  if (jvmci_nmethod_data() != NULL) {
+    const char* jvmci_name = jvmci_nmethod_data()->mirror_name();
     if (jvmci_name != NULL) {
       log->print(" jvmci_mirror_name='");
       log->text("%s", jvmci_name);
@@ -1767,10 +1769,6 @@ void nmethod::flush() {
 #ifdef SHARK
   ((SharkCompiler *) compiler())->free_compiled_method(insts_begin());
 #endif // SHARK
-
-#if INCLUDE_JVMCI
-  assert(_jvmci_nmethod_data == NULL, "should have been nulled out when transitioned to zombie");
-#endif
 
   ((CodeBlob*)(this))->flush();
 
@@ -3157,10 +3155,14 @@ void nmethod::print() const {
                                               nul_chk_table_end(),
                                               nul_chk_table_size());
 #if INCLUDE_JVMCI
-  if (speculations_size () > 0) tty->print(" speculations   [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
+  if (speculations_size () > 0) tty->print_cr(" speculations   [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
                                               speculations_begin(),
                                               speculations_end(),
                                               speculations_size());
+  if (jvmci_data_size   () > 0) tty->print_cr(" JVMCI data     [" INTPTR_FORMAT "," INTPTR_FORMAT "] = %d",
+                                              jvmci_data_begin(),
+                                              jvmci_data_end(),
+                                              jvmci_data_size());
 #endif
 }
 
@@ -3590,28 +3592,24 @@ void nmethod::print_statistics() {
 
 #if INCLUDE_JVMCI
 void nmethod::invalidate_mirror() {
-  if (_jvmci_nmethod_data != NULL) {
-    _jvmci_nmethod_data->invalidate_mirror(this);
-    if (!is_alive()) {
-      delete _jvmci_nmethod_data;
-      _jvmci_nmethod_data = NULL;
-    }
+  if (jvmci_nmethod_data() != NULL) {
+    jvmci_nmethod_data()->invalidate_mirror(this);
   }
 }
 
 void nmethod::update_speculation(JavaThread* thread) {
   jlong speculation = thread->pending_failed_speculation();
   if (speculation != 0) {
-    if (_jvmci_nmethod_data != NULL) {
-      _jvmci_nmethod_data->add_failed_speculation(this, speculation);
+    if (jvmci_nmethod_data() != NULL) {
+      jvmci_nmethod_data()->add_failed_speculation(this, speculation);
     }
     thread->set_pending_failed_speculation(0);
   }
 }
 
 const char* nmethod::mirror_name() {
-  if (_jvmci_nmethod_data != NULL) {
-    return _jvmci_nmethod_data->mirror_name();
+  if (jvmci_nmethod_data() != NULL) {
+    return jvmci_nmethod_data()->mirror_name();
   }
   return NULL;
 }
