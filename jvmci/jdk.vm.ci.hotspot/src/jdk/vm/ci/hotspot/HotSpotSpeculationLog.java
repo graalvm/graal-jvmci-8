@@ -172,6 +172,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
     public void collectFailedSpeculations() {
         if (failedSpeculationsAddress != 0 && UnsafeAccess.UNSAFE.getLong(failedSpeculationsAddress) != 0) {
             failedSpeculations = compilerToVM().getFailedSpeculations(failedSpeculationsAddress);
+            assert failedSpeculations.getClass() == byte[][].class;
         }
     }
 
