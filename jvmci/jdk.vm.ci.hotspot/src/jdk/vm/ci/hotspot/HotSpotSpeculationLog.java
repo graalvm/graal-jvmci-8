@@ -46,7 +46,6 @@ import jdk.vm.ci.meta.SpeculationLog;
  */
 public class HotSpotSpeculationLog implements SpeculationLog {
 
-    private static final byte[][] NO_SPECULATIONS = {};
     private static final byte[] NO_FLATTENED_SPECULATIONS = {};
 
     /**
@@ -160,7 +159,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
      * The list of failed speculations read from native memory via
      * {@link CompilerToVM#getFailedSpeculations(long)}.
      */
-    private byte[][] failedSpeculations = NO_SPECULATIONS;
+    private byte[][] failedSpeculations;
 
     /**
      * Speculations made during the compilation associated with this log.
