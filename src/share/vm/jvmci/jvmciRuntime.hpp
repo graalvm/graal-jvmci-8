@@ -37,7 +37,8 @@ class JVMCIEnv;
 class JVMCICompileState;
 
 // Encapsulates the JVMCI metadata for an nmethod.
-// JVMCINMethodData objects are inlined into nmethods.
+// JVMCINMethodData objects are inlined into nmethods
+// at nmethod::_jvmci_data_offset.
 class JVMCINMethodData VALUE_OBJ_CLASS_SPEC {
   // Index for the HotSpotNmethod mirror in the nmethod's oop table.
   int _mirror_index;

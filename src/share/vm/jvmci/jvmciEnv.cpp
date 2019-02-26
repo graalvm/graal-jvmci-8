@@ -1208,8 +1208,8 @@ CodeBlob* JVMCIEnv::asCodeBlob(JVMCIObject obj) {
   if (isa_HotSpotNmethod(obj)) {
     jlong compile_id_snapshot = get_HotSpotNmethod_compileIdSnapshot(obj);
     if (compile_id_snapshot != 0L) {
-      // A HotSpotNMethod unmanaged by its nmethod so safely find
-      // the nmethod* and then update the fields based on its state.
+      // A HotSpotNMethod not in an nmethod's oops table so look up
+      // the nmethod and then update the fields based on its state.
       CodeBlob* cb = CodeCache::find_blob_unsafe(code);
       if (cb == (CodeBlob*) code) {
         // Found a live CodeBlob with the same address, make sure it's the same nmethod
