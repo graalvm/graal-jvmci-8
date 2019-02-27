@@ -180,10 +180,15 @@ public class HotSpotSpeculationLog implements SpeculationLog {
             return NO_FLATTENED_SPECULATIONS;
         }
         if (validate) {
+            int newFailuresStart = failedSpeculations == null ? 0 : failedSpeculations.length;
             collectFailedSpeculations();
-            for (SpeculationReason reason : speculationReasons) {
-                if (!maySpeculate(reason)) {
-                    throw new BailoutException(false, "Speculation failed: " + reason);
+            if (failedSpeculations != null && failedSpeculations.length != newFailuresStart) {
+                for (SpeculationReason reason : speculationReasons) {
+                    byte[] encoding = encode(reason);
+                    // Only check against new failures
+                    if (contains(failedSpeculations, newFailuresStart, encoding)) {
+                        throw new BailoutException(false, "Speculation failed: " + reason);
+                    }
                 }
             }
         }
@@ -207,13 +212,23 @@ public class HotSpotSpeculationLog implements SpeculationLog {
         }
         if (failedSpeculations != null && failedSpeculations.length != 0) {
             byte[] encoding = encode(reason);
-            for (byte[] fs : failedSpeculations) {
-                if (Arrays.equals(fs, encoding)) {
-                    return false;
-                }
-            }
+            return !contains(failedSpeculations, 0, encoding);
         }
         return true;
+    }
+
+    /**
+     * @return {@code true} if {@code needle} is in {@code haystack[fromIndex..haystack.length-1]}
+     */
+    private static boolean contains(byte[][] haystack, int fromIndex, byte[] needle) {
+        for (int i = fromIndex; i < haystack.length; i++) {
+            byte[] fs = haystack[i];
+
+            if (Arrays.equals(fs, needle)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static long encodeIndexAndLength(int index, int length) {
