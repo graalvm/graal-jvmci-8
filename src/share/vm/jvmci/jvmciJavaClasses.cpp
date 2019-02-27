@@ -69,6 +69,7 @@ void HotSpotJVMCI::compute_offset(int &dest_offset, Klass* klass, const char* na
 
 
 jclass JNIJVMCI::_box_classes[T_CONFLICT+1];
+jclass JNIJVMCI::_byte_array;
 jfieldID JNIJVMCI::_box_fields[T_CONFLICT+1];
 jmethodID JNIJVMCI::_box_constructors[T_CONFLICT+1];
 jmethodID JNIJVMCI::_Class_getName_method;
@@ -376,6 +377,16 @@ void JNIJVMCI::initialize_ids(JNIEnv* env) {
   }
 
   BOX_CLASSES(DO_BOX_CLASS);
+
+  if (JVMCILibDumpJNIConfig == NULL) {
+    _byte_array = env->FindClass("[B");
+    JVMCI_EXCEPTION_CHECK(env, "FindClass([B)");
+    _byte_array = (jclass) env->NewGlobalRef(_byte_array);
+    assert(_byte_array != NULL, "uninitialized");
+  } else {
+    fileStream* st = JVMCIGlobals::get_jni_config_file();
+    st->print_cr("class [B");
+  }
 
 #define DUMP_ALL_NATIVE_METHODS(class_symbol) do {                                                                  \
   current_class_name = class_symbol->as_C_string();                                                                 \

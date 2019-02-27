@@ -2329,7 +2329,7 @@ C2V_VMENTRY(jobject, getFailedSpeculations, (JNIEnv* env, jobject, jlong failed_
     index++;
   }
 
-  JVMCIObjectArray result = JVMCIENV->new_Object_array(index, JVMCI_CHECK_NULL);
+  JVMCIObjectArray result = JVMCIENV->new_byte_array_array(index, JVMCI_CHECK_NULL);
   index = 0;
   for (FailedSpeculation* fs = head; fs != NULL; fs = fs->next()) {
     JVMCIPrimitiveArray entry = JVMCIENV->new_byteArray(fs->data_len(), JVMCI_CHECK_NULL);

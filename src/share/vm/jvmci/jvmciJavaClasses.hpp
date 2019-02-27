@@ -655,6 +655,7 @@ public:                                                                         
 class JNIJVMCI {
   friend class JVMCIEnv;
 
+  static jclass _byte_array;
   static jclass _box_classes[T_CONFLICT+1];
   static jfieldID _box_fields[T_CONFLICT+1];
   static jmethodID _box_constructors[T_CONFLICT+1];
@@ -667,6 +668,8 @@ class JNIJVMCI {
 
  public:
   static jmethodID Class_getName_method() { return _Class_getName_method; }
+
+  static jclass    byte_array()           { assert(_byte_array != NULL, "uninit");      return _byte_array; }
 
   static jclass    box_class(BasicType type)       { assert(_box_classes[type]!= NULL, "uninit");      return _box_classes[type]; }
   static jfieldID  box_field(BasicType type)       { assert(_box_fields[type]!= NULL, "uninit");       return _box_fields[type]; }
