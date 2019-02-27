@@ -123,7 +123,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         byte[] speculations;
         long failedSpeculationsAddress;
         if (speculationLog != null) {
-            speculations = speculationLog.getFlattenedSpeculations();
+            speculations = speculationLog.getFlattenedSpeculations(true);
             failedSpeculationsAddress = speculationLog.getFailedSpeculationsAddress();
         } else {
             speculations = new byte[0];

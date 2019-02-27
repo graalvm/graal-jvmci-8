@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Formatter;
 import java.util.List;
 
+import jdk.vm.ci.code.BailoutException;
 import jdk.vm.ci.meta.JavaConstant;
 import jdk.vm.ci.meta.SpeculationLog;
 
@@ -46,7 +47,6 @@ import jdk.vm.ci.meta.SpeculationLog;
  */
 public class HotSpotSpeculationLog implements SpeculationLog {
 
-    private static final byte[][] NO_SPECULATIONS = {};
     private static final byte[] NO_FLATTENED_SPECULATIONS = {};
 
     /**
@@ -121,7 +121,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
         /**
          * A speculation id is a long encoding an offset (high 32 bits) and a length (low 32 bts).
          * Combined, the index and length denote where the {@linkplain #encoding encoded
-         * speculation} is in a {@linkplain HotSpotSpeculationLog#getFlattenedSpeculations()
+         * speculation} is in a {@linkplain HotSpotSpeculationLog#getFlattenedSpeculations
          * flattened} speculations array.
          */
         private final JavaConstant id;
@@ -160,7 +160,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
      * The list of failed speculations read from native memory via
      * {@link CompilerToVM#getFailedSpeculations(long)}.
      */
-    private byte[][] failedSpeculations = NO_SPECULATIONS;
+    private byte[][] failedSpeculations;
 
     /**
      * Speculations made during the compilation associated with this log.
@@ -176,9 +176,22 @@ public class HotSpotSpeculationLog implements SpeculationLog {
         }
     }
 
-    byte[] getFlattenedSpeculations() {
+    byte[] getFlattenedSpeculations(boolean validate) {
         if (speculations == null) {
             return NO_FLATTENED_SPECULATIONS;
+        }
+        if (validate) {
+            int newFailuresStart = failedSpeculations == null ? 0 : failedSpeculations.length;
+            collectFailedSpeculations();
+            if (failedSpeculations != null && failedSpeculations.length != newFailuresStart) {
+                for (SpeculationReason reason : speculationReasons) {
+                    byte[] encoding = encode(reason);
+                    // Only check against new failures
+                    if (contains(failedSpeculations, newFailuresStart, encoding)) {
+                        throw new BailoutException(false, "Speculation failed: " + reason);
+                    }
+                }
+            }
         }
         int size = 0;
         for (byte[] s : speculations) {
@@ -200,13 +213,23 @@ public class HotSpotSpeculationLog implements SpeculationLog {
         }
         if (failedSpeculations != null && failedSpeculations.length != 0) {
             byte[] encoding = encode(reason);
-            for (byte[] fs : failedSpeculations) {
-                if (Arrays.equals(fs, encoding)) {
-                    return false;
-                }
-            }
+            return !contains(failedSpeculations, 0, encoding);
         }
         return true;
+    }
+
+    /**
+     * @return {@code true} if {@code needle} is in {@code haystack[fromIndex..haystack.length-1]}
+     */
+    private static boolean contains(byte[][] haystack, int fromIndex, byte[] needle) {
+        for (int i = fromIndex; i < haystack.length; i++) {
+            byte[] fs = haystack[i];
+
+            if (Arrays.equals(fs, needle)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static long encodeIndexAndLength(int index, int length) {
@@ -308,7 +331,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
                 sep = ", ";
             }
         }
-        buf.format("], len:%d, hash:0x%x}", size, Arrays.hashCode(getFlattenedSpeculations()));
+        buf.format("], len:%d, hash:0x%x}", size, Arrays.hashCode(getFlattenedSpeculations(false)));
         return buf.toString();
     }
 
