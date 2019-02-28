@@ -939,10 +939,11 @@ final class CompilerToVM {
     /**
      * Gets the failed speculations pointed to by {@code *failedSpeculationsAddress}.
      *
+     * @param currentFailures the known failures at {@code failedSpeculationsAddress}
      * @return the list of failed speculations with each entry being a single speculation in the
      *         format emitted by {@link HotSpotSpeculationEncoding#toByteArray()}
      */
-    native byte[][] getFailedSpeculations(long failedSpeculationsAddress);
+    native byte[][] getFailedSpeculations(long failedSpeculationsAddress, byte[][] currentFailures);
 
     /**
      * Gets the address of the {@code MethodData::_failed_speculations} field in the

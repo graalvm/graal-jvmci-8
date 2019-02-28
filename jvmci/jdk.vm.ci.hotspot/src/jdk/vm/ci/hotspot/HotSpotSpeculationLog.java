@@ -158,7 +158,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
 
     /**
      * The list of failed speculations read from native memory via
-     * {@link CompilerToVM#getFailedSpeculations(long)}.
+     * {@link CompilerToVM#getFailedSpeculations}.
      */
     private byte[][] failedSpeculations;
 
@@ -171,7 +171,7 @@ public class HotSpotSpeculationLog implements SpeculationLog {
     @Override
     public void collectFailedSpeculations() {
         if (failedSpeculationsAddress != 0 && UnsafeAccess.UNSAFE.getLong(failedSpeculationsAddress) != 0) {
-            failedSpeculations = compilerToVM().getFailedSpeculations(failedSpeculationsAddress);
+            failedSpeculations = compilerToVM().getFailedSpeculations(failedSpeculationsAddress, failedSpeculations);
             assert failedSpeculations.getClass() == byte[][].class;
         }
     }
