@@ -891,7 +891,7 @@ static void guarantee_failed_speculations_alive(nmethod* nm, FailedSpeculation**
       if (method != NULL) {
         method->print_name(&st);
       } else {
-        const char* jvmci_name = nm->jvmci_nmethod_mirror_name();
+        const char* jvmci_name = nm->jvmci_name();
         if (jvmci_name != NULL) {
           st.print_raw(jvmci_name);
         }

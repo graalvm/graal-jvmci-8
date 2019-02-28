@@ -641,7 +641,7 @@ JVMCIObject JVMCIEnv::new_StackTraceElement(methodHandle method, int bci, JVMCI_
   }
 }
 
-JVMCIObject JVMCIEnv::new_HotSpotNmethod(methodHandle method, const char* name, jboolean isDefault, JVMCI_TRAPS) {
+JVMCIObject JVMCIEnv::new_HotSpotNmethod(methodHandle method, const char* name, jboolean isDefault, jlong compileId, JVMCI_TRAPS) {
   JavaThread* THREAD = JavaThread::current();
 
   JVMCIObject methodObject = get_jvmci_method(method(), JVMCI_CHECK_(JVMCIObject()));
@@ -654,6 +654,7 @@ JVMCIObject JVMCIEnv::new_HotSpotNmethod(methodHandle method, const char* name, 
     HotSpotJVMCI::InstalledCode::set_name(this, obj, nameStr());
     HotSpotJVMCI::HotSpotNmethod::set_isDefault(this, obj, isDefault);
     HotSpotJVMCI::HotSpotNmethod::set_method(this, obj, HotSpotJVMCI::resolve(methodObject));
+    HotSpotJVMCI::HotSpotNmethod::set_compileIdSnapshot(this, obj, compileId);
     return wrap(obj);
   } else {
     JNIAccessMark jni(this);
@@ -662,8 +663,8 @@ JVMCIObject JVMCIEnv::new_HotSpotNmethod(methodHandle method, const char* name, 
       return JVMCIObject();
     }
 
-    jobject result = jni()->NewObject(JNIJVMCI::HotSpotNmethodHandle::clazz(),
-                                      JNIJVMCI::HotSpotNmethodHandle::constructor(),
+    jobject result = jni()->NewObject(JNIJVMCI::HotSpotNmethod::clazz(),
+                                      JNIJVMCI::HotSpotNmethod::constructor(),
                                       methodObject.as_jobject(), nameStr, isDefault);
     return wrap(result);
   }
@@ -1140,9 +1141,6 @@ void JVMCIEnv::initialize_installed_code(JVMCIObject installed_code, CodeBlob* c
     if (nm->is_in_use()) {
       set_InstalledCode_entryPoint(installed_code, (jlong) nm->verified_entry_point());
     }
-    if (isa_HotSpotNmethodHandle(installed_code)) {
-      set_HotSpotNmethodHandle_compileId(installed_code, nm->compile_id());
-    }
   } else {
     set_InstalledCode_entryPoint(installed_code, (jlong) cb->code_begin());
   }
@@ -1153,20 +1151,20 @@ void JVMCIEnv::initialize_installed_code(JVMCIObject installed_code, CodeBlob* c
 }
 
 
-void JVMCIEnv::invalidate_nmethod_mirror(JVMCIObject nmethod_mirror, JVMCI_TRAPS) {
-  if (nmethod_mirror.is_null()) {
+void JVMCIEnv::invalidate_nmethod_mirror(JVMCIObject mirror, JVMCI_TRAPS) {
+  if (mirror.is_null()) {
     JVMCI_THROW(NullPointerException);
   }
 
-  jlong nativeMethod = get_InstalledCode_address(nmethod_mirror);
-  nmethod* nm = (nmethod*)nativeMethod;
+  jlong nativeMethod = get_InstalledCode_address(mirror);
+  nmethod* nm = JVMCIENV->asNmethod(mirror);
   if (nm == NULL) {
     // Nothing to do
     return;
   }
 
   Thread* THREAD = Thread::current();
-  if (!nmethod_mirror.is_hotspot() && !THREAD->is_Java_thread()) {
+  if (!mirror.is_hotspot() && !THREAD->is_Java_thread()) {
     // Calling back into native might cause the execution to block, so only allow this when calling
     // from a JavaThread, which is the normal case anyway.
     JVMCI_THROW_MSG(IllegalArgumentException,
@@ -1184,7 +1182,7 @@ void JVMCIEnv::invalidate_nmethod_mirror(JVMCIObject nmethod_mirror, JVMCI_TRAPS
 
   // A HotSpotNmethod instance can only reference a single nmethod
   // during its lifetime so simply clear it here.
-  set_InstalledCode_address(nmethod_mirror, 0);
+  set_InstalledCode_address(mirror, 0);
 }
 
 Klass* JVMCIEnv::asKlass(JVMCIObject obj) {
@@ -1207,33 +1205,35 @@ CodeBlob* JVMCIEnv::asCodeBlob(JVMCIObject obj) {
   if (code == NULL) {
     return NULL;
   }
-  if (isa_HotSpotNmethodHandle(obj)) {
-    // The state of HotSpotNMethodHandles are updated cooperatively so
-    // safely find the original nmethod* and then update the fields
-    // based on its state.
-    CodeBlob* cb = CodeCache::find_blob_unsafe(code);
-    if (cb == (CodeBlob*) code) {
-      // Found a live CodeBlob with the same address, make sure it's the same nmethod
-      nmethod* nm = cb->as_nmethod_or_null();
-      long compile_id = get_HotSpotNmethodHandle_compileId(obj);
-      if (nm != NULL && nm->compile_id() == compile_id) {
-        if (!nm->is_alive()) {
-          // Break the link to the nmethod so that the instance is no
-          // longer alive.
-          set_InstalledCode_address(obj, 0);
-          set_InstalledCode_entryPoint(obj, 0);
-        } else if (nm->is_not_entrant()) {
-          // Zero the entry point so that it appears invalid but keep
-          // the address so that it still is alive.
-          set_InstalledCode_entryPoint(obj, 0);
+  if (isa_HotSpotNmethod(obj)) {
+    jlong compile_id_snapshot = get_HotSpotNmethod_compileIdSnapshot(obj);
+    if (compile_id_snapshot != 0L) {
+      // A HotSpotNMethod not in an nmethod's oops table so look up
+      // the nmethod and then update the fields based on its state.
+      CodeBlob* cb = CodeCache::find_blob_unsafe(code);
+      if (cb == (CodeBlob*) code) {
+        // Found a live CodeBlob with the same address, make sure it's the same nmethod
+        nmethod* nm = cb->as_nmethod_or_null();
+        if (nm != NULL && nm->compile_id() == compile_id_snapshot) {
+          if (!nm->is_alive()) {
+            // Break the links from the mirror to the nmethod
+            set_InstalledCode_address(obj, 0);
+            set_InstalledCode_entryPoint(obj, 0);
+          } else if (nm->is_not_entrant()) {
+            // Zero the entry point so that the nmethod
+            // cannot be invoked by the mirror but can
+            // still be deoptimized.
+            set_InstalledCode_entryPoint(obj, 0);
+          }
+          return cb;
         }
-        return cb;
       }
+      // Clear the InstalledCode fields of this HotSpotNmethod
+      // that no longer refers to an nmethod in the code cache.
+      set_InstalledCode_address(obj, 0);
+      set_InstalledCode_entryPoint(obj, 0);
+      return NULL;
     }
-    // Clear the InstalledCode fields of this HotSpotNmethodHandle
-    set_InstalledCode_address(obj, 0);
-    set_InstalledCode_entryPoint(obj, 0);
-    return NULL;
   }
   return (CodeBlob*) code;
 }

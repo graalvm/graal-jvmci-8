@@ -38,19 +38,18 @@
   template(jdk_vm_ci_hotspot_CompilerToVM,                        "jdk/vm/ci/hotspot/CompilerToVM")                                       \
   template(jdk_vm_ci_hotspot_HotSpotInstalledCode,                "jdk/vm/ci/hotspot/HotSpotInstalledCode")                               \
   template(jdk_vm_ci_hotspot_HotSpotNmethod,                      "jdk/vm/ci/hotspot/HotSpotNmethod")                                     \
-  template(jdk_vm_ci_hotspot_HotSpotNmethodHandle,                "jdk/vm/ci/hotspot/HotSpotNmethodHandle")                                                                \
   template(jdk_vm_ci_hotspot_HotSpotResolvedJavaMethodImpl,       "jdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl")                      \
   template(jdk_vm_ci_hotspot_HotSpotResolvedObjectTypeImpl,       "jdk/vm/ci/hotspot/HotSpotResolvedObjectTypeImpl")                      \
-  template(jdk_vm_ci_hotspot_HotSpotResolvedPrimitiveType,        "jdk/vm/ci/hotspot/HotSpotResolvedPrimitiveType")                                                        \
-  template(jdk_vm_ci_hotspot_HotSpotResolvedJavaFieldImpl,        "jdk/vm/ci/hotspot/HotSpotResolvedJavaFieldImpl")                                                        \
+  template(jdk_vm_ci_hotspot_HotSpotResolvedPrimitiveType,        "jdk/vm/ci/hotspot/HotSpotResolvedPrimitiveType")                       \
+  template(jdk_vm_ci_hotspot_HotSpotResolvedJavaFieldImpl,        "jdk/vm/ci/hotspot/HotSpotResolvedJavaFieldImpl")                       \
   template(jdk_vm_ci_hotspot_HotSpotCompressedNullConstant,       "jdk/vm/ci/hotspot/HotSpotCompressedNullConstant")                      \
   template(jdk_vm_ci_hotspot_HotSpotObjectConstantImpl,           "jdk/vm/ci/hotspot/HotSpotObjectConstantImpl")                          \
-  template(jdk_vm_ci_hotspot_DirectHotSpotObjectConstantImpl,     "jdk/vm/ci/hotspot/DirectHotSpotObjectConstantImpl")                                                     \
-  template(jdk_vm_ci_hotspot_IndirectHotSpotObjectConstantImpl,   "jdk/vm/ci/hotspot/IndirectHotSpotObjectConstantImpl")                                                   \
-  template(jdk_vm_ci_hotspot_HotSpotMetaspaceConstantImpl,        "jdk/vm/ci/hotspot/HotSpotMetaspaceConstantImpl")                                                        \
-  template(jdk_vm_ci_hotspot_HotSpotSentinelConstant,             "jdk/vm/ci/hotspot/HotSpotSentinelConstant")             \
-  template(jdk_vm_ci_hotspot_HotSpotStackFrameReference,          "jdk/vm/ci/hotspot/HotSpotStackFrameReference")                                                          \
-  template(jdk_vm_ci_hotspot_HotSpotMetaData,                     "jdk/vm/ci/hotspot/HotSpotMetaData")                     \
+  template(jdk_vm_ci_hotspot_DirectHotSpotObjectConstantImpl,     "jdk/vm/ci/hotspot/DirectHotSpotObjectConstantImpl")                    \
+  template(jdk_vm_ci_hotspot_IndirectHotSpotObjectConstantImpl,   "jdk/vm/ci/hotspot/IndirectHotSpotObjectConstantImpl")                  \
+  template(jdk_vm_ci_hotspot_HotSpotMetaspaceConstantImpl,        "jdk/vm/ci/hotspot/HotSpotMetaspaceConstantImpl")                       \
+  template(jdk_vm_ci_hotspot_HotSpotSentinelConstant,             "jdk/vm/ci/hotspot/HotSpotSentinelConstant")                            \
+  template(jdk_vm_ci_hotspot_HotSpotStackFrameReference,          "jdk/vm/ci/hotspot/HotSpotStackFrameReference")                         \
+  template(jdk_vm_ci_hotspot_HotSpotMetaData,                     "jdk/vm/ci/hotspot/HotSpotMetaData")                                    \
   template(jdk_vm_ci_hotspot_HotSpotConstantPool,                 "jdk/vm/ci/hotspot/HotSpotConstantPool")                                \
   template(jdk_vm_ci_hotspot_HotSpotJVMCIRuntime,                 "jdk/vm/ci/hotspot/HotSpotJVMCIRuntime")                                \
   template(jdk_vm_ci_hotspot_HotSpotSpeculationLog,               "jdk/vm/ci/hotspot/HotSpotSpeculationLog")                              \
@@ -58,7 +57,7 @@
   template(jdk_vm_ci_hotspot_VMField,                             "jdk/vm/ci/hotspot/VMField")                                            \
   template(jdk_vm_ci_hotspot_VMFlag,                              "jdk/vm/ci/hotspot/VMFlag")                                             \
   template(jdk_vm_ci_hotspot_VMIntrinsicMethod,                   "jdk/vm/ci/hotspot/VMIntrinsicMethod")                                  \
-  template(jdk_vm_ci_meta_ResolvedJavaMethod,                     "jdk/vm/ci/meta/ResolvedJavaMethod")                                                                     \
+  template(jdk_vm_ci_meta_ResolvedJavaMethod,                     "jdk/vm/ci/meta/ResolvedJavaMethod")                                    \
   template(jdk_vm_ci_meta_JavaConstant,                           "jdk/vm/ci/meta/JavaConstant")                                          \
   template(jdk_vm_ci_meta_PrimitiveConstant,                      "jdk/vm/ci/meta/PrimitiveConstant")                                     \
   template(jdk_vm_ci_meta_RawConstant,                            "jdk/vm/ci/meta/RawConstant")                                           \
@@ -93,16 +92,16 @@
   template(jdk_vm_ci_code_site_ExceptionHandler,                  "jdk/vm/ci/code/site/ExceptionHandler")                                 \
   template(jdk_vm_ci_code_site_Mark,                              "jdk/vm/ci/code/site/Mark")                                             \
   template(jdk_vm_ci_code_site_Infopoint,                         "jdk/vm/ci/code/site/Infopoint")                                        \
-  template(jdk_vm_ci_code_stack_InspectedFrameVisitor,            "jdk/vm/ci/code/stack/InspectedFrameVisitor")            \
+  template(jdk_vm_ci_code_stack_InspectedFrameVisitor,            "jdk/vm/ci/code/stack/InspectedFrameVisitor")                           \
   template(jdk_vm_ci_code_site_Site,                              "jdk/vm/ci/code/site/Site")                                             \
   template(jdk_vm_ci_code_site_InfopointReason,                   "jdk/vm/ci/code/site/InfopointReason")                                  \
-  template(jdk_vm_ci_common_JVMCIError,                           "jdk/vm/ci/common/JVMCIError")                                                                           \
-                               \
+  template(jdk_vm_ci_common_JVMCIError,                           "jdk/vm/ci/common/JVMCIError")                                          \
+                                                                                                                                          \
   template(visitFrame_name,                                       "visitFrame")                                                           \
   template(visitFrame_signature,                                  "(Ljdk/vm/ci/code/stack/InspectedFrame;)Ljava/lang/Object;")            \
-  template(adjustCompilationLevel_name,                           "adjustCompilationLevel")                                \
+  template(adjustCompilationLevel_name,                           "adjustCompilationLevel")                                               \
   template(adjustCompilationLevel_signature,                      "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ZI)I")          \
-  template(compileMethod_name,                                    "compileMethod") \
+  template(compileMethod_name,                                    "compileMethod")                                                        \
   template(compileMethod_signature,                               "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;IJI)Ljdk/vm/ci/hotspot/HotSpotCompilationRequestResult;") \
   template(encodeThrowable_name,                                  "encodeThrowable")                                                                                       \
   template(encodeThrowable_signature,                             "(Ljava/lang/Throwable;)Ljava/lang/String;")                                                             \

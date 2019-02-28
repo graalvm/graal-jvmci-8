@@ -660,12 +660,12 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
       JVMCI_THROW_MSG_(IllegalArgumentException, "InstalledCode object must be a HotSpotNmethod when installing a HotSpotCompiledNmethod", JVMCI::ok);
     }
 
-    JVMCIObject nmethod_mirror = installed_code;
+    JVMCIObject mirror = installed_code;
     nmethod* nm = NULL;
     result = runtime()->register_method(jvmci_env(), method, nm, entry_bci, &_offsets, _orig_pc_offset, &buffer,
                                         stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table, &_implicit_exception_table,
                                         compiler, _debug_recorder, _dependencies, id,
-                                        has_unsafe_access, _has_wide_vector, compiled_code, nmethod_mirror,
+                                        has_unsafe_access, _has_wide_vector, compiled_code, mirror,
                                         failed_speculations, speculations, speculations_len);
     cb = nm;
   }

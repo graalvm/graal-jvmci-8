@@ -106,11 +106,16 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         if (installedCode != null) {
             throw new IllegalArgumentException("InstalledCode argument must be null");
         }
+        HotSpotCompiledCode hsCompiledCode = (HotSpotCompiledCode) compiledCode;
+        String name = hsCompiledCode.getName();
+        HotSpotCompiledNmethod hsCompiledNmethod = null;
         if (method == null) {
             // Must be a stub
-            resultInstalledCode = new HotSpotRuntimeStub(((HotSpotCompiledCode) compiledCode).getName());
+            resultInstalledCode = new HotSpotRuntimeStub(name);
         } else {
-            resultInstalledCode = new HotSpotNmethod((HotSpotResolvedJavaMethodImpl) method, ((HotSpotCompiledCode) compiledCode).getName(), isDefault);
+            hsCompiledNmethod = (HotSpotCompiledNmethod) hsCompiledCode;
+            HotSpotResolvedJavaMethodImpl hsMethod = (HotSpotResolvedJavaMethodImpl) method;
+            resultInstalledCode = new HotSpotNmethod(hsMethod, name, isDefault, hsCompiledNmethod.id);
         }
 
         HotSpotSpeculationLog speculationLog = null;
@@ -132,9 +137,8 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
         int result = runtime.getCompilerToVM().installCode(target, (HotSpotCompiledCode) compiledCode, resultInstalledCode, failedSpeculationsAddress, speculations);
         if (result != config.codeInstallResultOk) {
             String resultDesc = config.getCodeInstallResultDescription(result);
-            if (compiledCode instanceof HotSpotCompiledNmethod) {
-                HotSpotCompiledNmethod compiledNmethod = (HotSpotCompiledNmethod) compiledCode;
-                String msg = compiledNmethod.getInstallationFailureMessage();
+            if (hsCompiledNmethod != null) {
+                String msg = hsCompiledNmethod.getInstallationFailureMessage();
                 if (msg != null) {
                     msg = String.format("Code installation failed: %s%n%s", resultDesc, msg);
                 } else {

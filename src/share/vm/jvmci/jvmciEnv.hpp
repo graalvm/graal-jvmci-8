@@ -582,7 +582,7 @@ public:
   JVMCIObjectArray new_byte_array_array(int length, JVMCI_TRAPS);
 
   JVMCIObject new_StackTraceElement(methodHandle method, int bci, JVMCI_TRAPS);
-  JVMCIObject new_HotSpotNmethod(methodHandle method, const char* name, jboolean isDefault, JVMCI_TRAPS);
+  JVMCIObject new_HotSpotNmethod(methodHandle method, const char* name, jboolean isDefault, jlong compileId, JVMCI_TRAPS);
   JVMCIObject new_VMField(JVMCIObject name, JVMCIObject type, jlong offset, jlong address, JVMCIObject value, JVMCI_TRAPS);
   JVMCIObject new_VMFlag(JVMCIObject name, JVMCIObject type, JVMCIObject value, JVMCI_TRAPS);
   JVMCIObject new_VMIntrinsicMethod(JVMCIObject declaringClass, JVMCIObject name, JVMCIObject descriptor, int id, JVMCI_TRAPS);
@@ -600,9 +600,9 @@ public:
   void destroy_global(JVMCIObject object);
   void destroy_weak(JVMCIObject object);
 
-  // Deoptimizes the nmethod (if any) in the address field of a given
-  // HotSpotNmethod object. The address field is also zeroed.
-  void invalidate_nmethod_mirror(JVMCIObject nmethod_mirror, JVMCI_TRAPS);
+  // Deoptimizes the nmethod (if any) in the HotSpotNmethod.address
+  // field of mirror. The field is subsequently zeroed.
+  void invalidate_nmethod_mirror(JVMCIObject mirror, JVMCI_TRAPS);
 
   void initialize_installed_code(JVMCIObject installed_code, CodeBlob* cb, JVMCI_TRAPS);
 

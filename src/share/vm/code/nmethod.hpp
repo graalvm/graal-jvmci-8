@@ -112,6 +112,8 @@ class PcDescCache VALUE_OBJ_CLASS_SPEC {
 //  - implicit null table array
 //  [Speculations]
 //  - encoded speculations array
+//  [JVMCINMethodData]
+//  - meta data for JVMCI compiled nmethod
 
 class Dependencies;
 class ExceptionHandlerTable;
@@ -137,10 +139,6 @@ class nmethod : public CodeBlob {
   Method*   _method;
   int       _entry_bci;        // != InvocationEntryBci if this nmethod is an on-stack replacement method
   jmethodID _jmethod_id;       // Cache of method()->jmethod_id()
-
-#if INCLUDE_JVMCI
-  JVMCINMethodData* _jvmci_nmethod_data;
-#endif
 
   // To support simple linked-list chaining of nmethods:
   nmethod*  _osr_link;         // from InstanceKlass::osr_nmethods_head
@@ -187,6 +185,7 @@ class nmethod : public CodeBlob {
   int _nul_chk_table_offset;
 #if INCLUDE_JVMCI
   int _speculations_offset;
+  int _jvmci_data_offset;
 #endif
   int _nmethod_end_offset;
 
@@ -315,7 +314,7 @@ class nmethod : public CodeBlob {
 #if INCLUDE_JVMCI
           , char* speculations,
           int speculations_len,
-          JVMCINMethodData* jvmci_nmethod_data
+          int jvmci_data_size
 #endif
           );
 
@@ -357,7 +356,7 @@ class nmethod : public CodeBlob {
 #if INCLUDE_JVMCI
                               , char* speculations = NULL,
                               int speculations_len = 0,
-                              JVMCINMethodData* jvmci_nmethod_data = NULL
+                              int jvmci_data_size = 0
 #endif
   );
 
@@ -431,7 +430,9 @@ class nmethod : public CodeBlob {
 #if INCLUDE_JVMCI
   address nul_chk_table_end     () const          { return           header_begin() + _speculations_offset  ; }
   address speculations_begin    () const          { return           header_begin() + _speculations_offset  ; }
-  address speculations_end      () const          { return           header_begin() + _nmethod_end_offset   ; }
+  address speculations_end      () const          { return           header_begin() + _jvmci_data_offset   ; }
+  address jvmci_data_begin      () const          { return           header_begin() + _jvmci_data_offset    ; }
+  address jvmci_data_end        () const          { return           header_begin() + _nmethod_end_offset   ; }
 #else
   address nul_chk_table_end     () const          { return           header_begin() + _nmethod_end_offset;    }
 #endif
@@ -449,6 +450,7 @@ class nmethod : public CodeBlob {
   int nul_chk_table_size() const                  { return            nul_chk_table_end() -            nul_chk_table_begin(); }
 #if INCLUDE_JVMCI
   int speculations_size () const                  { return            speculations_end () -            speculations_begin (); }
+  int jvmci_data_size   () const                  { return            jvmci_data_end   () -            jvmci_data_begin   (); }
 #endif
 
   int total_size        () const;
@@ -657,19 +659,24 @@ public:
   void set_method(Method* method) { _method = method; }
 
 #if INCLUDE_JVMCI
-  // Return the name of the HotSpotNmethod mirror (if any).
-  const char* jvmci_nmethod_mirror_name();
+  // Gets the JVMCI name of this nmethod.
+  const char* jvmci_name();
 
-  // Updates the state of the HotSpotNmethod and SpeculationLog
-  // references associated with this nmethod based on the current
-  // value of _state.
-  void maybe_invalidate_jvmci_mirror();
+  // Updates the state of this nmethod's HotSpotNmethod mirror
+  // based on the current value of _state. If this nmethod is
+  // not alive, all references from the mirror to this nmethod
+  // are cleared. If this nmethod is non-entrant, the
+  // HotSpotNmethod.entryPoint field is zeroed so that new
+  // activations cannot be created.
+  void invalidate_mirror();
 
   // Records the pending failed speculation in the
   // JVMCI speculation log associated with this nmethod.
   void update_speculation(JavaThread* thread);
   
-  JVMCINMethodData* jvmci_nmethod_data() { return _jvmci_nmethod_data; }
+  JVMCINMethodData* jvmci_nmethod_data() const {
+    return jvmci_data_size() == 0 ? NULL : (JVMCINMethodData*) jvmci_data_begin();
+  }
 #endif
 
   // GC support

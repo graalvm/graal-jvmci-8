@@ -735,7 +735,8 @@ C2V_VMENTRY(void, setNotInlinableOrCompilable,(JNIEnv* env, jobject,  jobject jv
   method->set_dont_inline(true);
 C2V_END
 
-C2V_VMENTRY(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject compiled_code, jobject installed_code, jlong failed_speculations_address, jbyteArray speculations_obj))
+C2V_VMENTRY(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject compiled_code,
+            jobject installed_code, jlong failed_speculations_address, jbyteArray speculations_obj))
   HandleMark hm;
   JNIHandleMark jni_hm;
 
@@ -753,7 +754,6 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject co
 
   TraceTime install_time("installCode", JVMCICompiler::codeInstallTimer());
   bool is_immutable_PIC = JVMCIENV->get_HotSpotCompiledCode_isImmutablePIC(compiled_code_handle) > 0;
-  JVMCINMethodData::cleanup();
 
   CodeInstaller installer(JVMCIENV, is_immutable_PIC);
   JVMCI::CodeInstallResult result = installer.install(compiler,
@@ -925,12 +925,7 @@ C2V_VMENTRY(jobject, getStackTraceElement, (JNIEnv* env, jobject, jobject jvmci_
 C2V_END
 
 C2V_VMENTRY(jobject, executeHotSpotNmethod, (JNIEnv* env, jobject, jobject args, jobject hs_nmethod))
-  bool wrap_objects = false;
   if (env != JavaThread::current()->jni_environment()) {
-    wrap_objects = true;
-  }
-
-  if (wrap_objects) {
     // The incoming arguments array would have to contain JavaConstants instead of regular objects
     // and the return value would have to be wrapped as a JavaConstant.
     JVMCI_THROW_MSG_NULL(InternalError, "Wrapping of arguments is currently unsupported");
@@ -2220,12 +2215,12 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
     if (nm != NULL) {
       JVMCINMethodData* data = nm->jvmci_nmethod_data();
       if (data != NULL) {
-        // First check if an InstalledCode instance already exists in the appropriate runtime
-        JVMCIObject peer_installed_code = data->get_nmethod_mirror();
-        if (!peer_installed_code.is_null() && peer_installed_code.is_hotspot() != obj.is_hotspot()) {
-          nmethod* peer_nm = peerEnv->asNmethod(peer_installed_code);
-          if (peer_nm == nm) {
-            result = peer_installed_code;
+        if (peerEnv->is_hotspot()) {
+          // Only the mirror in the HotSpot heap is accessible
+          // through JVMCINMethodData
+          oop nmethod_mirror = data->get_nmethod_mirror(nm);
+          if (nmethod_mirror != NULL) {
+            result = HotSpotJVMCI::wrap(nmethod_mirror);
           }
         }
       }
@@ -2234,17 +2229,26 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
       JVMCIObject methodObject = thisEnv->get_HotSpotNmethod_method(obj);
       methodHandle mh = thisEnv->asMethod(methodObject);
       jboolean isDefault = thisEnv->get_HotSpotNmethod_isDefault(obj);
+      jlong compileIdSnapshot = thisEnv->get_HotSpotNmethod_compileIdSnapshot(obj);
       JVMCIObject name_string = thisEnv->get_InstalledCode_name(obj);
       const char* cstring = name_string.is_null() ? NULL : thisEnv->as_utf8_string(name_string);
       // Create a new HotSpotNmethod instance in the peer runtime
-      result = peerEnv->new_HotSpotNmethod(mh(), cstring, isDefault, JVMCI_CHECK_0);
+      result = peerEnv->new_HotSpotNmethod(mh(), cstring, isDefault, compileIdSnapshot, JVMCI_CHECK_0);
       if (nm == NULL) {
         // nmethod must have been unloaded
       } else {
         // Link the new HotSpotNmethod to the nmethod
         peerEnv->initialize_installed_code(result, nm, JVMCI_CHECK_0);
-        JVMCINMethodData* data = nm->jvmci_nmethod_data();
-        data->add_nmethod_mirror(peerEnv, result, JVMCI_CHECK_0);
+        // Only HotSpotNmethod instances are tracked directly by the runtime.
+        // HotSpotNMethodHandle instances are updated cooperatively.
+        if (peerEnv->is_hotspot()) {
+          JVMCINMethodData* data = nm->jvmci_nmethod_data();
+          if (data->get_nmethod_mirror(nm) != NULL) {
+            JVMCI_THROW_MSG_0(IllegalArgumentException, "Cannot overwrite existing HotSpotNmethod mirror for nmethod");
+          }
+          oop nmethod_mirror = HotSpotJVMCI::resolve(result);
+          data->set_nmethod_mirror(nm, nmethod_mirror);
+        }
       }
     }
   } else {
@@ -2266,7 +2270,7 @@ C2V_VMENTRY(jobject, unhand, (JNIEnv* env, jobject, jlong obj_handle))
   return result;
 }
 
-C2V_VMENTRY(void, updateHotSpotNmethodHandle, (JNIEnv* env, jobject, jobject code_handle))
+C2V_VMENTRY(void, updateHotSpotNmethod, (JNIEnv* env, jobject, jobject code_handle))
   JVMCIObject code = JVMCIENV->wrap(code_handle);
   // Execute this operation for the side effect of updating the InstalledCode state
   JVMCIENV->asNmethod(code);
@@ -2384,7 +2388,6 @@ C2V_VMENTRY(bool, addFailedSpeculation, (JNIEnv* env, jobject, jlong failed_spec
 #define HS_RESOLVED_FIELD       "Ljdk/vm/ci/hotspot/HotSpotResolvedJavaField;"
 #define HS_INSTALLED_CODE       "Ljdk/vm/ci/hotspot/HotSpotInstalledCode;"
 #define HS_NMETHOD              "Ljdk/vm/ci/hotspot/HotSpotNmethod;"
-#define HS_NMETHOD_HANDLE       "Ljdk/vm/ci/hotspot/HotSpotNmethodHandle;"
 #define HS_CONSTANT_POOL        "Ljdk/vm/ci/hotspot/HotSpotConstantPool;"
 #define HS_COMPILED_CODE        "Ljdk/vm/ci/hotspot/HotSpotCompiledCode;"
 #define HS_CONFIG               "Ljdk/vm/ci/hotspot/HotSpotVMConfig;"
@@ -2495,7 +2498,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "registerNativeMethods",                        CC "(" CLASS ")[J",                                                                   FN_PTR(registerNativeMethods)},
   {CC "translate",                                    CC "(" OBJECT ")J",                                                                   FN_PTR(translate)},
   {CC "unhand",                                       CC "(J)" OBJECT,                                                                      FN_PTR(unhand)},
-  {CC "updateHotSpotNmethodHandle",                   CC "(" HS_NMETHOD_HANDLE ")V",                                                        FN_PTR(updateHotSpotNmethodHandle)},
+  {CC "updateHotSpotNmethod",                         CC "(" HS_NMETHOD ")V",                                                               FN_PTR(updateHotSpotNmethod)},
   {CC "getCode",                                      CC "(" HS_INSTALLED_CODE ")[B",                                                       FN_PTR(getCode)},
   {CC "getCode",                                      CC "(" HS_INSTALLED_CODE ")[B",                                                       FN_PTR(getCode)},
   {CC "asReflectionExecutable",                       CC "(" HS_RESOLVED_METHOD ")" REFLECTION_EXECUTABLE,                                  FN_PTR(asReflectionExecutable)},

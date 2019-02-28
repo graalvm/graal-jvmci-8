@@ -531,7 +531,7 @@ void Disassembler::decode(nmethod* nm, outputStream* st) {
   nm->method()->name()->print_symbol_on(env.output());
 #if INCLUDE_JVMCI
   {
-    const char* jvmciName = nm->jvmci_nmethod_mirror_name();
+    const char* jvmciName = nm->jvmci_name();
     if (jvmciName != NULL) {
       env.output()->print(" (%s)", jvmciName);
     }

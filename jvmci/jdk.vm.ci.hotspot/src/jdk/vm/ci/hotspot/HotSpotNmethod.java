@@ -23,6 +23,7 @@
 package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.hotspot.CompilerToVM.compilerToVM;
+import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
 
 import jdk.vm.ci.code.InstalledCode;
 import jdk.vm.ci.code.InvalidInstalledCodeException;
@@ -34,14 +35,6 @@ import jdk.vm.ci.meta.ResolvedJavaMethod;
  * Implementation of {@link InstalledCode} for code installed as an {@code nmethod}. The address of
  * the {@code nmethod} is stored in {@link InstalledCode#address} and the value of
  * {@code nmethod::verified_entry_point()} is in {@link InstalledCode#entryPoint}.
- * <p>
- * When a {@link HotSpotNmethod} dies, it triggers invalidation of the {@code nmethod} unless
- * {@link #isDefault() == true}.
- * <p>
- * The diagram below shows the relationship between an {@code nmethod} and its
- * {@link HotSpotNmethod} mirrors:
- * <p>
- * <img src="doc-files/HotSpotNmethod Mirrors.jpg">
  */
 public class HotSpotNmethod extends HotSpotInstalledCode {
 
@@ -53,27 +46,59 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
 
     /**
      * Specifies whether the {@code nmethod} associated with this object is the code executed by
-     * default HotSpot linkage when a normal Java call to {@link #method} is made. This true when
-     * {@code this.method.metadataHandle->_code == this.address}. If not, then the {@code nmethod}
-     * can only be invoked via a non-default mechanism based on a strong reference to this object
-     * (e.g., https://goo.gl/LX88rZ). As such, HotSpot will invalidate the {@code nmethod} once this
-     * object dies if {@code isDefault == false}.
+     * default HotSpot linkage when a normal Java call to {@link #method} is made. That is, does
+     * {@code this.method.metadataHandle->_code} == {@code this.address}. If not, then the
+     * {@code nmethod} can only be invoked via a reference to this object. An example of this is the
+     * trampoline mechanism used by Truffle: https://goo.gl/LX88rZ.
      */
     private final boolean isDefault;
 
-    HotSpotNmethod(HotSpotResolvedJavaMethodImpl method, String name, boolean isDefault) {
+    /**
+     * Determines whether this object is in the oops table of the nmethod.
+     * <p>
+     * If this object is in the oops table, the VM uses the oops table entry to update this object's
+     * {@link #address} and {@link #entryPoint} fields when the state of the nmethod changes. The
+     * nmethod will be unloadable when this object dies.
+     * <p>
+     * Otherwise, the nmethod's unloadability is not chnaged when this object dies.
+     */
+    boolean inOopsTable() {
+        return compileIdSnapshot != 0;
+    }
+
+    /**
+     * If this field is 0, this object is in the oops table of the nmethod. Otherwise, the value of
+     * the field records the nmethod's compile identifier. This value is used to confirm an entry in
+     * the code cache retrieved by {@link #address} is indeed the nmethod represented by this
+     * object.
+     *
+     * @see #inOopsTable
+     */
+    private final long compileIdSnapshot;
+
+    HotSpotNmethod(HotSpotResolvedJavaMethodImpl method, String name, boolean isDefault, long compileId) {
         super(name);
         this.method = method;
         this.isDefault = isDefault;
+        boolean inOopsTable = !IS_IN_NATIVE_IMAGE && !isDefault;
+        this.compileIdSnapshot = inOopsTable ? 0L : compileId;
+        assert inOopsTable || compileId != 0L : this;
     }
 
     /**
      * Determines if the nmethod associated with this object is the compiled entry point for
-     * {@link #getMethod()}. If {@code false}, then the nmethod is unloaded when the VM determines
-     * this object has died.
+     * {@link #getMethod()}.
      */
     public boolean isDefault() {
         return isDefault;
+    }
+
+    @Override
+    public boolean isValid() {
+        if (compileIdSnapshot != 0L) {
+            compilerToVM().updateHotSpotNmethod(this);
+        }
+        return super.isValid();
     }
 
     public ResolvedJavaMethod getMethod() {
@@ -86,8 +111,25 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
     }
 
     @Override
+    public long getAddress() {
+        if (compileIdSnapshot != 0L) {
+            compilerToVM().updateHotSpotNmethod(this);
+        }
+        return super.getAddress();
+    }
+
+    @Override
+    public long getEntryPoint() {
+        if (compileIdSnapshot != 0L) {
+            return 0;
+        }
+        return super.getEntryPoint();
+    }
+
+    @Override
     public String toString() {
-        return String.format("HotSpotNmethod[method=%s, codeBlob=0x%x, isDefault=%b, name=%s]", method, getAddress(), isDefault, name);
+        return String.format("HotSpotNmethod[method=%s, codeBlob=0x%x, isDefault=%b, name=%s, inOopsTable=%s]",
+                        method, getAddress(), isDefault, name, inOopsTable());
     }
 
     private boolean checkArgs(Object... args) {
@@ -106,6 +148,9 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
 
     @Override
     public Object executeVarargs(Object... args) throws InvalidInstalledCodeException {
+        if (IS_IN_NATIVE_IMAGE) {
+            throw new HotSpotJVMCIUnsupportedOperationError("Cannot execute nmethod via mirror in native image");
+        }
         assert checkArgs(args);
         return compilerToVM().executeHotSpotNmethod(args, this);
     }
