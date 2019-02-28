@@ -2326,19 +2326,34 @@ C2V_VMENTRY(jobject, asReflectionField, (JNIEnv* env, jobject, jobject jvmci_typ
   return JNIHandles::make_local(env, reflected);
 }
 
-C2V_VMENTRY(jobject, getFailedSpeculations, (JNIEnv* env, jobject, jlong failed_speculations_address))
+C2V_VMENTRY(jobjectArray, getFailedSpeculations, (JNIEnv* env, jobject, jlong failed_speculations_address, jobjectArray current))
   FailedSpeculation* head = *((FailedSpeculation**)(address) failed_speculations_address);
-  int index = 0;
+  int result_length = 0;
   for (FailedSpeculation* fs = head; fs != NULL; fs = fs->next()) {
-    index++;
+    result_length++;
   }
-
-  JVMCIObjectArray result = JVMCIENV->new_byte_array_array(index, JVMCI_CHECK_NULL);
-  index = 0;
-  for (FailedSpeculation* fs = head; fs != NULL; fs = fs->next()) {
-    JVMCIPrimitiveArray entry = JVMCIENV->new_byteArray(fs->data_len(), JVMCI_CHECK_NULL);
-    JVMCIENV->copy_bytes_from((jbyte*) fs->data(), entry, 0, fs->data_len());
-    JVMCIENV->put_object_at(result, index++, entry);
+  int current_length = 0;
+  JVMCIObjectArray current_array = NULL;
+  if (current != NULL) {
+    current_array = JVMCIENV->wrap(current);
+    current_length = JVMCIENV->get_length(current_array);
+    if (current_length == result_length) {
+      // No new failures
+      return current;
+    }
+  }
+  JVMCIObjectArray result = JVMCIENV->new_byte_array_array(result_length, JVMCI_CHECK_NULL);
+  int result_index = 0;
+  for (FailedSpeculation* fs = head; result_index < result_length; fs = fs->next()) {
+    assert(fs != NULL, "npe");
+    JVMCIPrimitiveArray entry;
+    if (result_index < current_length) {
+      entry = (JVMCIPrimitiveArray) JVMCIENV->get_object_at(current_array, result_index);
+    } else {
+      entry = JVMCIENV->new_byteArray(fs->data_len(), JVMCI_CHECK_NULL);
+      JVMCIENV->copy_bytes_from((jbyte*) fs->data(), entry, 0, fs->data_len());
+    }
+    JVMCIENV->put_object_at(result, result_index++, entry);
   }
   return JVMCIENV->get_jobjectArray(result);
 }
@@ -2503,7 +2518,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "getCode",                                      CC "(" HS_INSTALLED_CODE ")[B",                                                       FN_PTR(getCode)},
   {CC "asReflectionExecutable",                       CC "(" HS_RESOLVED_METHOD ")" REFLECTION_EXECUTABLE,                                  FN_PTR(asReflectionExecutable)},
   {CC "asReflectionField",                            CC "(" HS_RESOLVED_KLASS "I)" REFLECTION_FIELD,                                       FN_PTR(asReflectionField)},
-  {CC "getFailedSpeculations",                        CC "(J)[[B",                                                                          FN_PTR(getFailedSpeculations)},
+  {CC "getFailedSpeculations",                        CC "(J[[B)[[B",                                                                       FN_PTR(getFailedSpeculations)},
   {CC "getFailedSpeculationsAddress",                 CC "(" HS_RESOLVED_METHOD ")J",                                                       FN_PTR(getFailedSpeculationsAddress)},
   {CC "releaseFailedSpeculations",                    CC "(J)V",                                                                            FN_PTR(releaseFailedSpeculations)},
   {CC "addFailedSpeculation",                         CC "(J[B)Z",                                                                          FN_PTR(addFailedSpeculation)},
