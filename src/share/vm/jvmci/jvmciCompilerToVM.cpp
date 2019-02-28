@@ -784,8 +784,8 @@ C2V_VMENTRY(jint, installCode, (JNIEnv *env, jobject, jobject target, jobject co
       if (cb->is_nmethod()) {
         assert(JVMCIENV->isa_HotSpotNmethod(installed_code_handle), "wrong type");
         // Clear the link to an old nmethod first
-        JVMCIObject mirror = installed_code_handle;
-        JVMCIENV->invalidate_nmethod_mirror(mirror, JVMCI_CHECK_0);
+        JVMCIObject nmethod_mirror = installed_code_handle;
+        JVMCIENV->invalidate_nmethod_mirror(nmethod_mirror, JVMCI_CHECK_0);
       } else {
         assert(JVMCIENV->isa_InstalledCode(installed_code_handle), "wrong type");
       }
@@ -933,8 +933,8 @@ C2V_VMENTRY(jobject, executeHotSpotNmethod, (JNIEnv* env, jobject, jobject args,
 
   HandleMark hm;
 
-  JVMCIObject mirror = JVMCIENV->wrap(hs_nmethod);
-  nmethod* nm = JVMCIENV->asNmethod(mirror);
+  JVMCIObject nmethod_mirror = JVMCIENV->wrap(hs_nmethod);
+  nmethod* nm = JVMCIENV->asNmethod(nmethod_mirror);
   if (nm == NULL) {
     JVMCI_THROW_NULL(InvalidInstalledCodeException);
   }
@@ -1040,8 +1040,8 @@ C2V_END
 
 
 C2V_VMENTRY(void, invalidateHotSpotNmethod, (JNIEnv* env, jobject, jobject hs_nmethod))
-  JVMCIObject mirror = JVMCIENV->wrap(hs_nmethod);
-  JVMCIENV->invalidate_nmethod_mirror(mirror, JVMCI_CHECK);
+  JVMCIObject nmethod_mirror = JVMCIENV->wrap(hs_nmethod);
+  JVMCIENV->invalidate_nmethod_mirror(nmethod_mirror, JVMCI_CHECK);
 C2V_END
 
 C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv* env, jobject, jlong addr))
@@ -2216,10 +2216,11 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
       JVMCINMethodData* data = nm->jvmci_nmethod_data();
       if (data != NULL) {
         if (peerEnv->is_hotspot()) {
-          // Only the mirror in the HotSpot heap is held by JVMCINMethodData
-          oop mirror = data->get_mirror(nm);
-          if (mirror != NULL) {
-            result = HotSpotJVMCI::wrap(mirror);
+          // Only the mirror in the HotSpot heap is accessible
+          // through JVMCINMethodData
+          oop nmethod_mirror = data->get_nmethod_mirror(nm);
+          if (nmethod_mirror != NULL) {
+            result = HotSpotJVMCI::wrap(nmethod_mirror);
           }
         }
       }
@@ -2242,11 +2243,11 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
         // HotSpotNMethodHandle instances are updated cooperatively.
         if (peerEnv->is_hotspot()) {
           JVMCINMethodData* data = nm->jvmci_nmethod_data();
-          if (data->get_mirror(nm) != NULL) {
-            JVMCI_THROW_MSG_0(IllegalArgumentException, "Cannot overwrite existing HotSpotNmethod object for nmethod");
+          if (data->get_nmethod_mirror(nm) != NULL) {
+            JVMCI_THROW_MSG_0(IllegalArgumentException, "Cannot overwrite existing HotSpotNmethod mirror for nmethod");
           }
-          oop mirror = HotSpotJVMCI::resolve(result);
-          data->set_mirror(nm, mirror);
+          oop nmethod_mirror = HotSpotJVMCI::resolve(result);
+          data->set_nmethod_mirror(nm, nmethod_mirror);
         }
       }
     }

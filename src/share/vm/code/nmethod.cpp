@@ -1107,7 +1107,7 @@ void nmethod::log_identity(xmlStream* log) const {
   }
 #if INCLUDE_JVMCI
   if (jvmci_nmethod_data() != NULL) {
-    const char* jvmci_name = jvmci_nmethod_data()->mirror_name();
+    const char* jvmci_name = jvmci_nmethod_data()->name();
     if (jvmci_name != NULL) {
       log->print(" jvmci_mirror_name='");
       log->text("%s", jvmci_name);
@@ -3593,7 +3593,7 @@ void nmethod::print_statistics() {
 #if INCLUDE_JVMCI
 void nmethod::invalidate_mirror() {
   if (jvmci_nmethod_data() != NULL) {
-    jvmci_nmethod_data()->invalidate_mirror(this);
+    jvmci_nmethod_data()->invalidate_nmethod_mirror(this);
   }
 }
 
@@ -3607,9 +3607,9 @@ void nmethod::update_speculation(JavaThread* thread) {
   }
 }
 
-const char* nmethod::mirror_name() {
+const char* nmethod::jvmci_name() {
   if (jvmci_nmethod_data() != NULL) {
-    return jvmci_nmethod_data()->mirror_name();
+    return jvmci_nmethod_data()->name();
   }
   return NULL;
 }

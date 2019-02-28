@@ -41,7 +41,7 @@ class JVMCICompileState;
 // at nmethod::_jvmci_data_offset.
 class JVMCINMethodData VALUE_OBJ_CLASS_SPEC {
   // Index for the HotSpotNmethod mirror in the nmethod's oop table.
-  int _mirror_index;
+  int _nmethod_mirror_index;
 
   // Is HotSpotNmethod.name non-null? If so, the value is
   // embedded in the end of this object.
@@ -56,25 +56,25 @@ public:
   void* operator new(size_t size, nmethod* nm) throw();
 
   JVMCINMethodData(JVMCIEnv* jvmciEnv,
-      int mirror_index,
+      int nmethod_mirror_index,
       const char* name,
       FailedSpeculation** failed_speculations);
 
   // Adds `speculation` to the failed speculations list.
   void add_failed_speculation(nmethod* nm, jlong speculation);
 
-  // Gets the value of HotSpotNmethod.name (which may be NULL).
-  const char* mirror_name() { return _has_name ? (char*)(((address) this) + sizeof(JVMCINMethodData)) : NULL; }
+  // Gets the JVMCI name of the nmethod (which may be NULL).
+  const char* name() { return _has_name ? (char*)(((address) this) + sizeof(JVMCINMethodData)) : NULL; }
 
   // Clears the HotSpotNmethod.address field in the  mirror. If nm
   // is dead, the HotSpotNmethod.entryPoint field is also cleared.
-  void invalidate_mirror(nmethod* nm);
+  void invalidate_nmethod_mirror(nmethod* nm);
 
   // Gets the mirror from nm's oops table.
-  oop get_mirror(nmethod* nm);
+  oop get_nmethod_mirror(nmethod* nm);
 
   // Sets the mirror in nm's oops table.
-  void set_mirror(nmethod* nm, oop mirror);
+  void set_nmethod_mirror(nmethod* nm, oop mirror);
 };
 
 // A top level class that represents an initialized JVMCI runtime.
@@ -245,7 +245,7 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
                        bool                      has_unsafe_access,
                        bool                      has_wide_vector,
                        JVMCIObject               compiled_code,
-                       JVMCIObject               mirror,
+                       JVMCIObject               nmethod_mirror,
                        FailedSpeculation**       failed_speculations,
                        char*                     speculations,
                        int                       speculations_len);

@@ -1660,7 +1660,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
         nm->method()->print_short_name(tty);
         tty->print(" compiler=%s compile_id=%d", nm->compiler() == NULL ? "" : nm->compiler()->name(), nm->compile_id());
 #if INCLUDE_JVMCI
-        const char* installed_code_name = nm->mirror_name();
+        const char* installed_code_name = nm->jvmci_name();
         if (installed_code_name != NULL) {
           tty->print(" (JVMCI: installed code name=%s) ", installed_code_name);
         }

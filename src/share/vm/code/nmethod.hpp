@@ -659,8 +659,8 @@ public:
   void set_method(Method* method) { _method = method; }
 
 #if INCLUDE_JVMCI
-  // Gets the name of the mirror (if any).
-  const char* mirror_name();
+  // Gets the JVMCI name of this nmethod.
+  const char* jvmci_name();
 
   // Updates the state of this nmethod's HotSpotNmethod mirror
   // based on the current value of _state. If this nmethod is

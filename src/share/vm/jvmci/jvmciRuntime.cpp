@@ -965,16 +965,16 @@ void* JVMCINMethodData::operator new(size_t size, nmethod* nm) throw() {
 
 JVMCINMethodData::JVMCINMethodData(
   JVMCIEnv* jvmciEnv,
-  int mirror_index,
-  const char* mirror_name,
+  int nmethod_mirror_index,
+  const char* name,
   FailedSpeculation** failed_speculations)
 {
   _failed_speculations = failed_speculations;
-  _mirror_index = mirror_index;
-  if (mirror_name != NULL) {
+  _nmethod_mirror_index = nmethod_mirror_index;
+  if (name != NULL) {
     _has_name = true;
-    char* dest = (char*) this->mirror_name();
-    strcpy(dest, mirror_name);
+    char* dest = (char*) this->name();
+    strcpy(dest, name);
   } else {
     _has_name = false;
   }
@@ -990,15 +990,15 @@ void JVMCINMethodData::add_failed_speculation(nmethod* nm, jlong speculation) {
   FailedSpeculation::add_failed_speculation(nm, _failed_speculations, data, length);
 }
 
-oop JVMCINMethodData::get_mirror(nmethod* nm) {
-  if (_mirror_index == -1) {
+oop JVMCINMethodData::get_nmethod_mirror(nmethod* nm) {
+  if (_nmethod_mirror_index == -1) {
     return NULL;
   }
-  return nm->oop_at(_mirror_index);
+  return nm->oop_at(_nmethod_mirror_index);
 }
 
-void JVMCINMethodData::set_mirror(nmethod* nm, oop new_mirror) {
-  oop* addr = nm->oop_addr_at(_mirror_index);
+void JVMCINMethodData::set_nmethod_mirror(nmethod* nm, oop new_mirror) {
+  oop* addr = nm->oop_addr_at(_nmethod_mirror_index);
   assert(*addr == NULL || new_mirror == NULL || *addr == new_mirror, "cannot overwrite non-null mirror");
 
   // Patching in an oop so make sure nm is on the scavenge list.
@@ -1016,9 +1016,9 @@ void JVMCINMethodData::set_mirror(nmethod* nm, oop new_mirror) {
   *addr = new_mirror;
 }
 
-void JVMCINMethodData::invalidate_mirror(nmethod* nm) {
-  oop mirror = get_mirror(nm);
-  if (mirror == NULL) {
+void JVMCINMethodData::invalidate_nmethod_mirror(nmethod* nm) {
+  oop nmethod_mirror = get_nmethod_mirror(nm);
+  if (nmethod_mirror == NULL) {
     return;
   }
 
@@ -1026,26 +1026,26 @@ void JVMCINMethodData::invalidate_mirror(nmethod* nm) {
   // We cannot use JVMCIObject to wrap the mirror as this is called
   // during GC, forbidding the creation of JNIHandles.
   JVMCIEnv* jvmciEnv = NULL;
-  nmethod* current = (nmethod*) HotSpotJVMCI::InstalledCode::address(jvmciEnv, mirror);
+  nmethod* current = (nmethod*) HotSpotJVMCI::InstalledCode::address(jvmciEnv, nmethod_mirror);
   if (nm == current) {
     if (!nm->is_alive()) {
       // Break the link from the mirror to nm such that
       // future invocations via the mirror will result in
       // an InvalidInstalledCodeException.
-      HotSpotJVMCI::InstalledCode::set_address(jvmciEnv, mirror, 0);
-      HotSpotJVMCI::InstalledCode::set_entryPoint(jvmciEnv, mirror, 0);
+      HotSpotJVMCI::InstalledCode::set_address(jvmciEnv, nmethod_mirror, 0);
+      HotSpotJVMCI::InstalledCode::set_entryPoint(jvmciEnv, nmethod_mirror, 0);
     } else if (nm->is_not_entrant()) {
       // Zero the entry point so any new invocation will fail but keep
       // the address link around that so that existing activations can
       // be deoptimized via the mirror (i.e. JVMCIEnv::invalidate_installed_code).
-      HotSpotJVMCI::InstalledCode::set_entryPoint(jvmciEnv, mirror, 0);
+      HotSpotJVMCI::InstalledCode::set_entryPoint(jvmciEnv, nmethod_mirror, 0);
     }
   }
 
   if (!nm->is_alive()) {
     // Clear the mirror now that nm is dead and all
     // relevant fields in the mirror have been zeroed.
-    set_mirror(nm, NULL);
+    set_nmethod_mirror(nm, NULL);
   }
 }
 
@@ -1892,7 +1892,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                                 bool has_unsafe_access,
                                 bool has_wide_vector,
                                 JVMCIObject compiled_code,
-                                JVMCIObject mirror,
+                                JVMCIObject nmethod_mirror,
                                 FailedSpeculation** failed_speculations,
                                 char* speculations,
                                 int speculations_len) {
@@ -1902,23 +1902,23 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
   int comp_level = CompLevel_full_optimization;
   char* failure_detail = NULL;
 
-  bool install_default = JVMCIENV->get_HotSpotNmethod_isDefault(mirror) != 0;
-  assert(JVMCIENV->isa_HotSpotNmethod(mirror), "must be");
-  const char* mirror_name = NULL;
+  bool install_default = JVMCIENV->get_HotSpotNmethod_isDefault(nmethod_mirror) != 0;
+  assert(JVMCIENV->isa_HotSpotNmethod(nmethod_mirror), "must be");
+  const char* nmethod_mirror_name = NULL;
   int jvmci_data_size = sizeof(JVMCINMethodData);
-  JVMCIObject name = JVMCIENV->get_InstalledCode_name(mirror);
+  JVMCIObject name = JVMCIENV->get_InstalledCode_name(nmethod_mirror);
   if (!name.is_null()) {
-    mirror_name = JVMCIENV->as_utf8_string(name);
-    jvmci_data_size += strlen(mirror_name) + 1;
+    nmethod_mirror_name = JVMCIENV->as_utf8_string(name);
+    jvmci_data_size += (int) strlen(nmethod_mirror_name) + 1;
   }
-  int mirror_index;
-  if (JVMCIENV->get_HotSpotNmethod_compileIdSnapshot(mirror) == 0) {
+  int nmethod_mirror_index;
+  if (JVMCIENV->get_HotSpotNmethod_compileIdSnapshot(nmethod_mirror) == 0) {
     // Reserve or initialize mirror slot in the oops table.
     OopRecorder* oop_recorder = debug_info->oop_recorder();
-    mirror_index = oop_recorder->allocate_oop_index(mirror.is_hotspot() ? mirror.as_jobject() : NULL);
+    nmethod_mirror_index = oop_recorder->allocate_oop_index(nmethod_mirror.is_hotspot() ? nmethod_mirror.as_jobject() : NULL);
   } else {
     // A HotSpotNmethod mirror whose compileIdSnapshot is non-zero is not tracked by the nmethod
-    mirror_index = -1;
+    nmethod_mirror_index = -1;
   }
 
   JVMCI::CodeInstallResult result;
@@ -1981,7 +1981,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
           CompileBroker::handle_full_code_cache();
         }
       } else {
-        JVMCINMethodData* data = new (nm) JVMCINMethodData(JVMCIENV, mirror_index, mirror_name, failed_speculations);
+        JVMCINMethodData* data = new (nm) JVMCINMethodData(JVMCIENV, nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
 
         nm->set_has_unsafe_access(has_unsafe_access);
         nm->set_has_wide_vectors(has_wide_vector);
@@ -1993,7 +1993,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
         }
 
         if (install_default) {
-          assert(!mirror.is_hotspot() || data->get_mirror(nm) == NULL, "must be");
+          assert(!nmethod_mirror.is_hotspot() || data->get_nmethod_mirror(nm) == NULL, "must be");
           if (entry_bci == InvocationEntryBci) {
             if (TieredCompilation) {
               // If there is an old version we're done with it
@@ -2030,7 +2030,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
             InstanceKlass::cast(method->method_holder())->add_osr_nmethod(nm);
           }
         } else {
-          assert(!mirror.is_hotspot() || data->get_mirror(nm) == HotSpotJVMCI::resolve(mirror), "must be");
+          assert(!nmethod_mirror.is_hotspot() || data->get_nmethod_mirror(nm) == HotSpotJVMCI::resolve(nmethod_mirror), "must be");
         }
       }
       result = nm != NULL ? JVMCI::ok :JVMCI::cache_full;
