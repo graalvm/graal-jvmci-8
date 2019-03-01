@@ -22,8 +22,6 @@
  */
 package jdk.vm.ci.hotspot;
 
-import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
-
 import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -89,19 +87,17 @@ public class HotSpotMetaAccessProvider implements MetaAccessProvider {
 
         HotSpotResolvedJavaType holder = runtime.fromClass(fieldHolder);
         assert holder != null : fieldHolder;
+        ResolvedJavaField[] fields;
         if (Modifier.isStatic(reflectionField.getModifiers())) {
-            final long offset = UNSAFE.staticFieldOffset(reflectionField);
-            for (ResolvedJavaField field : holder.getStaticFields()) {
-                if (offset == field.getOffset()) {
-                    return field;
-                }
-            }
+            fields = holder.getStaticFields();
         } else {
-            final long offset = UNSAFE.objectFieldOffset(reflectionField);
-            for (ResolvedJavaField field : holder.getInstanceFields(false)) {
-                if (offset == field.getOffset()) {
-                    return field;
-                }
+            fields = holder.getInstanceFields(false);
+        }
+        ResolvedJavaType fieldType = lookupJavaType(reflectionField.getType());
+        for (ResolvedJavaField field : fields) {
+            if (reflectionField.getName().equals(field.getName()) && field.getType().equals(fieldType)) {
+                assert Modifier.isStatic(reflectionField.getModifiers()) == field.isStatic();
+                return field;
             }
         }
 
