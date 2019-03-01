@@ -1039,9 +1039,9 @@ JVMCIObject JVMCIEnv::get_object_constant(Handle obj, bool compressed, bool dont
 }
 
 
-oop JVMCIEnv::asConstant(JVMCIObject constant, JVMCI_TRAPS) {
+Handle JVMCIEnv::asConstant(JVMCIObject constant, JVMCI_TRAPS) {
   if (constant.is_null()) {
-    return NULL;
+    return Handle();
   }
   if (is_hotspot()) {
     assert(HotSpotJVMCI::DirectHotSpotObjectConstantImpl::is_instance(this, constant), "wrong type");
@@ -1049,9 +1049,9 @@ oop JVMCIEnv::asConstant(JVMCIObject constant, JVMCI_TRAPS) {
   } else {
     assert(isa_IndirectHotSpotObjectConstantImpl(constant), "wrong type");
     jlong object_handle = get_IndirectHotSpotObjectConstantImpl_objectHandle(constant);
-    oop result = resolve_handle(object_handle);
+    Handle result = resolve_handle(object_handle);
     if (result == NULL) {
-      JVMCI_THROW_MSG_NULL(InternalError, "Constant was unexpectedly NULL");
+      JVMCI_THROW_MSG_(InternalError, "Constant was unexpectedly NULL", Handle());
     }
     return result;
   }

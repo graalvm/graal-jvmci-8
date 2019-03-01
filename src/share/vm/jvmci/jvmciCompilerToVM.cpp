@@ -311,7 +311,7 @@ C2V_VMENTRY(jobject, getResolvedJavaMethod, (JNIEnv* env, jobject, jobject base,
   if (base_object.is_null()) {
     method = *((Method**)(offset));
   } else if (JVMCIENV->isa_HotSpotObjectConstantImpl(base_object)) {
-    oop obj = JVMCIENV->asConstant(base_object, JVMCI_CHECK_NULL);
+    Handle obj = JVMCIENV->asConstant(base_object, JVMCI_CHECK_NULL);
     if (obj->is_a(SystemDictionary::MemberName_klass())) {
       method = (Method*) (intptr_t) obj->long_field(offset);
     }
@@ -353,7 +353,7 @@ C2V_VMENTRY(jobject, getResolvedJavaType0, (JNIEnv* env, jobject, jobject base, 
   if (base_object.is_non_null() && offset == oopDesc::klass_offset_in_bytes()) {
     // klass = JVMCIENV->unhandle(base_object)->klass();
     if (JVMCIENV->isa_HotSpotObjectConstantImpl(base_object)) {
-      oop base_oop = JVMCIENV->asConstant(base_object, JVMCI_CHECK_NULL);
+      Handle base_oop = JVMCIENV->asConstant(base_object, JVMCI_CHECK_NULL);
       klass = base_oop->klass();
     } else {
       assert(false, "What types are we actually expecting here?");
@@ -367,9 +367,9 @@ C2V_VMENTRY(jobject, getResolvedJavaType0, (JNIEnv* env, jobject, jobject base, 
       } else if (JVMCIENV->isa_HotSpotResolvedObjectTypeImpl(base_object)) {
         base_address = (intptr_t) JVMCIENV->asKlass(base_object);
       } else if (JVMCIENV->isa_HotSpotObjectConstantImpl(base_object)) {
-        oop base_oop = JVMCIENV->asConstant(base_object, JVMCI_CHECK_NULL);
+        Handle base_oop = JVMCIENV->asConstant(base_object, JVMCI_CHECK_NULL);
         if (base_oop->is_a(SystemDictionary::Class_klass())) {
-          base_address = (jlong) (address) base_oop;
+          base_address = (jlong) (address) base_oop();
         }
       }
       if (base_address == 0) {
@@ -1710,7 +1710,7 @@ C2V_VMENTRY(void, compileToBytecode, (JNIEnv* env, jobject, jobject lambda_form_
 C2V_END
 
 C2V_VMENTRY(int, getIdentityHashCode, (JNIEnv* env, jobject, jobject object))
-  oop obj = JVMCIENV->asConstant(JVMCIENV->wrap(object), JVMCI_CHECK_0);
+  Handle obj = JVMCIENV->asConstant(JVMCIENV->wrap(object), JVMCI_CHECK_0);
   return obj->identity_hash();
 C2V_END
 
@@ -2208,7 +2208,7 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
     result = peerEnv->get_jvmci_primitive_type(type);
   } else if (thisEnv->isa_IndirectHotSpotObjectConstantImpl(obj) ||
              thisEnv->isa_DirectHotSpotObjectConstantImpl(obj)) {
-    oop constant = thisEnv->asConstant(obj, JVMCI_CHECK_0);
+    Handle constant = thisEnv->asConstant(obj, JVMCI_CHECK_0);
     result = peerEnv->get_object_constant(constant);
   } else if (thisEnv->isa_HotSpotNmethod(obj)) {
     nmethod* nm = thisEnv->asNmethod(obj);
