@@ -405,11 +405,11 @@ ScopeValue* CodeInstaller::get_scope_value(JVMCIObject value, BasicType type, Gr
       }
     } else if (jvmci_env()->isa_HotSpotObjectConstantImpl(value)) {
       if (type == T_OBJECT) {
-        oop obj = jvmci_env()->asConstant(value, JVMCI_CHECK_NULL);
+        Handle obj = jvmci_env()->asConstant(value, JVMCI_CHECK_NULL);
         if (obj == NULL) {
           JVMCI_ERROR_NULL("null value must be in NullConstant");
         }
-        return new ConstantOopWriteValue(JNIHandles::make_local(obj));
+        return new ConstantOopWriteValue(JNIHandles::make_local(obj()));
       } else {
         JVMCI_ERROR_NULL("unexpected object constant, expected %s", basictype_to_str(type));
       }
@@ -848,8 +848,8 @@ JVMCI::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, bo
         *((void**) dest) = record_metadata_reference(_constants, dest, constant, JVMCI_CHECK_OK);
       }
     } else if (jvmci_env()->isa_HotSpotObjectConstantImpl(constant)) {
-      oop obj = jvmci_env()->asConstant(constant, JVMCI_CHECK_OK);
-      jobject value = JNIHandles::make_local(obj);
+      Handle obj = jvmci_env()->asConstant(constant, JVMCI_CHECK_OK);
+      jobject value = JNIHandles::make_local(obj());
       int oop_index = _oop_recorder->find_index(value);
 
       if (jvmci_env()->get_HotSpotObjectConstantImpl_compressed(constant)) {

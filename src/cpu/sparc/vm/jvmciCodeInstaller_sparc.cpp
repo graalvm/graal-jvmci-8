@@ -45,8 +45,8 @@ jint CodeInstaller::pd_next_offset(NativeInstruction* inst, jint pc_offset, JVMC
 
 void CodeInstaller::pd_patch_OopConstant(int pc_offset, JVMCIObject constant, JVMCI_TRAPS) {
   address pc = _instructions->start() + pc_offset;
-  oop obj = jvmci_env()->asConstant(constant, JVMCI_CHECK);
-  jobject value = JNIHandles::make_local(obj);
+  Handle obj = jvmci_env()->asConstant(constant, JVMCI_CHECK);
+  jobject value = JNIHandles::make_local(obj());
   if (jvmci_env()->get_HotSpotObjectConstantImpl_compressed(constant)) {
     int oop_index = _oop_recorder->find_index(value);
     RelocationHolder rspec = oop_Relocation::spec(oop_index);

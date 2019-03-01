@@ -571,7 +571,7 @@ public:
   JVMCIObject get_jvmci_constant_pool(constantPoolHandle cp, JVMCI_TRAPS);
   JVMCIObject get_jvmci_primitive_type(BasicType type);
 
-  oop asConstant(JVMCIObject object, JVMCI_TRAPS);
+  Handle asConstant(JVMCIObject object, JVMCI_TRAPS);
   JVMCIObject get_object_constant(Handle obj, bool compressed = false, bool dont_register = false);
 
   JVMCIPrimitiveArray new_booleanArray(int length, JVMCI_TRAPS);
