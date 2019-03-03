@@ -29,15 +29,15 @@ import java.util.List;
 
 import jdk.vm.ci.code.CompilationRequest;
 import jdk.vm.ci.code.CompilationRequestResult;
-import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.common.JVMCIError;
+import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.runtime.JVMCICompiler;
 import jdk.vm.ci.runtime.JVMCICompilerFactory;
 import jdk.vm.ci.runtime.JVMCIRuntime;
 import jdk.vm.ci.services.JVMCIPermission;
 import jdk.vm.ci.services.JVMCIServiceLocator;
-import sun.misc.VM;
+import jdk.vm.ci.services.Services;
 
 final class HotSpotJVMCICompilerConfig {
 
@@ -121,7 +121,7 @@ final class HotSpotJVMCICompilerConfig {
                                     ". You can select one of these with the " + Option.Compiler.getPropertyName() + " property " +
                                     "(e.g., -D" + Option.Compiler.getPropertyName() + "=" + multiple.get(0) + ").");
                 } else if (factory == null) {
-                    Path jvmciDir = Paths.get(VM.getSavedProperty("java.home"), "lib", "jvmci");
+                    Path jvmciDir = Paths.get(Services.getSavedProperties().get("java.home"), "lib", "jvmci");
                     factory = new DummyCompilerFactory("No providers of " + JVMCICompilerFactory.class + " found in " + jvmciDir +
                                     " or on the class path specified by the jvmci.class.path.append property.");
                 }

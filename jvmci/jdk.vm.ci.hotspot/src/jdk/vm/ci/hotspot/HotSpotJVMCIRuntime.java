@@ -61,7 +61,6 @@ import jdk.vm.ci.runtime.JVMCICompilerFactory;
 import jdk.vm.ci.runtime.JVMCIRuntime;
 import jdk.vm.ci.services.JVMCIServiceLocator;
 import jdk.vm.ci.services.Services;
-import sun.misc.VM;
 
 /**
  * HotSpot implementation of a JVMCI runtime.
@@ -247,7 +246,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
         private Object getValue() {
             if (value == UNINITIALIZED) {
-                String propertyValue = VM.getSavedProperty(getPropertyName());
+                String propertyValue = Services.getSavedProperties().get(getPropertyName());
                 if (propertyValue == null) {
                     this.value = defaultValue;
                     this.isDefault = true;

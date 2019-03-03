@@ -1139,7 +1139,12 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
     create_jvmci_primitive_type(T_FLOAT, JVMCI_CHECK_EXIT_((void)0));
     create_jvmci_primitive_type(T_DOUBLE, JVMCI_CHECK_EXIT_((void)0));
     create_jvmci_primitive_type(T_VOID, JVMCI_CHECK_EXIT_((void)0));
+
+    if (!JVMCIENV->is_hotspot()) {
+      JVMCIENV->copy_saved_properties();
+    }
   }
+
   _initialized = true;
   _being_initialized = false;
   JVMCI_lock->notify_all();

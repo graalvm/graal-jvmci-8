@@ -195,12 +195,6 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 #endif // PRODUCT
 #undef CHECK_NOT_SET
 
-  if (strlen(JVMCILibArgsSep) != 1) {
-    jio_fprintf(defaultStream::error_stream(),
-                "Length of -XX:JVMCILibArgsSep must be 1: \"%s\"\n", JVMCILibArgsSep);
-    return false;
-  }
-
   if (UseJVMCICompiler) {
     if (JVMCIThreads < 1) {
       // Check the minimum number of JVMCI compiler threads

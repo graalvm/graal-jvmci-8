@@ -193,6 +193,10 @@ public:
     return _runtime;
   }
 
+  // Initializes Services.savedProperties in the shared library by copying
+  // the values from the same field in the HotSpot heap.
+  void copy_saved_properties();
+
   jboolean has_pending_exception() {
     if (!is_hotspot()) {
       JNIAccessMark jni(this);
