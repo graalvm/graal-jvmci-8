@@ -40,7 +40,8 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
     /**
      * Returns the bytecode of this method, if the method has code. The returned byte array does not
      * contain breakpoints or non-Java bytecodes. This may return null if the
-     * {@link #getDeclaringClass() holder} is not {@link ResolvedJavaType#isLinked() linked}.
+     * {@linkplain #getDeclaringClass() declaring class} is not
+     * {@linkplain ResolvedJavaType#isLinked() linked}.
      *
      * The contained constant pool indices may not be the ones found in the original class file but
      * they can be used with the JVMCI API (e.g. methods in {@link ConstantPool}).
@@ -440,13 +441,15 @@ public interface ResolvedJavaMethod extends JavaMethod, InvokeTarget, ModifiersP
     }
 
     /**
-     * Checks whether the method has bytecodes associated with it. Methods without bytecodes are
-     * either abstract or native methods.
+     * Checks whether the method has bytecodes associated with it. Note that even if this method
+     * returns {@code true}, {@link #getCode} can return {@code null} if
+     * {@linkplain #getDeclaringClass() declaring class} is not
+     * {@linkplain ResolvedJavaType#isLinked() linked}.
      *
-     * @return whether the definition of this method is Java bytecodes
+     * @return {@code this.getCodeSize() != 0}
      */
     default boolean hasBytecodes() {
-        return isConcrete() && !isNative();
+        return getCodeSize() != 0;
     }
 
     /**
