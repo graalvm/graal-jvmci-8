@@ -55,10 +55,9 @@ public:
   // A JVMCINMethodData is inlined in an nmethod
   void* operator new(size_t size, nmethod* nm) throw();
 
-  JVMCINMethodData(JVMCIEnv* jvmciEnv,
-      int nmethod_mirror_index,
-      const char* name,
-      FailedSpeculation** failed_speculations);
+  JVMCINMethodData(int nmethod_mirror_index,
+                   const char* name,
+                   FailedSpeculation** failed_speculations);
 
   // Adds `speculation` to the failed speculations list.
   void add_failed_speculation(nmethod* nm, jlong speculation);

@@ -964,7 +964,6 @@ void* JVMCINMethodData::operator new(size_t size, nmethod* nm) throw() {
 }
 
 JVMCINMethodData::JVMCINMethodData(
-  JVMCIEnv* jvmciEnv,
   int nmethod_mirror_index,
   const char* name,
   FailedSpeculation** failed_speculations)
@@ -1970,7 +1969,8 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                                  handler_table, implicit_exception_table,
                                  compiler, comp_level,
                                  speculations, speculations_len,
-                                 jvmci_data_size);
+                                 nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
+
 
       // Free codeBlobs
       if (nm == NULL) {
@@ -1981,8 +1981,6 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
           CompileBroker::handle_full_code_cache();
         }
       } else {
-        JVMCINMethodData* data = new (nm) JVMCINMethodData(JVMCIENV, nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
-
         nm->set_has_unsafe_access(has_unsafe_access);
         nm->set_has_wide_vectors(has_wide_vector);
 
@@ -1992,6 +1990,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
           JVMCIENV->compile_state()->task()->set_code(nm);
         }
 
+        JVMCINMethodData* data = nm->jvmci_nmethod_data();
         if (install_default) {
           assert(!nmethod_mirror.is_hotspot() || data->get_nmethod_mirror(nm) == NULL, "must be");
           if (entry_bci == InvocationEntryBci) {
