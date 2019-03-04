@@ -1912,7 +1912,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
     jvmci_data_size += (int) strlen(nmethod_mirror_name) + 1;
   }
   int nmethod_mirror_index;
-  if (JVMCIENV->get_HotSpotNmethod_compileIdSnapshot(nmethod_mirror) == 0) {
+  if (!install_default) {
     // Reserve or initialize mirror slot in the oops table.
     OopRecorder* oop_recorder = debug_info->oop_recorder();
     nmethod_mirror_index = oop_recorder->allocate_oop_index(nmethod_mirror.is_hotspot() ? nmethod_mirror.as_jobject() : NULL);

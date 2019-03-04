@@ -647,15 +647,27 @@ JVMCIObject JVMCIEnv::new_HotSpotNmethod(methodHandle method, const char* name, 
   JVMCIObject methodObject = get_jvmci_method(method(), JVMCI_CHECK_(JVMCIObject()));
 
   if (is_hotspot()) {
-    HotSpotJVMCI::HotSpotNmethod::klass()->initialize(CHECK_(JVMCIObject()));
-    oop obj = HotSpotJVMCI::HotSpotNmethod::klass()->allocate_instance(CHECK_(JVMCIObject()));
-
+    instanceKlassHandle ik(THREAD, HotSpotJVMCI::HotSpotNmethod::klass());
+    if (ik->should_be_initialized()) {
+      ik->initialize(CHECK_(JVMCIObject()));
+    }
+    oop obj = ik->allocate_instance(CHECK_(JVMCIObject()));
+    Handle obj_h(THREAD, obj);
     Handle nameStr = java_lang_String::create_from_str(name, CHECK_(JVMCIObject()));
-    HotSpotJVMCI::InstalledCode::set_name(this, obj, nameStr());
-    HotSpotJVMCI::HotSpotNmethod::set_isDefault(this, obj, isDefault);
-    HotSpotJVMCI::HotSpotNmethod::set_method(this, obj, HotSpotJVMCI::resolve(methodObject));
-    HotSpotJVMCI::HotSpotNmethod::set_compileIdSnapshot(this, obj, compileId);
-    return wrap(obj);
+
+    // Call constructor
+    JavaCallArguments jargs;
+    jargs.push_oop(obj_h());
+    jargs.push_oop(HotSpotJVMCI::resolve(methodObject));
+    jargs.push_oop(nameStr());
+    jargs.push_int(isDefault);
+    jargs.push_long(compileId);
+    JavaValue result(T_VOID);
+    JavaCalls::call_special(&result, ik,
+                            vmSymbols::object_initializer_name(),
+                            vmSymbols::method_string_bool_long_signature(),
+                            &jargs, CHECK_(JVMCIObject()));
+    return wrap(obj_h());
   } else {
     JNIAccessMark jni(this);
     jobject nameStr = name == NULL ? NULL : jni()->NewStringUTF(name);
