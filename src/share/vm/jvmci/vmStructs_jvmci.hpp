@@ -122,6 +122,7 @@
   declare_toplevel_type(JVMCIEnv)                                             \
   declare_toplevel_type(CompilerToVM::Data)                                   \
   declare_toplevel_type(ObjectWaiter)                                         \
+  declare_toplevel_type(JVMCICompileState)                                    \
 
 #define VM_INT_CONSTANTS_JVMCI(declare_constant, declare_preprocessor_constant)                   \
   declare_constant(Deoptimization::Reason_unreached0)                                             \
