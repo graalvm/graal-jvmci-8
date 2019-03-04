@@ -1839,7 +1839,13 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
 
   HandleMark hm;
   JVMCIObject receiver = get_HotSpotJVMCIRuntime(JVMCI_CHECK_EXIT);
-  JVMCIObject jvmci_method = JVMCIENV->get_jvmci_method(method, JVMCI_CHECK);
+  JVMCIObject jvmci_method = JVMCIENV->get_jvmci_method(method, JVMCIENV);
+  if (JVMCIENV->has_pending_exception()) {
+    JVMCIENV->describe_pending_exception(true);
+    compile_state->set_failure(false, "exception getting JVMCI wrapper method");
+    return;
+  }
+
   JVMCIObject result_object = JVMCIENV->call_HotSpotJVMCIRuntime_compileMethod(receiver, jvmci_method, entry_bci,
                                                                      (jlong) compile_state, compile_state->task()->compile_id());
   if (!JVMCIENV->has_pending_exception()) {
