@@ -1358,26 +1358,30 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr
   ResourceMark rm;
   HandleMark hm;
 
-#define CHECK_RETURN JVMCIENV); \
-  if (HAS_PENDING_EXCEPTION) { \
-    Handle exception(THREAD, PENDING_EXCEPTION); \
-    CLEAR_PENDING_EXCEPTION; \
-  \
-    if (exception->is_a(SystemDictionary::ThreadDeath_klass())) { \
-      /* In the special case of ThreadDeath, we need to reset the */ \
-      /* pending async exception so that it is propagated.         */ \
-      thread->set_pending_async_exception(exception()); \
-      return level; \
-    } \
-    tty->print("Uncaught exception while adjusting compilation level: "); \
-    java_lang_Throwable::print(exception(), tty); \
-    tty->cr(); \
-    java_lang_Throwable::print_stack_trace(exception(), tty); \
-    if (HAS_PENDING_EXCEPTION) { \
-      CLEAR_PENDING_EXCEPTION; \
-    } \
-    return level; \
-  } \
+#define CHECK_RETURN JVMCIENV);                  \
+  if (JVMCIENV->has_pending_exception()) {               \
+    if (JVMCIENV->is_hotspot()) {                        \
+      Handle exception(THREAD, PENDING_EXCEPTION);                \
+      CLEAR_PENDING_EXCEPTION;                                    \
+                                                                  \
+      if (exception->is_a(SystemDictionary::ThreadDeath_klass())) {   \
+        /* In the special case of ThreadDeath, we need to reset the */  \
+        /* pending async exception so that it is propagated.         */ \
+        thread->set_pending_async_exception(exception());               \
+        return level;                                                   \
+      }                                                                 \
+      tty->print("Uncaught exception while adjusting compilation level: "); \
+      java_lang_Throwable::print(exception(), tty);                     \
+      tty->cr();                                                        \
+      java_lang_Throwable::print_stack_trace(exception(), tty);         \
+      if (HAS_PENDING_EXCEPTION) {                                      \
+        CLEAR_PENDING_EXCEPTION;                                        \
+      }                                                                 \
+    } else {                                                            \
+      JVMCIENV->clear_pending_exception();                               \
+    }                                                                   \
+    return level;                                                       \
+  }                                                                     \
   (void)(0
 
 
@@ -1390,7 +1394,7 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr
     sig = JVMCIENV->create_string(method->signature(), CHECK_RETURN);
   }
 
-  int comp_level = JVMCIENV->call_HotSpotJVMCIRuntime_adjustCompilationLevel(receiver, method->method_holder(), name, sig, is_osr, level, JVMCI_CHECK_EXIT_(level));
+  int comp_level = JVMCIENV->call_HotSpotJVMCIRuntime_adjustCompilationLevel(receiver, method->method_holder(), name, sig, is_osr, level, CHECK_RETURN);
   if (comp_level < CompLevel_none || comp_level > CompLevel_full_optimization) {
     assert(false, "compilation level out of bounds");
     return level;

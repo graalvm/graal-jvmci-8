@@ -203,7 +203,15 @@ public:
     }
   }
 
-  jboolean clear_pending_exception();
+  void clear_pending_exception() {
+    if (!is_hotspot()) {
+      JNIAccessMark jni(this);
+      jni()->ExceptionClear();
+    } else {
+      Thread* THREAD = Thread::current();
+      CLEAR_PENDING_EXCEPTION;
+    }
+  }
 
   // Prints an exception and stack trace of a pending exception.
   void describe_pending_exception(bool clear);
