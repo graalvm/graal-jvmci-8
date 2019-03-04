@@ -60,7 +60,7 @@ public class HotSpotNmethod extends HotSpotInstalledCode {
      * {@link #address} and {@link #entryPoint} fields when the state of the nmethod changes. The
      * nmethod will be unloadable when this object dies.
      * <p>
-     * Otherwise, the nmethod's unloadability is not chnaged when this object dies.
+     * Otherwise, the nmethod's unloadability is not changed when this object dies.
      */
     boolean inOopsTable() {
         return compileIdSnapshot != 0;

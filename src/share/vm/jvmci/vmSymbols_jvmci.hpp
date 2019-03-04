@@ -130,6 +130,7 @@
   template(forFloat_signature,                                    "(F)Ljdk/vm/ci/meta/PrimitiveConstant;")                                                                 \
   template(forDouble_name,                                        "forDouble")                                                                                             \
   template(forDouble_signature,                                   "(D)Ljdk/vm/ci/meta/PrimitiveConstant;")                                                                 \
+  template(method_string_bool_long_signature,                     "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;Ljava/lang/String;ZJ)V")                              \
 
 #endif
 
