@@ -1051,7 +1051,7 @@ void JVMCINMethodData::invalidate_nmethod_mirror(nmethod* nm) {
 
 void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(JVMCI_TRAPS) {
   if (!_HotSpotJVMCIRuntime_instance.is_null()) {
-    if (JVMCIENV->is_hotspot() && JVMCIGlobals::java_mode() == JVMCIGlobals::SharedLibrary) {
+    if (JVMCIENV->is_hotspot() && UseJVMCINativeLibrary) {
       JVMCI_THROW_MSG(InternalError, "JVMCI has already been enabled in the JVMCI shared library");
     }
   }
@@ -1082,7 +1082,7 @@ void JVMCI::initialize_compiler(TRAPS) {
 void JVMCI::initialize_globals() {
   _object_handles = JNIHandleBlock::allocate_block();
   _metadata_handles = MetadataHandleBlock::allocate_block();
-  if (JVMCIGlobals::java_mode() == JVMCIGlobals::SharedLibrary) {
+  if (UseJVMCINativeLibrary) {
     // There are two runtimes.
     _compiler_runtime = new JVMCIRuntime();
     _java_runtime = new JVMCIRuntime();
@@ -1120,7 +1120,7 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
     HandleMark hm;
     ResourceMark rm;
     JavaThread* THREAD = JavaThread::current();
-    if (JVMCIENV->mode() == JVMCIGlobals::HotSpot) {
+    if (JVMCIENV->is_hotspot()) {
       HotSpotJVMCI::compute_offsets(CHECK_EXIT);
     } else {
       JNIAccessMark jni(JVMCIENV);

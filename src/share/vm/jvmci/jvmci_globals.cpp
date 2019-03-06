@@ -44,7 +44,6 @@
 # include "os_bsd.inline.hpp"
 #endif
 
-JVMCIGlobals::JavaMode JVMCIGlobals::_java_mode = HotSpot;
 fileStream* JVMCIGlobals::_jni_config_file = NULL;
 
 JVMCI_FLAGS(MATERIALIZE_DEVELOPER_FLAG, MATERIALIZE_PD_DEVELOPER_FLAG, MATERIALIZE_PRODUCT_FLAG, MATERIALIZE_PD_PRODUCT_FLAG, MATERIALIZE_NOTPRODUCT_FLAG)
@@ -173,7 +172,6 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
   CHECK_NOT_SET(JVMCINMethodSizeLimit,        EnableJVMCI)
   CHECK_NOT_SET(MethodProfileWidth,           EnableJVMCI)
   CHECK_NOT_SET(JVMCIPrintProperties,         EnableJVMCI)
-  CHECK_NOT_SET(TraceUncollectedSpeculations, EnableJVMCI)
   CHECK_NOT_SET(UseJVMCINativeLibrary,        EnableJVMCI)
   CHECK_NOT_SET(JVMCILibPath,                 EnableJVMCI)
   CHECK_NOT_SET(JVMCILibArgs,                 EnableJVMCI)
@@ -194,6 +192,12 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 #endif // PRODUCT
 #undef CHECK_NOT_SET
 
+  if (strlen(JVMCILibArgsSep) != 1) {
+    jio_fprintf(defaultStream::error_stream(),
+                "Length of -XX:JVMCILibArgsSep must be 1: \"%s\"\n", JVMCILibArgsSep);
+    return false;
+  }
+
   if (UseJVMCICompiler) {
     if (JVMCIThreads < 1) {
       // Check the minimum number of JVMCI compiler threads
@@ -211,51 +215,32 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
   return true;
 }
 
-bool JVMCIGlobals::init_java_mode_from_flags() {
-  if (!UseJVMCINativeLibrary) {
-    _java_mode = HotSpot;
-  } else {
-    _java_mode = SharedLibrary;
-
-    if (strlen(JVMCILibArgsSep) != 1) {
-      jio_fprintf(defaultStream::error_stream(),
-                  "Length of -XX:JVMCILibArgsSep must be 1: \"%s\"\n", JVMCILibArgsSep);
-      return false;
-    }
-
-    // Make JVMCI initialization eager if loaded from a shared library
-    if (FLAG_IS_DEFAULT(EagerJVMCI)) {
-      FLAG_SET_DEFAULT(EagerJVMCI, true);
-    }
-  }
-  return true;
-}
-
 void JVMCIGlobals::set_jvmci_specific_flags() {
   if (UseJVMCICompiler) {
     if (FLAG_IS_DEFAULT(TypeProfileWidth)) {
       FLAG_SET_DEFAULT(TypeProfileWidth, 8);
     }
-    // Adjust the on stack replacement percentage to avoid early
-    // OSR compilations while JVMCI itself is warming up
-    if (FLAG_IS_DEFAULT(OnStackReplacePercentage)) {
-      FLAG_SET_DEFAULT(OnStackReplacePercentage, 933);
-    }
-    if (FLAG_IS_DEFAULT(ReservedCodeCacheSize)) {
-      FLAG_SET_DEFAULT(ReservedCodeCacheSize, 64*M);
-    }
-    if (FLAG_IS_DEFAULT(InitialCodeCacheSize)) {
-      FLAG_SET_DEFAULT(InitialCodeCacheSize, 16*M);
-    }
 
-    // SVM compiled code requires more stack space
-    if (JVMCIGlobals::java_mode() == JVMCIGlobals::SharedLibrary) {
+    if (UseJVMCINativeLibrary) {
+      // SVM compiled code requires more stack space
       if (FLAG_IS_DEFAULT(CompilerThreadStackSize)) {
         FLAG_SET_DEFAULT(CompilerThreadStackSize, 2*M);
       }
+    } else {
+      // Adjust the on stack replacement percentage to avoid early
+      // OSR compilations while JVMCI itself is warming up
+      if (FLAG_IS_DEFAULT(OnStackReplacePercentage)) {
+        FLAG_SET_DEFAULT(OnStackReplacePercentage, 933);
+      }
+      if (FLAG_IS_DEFAULT(ReservedCodeCacheSize)) {
+        FLAG_SET_DEFAULT(ReservedCodeCacheSize, 64*M);
+      }
+      if (FLAG_IS_DEFAULT(InitialCodeCacheSize)) {
+        FLAG_SET_DEFAULT(InitialCodeCacheSize, 16*M);
+      }
     }
-
   }
+
   if (!ScavengeRootsInCode) {
     warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
     ScavengeRootsInCode = 1;

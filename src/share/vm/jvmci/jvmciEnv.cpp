@@ -198,9 +198,9 @@ JNIEnv* JVMCIEnv::attach_shared_library() {
 void JVMCIEnv::init_env_mode_runtime(JNIEnv* parent_env) {
   // By default there is only one runtime which is the compiler runtime.
   _runtime = JVMCI::compiler_runtime();
-  if (JVMCIGlobals::java_mode() == JVMCIGlobals::HotSpot) {
+  if (!UseJVMCINativeLibrary) {
     // In HotSpot mode, JNI isn't used at all.
-    _mode = JVMCIGlobals::HotSpot;
+    _is_hotspot = true;
     _env = NULL;
     return;
   }
@@ -212,14 +212,14 @@ void JVMCIEnv::init_env_mode_runtime(JNIEnv* parent_env) {
     if (thread->jni_environment() == parent_env) {
       // Select the Java runtime
       _runtime = JVMCI::java_runtime();
-      _mode = JVMCIGlobals::HotSpot;
+      _is_hotspot = true;
       _env = NULL;
       return;
     }
   }
 
   // Running in JVMCI shared library mode so get a shared library JNIEnv
-  _mode = JVMCIGlobals::SharedLibrary;
+  _is_hotspot = false;
   _env = attach_shared_library();
   assert(parent_env == NULL || _env == parent_env, "must be");
 
@@ -261,7 +261,7 @@ void JVMCIEnv::init(bool is_hotspot, const char* file, int line) {
   _line = line;
   if (is_hotspot) {
     _env = NULL;
-    _mode = JVMCIGlobals::HotSpot;
+    _is_hotspot = true;
     _runtime = JVMCI::java_runtime();
   } else {
     init_env_mode_runtime(NULL);

@@ -141,7 +141,7 @@ class JVMCIEnv : public ResourceObj {
 
   JNIEnv*                _env;     // JNI env for calling into shared library
   JVMCIRuntime*          _runtime; // Access to a HotSpotJVMCIRuntime
-  JVMCIGlobals::JavaMode _mode;    // Which heap is the HotSpotJVMCIRuntime in
+  bool             _is_hotspot;    // Which heap is the HotSpotJVMCIRuntime in
   bool        _throw_to_caller;    // Propagate an exception raised in this env to the caller?
   const char*            _file;    // The file and ...
   int                    _line;    // ... line where this JNIEnv was created
@@ -616,9 +616,7 @@ public:
 
   // Determines if this is for the JVMCI runtime in the HotSpot
   // heap (true) or the shared library heap (false).
-  bool is_hotspot() { return _mode == JVMCIGlobals::HotSpot; }
-
-  JVMCIGlobals::JavaMode mode()              { return _mode; }
+  bool is_hotspot() { return _is_hotspot; }
 
   JVMCICompileState* compile_state() { return _compile_state; }
   void set_compile_state(JVMCICompileState* compile_state) {

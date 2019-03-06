@@ -852,7 +852,7 @@ void CommandLineFlags::printSetFlags(outputStream* out) {
 
 void CommandLineFlags::verify() {
   assert(Arguments::check_vm_args_consistency(), "Some flag settings conflict");
-  JVMCI_ONLY(assert(JVMCIGlobals::init_java_mode_from_flags(), "JVMCI flags settings conflict"));
+  JVMCI_ONLY(assert(JVMCIGlobals::check_jvmci_flags_are_consistent(), "JVMCI flags settings conflict"));
 }
 
 #endif // PRODUCT
