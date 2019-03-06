@@ -53,7 +53,7 @@ class JVMCI : public AllStatic {
 
   // Access to the HotSpotJVMCIRuntime used by Java code running on the
   // HotSpot heap. It will be the same as _compiler_runtime if
-  // JVMCIGlobals::java_mode() == JVMCIGlobals::HotSpot.
+  // UseJVMCINativeLibrary is false
   static JVMCIRuntime* _java_runtime;
 
  public:
