@@ -964,7 +964,6 @@ void* JVMCINMethodData::operator new(size_t size, nmethod* nm) throw() {
 }
 
 JVMCINMethodData::JVMCINMethodData(
-  JVMCIEnv* jvmciEnv,
   int nmethod_mirror_index,
   const char* name,
   FailedSpeculation** failed_speculations)
@@ -1359,26 +1358,30 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr
   ResourceMark rm;
   HandleMark hm;
 
-#define CHECK_RETURN JVMCIENV); \
-  if (HAS_PENDING_EXCEPTION) { \
-    Handle exception(THREAD, PENDING_EXCEPTION); \
-    CLEAR_PENDING_EXCEPTION; \
-  \
-    if (exception->is_a(SystemDictionary::ThreadDeath_klass())) { \
-      /* In the special case of ThreadDeath, we need to reset the */ \
-      /* pending async exception so that it is propagated.         */ \
-      thread->set_pending_async_exception(exception()); \
-      return level; \
-    } \
-    tty->print("Uncaught exception while adjusting compilation level: "); \
-    java_lang_Throwable::print(exception(), tty); \
-    tty->cr(); \
-    java_lang_Throwable::print_stack_trace(exception(), tty); \
-    if (HAS_PENDING_EXCEPTION) { \
-      CLEAR_PENDING_EXCEPTION; \
-    } \
-    return level; \
-  } \
+#define CHECK_RETURN JVMCIENV);                  \
+  if (JVMCIENV->has_pending_exception()) {               \
+    if (JVMCIENV->is_hotspot()) {                        \
+      Handle exception(THREAD, PENDING_EXCEPTION);                \
+      CLEAR_PENDING_EXCEPTION;                                    \
+                                                                  \
+      if (exception->is_a(SystemDictionary::ThreadDeath_klass())) {   \
+        /* In the special case of ThreadDeath, we need to reset the */  \
+        /* pending async exception so that it is propagated.         */ \
+        thread->set_pending_async_exception(exception());               \
+        return level;                                                   \
+      }                                                                 \
+      tty->print("Uncaught exception while adjusting compilation level: "); \
+      java_lang_Throwable::print(exception(), tty);                     \
+      tty->cr();                                                        \
+      java_lang_Throwable::print_stack_trace(exception(), tty);         \
+      if (HAS_PENDING_EXCEPTION) {                                      \
+        CLEAR_PENDING_EXCEPTION;                                        \
+      }                                                                 \
+    } else {                                                            \
+      JVMCIENV->clear_pending_exception();                               \
+    }                                                                   \
+    return level;                                                       \
+  }                                                                     \
   (void)(0
 
 
@@ -1391,7 +1394,7 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr
     sig = JVMCIENV->create_string(method->signature(), CHECK_RETURN);
   }
 
-  int comp_level = JVMCIENV->call_HotSpotJVMCIRuntime_adjustCompilationLevel(receiver, method->method_holder(), name, sig, is_osr, level, JVMCI_CHECK_EXIT_(level));
+  int comp_level = JVMCIENV->call_HotSpotJVMCIRuntime_adjustCompilationLevel(receiver, method->method_holder(), name, sig, is_osr, level, CHECK_RETURN);
   if (comp_level < CompLevel_none || comp_level > CompLevel_full_optimization) {
     assert(false, "compilation level out of bounds");
     return level;
@@ -1836,7 +1839,13 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
 
   HandleMark hm;
   JVMCIObject receiver = get_HotSpotJVMCIRuntime(JVMCI_CHECK_EXIT);
-  JVMCIObject jvmci_method = JVMCIENV->get_jvmci_method(method, JVMCI_CHECK);
+  JVMCIObject jvmci_method = JVMCIENV->get_jvmci_method(method, JVMCIENV);
+  if (JVMCIENV->has_pending_exception()) {
+    JVMCIENV->describe_pending_exception(true);
+    compile_state->set_failure(false, "exception getting JVMCI wrapper method");
+    return;
+  }
+
   JVMCIObject result_object = JVMCIENV->call_HotSpotJVMCIRuntime_compileMethod(receiver, jvmci_method, entry_bci,
                                                                      (jlong) compile_state, compile_state->task()->compile_id());
   if (!JVMCIENV->has_pending_exception()) {
@@ -1970,7 +1979,8 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
                                  handler_table, implicit_exception_table,
                                  compiler, comp_level,
                                  speculations, speculations_len,
-                                 jvmci_data_size);
+                                 nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
+
 
       // Free codeBlobs
       if (nm == NULL) {
@@ -1981,8 +1991,6 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
           CompileBroker::handle_full_code_cache();
         }
       } else {
-        JVMCINMethodData* data = new (nm) JVMCINMethodData(JVMCIENV, nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
-
         nm->set_has_unsafe_access(has_unsafe_access);
         nm->set_has_wide_vectors(has_wide_vector);
 
@@ -1992,6 +2000,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
           JVMCIENV->compile_state()->task()->set_code(nm);
         }
 
+        JVMCINMethodData* data = nm->jvmci_nmethod_data();
         if (install_default) {
           assert(!nmethod_mirror.is_hotspot() || data->get_nmethod_mirror(nm) == NULL, "must be");
           if (entry_bci == InvocationEntryBci) {

@@ -689,7 +689,9 @@ nmethod* nmethod::new_nmethod(methodHandle method,
 #if INCLUDE_JVMCI
   , char* speculations,
   int speculations_len,
-  int jvmci_data_size
+  int nmethod_mirror_index,
+  const char* nmethod_mirror_name,
+  FailedSpeculation** failed_speculations
 #endif
 )
 {
@@ -698,6 +700,10 @@ nmethod* nmethod::new_nmethod(methodHandle method,
   // create nmethod
   nmethod* nm = NULL;
   { MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
+    int jvmci_data_size = sizeof(JVMCINMethodData);
+    if (nmethod_mirror_name != NULL) {
+      jvmci_data_size += (int) strlen(nmethod_mirror_name) + 1;
+    }
     int nmethod_size =
       allocation_size(code_buffer, sizeof(nmethod))
       + adjust_pcs_size(debug_info->pcs_size())
@@ -726,6 +732,8 @@ nmethod* nmethod::new_nmethod(methodHandle method,
             );
 
     if (nm != NULL) {
+      JVMCINMethodData* data = new (nm) JVMCINMethodData(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
+
       // To make dependency checking during class loading fast, record
       // the nmethod dependencies in the classes it is dependent on.
       // This allows the dependency checking code to simply walk the
