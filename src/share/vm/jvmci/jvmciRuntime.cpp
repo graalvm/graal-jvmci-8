@@ -1449,17 +1449,6 @@ void JVMCIRuntime::exit_on_pending_exception(JVMCIEnv* JVMCIENV, const char* mes
   vm_exit(-1);
 }
 
-Klass* JVMCIRuntime::resolve_or_null(Symbol* name, TRAPS) {
-  assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
-  return SystemDictionary::resolve_or_null(name, SystemDictionary::jvmci_loader(), Handle(), CHECK_NULL);
-}
-
-Klass* JVMCIRuntime::resolve_or_fail(Symbol* name, TRAPS) {
-  assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
-  return SystemDictionary::resolve_or_fail(name, SystemDictionary::jvmci_loader(), Handle(), true, CHECK_NULL);
-}
-
-
 // ------------------------------------------------------------------
 // Note: the logic of this method should mirror the logic of
 // constantPoolOopDesc::verify_constant_pool_resolve.
