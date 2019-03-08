@@ -125,6 +125,9 @@
           "Execute JVMCI Java code from a shared library "                  \
           "instead of loading it from class files and executing it "        \
           "on the HotSpot heap")                                            \
+                                                                            \
+  product(bool, TraceClassLoadingStack, false,                              \
+          "Print Java stack trace when loading a class")                    \
 
 // Read default values for JVMCI globals
 
