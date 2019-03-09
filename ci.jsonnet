@@ -163,7 +163,7 @@
             ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
             ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
 
-            ["mx", "-p", "graal/vm", "--env", "libgraal", "--extra-image-builder-argument=-ea", "--extra-image-builder-argument=-J-esa", "build"],
+            ["mx", "-p", "graal/vm", "--env", "libgraal", "--extra-image-builder-argument=-J-esa", "build"],
             ["mx", "-p", "graal/vm", "--env", "libgraal", "gate", "--task", "LibGraal"]
         ]
     },

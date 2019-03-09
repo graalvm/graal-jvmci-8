@@ -4213,7 +4213,7 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
     ClassLoadingService::notify_class_loaded(InstanceKlass::cast(this_klass()),
                                              false /* not shared class */);
 
-    if (TraceClassLoading) {
+    if (TraceClassLoading || TraceClassLoadingStack) {
       ResourceMark rm;
       // print in a single call to reduce interleaving of output
       if (cfs->source() != NULL) {
@@ -4236,6 +4236,11 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
         tty->print("[Loaded %s from %s]\n", this_klass->external_name(),
                    InstanceKlass::cast(class_loader->klass())->external_name());
       }
+#if INCLUDE_JVMCI
+      if (TraceClassLoadingStack) {
+        JavaThread::current()->print_stack_on(tty);
+      }
+#endif
     }
 
     if (TraceClassResolution) {
