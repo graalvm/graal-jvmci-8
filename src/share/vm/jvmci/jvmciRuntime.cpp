@@ -1287,6 +1287,9 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized(JVMCIEnv* JVMCIENV) 
     // on class initialization semantics to synchronize racing threads.
     static Klass* _FactoryKlass = NULL;
     if (_FactoryKlass == NULL) {
+      // We must exit the VM if we fail to initialize the JVMCI class loader
+      // as class initialization cannot be re-done - the class is permanently
+      // put into a "failed initialization" state.
       JavaThread* THREAD = JavaThread::current();
       TempNewSymbol name = SymbolTable::new_symbol("jdk/vm/ci/services/JVMCIClassLoaderFactory", CHECK_EXIT);
       Klass* klass = SystemDictionary::resolve_or_fail(name, true, CHECK_EXIT);
@@ -1448,17 +1451,6 @@ void JVMCIRuntime::exit_on_pending_exception(JVMCIEnv* JVMCIENV, const char* mes
   before_exit(THREAD);
   vm_exit(-1);
 }
-
-Klass* JVMCIRuntime::resolve_or_null(Symbol* name, TRAPS) {
-  assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
-  return SystemDictionary::resolve_or_null(name, SystemDictionary::jvmci_loader(), Handle(), CHECK_NULL);
-}
-
-Klass* JVMCIRuntime::resolve_or_fail(Symbol* name, TRAPS) {
-  assert(!UseJVMCIClassLoader || SystemDictionary::jvmci_loader() != NULL, "JVMCI classloader should have been initialized");
-  return SystemDictionary::resolve_or_fail(name, SystemDictionary::jvmci_loader(), Handle(), true, CHECK_NULL);
-}
-
 
 // ------------------------------------------------------------------
 // Note: the logic of this method should mirror the logic of
@@ -1838,7 +1830,12 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
   }
 
   HandleMark hm;
-  JVMCIObject receiver = get_HotSpotJVMCIRuntime(JVMCI_CHECK_EXIT);
+  JVMCIObject receiver = get_HotSpotJVMCIRuntime(JVMCIENV);
+  if (JVMCIENV->has_pending_exception()) {
+    JVMCIENV->describe_pending_exception(true);
+    compile_state->set_failure(false, "exception getting HotSpotJVMCIRuntime object");
+    return;
+  }
   JVMCIObject jvmci_method = JVMCIENV->get_jvmci_method(method, JVMCIENV);
   if (JVMCIENV->has_pending_exception()) {
     JVMCIENV->describe_pending_exception(true);

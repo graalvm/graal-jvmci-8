@@ -292,16 +292,6 @@ class JVMCIRuntime: public CHeapObj<mtCompiler> {
   } \
   (void)(0
 
-  /**
-   * Same as SystemDictionary::resolve_or_null but uses the JVMCI loader.
-   */
-  static Klass* resolve_or_null(Symbol* name, TRAPS);
-
-  /**
-   * Same as SystemDictionary::resolve_or_fail but uses the JVMCI loader.
-   */
-  static Klass* resolve_or_fail(Symbol* name, TRAPS);
-
   static BasicType kindToBasicType(Handle kind, TRAPS);
 
   static void new_instance_common(JavaThread* thread, Klass* klass, bool null_on_fail);
