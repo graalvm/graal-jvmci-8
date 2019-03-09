@@ -849,10 +849,6 @@ meth public void notifyBootstrapFinished()
 meth public void notifyInstall(jdk.vm.ci.hotspot.HotSpotCodeCacheProvider,jdk.vm.ci.code.InstalledCode,jdk.vm.ci.code.CompiledCode)
 meth public void notifyShutdown()
 
-CLSS public abstract interface !annotation jdk.vm.ci.hotspot.VMEntryPoint
-intf java.lang.annotation.Annotation
-meth public abstract !hasdefault java.lang.String value()
-
 CLSS public final jdk.vm.ci.hotspot.VMField
 fld public final java.lang.Object value
 fld public final java.lang.String name

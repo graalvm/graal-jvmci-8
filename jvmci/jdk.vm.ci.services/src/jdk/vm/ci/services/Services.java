@@ -291,9 +291,8 @@ public final class Services {
      * Serializes the {@linkplain #getSavedProperties() saved system properties} to a byte array for
      * the purpose of {@linkplain #initializeSavedProperties(byte[]) initializing} the initial
      * properties in the JVMCI shared library.
-     *
-     * Called from the VM.
      */
+    @VMEntryPoint
     private static byte[] serializeSavedProperties() throws IOException {
         if (IS_IN_NATIVE_IMAGE) {
             throw new InternalError("Can only serialize saved properties in HotSpot runtime");
@@ -325,9 +324,8 @@ public final class Services {
      * Initialized the {@linkplain #getSavedProperties() saved system properties} in the JVMCI
      * shared library from the {@linkplain #serializeSavedProperties() serialized saved properties}
      * in the HotSpot runtime.
-     *
-     * Called from the VM.
      */
+    @VMEntryPoint
     private static void initializeSavedProperties(byte[] serializedProperties) throws IOException {
         if (!IS_IN_NATIVE_IMAGE) {
             throw new InternalError("Can only initialize saved properties in JVMCI shared library runtime");
