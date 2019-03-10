@@ -417,7 +417,16 @@ int VM_Exit::wait_for_threads_in_native_to_block() {
       if (thr!=thr_cur && thr->thread_state() == _thread_in_native) {
         num_active++;
         if (thr->is_Compiler_thread()) {
-          num_active_compiler_thread++;
+          CompilerThread* ct = (CompilerThread*) thr;
+          if (ct->compiler() == NULL || !ct->compiler()->is_jvmci()) {
+            num_active_compiler_thread++;
+          } else {
+            // When using a Java based JVMCI compiler, it's possible
+            // for one compiler thread to grab a Java lock, enter
+            // HotSpot and go to sleep on the shutdown safepoint.
+            // Another JVMCI compiler thread can then attempt grab
+            // the lock and thus never make progress.
+          }
         }
       }
     }
