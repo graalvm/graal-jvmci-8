@@ -1180,7 +1180,6 @@ void JVMCIRuntime::initialize_JVMCI(JVMCI_TRAPS) {
     initialize(JVMCI_CHECK);
     JVMCIENV->call_JVMCI_getRuntime(JVMCI_CHECK);
   }
-  assert(_HotSpotJVMCIRuntime_instance.is_non_null(), "what?");
 }
 
 JVMCIObject JVMCIRuntime::get_HotSpotJVMCIRuntime(JVMCI_TRAPS) {
