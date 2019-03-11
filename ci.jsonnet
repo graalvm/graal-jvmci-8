@@ -153,6 +153,7 @@
     # Build a basic GraalVM and run some simple tests.
     GraalVMTest:: {
         name+: "-graalvm",
+        timelimit: "1:20:00",
         run+: [
             ["mx", "-p", "graal/vm",
                     "--dy", "/substratevm,/graal-js",
