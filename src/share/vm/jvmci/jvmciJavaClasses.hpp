@@ -49,7 +49,15 @@
                          object_field, \
                          primarray_field, \
                          objectarray_field, \
-                         static_object_field, static_objectarray_field, static_int_field, static_boolean_field, jvmci_method, jvmci_constructor) \
+                         static_object_field, \
+                         static_objectarray_field, \
+                         static_int_field, \
+                         static_boolean_field, \
+                         jvmci_method, \
+                         jvmci_constructor) \
+  start_class(Services, jdk_vm_ci_services_Services)                                                          \
+    jvmci_method(CallStaticVoidMethod, GetStaticMethodID, call_static, void, Services, initializeSavedProperties, byte_array_void_signature, (JVMCIObject serializedProperties)) \
+  end_class                                                                                                   \
   start_class(Architecture, jdk_vm_ci_code_Architecture)                                                      \
     object_field(Architecture, wordKind, "Ljdk/vm/ci/meta/PlatformKind;")                                     \
   end_class                                                                                                   \
@@ -62,7 +70,7 @@
   start_class(HotSpotResolvedPrimitiveType, jdk_vm_ci_hotspot_HotSpotResolvedPrimitiveType)                   \
     object_field(HotSpotResolvedPrimitiveType, mirror, "Ljdk/vm/ci/hotspot/HotSpotObjectConstantImpl;")       \
   object_field(HotSpotResolvedPrimitiveType, kind, "Ljdk/vm/ci/meta/JavaKind;")                               \
-    static_objectarray_field(HotSpotResolvedPrimitiveType, primitives, "[Ljdk/vm/ci/hotspot/HotSpotResolvedPrimitiveType;")        \
+    static_objectarray_field(HotSpotResolvedPrimitiveType, primitives, "[Ljdk/vm/ci/hotspot/HotSpotResolvedPrimitiveType;") \
   end_class                                                                                                   \
   start_class(HotSpotResolvedJavaFieldImpl, jdk_vm_ci_hotspot_HotSpotResolvedJavaFieldImpl)                   \
     object_field(HotSpotResolvedJavaFieldImpl, type, "Ljdk/vm/ci/meta/JavaType;")                             \
@@ -86,7 +94,7 @@
   end_class                                                                                                   \
   start_class(HotSpotNmethod, jdk_vm_ci_hotspot_HotSpotNmethod)                                               \
     boolean_field(HotSpotNmethod, isDefault)                                                                  \
-    long_field(HotSpotNmethod, compileIdSnapshot)                                                                     \
+    long_field(HotSpotNmethod, compileIdSnapshot)                                                             \
     object_field(HotSpotNmethod, method, "Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;")                 \
     jvmci_constructor(HotSpotNmethod, "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;Ljava/lang/String;ZJ)V") \
   end_class                                                                                                   \
@@ -333,8 +341,8 @@
   start_class(HotSpotJVMCIRuntime, jdk_vm_ci_hotspot_HotSpotJVMCIRuntime)                                     \
     int_field(HotSpotJVMCIRuntime, compilationLevelAdjustment)                                                \
     jvmci_method(CallNonvirtualObjectMethod, GetMethodID, call_special, JVMCIObject, HotSpotJVMCIRuntime, compileMethod, compileMethod_signature, (JVMCIObject runtime, JVMCIObject method, int entry_bci, jlong env, int id)) \
-    jvmci_method(CallStaticObjectMethod, GetStaticMethodID, call_static, void, HotSpotJVMCIRuntime, encodeThrowable, encodeThrowable_signature, (JVMCIObject throwable)) \
-    jvmci_method(CallStaticObjectMethod, GetStaticMethodID, call_static, void, HotSpotJVMCIRuntime, decodeThrowable, decodeThrowable_signature, (JVMCIObject encodedThrowable)) \
+    jvmci_method(CallStaticObjectMethod, GetStaticMethodID, call_static, JVMCIObject, HotSpotJVMCIRuntime, encodeThrowable, encodeThrowable_signature, (JVMCIObject throwable)) \
+    jvmci_method(CallStaticObjectMethod, GetStaticMethodID, call_static, JVMCIObject, HotSpotJVMCIRuntime, decodeThrowable, decodeThrowable_signature, (JVMCIObject encodedThrowable)) \
     jvmci_method(CallNonvirtualIntMethod, GetMethodID, call_special, int, HotSpotJVMCIRuntime, adjustCompilationLevel, adjustCompilationLevel_signature, (JVMCIObject runtime, JVMCIObject declaringClass, JVMCIObject name, JVMCIObject signature, bool is_osr, int level)) \
     jvmci_method(CallNonvirtualVoidMethod, GetMethodID, call_special, void, HotSpotJVMCIRuntime, bootstrapFinished, void_method_signature, (JVMCIObject runtime, JVMCI_TRAPS)) \
     jvmci_method(CallNonvirtualVoidMethod, GetMethodID, call_special, void, HotSpotJVMCIRuntime, shutdown, void_method_signature, (JVMCIObject runtime)) \

@@ -29,6 +29,7 @@
 #define JVMCI_VM_SYMBOLS_DO(template, do_alias)
 #else
 #define JVMCI_VM_SYMBOLS_DO(template, do_alias)                                                                                           \
+  template(jdk_vm_ci_services_Services,                           "jdk/vm/ci/services/Services")                                          \
   template(jdk_vm_ci_runtime_JVMCI,                               "jdk/vm/ci/runtime/JVMCI")                                              \
   template(jdk_vm_ci_hotspot_HotSpotCompiledCode,                 "jdk/vm/ci/hotspot/HotSpotCompiledCode")                                \
   template(jdk_vm_ci_hotspot_HotSpotCompiledCode_Comment,         "jdk/vm/ci/hotspot/HotSpotCompiledCode$Comment")                        \
@@ -103,34 +104,35 @@
   template(adjustCompilationLevel_signature,                      "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ZI)I")          \
   template(compileMethod_name,                                    "compileMethod")                                                        \
   template(compileMethod_signature,                               "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;IJI)Ljdk/vm/ci/hotspot/HotSpotCompilationRequestResult;") \
-  template(encodeThrowable_name,                                  "encodeThrowable")                                                                                       \
-  template(encodeThrowable_signature,                             "(Ljava/lang/Throwable;)Ljava/lang/String;")                                                             \
-  template(decodeThrowable_name,                                  "decodeThrowable")                                                                                       \
-  template(decodeThrowable_signature,                             "(Ljava/lang/String;)Ljava/lang/Throwable;")                                                             \
+  template(encodeThrowable_name,                                  "encodeThrowable")                                                      \
+  template(encodeThrowable_signature,                             "(Ljava/lang/Throwable;)Ljava/lang/String;")                            \
+  template(decodeThrowable_name,                                  "decodeThrowable")                                                      \
+  template(decodeThrowable_signature,                             "(Ljava/lang/String;)Ljava/lang/Throwable;")                            \
   template(fromMetaspace_name,                                    "fromMetaspace")                                                        \
   template(method_fromMetaspace_signature,                        "(J)Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;")                     \
   template(constantPool_fromMetaspace_signature,                  "(J)Ljdk/vm/ci/hotspot/HotSpotConstantPool;")                           \
-  template(klass_fromMetaspace_signature,                         "(JLjava/lang/String;)Ljdk/vm/ci/hotspot/HotSpotResolvedObjectTypeImpl;")                                \
-  template(primitive_fromMetaspace_signature,                     "(Ljdk/vm/ci/hotspot/HotSpotObjectConstantImpl;C)Ljdk/vm/ci/hotspot/HotSpotResolvedPrimitiveType;")      \
-  template(getRuntime_name,                                       "getRuntime")                                                                                            \
-  template(getRuntime_signature,                                  "()Ljdk/vm/ci/runtime/JVMCIRuntime;")                                                                    \
-  template(initializeRuntime_name,                                "initializeRuntime")                                                                                     \
-  do_alias(initializeRuntime_signature, getRuntime_signature)                                                                                                              \
-  template(runtime_name,                                          "runtime")                                                                                               \
-  template(runtime_signature,                                     "()Ljdk/vm/ci/hotspot/HotSpotJVMCIRuntime;")                                                             \
-  template(getCompiler_name,                                      "getCompiler")                                                                                           \
-  template(getCompiler_signature,                                 "()Ljdk/vm/ci/runtime/JVMCICompiler;")                                                                   \
-  template(callToString_name,                                     "callToString")                                                                                          \
-  template(callToString_signature,                                "(Ljava/lang/Object;)Ljava/lang/String;")                                                                \
-  template(getName_name,                                          "getName")                                                                                               \
-  template(bootstrapFinished_name,                                "bootstrapFinished")                                                                                     \
-  template(forTypeChar_name,                                      "forTypeChar")                                                                                           \
-  template(forTypeChar_signature,                                 "(CJ)Ljdk/vm/ci/meta/PrimitiveConstant;")                                                                \
-  template(forFloat_name,                                         "forFloat")                                                                                              \
-  template(forFloat_signature,                                    "(F)Ljdk/vm/ci/meta/PrimitiveConstant;")                                                                 \
-  template(forDouble_name,                                        "forDouble")                                                                                             \
-  template(forDouble_signature,                                   "(D)Ljdk/vm/ci/meta/PrimitiveConstant;")                                                                 \
-  template(method_string_bool_long_signature,                     "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;Ljava/lang/String;ZJ)V")                              \
+  template(klass_fromMetaspace_signature,                         "(JLjava/lang/String;)Ljdk/vm/ci/hotspot/HotSpotResolvedObjectTypeImpl;") \
+  template(primitive_fromMetaspace_signature,                     "(Ljdk/vm/ci/hotspot/HotSpotObjectConstantImpl;C)Ljdk/vm/ci/hotspot/HotSpotResolvedPrimitiveType;") \
+  template(getRuntime_name,                                       "getRuntime")                                                           \
+  template(getRuntime_signature,                                  "()Ljdk/vm/ci/runtime/JVMCIRuntime;")                                   \
+  template(initializeRuntime_name,                                "initializeRuntime")                                                    \
+  do_alias(initializeRuntime_signature, getRuntime_signature)                                                                             \
+  template(runtime_name,                                          "runtime")                                                              \
+  template(runtime_signature,                                     "()Ljdk/vm/ci/hotspot/HotSpotJVMCIRuntime;")                            \
+  template(getCompiler_name,                                      "getCompiler")                                                          \
+  template(getCompiler_signature,                                 "()Ljdk/vm/ci/runtime/JVMCICompiler;")                                  \
+  template(callToString_name,                                     "callToString")                                                         \
+  template(callToString_signature,                                "(Ljava/lang/Object;)Ljava/lang/String;")                               \
+  template(getName_name,                                          "getName")                                                              \
+  template(bootstrapFinished_name,                                "bootstrapFinished")                                                    \
+  template(forTypeChar_name,                                      "forTypeChar")                                                          \
+  template(forTypeChar_signature,                                 "(CJ)Ljdk/vm/ci/meta/PrimitiveConstant;")                               \
+  template(forFloat_name,                                         "forFloat")                                                             \
+  template(forFloat_signature,                                    "(F)Ljdk/vm/ci/meta/PrimitiveConstant;")                                \
+  template(forDouble_name,                                        "forDouble")                                                            \
+  template(forDouble_signature,                                   "(D)Ljdk/vm/ci/meta/PrimitiveConstant;")                                \
+  template(method_string_bool_long_signature,                     "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethodImpl;Ljava/lang/String;ZJ)V") \
+  template(initializeSavedProperties_name,                        "initializeSavedProperties")                                            \
 
 #endif
 

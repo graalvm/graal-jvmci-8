@@ -107,13 +107,6 @@
   product(intx, MethodProfileWidth, 0,                                      \
           "Number of methods to record in call profile")                    \
                                                                             \
-  product(ccstr, JVMCILibArgs, NULL,                                        \
-          "Arguments for JVMCI shared library VM separated by a space (use "\
-          "JVMCILibArgsSep for an alternative separator)")                  \
-                                                                            \
-  product(ccstr, JVMCILibArgsSep, " ",                                      \
-          "Single character separator between JVMCILibArgs")                \
-                                                                            \
   product(ccstr, JVMCILibPath, NULL,                                        \
           "LD path for loading the JVMCI shared library")                   \
                                                                             \

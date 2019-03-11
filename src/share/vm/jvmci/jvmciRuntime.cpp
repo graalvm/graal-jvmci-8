@@ -1139,7 +1139,12 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
     create_jvmci_primitive_type(T_FLOAT, JVMCI_CHECK_EXIT_((void)0));
     create_jvmci_primitive_type(T_DOUBLE, JVMCI_CHECK_EXIT_((void)0));
     create_jvmci_primitive_type(T_VOID, JVMCI_CHECK_EXIT_((void)0));
+
+    if (!JVMCIENV->is_hotspot()) {
+      JVMCIENV->copy_saved_properties();
+    }
   }
+
   _initialized = true;
   _being_initialized = false;
   JVMCI_lock->notify_all();
@@ -1175,7 +1180,6 @@ void JVMCIRuntime::initialize_JVMCI(JVMCI_TRAPS) {
     initialize(JVMCI_CHECK);
     JVMCIENV->call_JVMCI_getRuntime(JVMCI_CHECK);
   }
-  assert(_HotSpotJVMCIRuntime_instance.is_non_null(), "what?");
 }
 
 JVMCIObject JVMCIRuntime::get_HotSpotJVMCIRuntime(JVMCI_TRAPS) {

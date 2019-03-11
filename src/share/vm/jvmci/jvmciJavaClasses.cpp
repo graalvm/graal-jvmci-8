@@ -67,6 +67,24 @@ void HotSpotJVMCI::compute_offset(int &dest_offset, Klass* klass, const char* na
   }
 }
 
+#ifndef PRODUCT
+static void check_resolve_method(const char* call_type, Klass* resolved_klass, Symbol* method_name, Symbol* method_signature, TRAPS) {
+  methodHandle method;
+  KlassHandle current_klass;
+  if (strcmp(call_type, "call_static") == 0) {
+    method = LinkResolver::resolve_static_call_or_null(resolved_klass, method_name, method_signature, current_klass, false);
+  } else if (strcmp(call_type, "call_virtual") == 0) {
+    method = LinkResolver::resolve_virtual_call_or_null(resolved_klass, resolved_klass, method_name, method_signature, current_klass, false);
+  } else if (strcmp(call_type, "call_special") == 0) {
+    method = LinkResolver::resolve_special_call_or_null(resolved_klass, method_name, method_signature, current_klass, false);
+  } else {
+    fatal(err_msg("Unknown or unsupported call type: %s", call_type));
+  }
+  if (method.is_null()) {
+    fatal(err_msg("Could not resolve %s.%s%s", resolved_klass->external_name(), method_name->as_C_string(), method_signature->as_C_string()));
+  }
+}
+#endif
 
 jclass JNIJVMCI::_box_classes[T_CONFLICT+1];
 jclass JNIJVMCI::_byte_array;
@@ -96,9 +114,17 @@ jmethodID JNIJVMCI::_HotSpotResolvedPrimitiveType_fromMetaspace_method;
 #define STATIC_OBJECT_FIELD(className, name, signature) FIELD(className, name, signature, true)
 #define STATIC_INT_FIELD(className, name) FIELD(className, name, "I", true)
 #define STATIC_BOOLEAN_FIELD(className, name) FIELD(className, name, "Z", true)
+#ifdef PRODUCT
 #define METHOD(jniCallType, jniGetMethod, hsCallType, returnType, className, methodName, signatureSymbolName, args)
 #define CONSTRUCTOR(className, signature)
-
+#else
+#define METHOD(jniCallType, jniGetMethod, hsCallType, returnType, className, methodName, signatureSymbolName, args) \
+		check_resolve_method(#hsCallType, k, vmSymbols::methodName##_name(), vmSymbols::signatureSymbolName(), CHECK);
+#define CONSTRUCTOR(className, signature) { \
+	  TempNewSymbol sig = SymbolTable::new_symbol(signature, CHECK); \
+	  check_resolve_method("call_special", k, vmSymbols::object_initializer_name(), sig, CHECK); \
+  }
+#endif
 /**
  * Computes and initializes the offsets used by HotSpotJVMCI.
  */

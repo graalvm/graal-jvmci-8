@@ -179,8 +179,6 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
   CHECK_NOT_SET(JVMCIPrintProperties,         EnableJVMCI)
   CHECK_NOT_SET(UseJVMCINativeLibrary,        EnableJVMCI)
   CHECK_NOT_SET(JVMCILibPath,                 EnableJVMCI)
-  CHECK_NOT_SET(JVMCILibArgs,                 EnableJVMCI)
-  CHECK_NOT_SET(JVMCILibArgsSep,              EnableJVMCI)
   CHECK_NOT_SET(JVMCILibDumpJNIConfig,        EnableJVMCI)
 
 #ifndef PRODUCT
@@ -196,12 +194,6 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 #undef JVMCI_FLAG_CHECKED
 #endif // PRODUCT
 #undef CHECK_NOT_SET
-
-  if (strlen(JVMCILibArgsSep) != 1) {
-    jio_fprintf(defaultStream::error_stream(),
-                "Length of -XX:JVMCILibArgsSep must be 1: \"%s\"\n", JVMCILibArgsSep);
-    return false;
-  }
 
   if (UseJVMCICompiler) {
     if (JVMCIThreads < 1) {

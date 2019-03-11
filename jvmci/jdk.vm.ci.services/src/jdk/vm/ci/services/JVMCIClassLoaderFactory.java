@@ -35,8 +35,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import sun.misc.VM;
-
 /**
  * Utility called from the VM to create and register a separate class loader for loading JVMCI
  * classes. The core JVMCI classes are in {@code lib/jvmci/jvmci-api.jar} and
@@ -60,7 +58,7 @@ class JVMCIClassLoaderFactory {
      * Creates a new class loader for loading JVMCI classes.
      */
     private static ClassLoader newClassLoader() {
-        Path jvmciDir = Paths.get(VM.getSavedProperty("java.home"), "lib", "jvmci");
+        Path jvmciDir = Paths.get(Services.getSavedProperties().get("java.home"), "lib", "jvmci");
         if (!Files.isDirectory(jvmciDir)) {
             throw new InternalError(jvmciDir + " does not exist or is not a directory");
         }
@@ -128,7 +126,7 @@ class JVMCIClassLoaderFactory {
      */
     private static URL[] getJVMCIJarsUrls(Path jvmciDir) {
         String[] dirEntries = jvmciDir.toFile().list();
-        String append = VM.getSavedProperty("jvmci.class.path.append");
+        String append = Services.getSavedProperties().get("jvmci.class.path.append");
         String[] appendEntries = append != null ? append.split(File.pathSeparator) : new String[0];
         List<URL> urls = new ArrayList<>(dirEntries.length + appendEntries.length);
 

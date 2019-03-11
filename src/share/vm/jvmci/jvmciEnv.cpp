@@ -90,58 +90,69 @@ JavaVM* JVMCIEnv::_shared_library_javavm = NULL;
 void* JVMCIEnv::_shared_library_handle = NULL;
 char* JVMCIEnv::_shared_library_path = NULL;
 
-static void init_shared_library_options(JavaVMInitArgs& vm_args) {
-  int n_options = 0;
-  int args_len = 0;
-  const size_t len = JVMCILibArgs != NULL ? strlen(JVMCILibArgs) : 0;
-  char sep = JVMCILibArgsSep[0];
-  const char* p = JVMCILibArgs;
-  const char* end = JVMCILibArgs + len;
-  while (p < end) {
-    if (*p != sep) {
-      args_len++;
-      if (p == JVMCILibArgs || *(p - 1) == sep) {
-        n_options++;
-      }
-    }
-    p++;
+void JVMCIEnv::copy_saved_properties() {
+  assert(!is_hotspot(), "can only copy saved properties from HotSpot to native image");
+
+  JavaThread* THREAD = JavaThread::current();
+
+  Klass* k = SystemDictionary::resolve_or_fail(vmSymbols::jdk_vm_ci_services_Services(), Handle(), Handle(), true, THREAD);
+  if (HAS_PENDING_EXCEPTION) {
+    JVMCIRuntime::exit_on_pending_exception(NULL, "Error initializing jdk.vm.ci.services.Services");
   }
-
-  JavaVMOption* options = NEW_RESOURCE_ARRAY(JavaVMOption, n_options);
-  int option_index = 0;
-
-  if (args_len != 0) {
-    int i = 0;
-    char* args = NEW_RESOURCE_ARRAY(char, args_len);
-    char* a = args;
-    int args_index = 0;
-    p = JVMCILibArgs;
-    while (p < end) {
-      // Skip separator chars
-      while (*p == sep) {
-        p++;
-      }
-
-      char* arg = a;
-      while (*p != sep && *p != '\0') {
-        *a++ = *p++;
-      }
-      p++;
-      if (arg != a) {
-        *a++ = '\0';
-        options[option_index++].optionString = arg;
-      }
+  instanceKlassHandle ik (THREAD, k);
+  if (ik->should_be_initialized()) {
+    ik->initialize(THREAD);
+    if (HAS_PENDING_EXCEPTION) {
+      JVMCIRuntime::exit_on_pending_exception(NULL, "Error initializing jdk.vm.ci.services.Services");
     }
   }
-  assert(option_index == n_options, "must be");
-  vm_args.options = options;
-  vm_args.nOptions = n_options;
+
+  // Get the serialized saved properties from HotSpot
+  TempNewSymbol serializeSavedProperties = SymbolTable::new_symbol("serializeSavedProperties", CHECK_EXIT);
+  JavaValue result(T_OBJECT);
+  JavaCallArguments args;
+  JavaCalls::call_static(&result, ik, serializeSavedProperties, vmSymbols::serializePropertiesToByteArray_signature(), &args, THREAD);
+  if (HAS_PENDING_EXCEPTION) {
+    JVMCIRuntime::exit_on_pending_exception(NULL, "Error calling jdk.vm.ci.services.Services.serializeSavedProperties");
+  }
+  oop res = (oop) result.get_jobject();
+  assert(res->is_typeArray(), "must be");
+  assert(TypeArrayKlass::cast(res->klass())->element_type() == T_BYTE, "must be");
+  typeArrayOop ba = typeArrayOop(res);
+  int serialized_properties_len = ba->length();
+
+  // Copy serialized saved properties from HotSpot object into native buffer
+  jbyte* serialized_properties = NEW_RESOURCE_ARRAY(jbyte, serialized_properties_len);
+  memcpy(serialized_properties, ba->byte_at_addr(0), serialized_properties_len);
+
+  // Copy native buffer into shared library object
+  JVMCIPrimitiveArray buf = new_byteArray(serialized_properties_len, this);
+  if (has_pending_exception()) {
+    describe_pending_exception(true);
+    fatal("Error in copy_saved_properties");
+  }
+  copy_bytes_from(serialized_properties, buf, 0, serialized_properties_len);
+  if (has_pending_exception()) {
+    describe_pending_exception(true);
+    fatal("Error in copy_saved_properties");
+  }
+
+  // Initialize saved properties in shared library
+  jclass servicesClass = JNIJVMCI::Services::clazz();
+  jmethodID initializeSavedProperties = JNIJVMCI::Services::initializeSavedProperties_method();
+  JNIAccessMark jni(this);
+  jni()->CallStaticVoidMethod(servicesClass, initializeSavedProperties, buf.as_jobject());
+  if (jni()->ExceptionCheck()) {
+    jni()->ExceptionDescribe();
+    fatal("Error calling jdk.vm.ci.services.Services.initializeSavedProperties");
+  }
 }
 
 JNIEnv* JVMCIEnv::attach_shared_library() {
   if (_shared_library_javavm == NULL) {
     MutexLocker locker(JVMCI_lock);
     if (_shared_library_javavm == NULL) {
+
       char path[JVM_MAXPATHLEN];
       char ebuf[1024];
       if (JVMCILibPath != NULL) {
@@ -173,7 +184,8 @@ JNIEnv* JVMCIEnv::attach_shared_library() {
       JavaVMInitArgs vm_args;
       vm_args.version = JNI_VERSION_1_2;
       vm_args.ignoreUnrecognized = JNI_TRUE;
-      init_shared_library_options(vm_args);
+      vm_args.options = NULL;
+      vm_args.nOptions = 0;
 
       JavaVM* the_javavm = NULL;
       int result = (*JNI_CreateJavaVM)(&the_javavm, (void**) &env, &vm_args);
