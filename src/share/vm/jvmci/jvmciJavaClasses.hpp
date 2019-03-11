@@ -49,7 +49,12 @@
                          object_field, \
                          primarray_field, \
                          objectarray_field, \
-                         static_object_field, static_objectarray_field, static_int_field, static_boolean_field, jvmci_method, jvmci_constructor) \
+                         static_object_field, \
+                         static_objectarray_field, \
+                         static_int_field, \
+                         static_boolean_field, \
+                         jvmci_method, \
+                         jvmci_constructor) \
   start_class(Services, jdk_vm_ci_services_Services)                                                          \
     jvmci_method(CallStaticVoidMethod, GetStaticMethodID, call_static, void, Services, initializeSavedProperties, byte_array_void_signature, (JVMCIObject serializedProperties)) \
   end_class                                                                                                   \
