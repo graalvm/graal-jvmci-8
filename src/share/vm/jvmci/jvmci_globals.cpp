@@ -165,7 +165,7 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
       FLAG_SET_DEFAULT(EagerJVMCI, false);
     }
   }
-  JVMCI_FLAG_CHECKED(TraceClassLoadingStack)
+  JVMCI_FLAG_CHECKED(TraceClassLoadingCause)
   JVMCI_FLAG_CHECKED(EagerJVMCI)
 
   CHECK_NOT_SET(UseJVMCIClassLoader,          EnableJVMCI)

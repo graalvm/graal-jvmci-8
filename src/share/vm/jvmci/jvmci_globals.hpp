@@ -126,8 +126,9 @@
           "instead of loading it from class files and executing it "        \
           "on the HotSpot heap")                                            \
                                                                             \
-  product(bool, TraceClassLoadingStack, false,                              \
-          "Print Java stack trace when loading a class")                    \
+  product(ccstr, TraceClassLoadingCause, NULL,                              \
+          "Print Java stack trace when loading a class whose fully"         \
+          "qualified name contains this string (\"*\" matches any class).") \
 
 // Read default values for JVMCI globals
 
