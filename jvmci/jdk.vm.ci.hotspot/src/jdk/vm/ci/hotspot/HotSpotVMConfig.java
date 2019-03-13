@@ -25,6 +25,7 @@ package jdk.vm.ci.hotspot;
 import static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.runtime;
 import static jdk.vm.ci.hotspot.UnsafeAccess.UNSAFE;
 
+import jdk.vm.ci.services.Services;
 import sun.misc.Unsafe;
 
 /**
@@ -52,7 +53,7 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
      * {@linkplain HotSpotJVMCIBackendFactory backend}.
      */
     String getHostArchitectureName() {
-        String arch = System.getProperty("os.arch");
+        String arch = Services.getSavedProperties().get("os.arch");
         switch (arch) {
             case "x86_64":
                 return "amd64";

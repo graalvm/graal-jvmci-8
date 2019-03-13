@@ -257,8 +257,9 @@ public final class Services {
             singleProvider = provider;
         }
         if (singleProvider == null && required) {
-            String javaHome = System.getProperty("java.home");
-            String vmName = System.getProperty("java.vm.name");
+            Map<String, String> savedProps = getSavedProperties();
+            String javaHome = savedProps.get("java.home");
+            String vmName = savedProps.get("java.vm.name");
             Formatter errorMessage = new Formatter();
             errorMessage.format("The VM does not expose required service %s.%n", service.getName());
             errorMessage.format("Currently used Java home directory is %s.%n", javaHome);
