@@ -225,12 +225,12 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         private static final String JVMCI_OPTION_PROPERTY_PREFIX = "jvmci.";
 
         /**
-         * Marker for uninitialized flags.
+         * Sentinel for value initialized to {@code null} since {@code null} means uninitialized.
          */
-        private static final String UNINITIALIZED = "UNINITIALIZED";
+        private static final String NULL_VALUE = "NULL";
 
         private final Class<?> type;
-        private Object value;
+        @NativeImageReinitialize private Object value;
         private final Object defaultValue;
         private boolean isDefault;
         private final String[] helpLines;
@@ -238,17 +238,16 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         Option(Class<?> type, Object defaultValue, String... helpLines) {
             assert Character.isUpperCase(name().charAt(0)) : "Option name must start with upper-case letter: " + name();
             this.type = type;
-            this.value = UNINITIALIZED;
             this.defaultValue = defaultValue;
             this.helpLines = helpLines;
         }
 
         @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
         private Object getValue() {
-            if (value == UNINITIALIZED) {
+            if (value == null) {
                 String propertyValue = Services.getSavedProperties().get(getPropertyName());
                 if (propertyValue == null) {
-                    this.value = defaultValue;
+                    this.value = defaultValue == null ? NULL_VALUE : defaultValue;
                     this.isDefault = true;
                 } else {
                     if (type == Boolean.class) {
@@ -260,10 +259,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                     }
                     this.isDefault = false;
                 }
-                // Saved properties should not be interned - let's be sure
-                assert value != UNINITIALIZED;
             }
-            return value;
+            return value == NULL_VALUE ? null : value;
         }
 
         /**
