@@ -26,6 +26,8 @@ package jdk.vm.ci.common;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jdk.vm.ci.services.Services;
+
 /**
  * A facility for timing a step in the runtime initialization sequence. This is independent from all
  * other JVMCI code so as to not perturb the initialization sequence. It is enabled by setting the
@@ -73,7 +75,7 @@ public final class InitTimer implements AutoCloseable {
      */
     private static boolean isEnabled() {
         if (enabledPropertyValue == null) {
-            enabledPropertyValue = Boolean.getBoolean("jvmci.InitTimer");
+            enabledPropertyValue = Boolean.parseBoolean(Services.getSavedProperties().get("jvmci.InitTimer"));
             nesting = new AtomicInteger();
         }
         return enabledPropertyValue;

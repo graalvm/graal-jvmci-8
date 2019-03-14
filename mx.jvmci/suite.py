@@ -79,6 +79,9 @@ suite = {
     "jdk.vm.ci.common" : {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
+      "dependencies" : [
+        "jdk.vm.ci.services",
+      ],
       "checkstyle" : "jdk.vm.ci.services",
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
@@ -175,7 +178,6 @@ suite = {
       "subDir" : "jvmci",
       "sourceDirs" : ["src"],
       "dependencies" : [
-        "jdk.vm.ci.services",
         "jdk.vm.ci.runtime",
       ],
       "checkstyleVersion" : "8.8",
