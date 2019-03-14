@@ -1365,32 +1365,27 @@ CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr
   ResourceMark rm;
   HandleMark hm;
 
-#define CHECK_RETURN JVMCIENV);                  \
-  if (JVMCIENV->has_pending_exception()) {               \
-    if (JVMCIENV->is_hotspot()) {                        \
-      Handle exception(THREAD, PENDING_EXCEPTION);                \
-      CLEAR_PENDING_EXCEPTION;                                    \
-                                                                  \
-      if (exception->is_a(SystemDictionary::ThreadDeath_klass())) {   \
+#define CHECK_RETURN JVMCIENV);                                         \
+  if (JVMCIENV->has_pending_exception()) {                              \
+    if (JVMCIENV->is_hotspot()) {                                       \
+      Handle exception(THREAD, PENDING_EXCEPTION);                      \
+      CLEAR_PENDING_EXCEPTION;                                          \
+                                                                        \
+      if (exception->is_a(SystemDictionary::ThreadDeath_klass())) {     \
         /* In the special case of ThreadDeath, we need to reset the */  \
         /* pending async exception so that it is propagated.         */ \
         thread->set_pending_async_exception(exception());               \
         return level;                                                   \
       }                                                                 \
-      tty->print("Uncaught exception while adjusting compilation level: "); \
-      java_lang_Throwable::print(exception(), tty);                     \
-      tty->cr();                                                        \
-      java_lang_Throwable::print_stack_trace(exception(), tty);         \
-      if (HAS_PENDING_EXCEPTION) {                                      \
-        CLEAR_PENDING_EXCEPTION;                                        \
-      }                                                                 \
+      /* No need report errors while adjusting compilation level. */    \
+      /* The most likely error will be a StackOverflowError or */       \
+      /* an OutOfMemoryError. */                                        \
     } else {                                                            \
-      JVMCIENV->clear_pending_exception();                               \
+      JVMCIENV->clear_pending_exception();                              \
     }                                                                   \
     return level;                                                       \
   }                                                                     \
   (void)(0
-
 
   THREAD_JVMCIENV(thread);
   JVMCIObject receiver = _HotSpotJVMCIRuntime_instance;
