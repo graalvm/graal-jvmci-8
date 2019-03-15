@@ -23,6 +23,7 @@
 package jdk.vm.ci.hotspot;
 
 import static jdk.vm.ci.common.InitTimer.timer;
+import static jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory.CompilationLevelAdjustment.None;
 import static jdk.vm.ci.services.Services.IS_BUILDING_NATIVE_IMAGE;
 import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
 
@@ -49,7 +50,6 @@ import jdk.vm.ci.code.InstalledCode;
 import jdk.vm.ci.common.InitTimer;
 import jdk.vm.ci.common.JVMCIError;
 import jdk.vm.ci.common.NativeImageReinitialize;
-import jdk.vm.ci.hotspot.HotSpotJVMCICompilerFactory.CompilationLevel;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaType;
 import jdk.vm.ci.meta.ResolvedJavaType;
@@ -377,12 +377,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
 
     @NativeImageReinitialize private HashMap<Long, WeakReference<ResolvedJavaType>> resolvedJavaTypes;
 
-    /**
-     * Stores the result of {@link HotSpotJVMCICompilerFactory#getCompilationLevelAdjustment} so
-     * that it can be read from the VM.
-     */
-    @SuppressWarnings("unused") private final int compilationLevelAdjustment;
-
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
 
     private volatile List<HotSpotVMEventListener> vmEventListeners;
@@ -431,23 +425,11 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory();
         if (compilerFactory instanceof HotSpotJVMCICompilerFactory) {
             hsCompilerFactory = (HotSpotJVMCICompilerFactory) compilerFactory;
-            switch (hsCompilerFactory.getCompilationLevelAdjustment()) {
-                case None:
-                    compilationLevelAdjustment = config.compLevelAdjustmentNone;
-                    break;
-                case ByHolder:
-                    compilationLevelAdjustment = config.compLevelAdjustmentByHolder;
-                    break;
-                case ByFullSignature:
-                    compilationLevelAdjustment = config.compLevelAdjustmentByFullSignature;
-                    break;
-                default:
-                    compilationLevelAdjustment = config.compLevelAdjustmentNone;
-                    break;
+            if (hsCompilerFactory.getCompilationLevelAdjustment() != None) {
+                throw new HotSpotJVMCIUnsupportedOperationError("adjustCompilationLEvel isn't supported");
             }
         } else {
             hsCompilerFactory = null;
-            compilationLevelAdjustment = config.compLevelAdjustmentNone;
         }
 
         if (config.getFlag("JVMCIPrintProperties", Boolean.class)) {
@@ -663,39 +645,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
 
     public Map<Class<? extends Architecture>, JVMCIBackend> getJVMCIBackends() {
         return Collections.unmodifiableMap(backends);
-    }
-
-    @VMEntryPoint
-    private int adjustCompilationLevel(Object declaringClass, String name, String signature, boolean isOsr, int level) {
-        CompilationLevel curLevel;
-        if (level == config.compilationLevelNone) {
-            curLevel = CompilationLevel.None;
-        } else if (level == config.compilationLevelSimple) {
-            curLevel = CompilationLevel.Simple;
-        } else if (level == config.compilationLevelLimitedProfile) {
-            curLevel = CompilationLevel.LimitedProfile;
-        } else if (level == config.compilationLevelFullProfile) {
-            curLevel = CompilationLevel.FullProfile;
-        } else if (level == config.compilationLevelFullOptimization) {
-            curLevel = CompilationLevel.FullOptimization;
-        } else {
-            throw JVMCIError.shouldNotReachHere();
-        }
-
-        switch (hsCompilerFactory.adjustCompilationLevel(declaringClass, name, signature, isOsr, curLevel)) {
-            case None:
-                return config.compilationLevelNone;
-            case Simple:
-                return config.compilationLevelSimple;
-            case LimitedProfile:
-                return config.compilationLevelLimitedProfile;
-            case FullProfile:
-                return config.compilationLevelFullProfile;
-            case FullOptimization:
-                return config.compilationLevelFullOptimization;
-            default:
-                return level;
-        }
     }
 
     @VMEntryPoint

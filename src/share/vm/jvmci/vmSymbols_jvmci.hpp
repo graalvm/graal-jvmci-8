@@ -100,8 +100,6 @@
                                                                                                                                           \
   template(visitFrame_name,                                       "visitFrame")                                                           \
   template(visitFrame_signature,                                  "(Ljdk/vm/ci/code/stack/InspectedFrame;)Ljava/lang/Object;")            \
-  template(adjustCompilationLevel_name,                           "adjustCompilationLevel")                                               \
-  template(adjustCompilationLevel_signature,                      "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/String;ZI)I")          \
   template(compileMethod_name,                                    "compileMethod")                                                        \
   template(compileMethod_signature,                               "(Ljdk/vm/ci/hotspot/HotSpotResolvedJavaMethod;IJI)Ljdk/vm/ci/hotspot/HotSpotCompilationRequestResult;") \
   template(encodeThrowable_name,                                  "encodeThrowable")                                                      \

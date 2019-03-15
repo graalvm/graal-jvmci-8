@@ -360,11 +360,6 @@ CompLevel SimpleThresholdPolicy::call_event(Method* method,  CompLevel cur_level
   } else {
     next_level = MAX2(osr_level, next_level);
   }
-#if INCLUDE_JVMCI
-  if (UseJVMCICompiler) {
-    next_level = JVMCI::adjust_comp_level(method, false, next_level, thread);
-  }
-#endif
   return next_level;
 }
 
@@ -379,11 +374,6 @@ CompLevel SimpleThresholdPolicy::loop_event(Method* method, CompLevel cur_level,
       return osr_level;
     }
   }
-#if INCLUDE_JVMCI
-  if (UseJVMCICompiler) {
-    next_level = JVMCI::adjust_comp_level(method, true, next_level, thread);
-  }
-#endif
   return next_level;
 }
 

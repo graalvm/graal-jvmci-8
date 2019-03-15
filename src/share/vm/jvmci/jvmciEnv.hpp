@@ -489,8 +489,6 @@ public:
   JVMCIObject call_HotSpotJVMCIRuntime_compileMethod(JVMCIObject runtime, JVMCIObject method, int entry_bci,
                                                      jlong compile_state, int id);
 
-  int call_HotSpotJVMCIRuntime_adjustCompilationLevel(JVMCIObject runtime, InstanceKlass* declaringClass,
-                                                      JVMCIObject name, JVMCIObject signature, bool is_osr, int level, JVMCI_TRAPS);
   void call_HotSpotJVMCIRuntime_bootstrapFinished(JVMCIObject runtime, JVMCI_TRAPS);
   void call_HotSpotJVMCIRuntime_shutdown(JVMCIObject runtime);
   JVMCIObject call_HotSpotJVMCIRuntime_runtime(JVMCI_TRAPS);
