@@ -958,12 +958,7 @@ void JVMCIRuntime::call_getCompiler(TRAPS) {
   JVMCIENV->call_HotSpotJVMCIRuntime_getCompiler(jvmciRuntime, JVMCI_CHECK);
 }
 
-void* JVMCINMethodData::operator new(size_t size, nmethod* nm) throw() {
-  guarantee(nm->jvmci_data_size() >= (int) sizeof(JVMCINMethodData), "must be");
-  return nm->jvmci_nmethod_data();
-}
-
-JVMCINMethodData::JVMCINMethodData(
+void JVMCINMethodData::initialize(
   int nmethod_mirror_index,
   const char* name,
   FailedSpeculation** failed_speculations)

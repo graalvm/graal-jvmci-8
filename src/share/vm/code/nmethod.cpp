@@ -733,7 +733,8 @@ nmethod* nmethod::new_nmethod(methodHandle method,
     if (nm != NULL) {
 #if INCLUDE_JVMCI
       if (compiler->is_jvmci()) {
-        new (nm) JVMCINMethodData(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
+        // Initialize the JVMCINMethodData object inlined into nm
+        nm->jvmci_nmethod_data()->initialize(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
       }
 #endif
 
