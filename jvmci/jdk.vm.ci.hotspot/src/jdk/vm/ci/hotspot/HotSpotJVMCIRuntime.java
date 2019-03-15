@@ -245,7 +245,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
         private Object getValue() {
             if (value == null) {
-                String propertyValue = Services.getSavedProperties().get(getPropertyName());
+                String propertyValue = Services.getSavedProperty(getPropertyName());
                 if (propertyValue == null) {
                     this.value = defaultValue == null ? NULL_VALUE : defaultValue;
                     this.isDefault = true;

@@ -75,7 +75,7 @@ public final class InitTimer implements AutoCloseable {
      */
     private static boolean isEnabled() {
         if (enabledPropertyValue == null) {
-            enabledPropertyValue = Boolean.parseBoolean(Services.getSavedProperties().get("jvmci.InitTimer"));
+            enabledPropertyValue = Boolean.parseBoolean(Services.getSavedProperty("jvmci.InitTimer"));
             nesting = new AtomicInteger();
         }
         return enabledPropertyValue;

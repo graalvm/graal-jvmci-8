@@ -117,6 +117,20 @@ public final class Services {
     }
 
     /**
+     * Helper method equivalent to {@link #getSavedProperties()}{@code .getOrDefault(name, def)}.
+     */
+    public static String getSavedProperty(String name, String def) {
+        return Services.getSavedProperties().getOrDefault(name, def);
+    }
+
+    /**
+     * Helper method equivalent to {@link #getSavedProperties()}{@code .get(name)}.
+     */
+    public static String getSavedProperty(String name) {
+        return Services.getSavedProperties().get(name);
+    }
+
+    /**
      * Causes the JVMCI subsystem to be initialized if it isn't already initialized.
      */
     public static void initializeJVMCI() {
@@ -257,9 +271,8 @@ public final class Services {
             singleProvider = provider;
         }
         if (singleProvider == null && required) {
-            Map<String, String> savedProps = getSavedProperties();
-            String javaHome = savedProps.get("java.home");
-            String vmName = savedProps.get("java.vm.name");
+            String javaHome = Services.getSavedProperty("java.home");
+            String vmName = Services.getSavedProperty("java.vm.name");
             Formatter errorMessage = new Formatter();
             errorMessage.format("The VM does not expose required service %s.%n", service.getName());
             errorMessage.format("Currently used Java home directory is %s.%n", javaHome);

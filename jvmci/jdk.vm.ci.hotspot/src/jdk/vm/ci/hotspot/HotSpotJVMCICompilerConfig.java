@@ -121,7 +121,7 @@ final class HotSpotJVMCICompilerConfig {
                                     ". You can select one of these with the " + Option.Compiler.getPropertyName() + " property " +
                                     "(e.g., -D" + Option.Compiler.getPropertyName() + "=" + multiple.get(0) + ").");
                 } else if (factory == null) {
-                    Path jvmciDir = Paths.get(Services.getSavedProperties().get("java.home"), "lib", "jvmci");
+                    Path jvmciDir = Paths.get(Services.getSavedProperty("java.home"), "lib", "jvmci");
                     factory = new DummyCompilerFactory("No providers of " + JVMCICompilerFactory.class + " found in " + jvmciDir +
                                     " or on the class path specified by the jvmci.class.path.append property.");
                 }

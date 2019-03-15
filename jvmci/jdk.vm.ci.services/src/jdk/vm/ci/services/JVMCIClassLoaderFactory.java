@@ -58,7 +58,7 @@ class JVMCIClassLoaderFactory {
      * Creates a new class loader for loading JVMCI classes.
      */
     private static ClassLoader newClassLoader() {
-        Path jvmciDir = Paths.get(Services.getSavedProperties().get("java.home"), "lib", "jvmci");
+        Path jvmciDir = Paths.get(Services.getSavedProperty("java.home"), "lib", "jvmci");
         if (!Files.isDirectory(jvmciDir)) {
             throw new InternalError(jvmciDir + " does not exist or is not a directory");
         }
@@ -126,7 +126,7 @@ class JVMCIClassLoaderFactory {
      */
     private static URL[] getJVMCIJarsUrls(Path jvmciDir) {
         String[] dirEntries = jvmciDir.toFile().list();
-        String append = Services.getSavedProperties().get("jvmci.class.path.append");
+        String append = Services.getSavedProperty("jvmci.class.path.append");
         String[] appendEntries = append != null ? append.split(File.pathSeparator) : new String[0];
         List<URL> urls = new ArrayList<>(dirEntries.length + appendEntries.length);
 

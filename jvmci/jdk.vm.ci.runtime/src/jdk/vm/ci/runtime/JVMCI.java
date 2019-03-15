@@ -27,6 +27,7 @@ package jdk.vm.ci.runtime;
 import java.util.Formatter;
 
 import jdk.vm.ci.common.NativeImageReinitialize;
+import jdk.vm.ci.services.Services;
 
 public class JVMCI {
 
@@ -61,8 +62,8 @@ public class JVMCI {
                     try {
                         runtime = result = initializeRuntime();
                     } catch (UnsatisfiedLinkError e) {
-                        String javaHome = System.getProperty("java.home");
-                        String vmName = System.getProperty("java.vm.name");
+                        String javaHome = Services.getSavedProperty("java.home");
+                        String vmName = Services.getSavedProperty("java.vm.name");
                         Formatter errorMessage = new Formatter();
                         errorMessage.format("The VM does not support the JVMCI API.%n");
                         errorMessage.format("Currently used Java home directory is %s.%n", javaHome);
