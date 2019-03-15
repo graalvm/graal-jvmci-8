@@ -58,14 +58,6 @@ bool SimpleThresholdPolicy::is_trivial(Method* method) {
       method->is_constant_getter()) {
     return true;
   }
-  if (method->has_loops() || method->code_size() >= 15) {
-    return false;
-  }
-  MethodData* mdo = method->method_data();
-  if (mdo != NULL && !mdo->would_profile() &&
-      (method->code_size() < 5  || (mdo->num_blocks() < 4))) {
-    return true;
-  }
   return false;
 }
 
