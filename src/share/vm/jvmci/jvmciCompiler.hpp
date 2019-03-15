@@ -88,6 +88,8 @@ public:
     _instance->_bootstrap_compilation_request_handled = true;
   }
 
+  // Force compilation at CompLevel_simple
+  virtual bool compile_at_level1(Method* method);
 
   // Compilation entry point for methods
   virtual void compile_method(ciEnv* env, ciMethod* target, int entry_bci);

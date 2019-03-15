@@ -377,6 +377,12 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
 
     @NativeImageReinitialize private HashMap<Long, WeakReference<ResolvedJavaType>> resolvedJavaTypes;
 
+    /**
+     * Stores the value set by {@link #excludeFromJVMCICompilation(ClassLoader...)} so that it can
+     * be read from the VM.
+     */
+    @SuppressWarnings("unused") @NativeImageReinitialize private ClassLoader[] excludeFromJVMCICompilation;
+
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
 
     private volatile List<HotSpotVMEventListener> vmEventListeners;
@@ -943,5 +949,15 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      */
     public <T> T unhand(Class<T> type, long handle) {
         return type.cast(compilerToVm.unhand(handle));
+    }
+
+    /**
+     * Informs HotSpot that no method whose class loader is in {@code loaders} is to be compiled
+     * with {@link #compileMethod}.
+     *
+     * @param loaders the set of loaders used to load JVMCI compiler classes
+     */
+    public void excludeFromJVMCICompilation(ClassLoader... loaders) {
+        this.excludeFromJVMCICompilation = loaders.clone();
     }
 }

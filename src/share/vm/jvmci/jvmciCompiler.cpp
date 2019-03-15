@@ -110,6 +110,30 @@ void JVMCICompiler::bootstrap(TRAPS) {
   JVMCI::compiler_runtime()->bootstrap_finished(CHECK);
 }
 
+bool JVMCICompiler::compile_at_level1(Method* method) {
+  if (UseJVMCINativeLibrary) {
+    return false;
+  }
+
+  JVMCIRuntime* runtime = JVMCI::compiler_runtime();
+  if (runtime != NULL && runtime->is_HotSpotJVMCIRuntime_initialized()) {
+    Handle class_loader = method->method_holder()->class_loader_data()->class_loader();
+    if (!class_loader.is_null()) {
+      THREAD_JVMCIENV(JavaThread::current());
+      JVMCIObject receiver = runtime->get_HotSpotJVMCIRuntime(JVMCIENV);
+      objArrayOop loaders = HotSpotJVMCI::HotSpotJVMCIRuntime::excludeFromJVMCICompilation(JVMCIENV, HotSpotJVMCI::resolve(receiver));
+      if (loaders != NULL) {
+        for (int i = 0; i < loaders->length(); i++) {
+          if (loaders->obj_at(i) == class_loader()) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
+}
+
 // Compilation entry point for methods
 void JVMCICompiler::compile_method(ciEnv* env, ciMethod* target, int entry_bci) {
   ShouldNotReachHere();
