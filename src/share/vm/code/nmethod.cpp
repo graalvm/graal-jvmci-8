@@ -1564,8 +1564,14 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
   // Log the unloading.
   log_state_change(cause);
 
+#if INCLUDE_JVMCI
   // Clear the link between this nmethod and a HotSpotNmethod mirror
-  JVMCI_ONLY(invalidate_mirror();)
+  JVMCINMethodData* nmethod_data = jvmci_nmethod_data();
+  if (nmethod_data != NULL) {
+    nmethod_data->invalidate_nmethod_mirror(this);
+    nmethod_data->clear_nmethod_mirror(this);
+  }
+#endif
 
   // The Method* is gone at this point
   assert(_method == NULL, "Tautology");
@@ -1697,8 +1703,13 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
     }
   } // leave critical region under Patching_lock
 
+#if INCLUDE_JVMCI
   // Invalidate can't occur while holding the Patching lock
-  JVMCI_ONLY(invalidate_mirror());
+  JVMCINMethodData* nmethod_data = jvmci_nmethod_data();
+  if (nmethod_data != NULL) {
+    nmethod_data->invalidate_nmethod_mirror(this);
+  }
+#endif
 
   // When the nmethod becomes zombie it is no longer alive so the
   // dependencies must be flushed.  nmethods in the not_entrant
@@ -1715,6 +1726,14 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
       }
       flush_dependencies(NULL);
     }
+
+#if INCLUDE_JVMCI
+    // Now that the nmethod has been unregistered, it's
+    // safe to clear the HotSpotNmethod mirror oop.
+    if (nmethod_data != NULL) {
+      nmethod_data->clear_nmethod_mirror(this);
+    }
+#endif
 
     // zombie only - if a JVMTI agent has enabled the CompiledMethodUnload
     // event and it hasn't already been reported for this nmethod then
@@ -3599,12 +3618,6 @@ void nmethod::print_statistics() {
 }
 
 #if INCLUDE_JVMCI
-void nmethod::invalidate_mirror() {
-  if (jvmci_nmethod_data() != NULL) {
-    jvmci_nmethod_data()->invalidate_nmethod_mirror(this);
-  }
-}
-
 void nmethod::update_speculation(JavaThread* thread) {
   jlong speculation = thread->pending_failed_speculation();
   if (speculation != 0) {

@@ -998,10 +998,11 @@ oop JVMCINMethodData::get_nmethod_mirror(nmethod* nm) {
 
 void JVMCINMethodData::set_nmethod_mirror(nmethod* nm, oop new_mirror) {
   oop* addr = nm->oop_addr_at(_nmethod_mirror_index);
-  assert(*addr == NULL || new_mirror == NULL || *addr == new_mirror, "cannot overwrite non-null mirror");
+  assert(new_mirror != NULL, "use clear_nmethod_mirror to clear the mirror");
+  assert(*addr == NULL, "cannot overwrite non-null mirror");
 
   // Patching in an oop so make sure nm is on the scavenge list.
-  if (ScavengeRootsInCode && (new_mirror != NULL && new_mirror->is_scavengable())) {
+  if (ScavengeRootsInCode && new_mirror->is_scavengable()) {
     MutexLockerEx ml_code (CodeCache_lock, Mutex::_no_safepoint_check_flag);
     if (!nm->on_scavenge_root_list()) {
       CodeCache::add_scavenge_root_nmethod(nm);
@@ -1013,6 +1014,11 @@ void JVMCINMethodData::set_nmethod_mirror(nmethod* nm, oop new_mirror) {
   }
 
   *addr = new_mirror;
+}
+
+void JVMCINMethodData::clear_nmethod_mirror(nmethod* nm) {
+  oop* addr = nm->oop_addr_at(_nmethod_mirror_index);
+  *addr = NULL;
 }
 
 void JVMCINMethodData::invalidate_nmethod_mirror(nmethod* nm) {
@@ -1039,12 +1045,6 @@ void JVMCINMethodData::invalidate_nmethod_mirror(nmethod* nm) {
       // be deoptimized via the mirror (i.e. JVMCIEnv::invalidate_installed_code).
       HotSpotJVMCI::InstalledCode::set_entryPoint(jvmciEnv, nmethod_mirror, 0);
     }
-  }
-
-  if (!nm->is_alive()) {
-    // Clear the mirror now that nm is dead and all
-    // relevant fields in the mirror have been zeroed.
-    set_nmethod_mirror(nm, NULL);
   }
 }
 

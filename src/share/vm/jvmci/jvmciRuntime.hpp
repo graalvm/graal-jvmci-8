@@ -74,6 +74,9 @@ public:
 
   // Sets the mirror in nm's oops table.
   void set_nmethod_mirror(nmethod* nm, oop mirror);
+
+  // Clears the mirror in nm's oops table.
+  void clear_nmethod_mirror(nmethod* nm);
 };
 
 // A top level class that represents an initialized JVMCI runtime.

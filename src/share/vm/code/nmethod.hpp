@@ -664,14 +664,6 @@ public:
   // Gets the JVMCI name of this nmethod.
   const char* jvmci_name();
 
-  // Updates the state of this nmethod's HotSpotNmethod mirror
-  // based on the current value of _state. If this nmethod is
-  // not alive, all references from the mirror to this nmethod
-  // are cleared. If this nmethod is non-entrant, the
-  // HotSpotNmethod.entryPoint field is zeroed so that new
-  // activations cannot be created.
-  void invalidate_mirror();
-
   // Records the pending failed speculation in the
   // JVMCI speculation log associated with this nmethod.
   void update_speculation(JavaThread* thread);
