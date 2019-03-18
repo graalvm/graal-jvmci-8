@@ -24,6 +24,7 @@ package jdk.vm.ci.hotspot.aarch64;
 
 import jdk.vm.ci.hotspot.HotSpotVMConfigAccess;
 import jdk.vm.ci.hotspot.HotSpotVMConfigStore;
+import jdk.vm.ci.services.Services;
 
 /**
  * Used to access AArch64 specific native configuration details.
@@ -34,7 +35,7 @@ class AArch64HotSpotVMConfig extends HotSpotVMConfigAccess {
         super(config);
     }
 
-    final boolean linuxOs = System.getProperty("os.name", "").startsWith("Linux");
+    final boolean linuxOs = Services.getSavedProperty("os.name", "").startsWith("Linux");
 
     final boolean useCompressedOops = getFlag("UseCompressedOops", Boolean.class);
 }

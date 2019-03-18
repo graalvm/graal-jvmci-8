@@ -65,7 +65,6 @@ import sun.misc.Unsafe;
 public class TypeUniverse {
 
     public static final Unsafe unsafe;
-    public static final double JAVA_VERSION = Double.valueOf(System.getProperty("java.specification.version"));
 
     public static final MetaAccessProvider metaAccess = JVMCI.getRuntime().getHostJVMCIBackend().getMetaAccess();
     public static final ConstantReflectionProvider constantReflection = JVMCI.getRuntime().getHostJVMCIBackend().getConstantReflection();

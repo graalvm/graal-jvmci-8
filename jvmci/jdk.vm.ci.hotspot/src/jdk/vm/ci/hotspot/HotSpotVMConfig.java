@@ -53,7 +53,7 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
      * {@linkplain HotSpotJVMCIBackendFactory backend}.
      */
     String getHostArchitectureName() {
-        String arch = Services.getSavedProperties().get("os.arch");
+        String arch = Services.getSavedProperty("os.arch");
         switch (arch) {
             case "x86_64":
                 return "amd64";

@@ -997,11 +997,13 @@ oop JVMCINMethodData::get_nmethod_mirror(nmethod* nm) {
 }
 
 void JVMCINMethodData::set_nmethod_mirror(nmethod* nm, oop new_mirror) {
+  assert(_nmethod_mirror_index != -1, "cannot set JVMCI mirror for nmethod");
   oop* addr = nm->oop_addr_at(_nmethod_mirror_index);
-  assert(*addr == NULL || new_mirror == NULL || *addr == new_mirror, "cannot overwrite non-null mirror");
+  assert(new_mirror != NULL, "use clear_nmethod_mirror to clear the mirror");
+  assert(*addr == NULL, "cannot overwrite non-null mirror");
 
   // Patching in an oop so make sure nm is on the scavenge list.
-  if (ScavengeRootsInCode && (new_mirror != NULL && new_mirror->is_scavengable())) {
+  if (ScavengeRootsInCode && new_mirror->is_scavengable()) {
     MutexLockerEx ml_code (CodeCache_lock, Mutex::_no_safepoint_check_flag);
     if (!nm->on_scavenge_root_list()) {
       CodeCache::add_scavenge_root_nmethod(nm);
@@ -1013,6 +1015,13 @@ void JVMCINMethodData::set_nmethod_mirror(nmethod* nm, oop new_mirror) {
   }
 
   *addr = new_mirror;
+}
+
+void JVMCINMethodData::clear_nmethod_mirror(nmethod* nm) {
+  if (_nmethod_mirror_index != -1) {
+    oop* addr = nm->oop_addr_at(_nmethod_mirror_index);
+    *addr = NULL;
+  }
 }
 
 void JVMCINMethodData::invalidate_nmethod_mirror(nmethod* nm) {
@@ -1039,12 +1048,6 @@ void JVMCINMethodData::invalidate_nmethod_mirror(nmethod* nm) {
       // be deoptimized via the mirror (i.e. JVMCIEnv::invalidate_installed_code).
       HotSpotJVMCI::InstalledCode::set_entryPoint(jvmciEnv, nmethod_mirror, 0);
     }
-  }
-
-  if (!nm->is_alive()) {
-    // Clear the mirror now that nm is dead and all
-    // relevant fields in the mirror have been zeroed.
-    set_nmethod_mirror(nm, NULL);
   }
 }
 
@@ -1909,20 +1912,15 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
 
   bool install_default = JVMCIENV->get_HotSpotNmethod_isDefault(nmethod_mirror) != 0;
   assert(JVMCIENV->isa_HotSpotNmethod(nmethod_mirror), "must be");
-  const char* nmethod_mirror_name = NULL;
-  int jvmci_data_size = sizeof(JVMCINMethodData);
   JVMCIObject name = JVMCIENV->get_InstalledCode_name(nmethod_mirror);
-  if (!name.is_null()) {
-    nmethod_mirror_name = JVMCIENV->as_utf8_string(name);
-    jvmci_data_size += (int) strlen(nmethod_mirror_name) + 1;
-  }
+  const char* nmethod_mirror_name = name.is_null() ? NULL : JVMCIENV->as_utf8_string(name);
   int nmethod_mirror_index;
   if (!install_default) {
     // Reserve or initialize mirror slot in the oops table.
     OopRecorder* oop_recorder = debug_info->oop_recorder();
     nmethod_mirror_index = oop_recorder->allocate_oop_index(nmethod_mirror.is_hotspot() ? nmethod_mirror.as_jobject() : NULL);
   } else {
-    // A HotSpotNmethod mirror whose compileIdSnapshot is non-zero is not tracked by the nmethod
+    // A default HotSpotNmethod mirror is never tracked by the nmethod
     nmethod_mirror_index = -1;
   }
 
@@ -1997,6 +1995,7 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
         }
 
         JVMCINMethodData* data = nm->jvmci_nmethod_data();
+        assert(data != NULL, "must be");
         if (install_default) {
           assert(!nmethod_mirror.is_hotspot() || data->get_nmethod_mirror(nm) == NULL, "must be");
           if (entry_bci == InvocationEntryBci) {

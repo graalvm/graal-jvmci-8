@@ -700,10 +700,9 @@ nmethod* nmethod::new_nmethod(methodHandle method,
   // create nmethod
   nmethod* nm = NULL;
   { MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    int jvmci_data_size = sizeof(JVMCINMethodData);
-    if (nmethod_mirror_name != NULL) {
-      jvmci_data_size += (int) strlen(nmethod_mirror_name) + 1;
-    }
+#if INCLUDE_JVMCI
+    int jvmci_data_size = !compiler->is_jvmci() ? 0 : JVMCINMethodData::compute_size(nmethod_mirror_name);
+#endif
     int nmethod_size =
       allocation_size(code_buffer, sizeof(nmethod))
       + adjust_pcs_size(debug_info->pcs_size())
@@ -732,7 +731,11 @@ nmethod* nmethod::new_nmethod(methodHandle method,
             );
 
     if (nm != NULL) {
-      JVMCINMethodData* data = new (nm) JVMCINMethodData(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
+#if INCLUDE_JVMCI
+      if (compiler->is_jvmci()) {
+        new (nm) JVMCINMethodData(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
+      }
+#endif
 
       // To make dependency checking during class loading fast, record
       // the nmethod dependencies in the classes it is dependent on.
@@ -1564,8 +1567,14 @@ void nmethod::make_unloaded(BoolObjectClosure* is_alive, oop cause) {
   // Log the unloading.
   log_state_change(cause);
 
+#if INCLUDE_JVMCI
   // Clear the link between this nmethod and a HotSpotNmethod mirror
-  JVMCI_ONLY(invalidate_mirror();)
+  JVMCINMethodData* nmethod_data = jvmci_nmethod_data();
+  if (nmethod_data != NULL) {
+    nmethod_data->invalidate_nmethod_mirror(this);
+    nmethod_data->clear_nmethod_mirror(this);
+  }
+#endif
 
   // The Method* is gone at this point
   assert(_method == NULL, "Tautology");
@@ -1697,8 +1706,13 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
     }
   } // leave critical region under Patching_lock
 
+#if INCLUDE_JVMCI
   // Invalidate can't occur while holding the Patching lock
-  JVMCI_ONLY(invalidate_mirror());
+  JVMCINMethodData* jvmci_data = jvmci_nmethod_data();
+  if (jvmci_data != NULL) {
+    jvmci_data->invalidate_nmethod_mirror(this);
+  }
+#endif
 
   // When the nmethod becomes zombie it is no longer alive so the
   // dependencies must be flushed.  nmethods in the not_entrant
@@ -1715,6 +1729,14 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
       }
       flush_dependencies(NULL);
     }
+
+#if INCLUDE_JVMCI
+    // Now that the nmethod has been unregistered, it's
+    // safe to clear the HotSpotNmethod mirror oop.
+    if (jvmci_data != NULL) {
+      jvmci_data->clear_nmethod_mirror(this);
+    }
+#endif
 
     // zombie only - if a JVMTI agent has enabled the CompiledMethodUnload
     // event and it hasn't already been reported for this nmethod then
@@ -3599,18 +3621,11 @@ void nmethod::print_statistics() {
 }
 
 #if INCLUDE_JVMCI
-void nmethod::invalidate_mirror() {
-  if (jvmci_nmethod_data() != NULL) {
-    jvmci_nmethod_data()->invalidate_nmethod_mirror(this);
-  }
-}
-
 void nmethod::update_speculation(JavaThread* thread) {
   jlong speculation = thread->pending_failed_speculation();
   if (speculation != 0) {
-    if (jvmci_nmethod_data() != NULL) {
-      jvmci_nmethod_data()->add_failed_speculation(this, speculation);
-    }
+    guarantee(jvmci_nmethod_data() != NULL, "failed speculation in nmethod without failed speculation list");
+    jvmci_nmethod_data()->add_failed_speculation(this, speculation);
     thread->set_pending_failed_speculation(0);
   }
 }
