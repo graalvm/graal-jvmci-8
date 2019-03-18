@@ -733,7 +733,8 @@ nmethod* nmethod::new_nmethod(methodHandle method,
     if (nm != NULL) {
 #if INCLUDE_JVMCI
       if (compiler->is_jvmci()) {
-        new (nm) JVMCINMethodData(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
+        // Initialize the JVMCINMethodData object inlined into nm
+        nm->jvmci_nmethod_data()->initialize(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
       }
 #endif
 
@@ -2385,6 +2386,7 @@ void nmethod::metadata_do(void f(Metadata*)) {
         }
       } else if (iter.type() == relocInfo::virtual_call_type) {
         // Check compiledIC holders associated with this nmethod
+        ResourceMark rm; // JDK-8220718
         CompiledIC *ic = CompiledIC_at(&iter);
         if (ic->is_icholder_call()) {
           CompiledICHolder* cichk = ic->cached_icholder();
