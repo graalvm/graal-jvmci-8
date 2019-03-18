@@ -40,7 +40,8 @@ class JVMCICompileState;
 // JVMCINMethodData objects are inlined into nmethods
 // at nmethod::_jvmci_data_offset.
 class JVMCINMethodData VALUE_OBJ_CLASS_SPEC {
-  // Index for the HotSpotNmethod mirror in the nmethod's oop table.
+  // Index for the HotSpotNmethod mirror in the nmethod's oops table.
+  // This is -1 if there is no mirror in the oops table.
   int _nmethod_mirror_index;
 
   // Is HotSpotNmethod.name non-null? If so, the value is
@@ -52,6 +53,15 @@ class JVMCINMethodData VALUE_OBJ_CLASS_SPEC {
   FailedSpeculation** _failed_speculations;
 
 public:
+  // Computes the size of a JVMCINMethodData object
+  static int compute_size(const char* nmethod_mirror_name) {
+    int size = sizeof(JVMCINMethodData);
+    if (nmethod_mirror_name != NULL) {
+      size += (int) strlen(nmethod_mirror_name) + 1;
+    }
+    return size;
+  }
+
   // A JVMCINMethodData is inlined in an nmethod
   void* operator new(size_t size, nmethod* nm) throw();
 

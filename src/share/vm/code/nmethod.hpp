@@ -668,6 +668,9 @@ public:
   // JVMCI speculation log associated with this nmethod.
   void update_speculation(JavaThread* thread);
   
+  // Gets the data specific to a JVMCI compiled method.
+  // This returns a non-NULL value iff this nmethod was
+  // compiled by the JVMCI compiler.
   JVMCINMethodData* jvmci_nmethod_data() const {
     return jvmci_data_size() == 0 ? NULL : (JVMCINMethodData*) jvmci_data_begin();
   }

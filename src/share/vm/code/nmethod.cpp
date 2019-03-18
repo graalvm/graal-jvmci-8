@@ -700,10 +700,9 @@ nmethod* nmethod::new_nmethod(methodHandle method,
   // create nmethod
   nmethod* nm = NULL;
   { MutexLockerEx mu(CodeCache_lock, Mutex::_no_safepoint_check_flag);
-    int jvmci_data_size = sizeof(JVMCINMethodData);
-    if (nmethod_mirror_name != NULL) {
-      jvmci_data_size += (int) strlen(nmethod_mirror_name) + 1;
-    }
+#if INCLUDE_JVMCI
+    int jvmci_data_size = !compiler->is_jvmci() ? 0 : JVMCINMethodData::compute_size(nmethod_mirror_name);
+#endif
     int nmethod_size =
       allocation_size(code_buffer, sizeof(nmethod))
       + adjust_pcs_size(debug_info->pcs_size())
@@ -732,7 +731,11 @@ nmethod* nmethod::new_nmethod(methodHandle method,
             );
 
     if (nm != NULL) {
-      JVMCINMethodData* data = new (nm) JVMCINMethodData(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
+#if INCLUDE_JVMCI
+      if (compiler->is_jvmci()) {
+        new (nm) JVMCINMethodData(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
+      }
+#endif
 
       // To make dependency checking during class loading fast, record
       // the nmethod dependencies in the classes it is dependent on.
@@ -1705,9 +1708,9 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
 
 #if INCLUDE_JVMCI
   // Invalidate can't occur while holding the Patching lock
-  JVMCINMethodData* nmethod_data = jvmci_nmethod_data();
-  if (nmethod_data != NULL) {
-    nmethod_data->invalidate_nmethod_mirror(this);
+  JVMCINMethodData* jvmci_data = jvmci_nmethod_data();
+  if (jvmci_data != NULL) {
+    jvmci_data->invalidate_nmethod_mirror(this);
   }
 #endif
 
@@ -1730,8 +1733,8 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
 #if INCLUDE_JVMCI
     // Now that the nmethod has been unregistered, it's
     // safe to clear the HotSpotNmethod mirror oop.
-    if (nmethod_data != NULL) {
-      nmethod_data->clear_nmethod_mirror(this);
+    if (jvmci_data != NULL) {
+      jvmci_data->clear_nmethod_mirror(this);
     }
 #endif
 
@@ -3621,9 +3624,8 @@ void nmethod::print_statistics() {
 void nmethod::update_speculation(JavaThread* thread) {
   jlong speculation = thread->pending_failed_speculation();
   if (speculation != 0) {
-    if (jvmci_nmethod_data() != NULL) {
-      jvmci_nmethod_data()->add_failed_speculation(this, speculation);
-    }
+    guarantee(jvmci_nmethod_data() != NULL, "failed speculation in nmethod without failed speculation list");
+    jvmci_nmethod_data()->add_failed_speculation(this, speculation);
     thread->set_pending_failed_speculation(0);
   }
 }

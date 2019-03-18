@@ -2239,8 +2239,7 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
       } else {
         // Link the new HotSpotNmethod to the nmethod
         peerEnv->initialize_installed_code(result, nm, JVMCI_CHECK_0);
-        // Only HotSpotNmethod instances are tracked directly by the runtime.
-        // HotSpotNMethodHandle instances are updated cooperatively.
+        // Only HotSpotNmethod instances in the HotSpot heap are tracked directly by the runtime.
         if (peerEnv->is_hotspot()) {
           JVMCINMethodData* data = nm->jvmci_nmethod_data();
           if (data->get_nmethod_mirror(nm) != NULL) {
