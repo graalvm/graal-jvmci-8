@@ -381,7 +381,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * Stores the value set by {@link #excludeFromJVMCICompilation(ClassLoader...)} so that it can
      * be read from the VM.
      */
-    @SuppressWarnings("unused") @NativeImageReinitialize private ClassLoader[] excludeFromJVMCICompilation;
+    @SuppressWarnings("unused")//
+    @NativeImageReinitialize private ClassLoader[] excludeFromJVMCICompilation;
 
     private final Map<Class<? extends Architecture>, JVMCIBackend> backends = new HashMap<>();
 
@@ -432,7 +433,10 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         if (compilerFactory instanceof HotSpotJVMCICompilerFactory) {
             hsCompilerFactory = (HotSpotJVMCICompilerFactory) compilerFactory;
             if (hsCompilerFactory.getCompilationLevelAdjustment() != None) {
-                throw new HotSpotJVMCIUnsupportedOperationError("adjustCompilationLEvel isn't supported");
+                String name = HotSpotJVMCICompilerFactory.class.getName();
+                String msg = String.format("%s.getCompilationLevelAdjustment() is no longer supported. " +
+                                "Use %s.excludeFromJVMCICompilation() instead.", name, name);
+                throw new HotSpotJVMCIUnsupportedOperationError(msg);
             }
         } else {
             hsCompilerFactory = null;
@@ -952,8 +956,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     }
 
     /**
-     * Informs HotSpot that no method whose class loader is in {@code loaders} is to be compiled
-     * with {@link #compileMethod}.
+     * Informs HotSpot that any method whose class loader is in {@code loaders} is not to be
+     * compiled with {@link #compileMethod}.
      *
      * @param loaders the set of loaders used to load JVMCI compiler classes
      */
