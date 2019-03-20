@@ -122,7 +122,7 @@
             "pip:astroid" : "==1.1.0",
             "pip:pylint" : "==1.1.0",
         },
-        name: "gate",
+        name: "gate-jvmci",
         timelimit: "1:00:00",
         diskspace_required: "10G",
         logs: ["*.log"],
@@ -137,7 +137,7 @@
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
 
             # Look for a well known branch that fixes a downstream failure caused by a JDK change
-            ["git", "-C", "graal", "checkout", "master", "||", "true"]
+            ["git", "-C", "graal", "checkout", "ds/GR-13902", "||", "true"]
         ],
     },
 

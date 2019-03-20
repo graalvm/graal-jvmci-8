@@ -75,18 +75,6 @@ class JVMCI : public AllStatic {
 
   static bool shutdown_called();
 
-  /**
-   * Lets JVMCI modify the compilation level currently selected for a method by
-   * the VM compilation policy.
-   *
-   * @param method the method being scheduled for compilation
-   * @param is_osr specifies if the compilation is an OSR compilation
-   * @param level the compilation level currently selected by the VM compilation policy
-   * @param thread the current thread
-   * @return the compilation level to use for the compilation
-   */
-  static CompLevel adjust_comp_level(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread);
-
   static bool is_compiler_initialized();
 
   static void initialize_globals();

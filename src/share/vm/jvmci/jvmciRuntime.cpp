@@ -1057,11 +1057,6 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(JVMCI_TRAPS) {
 
   // This should only be called in the context of the JVMCI class being initialized
   JVMCIObject result = JVMCIENV->call_HotSpotJVMCIRuntime_runtime(JVMCI_CHECK);
-  int adjustment = JVMCIENV->get_HotSpotJVMCIRuntime_compilationLevelAdjustment(result);
-  assert(adjustment >= JVMCIRuntime::none &&
-         adjustment <= JVMCIRuntime::by_full_signature,
-         "compilation level adjustment out of bounds");
-  _comp_level_adjustment = (CompLevelAdjustment) adjustment;
 
   _HotSpotJVMCIRuntime_instance = JVMCIENV->make_global(result);
 }
@@ -1231,11 +1226,6 @@ void JVMCI::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred) {
   }
 }
 
-CompLevel JVMCI::adjust_comp_level(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread) {
-  return compiler_runtime()->adjust_comp_level(method, is_osr, level, thread);
-}
-
-
 // private static void CompilerToVM.registerNatives()
 JVM_ENTRY_NO_ENV(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
 
@@ -1338,69 +1328,6 @@ void JVMCIRuntime::bootstrap_finished(TRAPS) {
     THREAD_JVMCIENV(JavaThread::current());
     JVMCIENV->call_HotSpotJVMCIRuntime_bootstrapFinished(_HotSpotJVMCIRuntime_instance, JVMCIENV);
   }
-}
-CompLevel JVMCIRuntime::adjust_comp_level(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread) {
-  if (!thread->adjusting_comp_level()) {
-    thread->set_adjusting_comp_level(true);
-    level = adjust_comp_level_inner(method, is_osr, level, thread);
-    thread->set_adjusting_comp_level(false);
-  }
-  return level;
-}
-
-CompLevel JVMCIRuntime::adjust_comp_level_inner(methodHandle method, bool is_osr, CompLevel level, JavaThread* thread) {
-  JVMCICompiler* compiler = JVMCICompiler::instance(false, thread);
-  if (compiler != NULL && compiler->is_bootstrapping()) {
-    return level;
-  }
-  if (!is_HotSpotJVMCIRuntime_initialized() || _comp_level_adjustment == JVMCIRuntime::none) {
-    // JVMCI cannot participate in compilation scheduling until
-    // JVMCI is initialized and indicates it wants to participate.
-    return level;
-  }
-
-  JavaThread* THREAD = JavaThread::current();
-  ResourceMark rm;
-  HandleMark hm;
-
-#define CHECK_RETURN JVMCIENV);                                         \
-  if (JVMCIENV->has_pending_exception()) {                              \
-    if (JVMCIENV->is_hotspot()) {                                       \
-      Handle exception(THREAD, PENDING_EXCEPTION);                      \
-      CLEAR_PENDING_EXCEPTION;                                          \
-                                                                        \
-      if (exception->is_a(SystemDictionary::ThreadDeath_klass())) {     \
-        /* In the special case of ThreadDeath, we need to reset the */  \
-        /* pending async exception so that it is propagated.         */ \
-        thread->set_pending_async_exception(exception());               \
-        return level;                                                   \
-      }                                                                 \
-      /* No need report errors while adjusting compilation level. */    \
-      /* The most likely error will be a StackOverflowError or */       \
-      /* an OutOfMemoryError. */                                        \
-    } else {                                                            \
-      JVMCIENV->clear_pending_exception();                              \
-    }                                                                   \
-    return level;                                                       \
-  }                                                                     \
-  (void)(0
-
-  THREAD_JVMCIENV(thread);
-  JVMCIObject receiver = _HotSpotJVMCIRuntime_instance;
-  JVMCIObject name;
-  JVMCIObject sig;
-  if (_comp_level_adjustment == JVMCIRuntime::by_full_signature) {
-    name = JVMCIENV->create_string(method->name(), CHECK_RETURN);
-    sig = JVMCIENV->create_string(method->signature(), CHECK_RETURN);
-  }
-
-  int comp_level = JVMCIENV->call_HotSpotJVMCIRuntime_adjustCompilationLevel(receiver, method->method_holder(), name, sig, is_osr, level, CHECK_RETURN);
-  if (comp_level < CompLevel_none || comp_level > CompLevel_full_optimization) {
-    assert(false, "compilation level out of bounds");
-    return level;
-  }
-  return (CompLevel) comp_level;
-#undef CHECK_RETURN
 }
 
 void JVMCIRuntime::describe_pending_hotspot_exception(JavaThread* THREAD, bool clear) {

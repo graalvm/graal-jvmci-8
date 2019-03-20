@@ -339,11 +339,10 @@
     long_field(HotSpotConstantPool, metadataHandle)                                                           \
   end_class                                                                                                   \
   start_class(HotSpotJVMCIRuntime, jdk_vm_ci_hotspot_HotSpotJVMCIRuntime)                                     \
-    int_field(HotSpotJVMCIRuntime, compilationLevelAdjustment)                                                \
+    objectarray_field(HotSpotJVMCIRuntime, excludeFromJVMCICompilation, "[Ljava/lang/ClassLoader;")           \
     jvmci_method(CallNonvirtualObjectMethod, GetMethodID, call_special, JVMCIObject, HotSpotJVMCIRuntime, compileMethod, compileMethod_signature, (JVMCIObject runtime, JVMCIObject method, int entry_bci, jlong env, int id)) \
     jvmci_method(CallStaticObjectMethod, GetStaticMethodID, call_static, JVMCIObject, HotSpotJVMCIRuntime, encodeThrowable, encodeThrowable_signature, (JVMCIObject throwable)) \
     jvmci_method(CallStaticObjectMethod, GetStaticMethodID, call_static, JVMCIObject, HotSpotJVMCIRuntime, decodeThrowable, decodeThrowable_signature, (JVMCIObject encodedThrowable)) \
-    jvmci_method(CallNonvirtualIntMethod, GetMethodID, call_special, int, HotSpotJVMCIRuntime, adjustCompilationLevel, adjustCompilationLevel_signature, (JVMCIObject runtime, JVMCIObject declaringClass, JVMCIObject name, JVMCIObject signature, bool is_osr, int level)) \
     jvmci_method(CallNonvirtualVoidMethod, GetMethodID, call_special, void, HotSpotJVMCIRuntime, bootstrapFinished, void_method_signature, (JVMCIObject runtime, JVMCI_TRAPS)) \
     jvmci_method(CallNonvirtualVoidMethod, GetMethodID, call_special, void, HotSpotJVMCIRuntime, shutdown, void_method_signature, (JVMCIObject runtime)) \
     jvmci_method(CallStaticObjectMethod, GetStaticMethodID, call_static, JVMCIObject, HotSpotJVMCIRuntime, runtime, runtime_signature, (JVMCI_TRAPS)) \

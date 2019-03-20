@@ -387,34 +387,6 @@ JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_compileMethod (JVMCIObject runtim
   }
 }
 
-int JVMCIEnv::call_HotSpotJVMCIRuntime_adjustCompilationLevel (JVMCIObject runtime, InstanceKlass* declaringClass,
-                                                               JVMCIObject name, JVMCIObject signature, bool is_osr, int level, JVMCI_TRAPS) {
-  if (is_hotspot()) {
-    Thread* THREAD = Thread::current();
-    JavaCallArguments jargs;
-    jargs.push_oop(HotSpotJVMCI::resolve(runtime));
-    jargs.push_oop(declaringClass->java_mirror());
-    jargs.push_oop(HotSpotJVMCI::resolve(name));
-    jargs.push_oop(HotSpotJVMCI::resolve(signature));
-    jargs.push_int(is_osr);
-    jargs.push_int(level);
-    JavaValue result(T_INT);
-    JavaCalls::call_special(&result, HotSpotJVMCI::HotSpotJVMCIRuntime::klass(), vmSymbols::adjustCompilationLevel_name(), vmSymbols::adjustCompilationLevel_signature(), &jargs, THREAD);
-    return result.get_jint();
-  } else {
-    JVMCIObject declaringClassName = create_string(declaringClass->external_name(), JVMCI_CHECK_(0));
-    int result;
-    {
-      JNIAccessMark jni(this);
-      result = jni()->CallNonvirtualIntMethod(runtime.as_jobject(),
-                                              JNIJVMCI::HotSpotJVMCIRuntime::clazz(),
-                                              JNIJVMCI::HotSpotJVMCIRuntime::adjustCompilationLevel_method(),
-                                              get_jobject(declaringClassName), get_jobject(name), get_jobject(signature), is_osr, level);
-    }
-    return result;
-  }
-}
-
 void JVMCIEnv::call_HotSpotJVMCIRuntime_bootstrapFinished (JVMCIObject runtime, JVMCIEnv* JVMCIENV) {
   if (is_hotspot()) {
     Thread* THREAD = Thread::current();

@@ -53,19 +53,19 @@ bool SimpleThresholdPolicy::loop_predicate_helper(int i, int b, double scale) {
 
 // Simple methods are as good being compiled with C1 as C2.
 // Determine if a given method is such a case.
-bool SimpleThresholdPolicy::is_trivial(Method* method) {
+bool SimpleThresholdPolicy::should_compile_at_level_simple(Method* method) {
   if (method->is_accessor() ||
       method->is_constant_getter()) {
     return true;
   }
-  if (method->has_loops() || method->code_size() >= 15) {
-    return false;
+#if INCLUDE_JVMCI
+  if (UseJVMCICompiler && TieredCompilation) {
+    AbstractCompiler* comp = CompileBroker::compiler(CompLevel_full_optimization);
+    if (comp != NULL && comp->is_jvmci() && ((JVMCICompiler*) comp)->force_comp_at_level_simple(method)) {
+      return true;
+    }
   }
-  MethodData* mdo = method->method_data();
-  if (mdo != NULL && !mdo->would_profile() &&
-      (method->code_size() < 5  || (mdo->num_blocks() < 4))) {
-    return true;
-  }
+#endif
   return false;
 }
 
