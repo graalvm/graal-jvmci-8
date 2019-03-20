@@ -110,8 +110,11 @@ void JVMCICompiler::bootstrap(TRAPS) {
   JVMCI::compiler_runtime()->bootstrap_finished(CHECK);
 }
 
-bool JVMCICompiler::compile_at_level1(Method* method) {
+bool JVMCICompiler::force_comp_at_level_simple(Method* method) {
   if (UseJVMCINativeLibrary) {
+    // This mechanism exists to force compilation of a JVMCI compiler by C1
+    // to reduces the compilation time spent on the JVMCI compiler itself. In
+    // +UseJVMCINativeLibrary mode, the JVMCI compiler is AOT compiled.
     return false;
   }
 

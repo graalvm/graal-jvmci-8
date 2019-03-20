@@ -114,9 +114,6 @@ class AbstractCompiler : public CHeapObj<mtCompiler> {
   bool is_shark()                                { return _type == shark; }
   bool is_jvmci()                                { return _type == jvmci; }
 
-  // Force compilation at CompLevel_simple
-  virtual bool compile_at_level1(Method* method) { return false; }
-
   // Customization
   virtual void initialize () = 0;
 

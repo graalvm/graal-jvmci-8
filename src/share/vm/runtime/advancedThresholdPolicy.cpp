@@ -359,7 +359,7 @@ CompLevel AdvancedThresholdPolicy::common(Predicate p, Method* method, CompLevel
   int i = method->invocation_count();
   int b = method->backedge_count();
 
-  if (compile_at_level1(method)) {
+  if (should_compile_at_level_simple(method)) {
     next_level = CompLevel_simple;
   } else {
     switch(cur_level) {

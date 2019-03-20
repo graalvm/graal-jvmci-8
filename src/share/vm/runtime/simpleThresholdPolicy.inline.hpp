@@ -53,7 +53,7 @@ bool SimpleThresholdPolicy::loop_predicate_helper(int i, int b, double scale) {
 
 // Simple methods are as good being compiled with C1 as C2.
 // Determine if a given method is such a case.
-bool SimpleThresholdPolicy::compile_at_level1(Method* method) {
+bool SimpleThresholdPolicy::should_compile_at_level_simple(Method* method) {
   if (method->is_accessor() ||
       method->is_constant_getter()) {
     return true;
@@ -61,7 +61,7 @@ bool SimpleThresholdPolicy::compile_at_level1(Method* method) {
 #if INCLUDE_JVMCI
   if (UseJVMCICompiler && TieredCompilation) {
     AbstractCompiler* comp = CompileBroker::compiler(CompLevel_full_optimization);
-    if (comp != NULL && comp->compile_at_level1(method)) {
+    if (comp != NULL && comp->is_jvmci() && ((JVMCICompiler*) comp)->force_comp_at_level_simple(method)) {
       return true;
     }
   }
