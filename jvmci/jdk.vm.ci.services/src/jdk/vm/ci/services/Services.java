@@ -54,7 +54,7 @@ public final class Services {
      * from (being compiled into) the library. Such code must be directly guarded by an {@code if}
      * statement on this field - the guard cannot be behind a method call.
      */
-    public static final boolean IS_BUILDING_NATIVE_IMAGE = Boolean.getBoolean("jdk.vm.ci.services.aot");
+    public static final boolean IS_BUILDING_NATIVE_IMAGE = Boolean.parseBoolean(VM.getSavedProperty("jdk.vm.ci.services.aot"));
 
     /**
      * Guards code that should only be run in a JVMCI shared library. Such code must be directly
