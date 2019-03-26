@@ -26,6 +26,8 @@ import static jdk.vm.ci.services.Services.IS_IN_NATIVE_IMAGE;
 
 import java.net.URISyntaxException;
 
+import com.sun.org.apache.xalan.internal.xsltc.compiler.XSLTC;
+
 import jdk.vm.ci.hotspot.EventProvider;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime;
 import jdk.vm.ci.hotspot.HotSpotVMConfigAccess;
@@ -101,7 +103,12 @@ public final class JFREventProvider implements EventProvider {
     @SuppressWarnings({"javadoc", "unchecked"})
     private static com.oracle.jrockit.jfr.EventToken registerEvent(com.oracle.jrockit.jfr.Producer producer, Class<?> c) {
         try {
-            return producer.addEvent((Class<? extends com.oracle.jrockit.jfr.InstantEvent>) c);
+            // Both JFR and javax.xml.transform classes use thread unsafe logic in BCEL.
+            // The latter locks on the XSLTC class to synchronize its BCEL usage so the
+            // former needs to as well (GR-14584).
+            synchronized (XSLTC.class) {
+                return producer.addEvent((Class<? extends com.oracle.jrockit.jfr.InstantEvent>) c);
+            }
         } catch (com.oracle.jrockit.jfr.InvalidEventDefinitionException | com.oracle.jrockit.jfr.InvalidValueException e) {
             throw new InternalError(e);
         }
