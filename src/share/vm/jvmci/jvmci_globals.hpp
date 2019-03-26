@@ -61,7 +61,10 @@
           "Load JVMCI classes with separate class loader")                  \
                                                                             \
   product(bool, BootstrapJVMCI, false,                                      \
-          "Bootstrap JVMCI before running Java main method")                \
+          "Bootstrap JVMCI before running Java main method. This "          \
+          "initializes the compile queue with a small set of methods "      \
+          "and processes the queue until it is empty. Combining this with " \
+          "-XX:-TieredCompilation makes JVMCI compile more of itself.")     \
                                                                             \
   product(bool, PrintBootstrap, true,                                       \
           "Print JVMCI bootstrap progress and summary")                     \
