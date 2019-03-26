@@ -1716,6 +1716,9 @@ C2V_END
 
 C2V_VMENTRY(jboolean, isInternedString, (JNIEnv* env, jobject, jobject object))
   Handle str = JVMCIENV->asConstant(JVMCIENV->wrap(object), JVMCI_CHECK_0);
+  if (!java_lang_String::is_instance(str())) {
+    return false;
+  }
   int len;
   jchar* name = java_lang_String::as_unicode_string(str(), len, CHECK_0);
   return (StringTable::lookup(name, len) != NULL);
