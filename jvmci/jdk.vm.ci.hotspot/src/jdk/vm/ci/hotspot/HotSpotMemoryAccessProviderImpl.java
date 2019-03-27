@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -123,7 +123,7 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
         }
     }
 
-    private boolean verifyReadRawObject(HotSpotObjectConstant expected, Constant base, long displacement) {
+    private boolean verifyReadRawObject(JavaConstant expected, Constant base, long displacement) {
         if (base instanceof HotSpotMetaspaceConstant) {
             MetaspaceObject metaspaceObject = HotSpotMetaspaceConstantImpl.getMetaspaceObject(base);
             if (metaspaceObject instanceof HotSpotResolvedObjectTypeImpl) {
@@ -136,9 +136,9 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
         return true;
     }
 
-    private HotSpotObjectConstant readRawObject(Constant baseConstant, long initialDisplacement, boolean compressed) {
+    private JavaConstant readRawObject(Constant baseConstant, long initialDisplacement, boolean compressed) {
         long displacement = initialDisplacement;
-        HotSpotObjectConstantImpl ret;
+        JavaConstant ret;
         HotSpotObjectConstantImpl base = asObject(baseConstant, JavaKind.Object, displacement);
         if (base == null) {
             assert !compressed;
@@ -149,7 +149,7 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
             assert runtime.getConfig().useCompressedOops == compressed;
             ret = runtime.getCompilerToVM().getObject(base, displacement);
         }
-        return ret;
+        return ret == null ? JavaConstant.NULL_POINTER : ret;
     }
 
     @Override
@@ -194,7 +194,8 @@ class HotSpotMemoryAccessProviderImpl implements HotSpotMemoryAccessProvider {
 
     @Override
     public JavaConstant readNarrowOopConstant(Constant base, long displacement) {
-        return readRawObject(base, displacement, true).compress();
+        JavaConstant res = readRawObject(base, displacement, true);
+        return JavaConstant.NULL_POINTER.equals(res) ? HotSpotCompressedNullConstant.COMPRESSED_NULL : ((HotSpotObjectConstant) res).compress();
     }
 
     private HotSpotResolvedObjectTypeImpl readKlass(Constant base, long displacement, boolean compressed) {
