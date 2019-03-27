@@ -118,6 +118,11 @@ bool JVMCICompiler::force_comp_at_level_simple(Method* method) {
     return false;
   }
 
+  if (_bootstrapping) {
+    // When bootstrapping, the JVMCI compiler can compile its own methods.
+    return false;
+  }
+
   JVMCIRuntime* runtime = JVMCI::compiler_runtime();
   if (runtime != NULL && runtime->is_HotSpotJVMCIRuntime_initialized()) {
     Handle class_loader = method->method_holder()->class_loader_data()->class_loader();
