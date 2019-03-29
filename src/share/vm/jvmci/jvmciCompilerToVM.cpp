@@ -2138,10 +2138,6 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
   for (int i = 0; i < iklass->methods()->length(); i++) {
     Method* method = iklass->methods()->at(i);
     if (method->is_native()) {
-      if (method->has_native_function()) {
-        JVMCI_THROW_MSG_0(UnsatisfiedLinkError, err_msg("Cannot overwrite existing native implementation for %s",
-            method->name_and_sig_as_C_string()));
-      }
 
       // Compute argument size
       int args_size = 1                             // JNIEnv
@@ -2170,6 +2166,10 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
       }
       if (entry == NULL) {
         JVMCI_THROW_MSG_0(UnsatisfiedLinkError, method->name_and_sig_as_C_string());
+      }
+      if (method->has_native_function() && entry != method->native_function()) {
+        JVMCI_THROW_MSG_0(UnsatisfiedLinkError, err_msg("Cannot overwrite existing native implementation for %s",
+            method->name_and_sig_as_C_string()));
       }
       method->set_native_function(entry, Method::native_bind_event_is_interesting);
       if (PrintJNIResolving) {
