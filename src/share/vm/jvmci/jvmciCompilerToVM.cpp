@@ -2122,10 +2122,31 @@ C2V_VMENTRY(void, deleteGlobalHandle, (JNIEnv* env, jobject, jlong h))
 }
 
 C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
+  if (!UseJVMCINativeLibrary) {
+    JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
+  }
+  if (!JVMCIENV->is_hotspot()) {
+    JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "Cannot call registerNativeMethods from JVMCI shared library");
+  }
   void* shared_library = JVMCIEnv::get_shared_library_handle();
+  if (shared_library == NULL) {
+    // Ensure the JVMCI shared library runtime is initialized.
+    JVMCIEnv __peer_jvmci_env__(false, __FILE__, __LINE__);
+    JVMCIEnv* peerEnv = &__peer_jvmci_env__;
+    HandleMark hm;
+    JVMCIRuntime* runtime = JVMCI::compiler_runtime();
+    JVMCIObject receiver = runtime->get_HotSpotJVMCIRuntime(peerEnv);
+    if (peerEnv->has_pending_exception()) {
+      peerEnv->describe_pending_exception(true);
+      JVMCI_THROW_MSG_0(InternalError, "Error initializing JVMCI runtime");
+    }
+    shared_library = JVMCIEnv::get_shared_library_handle();
+  }
+
   if (shared_library == NULL) {
     JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "JVMCI shared library is unavailable");
   }
+
   if (mirror == NULL) {
     JVMCI_THROW_0(NullPointerException);
   }
