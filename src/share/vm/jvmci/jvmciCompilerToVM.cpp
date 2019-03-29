@@ -2166,6 +2166,7 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
         st.print_raw(long_name);
         os::print_jni_name_suffix_on(&st, args_size);
         jni_name = st.as_string();
+        entry = (address) os::dll_lookup(shared_library, jni_name);
       }
       if (entry == NULL) {
         JVMCI_THROW_MSG_0(UnsatisfiedLinkError, method->name_and_sig_as_C_string());
