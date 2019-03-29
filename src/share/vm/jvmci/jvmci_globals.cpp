@@ -137,6 +137,18 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
     }
   }
 
+  if (FLAG_IS_DEFAULT(UseJVMCINativeLibrary) && !UseJVMCINativeLibrary) {
+    char path[JVM_MAXPATHLEN];
+    if (os::dll_build_name(path, sizeof(path), Arguments::get_dll_dir(), JVMCI_SHARED_LIBRARY_NAME)) {
+      struct stat statbuf;
+      if (os::stat(path, &statbuf) == 0) {
+        // If a JVMCI native library is present,
+        // we enable UseJVMCINativeLibrary by default.
+        FLAG_SET_DEFAULT(UseJVMCINativeLibrary, true);
+      }
+    }
+  }
+
   JVMCI_FLAG_CHECKED(UseJVMCICompiler)
   JVMCI_FLAG_CHECKED(EnableJVMCI)
 
