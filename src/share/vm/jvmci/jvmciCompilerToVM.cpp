@@ -2122,10 +2122,31 @@ C2V_VMENTRY(void, deleteGlobalHandle, (JNIEnv* env, jobject, jlong h))
 }
 
 C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
+  if (!UseJVMCINativeLibrary) {
+    JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
+  }
+  if (!JVMCIENV->is_hotspot()) {
+    JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "Cannot call registerNativeMethods from JVMCI shared library");
+  }
   void* shared_library = JVMCIEnv::get_shared_library_handle();
+  if (shared_library == NULL) {
+    // Ensure the JVMCI shared library runtime is initialized.
+    JVMCIEnv __peer_jvmci_env__(false, __FILE__, __LINE__);
+    JVMCIEnv* peerEnv = &__peer_jvmci_env__;
+    HandleMark hm;
+    JVMCIRuntime* runtime = JVMCI::compiler_runtime();
+    JVMCIObject receiver = runtime->get_HotSpotJVMCIRuntime(peerEnv);
+    if (peerEnv->has_pending_exception()) {
+      peerEnv->describe_pending_exception(true);
+      JVMCI_THROW_MSG_0(InternalError, "Error initializing JVMCI runtime");
+    }
+    shared_library = JVMCIEnv::get_shared_library_handle();
+  }
+
   if (shared_library == NULL) {
     JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "JVMCI shared library is unavailable");
   }
+
   if (mirror == NULL) {
     JVMCI_THROW_0(NullPointerException);
   }
@@ -2138,10 +2159,6 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
   for (int i = 0; i < iklass->methods()->length(); i++) {
     Method* method = iklass->methods()->at(i);
     if (method->is_native()) {
-      if (method->has_native_function()) {
-        JVMCI_THROW_MSG_0(UnsatisfiedLinkError, err_msg("Cannot overwrite existing native implementation for %s",
-            method->name_and_sig_as_C_string()));
-      }
 
       // Compute argument size
       int args_size = 1                             // JNIEnv
@@ -2166,9 +2183,14 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
         st.print_raw(long_name);
         os::print_jni_name_suffix_on(&st, args_size);
         jni_name = st.as_string();
+        entry = (address) os::dll_lookup(shared_library, jni_name);
       }
       if (entry == NULL) {
         JVMCI_THROW_MSG_0(UnsatisfiedLinkError, method->name_and_sig_as_C_string());
+      }
+      if (method->has_native_function() && entry != method->native_function()) {
+        JVMCI_THROW_MSG_0(UnsatisfiedLinkError, err_msg("Cannot overwrite existing native implementation for %s",
+            method->name_and_sig_as_C_string()));
       }
       method->set_native_function(entry, Method::native_bind_event_is_interesting);
       if (PrintJNIResolving) {
