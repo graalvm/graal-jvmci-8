@@ -233,7 +233,17 @@ void JVMCIGlobals::set_jvmci_specific_flags() {
     if (UseJVMCINativeLibrary) {
       // SVM compiled code requires more stack space
       if (FLAG_IS_DEFAULT(CompilerThreadStackSize)) {
-        FLAG_SET_DEFAULT(CompilerThreadStackSize, 2*M);
+        // Duplicate logic in the implementations of os::create_thread
+        // so that we can then double the computed stack size. Once
+        // the stack size requirements of SVM are better understood,
+        // this logic can be pushed down into os::create_thread.
+        int stack_size = CompilerThreadStackSize;
+        if (stack_size == 0) {
+          stack_size = VMThreadStackSize;
+        }
+        if (stack_size != 0) {
+          FLAG_SET_DEFAULT(CompilerThreadStackSize, stack_size * 2);
+        }
       }
     } else {
       // Adjust the on stack replacement percentage to avoid early
