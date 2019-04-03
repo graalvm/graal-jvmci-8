@@ -611,7 +611,7 @@ JVMCIObject JVMCIEnv::new_StackTraceElement(methodHandle method, int bci, JVMCI_
       return JVMCIObject();
     }
     jobject file_name = NULL;
-    if (file_name != NULL) {
+    if (file_name_sym != NULL) {
       file_name = jni()->NewStringUTF(file_name_sym->as_C_string());
       if (jni()->ExceptionCheck()) {
         return JVMCIObject();
