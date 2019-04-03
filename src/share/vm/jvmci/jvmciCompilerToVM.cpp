@@ -2212,6 +2212,9 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
 }
 
 C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
+  if (!UseJVMCINativeLibrary) {
+    JVMCI_THROW_MSG_0(UnsupportedOperationException, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
+  }
   if (obj_handle == NULL) {
     return 0L;
   }
@@ -2284,6 +2287,9 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
 }
 
 C2V_VMENTRY(jobject, unhand, (JNIEnv* env, jobject, jlong obj_handle))
+  if (!UseJVMCINativeLibrary) {
+    JVMCI_THROW_MSG_0(UnsupportedOperationException, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
+  }
   if (obj_handle == 0L) {
     return NULL;
   }

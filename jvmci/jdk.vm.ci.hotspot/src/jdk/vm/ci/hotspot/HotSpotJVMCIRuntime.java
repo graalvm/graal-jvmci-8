@@ -933,6 +933,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *
      * @param obj an object for which an equivalent instance in the peer runtime is requested
      * @return a JNI global reference to the mirror of {@code obj} in the peer runtime
+     * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
+     *             {@code -XX:-UseJVMCINativeLibrary})
      * @throws IllegalArgumentException if {@code obj} is not of a translatable type
      *
      * @see "https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html#global_and_local_references"
@@ -948,6 +950,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *
      * @param handle a JNI global reference to an object in the current runtime
      * @return the object referred to by {@code handle}
+     * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
+     *             {@code -XX:-UseJVMCINativeLibrary})
      * @throws ClassCastException if the returned object cannot be cast to {@code type}
      *
      * @see "https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html#global_and_local_references"
