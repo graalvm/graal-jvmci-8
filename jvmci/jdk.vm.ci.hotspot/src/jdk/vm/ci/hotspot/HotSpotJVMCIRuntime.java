@@ -903,11 +903,13 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *         the Java VM in the JVMCI shared library, and the remaining values are the first 3
      *         pointers in the Invocation API function table (i.e., {@code JNIInvokeInterface})
      * @throws NullPointerException if {@code clazz == null}
+     * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
+     *             {@code -XX:-UseJVMCINativeLibrary})
      * @throws IllegalArgumentException if the current execution context is the JVMCI shared library
      *             or if {@code clazz} is {@link Class#isPrimitive()}
-     * @throws UnsatisfiedLinkError if the JVMCI shared library is not available, a native method in
-     *             {@code clazz} is already linked or the JVMCI shared library does not contain a
-     *             JNI-compatible symbol for a native method in {@code clazz}
+     * @throws UnsatisfiedLinkError if there's a problem linking a native method in {@code clazz}
+     *             (no matching JNI symbol or the native method is already linked to a different
+     *             address)
      */
     public long[] registerNativeMethods(Class<?> clazz) {
         return compilerToVm.registerNativeMethods(clazz);
@@ -946,7 +948,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *
      * @param handle a JNI global reference to an object in the current runtime
      * @return the object referred to by {@code handle}
-     * @throws ClassCastException if the returned object cannot be case to {@code type}
+     * @throws ClassCastException if the returned object cannot be cast to {@code type}
      *
      * @see "https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/design.html#global_and_local_references"
      *

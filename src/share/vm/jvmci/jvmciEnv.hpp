@@ -521,6 +521,7 @@ public:
   DO_THROW(IllegalArgumentException)
   DO_THROW(InvalidInstalledCodeException)
   DO_THROW(UnsatisfiedLinkError)
+  DO_THROW(UnsupportedOperationException)
 
 #undef DO_THROW
 
