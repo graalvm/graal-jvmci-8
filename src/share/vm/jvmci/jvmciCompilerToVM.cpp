@@ -2123,10 +2123,10 @@ C2V_VMENTRY(void, deleteGlobalHandle, (JNIEnv* env, jobject, jlong h))
 
 C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
   if (!UseJVMCINativeLibrary) {
-    JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
+    JVMCI_THROW_MSG_0(UnsupportedOperationException, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
   }
   if (!JVMCIENV->is_hotspot()) {
-    JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "Cannot call registerNativeMethods from JVMCI shared library");
+    JVMCI_THROW_MSG_0(IllegalArgumentException, "Cannot call registerNativeMethods from JVMCI shared library");
   }
   void* shared_library = JVMCIEnv::get_shared_library_handle();
   if (shared_library == NULL) {
@@ -2138,13 +2138,11 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
     JVMCIObject receiver = runtime->get_HotSpotJVMCIRuntime(peerEnv);
     if (peerEnv->has_pending_exception()) {
       peerEnv->describe_pending_exception(true);
-      JVMCI_THROW_MSG_0(InternalError, "Error initializing JVMCI runtime");
     }
     shared_library = JVMCIEnv::get_shared_library_handle();
-  }
-
-  if (shared_library == NULL) {
-    JVMCI_THROW_MSG_0(UnsatisfiedLinkError, "JVMCI shared library is unavailable");
+    if (shared_library == NULL) {
+      JVMCI_THROW_MSG_0(InternalError, "Error initializing JVMCI runtime");
+    }
   }
 
   if (mirror == NULL) {
@@ -2182,15 +2180,18 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
         st.print_raw(pure_name);
         st.print_raw(long_name);
         os::print_jni_name_suffix_on(&st, args_size);
-        jni_name = st.as_string();
-        entry = (address) os::dll_lookup(shared_library, jni_name);
+        char* jni_long_name = st.as_string();
+        entry = (address) os::dll_lookup(shared_library, jni_long_name);
+        if (entry == NULL) {
+          JVMCI_THROW_MSG_0(UnsatisfiedLinkError, err_msg("%s [neither %s nor %s exist in %s]",
+              method->name_and_sig_as_C_string(),
+              jni_name, jni_long_name, JVMCIEnv::get_shared_library_path()));
+        }
       }
-      if (entry == NULL) {
-        JVMCI_THROW_MSG_0(UnsatisfiedLinkError, method->name_and_sig_as_C_string());
-      }
+
       if (method->has_native_function() && entry != method->native_function()) {
-        JVMCI_THROW_MSG_0(UnsatisfiedLinkError, err_msg("Cannot overwrite existing native implementation for %s",
-            method->name_and_sig_as_C_string()));
+        JVMCI_THROW_MSG_0(UnsatisfiedLinkError, err_msg("%s [cannot re-link from " PTR_FORMAT " to " PTR_FORMAT "]",
+            method->name_and_sig_as_C_string(), method->native_function(), entry));
       }
       method->set_native_function(entry, Method::native_bind_event_is_interesting);
       if (PrintJNIResolving) {
@@ -2211,6 +2212,9 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
 }
 
 C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
+  if (!UseJVMCINativeLibrary) {
+    JVMCI_THROW_MSG_0(UnsupportedOperationException, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
+  }
   if (obj_handle == NULL) {
     return 0L;
   }
@@ -2283,6 +2287,9 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
 }
 
 C2V_VMENTRY(jobject, unhand, (JNIEnv* env, jobject, jlong obj_handle))
+  if (!UseJVMCINativeLibrary) {
+    JVMCI_THROW_MSG_0(UnsupportedOperationException, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
+  }
   if (obj_handle == 0L) {
     return NULL;
   }

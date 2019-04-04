@@ -386,6 +386,9 @@
   start_class(UnsatisfiedLinkError, java_lang_UnsatisfiedLinkError)                                           \
     jvmci_constructor(UnsatisfiedLinkError, "(Ljava/lang/String;)V")                                          \
   end_class                                                                                                   \
+  start_class(UnsupportedOperationException, java_lang_UnsupportedOperationException)                         \
+    jvmci_constructor(UnsupportedOperationException, "(Ljava/lang/String;)V")                                 \
+  end_class                                                                                                   \
   start_class(StackTraceElement, java_lang_StackTraceElement)                                                 \
     object_field(StackTraceElement, declaringClass, "Ljava/lang/String;")                                     \
     object_field(StackTraceElement, methodName, "Ljava/lang/String;")                                         \
