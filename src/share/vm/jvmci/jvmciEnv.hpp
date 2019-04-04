@@ -522,6 +522,7 @@ public:
   DO_THROW(InvalidInstalledCodeException)
   DO_THROW(UnsatisfiedLinkError)
   DO_THROW(UnsupportedOperationException)
+  DO_THROW(ClassNotFoundException)
 
 #undef DO_THROW
 
