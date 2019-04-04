@@ -1188,6 +1188,8 @@ jobject JVMCI::make_global(Handle obj) {
 }
 
 bool JVMCI::is_global_handle(jobject handle) {
+  assert(_object_handles != NULL, "uninitialized");
+  MutexLocker ml(JVMCI_lock);
   return _object_handles->chain_contains(handle);
 }
 
