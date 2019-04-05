@@ -471,6 +471,9 @@ C2V_VMENTRY(jobject, lookupType, (JNIEnv* env, jobject, jstring jname, jclass ac
 
   if (resolve) {
     resolved_klass = SystemDictionary::resolve_or_null(class_name, class_loader, protection_domain, CHECK_0);
+    if (resolved_klass == NULL) {
+      JVMCI_THROW_MSG_NULL(ClassNotFoundException, str);
+    }
   } else {
     if (class_name->byte_at(0) == 'L' &&
       class_name->byte_at(class_name->utf8_length()-1) == ';') {
@@ -489,7 +492,6 @@ C2V_VMENTRY(jobject, lookupType, (JNIEnv* env, jobject, jstring jname, jclass ac
         TempNewSymbol strippedsym = SymbolTable::new_symbol(class_name->as_utf8()+1+fd.dimension(),
                                                             class_name->utf8_length()-2-fd.dimension(),
                                                             CHECK_0);
-        // naked oop "k" is OK here -- we assign back into it
         resolved_klass = SystemDictionary::find(strippedsym,
                                                              class_loader,
                                                              protection_domain,

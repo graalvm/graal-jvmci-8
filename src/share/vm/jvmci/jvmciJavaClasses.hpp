@@ -380,6 +380,9 @@
   start_class(InternalError, java_lang_InternalError)                                                         \
     jvmci_constructor(InternalError, "(Ljava/lang/String;)V")                                                 \
   end_class                                                                                                   \
+  start_class(ClassNotFoundException, java_lang_ClassNotFoundException)                                       \
+    jvmci_constructor(ClassNotFoundException, "(Ljava/lang/String;)V")                                        \
+  end_class                                                                                                   \
   start_class(InvalidInstalledCodeException, jdk_vm_ci_code_InvalidInstalledCodeException)                    \
     jvmci_constructor(InvalidInstalledCodeException, "(Ljava/lang/String;)V")                                 \
   end_class                                                                                                   \
