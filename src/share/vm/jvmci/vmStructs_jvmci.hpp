@@ -100,6 +100,7 @@
                                                                                                                                      \
   volatile_nonstatic_field(ObjectMonitor,      _cxq,                                   ObjectWaiter*)                                \
   volatile_nonstatic_field(ObjectMonitor,      _EntryList,                             ObjectWaiter*)                                \
+  volatile_nonstatic_field(ObjectMonitor,      _succ,                                  Thread*)                                      \
                                                                                                                                      \
   nonstatic_field(Klass,                       _class_loader_data,                     ClassLoaderData*)                             \
                                                                                                                                      \
