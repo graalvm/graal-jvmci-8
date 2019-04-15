@@ -1320,7 +1320,8 @@ void JVMCIRuntime::shutdown() {
   if (_HotSpotJVMCIRuntime_instance.is_non_null()) {
     _shutdown_called = true;
 
-    THREAD_JVMCIENV(JavaThread::current());
+    JVMCIEnv __stack_jvmci_env__(JavaThread::current(), __FILE__, __LINE__);
+    JVMCIEnv* JVMCIENV = &__stack_jvmci_env__;
     JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(_HotSpotJVMCIRuntime_instance);
   }
 }
@@ -1752,6 +1753,10 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
     // no OSR compilations during bootstrap - the compiler is just too slow at this point,
     // and we know that there are no endless loops
     compile_state->set_failure(true, "No OSR during boostrap");
+    return;
+  }
+  if (JVMCI::shutdown_called()) {
+    compile_state->set_failure(false, "Avoiding compilation during shutdown");
     return;
   }
 

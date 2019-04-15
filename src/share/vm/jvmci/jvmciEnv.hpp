@@ -127,24 +127,24 @@ class JVMCIEnv : public ResourceObj {
   static void*   _shared_library_handle; // result of os::dll_load
   static JavaVM* _shared_library_javavm; // result of calling JNI_CreateJavaVM in shared library
 
-  // Attaches the current thread to the JavaVM in the shared library,
-  // initializing the shared library VM first if necessary.
-  // Returns the JNI interface pointer of the current thread.
-  // The _shared_library_* fields are initialized by the first
-  // call to this method.
-  static JNIEnv* attach_shared_library();
+  // Initializes the shared library JavaVM if not already initialized.
+  // Returns the JNI interface pointer for the current thread
+  // if initialization was performed by this call, NULL if
+  // initialization was performed by a previous call.
+  static JNIEnv* init_shared_library(JavaThread* thread);
 
   // Initializes the _env, _mode and _runtime fields.
   void init_env_mode_runtime(JNIEnv* parent_env);
 
   void init(bool is_hotspot, const char* file, int line);
 
-  JNIEnv*                _env;     // JNI env for calling into shared library
-  JVMCIRuntime*          _runtime; // Access to a HotSpotJVMCIRuntime
-  bool             _is_hotspot;    // Which heap is the HotSpotJVMCIRuntime in
-  bool        _throw_to_caller;    // Propagate an exception raised in this env to the caller?
-  const char*            _file;    // The file and ...
-  int                    _line;    // ... line where this JNIEnv was created
+  JNIEnv*                 _env;  // JNI env for calling into shared library
+  bool              _top_level;  // Is top level entry into the shared library?
+  JVMCIRuntime*       _runtime;  // Access to a HotSpotJVMCIRuntime
+  bool             _is_hotspot;  // Which heap is the HotSpotJVMCIRuntime in
+  bool        _throw_to_caller;  // Propagate an exception raised in this env to the caller?
+  const char*            _file;  // The file and ...
+  int                    _line;  // ... line where this JNIEnv was created
 
   // Translates an exception on the HotSpot heap to an exception on
   // the shared library heap. The translation includes the stack and
@@ -167,7 +167,7 @@ public:
 
   // Opens a JNIEnv scope for a call from within the VM. An exception occurring
   // within the scope must not be propagated back to the caller.
-  JVMCIEnv(JavaThread* env, const char* file, int line);
+  JVMCIEnv(JavaThread* thread, const char* file, int line);
 
   // Opens a JNIEnv scope for accessing `for_object`. An exception occurring
   // within the scope must not be propagated back to the caller.

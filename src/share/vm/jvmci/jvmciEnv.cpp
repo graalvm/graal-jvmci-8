@@ -148,11 +148,10 @@ void JVMCIEnv::copy_saved_properties() {
   }
 }
 
-JNIEnv* JVMCIEnv::attach_shared_library() {
+JNIEnv* JVMCIEnv::init_shared_library(JavaThread* thread) {
   if (_shared_library_javavm == NULL) {
     MutexLocker locker(JVMCI_lock);
     if (_shared_library_javavm == NULL) {
-
       char path[JVM_MAXPATHLEN];
       char ebuf[1024];
       if (JVMCILibPath != NULL) {
@@ -198,55 +197,70 @@ JNIEnv* JVMCIEnv::attach_shared_library() {
       }
     }
   }
-  JNIEnv* env;
-  if (_shared_library_javavm->AttachCurrentThread((void**)&env, NULL) == JNI_OK) {
-    guarantee(env != NULL, "missing env");
-    return env;
-  }
-  fatal("Error attaching current thread to JVMCI shared library JNI interface");
   return NULL;
 }
 
 void JVMCIEnv::init_env_mode_runtime(JNIEnv* parent_env) {
   // By default there is only one runtime which is the compiler runtime.
   _runtime = JVMCI::compiler_runtime();
+  _env = NULL;
+  _top_level = false;
   if (!UseJVMCINativeLibrary) {
     // In HotSpot mode, JNI isn't used at all.
     _is_hotspot = true;
-    _env = NULL;
     return;
   }
 
+  JavaThread* thread = JavaThread::current();
   if (parent_env != NULL) {
     // If the parent JNI environment is non-null then figure out whether it
     // is a HotSpot or shared library JNIEnv and set the state appropriately.
-    JavaThread* thread = JavaThread::current();
     if (thread->jni_environment() == parent_env) {
       // Select the Java runtime
       _runtime = JVMCI::java_runtime();
       _is_hotspot = true;
-      _env = NULL;
       return;
     }
   }
 
-  // Running in JVMCI shared library mode so get a shared library JNIEnv
+  // Running in JVMCI shared library mode so ensure the shared library
+  // is loaded and initialized and get a shared library JNIEnv
   _is_hotspot = false;
-  _env = attach_shared_library();
-  assert(parent_env == NULL || _env == parent_env, "must be");
+  _env = init_shared_library(thread);
 
-  if (parent_env == NULL) {
-    // There is no parent shared library JNI env so push
-    // a JNI local frame to release all local handles in
-    // this JVMCIEnv scope when it's closed.
-    assert(_throw_to_caller == false, "must be");
-    JNIAccessMark jni(this);
-    jint result = _env->PushLocalFrame(32);
-    if (result != JNI_OK) {
-      char message[256];
-      jio_snprintf(message, 256, "Uncaught exception pushing local frame for JVMCIEnv scope entered at %s:%d", _file, _line);
-      JVMCIRuntime::exit_on_pending_exception(this, message);
+  if (_env == NULL) {
+    if (parent_env == NULL) {
+      _shared_library_javavm->GetEnv((void**)&parent_env, JNI_VERSION_1_2);
     }
+    if (parent_env != NULL) {
+      _env = parent_env;
+      return;
+    }
+    ResourceMark rm; // Thread name is resource allocated
+    JavaVMAttachArgs attach_args;
+    attach_args.version = JNI_VERSION_1_2;
+    attach_args.name = thread->name();
+    attach_args.group = NULL;
+    if (_shared_library_javavm->AttachCurrentThread((void**)&_env, &attach_args) != JNI_OK) {
+      fatal(err_msg("Error attaching current thread (%s) to JVMCI shared library JNI interface", attach_args.name));
+    }
+  } else {
+    assert(parent_env == NULL, "must be");
+  }
+
+  guarantee(_env != NULL, "missing env");
+  _top_level = true;
+
+  // This is the top level entry point into the shared library so push
+  // a JNI local frame to release all local handles in
+  // this JVMCIEnv scope when it's closed.
+  assert(_throw_to_caller == false, "must be");
+  JNIAccessMark jni(this);
+  jint result = _env->PushLocalFrame(32);
+  if (result != JNI_OK) {
+    char message[256];
+    jio_snprintf(message, 256, "Uncaught exception pushing local frame for JVMCIEnv scope entered at %s:%d", _file, _line);
+    JVMCIRuntime::exit_on_pending_exception(this, message);
   }
 }
 
@@ -273,6 +287,7 @@ void JVMCIEnv::init(bool is_hotspot, const char* file, int line) {
   _line = line;
   if (is_hotspot) {
     _env = NULL;
+    _top_level = false;
     _is_hotspot = true;
     _runtime = JVMCI::java_runtime();
   } else {
@@ -344,7 +359,7 @@ JVMCIEnv::~JVMCIEnv() {
       }
     }
   } else {
-    if (!is_hotspot()) {
+    if (_top_level) {
       // Pop the JNI local frame that was pushed when entering this JVMCIEnv scope.
       JNIAccessMark jni(this);
       jni()->PopLocalFrame(NULL);
@@ -354,6 +369,10 @@ JVMCIEnv::~JVMCIEnv() {
       char message[256];
       jio_snprintf(message, 256, "Uncaught exception exiting JVMCIEnv scope entered at %s:%d", _file, _line);
       JVMCIRuntime::exit_on_pending_exception(this, message);
+    }
+
+    if (_top_level) {
+      get_shared_library_javavm()->DetachCurrentThread();
     }
   }
 }
