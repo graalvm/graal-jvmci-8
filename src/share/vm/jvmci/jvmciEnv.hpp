@@ -145,6 +145,7 @@ class JVMCIEnv : public ResourceObj {
   bool        _throw_to_caller;  // Propagate an exception raised in this env to the caller?
   const char*            _file;  // The file and ...
   int                    _line;  // ... line where this JNIEnv was created
+  bool                _closeVM;  // Should close shared library JVM in destructor?
 
   // Translates an exception on the HotSpot heap to an exception on
   // the shared library heap. The translation includes the stack and
@@ -167,7 +168,7 @@ public:
 
   // Opens a JNIEnv scope for a call from within the VM. An exception occurring
   // within the scope must not be propagated back to the caller.
-  JVMCIEnv(JavaThread* thread, const char* file, int line);
+  JVMCIEnv(JavaThread* thread, const char* file, int line, bool closeVM = false);
 
   // Opens a JNIEnv scope for accessing `for_object`. An exception occurring
   // within the scope must not be propagated back to the caller.

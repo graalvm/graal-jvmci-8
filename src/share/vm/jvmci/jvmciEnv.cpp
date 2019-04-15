@@ -265,17 +265,17 @@ void JVMCIEnv::init_env_mode_runtime(JNIEnv* parent_env) {
 }
 
 JVMCIEnv::JVMCIEnv(JVMCICompileState* compile_state, const char* file, int line):
-    _throw_to_caller(false), _file(file), _line(line), _compile_state(compile_state) {
+    _throw_to_caller(false), _file(file), _line(line), _compile_state(compile_state), _closeVM(false) {
   init_env_mode_runtime(NULL);
 }
 
-JVMCIEnv::JVMCIEnv(JavaThread* thread, const char* file, int line):
-    _throw_to_caller(false), _file(file), _line(line), _compile_state(NULL) {
+JVMCIEnv::JVMCIEnv(JavaThread* thread, const char* file, int line, bool closeVM):
+    _throw_to_caller(false), _file(file), _line(line), _compile_state(NULL), _closeVM(closeVM) {
   init_env_mode_runtime(NULL);
 }
 
 JVMCIEnv::JVMCIEnv(JNIEnv* parent_env, const char* file, int line):
-    _throw_to_caller(true), _file(file), _line(line), _compile_state(NULL) {
+    _throw_to_caller(true), _file(file), _line(line), _compile_state(NULL), _closeVM(false) {
   init_env_mode_runtime(parent_env);
   assert(_env == NULL || parent_env == _env, "mismatched JNIEnvironment");
 }
@@ -285,6 +285,7 @@ void JVMCIEnv::init(bool is_hotspot, const char* file, int line) {
   _throw_to_caller = false;
   _file = file;
   _line = line;
+  _closeVM = false;
   if (is_hotspot) {
     _env = NULL;
     _top_level = false;
@@ -373,6 +374,9 @@ JVMCIEnv::~JVMCIEnv() {
 
     if (_top_level) {
       get_shared_library_javavm()->DetachCurrentThread();
+      if (_closeVM) {
+        get_shared_library_javavm()->DestroyJavaVM();
+      }
     }
   }
 }
