@@ -2123,13 +2123,29 @@ C2V_VMENTRY(void, deleteGlobalHandle, (JNIEnv* env, jobject, jlong h))
   }
 }
 
-C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
+static void requireJVMCINativeLibrary(JVMCI_TRAPS) {
   if (!UseJVMCINativeLibrary) {
-    JVMCI_THROW_MSG_0(UnsupportedOperationException, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
+    JVMCI_THROW_MSG(UnsupportedOperationException, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
   }
+}
+
+static void requireInHotSpot(const char* caller, JVMCI_TRAPS) {
   if (!JVMCIENV->is_hotspot()) {
-    JVMCI_THROW_MSG_0(IllegalArgumentException, "Cannot call registerNativeMethods from JVMCI shared library");
+    JVMCI_THROW_MSG(IllegalStateException, err_msg("Cannot call %s from JVMCI shared library", caller));
   }
+}
+
+static JavaVM* requireNativeLibraryJavaVM(const char* caller, JVMCI_TRAPS) {
+  JavaVM* javaVM = JVMCIEnv::get_shared_library_javavm();
+  if (javaVM == NULL) {
+    JVMCI_THROW_MSG_NULL(IllegalStateException, err_msg("Require JVMCI shared library to be initialized in %s", caller));
+  }
+  return javaVM;
+}
+
+C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mirror))
+  requireJVMCINativeLibrary(JVMCI_CHECK_NULL);
+  requireInHotSpot("registerNativeMethods", JVMCI_CHECK_NULL);
   void* shared_library = JVMCIEnv::get_shared_library_handle();
   if (shared_library == NULL) {
     // Ensure the JVMCI shared library runtime is initialized.
@@ -2213,10 +2229,50 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
   return (jlongArray) JVMCIENV->get_jobject(result);
 }
 
-C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
-  if (!UseJVMCINativeLibrary) {
-    JVMCI_THROW_MSG_0(UnsupportedOperationException, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
+C2V_VMENTRY(jboolean, isCurrentThreadAttached, (JNIEnv* env, jobject))
+  requireJVMCINativeLibrary(JVMCI_CHECK_0);
+  requireInHotSpot("isCurrentThreadAttached", JVMCI_CHECK_0);
+  JavaVM* javaVM = requireNativeLibraryJavaVM("isCurrentThreadAttached", JVMCI_CHECK_0);
+  JNIEnv* peerEnv;
+  return javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) == JNI_OK;
+}
+
+C2V_VMENTRY(void, attachCurrentThread, (JNIEnv* env, jobject))
+  requireJVMCINativeLibrary(JVMCI_CHECK);
+  requireInHotSpot("attachCurrentThread", JVMCI_CHECK);
+  JavaVM* javaVM = requireNativeLibraryJavaVM("attachCurrentThread", JVMCI_CHECK);
+  JavaVMAttachArgs attach_args;
+  attach_args.version = JNI_VERSION_1_2;
+  attach_args.name = thread->name();
+  attach_args.group = NULL;
+  JNIEnv* peerEnv;
+  if (javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) == JNI_OK) {
+    JVMCI_THROW_MSG(IllegalStateException, err_msg("Thread already attached: %s", attach_args.name));
   }
+  jint res = javaVM->AttachCurrentThread((void**)&peerEnv, &attach_args);
+  if (res == JNI_OK) {
+    guarantee(peerEnv != NULL, "must be");
+    return;
+  }
+  JVMCI_THROW_MSG(InternalError, err_msg("Error %d while attaching %s", res, attach_args.name));
+}
+
+C2V_VMENTRY(void, detachCurrentThread, (JNIEnv* env, jobject))
+  requireJVMCINativeLibrary(JVMCI_CHECK);
+  requireInHotSpot("detachCurrentThread", JVMCI_CHECK);
+  JavaVM* javaVM = requireNativeLibraryJavaVM("detachCurrentThread", JVMCI_CHECK);
+  JNIEnv* peerEnv;
+  if (javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) != JNI_OK) {
+    JVMCI_THROW_MSG(IllegalStateException, err_msg("Cannot detach non-attached thread: %s", thread->name()));
+  }
+  jint res = javaVM->DetachCurrentThread();
+  if (res != JNI_OK) {
+    JVMCI_THROW_MSG(InternalError, err_msg("Error %d while attaching %s", res, thread->name()));
+  }
+}
+
+C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
+  requireJVMCINativeLibrary(JVMCI_CHECK_0);
   if (obj_handle == NULL) {
     return 0L;
   }
@@ -2289,9 +2345,7 @@ C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
 }
 
 C2V_VMENTRY(jobject, unhand, (JNIEnv* env, jobject, jlong obj_handle))
-  if (!UseJVMCINativeLibrary) {
-    JVMCI_THROW_MSG_0(UnsupportedOperationException, "JVMCI shared library is not enabled (requires -XX:+UseJVMCINativeLibrary)");
-  }
+  requireJVMCINativeLibrary(JVMCI_CHECK_NULL);
   if (obj_handle == 0L) {
     return NULL;
   }
@@ -2544,6 +2598,9 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "getObject",                                    CC "(" OBJECTCONSTANT "J)" OBJECTCONSTANT,                                            FN_PTR(getObject)},
   {CC "deleteGlobalHandle",                           CC "(J)V",                                                                            FN_PTR(deleteGlobalHandle)},
   {CC "registerNativeMethods",                        CC "(" CLASS ")[J",                                                                   FN_PTR(registerNativeMethods)},
+  {CC "isCurrentThreadAttached",                      CC "()Z",                                                                             FN_PTR(isCurrentThreadAttached)},
+  {CC "attachCurrentThread",                          CC "()V",                                                                             FN_PTR(attachCurrentThread)},
+  {CC "detachCurrentThread",                          CC "()V",                                                                             FN_PTR(detachCurrentThread)},
   {CC "translate",                                    CC "(" OBJECT ")J",                                                                   FN_PTR(translate)},
   {CC "unhand",                                       CC "(J)" OBJECT,                                                                      FN_PTR(unhand)},
   {CC "updateHotSpotNmethod",                         CC "(" HS_NMETHOD ")V",                                                               FN_PTR(updateHotSpotNmethod)},
