@@ -49,16 +49,23 @@ final class TranslatedException extends Exception {
         return this;
     }
 
-    @Override
-    public String toString() {
-        return getMessage();
-    }
+    private static Throwable create(String className, String message) {
+        // Try create with reflection first.
+        try {
+            Class<?> cls = Class.forName(className);
+            if (message == null) {
+                return (Throwable) cls.getConstructor().newInstance();
+            }
+            cls.getDeclaredConstructor(String.class);
+            return (Throwable) cls.getConstructor(String.class).newInstance(message);
+        } catch (Throwable ignore) {
+        }
 
-    private static TranslatedException create(String className, String message) {
         if (className.equals(TranslatedException.class.getName())) {
             // Chop the class name when boxing another TranslatedException
             return new TranslatedException(message);
         }
+
         if (message == null) {
             return new TranslatedException(className);
         }
