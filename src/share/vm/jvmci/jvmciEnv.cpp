@@ -1042,14 +1042,15 @@ Handle JVMCIEnv::asConstant(JVMCIObject constant, JVMCI_TRAPS) {
   if (is_hotspot()) {
     assert(HotSpotJVMCI::DirectHotSpotObjectConstantImpl::is_instance(this, constant), "wrong type");
     return HotSpotJVMCI::DirectHotSpotObjectConstantImpl::object(this, HotSpotJVMCI::resolve(constant));
-  } else {
-    assert(isa_IndirectHotSpotObjectConstantImpl(constant), "wrong type");
+  } else if (isa_IndirectHotSpotObjectConstantImpl(constant)) {
     jlong object_handle = get_IndirectHotSpotObjectConstantImpl_objectHandle(constant);
     Handle result = resolve_handle(object_handle);
     if (result == NULL) {
       JVMCI_THROW_MSG_(InternalError, "Constant was unexpectedly NULL", Handle());
     }
     return result;
+  } else {
+    JVMCI_THROW_MSG_(IllegalArgumentException, "DirectHotSpotObjectConstantImpl shouldn't reach JVMCI in SVM mode", Handle());
   }
 }
 
