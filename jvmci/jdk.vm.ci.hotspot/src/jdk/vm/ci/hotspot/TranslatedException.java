@@ -154,7 +154,7 @@ final class TranslatedException extends Exception {
                 Throwable throwable = create(exceptionClassName, exceptionMessage);
                 int stackTraceDepth = Integer.parseInt(parts[i++]);
 
-                StackTraceElement[] suffix = parent == null ? new StackTraceElement[0] : getStackTraceSuffix();
+                StackTraceElement[] suffix = getStackTraceSuffix();
                 StackTraceElement[] stackTrace = new StackTraceElement[stackTraceDepth + suffix.length];
                 for (int j = 0; j < stackTraceDepth; j++) {
                     String className = parts[i++];
