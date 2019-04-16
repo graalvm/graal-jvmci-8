@@ -1320,8 +1320,7 @@ void JVMCIRuntime::shutdown() {
   if (_HotSpotJVMCIRuntime_instance.is_non_null()) {
     _shutdown_called = true;
 
-    JVMCIEnv __stack_jvmci_env__(JavaThread::current(), __FILE__, __LINE__, true);
-    JVMCIEnv* JVMCIENV = &__stack_jvmci_env__;
+    THREAD_JVMCIENV(JavaThread::current());
     JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(_HotSpotJVMCIRuntime_instance);
   }
 }
