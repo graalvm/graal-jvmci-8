@@ -2237,24 +2237,24 @@ C2V_VMENTRY(jboolean, isCurrentThreadAttached, (JNIEnv* env, jobject))
   return javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) == JNI_OK;
 }
 
-C2V_VMENTRY(void, attachCurrentThread, (JNIEnv* env, jobject))
-  requireJVMCINativeLibrary(JVMCI_CHECK);
-  requireInHotSpot("attachCurrentThread", JVMCI_CHECK);
-  JavaVM* javaVM = requireNativeLibraryJavaVM("attachCurrentThread", JVMCI_CHECK);
+C2V_VMENTRY(jboolean, attachCurrentThread, (JNIEnv* env, jobject))
+  requireJVMCINativeLibrary(JVMCI_CHECK_0);
+  requireInHotSpot("attachCurrentThread", JVMCI_CHECK_0);
+  JavaVM* javaVM = requireNativeLibraryJavaVM("attachCurrentThread", JVMCI_CHECK_0);
   JavaVMAttachArgs attach_args;
   attach_args.version = JNI_VERSION_1_2;
   attach_args.name = thread->name();
   attach_args.group = NULL;
   JNIEnv* peerEnv;
   if (javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) == JNI_OK) {
-    JVMCI_THROW_MSG(IllegalStateException, err_msg("Thread already attached: %s", attach_args.name));
+    return false;
   }
   jint res = javaVM->AttachCurrentThread((void**)&peerEnv, &attach_args);
   if (res == JNI_OK) {
     guarantee(peerEnv != NULL, "must be");
-    return;
+    return true;
   }
-  JVMCI_THROW_MSG(InternalError, err_msg("Error %d while attaching %s", res, attach_args.name));
+  JVMCI_THROW_MSG_0(InternalError, err_msg("Error %d while attaching %s", res, attach_args.name));
 }
 
 C2V_VMENTRY(void, detachCurrentThread, (JNIEnv* env, jobject))
@@ -2599,7 +2599,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "deleteGlobalHandle",                           CC "(J)V",                                                                            FN_PTR(deleteGlobalHandle)},
   {CC "registerNativeMethods",                        CC "(" CLASS ")[J",                                                                   FN_PTR(registerNativeMethods)},
   {CC "isCurrentThreadAttached",                      CC "()Z",                                                                             FN_PTR(isCurrentThreadAttached)},
-  {CC "attachCurrentThread",                          CC "()V",                                                                             FN_PTR(attachCurrentThread)},
+  {CC "attachCurrentThread",                          CC "()Z",                                                                             FN_PTR(attachCurrentThread)},
   {CC "detachCurrentThread",                          CC "()V",                                                                             FN_PTR(detachCurrentThread)},
   {CC "translate",                                    CC "(" OBJECT ")J",                                                                   FN_PTR(translate)},
   {CC "unhand",                                       CC "(J)" OBJECT,                                                                      FN_PTR(unhand)},
