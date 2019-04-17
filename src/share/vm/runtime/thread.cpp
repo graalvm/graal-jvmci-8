@@ -1432,18 +1432,16 @@ bool jvmci_counters_include(JavaThread* thread) {
   return !JVMCICountersExcludeCompiler || !thread->is_Compiler_thread();
 }
 
-void JavaThread::collect_counters(JVMCIEnv* jvmci_env, JVMCIPrimitiveArray array) {
-  if (JVMCICounterSize > 0) {
-    MutexLocker tl(Threads_lock);
-    int len = jvmci_env->get_length(array);
-    for (int i = 0; i < len; i++) {
-      jvmci_env->put_long_at(array, i, _jvmci_old_thread_counters[i]);
-    }
-    for (JavaThread* tp = Threads::first(); tp != NULL; tp = tp->next()) {
-      if (jvmci_counters_include(tp)) {
-        for (int i = 0; i < len; i++) {
-          jvmci_env->put_long_at(array, i, jvmci_env->get_long_at(array, i) + tp->_jvmci_counters[i]);
-        }
+void JavaThread::collect_counters(jlong* array, int length) {
+  assert(length == JVMCICounterSize, "wrong value");
+  MutexLocker tl(Threads_lock);
+  for (int i = 0; i < length; i++) {
+    array[i] = _jvmci_old_thread_counters[i];
+  }
+  for (JavaThread* tp = Threads::first(); tp != NULL; tp = tp->next()) {
+    if (jvmci_counters_include(tp)) {
+      for (int i = 0; i < length; i++) {
+        array[i] += tp->_jvmci_counters[i];
       }
     }
   }

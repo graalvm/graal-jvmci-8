@@ -1071,8 +1071,13 @@ C2V_VMENTRY(jobject, readUncompressedOop, (JNIEnv* env, jobject, jlong addr))
 C2V_END
 
 C2V_VMENTRY(jlongArray, collectCounters, (JNIEnv* env, jobject))
+  // Returns a zero length array if counters aren't enabled
   JVMCIPrimitiveArray array = JVMCIENV->new_longArray(JVMCICounterSize, JVMCI_CHECK_NULL);
-  JavaThread::collect_counters(JVMCIENV, array);
+  if (JVMCICounterSize > 0) {
+    jlong* temp_array = NEW_RESOURCE_ARRAY(jlong, JVMCICounterSize);
+    JavaThread::collect_counters(temp_array, JVMCICounterSize);
+    JVMCIENV->copy_longs_from(temp_array, array, 0, JVMCICounterSize);
+  }
   return (jlongArray) JVMCIENV->get_jobject(array);
 C2V_END
 

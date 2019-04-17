@@ -315,26 +315,38 @@ public:
     }
   }
 
-  void copy_bytes_to(JVMCIPrimitiveArray src, jbyte* dest, int offset, int size_in_bytes) {
-    if (size_in_bytes == 0) {
+  void copy_bytes_to(JVMCIPrimitiveArray src, jbyte* dest, int offset, jsize length) {
+    if (length == 0) {
       return;
     }
     if (is_hotspot()) {
-      memcpy(dest, HotSpotJVMCI::resolve(src)->byte_at_addr(offset), size_in_bytes);
+      memcpy(dest, HotSpotJVMCI::resolve(src)->byte_at_addr(offset), length);
     } else {
       JNIAccessMark jni(this);
-      jni()->GetByteArrayRegion(src.as_jbyteArray(), offset, size_in_bytes, dest);
+      jni()->GetByteArrayRegion(src.as_jbyteArray(), offset, length, dest);
     }
   }
-  void copy_bytes_from(jbyte* src, JVMCIPrimitiveArray dest, int offset, int size_in_bytes) {
-    if (size_in_bytes == 0) {
+  void copy_bytes_from(jbyte* src, JVMCIPrimitiveArray dest, int offset, jsize length) {
+    if (length == 0) {
       return;
     }
     if (is_hotspot()) {
-      memcpy(HotSpotJVMCI::resolve(dest)->byte_at_addr(offset), src, size_in_bytes);
+      memcpy(HotSpotJVMCI::resolve(dest)->byte_at_addr(offset), src, length);
     } else {
       JNIAccessMark jni(this);
-      jni()->SetByteArrayRegion(dest.as_jbyteArray(), offset, size_in_bytes, src);
+      jni()->SetByteArrayRegion(dest.as_jbyteArray(), offset, length, src);
+    }
+  }
+
+  void copy_longs_from(jlong* src, JVMCIPrimitiveArray dest, int offset, jsize length) {
+    if (length == 0) {
+      return;
+    }
+    if (is_hotspot()) {
+      memcpy(HotSpotJVMCI::resolve(dest)->long_at_addr(offset), src, length * sizeof(jlong));
+    } else {
+      JNIAccessMark jni(this);
+      jni()->SetLongArrayRegion(dest.as_jlongArray(), offset, length, src);
     }
   }
 
