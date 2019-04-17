@@ -97,6 +97,7 @@
   template(LinuxDllLoad)                          \
   template(RotateGCLog)                           \
   template(WhiteBoxOperation)                     \
+  template(JVMCIResizeCounters)                   \
   template(ClassLoaderStatsOperation)             \
 
 class VM_Operation: public CHeapObj<mtInternal> {

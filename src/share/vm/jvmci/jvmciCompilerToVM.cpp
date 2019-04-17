@@ -1121,6 +1121,14 @@ C2V_VMENTRY_NULL(jlongArray, collectCounters, (JNIEnv* env, jobject))
   return (jlongArray) JVMCIENV->get_jobject(array);
 C2V_END
 
+C2V_VMENTRY_0(int, getCountersSize, (JNIEnv* env, jobject))
+  return JVMCICounterSize;
+C2V_END
+
+C2V_VMENTRY_0(jboolean, setCountersSize, (JNIEnv* env, jobject, jint new_size))
+  return JavaThread::resize_all_jvmci_counters(new_size);
+C2V_END
+
 C2V_VMENTRY_0(jint, allocateCompileId, (JNIEnv* env, jobject, jobject jvmci_method, int entry_bci))
   HandleMark hm;
   if (jvmci_method == NULL) {
@@ -2710,6 +2718,8 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "invalidateHotSpotNmethod",                     CC "(" HS_NMETHOD ")V",                                                               FN_PTR(invalidateHotSpotNmethod)},
   {CC "readUncompressedOop",                          CC "(J)" OBJECTCONSTANT,                                                              FN_PTR(readUncompressedOop)},
   {CC "collectCounters",                              CC "()[J",                                                                            FN_PTR(collectCounters)},
+  {CC "getCountersSize",                              CC "()I",                                                                             FN_PTR(getCountersSize)},
+  {CC "setCountersSize",                              CC "(I)Z",                                                                            FN_PTR(setCountersSize)},
   {CC "allocateCompileId",                            CC "(" HS_RESOLVED_METHOD "I)I",                                                      FN_PTR(allocateCompileId)},
   {CC "isMature",                                     CC "(" METASPACE_METHOD_DATA ")Z",                                                    FN_PTR(isMature)},
   {CC "hasCompiledCodeForOSR",                        CC "(" HS_RESOLVED_METHOD "II)Z",                                                     FN_PTR(hasCompiledCodeForOSR)},
