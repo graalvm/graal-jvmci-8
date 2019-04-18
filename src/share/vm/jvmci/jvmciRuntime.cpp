@@ -997,6 +997,8 @@ void JVMCINMethodData::set_nmethod_mirror(nmethod* nm, oop new_mirror) {
   assert(new_mirror != NULL, "use clear_nmethod_mirror to clear the mirror");
   assert(*addr == NULL, "cannot overwrite non-null mirror");
 
+  *addr = new_mirror;
+
   // Patching in an oop so make sure nm is on the scavenge list.
   if (ScavengeRootsInCode && new_mirror->is_scavengable()) {
     MutexLockerEx ml_code (CodeCache_lock, Mutex::_no_safepoint_check_flag);
@@ -1008,8 +1010,6 @@ void JVMCINMethodData::set_nmethod_mirror(nmethod* nm, oop new_mirror) {
     // (re)register it with the heap.
     Universe::heap()->register_nmethod(nm);
   }
-
-  *addr = new_mirror;
 }
 
 void JVMCINMethodData::clear_nmethod_mirror(nmethod* nm) {
