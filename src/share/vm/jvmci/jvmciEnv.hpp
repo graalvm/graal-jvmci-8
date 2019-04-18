@@ -42,15 +42,6 @@ class JVMCIPrimitiveArray;
 class JVMCICompiler;
 class JVMCIRuntime;
 
-// Bring the JVMCI compiler thread into the VM state.
-#define JVMCI_VM_ENTRY_MARK                       \
-  JavaThread* thread = JavaThread::current(); \
-  ThreadInVMfromNative __tiv(thread);       \
-  ResetNoHandleMark rnhm;                   \
-  HandleMarkCleaner __hm(thread);           \
-  Thread* THREAD = thread;                  \
-  debug_only(VMNativeEntryWrapper __vew;)
-
 #define JVMCI_EXCEPTION_CONTEXT \
   JavaThread* thread=JavaThread::current(); \
   Thread* THREAD = thread;

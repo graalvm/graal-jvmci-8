@@ -972,9 +972,9 @@ final class CompilerToVM {
     native boolean isCurrentThreadAttached();
 
     /**
-     * @see HotSpotJVMCIRuntime#attachCurrentThread()
+     * @see HotSpotJVMCIRuntime#attachCurrentThread
      */
-    native boolean attachCurrentThread();
+    native boolean attachCurrentThread(boolean asDaemon);
 
     /**
      * @see HotSpotJVMCIRuntime#detachCurrentThread()

@@ -118,14 +118,33 @@ Handle JavaArgumentUnboxer::next_arg(BasicType expectedType) {
   return Handle(Thread::current(), arg);
 }
 
-// Entry to native method implementation that transitions current thread to '_thread_in_vm'.
+// Bring the JVMCI compiler thread into the VM state.
+#define JVMCI_VM_ENTRY_MARK                   \
+  JavaThread* thread = JavaThread::current(); \
+  ThreadInVMfromNative __tiv(thread);         \
+  ResetNoHandleMark rnhm;                     \
+  HandleMarkCleaner __hm(thread);             \
+  Thread* THREAD = thread;                    \
+  debug_only(VMNativeEntryWrapper __vew;)
+
+// Native method block that transitions current thread to '_thread_in_vm'.
+#define C2V_BLOCK(result_type, name, signature)      \
+  TRACE_CALL(result_type, jvmci_ ## name signature)  \
+  JVMCI_VM_ENTRY_MARK;                               \
+  ResourceMark rm;                                   \
+  JNI_JVMCIENV(env);
+
+// Entry to native method implementation that transitions
+// current thread to '_thread_in_vm'.
 #define C2V_VMENTRY(result_type, name, signature)        \
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
   JVMCITraceMark jtm("CompilerToVM::" #name);            \
-  TRACE_CALL(result_type, jvmci_ ## name signature)      \
-  JVMCI_VM_ENTRY_MARK;                                   \
-  ResourceMark rm;                                       \
-  JNI_JVMCIENV(env);
+  C2V_BLOCK(result_type, name, signature)
+
+// Entry to native method implementation that does not transition
+// current thread to '_thread_in_vm'.
+#define C2V_VMENTRY_PREFIX(result_type, name, signature) \
+	JNIEXPORT result_type JNICALL c2v_ ## name signature { \
 
 #define C2V_END }
 
@@ -2229,47 +2248,97 @@ C2V_VMENTRY(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclass mir
   return (jlongArray) JVMCIENV->get_jobject(result);
 }
 
-C2V_VMENTRY(jboolean, isCurrentThreadAttached, (JNIEnv* env, jobject))
-  requireJVMCINativeLibrary(JVMCI_CHECK_0);
-  requireInHotSpot("isCurrentThreadAttached", JVMCI_CHECK_0);
-  JavaVM* javaVM = requireNativeLibraryJavaVM("isCurrentThreadAttached", JVMCI_CHECK_0);
-  JNIEnv* peerEnv;
-  return javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) == JNI_OK;
-}
-
-C2V_VMENTRY(jboolean, attachCurrentThread, (JNIEnv* env, jobject))
-  requireJVMCINativeLibrary(JVMCI_CHECK_0);
-  requireInHotSpot("attachCurrentThread", JVMCI_CHECK_0);
-  JavaVM* javaVM = requireNativeLibraryJavaVM("attachCurrentThread", JVMCI_CHECK_0);
-  JavaVMAttachArgs attach_args;
-  attach_args.version = JNI_VERSION_1_2;
-  attach_args.name = thread->name();
-  attach_args.group = NULL;
-  JNIEnv* peerEnv;
-  if (javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) == JNI_OK) {
+C2V_VMENTRY_PREFIX(jboolean, isCurrentThreadAttached, (JNIEnv* env, jobject c2vm))
+  Thread* thread = ThreadLocalStorage::thread();
+  if (thread == NULL) {
+    // Called from unattached JVMCI shared library thread
     return false;
   }
-  jint res = javaVM->AttachCurrentThread((void**)&peerEnv, &attach_args);
-  if (res == JNI_OK) {
-    guarantee(peerEnv != NULL, "must be");
+  JVMCITraceMark jtm("isCurrentThreadAttached");
+  JavaThread* jt = JavaThread::current();
+  if (jt->jni_environment() == env) {
+    C2V_BLOCK(jboolean, isCurrentThreadAttached, (JNIEnv* env, jobject))
+    requireJVMCINativeLibrary(JVMCI_CHECK_0);
+    JavaVM* javaVM = requireNativeLibraryJavaVM("isCurrentThreadAttached", JVMCI_CHECK_0);
+    JNIEnv* peerEnv;
+    return javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) == JNI_OK;
+  }
+  return true;
+C2V_END
+
+C2V_VMENTRY_PREFIX(jboolean, attachCurrentThread, (JNIEnv* env, jobject c2vm, jboolean as_daemon))
+  Thread* thread = ThreadLocalStorage::thread();
+  if (thread == NULL) {
+    // Called from unattached JVMCI shared library thread
+    extern struct JavaVM_ main_vm;
+    JNIEnv* hotspotEnv;
+    jint res = as_daemon ? main_vm.AttachCurrentThreadAsDaemon((void**)&hotspotEnv, NULL) :
+                           main_vm.AttachCurrentThread((void**)&hotspotEnv, NULL);
+    if (res != JNI_OK) {
+      env->ThrowNew(JNIJVMCI::InternalError::clazz(), err_msg("Trying to attach thread returned %d", res));
+      return false;
+    }
     return true;
   }
-  JVMCI_THROW_MSG_0(InternalError, err_msg("Error %d while attaching %s", res, attach_args.name));
-}
+  JVMCITraceMark jtm("attachCurrentThread");
+  JavaThread* jt = JavaThread::current();
+  if (jt->jni_environment() == env) {
+    // Called from HotSpot
+    C2V_BLOCK(jboolean, attachCurrentThread, (JNIEnv* env, jobject, jboolean))
+    requireJVMCINativeLibrary(JVMCI_CHECK_0);
+    JavaVM* javaVM = requireNativeLibraryJavaVM("attachCurrentThread", JVMCI_CHECK_0);
+    JavaVMAttachArgs attach_args;
+    attach_args.version = JNI_VERSION_1_2;
+    attach_args.name = thread->name();
+    attach_args.group = NULL;
+    JNIEnv* peerEnv;
+    if (javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) == JNI_OK) {
+      return false;
+    }
+    jint res = as_daemon ? javaVM->AttachCurrentThreadAsDaemon((void**)&peerEnv, &attach_args) :
+                           javaVM->AttachCurrentThread((void**)&peerEnv, &attach_args);
+    if (res == JNI_OK) {
+      guarantee(peerEnv != NULL, "must be");
+      return true;
+    }
+    JVMCI_THROW_MSG_0(InternalError, err_msg("Error %d while attaching %s", res, attach_args.name));
+  }
+  // Called from JVMCI shared library
+  return false;
+C2V_END
 
-C2V_VMENTRY(void, detachCurrentThread, (JNIEnv* env, jobject))
-  requireJVMCINativeLibrary(JVMCI_CHECK);
-  requireInHotSpot("detachCurrentThread", JVMCI_CHECK);
-  JavaVM* javaVM = requireNativeLibraryJavaVM("detachCurrentThread", JVMCI_CHECK);
-  JNIEnv* peerEnv;
-  if (javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) != JNI_OK) {
-    JVMCI_THROW_MSG(IllegalStateException, err_msg("Cannot detach non-attached thread: %s", thread->name()));
+C2V_VMENTRY_PREFIX(void, detachCurrentThread, (JNIEnv* env, jobject c2vm))
+  Thread* thread = ThreadLocalStorage::thread();
+  if (thread == NULL) {
+    // Called from unattached JVMCI shared library thread
+    env->ThrowNew(JNIJVMCI::IllegalStateException::clazz(), err_msg("Cannot detach non-attached thread"));
+    return;
   }
-  jint res = javaVM->DetachCurrentThread();
-  if (res != JNI_OK) {
-    JVMCI_THROW_MSG(InternalError, err_msg("Error %d while attaching %s", res, thread->name()));
+  JVMCITraceMark jtm("detachCurrentThread");
+  JavaThread* jt = JavaThread::current();
+  if (jt->jni_environment() == env) {
+    // Called from HotSpot
+    C2V_BLOCK(void, detachCurrentThread, (JNIEnv* env, jobject))
+    requireJVMCINativeLibrary(JVMCI_CHECK);
+    requireInHotSpot("detachCurrentThread", JVMCI_CHECK);
+    JavaVM* javaVM = requireNativeLibraryJavaVM("detachCurrentThread", JVMCI_CHECK);
+    JNIEnv* peerEnv;
+    if (javaVM->GetEnv((void**)&peerEnv, JNI_VERSION_1_2) != JNI_OK) {
+      JVMCI_THROW_MSG(IllegalStateException, err_msg("Cannot detach non-attached thread: %s", thread->name()));
+    }
+    jint res = javaVM->DetachCurrentThread();
+    if (res != JNI_OK) {
+      JVMCI_THROW_MSG(InternalError, err_msg("Error %d while attaching %s", res, thread->name()));
+    }
+  } else {
+    // Called from attached JVMCI shared library thread
+    extern struct JavaVM_ main_vm;
+    jint res = main_vm.DetachCurrentThread();
+    if (res != JNI_OK) {
+      env->ThrowNew(JNIJVMCI::InternalError::clazz(), err_msg("Trying to detach thread returned %d", res));
+    }
   }
-}
+C2V_END
 
 C2V_VMENTRY(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
   requireJVMCINativeLibrary(JVMCI_CHECK_0);
@@ -2599,7 +2668,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "deleteGlobalHandle",                           CC "(J)V",                                                                            FN_PTR(deleteGlobalHandle)},
   {CC "registerNativeMethods",                        CC "(" CLASS ")[J",                                                                   FN_PTR(registerNativeMethods)},
   {CC "isCurrentThreadAttached",                      CC "()Z",                                                                             FN_PTR(isCurrentThreadAttached)},
-  {CC "attachCurrentThread",                          CC "()Z",                                                                             FN_PTR(attachCurrentThread)},
+  {CC "attachCurrentThread",                          CC "(Z)Z",                                                                            FN_PTR(attachCurrentThread)},
   {CC "detachCurrentThread",                          CC "()V",                                                                             FN_PTR(detachCurrentThread)},
   {CC "translate",                                    CC "(" OBJECT ")J",                                                                   FN_PTR(translate)},
   {CC "unhand",                                       CC "(J)" OBJECT,                                                                      FN_PTR(unhand)},

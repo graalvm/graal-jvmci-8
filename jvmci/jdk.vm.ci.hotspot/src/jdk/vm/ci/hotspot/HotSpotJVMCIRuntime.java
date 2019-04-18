@@ -962,40 +962,38 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     }
 
     /**
-     * Determines if the current thread is attached to the JVMCI shared library.
+     * Determines if the current thread is attached to the peer runtime.
      *
      * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
      *             {@code -XX:-UseJVMCINativeLibrary})
-     * @throws IllegalStateException if the current execution context is the JVMCI shared library or
-     *             if the JVMCI shared library has not been initialized
+     * @throws IllegalStateException if the peer runtime has not been initialized
      */
     public boolean isCurrentThreadAttached() {
         return compilerToVm.isCurrentThreadAttached();
     }
 
     /**
-     * Ensures the current thread is attached to the JVMCI shared library.
+     * Ensures the current thread is attached to the peer runtime.
      *
+     * @param asDaemon if the thread is not yet attached, should it be attached as a daemon
      * @return {@code true} if this call attached the current thread, {@code false} if the current
      *         thread was already attached
      * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
      *             {@code -XX:-UseJVMCINativeLibrary})
-     * @throws IllegalStateException if the current execution context is the JVMCI shared library or
-     *             if the JVMCI shared library has not been initialized or there is an error while
-     *             trying to attach the thread
+     * @throws IllegalStateException if the peer runtime has not been initialized or there is an
+     *             error while trying to attach the thread
      */
-    public boolean attachCurrentThread() {
-        return compilerToVm.attachCurrentThread();
+    public boolean attachCurrentThread(boolean asDaemon) {
+        return compilerToVm.attachCurrentThread(asDaemon);
     }
 
     /**
-     * Detaches the current thread from the JVMCI shared library.
+     * Detaches the current thread from the peer runtime.
      *
      * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
      *             {@code -XX:-UseJVMCINativeLibrary})
-     * @throws IllegalStateException if the current execution context is the JVMCI shared library or
-     *             if the JVMCI shared library has not been initialized or if the current thread is
-     *             not attached or if there is an error while trying to detach the thread
+     * @throws IllegalStateException if the peer runtime has not been initialized or if the current
+     *             thread is not attached or if there is an error while trying to detach the thread
      */
     public void detachCurrentThread() {
         compilerToVm.detachCurrentThread();
