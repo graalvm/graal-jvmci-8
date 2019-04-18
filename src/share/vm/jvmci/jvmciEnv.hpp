@@ -125,9 +125,9 @@ class JVMCIEnv : public ResourceObj {
   static JNIEnv* init_shared_library(JavaThread* thread);
 
   // Initializes the _env, _mode and _runtime fields.
-  void init_env_mode_runtime(JNIEnv* parent_env);
+  void init_env_mode_runtime(JavaThread* thread, JNIEnv* parent_env);
 
-  void init(bool is_hotspot, const char* file, int line);
+  void init(JavaThread* thread, bool is_hotspot, const char* file, int line);
 
   JNIEnv*                 _env;  // JNI env for calling into shared library
   bool              _top_level;  // Is top level entry into the shared library?
@@ -149,12 +149,12 @@ public:
   // scope closes so that it will be propagated back to Java.
   // The JVMCIEnv destructor translates the exception object for the
   // Java runtime if necessary.
-  JVMCIEnv(JNIEnv* env, const char* file, int line);
+  JVMCIEnv(JavaThread* thread, JNIEnv* env, const char* file, int line);
 
   // Opens a JVMCIEnv scope for a compilation scheduled by the CompileBroker.
   // An exception occurring within the scope must not be propagated back to
   // the CompileBroker.
-  JVMCIEnv(JVMCICompileState* compile_state, const char* file, int line);
+  JVMCIEnv(JavaThread* thread, JVMCICompileState* compile_state, const char* file, int line);
 
   // Opens a JNIEnv scope for a call from within the VM. An exception occurring
   // within the scope must not be propagated back to the caller.
@@ -162,20 +162,20 @@ public:
 
   // Opens a JNIEnv scope for accessing `for_object`. An exception occurring
   // within the scope must not be propagated back to the caller.
-  JVMCIEnv(JVMCIObject for_object, const char* file, int line) {
+  JVMCIEnv(JavaThread* thread, JVMCIObject for_object, const char* file, int line) {
     // A JNI call to access an object in the shared library heap
     // can block or take a long time so do not allow such access
     // on the VM thread.
     assert(for_object.is_hotspot() || !Thread::current()->is_VM_thread(),
         "cannot open JVMCIEnv scope when in the VM thread for accessing a shared library heap object");
-    init(for_object.is_hotspot(), file, line);
+    init(thread, for_object.is_hotspot(), file, line);
   }
 
   // Opens a JNIEnv scope for the HotSpot runtime if `is_hotspot` is true
   // otherwise for the shared library runtime. An exception occurring
   // within the scope must not be propagated back to the caller.
-  JVMCIEnv(bool is_hotspot, const char* file, int line) {
-    init(is_hotspot, file, line);
+  JVMCIEnv(JavaThread* thread, bool is_hotspot, const char* file, int line) {
+    init(thread, is_hotspot, file, line);
   }
 
   ~JVMCIEnv();

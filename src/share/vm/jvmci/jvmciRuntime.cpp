@@ -928,7 +928,7 @@ JVM_END
 
 // private static JVMCIRuntime JVMCI.initializeRuntime()
 JVM_ENTRY_NO_ENV(jobject, JVM_GetJVMCIRuntime(JNIEnv *env, jclass c))
-  JNI_JVMCIENV(env);
+  JNI_JVMCIENV(thread, env);
   if (!EnableJVMCI) {
     JVMCIENV->throw_InternalError("JVMCI is not enabled");
   }
@@ -939,7 +939,7 @@ JVM_END
 
 // private static ClassLoader Services.getJVMCIClassLoader()
 JVM_ENTRY_NO_ENV(jobject, JVM_GetJVMCIClassLoader(JNIEnv *env, jclass c))
-  JNI_JVMCIENV(env);
+  JNI_JVMCIENV(thread, env);
   if (!EnableJVMCI) {
     // This message must not change - it is used by the Java code to
     // distinguish an InternalError due to -EnableJVMCI from other
@@ -1241,7 +1241,7 @@ JVM_ENTRY_NO_ENV(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
   fatal("check TLAB allocation code for address space conflicts");
 #endif
 
-  JNI_JVMCIENV(env);
+  JNI_JVMCIENV(thread, env);
 
   if (!EnableJVMCI) {
     JVMCIENV->throw_InternalError("JVMCI is not enabled");

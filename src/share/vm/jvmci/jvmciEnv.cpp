@@ -200,7 +200,8 @@ JNIEnv* JVMCIEnv::init_shared_library(JavaThread* thread) {
   return NULL;
 }
 
-void JVMCIEnv::init_env_mode_runtime(JNIEnv* parent_env) {
+void JVMCIEnv::init_env_mode_runtime(JavaThread* thread, JNIEnv* parent_env) {
+  assert(thread != NULL, "npe");
   // By default there is only one runtime which is the compiler runtime.
   _runtime = JVMCI::compiler_runtime();
   _env = NULL;
@@ -211,7 +212,6 @@ void JVMCIEnv::init_env_mode_runtime(JNIEnv* parent_env) {
     return;
   }
 
-  JavaThread* thread = JavaThread::current();
   if (parent_env != NULL) {
     // If the parent JNI environment is non-null then figure out whether it
     // is a HotSpot or shared library JNIEnv and set the state appropriately.
@@ -264,23 +264,23 @@ void JVMCIEnv::init_env_mode_runtime(JNIEnv* parent_env) {
   }
 }
 
-JVMCIEnv::JVMCIEnv(JVMCICompileState* compile_state, const char* file, int line):
+JVMCIEnv::JVMCIEnv(JavaThread* thread, JVMCICompileState* compile_state, const char* file, int line):
     _throw_to_caller(false), _file(file), _line(line), _compile_state(compile_state) {
-  init_env_mode_runtime(NULL);
+  init_env_mode_runtime(thread, NULL);
 }
 
 JVMCIEnv::JVMCIEnv(JavaThread* thread, const char* file, int line):
     _throw_to_caller(false), _file(file), _line(line), _compile_state(NULL) {
-  init_env_mode_runtime(NULL);
+  init_env_mode_runtime(thread, NULL);
 }
 
-JVMCIEnv::JVMCIEnv(JNIEnv* parent_env, const char* file, int line):
+JVMCIEnv::JVMCIEnv(JavaThread* thread, JNIEnv* parent_env, const char* file, int line):
     _throw_to_caller(true), _file(file), _line(line), _compile_state(NULL) {
-  init_env_mode_runtime(parent_env);
+  init_env_mode_runtime(thread, parent_env);
   assert(_env == NULL || parent_env == _env, "mismatched JNIEnvironment");
 }
 
-void JVMCIEnv::init(bool is_hotspot, const char* file, int line) {
+void JVMCIEnv::init(JavaThread* thread, bool is_hotspot, const char* file, int line) {
   _compile_state = NULL;
   _throw_to_caller = false;
   _file = file;
@@ -291,7 +291,7 @@ void JVMCIEnv::init(bool is_hotspot, const char* file, int line) {
     _is_hotspot = true;
     _runtime = JVMCI::java_runtime();
   } else {
-    init_env_mode_runtime(NULL);
+    init_env_mode_runtime(thread, NULL);
   }
 }
 
