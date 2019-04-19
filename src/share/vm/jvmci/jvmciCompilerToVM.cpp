@@ -137,11 +137,19 @@ Handle JavaArgumentUnboxer::next_arg(BasicType expectedType) {
   ResourceMark rm;                                   \
   JNI_JVMCIENV(thread, env);
 
+static Thread* get_current_thread() {
+  Thread* thread = ThreadLocalStorage::thread();
+  if (thread == NULL) {
+    thread = ThreadLocalStorage::get_thread_slow();
+  }
+  return thread;
+}
+
 // Entry to native method implementation that transitions
 // current thread to '_thread_in_vm'.
 #define C2V_VMENTRY(result_type, name, signature)        \
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
-  Thread* base_thread = ThreadLocalStorage::thread();    \
+  Thread* base_thread = get_current_thread();            \
   if (base_thread == NULL) {                             \
     env->ThrowNew(JNIJVMCI::InternalError::clazz(),      \
         err_msg("Cannot call into HotSpot from JVMCI shared library without attaching current thread")); \
@@ -154,7 +162,7 @@ Handle JavaArgumentUnboxer::next_arg(BasicType expectedType) {
 
 #define C2V_VMENTRY_(result_type, name, signature, result) \
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
-  Thread* base_thread = ThreadLocalStorage::thread();    \
+  Thread* base_thread = get_current_thread();            \
   if (base_thread == NULL) {                             \
     env->ThrowNew(JNIJVMCI::InternalError::clazz(),      \
         err_msg("Cannot call into HotSpot from JVMCI shared library without attaching current thread")); \
@@ -172,7 +180,7 @@ Handle JavaArgumentUnboxer::next_arg(BasicType expectedType) {
 // current thread to '_thread_in_vm'.
 #define C2V_VMENTRY_PREFIX(result_type, name, signature) \
   JNIEXPORT result_type JNICALL c2v_ ## name signature { \
-  Thread* base_thread = ThreadLocalStorage::thread();
+  Thread* base_thread = get_current_thread();
 
 #define C2V_END }
 
