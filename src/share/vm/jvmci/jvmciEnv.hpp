@@ -130,7 +130,8 @@ class JVMCIEnv : public ResourceObj {
   void init(JavaThread* thread, bool is_hotspot, const char* file, int line);
 
   JNIEnv*                 _env;  // JNI env for calling into shared library
-  bool              _top_level;  // Is top level entry into the shared library?
+  bool     _pop_frame_on_close;  // Must pop frame on close?
+  bool        _detach_on_close;  // Must detach on close?
   JVMCIRuntime*       _runtime;  // Access to a HotSpotJVMCIRuntime
   bool             _is_hotspot;  // Which heap is the HotSpotJVMCIRuntime in
   bool        _throw_to_caller;  // Propagate an exception raised in this env to the caller?
