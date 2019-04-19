@@ -514,7 +514,7 @@ public:
       THROW_MSG(HotSpotJVMCI::name::symbol(), msg); \
     } else {                                        \
       JNIAccessMark jni(this);                      \
-      jni()->ThrowNew(JNIJVMCI::name::clazz(), msg);  \
+      jni()->ThrowNew(JNIJVMCI::name::clazz(), msg);\
     }                                               \
   }
 

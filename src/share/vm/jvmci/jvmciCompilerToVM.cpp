@@ -184,6 +184,22 @@ static Thread* get_current_thread() {
 
 #define C2V_END }
 
+#define JNI_THROW(caller, name, msg) do {                                         \
+    jint __throw_res = env->ThrowNew(JNIJVMCI::name::clazz(), msg);               \
+    if (__throw_res != JNI_OK) {                                                  \
+      tty->print_cr("Throwing " #name " in " caller " returned %d", __throw_res); \
+    }                                                                             \
+    return;                                                                       \
+  } while (0);
+
+#define JNI_THROW_(caller, name, msg, result) do {                                \
+    jint __throw_res = env->ThrowNew(JNIJVMCI::name::clazz(), msg);               \
+    if (__throw_res != JNI_OK) {                                                  \
+      tty->print_cr("Throwing " #name " in " caller " returned %d", __throw_res); \
+    }                                                                             \
+    return result;                                                                \
+  } while (0)
+
 jobjectArray readConfiguration0(JNIEnv *env, JVMCI_TRAPS);
 
 C2V_VMENTRY_NULL(jobjectArray, readConfiguration, (JNIEnv* env))
@@ -1537,7 +1553,34 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv* env, jobject, jobject _hs_
   HotSpotJVMCI::HotSpotStackFrameReference::set_objectsMaterialized(JVMCIENV, hs_frame, JNI_TRUE);
 C2V_END
 
-C2V_VMENTRY(void, writeDebugOutput, (JNIEnv* env, jobject, jbyteArray bytes, jint offset, jint length))
+C2V_VMENTRY_PREFIX(void, writeDebugOutput, (JNIEnv* env, jobject, jbyteArray bytes, jint offset, jint length))
+  if (base_thread == NULL) {
+    // Called from unattached JVMCI shared library thread
+    if (bytes == NULL) {
+      JNI_THROW("writeDebugOutput", NullPointerException, NULL);
+    }
+
+    // Check if offset and length are non negative.
+    unsigned int array_length = env->GetArrayLength(bytes);
+    unsigned int end = (unsigned int) length + (unsigned int) offset;
+    if (offset < 0 || length < 0 || end > array_length) {
+      JNI_THROW("writeDebugOutput", ArrayIndexOutOfBoundsException,
+          err_msg("offset=%d, length=%d, array.length=%d", offset, length, array_length));
+    }
+    jbyte buffer[O_BUFLEN];
+    while (length > 0) {
+      int copy_len = MIN2(length, (jint)O_BUFLEN);
+      env->GetByteArrayRegion(bytes, offset, length, buffer);
+      tty->write((char*) buffer, copy_len);
+      length -= O_BUFLEN;
+      offset += O_BUFLEN;
+    }
+    return;
+  }
+  JVMCITraceMark jtm("writeDebugOutput");
+  assert(base_thread->is_Java_thread(), "just checking");
+  JavaThread* thread = (JavaThread*) base_thread;
+  C2V_BLOCK(void, writeDebugOutput, (JNIEnv* env, jobject, jbyteArray bytes, jint offset, jint length))
   if (bytes == NULL) {
     JVMCI_THROW(NullPointerException);
   }
@@ -2295,8 +2338,7 @@ C2V_VMENTRY_PREFIX(jboolean, attachCurrentThread, (JNIEnv* env, jobject c2vm, jb
     jint res = as_daemon ? main_vm.AttachCurrentThreadAsDaemon((void**)&hotspotEnv, NULL) :
                            main_vm.AttachCurrentThread((void**)&hotspotEnv, NULL);
     if (res != JNI_OK) {
-      env->ThrowNew(JNIJVMCI::InternalError::clazz(), err_msg("Trying to attach thread returned %d", res));
-      return false;
+      JNI_THROW_("writeDebugOutput", InternalError, err_msg("Trying to attach thread returned %d", res), false);
     }
     return true;
   }
@@ -2331,8 +2373,7 @@ C2V_END
 C2V_VMENTRY_PREFIX(void, detachCurrentThread, (JNIEnv* env, jobject c2vm))
   if (base_thread == NULL) {
     // Called from unattached JVMCI shared library thread
-    env->ThrowNew(JNIJVMCI::IllegalStateException::clazz(), err_msg("Cannot detach non-attached thread"));
-    return;
+    JNI_THROW("detachCurrentThread", IllegalStateException, err_msg("Cannot detach non-attached thread"));
   }
   JVMCITraceMark jtm("detachCurrentThread");
   assert(base_thread->is_Java_thread(), "just checking");\
@@ -2356,7 +2397,7 @@ C2V_VMENTRY_PREFIX(void, detachCurrentThread, (JNIEnv* env, jobject c2vm))
     extern struct JavaVM_ main_vm;
     jint res = main_vm.DetachCurrentThread();
     if (res != JNI_OK) {
-      env->ThrowNew(JNIJVMCI::InternalError::clazz(), err_msg("Trying to detach thread returned %d", res));
+      JNI_THROW("detachCurrentThread", InternalError, err_msg("Cannot detach non-attached thread"));
     }
   }
 C2V_END
