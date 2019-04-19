@@ -966,4 +966,18 @@ final class CompilerToVM {
      */
     native boolean addFailedSpeculation(long failedSpeculationsAddress, byte[] speculation);
 
+    /**
+     * @see HotSpotJVMCIRuntime#isCurrentThreadAttached()
+     */
+    native boolean isCurrentThreadAttached();
+
+    /**
+     * @see HotSpotJVMCIRuntime#attachCurrentThread
+     */
+    native boolean attachCurrentThread(boolean asDaemon);
+
+    /**
+     * @see HotSpotJVMCIRuntime#detachCurrentThread()
+     */
+    native void detachCurrentThread();
 }

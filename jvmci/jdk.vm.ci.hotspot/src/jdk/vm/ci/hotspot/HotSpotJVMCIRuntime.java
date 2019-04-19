@@ -905,8 +905,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * @throws NullPointerException if {@code clazz == null}
      * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
      *             {@code -XX:-UseJVMCINativeLibrary})
-     * @throws IllegalArgumentException if the current execution context is the JVMCI shared library
-     *             or if {@code clazz} is {@link Class#isPrimitive()}
+     * @throws IllegalStateException if the current execution context is the JVMCI shared library
+     * @throws IllegalArgumentException if {@code clazz} is {@link Class#isPrimitive()}
      * @throws UnsatisfiedLinkError if there's a problem linking a native method in {@code clazz}
      *             (no matching JNI symbol or the native method is already linked to a different
      *             address)
@@ -959,6 +959,44 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      */
     public <T> T unhand(Class<T> type, long handle) {
         return type.cast(compilerToVm.unhand(handle));
+    }
+
+    /**
+     * Determines if the current thread is attached to the peer runtime.
+     *
+     * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
+     *             {@code -XX:-UseJVMCINativeLibrary})
+     * @throws IllegalStateException if the peer runtime has not been initialized
+     */
+    public boolean isCurrentThreadAttached() {
+        return compilerToVm.isCurrentThreadAttached();
+    }
+
+    /**
+     * Ensures the current thread is attached to the peer runtime.
+     *
+     * @param asDaemon if the thread is not yet attached, should it be attached as a daemon
+     * @return {@code true} if this call attached the current thread, {@code false} if the current
+     *         thread was already attached
+     * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
+     *             {@code -XX:-UseJVMCINativeLibrary})
+     * @throws IllegalStateException if the peer runtime has not been initialized or there is an
+     *             error while trying to attach the thread
+     */
+    public boolean attachCurrentThread(boolean asDaemon) {
+        return compilerToVm.attachCurrentThread(asDaemon);
+    }
+
+    /**
+     * Detaches the current thread from the peer runtime.
+     *
+     * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
+     *             {@code -XX:-UseJVMCINativeLibrary})
+     * @throws IllegalStateException if the peer runtime has not been initialized or if the current
+     *             thread is not attached or if there is an error while trying to detach the thread
+     */
+    public void detachCurrentThread() {
+        compilerToVm.detachCurrentThread();
     }
 
     /**
