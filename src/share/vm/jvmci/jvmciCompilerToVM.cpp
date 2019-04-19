@@ -2292,7 +2292,7 @@ C2V_VMENTRY_NULL(jlongArray, registerNativeMethods, (JNIEnv* env, jobject, jclas
 
       if (method->has_native_function() && entry != method->native_function()) {
         JVMCI_THROW_MSG_0(UnsatisfiedLinkError, err_msg("%s [cannot re-link from " PTR_FORMAT " to " PTR_FORMAT "]",
-            method->name_and_sig_as_C_string(), method->native_function(), entry));
+            method->name_and_sig_as_C_string(), p2i(method->native_function()), p2i(entry)));
       }
       method->set_native_function(entry, Method::native_bind_event_is_interesting);
       if (PrintJNIResolving) {
