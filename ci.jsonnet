@@ -100,7 +100,7 @@
         downloads: {
             JAVA_HOME: {
                 name : "oraclejdk",
-                version : "8u202",
+                version : "8u212",
                 platformspecific: true
             }
         }
@@ -111,7 +111,7 @@
         downloads: {
             JAVA_HOME: {
                 name : "openjdk",
-                version : "8u202",
+                version : "8u212",
                 platformspecific: true
             }
         }
@@ -174,14 +174,10 @@
         for mach in [
             # Only need to test formatting and building
             # with Eclipse on one platform.
-            self.GraalVMTest + self.Linux + self.AMD64 + self.OracleJDK + self.Eclipse + self.JDT,
-            self.GraalVMTest + self.Linux + self.AMD64 + self.OpenJDK,
-            self.GraalVMTest + self.Darwin + self.AMD64 + self.OracleJDK,
+            self.GraalVMTest + self.Linux + self.AMD64 + self.OpenJDK + self.Eclipse + self.JDT,
             self.GraalVMTest + self.Darwin + self.AMD64 + self.OpenJDK,
             # GraalVM not (yet) supported on these platforms
-            self.Windows + self.AMD64 + self.OracleJDK,
             self.Windows + self.AMD64 + self.OpenJDK,
-            self.Solaris + self.SPARCv9 + self.OracleJDK,
         ]
     ]
 }
