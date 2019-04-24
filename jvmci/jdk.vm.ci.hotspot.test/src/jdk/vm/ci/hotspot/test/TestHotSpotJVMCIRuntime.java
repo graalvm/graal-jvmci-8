@@ -37,6 +37,49 @@ import jdk.vm.ci.meta.ResolvedJavaType;
 public class TestHotSpotJVMCIRuntime {
 
     @Test
+    public void writeDebugOutputTest() {
+        HotSpotJVMCIRuntime runtime = HotSpotJVMCIRuntime.runtime();
+
+        expectWriteDebugOutputFailure(runtime, null, 0, 0, true, true, NullPointerException.class);
+        expectWriteDebugOutputFailure(runtime, null, 0, 0, true, false, -1);
+
+        byte[] emptyOutput = {};
+        byte[] nonEmptyOutput = String.format("non-empty output%n").getBytes();
+
+        for (boolean canThrow : new boolean[]{true, false}) {
+            for (byte[] output : new byte[][]{emptyOutput, nonEmptyOutput}) {
+                for (int offset = 0; offset < output.length; offset++) {
+                    int length = output.length - offset;
+                    runtime.writeDebugOutput(output, offset, length, true, canThrow);
+                }
+
+                Object expect = canThrow ? IndexOutOfBoundsException.class : -2;
+                expectWriteDebugOutputFailure(runtime, output, output.length + 1, 0, true, canThrow, expect);
+                expectWriteDebugOutputFailure(runtime, output, 0, output.length + 1, true, canThrow, expect);
+                expectWriteDebugOutputFailure(runtime, output, -1, 0, true, canThrow, expect);
+                expectWriteDebugOutputFailure(runtime, output, 0, -1, true, canThrow, expect);
+            }
+        }
+    }
+
+    private static void expectWriteDebugOutputFailure(HotSpotJVMCIRuntime runtime, byte[] bytes, int offset, int length, boolean flush, boolean canThrow, Object expect) {
+        try {
+            int result = runtime.writeDebugOutput(bytes, offset, length, flush, canThrow);
+            if (expect instanceof Integer) {
+                Assert.assertEquals((int) expect, result);
+            } else {
+                Assert.fail("expected " + expect + ", got " + result + " for bytes == " + Arrays.toString(bytes));
+            }
+        } catch (Exception e) {
+            if (expect instanceof Integer) {
+                Assert.fail("expected " + expect + ", got " + e + " for bytes == " + Arrays.toString(bytes));
+            } else {
+                Assert.assertTrue(e.toString(), ((Class<?>) expect).isInstance(e));
+            }
+        }
+    }
+
+    @Test
     public void getIntrinsificationTrustPredicateTest() throws Exception {
         HotSpotJVMCIRuntime runtime = HotSpotJVMCIRuntime.runtime();
         MetaAccessProvider metaAccess = runtime.getHostJVMCIBackend().getMetaAccess();
