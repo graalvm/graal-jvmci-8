@@ -31,6 +31,7 @@
 #include "oops/oop.inline.hpp"
 #include "oops/methodData.hpp"
 #include "prims/nativeLookup.hpp"
+#include "prims/jvm.h"
 #include "runtime/fieldDescriptor.hpp"
 #include "runtime/javaCalls.hpp"
 #include "jvmci/jvmciRuntime.hpp"
@@ -1553,47 +1554,76 @@ C2V_VMENTRY(void, materializeVirtualObjects, (JNIEnv* env, jobject, jobject _hs_
   HotSpotJVMCI::HotSpotStackFrameReference::set_objectsMaterialized(JVMCIENV, hs_frame, JNI_TRUE);
 C2V_END
 
-C2V_VMENTRY_PREFIX(void, writeDebugOutput, (JNIEnv* env, jobject, jbyteArray bytes, jint offset, jint length))
-  if (base_thread == NULL) {
-    // Called from unattached JVMCI shared library thread
-    if (bytes == NULL) {
-      JNI_THROW("writeDebugOutput", NullPointerException, NULL);
+// Creates a scope where the current thread is attached and detached
+// from HotSpot if it wasn't already attached when entering the scope.
+extern "C" void jio_printf(const char *fmt, ...);
+class AttachDetach : public StackObj {
+ public:
+  bool _attached;
+  AttachDetach(JNIEnv* env, Thread* current_thread) {
+    if (current_thread == NULL) {
+      extern struct JavaVM_ main_vm;
+      JNIEnv* hotspotEnv;
+      jint res = main_vm.AttachCurrentThread((void**)&hotspotEnv, NULL);
+      _attached = res == JNI_OK;
+      static volatile int report_attach_error = 0;
+      if (res != JNI_OK && report_attach_error == 0 && Atomic::cmpxchg(1, &report_attach_error, 0) == 0) {
+        // Only report an attach error once
+        jio_printf("Warning: attaching current thread to VM failed with %d (future attach errors are suppressed)\n", res);
+      }
+    } else {
+      _attached = false;
     }
+  }
+  ~AttachDetach() {
+    if (_attached && get_current_thread() != NULL) {
+      extern struct JavaVM_ main_vm;
+      jint res = main_vm.DetachCurrentThread();
+      static volatile int report_detach_error = 0;
+      if (res != JNI_OK && report_detach_error == 0 && Atomic::cmpxchg(1, &report_detach_error, 0) == 0) {
+        // Only report an attach error once
+        jio_printf("Warning: detaching current thread from VM failed with %d (future attach errors are suppressed)\n", res);
+      }
+    }
+  }
+};
 
-    // Check if offset and length are non negative.
-    unsigned int array_length = env->GetArrayLength(bytes);
-    unsigned int end = (unsigned int) length + (unsigned int) offset;
-    if (offset < 0 || length < 0 || end > array_length) {
-      JNI_THROW("writeDebugOutput", ArrayIndexOutOfBoundsException,
-          err_msg("offset=%d, length=%d, array.length=%d", offset, length, array_length));
+C2V_VMENTRY_PREFIX(jint, writeDebugOutput, (JNIEnv* env, jobject, jbyteArray bytes, jint offset, jint length, bool flush, bool can_throw))
+  AttachDetach ad(env, base_thread);
+  bool use_tty = true;
+  if (base_thread == NULL) {
+    if (!ad._attached) {
+      // Can only use tty if the current thread is attached
+      return 0;
     }
-    jbyte buffer[O_BUFLEN];
-    while (length > 0) {
-      int copy_len = MIN2(length, (jint)O_BUFLEN);
-      env->GetByteArrayRegion(bytes, offset, length, buffer);
-      tty->write((char*) buffer, copy_len);
-      length -= O_BUFLEN;
-      offset += O_BUFLEN;
-    }
-    return;
+    base_thread = get_current_thread();
   }
   JVMCITraceMark jtm("writeDebugOutput");
   assert(base_thread->is_Java_thread(), "just checking");
   JavaThread* thread = (JavaThread*) base_thread;
   C2V_BLOCK(void, writeDebugOutput, (JNIEnv* env, jobject, jbyteArray bytes, jint offset, jint length))
   if (bytes == NULL) {
-    JVMCI_THROW(NullPointerException);
+    if (can_throw) {
+      JVMCI_THROW_0(NullPointerException);
+    }
+    return -1;
   }
   JVMCIPrimitiveArray array = JVMCIENV->wrap(bytes);
 
   // Check if offset and length are non negative.
   if (offset < 0 || length < 0) {
-    JVMCI_THROW(ArrayIndexOutOfBoundsException);
+    if (can_throw) {
+      JVMCI_THROW_0(ArrayIndexOutOfBoundsException);
+    }
+    return -2;
   }
   // Check if the range is valid.
   int array_length = JVMCIENV->get_length(array);
   if ((((unsigned int) length + (unsigned int) offset) > (unsigned int) array_length)) {
-    JVMCI_THROW(ArrayIndexOutOfBoundsException);
+    if (can_throw) {
+      JVMCI_THROW_0(ArrayIndexOutOfBoundsException);
+    }
+    return -2;
   }
   jbyte buffer[O_BUFLEN];
   while (length > 0) {
@@ -1603,6 +1633,10 @@ C2V_VMENTRY_PREFIX(void, writeDebugOutput, (JNIEnv* env, jobject, jbyteArray byt
     length -= O_BUFLEN;
     offset += O_BUFLEN;
   }
+  if (flush) {
+    tty->flush();
+  }
+  return 0;
 C2V_END
 
 C2V_VMENTRY(void, flushDebugOutput, (JNIEnv* env, jobject))
@@ -2338,7 +2372,7 @@ C2V_VMENTRY_PREFIX(jboolean, attachCurrentThread, (JNIEnv* env, jobject c2vm, jb
     jint res = as_daemon ? main_vm.AttachCurrentThreadAsDaemon((void**)&hotspotEnv, NULL) :
                            main_vm.AttachCurrentThread((void**)&hotspotEnv, NULL);
     if (res != JNI_OK) {
-      JNI_THROW_("writeDebugOutput", InternalError, err_msg("Trying to attach thread returned %d", res), false);
+      JNI_THROW_("attachCurrentThread", InternalError, err_msg("Trying to attach thread returned %d", res), false);
     }
     return true;
   }
@@ -2687,7 +2721,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "iterateFrames",                                CC "([" RESOLVED_METHOD "[" RESOLVED_METHOD "I" INSPECTED_FRAME_VISITOR ")" OBJECT,   FN_PTR(iterateFrames)},
   {CC "materializeVirtualObjects",                    CC "(" HS_STACK_FRAME_REF "Z)V",                                                      FN_PTR(materializeVirtualObjects)},
   {CC "shouldDebugNonSafepoints",                     CC "()Z",                                                                             FN_PTR(shouldDebugNonSafepoints)},
-  {CC "writeDebugOutput",                             CC "([BII)V",                                                                         FN_PTR(writeDebugOutput)},
+  {CC "writeDebugOutput",                             CC "([BIIZZ)I",                                                                       FN_PTR(writeDebugOutput)},
   {CC "flushDebugOutput",                             CC "()V",                                                                             FN_PTR(flushDebugOutput)},
   {CC "methodDataProfileDataSize",                    CC "(JI)I",                                                                           FN_PTR(methodDataProfileDataSize)},
   {CC "getFingerprint",                               CC "(J)J",                                                                            FN_PTR(getFingerprint)},
