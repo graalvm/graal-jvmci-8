@@ -171,8 +171,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
 
                         // Can only do eager initialization of the JVMCI compiler
                         // once the singleton instance is available.
-                        if (instance.config.getFlag("EagerJVMCI", Boolean.class)) {
-                            instance.getCompiler();
+                        if (result.config.getFlag("EagerJVMCI", Boolean.class)) {
+                            result.getCompiler();
                         }
                     }
                     // Ensures JVMCIRuntime::_HotSpotJVMCIRuntime_instance is
