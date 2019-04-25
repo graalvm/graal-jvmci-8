@@ -1470,6 +1470,10 @@ def deploy_binary(args):
 def _get_jvmci_version():
     return 'jvmci-' + _suite.release_version()
 
+def show_jvmci_version(args):
+    """show the jvmci version derived from the "version" and "release" suite attributes"""
+    mx.log(_get_jvmci_version())
+
 mx.update_commands(_suite, {
     'build': [build, ''],
     'buildvars': [buildvars, ''],
@@ -1482,6 +1486,7 @@ mx.update_commands(_suite, {
     'igv' : [igv, ''],
     'jdkhome': [print_jdkhome, ''],
     'jniconfig': [jniconfig, ''],
+    'jvmci-version': [show_jvmci_version, ''],
     'shortunittest' : [shortunittest, '[unittest options] [--] [VM options] [filters...]', mx_unittest.unittestHelpSuffix],
     'vm': [run_vm, '[-options] class [args...]'],
     'deoptalot' : [deoptalot, '[n]'],
