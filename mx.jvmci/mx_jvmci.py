@@ -829,7 +829,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             assert self.vm.startswith('client'), self.vm
             buildSuffix = '1'
 
-        jvmci_version = 'jvmci-' + _suite.release_version()
+        jvmci_version = _get_jvmci_version()
         hs_release_version = get_hotspot_release_version()
 
         if self.is_windows:
@@ -956,6 +956,20 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                             return (True, '{} does not exist'.format(newestOutput))
                         if ts.isNewerThan(newestOutput):
                             return (True, '{} is newer than {}'.format(ts, newestOutput))
+
+        # Rebuild if jvmci version changed since last build
+        mxOutputDir = mx.ensure_dir_exists(_suite.get_mx_output_dir())
+        jvmciVersionFile = join(mxOutputDir, 'jvmci-version')
+        if mx.update_file(jvmciVersionFile, _get_jvmci_version()):
+            buildtree_make = mx.TimeStampFile(join(_suite.dir, 'make', _hotspotOs(mx.get_os()), 'makefiles', 'buildtree.make'))
+            if buildtree_make.exists():
+                # A changed jvmci version requires touching make/*/makefiles/buildtree.make
+                # so that the generated makefiles are regenerated.
+                buildtree_make.touch()
+                # Need to also touch src/share/vm/runtime/vm_version.cpp so that the VM is rebuilt
+                mx.TimeStampFile(join(_suite.dir, 'src', 'share', 'vm', 'runtime', 'vm_version.cpp')).touch()
+            return (True, 'updated jvmci version')
+
         return (False, None)
 
     def buildForbidden(self):
@@ -1452,6 +1466,9 @@ def deploy_binary(args):
             if vmbuild != _vmbuild or vm != get_vm():
                 mx.instantiateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=vmbuild, vm=vm))
     mx.deploy_binary(args)
+
+def _get_jvmci_version():
+    return 'jvmci-' + _suite.release_version()
 
 mx.update_commands(_suite, {
     'build': [build, ''],
