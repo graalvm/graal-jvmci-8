@@ -301,7 +301,7 @@ else
   # g++ to link.
   ifeq ($(STATIC_CXX), true)
     LFLAGS_VM              += $(STATIC_LIBGCC)
-    LIBS_VM                += -lstdc++ #$(STATIC_STDCXX)
+    LIBS_VM                += $(STATIC_STDCXX)
   else
     LIBS_VM                += -lstdc++
   endif
