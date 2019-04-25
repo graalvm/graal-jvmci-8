@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2010, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -215,7 +215,7 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
     }
   }
   if (JVMCILibDumpJNIConfig != NULL) {
-    _jni_config_file = new(ResourceObj::C_HEAP, mtInternal) fileStream(JVMCILibDumpJNIConfig);
+    _jni_config_file = new(ResourceObj::C_HEAP, mtJVMCI) fileStream(JVMCILibDumpJNIConfig);
     if (_jni_config_file == NULL || !_jni_config_file->is_open()) {
       jio_fprintf(defaultStream::error_stream(), "Could not open file for dumping JVMCI shared library JNI config: %s\n", JVMCILibDumpJNIConfig);
       return false;

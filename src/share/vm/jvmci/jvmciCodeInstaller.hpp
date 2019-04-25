@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,10 +24,10 @@
 #ifndef SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP
 #define SHARE_VM_JVMCI_JVMCI_CODE_INSTALLER_HPP
 
+#include "code/debugInfoRec.hpp"
+#include "code/exceptionHandlerTable.hpp"
 #include "jvmci/jvmci.hpp"
-#include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciEnv.hpp"
-#include "jvmci/jvmciJavaClasses.hpp"
 
 #if INCLUDE_AOT
 class RelocBuffer : public StackObj {
@@ -215,7 +215,7 @@ private:
 
 public:
 
-  CodeInstaller(JVMCIEnv* jvmci_env, bool immutable_pic_compilation) : _arena(mtCompiler), _jvmci_env(jvmci_env), _immutable_pic_compilation(immutable_pic_compilation) {}
+  CodeInstaller(JVMCIEnv* jvmci_env, bool immutable_pic_compilation) : _arena(mtJVMCI), _jvmci_env(jvmci_env), _immutable_pic_compilation(immutable_pic_compilation) {}
 
 #if INCLUDE_AOT
   JVMCI::CodeInstallResult gather_metadata(Handle target, Handle compiled_code, CodeMetadata& metadata, TRAPS);

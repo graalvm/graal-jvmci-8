@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -41,7 +41,6 @@
 #include "gc_implementation/shared/markSweep.hpp"
 #include "gc_implementation/shared/spaceDecorator.hpp"
 #include "gc_interface/gcCause.hpp"
-#include "jvmci/jvmci.hpp"
 #include "memory/gcLocker.inline.hpp"
 #include "memory/referencePolicy.hpp"
 #include "memory/referenceProcessor.hpp"
@@ -54,6 +53,9 @@
 #include "services/memoryService.hpp"
 #include "utilities/events.hpp"
 #include "utilities/stack.inline.hpp"
+#if INCLUDE_JVMCI
+#include "jvmci/jvmci.hpp"
+#endif
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
@@ -544,6 +546,7 @@ void PSMarkSweep::mark_sweep_phase1(bool clear_all_softrefs) {
     ClassLoaderDataGraph::always_strong_cld_do(follow_cld_closure());
     // Do not treat nmethods as strong roots for mark/sweep, since we can unload them.
     //CodeCache::scavenge_root_nmethods_do(CodeBlobToOopClosure(mark_and_push_closure()));
+    JVMCI_ONLY(JVMCI::oops_do(mark_and_push_closure());)
   }
 
   // Flush marking stack.
@@ -570,7 +573,8 @@ void PSMarkSweep::mark_sweep_phase1(bool clear_all_softrefs) {
   // Prune dead klasses from subklass/sibling/implementor lists.
   Klass::clean_weak_klass_links(is_alive_closure());
 
-  JVMCI::do_unloading(is_alive_closure(), purged_class);
+  // Clean JVMCI metadata handles.
+  JVMCI_ONLY(JVMCI::do_unloading(purged_class);)
 
   // Delete entries for dead interned strings.
   StringTable::unlink(is_alive_closure());
@@ -643,6 +647,7 @@ void PSMarkSweep::mark_sweep_phase3() {
 
   CodeBlobToOopClosure adjust_from_blobs(adjust_pointer_closure(), CodeBlobToOopClosure::FixRelocations);
   CodeCache::blobs_do(&adjust_from_blobs);
+  JVMCI_ONLY(JVMCI::oops_do(adjust_pointer_closure());)
   StringTable::oops_do(adjust_pointer_closure());
   ref_processor()->weak_oops_do(adjust_pointer_closure());
   PSScavenge::reference_processor()->weak_oops_do(adjust_pointer_closure());

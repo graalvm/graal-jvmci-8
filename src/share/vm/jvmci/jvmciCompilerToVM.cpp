@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,37 +22,28 @@
  */
 
 #include "precompiled.hpp"
-#include "code/codeCache.hpp"
+#include "classfile/javaClasses.hpp"
+#include "classfile/symbolTable.hpp"
 #include "code/scopeDesc.hpp"
-#include "interpreter/linkResolver.hpp"
-#include "memory/oopFactory.hpp"
-#include "oops/generateOopMap.hpp"
-#include "oops/fieldStreams.hpp"
-#include "oops/oop.inline.hpp"
-#include "oops/methodData.hpp"
-#include "prims/nativeLookup.hpp"
-#include "prims/jvm.h"
-#include "runtime/fieldDescriptor.hpp"
-#include "runtime/javaCalls.hpp"
-#include "jvmci/jvmciRuntime.hpp"
-#include "compiler/abstractCompiler.hpp"
 #include "compiler/compileBroker.hpp"
 #include "compiler/compileLog.hpp"
-#include "compiler/compilerOracle.hpp"
 #include "compiler/disassembler.hpp"
+#include "interpreter/linkResolver.hpp"
+#include "interpreter/bytecodeStream.hpp"
 #include "jvmci/jvmciCompilerToVM.hpp"
-#include "jvmci/jvmciCompiler.hpp"
-#include "jvmci/jvmciEnv.hpp"
-#include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciCodeInstaller.hpp"
-#include "gc_implementation/g1/heapRegion.hpp"
-#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
-#include "runtime/javaCalls.hpp"
+#include "jvmci/jvmciRuntime.hpp"
+#include "memory/oopFactory.hpp"
+#include "oops/constantPool.hpp"
+#include "oops/method.hpp"
+#include "oops/typeArrayOop.hpp"
+#include "prims/nativeLookup.hpp"
 #include "runtime/deoptimization.hpp"
-#include "runtime/vframe.hpp"
+#include "runtime/fieldDescriptor.hpp"
+#include "runtime/frame.inline.hpp"
+#include "runtime/interfaceSupport.hpp"
+#include "runtime/jniHandles.hpp"
 #include "runtime/vframe_hp.hpp"
-#include "runtime/vmStructs.hpp"
-#include "utilities/resourceHash.hpp"
 
 JVMCIKlassHandle::JVMCIKlassHandle(Thread* thread, Klass* klass) {
   _thread = thread;
@@ -2461,7 +2452,7 @@ C2V_VMENTRY_0(jlong, translate, (JNIEnv* env, jobject, jobject obj_handle))
   } else if (thisEnv->isa_IndirectHotSpotObjectConstantImpl(obj) ||
              thisEnv->isa_DirectHotSpotObjectConstantImpl(obj)) {
     Handle constant = thisEnv->asConstant(obj, JVMCI_CHECK_0);
-    result = peerEnv->get_object_constant(constant);
+    result = peerEnv->get_object_constant(constant());
   } else if (thisEnv->isa_HotSpotNmethod(obj)) {
     nmethod* nm = thisEnv->asNmethod(obj);
     if (nm != NULL) {

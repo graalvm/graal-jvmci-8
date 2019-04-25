@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2001, 2013, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2001, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -34,7 +34,6 @@
 #include "gc_implementation/shared/gcTrace.hpp"
 #include "gc_implementation/shared/gcTraceTime.hpp"
 #include "gc_interface/collectedHeap.inline.hpp"
-#include "jvmci/jvmci.hpp"
 #include "memory/genCollectedHeap.hpp"
 #include "memory/genMarkSweep.hpp"
 #include "memory/genOopClosures.inline.hpp"
@@ -52,6 +51,9 @@
 #include "runtime/vmThread.hpp"
 #include "utilities/copy.hpp"
 #include "utilities/events.hpp"
+#if INCLUDE_JVMCI
+#include "jvmci/jvmci.hpp"
+#endif
 
 void GenMarkSweep::invoke_at_safepoint(int level, ReferenceProcessor* rp, bool clear_all_softrefs) {
   guarantee(level == 1, "We always collect both old and young.");
@@ -240,7 +242,8 @@ void GenMarkSweep::mark_sweep_phase1(int level,
   // Prune dead klasses from subklass/sibling/implementor lists.
   Klass::clean_weak_klass_links(&is_alive);
 
-  JVMCI::do_unloading(&is_alive, purged_class);
+  // Clean JVMCI metadata handles.
+  JVMCI_ONLY(JVMCI::do_unloading(purged_class);)
 
   // Delete entries for dead interned strings.
   StringTable::unlink(&is_alive);

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2005, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2005, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -44,7 +44,6 @@
 #include "gc_implementation/shared/gcTraceTime.hpp"
 #include "gc_implementation/shared/isGCActiveMark.hpp"
 #include "gc_interface/gcCause.hpp"
-#include "jvmci/jvmci.hpp"
 #include "memory/gcLocker.inline.hpp"
 #include "memory/referencePolicy.hpp"
 #include "memory/referenceProcessor.hpp"
@@ -59,6 +58,9 @@
 #include "services/memTracker.hpp"
 #include "utilities/events.hpp"
 #include "utilities/stack.inline.hpp"
+#if INCLUDE_JVMCI
+#include "jvmci/jvmci.hpp"
+#endif
 
 #include <math.h>
 
@@ -2389,6 +2391,7 @@ void PSParallelCompact::marking_phase(ParCompactionManager* cm,
     q->enqueue(new MarkFromRootsTask(MarkFromRootsTask::class_loader_data));
     q->enqueue(new MarkFromRootsTask(MarkFromRootsTask::jvmti));
     q->enqueue(new MarkFromRootsTask(MarkFromRootsTask::code_cache));
+    JVMCI_ONLY(q->enqueue(new MarkFromRootsTask(MarkFromRootsTask::jvmci));)
 
     if (active_gc_threads > 1) {
       for (uint j = 0; j < active_gc_threads; j++) {
@@ -2432,7 +2435,8 @@ void PSParallelCompact::marking_phase(ParCompactionManager* cm,
   // Prune dead klasses from subklass/sibling/implementor lists.
   Klass::clean_weak_klass_links(is_alive_closure());
 
-  JVMCI::do_unloading(&_is_alive_closure, purged_class);
+  // Clean JVMCI metadata handles.
+  JVMCI_ONLY(JVMCI::do_unloading(purged_class);)
 
   // Delete entries for dead interned strings.
   StringTable::unlink(is_alive_closure());
@@ -2483,6 +2487,7 @@ void PSParallelCompact::adjust_roots() {
 
   CodeBlobToOopClosure adjust_from_blobs(adjust_pointer_closure(), CodeBlobToOopClosure::FixRelocations);
   CodeCache::blobs_do(&adjust_from_blobs);
+  JVMCI_ONLY(JVMCI::oops_do(adjust_pointer_closure());)
   StringTable::oops_do(adjust_pointer_closure());
   ref_processor()->weak_oops_do(adjust_pointer_closure());
   // Roots were visited so references into the young gen in roots

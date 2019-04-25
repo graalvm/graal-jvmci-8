@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -144,18 +144,19 @@ enum MemoryType {
   mtCode              = 0x04,  // memory for generated code
   mtGC                = 0x05,  // memory for GC
   mtCompiler          = 0x06,  // memory for compiler
-  mtInternal          = 0x07,  // memory used by VM, but does not belong to
+  mtJVMCI             = 0x07,  // memory for JVMCI
+  mtInternal          = 0x08,  // memory used by VM, but does not belong to
                                  // any of above categories, and not used for
                                  // native memory tracking
-  mtOther             = 0x08,  // memory not used by VM
-  mtSymbol            = 0x09,  // symbol
-  mtNMT               = 0x0A,  // memory used by native memory tracking
-  mtClassShared       = 0x0B,  // class data sharing
-  mtChunk             = 0x0C,  // chunk that holds content of arenas
-  mtTest              = 0x0D,  // Test type for verifying NMT
-  mtTracing           = 0x0E,  // memory used for Tracing
-  mtNone              = 0x0F,  // undefined
-  mt_number_of_types  = 0x10   // number of memory types (mtDontTrack
+  mtOther             = 0x09,  // memory not used by VM
+  mtSymbol            = 0x0A,  // symbol
+  mtNMT               = 0x0B,  // memory used by native memory tracking
+  mtClassShared       = 0x0C,  // class data sharing
+  mtChunk             = 0x0D,  // chunk that holds content of arenas
+  mtTest              = 0x0E,  // Test type for verifying NMT
+  mtTracing           = 0x0F,  // memory used for Tracing
+  mtNone              = 0x10,  // undefined
+  mt_number_of_types  = 0x11   // number of memory types (mtDontTrack
                                  // is not included as validate type)
 };
 

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -25,7 +25,7 @@
 #include "classfile/systemDictionary.hpp"
 #include "oops/instanceMirrorKlass.hpp"
 #include "utilities/exceptions.hpp"
-#include "jvmci/jvmciEnv.hpp"
+#include "jvmci/jniAccessMark.inline.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "compiler/compileBroker.hpp"
@@ -35,6 +35,27 @@
 #include "memory/oopFactory.hpp"
 
 // ------------------------------------------------------------------
+
+oop HotSpotJVMCI::resolve(JVMCIObject obj) {
+  return JNIHandles::resolve(obj.as_jobject());
+}
+
+arrayOop HotSpotJVMCI::resolve(JVMCIArray obj) { 
+  return (arrayOop) JNIHandles::resolve(obj.as_jobject());
+}
+
+objArrayOop HotSpotJVMCI::resolve(JVMCIObjectArray obj) { 
+  return (objArrayOop) JNIHandles::resolve(obj.as_jobject());
+}
+
+typeArrayOop HotSpotJVMCI::resolve(JVMCIPrimitiveArray obj) { 
+  return (typeArrayOop) JNIHandles::resolve(obj.as_jobject());
+}
+
+JVMCIObject HotSpotJVMCI::wrap(oop obj) {
+  assert(Thread::current()->is_Java_thread(), "must be");
+  return JVMCIObject(JNIHandles::make_local(obj), true);
+}
 
 /**
  * Computes the field offset of a static or instance field.

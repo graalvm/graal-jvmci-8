@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1999, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1999, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -23,34 +23,13 @@
  */
 
 #include "precompiled.hpp"
-#include "jvmci/jvmciEnv.hpp"
-#include "classfile/javaAssertions.hpp"
-#include "classfile/systemDictionary.hpp"
-#include "code/codeCache.hpp"
-#include "code/scopeDesc.hpp"
-#include "compiler/compileBroker.hpp"
-#include "compiler/compileLog.hpp"
-#include "compiler/compilerOracle.hpp"
-#ifdef INCLUDE_ALL_GCS
-#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
-#endif
-#include "interpreter/linkResolver.hpp"
-#include "memory/allocation.inline.hpp"
 #include "memory/oopFactory.hpp"
-#include "memory/universe.inline.hpp"
-#include "oops/methodData.hpp"
-#include "oops/objArrayKlass.hpp"
-#include "oops/oop.inline.hpp"
-#include "prims/jvmtiExport.hpp"
-#include "runtime/init.hpp"
-#include "runtime/reflection.hpp"
-#include "runtime/sharedRuntime.hpp"
+#include "memory/resourceArea.hpp"
+#include "oops/typeArrayOop.hpp"
+#include "runtime/jniHandles.hpp"
 #include "runtime/javaCalls.hpp"
-#include "utilities/dtrace.hpp"
+#include "jvmci/jniAccessMark.inline.hpp"
 #include "jvmci/jvmciRuntime.hpp"
-#include "jvmci/jvmciJavaClasses.hpp"
-
-#include <string.h>
 
 JVMCICompileState::JVMCICompileState(CompileTask* task, int system_dictionary_modification_counter):
   _task(task),
@@ -320,7 +299,7 @@ void JVMCIEnv::describe_pending_exception(bool clear) {
   }
 }
 
-void JVMCIEnv::translate_hotspot_exception_to_jni_exception(JavaThread* THREAD, Handle throwable) {
+void JVMCIEnv::translate_hotspot_exception_to_jni_exception(JavaThread* THREAD, const Handle& throwable) {
   assert(!is_hotspot(), "must_be");
   // Resolve HotSpotJVMCIRuntime class explicitly as HotSpotJVMCI::compute_offsets
   // may not have been called.
@@ -380,6 +359,315 @@ JVMCIEnv::~JVMCIEnv() {
     if (_detach_on_close) {
       get_shared_library_javavm()->DetachCurrentThread();
     }
+  }
+}
+
+jboolean JVMCIEnv::has_pending_exception() {
+  if (!is_hotspot()) {
+    JNIAccessMark jni(this);
+    return jni()->ExceptionCheck();
+  } else {
+    Thread* THREAD = Thread::current();
+    return HAS_PENDING_EXCEPTION;
+  }
+}
+
+void JVMCIEnv::clear_pending_exception() {
+  if (!is_hotspot()) {
+    JNIAccessMark jni(this);
+    jni()->ExceptionClear();
+  } else {
+    Thread* THREAD = Thread::current();
+    CLEAR_PENDING_EXCEPTION;
+  }
+}
+
+int JVMCIEnv::get_length(JVMCIArray array) {
+  if (is_hotspot()) {
+    return HotSpotJVMCI::resolve(array)->length();
+  } else {
+    JNIAccessMark jni(this);
+    return jni()->GetArrayLength(get_jarray(array));
+  }
+}
+JVMCIObject JVMCIEnv::get_object_at(JVMCIObjectArray array, int index) {
+  if (is_hotspot()) {
+    oop result = HotSpotJVMCI::resolve(array)->obj_at(index);
+    return wrap(result);
+  } else {
+    JNIAccessMark jni(this);
+    jobject result = jni()->GetObjectArrayElement(get_jobjectArray(array), index);
+    return wrap(result);
+  }
+}
+
+void JVMCIEnv::put_object_at(JVMCIObjectArray array, int index, JVMCIObject value) {
+  if (is_hotspot()) {
+    HotSpotJVMCI::resolve(array)->obj_at_put(index, HotSpotJVMCI::resolve(value));
+  } else {
+    JNIAccessMark jni(this);
+    jni()->SetObjectArrayElement(get_jobjectArray(array), index, get_jobject(value));
+  }
+}
+
+jboolean JVMCIEnv::get_bool_at(JVMCIPrimitiveArray array, int index) {
+  if (is_hotspot()) {
+    return HotSpotJVMCI::resolve(array)->bool_at(index);
+  } else {
+    JNIAccessMark jni(this);
+    jboolean result;
+    jni()->GetBooleanArrayRegion(array.as_jbooleanArray(), index, 1, &result);
+    return result;
+  }
+}
+void JVMCIEnv::put_bool_at(JVMCIPrimitiveArray array, int index, jboolean value) {
+  if (is_hotspot()) {
+    HotSpotJVMCI::resolve(array)->bool_at_put(index, value);
+  } else {
+    JNIAccessMark jni(this);
+    jni()->SetBooleanArrayRegion(array.as_jbooleanArray(), index, 1, &value);
+  }
+}
+
+jbyte JVMCIEnv::get_byte_at(JVMCIPrimitiveArray array, int index) {
+  if (is_hotspot()) {
+    return HotSpotJVMCI::resolve(array)->byte_at(index);
+  } else {
+    JNIAccessMark jni(this);
+    jbyte result;
+    jni()->GetByteArrayRegion(array.as_jbyteArray(), index, 1, &result);
+    return result;
+  }
+}
+void JVMCIEnv::put_byte_at(JVMCIPrimitiveArray array, int index, jbyte value) {
+  if (is_hotspot()) {
+    HotSpotJVMCI::resolve(array)->byte_at_put(index, value);
+  } else {
+    JNIAccessMark jni(this);
+    jni()->SetByteArrayRegion(array.as_jbyteArray(), index, 1, &value);
+  }
+}
+
+int JVMCIEnv::get_int_at(JVMCIPrimitiveArray array, int index) {
+  if (is_hotspot()) {
+    return HotSpotJVMCI::resolve(array)->int_at(index);
+  } else {
+    JNIAccessMark jni(this);
+    int result;
+    jni()->GetIntArrayRegion(array.as_jintArray(), index, 1, &result);
+    return result;
+  }
+}
+void JVMCIEnv::put_int_at(JVMCIPrimitiveArray array, int index, int value) {
+  if (is_hotspot()) {
+    HotSpotJVMCI::resolve(array)->int_at_put(index, value);
+  } else {
+    JNIAccessMark jni(this);
+    jni()->SetIntArrayRegion(array.as_jintArray(), index, 1, &value);
+  }
+}
+
+long JVMCIEnv::get_long_at(JVMCIPrimitiveArray array, int index) {
+  if (is_hotspot()) {
+    return HotSpotJVMCI::resolve(array)->long_at(index);
+  } else {
+    JNIAccessMark jni(this);
+    jlong result;
+    jni()->GetLongArrayRegion(array.as_jlongArray(), index, 1, &result);
+    return result;
+  }
+}
+void JVMCIEnv::put_long_at(JVMCIPrimitiveArray array, int index, jlong value) {
+  if (is_hotspot()) {
+    HotSpotJVMCI::resolve(array)->long_at_put(index, value);
+  } else {
+    JNIAccessMark jni(this);
+    jni()->SetLongArrayRegion(array.as_jlongArray(), index, 1, &value);
+  }
+}
+
+void JVMCIEnv::copy_bytes_to(JVMCIPrimitiveArray src, jbyte* dest, int offset, jsize length) {
+  if (length == 0) {
+    return;
+  }
+  if (is_hotspot()) {
+    memcpy(dest, HotSpotJVMCI::resolve(src)->byte_at_addr(offset), length);
+  } else {
+    JNIAccessMark jni(this);
+    jni()->GetByteArrayRegion(src.as_jbyteArray(), offset, length, dest);
+  }
+}
+void JVMCIEnv::copy_bytes_from(jbyte* src, JVMCIPrimitiveArray dest, int offset, jsize length) {
+  if (length == 0) {
+    return;
+  }
+  if (is_hotspot()) {
+    memcpy(HotSpotJVMCI::resolve(dest)->byte_at_addr(offset), src, length);
+  } else {
+    JNIAccessMark jni(this);
+    jni()->SetByteArrayRegion(dest.as_jbyteArray(), offset, length, src);
+  }
+}
+
+void JVMCIEnv::copy_longs_from(jlong* src, JVMCIPrimitiveArray dest, int offset, jsize length) {
+  if (length == 0) {
+    return;
+  }
+  if (is_hotspot()) {
+    memcpy(HotSpotJVMCI::resolve(dest)->long_at_addr(offset), src, length * sizeof(jlong));
+  } else {
+    JNIAccessMark jni(this);
+    jni()->SetLongArrayRegion(dest.as_jlongArray(), offset, length, src);
+  }
+}
+
+jboolean JVMCIEnv::is_boxing_object(BasicType type, JVMCIObject object) {
+  if (is_hotspot()) {
+    return java_lang_boxing_object::is_instance(HotSpotJVMCI::resolve(object), type);
+  } else {
+    JNIAccessMark jni(this);
+    return jni()->IsInstanceOf(get_jobject(object), JNIJVMCI::box_class(type));
+  }
+}
+
+// Get the primitive value from a Java boxing object.  It's hard error to
+// pass a non-primitive BasicType.
+jvalue JVMCIEnv::get_boxed_value(BasicType type, JVMCIObject object) {
+  jvalue result;
+  if (is_hotspot()) {
+    if (java_lang_boxing_object::get_value(HotSpotJVMCI::resolve(object), &result) == T_ILLEGAL) {
+      ShouldNotReachHere();
+    }
+  } else {
+    JNIAccessMark jni(this);
+    jfieldID field = JNIJVMCI::box_field(type);
+    switch (type) {
+      case T_BOOLEAN: result.z = jni()->GetBooleanField(get_jobject(object), field); break;
+      case T_BYTE:    result.b = jni()->GetByteField(get_jobject(object), field); break;
+      case T_SHORT:   result.s = jni()->GetShortField(get_jobject(object), field); break;
+      case T_CHAR:    result.c = jni()->GetCharField(get_jobject(object), field); break;
+      case T_INT:     result.i = jni()->GetIntField(get_jobject(object), field); break;
+      case T_LONG:    result.j = jni()->GetLongField(get_jobject(object), field); break;
+      case T_FLOAT:   result.f = jni()->GetFloatField(get_jobject(object), field); break;
+      case T_DOUBLE:  result.d = jni()->GetDoubleField(get_jobject(object), field); break;
+      default:
+        ShouldNotReachHere();
+    }
+  }
+  return result;
+}
+
+// Return the BasicType of the object if it's a boxing object, otherwise return T_ILLEGAL.
+BasicType JVMCIEnv::get_box_type(JVMCIObject object) {
+  if (is_hotspot()) {
+    return java_lang_boxing_object::basic_type(HotSpotJVMCI::resolve(object));
+  } else {
+    JNIAccessMark jni(this);
+    jclass clazz = jni()->GetObjectClass(get_jobject(object));
+    if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_BOOLEAN))) return T_BOOLEAN;
+    if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_BYTE))) return T_BYTE;
+    if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_SHORT))) return T_SHORT;
+    if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_CHAR))) return T_CHAR;
+    if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_INT))) return T_INT;
+    if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_LONG))) return T_LONG;
+    if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_FLOAT))) return T_FLOAT;
+    if (jni()->IsSameObject(clazz, JNIJVMCI::box_class(T_DOUBLE))) return T_DOUBLE;
+    return T_ILLEGAL;
+  }
+}
+
+// Create a boxing object of the appropriate primitive type.
+JVMCIObject JVMCIEnv::create_box(BasicType type, jvalue* value, JVMCI_TRAPS) {
+  switch (type) {
+    case T_BOOLEAN:
+    case T_BYTE:
+    case T_CHAR:
+    case T_SHORT:
+    case T_INT:
+    case T_LONG:
+    case T_FLOAT:
+    case T_DOUBLE:
+      break;
+    default:
+      JVMCI_THROW_MSG_(IllegalArgumentException, "Only boxes for primitive values can be created", JVMCIObject());
+  }
+  if (is_hotspot()) {
+    JavaThread* THREAD = JavaThread::current();
+    oop box = java_lang_boxing_object::create(type, value, CHECK_(JVMCIObject()));
+    return HotSpotJVMCI::wrap(box);
+  } else {
+    JNIAccessMark jni(this);
+    jobject box = jni()->NewObjectA(JNIJVMCI::box_class(type), JNIJVMCI::box_constructor(type), value);
+    assert(box != NULL, "");
+    return wrap(box);
+  }
+}
+
+const char* JVMCIEnv::as_utf8_string(JVMCIObject str) {
+  if (is_hotspot()) {
+    return java_lang_String::as_utf8_string(HotSpotJVMCI::resolve(str));
+  } else {
+    JNIAccessMark jni(this);
+    int length = jni()->GetStringLength(str.as_jstring());
+    char* result = NEW_RESOURCE_ARRAY(char, length + 1);
+    jni()->GetStringUTFRegion(str.as_jstring(), 0, length, result);
+    return result;
+  }
+}
+
+char* JVMCIEnv::as_utf8_string(JVMCIObject str, char* buf, int buflen) {
+  if (is_hotspot()) {
+    return java_lang_String::as_utf8_string(HotSpotJVMCI::resolve(str), buf, buflen);
+  } else {
+    JNIAccessMark jni(this);
+    int length = jni()->GetStringLength(str.as_jstring());
+    if (length >= buflen) {
+      length = buflen;
+    }
+    jni()->GetStringUTFRegion(str.as_jstring(), 0, length, buf);
+    return buf;
+  }
+}
+
+#define DO_THROW(name)                            \
+void JVMCIEnv::throw_##name(const char* msg) {    \
+  if (is_hotspot()) {                             \
+    JavaThread* THREAD = JavaThread::current();   \
+    THROW_MSG(HotSpotJVMCI::name::symbol(), msg); \
+  } else {                                        \
+    JNIAccessMark jni(this);                      \
+    jni()->ThrowNew(JNIJVMCI::name::clazz(), msg);\
+  }                                               \
+}
+
+DO_THROW(InternalError)
+DO_THROW(ArrayIndexOutOfBoundsException)
+DO_THROW(IllegalStateException)
+DO_THROW(NullPointerException)
+DO_THROW(IllegalArgumentException)
+DO_THROW(InvalidInstalledCodeException)
+DO_THROW(UnsatisfiedLinkError)
+DO_THROW(UnsupportedOperationException)
+DO_THROW(ClassNotFoundException)
+
+#undef DO_THROW
+
+void JVMCIEnv::fthrow_error(const char* file, int line, const char* format, ...) {
+  const int max_msg_size = 1024;
+  va_list ap;
+  va_start(ap, format);
+  char msg[max_msg_size];
+  vsnprintf(msg, max_msg_size, format, ap);
+  msg[max_msg_size-1] = '\0';
+  va_end(ap);
+  if (is_hotspot()) {
+    JavaThread* THREAD = JavaThread::current();
+    Handle h_loader = Handle(THREAD, SystemDictionary::jvmci_loader());
+    Handle h_protection_domain = Handle();
+    Exceptions::_throw_msg(THREAD, file, line, vmSymbols::jdk_vm_ci_common_JVMCIError(), msg, h_loader, h_protection_domain);
+  } else {
+    JNIAccessMark jni(this);
+    jni()->ThrowNew(JNIJVMCI::JVMCIError::clazz(), msg);
   }
 }
 
@@ -598,7 +886,7 @@ JVMCIObject JVMCIEnv::get_jvmci_primitive_type(BasicType type) {
   return result;
 }
 
-JVMCIObject JVMCIEnv::new_StackTraceElement(methodHandle method, int bci, JVMCI_TRAPS) {
+JVMCIObject JVMCIEnv::new_StackTraceElement(const methodHandle& method, int bci, JVMCI_TRAPS) {
   JavaThread* THREAD = JavaThread::current();
   Symbol* method_name_sym;
   Symbol* file_name_sym;
@@ -650,7 +938,7 @@ JVMCIObject JVMCIEnv::new_StackTraceElement(methodHandle method, int bci, JVMCI_
   }
 }
 
-JVMCIObject JVMCIEnv::new_HotSpotNmethod(methodHandle method, const char* name, jboolean isDefault, jlong compileId, JVMCI_TRAPS) {
+JVMCIObject JVMCIEnv::new_HotSpotNmethod(const methodHandle& method, const char* name, jboolean isDefault, jlong compileId, JVMCI_TRAPS) {
   JavaThread* THREAD = JavaThread::current();
 
   JVMCIObject methodObject = get_jvmci_method(method(), JVMCI_CHECK_(JVMCIObject()));
@@ -811,7 +1099,7 @@ JVMCIObject JVMCIEnv::get_jvmci_method(const methodHandle& method, JVMCI_TRAPS) 
   return method_object;
 }
 
-JVMCIObject JVMCIEnv::get_jvmci_type(JVMCIKlassHandle& klass, JVMCI_TRAPS) {
+JVMCIObject JVMCIEnv::get_jvmci_type(const JVMCIKlassHandle& klass, JVMCI_TRAPS) {
   JVMCIObject type;
   if (klass.is_null()) {
     return type;
@@ -860,7 +1148,7 @@ JVMCIObject JVMCIEnv::get_jvmci_type(JVMCIKlassHandle& klass, JVMCI_TRAPS) {
   return type;
 }
 
-JVMCIObject JVMCIEnv::get_jvmci_constant_pool(constantPoolHandle cp, JVMCI_TRAPS) {
+JVMCIObject JVMCIEnv::get_jvmci_constant_pool(const constantPoolHandle& cp, JVMCI_TRAPS) {
   JVMCIObject cp_object;
   jmetadata handle = JVMCI::allocate_handle(cp);
   jboolean exception = false;
@@ -1038,12 +1326,13 @@ JVMCIObject JVMCIEnv::new_JVMCIError(JVMCI_TRAPS) {
 }
 
 
-JVMCIObject JVMCIEnv::get_object_constant(Handle obj, bool compressed, bool dont_register) {
+JVMCIObject JVMCIEnv::get_object_constant(oop objOop, bool compressed, bool dont_register) {
+  JavaThread* THREAD = JavaThread::current();
+  Handle obj = Handle(THREAD, objOop);
   if (obj.is_null()) {
     return JVMCIObject();
   }
   if (is_hotspot()) {
-    JavaThread* THREAD = JavaThread::current();
     HotSpotJVMCI::DirectHotSpotObjectConstantImpl::klass()->initialize(CHECK_(JVMCIObject()));
     oop constant = HotSpotJVMCI::DirectHotSpotObjectConstantImpl::klass()->allocate_instance(CHECK_(JVMCIObject()));
     HotSpotJVMCI::DirectHotSpotObjectConstantImpl::set_object(this, constant, obj());
@@ -1083,7 +1372,7 @@ JVMCIObject JVMCIEnv::wrap(jobject object) {
   return JVMCIObject::create(object, is_hotspot());
 }
 
-jlong JVMCIEnv::make_handle(Handle obj) {
+jlong JVMCIEnv::make_handle(const Handle& obj) {
   assert(!obj.is_null(), "should only create handle for non-NULL oops");
   jobject handle = JVMCI::make_global(obj);
   return (jlong) handle;

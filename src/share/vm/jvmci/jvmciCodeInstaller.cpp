@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,32 +24,9 @@
 #include "precompiled.hpp"
 #include "code/compiledIC.hpp"
 #include "compiler/compileBroker.hpp"
-#include "compiler/disassembler.hpp"
-#include "runtime/javaCalls.hpp"
-#include "jvmci/jvmciEnv.hpp"
-#include "jvmci/jvmciCompiler.hpp"
 #include "jvmci/jvmciCodeInstaller.hpp"
-#include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciCompilerToVM.hpp"
 #include "jvmci/jvmciRuntime.hpp"
-#include "asm/register.hpp"
-#include "code/vmreg.hpp"
-
-#ifdef TARGET_ARCH_x86
-# include "vmreg_x86.inline.hpp"
-#endif
-#ifdef TARGET_ARCH_sparc
-# include "vmreg_sparc.inline.hpp"
-#endif
-#ifdef TARGET_ARCH_zero
-# include "vmreg_zero.inline.hpp"
-#endif
-#ifdef TARGET_ARCH_arm
-# include "vmreg_arm.inline.hpp"
-#endif
-#ifdef TARGET_ARCH_ppc
-# include "vmreg_ppc.inline.hpp"
-#endif
 
 #define align_up(x, y) round_to(x, y)
 
@@ -57,12 +34,12 @@
 // Allocate them with new so they are never destroyed (otherwise, a
 // forced exit could destroy these objects while they are still in
 // use).
-ConstantOopWriteValue* CodeInstaller::_oop_null_scope_value = new (ResourceObj::C_HEAP, mtCompiler) ConstantOopWriteValue(NULL);
-ConstantIntValue*      CodeInstaller::_int_m1_scope_value = new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(-1);
-ConstantIntValue*      CodeInstaller::_int_0_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue((jint)0);
-ConstantIntValue*      CodeInstaller::_int_1_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(1);
-ConstantIntValue*      CodeInstaller::_int_2_scope_value =  new (ResourceObj::C_HEAP, mtCompiler) ConstantIntValue(2);
-LocationValue*         CodeInstaller::_illegal_value = new (ResourceObj::C_HEAP, mtCompiler) LocationValue(Location());
+ConstantOopWriteValue* CodeInstaller::_oop_null_scope_value = new (ResourceObj::C_HEAP, mtJVMCI) ConstantOopWriteValue(NULL);
+ConstantIntValue*      CodeInstaller::_int_m1_scope_value = new (ResourceObj::C_HEAP, mtJVMCI) ConstantIntValue(-1);
+ConstantIntValue*      CodeInstaller::_int_0_scope_value =  new (ResourceObj::C_HEAP, mtJVMCI) ConstantIntValue((jint)0);
+ConstantIntValue*      CodeInstaller::_int_1_scope_value =  new (ResourceObj::C_HEAP, mtJVMCI) ConstantIntValue(1);
+ConstantIntValue*      CodeInstaller::_int_2_scope_value =  new (ResourceObj::C_HEAP, mtJVMCI) ConstantIntValue(2);
+LocationValue*         CodeInstaller::_illegal_value = new (ResourceObj::C_HEAP, mtJVMCI) LocationValue(Location());
 
 VMReg CodeInstaller::getVMRegFromLocation(JVMCIObject location, int total_frame_size, JVMCI_TRAPS) {
   if (location.is_null()) {
@@ -537,7 +514,7 @@ void CodeInstaller::initialize_dependencies(JVMCIObject compiled_code, OopRecord
 #if INCLUDE_AOT
 RelocBuffer::~RelocBuffer() {
   if (_buffer != NULL) {
-    FREE_C_HEAP_ARRAY(char, _buffer, mtCompiler);
+    FREE_C_HEAP_ARRAY(char, _buffer, mtJVMCI);
   }
 }
 
@@ -557,7 +534,7 @@ void RelocBuffer::ensure_size(size_t bytes) {
   assert(_buffer == NULL, "can only be used once");
   assert(_size == 0, "can only be used once");
   if (bytes >= RelocBuffer::stack_size) {
-    _buffer = NEW_C_HEAP_ARRAY(char, bytes, mtInternal);
+    _buffer = NEW_C_HEAP_ARRAY(char, bytes, mtJVMCI);
   }
   _size = bytes;
 }

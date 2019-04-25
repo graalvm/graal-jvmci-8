@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012, 2016, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2012, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -22,297 +22,19 @@
  */
 
 #include "precompiled.hpp"
-#include "asm/codeBuffer.hpp"
-#include "code/codeCache.hpp"
 #include "compiler/compileBroker.hpp"
-#include "compiler/disassembler.hpp"
-#include "jvmci/jvmciRuntime.hpp"
+#include "jvmci/jniAccessMark.inline.hpp"
 #include "jvmci/jvmciCompilerToVM.hpp"
-#include "jvmci/jvmciCompiler.hpp"
-#include "jvmci/jvmciJavaClasses.hpp"
-#include "jvmci/jvmciEnv.hpp"
+#include "jvmci/jvmciRuntime.hpp"
 #include "memory/oopFactory.hpp"
+#include "oops/constantPool.hpp"
 #include "oops/oop.inline.hpp"
-#include "oops/instanceMirrorKlass.hpp"
-#include "prims/jvm.h"
 #include "runtime/biasedLocking.hpp"
-#include "runtime/interfaceSupport.hpp"
-#include "runtime/reflection.hpp"
+#include "runtime/deoptimization.hpp"
+#include "runtime/fieldDescriptor.hpp"
+#include "runtime/frame.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/sweeper.hpp"
-#include "utilities/debug.hpp"
-#include "utilities/defaultStream.hpp"
-
-#if defined(_MSC_VER)
-#define strtoll _strtoi64
-#endif
-
-#ifdef ASSERT
-#define METADATA_TRACK_NAMES
-#endif
-
-struct _jmetadata {
- private:
-  Metadata* _handle;
-#ifdef METADATA_TRACK_NAMES
-  // Debug data for tracking stale metadata
-  const char* _name;
-#endif
-
- public:
-  Metadata* handle() { return _handle; }
-
-#ifdef METADATA_TRACK_NAMES
-  void initialize() {
-    _handle = NULL;
-    _name = NULL;
-  }
-#endif
-
-  void set_handle(Metadata* value) {
-    _handle = value;
-  }
-
-#ifdef METADATA_TRACK_NAMES
-  const char* name() { return _name; }
-  void set_name(const char* name) {
-    if (_name != NULL) {
-      os::free((void*) _name);
-      _name = NULL;
-    }
-    if (name != NULL) {
-      _name = os::strdup(name);
-    }
-  }
-#endif
-};
-typedef struct _jmetadata HandleRecord;
-
-// JVMCI maintains direct references to metadata. To make these references safe in the face of
-// class redefinition, they are held in handles so they can be scanned during GC. They are
-// managed in a cooperative way between the Java code and HotSpot. A handle is filled in and
-// passed back to the Java code which is responsible for setting the handle to NULL when it
-// is no longer in use. This is done by jdk.vm.ci.hotspot.HandleCleaner. The
-// rebuild_free_list function notices when the handle is clear and reclaims it for re-use.
-class MetadataHandleBlock : public CHeapObj<mtInternal> {
- private:
-  enum SomeConstants {
-    block_size_in_handles  = 32,      // Number of handles per handle block
-    ptr_tag = 1,
-    ptr_mask = ~((intptr_t)ptr_tag)
-  };
-
-  // Free handles always have their low bit set so those pointers can
-  // be distinguished from handles which are in use.  The last handle
-  // on the free list has a NULL pointer with the tag bit set, so it's
-  // clear that the handle has been reclaimed.  The _free_list is
-  // always a real pointer to a handle.
-
-  HandleRecord    _handles[block_size_in_handles]; // The handles
-  int             _top;                         // Index of next unused handle
-  MetadataHandleBlock* _next;                   // Link to next block
-
-  // The following instance variables are only used by the first block in a chain.
-  // Having two types of blocks complicates the code and the space overhead is negligible.
-  MetadataHandleBlock* _last;                   // Last block in use
-  intptr_t        _free_list;                   // Handle free list
-  int             _allocate_before_rebuild;     // Number of blocks to allocate before rebuilding free list
-
-  jmetadata allocate_metadata_handle(Metadata* metadata);
-  void rebuild_free_list();
-
-  MetadataHandleBlock() {
-    _top = 0;
-    _next = NULL;
-    _last = this;
-    _free_list = 0;
-    _allocate_before_rebuild = 0;
-#ifdef METADATA_TRACK_NAMES
-    for (int i = 0; i < block_size_in_handles; i++) {
-      _handles[i].initialize();
-    }
-#endif
-  }
-
-  const char* get_name(int index) {
-#ifdef METADATA_TRACK_NAMES
-    return _handles[index].name();
-#else
-    return "<missing>";
-#endif
-  }
-
- public:
-  jmetadata allocate_handle(methodHandle handle)       { return allocate_metadata_handle(handle()); }
-  jmetadata allocate_handle(constantPoolHandle handle) { return allocate_metadata_handle(handle()); }
-
-  static MetadataHandleBlock* allocate_block();
-
-  // Adds `handle` to the free list in this block
-  void chain_free_list(HandleRecord* handle) {
-    handle->set_handle((Metadata*) (ptr_tag | _free_list));
-#ifdef METADATA_TRACK_NAMES
-    handle->set_name(NULL);
-#endif
-    _free_list = (intptr_t) handle;
-  }
-
-  HandleRecord* get_free_handle() {
-    assert(_free_list != 0, "should check before calling");
-    HandleRecord* handle = (HandleRecord*) (_free_list & ptr_mask);
-    _free_list = (ptr_mask & (intptr_t) (handle->handle()));
-    assert(_free_list != ptr_tag, "should be null");
-    handle->set_handle(NULL);
-    return handle;
-  }
-
-  void metadata_do(void f(Metadata*));
-
-  void do_unloading(BoolObjectClosure* is_alive);
-};
-
-jmetadata MetadataHandleBlock::allocate_metadata_handle(Metadata* obj) {
-  assert(obj->is_valid() && obj->is_metadata(), "must be");
-
-  // Try last block
-  HandleRecord* handle = NULL;
-  if (_last->_top < block_size_in_handles) {
-    handle = &(_last->_handles)[_last->_top++];
-  } else if (_free_list != 0) {
-    // Try free list
-    handle = get_free_handle();
-  }
-
-  if (handle != NULL) {
-    handle->set_handle(obj);
-#ifdef METADATA_TRACK_NAMES
-    handle->set_name(obj->print_value_string());
-#endif
-    return (jmetadata) handle;
-  }
-
-  // Check if unused block follow last
-  if (_last->_next != NULL) {
-    // update last and retry
-    _last = _last->_next;
-    return allocate_metadata_handle(obj);
-  }
-
-  // No space available, we have to rebuild free list or expand
-  if (_allocate_before_rebuild == 0) {
-    rebuild_free_list();        // updates _allocate_before_rebuild counter
-  } else {
-    // Append new block
-    // This can block, but the caller has a metadata handle around this object.
-    _last->_next = allocate_block();
-    _last = _last->_next;
-    _allocate_before_rebuild--;
-  }
-  return allocate_metadata_handle(obj);  // retry
-}
-
-void MetadataHandleBlock::rebuild_free_list() {
-  assert(_allocate_before_rebuild == 0 && _free_list == 0, "just checking");
-  int free = 0;
-  int blocks = 0;
-  for (MetadataHandleBlock* current = this; current != NULL; current = current->_next) {
-    for (int index = 0; index < current->_top; index++) {
-      HandleRecord* handle = &(current->_handles)[index];
-      if (handle->handle() == NULL) {
-        // this handle was cleared out by a delete call, reuse it
-        chain_free_list(handle);
-        free++;
-      }
-    }
-    // we should not rebuild free list if there are unused handles at the end
-    assert(current->_top == block_size_in_handles, "just checking");
-    blocks++;
-  }
-  // Heuristic: if more than half of the handles are free we rebuild next time
-  // as well, otherwise we append a corresponding number of new blocks before
-  // attempting a free list rebuild again.
-  int total = blocks * block_size_in_handles;
-  int extra = total - 2*free;
-  if (extra > 0) {
-    // Not as many free handles as we would like - compute number of new blocks to append
-    _allocate_before_rebuild = (extra + block_size_in_handles - 1) / block_size_in_handles;
-  }
-  if (TraceJNIHandleAllocation) {
-    tty->print_cr("Rebuild free list MetadataHandleBlock " PTR_FORMAT " blocks=%d used=%d free=%d add=%d",
-                  p2i(this), blocks, total-free, free, _allocate_before_rebuild);
-  }
-}
-
-MetadataHandleBlock* MetadataHandleBlock::allocate_block() {
-  return new MetadataHandleBlock();
-}
-
-void MetadataHandleBlock::metadata_do(void f(Metadata*)) {
-  for (MetadataHandleBlock* current = this; current != NULL; current = current->_next) {
-    for (int index = 0; index < current->_top; index++) {
-      HandleRecord* root = &(current->_handles)[index];
-      Metadata* value = root->handle();
-      // traverse heap pointers only, not deleted handles or free list
-      // pointers
-      if (value != NULL && ((intptr_t) value & ptr_tag) == 0) {
-        assert(value->is_valid(), err_msg("invalid metadata %s", get_name(index)));
-        f(value);
-      }
-    }
-    // the next handle block is valid only if current block is full
-    if (current->_top < block_size_in_handles) {
-      break;
-    }
-  }
-}
-
-// Visit any live metadata handles and clean them up.  Since clearing of these handles is driven by
-// weak references they will be cleared at some point in the future when the reference cleaning logic is run.
-void MetadataHandleBlock::do_unloading(BoolObjectClosure* is_alive) {
-  for (MetadataHandleBlock* current = this; current != NULL; current = current->_next) {
-    for (int index = 0; index < current->_top; index++) {
-      HandleRecord* handle = &(current->_handles)[index];
-      Metadata* value = handle->handle();
-      // traverse heap pointers only, not deleted handles or free list
-      // pointers
-      if (value != NULL && ((intptr_t) value & ptr_tag) == 0) {
-        Klass* klass = NULL;
-        if (value->is_klass()) {
-          klass = (Klass*)value;
-        } else if (value->is_method()) {
-          Method* m = (Method*)value;
-          klass = m->method_holder();
-        } else if (value->is_constantPool()) {
-          ConstantPool* cp = (ConstantPool*)value;
-          klass = cp->pool_holder();
-        } else {
-          ShouldNotReachHere();
-        }
-        if (klass->class_loader_data()->is_unloading()) {
-          // This needs to be marked so that it's no longer scanned
-          // but can't be put on the free list yet. The
-          // ReferenceCleaner will set this to NULL and
-          // put it on the free list.
-          jlong old_value = Atomic::cmpxchg((jlong) (ptr_tag), (jlong*)handle, (jlong) value);
-          if (old_value == (jlong) value) {
-            // Success
-          } else {
-            guarantee(old_value == 0, "only other possible value");
-          }
-        }
-      }
-    }
-    // the next handle block is valid only if current block is full
-    if (current->_top < block_size_in_handles) {
-      break;
-    }
-  }
-}
-
-JNIHandleBlock* JVMCI::_object_handles = NULL;
-MetadataHandleBlock* JVMCI::_metadata_handles = NULL;
-JVMCIRuntime* JVMCI::_compiler_runtime = NULL;
-JVMCIRuntime* JVMCI::_java_runtime = NULL;
 
 // Simple helper to see if the caller of a runtime stub which
 // entered the VM has been deoptimized
@@ -1061,30 +783,6 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(JVMCI_TRAPS) {
   _HotSpotJVMCIRuntime_instance = JVMCIENV->make_global(result);
 }
 
-
-void JVMCI::initialize_compiler(TRAPS) {
-  if (JVMCILibDumpJNIConfig) {
-    JNIJVMCI::initialize_ids(NULL);
-    ShouldNotReachHere();
-  }
-
-  JVMCI::compiler_runtime()->call_getCompiler(CHECK);
-}
-
-void JVMCI::initialize_globals() {
-  _object_handles = JNIHandleBlock::allocate_block();
-  _metadata_handles = MetadataHandleBlock::allocate_block();
-  if (UseJVMCINativeLibrary) {
-    // There are two runtimes.
-    _compiler_runtime = new JVMCIRuntime();
-    _java_runtime = new JVMCIRuntime();
-  } else {
-    // There is only a single runtime
-    _java_runtime = _compiler_runtime = new JVMCIRuntime();
-  }
-}
-
-
 void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
   // Check first without JVMCI_lock
   if (_initialized) {
@@ -1181,53 +879,6 @@ JVMCIObject JVMCIRuntime::get_HotSpotJVMCIRuntime(JVMCI_TRAPS) {
   return _HotSpotJVMCIRuntime_instance;
 }
 
-jobject JVMCI::make_global(Handle obj) {
-  assert(_object_handles != NULL, "uninitialized");
-  MutexLocker ml(JVMCI_lock);
-  return _object_handles->allocate_handle(obj());
-}
-
-bool JVMCI::is_global_handle(jobject handle) {
-  assert(_object_handles != NULL, "uninitialized");
-  MutexLocker ml(JVMCI_lock);
-  return _object_handles->chain_contains(handle);
-}
-
-jmetadata JVMCI::allocate_handle(const methodHandle& handle) {
-  assert(_metadata_handles != NULL, "uninitialized");
-  MutexLocker ml(JVMCI_lock);
-  return _metadata_handles->allocate_handle(handle);
-}
-
-jmetadata JVMCI::allocate_handle(const constantPoolHandle& handle) {
-  assert(_metadata_handles != NULL, "uninitialized");
-  MutexLocker ml(JVMCI_lock);
-  return _metadata_handles->allocate_handle(handle);
-}
-
-void JVMCI::release_handle(jmetadata handle) {
-  MutexLocker ml(JVMCI_lock);
-  _metadata_handles->chain_free_list(handle);
-}
-
-void JVMCI::oops_do(OopClosure* f) {
-  if (_object_handles != NULL) {
-    _object_handles->oops_do(f);
-  }
-}
-
-void JVMCI::metadata_do(void f(Metadata*)) {
-  if (_metadata_handles != NULL) {
-    _metadata_handles->metadata_do(f);
-  }
-}
-
-void JVMCI::do_unloading(BoolObjectClosure* is_alive, bool unloading_occurred) {
-  if (_metadata_handles != NULL && unloading_occurred) {
-    _metadata_handles->do_unloading(is_alive);
-  }
-}
-
 // private static void CompilerToVM.registerNatives()
 JVM_ENTRY_NO_ENV(void, JVM_RegisterJVMCINatives(JNIEnv *env, jclass c2vmClass))
 
@@ -1293,26 +944,6 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized(JVMCIEnv* JVMCIENV) 
     }
   }
   initialize(JVMCIENV);
-}
-
-
-bool JVMCI::is_compiler_initialized() {
-  return compiler_runtime()->is_HotSpotJVMCIRuntime_initialized();
-}
-
-
-void JVMCI::shutdown() {
-  if (compiler_runtime() != NULL) {
-    compiler_runtime()->shutdown();
-  }
-}
-
-
-bool JVMCI::shutdown_called() {
-  if (compiler_runtime() != NULL) {
-    return compiler_runtime()->shutdown_called();
-  }
-  return false;
 }
 
 
@@ -1782,7 +1413,7 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
         // Copy failure reason into resource memory first ...
         const char* failure_reason = JVMCIENV->as_utf8_string(failure_message);
         // ... and then into the C heap.
-        failure_reason = os::strdup(failure_reason, mtCompiler);
+        failure_reason = os::strdup(failure_reason, mtJVMCI);
         bool retryable = JVMCIENV->get_HotSpotCompilationRequestResult_retry(result_object) != 0;
         compile_state->set_failure(retryable, failure_reason, true);
       } else {
