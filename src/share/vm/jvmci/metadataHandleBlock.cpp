@@ -24,20 +24,22 @@
 #include "precompiled.hpp"
 #include "jvmci/metadataHandleBlock.hpp"
 
+MetadataHandleBlock* MetadataHandleBlock::_last = NULL;
+intptr_t             MetadataHandleBlock::_free_list = 0;
+int                  MetadataHandleBlock::_allocate_before_rebuild = 0;
+
 jmetadata MetadataHandleBlock::allocate_metadata_handle(Metadata* obj) {
   assert(obj->is_valid() && obj->is_metadata(), "must be");
 
-  // Try last block
-  HandleRecord* handle = NULL;
-  if (_last->_top < block_size_in_handles) {
-    handle = &(_last->_handles)[_last->_top++];
-  } else if (_free_list != 0) {
-    // Try free list
-    handle = get_free_handle();
+  if (_last == NULL) {
+    // This is the first allocation.
+    _last = this;
   }
 
+  HandleRecord* handle = get_handle();
+
   if (handle != NULL) {
-    handle->set_handle(obj);
+    handle->set_value(obj);
 #ifdef METADATA_TRACK_NAMES
     handle->set_name(obj->print_value_string());
 #endif
@@ -72,7 +74,7 @@ void MetadataHandleBlock::rebuild_free_list() {
   for (MetadataHandleBlock* current = this; current != NULL; current = current->_next) {
     for (int index = 0; index < current->_top; index++) {
       HandleRecord* handle = &(current->_handles)[index];
-      if (handle->handle() == NULL) {
+      if (handle->value() == NULL) {
         // this handle was cleared out by a delete call, reuse it
         chain_free_list(handle);
         free++;
@@ -82,7 +84,7 @@ void MetadataHandleBlock::rebuild_free_list() {
     assert(current->_top == block_size_in_handles, "just checking");
     blocks++;
   }
-  // Heuristic: if more than half of the handles are free we rebuild next time
+  // Heuristic: if more than half of the handles are NOT free we rebuild next time
   // as well, otherwise we append a corresponding number of new blocks before
   // attempting a free list rebuild again.
   int total = blocks * block_size_in_handles;
@@ -97,15 +99,11 @@ void MetadataHandleBlock::rebuild_free_list() {
   }
 }
 
-MetadataHandleBlock* MetadataHandleBlock::allocate_block() {
-  return new MetadataHandleBlock();
-}
-
 void MetadataHandleBlock::metadata_do(void f(Metadata*)) {
   for (MetadataHandleBlock* current = this; current != NULL; current = current->_next) {
     for (int index = 0; index < current->_top; index++) {
       HandleRecord* root = &(current->_handles)[index];
-      Metadata* value = root->handle();
+      Metadata* value = root->value();
       // traverse heap pointers only, not deleted handles or free list
       // pointers
       if (value != NULL && ((intptr_t) value & ptr_tag) == 0) {
@@ -126,7 +124,7 @@ void MetadataHandleBlock::do_unloading() {
   for (MetadataHandleBlock* current = this; current != NULL; current = current->_next) {
     for (int index = 0; index < current->_top; index++) {
       HandleRecord* handle = &(current->_handles)[index];
-      Metadata* value = handle->handle();
+      Metadata* value = handle->value();
       // traverse heap pointers only, not deleted handles or free list
       // pointers
       if (value != NULL && ((intptr_t) value & ptr_tag) == 0) {

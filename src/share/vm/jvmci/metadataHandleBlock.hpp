@@ -36,24 +36,24 @@
 
 struct _jmetadata {
  private:
-  Metadata* _handle;
+  Metadata* _value;
 #ifdef METADATA_TRACK_NAMES
   // Debug data for tracking stale metadata
   const char* _name;
 #endif
 
  public:
-  Metadata* handle() { return _handle; }
+  Metadata* value() { return _value; }
 
 #ifdef METADATA_TRACK_NAMES
   void initialize() {
-    _handle = NULL;
+    _value = NULL;
     _name = NULL;
   }
 #endif
 
-  void set_handle(Metadata* value) {
-    _handle = value;
+  void set_value(Metadata* value) {
+    _value = value;
   }
 
 #ifdef METADATA_TRACK_NAMES
@@ -100,19 +100,13 @@ class MetadataHandleBlock : public CHeapObj<mtJVMCI> {
 
   // The following instance variables are only used by the first block in a chain.
   // Having two types of blocks complicates the code and the space overhead is negligible.
-  MetadataHandleBlock* _last;                   // Last block in use
-  intptr_t        _free_list;                   // Handle free list
-  int             _allocate_before_rebuild;     // Number of blocks to allocate before rebuilding free list
-
-  jmetadata allocate_metadata_handle(Metadata* metadata);
-  void rebuild_free_list();
+  static MetadataHandleBlock* _last;                   // Last block in use
+  static intptr_t        _free_list;                   // Handle free list
+  static int             _allocate_before_rebuild;     // Number of blocks to allocate before rebuilding free list
 
   MetadataHandleBlock() {
     _top = 0;
     _next = NULL;
-    _last = this;
-    _free_list = 0;
-    _allocate_before_rebuild = 0;
 #ifdef METADATA_TRACK_NAMES
     for (int i = 0; i < block_size_in_handles; i++) {
       _handles[i].initialize();
@@ -128,28 +122,44 @@ class MetadataHandleBlock : public CHeapObj<mtJVMCI> {
 #endif
   }
 
+  static HandleRecord* get_free_handle() {
+    assert(_free_list != 0, "should check before calling");
+    HandleRecord* handle = (HandleRecord*) (_free_list & ptr_mask);
+    _free_list = (ptr_mask & (intptr_t) (handle->value()));
+    assert(_free_list != ptr_tag, "should be null");
+    handle->set_value(NULL);
+    return handle;
+  }
+
+  static HandleRecord* get_handle() {
+    assert(_last != NULL, "sanity");
+    // Try last block
+    if (_last->_top < block_size_in_handles) {
+      return &(_last->_handles)[_last->_top++];
+    } else if (_free_list != 0) {
+      // Try free list
+      return get_free_handle();
+    }
+    return NULL;
+  }
+
+  void rebuild_free_list();
+
+  jmetadata allocate_metadata_handle(Metadata* metadata);
+
  public:
   jmetadata allocate_handle(const methodHandle& handle)       { return allocate_metadata_handle(handle()); }
   jmetadata allocate_handle(const constantPoolHandle& handle) { return allocate_metadata_handle(handle()); }
 
-  static MetadataHandleBlock* allocate_block();
+  static MetadataHandleBlock* allocate_block() { return new MetadataHandleBlock(); }
 
   // Adds `handle` to the free list in this block
-  void chain_free_list(HandleRecord* handle) {
-    handle->set_handle((Metadata*) (ptr_tag | _free_list));
+  static void chain_free_list(HandleRecord* handle) {
+    handle->set_value((Metadata*) (ptr_tag | _free_list));
 #ifdef METADATA_TRACK_NAMES
     handle->set_name(NULL);
 #endif
     _free_list = (intptr_t) handle;
-  }
-
-  HandleRecord* get_free_handle() {
-    assert(_free_list != 0, "should check before calling");
-    HandleRecord* handle = (HandleRecord*) (_free_list & ptr_mask);
-    _free_list = (ptr_mask & (intptr_t) (handle->handle()));
-    assert(_free_list != ptr_tag, "should be null");
-    handle->set_handle(NULL);
-    return handle;
   }
 
   void metadata_do(void f(Metadata*));
