@@ -40,15 +40,15 @@ oop HotSpotJVMCI::resolve(JVMCIObject obj) {
   return JNIHandles::resolve(obj.as_jobject());
 }
 
-arrayOop HotSpotJVMCI::resolve(JVMCIArray obj) { 
+arrayOop HotSpotJVMCI::resolve(JVMCIArray obj) {
   return (arrayOop) JNIHandles::resolve(obj.as_jobject());
 }
 
-objArrayOop HotSpotJVMCI::resolve(JVMCIObjectArray obj) { 
+objArrayOop HotSpotJVMCI::resolve(JVMCIObjectArray obj) {
   return (objArrayOop) JNIHandles::resolve(obj.as_jobject());
 }
 
-typeArrayOop HotSpotJVMCI::resolve(JVMCIPrimitiveArray obj) { 
+typeArrayOop HotSpotJVMCI::resolve(JVMCIPrimitiveArray obj) {
   return (typeArrayOop) JNIHandles::resolve(obj.as_jobject());
 }
 
