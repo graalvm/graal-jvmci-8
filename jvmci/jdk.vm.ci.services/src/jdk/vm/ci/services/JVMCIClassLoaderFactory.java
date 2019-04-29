@@ -124,6 +124,7 @@ class JVMCIClassLoaderFactory {
      * Gets the URLs for the required JVMCI jars, all the other jar files in the {@code jvmciDir}
      * directory and the entries specified by the {@code "jvmci.class.path.append"} system property.
      */
+    @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "jvmciDir is guaranteed by the caller to be a directory")
     private static URL[] getJVMCIJarsUrls(Path jvmciDir) {
         String[] dirEntries = jvmciDir.toFile().list();
         String append = Services.getSavedProperty("jvmci.class.path.append");

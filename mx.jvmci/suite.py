@@ -1,5 +1,5 @@
 suite = {
-  "mxversion" : "5.169.0",
+  "mxversion" : "5.215.7",
   "name" : "jvmci",
   "url" : "http://openjdk.java.net/projects/graal",
   "developer" : {
@@ -46,7 +46,7 @@ suite = {
         "groupId" : "org.openjdk.jol",
         "artifactId" : "jol-cli",
         "version" : "0.9",
-        "suffix" : "full",
+        "classifier" : "full",
       },
     },
 
