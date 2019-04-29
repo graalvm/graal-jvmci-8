@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2000, 2014, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -59,6 +59,9 @@
 #include "gc_implementation/concurrentMarkSweep/concurrentMarkSweepThread.hpp"
 #include "gc_implementation/concurrentMarkSweep/vmCMSOperations.hpp"
 #endif // INCLUDE_ALL_GCS
+#if INCLUDE_JVMCI
+#include "jvmci/jvmci.hpp"
+#endif
 
 GenCollectedHeap* GenCollectedHeap::_gch;
 NOT_PRODUCT(size_t GenCollectedHeap::_skip_header_HeapWords = 0;)
@@ -74,6 +77,9 @@ enum GCH_strong_roots_tasks {
   GCH_PS_ClassLoaderDataGraph_oops_do,
   GCH_PS_jvmti_oops_do,
   GCH_PS_CodeCache_oops_do,
+#if INCLUDE_JVMCI
+  GCH_PS_jvmci_oops_do,
+#endif
   GCH_PS_younger_gens,
   // Leave this one last.
   GCH_PS_NumElements
@@ -666,6 +672,12 @@ void GenCollectedHeap::process_roots(bool activate_scope,
   if (!_process_strong_tasks->is_task_claimed(GCH_PS_jvmti_oops_do)) {
     JvmtiExport::oops_do(strong_roots);
   }
+
+#if INCLUDE_JVMCI
+  if (EnableJVMCI && !_process_strong_tasks->is_task_claimed(GCH_PS_jvmci_oops_do)) {
+    JVMCI::oops_do(strong_roots);
+  }
+#endif
 
   if (!_process_strong_tasks->is_task_claimed(GCH_PS_SystemDictionary_oops_do)) {
     SystemDictionary::roots_oops_do(strong_roots, weak_roots);

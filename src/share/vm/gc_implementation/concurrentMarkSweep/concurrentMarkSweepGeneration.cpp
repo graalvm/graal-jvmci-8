@@ -42,7 +42,6 @@
 #include "gc_implementation/shared/gcTraceTime.hpp"
 #include "gc_implementation/shared/isGCActiveMark.hpp"
 #include "gc_interface/collectedHeap.inline.hpp"
-#include "jvmci/jvmci.hpp"
 #include "memory/allocation.hpp"
 #include "memory/cardTableRS.hpp"
 #include "memory/collectorPolicy.hpp"
@@ -64,6 +63,9 @@
 #include "runtime/vmThread.hpp"
 #include "services/memoryService.hpp"
 #include "services/runtimeService.hpp"
+#if INCLUDE_JVMCI
+#include "jvmci/jvmci.hpp"
+#endif
 
 PRAGMA_FORMAT_MUTE_WARNINGS_FOR_GCC
 
@@ -6283,7 +6285,7 @@ void CMSCollector::refProcessingWork(bool asynch, bool clear_all_soft_refs) {
       // Prune dead klasses from subklass/sibling/implementor lists.
       Klass::clean_weak_klass_links(&_is_alive_closure);
 
-      JVMCI::do_unloading(&_is_alive_closure, purged_class);
+      JVMCI_ONLY(JVMCI::do_unloading(purged_class);)
     }
 
     {

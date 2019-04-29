@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1354,8 +1354,10 @@ class java_lang_StackTraceElement: AllStatic {
   static oop create(Handle mirror, int method, int version, int bci, int cpref, TRAPS);
   static oop create(methodHandle method, int bci, TRAPS);
 
+#if INCLUDE_JVMCI
   static void decode(Handle mirror, int method, int version, int bci, int cpref, Symbol*& methodName, Symbol*& fileName, int& lineNumber);
   static void decode(Handle mirror, methodHandle method, int bci, Symbol*& methodName, Symbol*& fileName, int& lineNumber);
+#endif
 
   // Debugging
   friend class JavaClasses;

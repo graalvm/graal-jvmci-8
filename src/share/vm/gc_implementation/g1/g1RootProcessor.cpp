@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2015, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2015, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -37,6 +37,9 @@
 #include "runtime/fprofiler.hpp"
 #include "runtime/mutex.hpp"
 #include "services/management.hpp"
+#if INCLUDE_JVMCI
+#include "jvmci/jvmci.hpp"
+#endif
 
 class G1CodeBlobClosure : public CodeBlobClosure {
   class HeapRegionGatheringOopClosure : public OopClosure {
@@ -334,6 +337,15 @@ void G1RootProcessor::process_vm_roots(OopClosure* strong_roots,
       JvmtiExport::oops_do(strong_roots);
     }
   }
+
+#if INCLUDE_JVMCI
+  if (EnableJVMCI) {
+    G1GCParPhaseTimesTracker x(phase_times, G1GCPhaseTimes::JVMCIRoots, worker_i);
+    if (!_process_strong_tasks.is_task_claimed(G1RP_PS_JVMCI_oops_do)) {
+      JVMCI::oops_do(strong_roots);
+    }
+  }
+#endif
 
   {
     G1GCParPhaseTimesTracker x(phase_times, G1GCPhaseTimes::SystemDictionaryRoots, worker_i);

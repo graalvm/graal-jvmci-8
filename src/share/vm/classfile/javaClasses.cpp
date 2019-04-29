@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -1903,6 +1903,7 @@ oop java_lang_StackTraceElement::create(Handle mirror, int method_id,
   return element();
 }
 
+#if INCLUDE_JVMCI
 void java_lang_StackTraceElement::decode(Handle mirror, methodHandle method, int bci, Symbol*& methodname, Symbol*& filename, int& line_number) {
   int method_id = method->orig_method_idnum();
   int cpref = method->name_index();
@@ -1939,6 +1940,7 @@ void java_lang_StackTraceElement::decode(Handle mirror, int method_id, int versi
     line_number = get_line_number(method, bci);
   }
 }
+#endif // INCLUDE_JVMCI
 
 oop java_lang_StackTraceElement::create(methodHandle method, int bci, TRAPS) {
   Handle mirror (THREAD, method->method_holder()->java_mirror());

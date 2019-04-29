@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -24,8 +24,10 @@
 #ifndef SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP
 #define SHARE_VM_JVMCI_JVMCIJAVACLASSES_HPP
 
+#include "classfile/vmSymbols.hpp"
 #include "jvmci/jvmciExceptions.hpp"
-
+#include "jvmci/jvmciObject.hpp"
+#include "runtime/jniHandles.hpp"
 
 /*
  * This macro defines the structure of the JVMCI classes accessed from VM code.  It is used to
@@ -407,70 +409,6 @@
 class JVMCICompiler;
 class JVMCIEnv;
 
-class JVMCIArray;
-class JVMCIPrimitiveArray;
-class JVMCIObjectArray;
-
-class JVMCIObject VALUE_OBJ_CLASS_SPEC {
-
- private:
-  jobject _object;
-  bool _is_hotspot;
-
- public:
-  JVMCIObject(): _object(NULL), _is_hotspot(false) {}
-  JVMCIObject(jobject o, bool is_hotspot): _object(o), _is_hotspot(is_hotspot) { }
-
-  static JVMCIObject create(jobject o, bool is_hotspot) { JVMCIObject r(o, is_hotspot); return r; }
-  jobject as_jobject() { return _object; }
-  jobject as_jweak()   { return (jweak) _object; }
-  jstring as_jstring() { return (jstring) _object; }
-  bool is_hotspot() { return _is_hotspot; }
-
-  bool is_null() const { return _object == NULL; }
-  bool is_non_null() const { return _object != NULL; }
-
-  operator JVMCIArray();
-  operator JVMCIPrimitiveArray();
-  operator JVMCIObjectArray();
-};
-
-class JVMCIArray : public JVMCIObject {
- public:
-  JVMCIArray() {}
-  JVMCIArray(jobject o, bool is_hotspot): JVMCIObject(o, is_hotspot) {}
-  jarray as_jobject() { return (jarray) JVMCIObject::as_jobject(); }
-};
-
-class JVMCIObjectArray : public JVMCIArray {
- public:
-  JVMCIObjectArray() {}
-  JVMCIObjectArray(void* v): JVMCIArray() { assert(v == NULL, "must be NULL"); }
-  JVMCIObjectArray(jobject o, bool is_hotspot): JVMCIArray(o, is_hotspot) {}
-
-  jobjectArray as_jobject() { return (jobjectArray) JVMCIArray::as_jobject(); }
-};
-
-class JVMCIPrimitiveArray : public JVMCIArray {
- public:
-  JVMCIPrimitiveArray() {}
-  JVMCIPrimitiveArray(void* v): JVMCIArray() { assert(v == NULL, "must be NULL"); }
-  JVMCIPrimitiveArray(jobject o, bool is_hotspot): JVMCIArray(o, is_hotspot) {}
-
-  jbooleanArray as_jbooleanArray() { return (jbooleanArray) as_jobject(); }
-  jbyteArray    as_jbyteArray()    { return (jbyteArray) as_jobject();    }
-  jcharArray    as_jcharArray()    { return (jcharArray) as_jobject();    }
-  jshortArray   as_jshortArray()   { return (jshortArray) as_jobject();   }
-  jintArray     as_jintArray()     { return (jintArray) as_jobject();     }
-  jfloatArray   as_jfloatArray()   { return (jfloatArray) as_jobject();   }
-  jlongArray    as_jlongArray()    { return (jlongArray) as_jobject();    }
-  jdoubleArray  as_jdoubleArray()  { return (jdoubleArray) as_jobject();  }
-};
-
-inline JVMCIObject::operator JVMCIArray() { return JVMCIArray(_object, _is_hotspot); }
-inline JVMCIObject::operator JVMCIPrimitiveArray() { return JVMCIPrimitiveArray(_object, _is_hotspot); }
-inline JVMCIObject::operator JVMCIObjectArray() { return JVMCIObjectArray(_object, _is_hotspot); }
-
 #define START_CLASS(simpleClassName, fullClassName)      \
   class simpleClassName { \
     friend class JVMCIEnv; \
@@ -571,14 +509,14 @@ class HotSpotJVMCI {
 
  public:
 
-  static oop resolve(JVMCIObject obj) { return JNIHandles::resolve(obj.as_jobject()); }
-
-  static arrayOop resolve(JVMCIArray obj) { return (objArrayOop) JNIHandles::resolve(obj.as_jobject()); }
-  static objArrayOop resolve(JVMCIObjectArray obj) { return (objArrayOop) JNIHandles::resolve(obj.as_jobject()); }
-  static typeArrayOop resolve(JVMCIPrimitiveArray obj) { return (typeArrayOop) JNIHandles::resolve(obj.as_jobject()); }
-
+  static oop resolve(JVMCIObject obj);
+  
+  static arrayOop resolve(JVMCIArray obj);
+  static objArrayOop resolve(JVMCIObjectArray obj);
+  static typeArrayOop resolve(JVMCIPrimitiveArray obj);
+  
   static JVMCIObject wrap(jobject obj) { return JVMCIObject(obj, true); }
-  static JVMCIObject wrap(oop obj) { assert(Thread::current()->is_Java_thread(), "must be"); return JVMCIObject(JNIHandles::make_local(obj), true); }
+  static JVMCIObject wrap(oop obj);
 
   static inline Method* asMethod(JVMCIEnv* env, oop jvmci_method) {
     return *(Method**) HotSpotResolvedJavaMethodImpl::metadataHandle(env, jvmci_method);
