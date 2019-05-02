@@ -14,7 +14,12 @@
             git: ">=1.8.3",
             mercurial: ">=2.2",
             make : ">=3.83",
-            "gcc-build-essentials" : "==4.9.1"
+            "gcc-build-essentials" : "==4.9.2",
+
+            # Deps for building GraalVM
+            binutils: "==2.23.2",
+            llvm: "==3.8",
+            ruby: "==2.1.0"
         },
         capabilities+: ["linux"],
         name+: "-linux",
@@ -39,6 +44,9 @@
         packages+: {
             # No need to specify a "make" package as Mac OS X has make 3.81
             # available once Xcode has been installed.
+
+            # Deps for building GraalVM
+            llvm: "==4.0.1"
         },
         environment+: {
             CI_OS: "darwin",
@@ -52,7 +60,7 @@
             ac_cv_func_mkostemps: "no",
             MACOSX_DEPLOYMENT_TARGET: "10.11"
         },
-        capabilities+: ["darwin_sierra", "macmini_late_2014_8gb"],
+        capabilities+: ["darwin_sierra"],
         name+: "-darwin",
     },
 
@@ -155,17 +163,14 @@
         name+: "-graalvm",
         timelimit: "1:20:00",
         run+: [
-            ["mx", "-p", "graal/vm",
-                    "--dy", "/substratevm,/graal-js",
-                    "--force-bash-launchers=true",
-                    "--disable-libpolyglot", "build"
-            ],
-            ["./graal/vm/latest_graalvm_home/bin/gu", "rebuild-images", "js"],
+            # Build and test JavaScript on GraalVM
+            ["mx", "-p", "graal/vm", "--env", "ce", "build"],
             ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
             ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
 
-            ["mx", "-p", "graal/vm", "--env", "libgraal", "--extra-image-builder-argument=-J-esa", "--extra-image-builder-argument=-H:+ReportExceptionStackTraces",  "build"],
-            ["mx", "-p", "graal/vm", "--env", "libgraal", "gate", "--task", "LibGraal"]
+             # Build and test LibGraal
+            ["mx", "-p", "graal/vm", "--env", "libgraal", "--extra-image-builder-argument=-J-esa", "--extra-image-builder-argument=-H:+ReportExceptionStackTraces", "build"],
+            ["mx", "-p", "graal/vm", "--env", "libgraal", "gate", "--task", "LibGraal"],
         ]
     },
 
