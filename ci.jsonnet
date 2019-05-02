@@ -137,7 +137,7 @@
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
 
             # Look for a well known branch that fixes a downstream failure caused by a JDK change
-            ["git", "-C", "graal", "checkout", "release/graal-vm/19", "||", "true"]
+            ["git", "-C", "graal", "checkout", "master", "||", "true"]
         ],
     },
 
