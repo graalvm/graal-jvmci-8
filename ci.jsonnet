@@ -161,10 +161,11 @@
     # Build a basic GraalVM and run some simple tests.
     GraalVMTest:: {
         name+: "-graalvm",
-        timelimit: "1:20:00",
+        timelimit: "1:30:00",
         run+: [
             # Build and test JavaScript on GraalVM
-            ["mx", "-p", "graal/vm", "--env", "ce", "build"],
+            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graaljs.git"]],
+            ["mx", "-p", "graal/vm", "--dynamicimports", "/graal-js,/substratevm", "--disable-polyglot", "--disable-libpolyglot", "--force-bash-launchers=native-image", "build"],
             ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
             ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
 
