@@ -622,9 +622,10 @@ C2V_VMENTRY_NULL(jobject, resolveTypeInPool, (JNIEnv* env, jobject, jobject jvmc
   Klass* klass = cp->klass_at(index, CHECK_NULL);
   JVMCIKlassHandle resolved_klass(THREAD, klass);
   if (resolved_klass->oop_is_instance()) {
-    bool linked = InstanceKlass::cast(resolved_klass())->link_class_or_fail(CHECK_NULL);
-    if (!linked) {
-      return NULL;
+    InstanceKlass::cast(resolved_klass())->link_class(CHECK_NULL);
+    if (!InstanceKlass::cast(resolved_klass())->is_linked()) {
+      // link_class() should not return here if there is an issue.
+      JVMCI_THROW_MSG_NULL(InternalError, err_msg("Class %s must be linked", resolved_klass()->external_name()));
     }
   }
   JVMCIObject klassObject = JVMCIENV->get_jvmci_type(resolved_klass, JVMCI_CHECK_NULL);
