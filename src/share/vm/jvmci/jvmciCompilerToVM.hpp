@@ -26,6 +26,7 @@
 
 #include "jvmci/jvmciExceptions.hpp"
 #include "runtime/javaCalls.hpp"
+#include "runtime/signature.hpp"
 
 class JVMCIObjectArray;
 
