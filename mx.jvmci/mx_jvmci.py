@@ -807,7 +807,7 @@ def get_hotspot_release_version(tag=mx.DEFAULT_JDK_TAG):
     #   OpenJDK 64-Bit Server VM (build 25.71-b01-internal-jvmci-0.49-dev, mixed mode)
     #   Java HotSpot(TM) 64-Bit Server VM (build 25.192-b12, mixed mode)
     last = output[-1]
-    m = re.search(r'.* \(build (\d+.\d+-b\d+)', last)
+    m = re.search(r'.*\(build (\d+.\d+-b\d+)', last)
     if m is None:
         mx.abort('Could not find HotSpot version in last line of `java -version` output:\n' + last)
     return m.group(1)
