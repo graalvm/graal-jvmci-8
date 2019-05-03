@@ -23,13 +23,18 @@
  */
 
 #include "precompiled.hpp"
+#include "code/codeCache.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/typeArrayOop.hpp"
+#include "runtime/arguments.hpp"
 #include "runtime/jniHandles.hpp"
 #include "runtime/javaCalls.hpp"
 #include "jvmci/jniAccessMark.inline.hpp"
 #include "jvmci/jvmciRuntime.hpp"
+#ifdef INCLUDE_ALL_GCS
+#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#endif
 
 JVMCICompileState::JVMCICompileState(CompileTask* task, int system_dictionary_modification_counter):
   _task(task),

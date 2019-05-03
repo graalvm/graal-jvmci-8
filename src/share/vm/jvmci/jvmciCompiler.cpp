@@ -25,6 +25,7 @@
 #include "compiler/compileBroker.hpp"
 #include "jvmci/jvmciEnv.hpp"
 #include "jvmci/jvmciRuntime.hpp"
+#include "runtime/arguments.hpp"
 #include "runtime/compilationPolicy.hpp"
 #include "runtime/handles.inline.hpp"
 
