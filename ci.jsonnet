@@ -1,4 +1,6 @@
 {
+    overlay: "2c2db49ea1f7ec142eda96d46723fbae5bdf6a1b",
+
     Windows:: {
         capabilities+: ["windows"],
         name+: "-windows",
@@ -135,25 +137,24 @@
         diskspace_required: "10G",
         logs: ["*.log"],
         targets: ["gate"],
-        run: [
+        run+: [
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
 
             ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
 
             # Test on graal
-            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
+            ["git", "clone", ["mx", "urlrewrite", "${GRAAL_REPO_URL}"]],
 
             # Look for a well known branch that fixes a downstream failure caused by a JDK change
-            ["git", "-C", "graal", "checkout", "master", "||", "true"]
+            ["git", "-C", "${GRAAL_REPO_NAME}", "checkout", "master", "||", "true"]
         ],
     },
 
     GraalTest:: {
         name+: "-graal",
         run+: [
-            ["mx", "-v", "-p", "graal/compiler",
-                    "gate", "--tags", "build,test,bootstraplite"
+            ["mx", "-v", "-p", "${GATE_SUITE}", "gate", "--tags", "build,test,bootstraplite"
             ]
         ]
     },
@@ -165,18 +166,29 @@
         run+: [
             # Build and test JavaScript on GraalVM
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graaljs.git"]],
-            ["mx", "-p", "graal/vm", "--dynamicimports", "/graal-js,/substratevm", "--disable-polyglot", "--disable-libpolyglot", "--force-bash-launchers=native-image", "build"],
+            ["mx", "-p", "${VM_SUITE}", "--dynamicimports", "/graal-js,${SVM_IMPORT}", "--disable-polyglot", "--disable-libpolyglot", "--force-bash-launchers=native-image", "build"],
             ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
             ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
 
              # Build and test LibGraal
-            ["mx", "-p", "graal/vm", "--env", "libgraal", "--extra-image-builder-argument=-J-esa", "--extra-image-builder-argument=-H:+ReportExceptionStackTraces", "build"],
-            ["mx", "-p", "graal/vm", "--env", "libgraal", "gate", "--task", "LibGraal"],
+            ["mx", "-p", "${VM_SUITE}", "--env", "${VM_SUITE_ENV}", "--extra-image-builder-argument=-J-esa", "--extra-image-builder-argument=-H:+ReportExceptionStackTraces", "build"],
+            ["mx", "-p", "${VM_SUITE}", "--env", "${VM_SUITE_ENV}", "gate", "--task", "LibGraal"],
         ]
     },
 
+    GraalCE:: {
+        environment+: {
+            VM_SUITE: "graal/vm",
+            VM_SUITE_ENV: "libgraal",
+            GATE_SUITE: "graal/compiler",
+            SVM_IMPORT: "/substratevm",
+            GRAAL_REPO_NAME: "graal",
+            GRAAL_REPO_URL: "https://github.com/graalvm/graal.git"
+        }
+    },
+
     builds: [
-        self.Build + self.GraalTest + mach
+        self.Build + self.GraalTest + mach + self.GraalCE
         for mach in [
             # Only need to test formatting and building
             # with Eclipse on one platform.
