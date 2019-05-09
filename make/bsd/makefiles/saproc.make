@@ -67,6 +67,7 @@ else
     SALIBS = -g \
              -framework Foundation \
              -framework JavaNativeFoundation \
+             -framework JavaRuntimeSupport \
              -framework Security \
              -framework CoreFoundation
     #objc compiler blows up on -march=i586, perhaps it should not be included in the macosx intel 32-bit C++ compiles?

@@ -25,6 +25,7 @@
 #include <objc/objc-runtime.h>
 #import <Foundation/Foundation.h>
 #import <JavaNativeFoundation/JavaNativeFoundation.h>
+#import <JavaRuntimeSupport/JavaRuntimeSupport.h>
 
 #include <jni.h>
 
