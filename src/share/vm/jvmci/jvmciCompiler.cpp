@@ -53,10 +53,6 @@ void JVMCICompiler::initialize() {
   CompilationPolicy::completed_vm_startup();
 }
 
-void JVMCICompiler::set_initialization_failed() {
-  set_state(failed);
-}
-
 void JVMCICompiler::bootstrap(TRAPS) {
   if (Arguments::mode() == Arguments::_int) {
     // Nothing to do in -Xint mode
@@ -114,10 +110,6 @@ void JVMCICompiler::bootstrap(TRAPS) {
 }
 
 bool JVMCICompiler::force_comp_at_level_simple(Method* method) {
-  if (is_failed()) {
-    // JVMCI failed during initialization
-    return true;
-  }
   if (UseJVMCINativeLibrary) {
     // This mechanism exists to force compilation of a JVMCI compiler by C1
     // to reduces the compilation time spent on the JVMCI compiler itself. In

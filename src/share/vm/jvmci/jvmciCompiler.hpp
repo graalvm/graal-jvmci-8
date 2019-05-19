@@ -77,9 +77,6 @@ public:
   // Initialization
   virtual void initialize();
 
-  // Notify that JVMCI compiler initialization failed.
-  void set_initialization_failed();
-
   /**
    * Initialize the compile queue with the methods in java.lang.Object and
    * then wait until the queue is empty.

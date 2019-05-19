@@ -1429,11 +1429,7 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
     }
   } else {
     // An uncaught exception here implies failure during compiler initialization.
-    // If tiered, disable JVMCI compilation by forcing all subsequent compiles
-    // to CompLevel_simple (see JVMCICompiler::force_comp_at_level_simple)
-    // otherwise disable compilation altogether.
-    compiler->set_initialization_failed();
-    compile_state->set_failure(false, "JVMCI compiler initialization failed");
+    // The only sensible thing to do here is to exit the VM.
 
     // Only report initialization failure once
     static volatile int report_init_failure = 0;
@@ -1441,10 +1437,9 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
         tty->print_cr("Exception during JVMCI compiler initialization:");
         JVMCIENV->describe_pending_exception(true);
     }
-    if (!TieredCompilation) {
-      CompileBroker::disable_compilation_forever();
-    }
     JVMCIENV->clear_pending_exception();
+    before_exit((JavaThread*) THREAD);
+    vm_exit(-1);
   }
   if (compiler->is_bootstrapping()) {
     compiler->set_bootstrap_compilation_request_handled();
