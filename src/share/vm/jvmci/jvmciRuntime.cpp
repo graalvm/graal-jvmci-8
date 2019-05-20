@@ -1428,11 +1428,18 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
       assert(false, "JVMCICompiler.compileMethod should always return non-null");
     }
   } else {
-    // An uncaught exception was thrown during compilation. Generally these
-    // should be handled by the Java code in some useful way but if they leak
-    // through to here report them instead of dying or silently ignoring them.
-    JVMCIENV->describe_pending_exception(true);
-    compile_state->set_failure(false, "unexpected exception thrown");
+    // An uncaught exception here implies failure during compiler initialization.
+    // The only sensible thing to do here is to exit the VM.
+
+    // Only report initialization failure once
+    static volatile int report_init_failure = 0;
+    if (!report_init_failure && Atomic::cmpxchg(1, &report_init_failure, 0) == 0) {
+        tty->print_cr("Exception during JVMCI compiler initialization:");
+        JVMCIENV->describe_pending_exception(true);
+    }
+    JVMCIENV->clear_pending_exception();
+    before_exit((JavaThread*) THREAD);
+    vm_exit(-1);
   }
   if (compiler->is_bootstrapping()) {
     compiler->set_bootstrap_compilation_request_handled();
