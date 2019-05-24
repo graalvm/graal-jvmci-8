@@ -681,9 +681,7 @@ void CompileTask::log_task_done(CompileLog* log) {
   log->end_elem();
   log->tail("task");
   log->clear_identities();   // next task will have different CI
-  if (log->unflushed_count() > 2000) {
-    log->flush();
-  }
+  log->flush();
   log->mark_file_end();
 }
 
@@ -1537,7 +1535,7 @@ nmethod* CompileBroker::compile_method(methodHandle method, int osr_bci,
     if (HAS_PENDING_EXCEPTION) {
       // In case of an exception looking up the method, we just forget
       // about it. The interpreter will kick-in and throw the exception.
-      method->set_not_compilable(); // implies is_not_osr_compilable()
+      method->set_not_compilable("NativeLookup::lookup failed"); // implies is_not_osr_compilable()
       CLEAR_PENDING_EXCEPTION;
       return NULL;
     }
@@ -1634,7 +1632,7 @@ bool CompileBroker::compilation_is_prohibited(methodHandle method, int osr_bci, 
   AbstractCompiler *comp = compiler(comp_level);
   if (is_native &&
       (!CICompileNatives || comp == NULL || !comp->supports_native())) {
-    method->set_not_compilable_quietly(comp_level);
+    method->set_not_compilable_quietly("native methods not supported", comp_level);
     return true;
   }
 
@@ -1642,7 +1640,7 @@ bool CompileBroker::compilation_is_prohibited(methodHandle method, int osr_bci, 
   // Some compilers may not support on stack replacement.
   if (is_osr &&
       (!CICompileOSR || comp == NULL || !comp->supports_osr())) {
-    method->set_not_osr_compilable(comp_level);
+    method->set_not_osr_compilable("OSR not supported", comp_level);
     return true;
   }
 
@@ -1658,7 +1656,7 @@ bool CompileBroker::compilation_is_prohibited(methodHandle method, int osr_bci, 
       method->print_short_name(tty);
       tty->cr();
     }
-    method->set_not_compilable(CompLevel_all, !quietly, "excluded by CompilerOracle");
+    method->set_not_compilable("excluded by CompilerOracle", CompLevel_all, !quietly);
   }
 
   return false;
@@ -1691,7 +1689,7 @@ int CompileBroker::assign_compile_id(methodHandle method, int osr_bci) {
   }
 
   // Method was not in the appropriate compilation range.
-  method->set_not_compilable_quietly();
+  method->set_not_compilable_quietly("Not in requested compile id range");
   return 0;
 #else
   // CICountOSR is a develop flag and set to 'false' by default. In a product built,
@@ -2339,15 +2337,15 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
   switch (compilable) {
   case ciEnv::MethodCompilable_never:
     if (is_osr)
-      method->set_not_osr_compilable_quietly();
+      method->set_not_osr_compilable_quietly("MethodCompilable_never");
     else
-      method->set_not_compilable_quietly();
+      method->set_not_compilable_quietly("MethodCompilable_never");
     break;
   case ciEnv::MethodCompilable_not_at_tier:
     if (is_osr)
-      method->set_not_osr_compilable_quietly(task_level);
+      method->set_not_osr_compilable_quietly("MethodCompilable_not_at_tier", task_level);
     else
-      method->set_not_compilable_quietly(task_level);
+      method->set_not_compilable_quietly("MethodCompilable_not_at_tier", task_level);
     break;
   }
 
