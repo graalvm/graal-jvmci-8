@@ -69,6 +69,8 @@ public class JVMCI {
                         errorMessage.format("Currently used Java home directory is %s.%n", javaHome);
                         errorMessage.format("Currently used VM configuration is: %s", vmName);
                         throw new UnsupportedOperationException(errorMessage.toString());
+                    } finally {
+                        initializing = false;
                     }
                 }
             }
