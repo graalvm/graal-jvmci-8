@@ -1213,14 +1213,18 @@ void java_lang_ThreadGroup::compute_offsets() {
   compute_offset(_ngroups_offset,     k, vmSymbols::ngroups_name(),     vmSymbols::int_signature());
 }
 
-oop java_lang_Throwable::unassigned_stacktrace() {
-  InstanceKlass* ik = InstanceKlass::cast(SystemDictionary::Throwable_klass());
-  address addr = ik->static_field_addr(static_unassigned_stacktrace_offset);
+static oop load_static_oop_field(Klass* k, int oop_field_offset) {
+  InstanceKlass* ik = InstanceKlass::cast(k);
+  address addr = ik->static_field_addr(oop_field_offset);
   if (UseCompressedOops) {
     return oopDesc::load_decode_heap_oop((narrowOop *)addr);
   } else {
     return oopDesc::load_decode_heap_oop((oop*)addr);
   }
+}
+
+oop java_lang_Throwable::unassigned_stacktrace() {
+  return load_static_oop_field(SystemDictionary::Throwable_klass(), static_unassigned_stacktrace_offset);
 }
 
 oop java_lang_Throwable::backtrace(oop throwable) {
@@ -2666,13 +2670,7 @@ HeapWord *java_lang_ref_Reference::pending_list_lock_addr() {
 }
 
 oop java_lang_ref_Reference::pending_list_lock() {
-  InstanceKlass* ik = InstanceKlass::cast(SystemDictionary::Reference_klass());
-  address addr = ik->static_field_addr(static_lock_offset);
-  if (UseCompressedOops) {
-    return oopDesc::load_decode_heap_oop((narrowOop *)addr);
-  } else {
-    return oopDesc::load_decode_heap_oop((oop*)addr);
-  }
+  return load_static_oop_field(SystemDictionary::Reference_klass(), static_lock_offset);
 }
 
 HeapWord *java_lang_ref_Reference::pending_list_addr() {
@@ -3186,15 +3184,8 @@ int java_lang_System::err_offset_in_bytes() {
   return (InstanceMirrorKlass::offset_of_static_fields() + static_err_offset);
 }
 
-
 bool java_lang_System::has_security_manager() {
-  InstanceKlass* ik = InstanceKlass::cast(SystemDictionary::System_klass());
-  address addr = ik->static_field_addr(static_security_offset);
-  if (UseCompressedOops) {
-    return oopDesc::load_decode_heap_oop((narrowOop *)addr) != NULL;
-  } else {
-    return oopDesc::load_decode_heap_oop((oop*)addr) != NULL;
-  }
+  return load_static_oop_field(SystemDictionary::System_klass(), static_security_offset)!= NULL;
 }
 
 int java_lang_Class::_klass_offset;
@@ -3276,7 +3267,13 @@ int java_nio_Buffer::_limit_offset;
 int java_util_concurrent_locks_AbstractOwnableSynchronizer::_owner_offset = 0;
 int sun_reflect_ConstantPool::_oop_offset;
 int sun_reflect_UnsafeStaticFieldAccessorImpl::_base_offset;
-
+int java_lang_Integer_IntegerCache::static_cache_offset;
+int java_lang_Long_LongCache::static_cache_offset;
+int java_lang_Character_CharacterCache::static_cache_offset;
+int java_lang_Short_ShortCache::static_cache_offset;
+int java_lang_Byte_ByteCache::static_cache_offset;
+int java_lang_Boolean::static_TRUE_offset;
+int java_lang_Boolean::static_FALSE_offset;
 
 // Support for java_lang_StackTraceElement
 
@@ -3347,6 +3344,93 @@ oop java_util_concurrent_locks_AbstractOwnableSynchronizer::get_owner_threadObj(
   return obj->obj_field(_owner_offset);
 }
 
+objArrayOop java_lang_Integer_IntegerCache::cache(InstanceKlass *ik) {
+  return objArrayOop(load_static_oop_field(ik, static_cache_offset));
+}
+
+Symbol* java_lang_Integer_IntegerCache::symbol() {
+  return vmSymbols::java_lang_Integer_IntegerCache();
+}
+
+jint java_lang_Integer::value(oop obj) {
+   jvalue v;
+   java_lang_boxing_object::get_value(obj, &v);
+   return v.i;
+}
+
+objArrayOop java_lang_Long_LongCache::cache(InstanceKlass *ik) {
+  return objArrayOop(load_static_oop_field(ik, static_cache_offset));
+}
+
+Symbol* java_lang_Long_LongCache::symbol() {
+  return vmSymbols::java_lang_Long_LongCache();
+}
+
+jlong java_lang_Long::value(oop obj) {
+   jvalue v;
+   java_lang_boxing_object::get_value(obj, &v);
+   return v.j;
+}
+
+objArrayOop java_lang_Character_CharacterCache::cache(InstanceKlass *ik) {
+  return objArrayOop(load_static_oop_field(ik, static_cache_offset));
+}
+
+Symbol* java_lang_Character_CharacterCache::symbol() {
+  return vmSymbols::java_lang_Character_CharacterCache();
+}
+
+jchar java_lang_Character::value(oop obj) {
+   jvalue v;
+   java_lang_boxing_object::get_value(obj, &v);
+   return v.c;
+}
+
+objArrayOop java_lang_Short_ShortCache::cache(InstanceKlass *ik) {
+  return objArrayOop(load_static_oop_field(ik, static_cache_offset));
+}
+
+Symbol* java_lang_Short_ShortCache::symbol() {
+  return vmSymbols::java_lang_Short_ShortCache();
+}
+
+jshort java_lang_Short::value(oop obj) {
+   jvalue v;
+   java_lang_boxing_object::get_value(obj, &v);
+   return v.s;
+}
+
+objArrayOop java_lang_Byte_ByteCache::cache(InstanceKlass *ik) {
+  return objArrayOop(load_static_oop_field(ik, static_cache_offset));
+}
+
+Symbol* java_lang_Byte_ByteCache::symbol() {
+  return vmSymbols::java_lang_Byte_ByteCache();
+}
+
+jbyte java_lang_Byte::value(oop obj) {
+   jvalue v;
+   java_lang_boxing_object::get_value(obj, &v);
+   return v.b;
+}
+oop java_lang_Boolean::get_TRUE(InstanceKlass *ik) {
+  return load_static_oop_field(ik, static_TRUE_offset);
+}
+
+oop java_lang_Boolean::get_FALSE(InstanceKlass *ik) {
+  return load_static_oop_field(ik, static_FALSE_offset);
+}
+
+Symbol* java_lang_Boolean::symbol() {
+  return vmSymbols::java_lang_Boolean();
+}
+
+jboolean java_lang_Boolean::value(oop obj) {
+   jvalue v;
+   java_lang_boxing_object::get_value(obj, &v);
+   return v.z;
+}
+
 // Compute hard-coded offsets
 // Invoked before SystemDictionary::initialize, so pre-loaded classes
 // are not available to determine the offset_of_static_fields.
@@ -3401,6 +3485,14 @@ void JavaClasses::compute_hard_coded_offsets() {
   java_lang_AssertionStatusDirectives::packageEnabled_offset = java_lang_AssertionStatusDirectives::hc_packageEnabled_offset * x + header;
   java_lang_AssertionStatusDirectives::deflt_offset = java_lang_AssertionStatusDirectives::hc_deflt_offset * x + header;
 
+  // Box cache types
+  java_lang_Integer_IntegerCache::static_cache_offset = java_lang_Integer_IntegerCache::hc_static_cache_offset * x;
+  java_lang_Character_CharacterCache::static_cache_offset = java_lang_Character_CharacterCache::hc_static_cache_offset * x;
+  java_lang_Long_LongCache::static_cache_offset = java_lang_Long_LongCache::hc_static_cache_offset * x;
+  java_lang_Short_ShortCache::static_cache_offset = java_lang_Short_ShortCache::hc_static_cache_offset * x;
+  java_lang_Byte_ByteCache::static_cache_offset = java_lang_Byte_ByteCache::hc_static_cache_offset * x;
+  java_lang_Boolean::static_TRUE_offset = java_lang_Boolean::hc_static_TRUE_offset * x;
+  java_lang_Boolean::static_FALSE_offset = java_lang_Boolean::hc_static_FALSE_offset * x;
 }
 
 
@@ -3581,6 +3673,14 @@ void JavaClasses::check_offsets() {
   CHECK_OFFSET("java/lang/Short",     java_lang_boxing_object, value, "S");
   CHECK_OFFSET("java/lang/Integer",   java_lang_boxing_object, value, "I");
   CHECK_LONG_OFFSET("java/lang/Long", java_lang_boxing_object, value, "J");
+
+  CHECK_STATIC_OFFSET("java/lang/Integer$IntegerCache",     java_lang_Integer_IntegerCache,     cache, "[Ljava/lang/Integer;");
+  CHECK_STATIC_OFFSET("java/lang/Character$CharacterCache", java_lang_Character_CharacterCache, cache, "[Ljava/lang/Character;");
+  CHECK_STATIC_OFFSET("java/lang/Long$LongCache",           java_lang_Long_LongCache,           cache, "[Ljava/lang/Long;");
+  CHECK_STATIC_OFFSET("java/lang/Short$ShortCache",         java_lang_Short_ShortCache,         cache, "[Ljava/lang/Short;");
+  CHECK_STATIC_OFFSET("java/lang/Byte$ByteCache",           java_lang_Byte_ByteCache,           cache, "[Ljava/lang/Byte;");
+  CHECK_STATIC_OFFSET("java/lang/Boolean",                  java_lang_Boolean,                  TRUE,  "Ljava/lang/Boolean;");
+  CHECK_STATIC_OFFSET("java/lang/Boolean",                  java_lang_Boolean,                  FALSE, "Ljava/lang/Boolean;");
 
   // java.lang.ClassLoader
 

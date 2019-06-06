@@ -48,6 +48,7 @@ class ScopeValue: public ResourceObj {
   // Testers
   virtual bool is_location() const { return false; }
   virtual bool is_object() const { return false; }
+  virtual bool is_auto_box() const { return false; }
   virtual bool is_constant_int() const { return false; }
   virtual bool is_constant_double() const { return false; }
   virtual bool is_constant_long() const { return false; }
@@ -93,14 +94,13 @@ class LocationValue: public ScopeValue {
 // An ObjectValue describes an object eliminated by escape analysis.
 
 class ObjectValue: public ScopeValue {
- private:
+ protected:
   int                        _id;
   ScopeValue*                _klass;
   ScopeValue*                _base_object;
   GrowableArray<ScopeValue*> _field_values;
   Handle                     _value;
   bool                       _visited;
-
  public:
   ObjectValue(int id, ScopeValue* klass, ScopeValue* base_object)
      : _id(id)
@@ -142,6 +142,15 @@ class ObjectValue: public ScopeValue {
   void print_fields_on(outputStream* st) const;
 };
 
+class AutoBoxObjectValue : public ObjectValue {
+  bool                       _cached;
+ public:
+  bool                       is_auto_box() const        { return true; }
+  bool                       is_cached() const          { return _cached; }
+  void                       set_cached(bool cached)    { _cached = cached; }
+  AutoBoxObjectValue(int id, ScopeValue* klass, ScopeValue* base_object) : ObjectValue(id, klass, base_object), _cached(false) { }
+  AutoBoxObjectValue(int id) : ObjectValue(id), _cached(false) { }
+};
 
 // A ConstantIntValue describes a constant int; i.e., the corresponding logical entity
 // is either a source constant or its computation has been constant-folded.
@@ -286,7 +295,7 @@ class DebugInfoReadStream : public CompressedReadStream {
     assert(o == NULL || o->is_metadata(), "meta data only");
     return o;
   }
-  ScopeValue* read_object_value();
+  ScopeValue* read_object_value(bool is_box);
   ScopeValue* get_cached_object();
   // BCI encoding is mostly unsigned, but -1 is a distinguished value
   int read_bci() { return read_int() + InvocationEntryBci; }

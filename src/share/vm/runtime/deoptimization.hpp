@@ -32,6 +32,7 @@ class ProfileData;
 class vframeArray;
 class MonitorValue;
 class ObjectValue;
+class AutoBoxObjectValue;
 
 class Deoptimization : AllStatic {
   friend class VMStructs;
@@ -130,6 +131,7 @@ class Deoptimization : AllStatic {
 
 #if INCLUDE_JVMCI
   static address deoptimize_for_missing_exception_handler(nmethod* nm);
+  static oop get_cached_box(AutoBoxObjectValue* bv, frame* fr, RegisterMap* reg_map, TRAPS);
 #endif
 
   private:
