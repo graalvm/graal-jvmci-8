@@ -3,6 +3,9 @@
 
 CLSS public abstract interface java.io.Serializable
 
+CLSS public abstract interface java.lang.AutoCloseable
+meth public abstract void close() throws java.lang.Exception
+
 CLSS public abstract interface java.lang.Comparable<%0 extends java.lang.Object>
 meth public abstract int compareTo({java.lang.Comparable%0})
 
@@ -69,12 +72,6 @@ meth public void setStackTrace(java.lang.StackTraceElement[])
 supr java.lang.Object
 hfds CAUSE_CAPTION,EMPTY_THROWABLE_ARRAY,NULL_CAUSE_MESSAGE,SELF_SUPPRESSION_MESSAGE,SUPPRESSED_CAPTION,SUPPRESSED_SENTINEL,UNASSIGNED_STACK,backtrace,cause,detailMessage,serialVersionUID,stackTrace,suppressedExceptions
 hcls PrintStreamOrWriter,SentinelHolder,WrappedPrintStream,WrappedPrintWriter
-
-CLSS public abstract interface java.lang.annotation.Annotation
-meth public abstract boolean equals(java.lang.Object)
-meth public abstract int hashCode()
-meth public abstract java.lang.Class<? extends java.lang.annotation.Annotation> annotationType()
-meth public abstract java.lang.String toString()
 
 CLSS public abstract interface java.lang.reflect.AnnotatedElement
 meth public <%0 extends java.lang.annotation.Annotation> {%%0} getDeclaredAnnotation(java.lang.Class<{%%0}>)
@@ -238,6 +235,7 @@ CLSS public jdk.vm.ci.hotspot.HotSpotCompilationRequest
 cons public init(jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod,int,long)
 cons public init(jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod,int,long,int)
 meth public int getId()
+meth public java.lang.String toString()
 meth public jdk.vm.ci.hotspot.HotSpotResolvedJavaMethod getMethod()
 meth public long getJvmciEnv()
 supr jdk.vm.ci.code.CompilationRequest
@@ -465,10 +463,16 @@ fld protected final jdk.vm.ci.hotspot.HotSpotVMConfigStore configStore
 innr public final static !enum Option
 intf jdk.vm.ci.runtime.JVMCIRuntime
 meth public !varargs java.util.function.Predicate<jdk.vm.ci.meta.ResolvedJavaType> getIntrinsificationTrustPredicate(java.lang.Class<?>[])
+meth public !varargs void excludeFromJVMCICompilation(java.lang.ClassLoader[])
 meth public <%0 extends java.lang.Object> {%%0} unhand(java.lang.Class<{%%0}>,long)
 meth public <%0 extends jdk.vm.ci.code.Architecture> jdk.vm.ci.runtime.JVMCIBackend getJVMCIBackend(java.lang.Class<{%%0}>)
+meth public boolean attachCurrentThread(boolean)
+meth public boolean isCurrentThreadAttached()
+meth public boolean setCountersSize(int)
 meth public int getArrayBaseOffset(jdk.vm.ci.meta.JavaKind)
 meth public int getArrayIndexScale(jdk.vm.ci.meta.JavaKind)
+meth public int getCountersSize()
+meth public int writeDebugOutput(byte[],int,int,boolean,boolean)
 meth public java.io.OutputStream getCompileLogStream()
 meth public java.io.OutputStream getLogStream()
 meth public java.lang.Class<?> getMirror(jdk.vm.ci.meta.ResolvedJavaType)
@@ -482,12 +486,14 @@ meth public long[] collectCounters()
 meth public long[] registerNativeMethods(java.lang.Class<?>)
 meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime()
 meth public static jdk.vm.ci.meta.JavaKind getHostWordKind()
+meth public void detachCurrentThread()
 supr java.lang.Object
-hfds backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compilationLevelAdjustment,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,resolvedJavaType,resolvedJavaTypes,serializableType,throwableType,vmEventListeners
+hfds backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,excludeFromJVMCICompilation,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,resolvedJavaType,resolvedJavaTypes,serializableType,throwableType,vmEventListeners
 hcls CompileLogStream
 
 CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option
  outer jdk.vm.ci.hotspot.HotSpotJVMCIRuntime
+fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option AuditHandles
 fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option Compiler
 fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option InitTimer
 fld public final static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option PrintConfig
@@ -500,7 +506,7 @@ meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option valueOf(java.lan
 meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option[] values()
 meth public static void printProperties(java.io.PrintStream)
 supr java.lang.Enum<jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option>
-hfds JVMCI_OPTION_PROPERTY_PREFIX,PROPERTY_HELP_INDENT,PROPERTY_LINE_WIDTH,UNINITIALIZED,defaultValue,helpLines,isDefault,type,value
+hfds JVMCI_OPTION_PROPERTY_PREFIX,NULL_VALUE,PROPERTY_HELP_INDENT,PROPERTY_LINE_WIDTH,defaultValue,helpLines,isDefault,type,value
 
 CLSS public jdk.vm.ci.hotspot.HotSpotJVMCIUnsupportedOperationError
 cons public init(java.lang.String)
@@ -590,12 +596,15 @@ supr java.lang.Object
 CLSS public jdk.vm.ci.hotspot.HotSpotNmethod
 meth public !varargs java.lang.Object executeVarargs(java.lang.Object[]) throws jdk.vm.ci.code.InvalidInstalledCodeException
 meth public boolean isDefault()
+meth public boolean isValid()
 meth public java.lang.String toString()
 meth public jdk.vm.ci.meta.ResolvedJavaMethod getMethod()
+meth public long getAddress()
+meth public long getEntryPoint()
 meth public long getStart()
 meth public void invalidate()
 supr jdk.vm.ci.hotspot.HotSpotInstalledCode
-hfds isDefault,method
+hfds compileIdSnapshot,isDefault,method
 
 CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotObjectConstant
 intf jdk.vm.ci.hotspot.HotSpotConstant
@@ -610,6 +619,14 @@ meth public abstract jdk.vm.ci.hotspot.HotSpotResolvedObjectType getType()
 meth public abstract jdk.vm.ci.meta.JavaConstant compress()
 meth public abstract jdk.vm.ci.meta.JavaConstant getCallSiteTarget(jdk.vm.ci.meta.Assumptions)
 meth public abstract jdk.vm.ci.meta.JavaConstant uncompress()
+
+CLSS public final jdk.vm.ci.hotspot.HotSpotObjectConstantScope
+intf java.lang.AutoCloseable
+meth public static jdk.vm.ci.hotspot.HotSpotObjectConstantScope enterGlobalScope()
+meth public static jdk.vm.ci.hotspot.HotSpotObjectConstantScope openLocalScope(java.lang.Object)
+meth public void close()
+supr java.lang.Object
+hfds CURRENT,foreignObjects,localScopeDescription,parent
 
 CLSS public final jdk.vm.ci.hotspot.HotSpotReferenceMap
 cons public init(jdk.vm.ci.code.Location[],jdk.vm.ci.code.Location[],int[],int)
@@ -781,7 +798,7 @@ meth public jdk.vm.ci.meta.SpeculationLog$Speculation speculate(jdk.vm.ci.meta.S
 meth public long getFailedSpeculationsAddress()
 meth public void collectFailedSpeculations()
 supr java.lang.Object
-hfds NO_FLATTENED_SPECULATIONS,NO_SPECULATIONS,failedSpeculations,failedSpeculationsAddress,managesFailedSpeculations,speculationReasons,speculations
+hfds NO_FLATTENED_SPECULATIONS,failedSpeculations,failedSpeculationsAddress,managesFailedSpeculations,speculationReasons,speculations
 hcls LogCleaner
 
 CLSS public final static jdk.vm.ci.hotspot.HotSpotSpeculationLog$HotSpotSpeculation
@@ -821,14 +838,17 @@ meth public <%0 extends java.lang.Object> {%%0} getConstant(java.lang.String,jav
 meth public <%0 extends java.lang.Object> {%%0} getFieldOffset(java.lang.String,java.lang.Class<{%%0}>)
 meth public <%0 extends java.lang.Object> {%%0} getFieldOffset(java.lang.String,java.lang.Class<{%%0}>,java.lang.String)
 meth public <%0 extends java.lang.Object> {%%0} getFieldOffset(java.lang.String,java.lang.Class<{%%0}>,java.lang.String,{%%0})
+meth public <%0 extends java.lang.Object> {%%0} getFieldOffset(java.lang.String,java.lang.Class<{%%0}>,{%%0},java.lang.String[])
 meth public <%0 extends java.lang.Object> {%%0} getFieldValue(java.lang.String,java.lang.Class<{%%0}>)
 meth public <%0 extends java.lang.Object> {%%0} getFieldValue(java.lang.String,java.lang.Class<{%%0}>,java.lang.String)
 meth public <%0 extends java.lang.Object> {%%0} getFieldValue(java.lang.String,java.lang.Class<{%%0}>,java.lang.String,{%%0})
+meth public <%0 extends java.lang.Object> {%%0} getFieldValue(java.lang.String,java.lang.Class<{%%0}>,{%%0},java.lang.String[])
 meth public <%0 extends java.lang.Object> {%%0} getFlag(java.lang.String,java.lang.Class<{%%0}>)
 meth public <%0 extends java.lang.Object> {%%0} getFlag(java.lang.String,java.lang.Class<{%%0}>,{%%0})
 meth public jdk.vm.ci.hotspot.HotSpotVMConfigStore getStore()
 meth public long getAddress(java.lang.String)
 meth public long getAddress(java.lang.String,java.lang.Long)
+meth public long getFieldAddress(java.lang.String,java.lang.Long,java.lang.String[])
 meth public long getFieldAddress(java.lang.String,java.lang.String)
 meth public long getFieldAddress(java.lang.String,java.lang.String,java.lang.Long)
 supr java.lang.Object

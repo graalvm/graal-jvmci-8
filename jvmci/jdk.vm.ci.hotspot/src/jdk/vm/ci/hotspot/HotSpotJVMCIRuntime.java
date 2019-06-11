@@ -212,6 +212,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         // so that -XX:+JVMCIPrintProperties shows the option.
         InitTimer(Boolean.class, false, "Specifies if initialization timing is enabled."),
         PrintConfig(Boolean.class, false, "Prints VM configuration available via JVMCI."),
+        AuditHandles(Boolean.class, false, "Record stack trace along with scoped foreign object reference wrappers " +
+                "to debug issue with a wrapper being used after its scope has closed."),
         TraceMethodDataFilter(String.class, null,
                 "Enables tracing of profiling info when read by JVMCI.",
                 "Empty value: trace all methods",
@@ -657,26 +659,29 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         return Collections.unmodifiableMap(backends);
     }
 
+    @SuppressWarnings("try")
     @VMEntryPoint
     private HotSpotCompilationRequestResult compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long compileState, int id) {
         Thread.currentThread().setContextClassLoader(HotSpotJVMCIRuntime.class.getClassLoader());
-        CompilationRequestResult result = getCompiler().compileMethod(new HotSpotCompilationRequest(method, entryBCI, compileState, id));
-        assert result != null : "compileMethod must always return something";
-        HotSpotCompilationRequestResult hsResult;
-        if (result instanceof HotSpotCompilationRequestResult) {
-            hsResult = (HotSpotCompilationRequestResult) result;
-        } else {
-            Object failure = result.getFailure();
-            if (failure != null) {
-                boolean retry = false; // Be conservative with unknown compiler
-                hsResult = HotSpotCompilationRequestResult.failure(failure.toString(), retry);
+        HotSpotCompilationRequest request = new HotSpotCompilationRequest(method, entryBCI, compileState, id);
+        try (HotSpotObjectConstantScope scope = HotSpotObjectConstantScope.openLocalScope(request)) {
+            CompilationRequestResult result = getCompiler().compileMethod(request);
+            assert result != null : "compileMethod must always return something";
+            HotSpotCompilationRequestResult hsResult;
+            if (result instanceof HotSpotCompilationRequestResult) {
+                hsResult = (HotSpotCompilationRequestResult) result;
             } else {
-                int inlinedBytecodes = -1;
-                hsResult = HotSpotCompilationRequestResult.success(inlinedBytecodes);
+                Object failure = result.getFailure();
+                if (failure != null) {
+                    boolean retry = false; // Be conservative with unknown compiler
+                    hsResult = HotSpotCompilationRequestResult.failure(failure.toString(), retry);
+                } else {
+                    int inlinedBytecodes = -1;
+                    hsResult = HotSpotCompilationRequestResult.success(inlinedBytecodes);
+                }
             }
+            return hsResult;
         }
-
-        return hsResult;
     }
 
     /**
@@ -803,7 +808,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     /**
      * Attempt to enlarge the number of per thread counters available. Requires a safepoint so
      * resizing should be rare to avoid performance effects.
-     * 
+     *
      * @param newSize
      * @return false if the resizing failed
      */

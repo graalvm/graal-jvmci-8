@@ -5,6 +5,7 @@
         capabilities+: ["windows"],
         name+: "-windows",
         environment+: {
+            PATH : "$MKS_HOME;$PATH",  # Makes the `test` utility available
             CI_OS: "windows"
         },
         packages+: {
@@ -127,6 +128,9 @@
         }
     },
 
+    # Downstream Graal branch to test against
+    local downstream_branch = "ds/GR-16369",
+
     Build:: {
         packages+: {
             "pip:astroid" : "==1.1.0",
@@ -140,14 +144,15 @@
         run+: [
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
-
             ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
 
             # Test on graal
-            ["git", "clone", ["mx", "urlrewrite", "${GRAAL_REPO_URL}"]],
 
-            # Look for a well known branch that fixes a downstream failure caused by a JDK change
-            ["git", "-C", "${GRAAL_REPO_NAME}", "checkout", "master", "||", "true"]
+            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
+            ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
+
+            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "clone", ["mx", "urlrewrite", "${GRAAL_REPO_URL}"]],
+            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "-C", "${GRAAL_REPO_NAME}", "checkout", downstream_branch, "||", "true"],
         ],
     },
 
