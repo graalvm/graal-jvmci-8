@@ -835,3 +835,5 @@ supr java.lang.Object
 hfds platformKind
 hcls IllegalKind,IllegalValueKind
 
+CLSS abstract interface jdk.vm.ci.meta.package-info
+

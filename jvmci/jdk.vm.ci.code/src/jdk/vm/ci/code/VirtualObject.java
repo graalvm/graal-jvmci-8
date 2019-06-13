@@ -29,6 +29,7 @@ import java.util.IdentityHashMap;
 import java.util.Set;
 
 import jdk.vm.ci.common.JVMCIError;
+import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.meta.JavaKind;
 import jdk.vm.ci.meta.JavaValue;
 import jdk.vm.ci.meta.ResolvedJavaField;
@@ -46,13 +47,14 @@ public final class VirtualObject implements JavaValue {
     private JavaValue[] values;
     private JavaKind[] slotKinds;
     private final int id;
+    private final boolean isAutoBox;
 
     /**
      * Creates a new {@link VirtualObject} for the given type, with the given contents. If
-     * {@link #type} is an instance class then {@link #values} provides the values for the fields
+     * {@code type} is an instance class then {@link #getValues} provides the values for the fields
      * returned by {@link ResolvedJavaType#getInstanceFields(boolean) getInstanceFields(true)}. If
-     * {@link #type} is an array then the length of {@link #values} determines the reallocated array
-     * length.
+     * {@code type} is an array then the length of {@link #getValues} determines the reallocated
+     * array length.
      *
      * @param type the type of the object whose allocation was removed during compilation. This can
      *            be either an instance of an array type.
@@ -61,14 +63,33 @@ public final class VirtualObject implements JavaValue {
      * @return a new {@link VirtualObject} instance.
      */
     public static VirtualObject get(ResolvedJavaType type, int id) {
-        return new VirtualObject(type, null, id);
+        return new VirtualObject(type, null, id, false);
     }
 
     /**
-     * Creates a new {@link VirtualObject} based on the given existing object, with the given
-     * contents. If {@link #type} is an instance class then {@link #values} provides the values for
-     * the fields returned by {@link ResolvedJavaType#getInstanceFields(boolean)
-     * getInstanceFields(true)}. If {@link #type} is an array then the length of {@link #values}
+     * Creates a new {@link VirtualObject} for the given type, with the given contents. If
+     * {@code type} is an instance class then {@link #getValues} provides the values for the fields
+     * returned by {@link ResolvedJavaType#getInstanceFields(boolean) getInstanceFields(true)}. If
+     * {@code type} is an array then the length of {@link #getValues} determines the reallocated
+     * array length.
+     *
+     * @param type the type of the object whose allocation was removed during compilation. This can
+     *            be either an instance of an array type.
+     * @param id a unique id that identifies the object within the debug information for one
+     *            position in the compiled code.
+     * @param isAutoBox a flag that tells the runtime that the object may be a boxed primitive that
+     *            needs to be obtained from the box cache instead of creating a new instance.
+     * @return a new {@link VirtualObject} instance.
+     */
+    public static VirtualObject get(ResolvedJavaType type, int id, boolean isAutoBox) {
+        return new VirtualObject(type, null, id, isAutoBox);
+    }
+
+    /**
+     * Creates a new {@link VirtualObject} based on a given existing object, with the given
+     * contents. If {@code type} is an instance class then {@link #getValues} provides the values
+     * for the fields returned by {@link ResolvedJavaType#getInstanceFields(boolean)
+     * getInstanceFields(true)}. If {@code type} is an array then the length of {@link #getValues}
      * determines the array length.
      *
      * @param type the type of the object whose allocation was removed during compilation. This can
@@ -76,16 +97,31 @@ public final class VirtualObject implements JavaValue {
      * @param baseObject the pre-existing object to be used instead of allocating a new object.
      * @param id a unique id that identifies the object within the debug information for one
      *            position in the compiled code.
+     * @param isAutoBox a flag that tells the runtime that the object may be a boxed primitive that
+     *            needs to be obtained from the box cache instead of creating a new instance.
      * @return a new {@link VirtualObject} instance.
      */
-    public static VirtualObject get(ResolvedJavaType type, JavaValue baseObject, int id) {
-        return new VirtualObject(type, baseObject, id);
+    public static VirtualObject get(ResolvedJavaType type, JavaValue baseObject, int id, boolean isAutoBox) {
+        return new VirtualObject(type, baseObject, id, isAutoBox);
     }
 
-    private VirtualObject(ResolvedJavaType type, JavaValue baseObject, int id) {
+    @NativeImageReinitialize private static boolean boxCachesInitialized;
+
+    private VirtualObject(ResolvedJavaType type, JavaValue baseObject, int id, boolean isAutoBox) {
         this.type = type;
         this.baseObject = baseObject;
         this.id = id;
+        this.isAutoBox = isAutoBox;
+        if (isAutoBox && !boxCachesInitialized) {
+            // Make sure all the primitive box caches are populated.
+            // Required for rematerialization during deoptimization.
+            Boolean.valueOf(false);
+            Short.valueOf((short) 0);
+            Character.valueOf((char) 0);
+            Integer.valueOf(0);
+            Long.valueOf(0);
+            boxCachesInitialized = true;
+        }
     }
 
     private static StringBuilder appendValue(StringBuilder buf, JavaValue value, Set<VirtualObject> visited) {
@@ -94,6 +130,9 @@ public final class VirtualObject implements JavaValue {
             buf.append("vobject:").append(vo.type.toJavaName(false)).append(':').append(vo.id);
             if (!visited.contains(vo)) {
                 visited.add(vo);
+                if (vo.isAutoBox) {
+                    buf.append("[auto_box]");
+                }
                 buf.append('{');
                 if (vo.values == null) {
                     buf.append("<uninitialized>");
@@ -241,6 +280,21 @@ public final class VirtualObject implements JavaValue {
      */
     public int getId() {
         return id;
+    }
+
+    /**
+     * Returns true if the object is a box. For boxes, deoptimization will check if the boxed value
+     * is in the range guaranteed to be cached by the API. For example, {@link Integer#valueOf(int)}
+     * says:
+     *
+     * "This method will always cache values in the range -128 to 127, inclusive, and may cache
+     * other values outside of this range".
+     *
+     * This means deoptimization must rematerialize a boxed {@code int} within this range by
+     * obtaining the box from the cache.
+     */
+    public boolean isAutoBox() {
+        return isAutoBox;
     }
 
     /**

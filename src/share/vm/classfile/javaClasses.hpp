@@ -1411,6 +1411,119 @@ class java_util_concurrent_locks_AbstractOwnableSynchronizer : AllStatic {
   static oop  get_owner_threadObj(oop obj);
 };
 
+class java_lang_Integer : AllStatic {
+public:
+  static jint value(oop obj);
+};
+
+class java_lang_Long : AllStatic {
+public:
+  static jlong value(oop obj);
+};
+
+class java_lang_Character : AllStatic {
+public:
+  static jchar value(oop obj);
+};
+
+class java_lang_Short : AllStatic {
+public:
+  static jshort value(oop obj);
+};
+
+class java_lang_Byte : AllStatic {
+public:
+  static jbyte value(oop obj);
+};
+
+class java_lang_Boolean : AllStatic {
+ private:
+  enum {
+    hc_static_TRUE_offset = 0,
+    hc_static_FALSE_offset = 1
+  };
+  static int static_TRUE_offset;
+  static int static_FALSE_offset;
+ public:
+  static Symbol* symbol();
+  static oop  get_TRUE(InstanceKlass *k);
+  static oop  get_FALSE(InstanceKlass *k);
+  static jboolean value(oop obj);
+
+  // Debugging
+  friend class JavaClasses;
+};
+
+class java_lang_Integer_IntegerCache : AllStatic {
+ private:
+  enum {
+    hc_static_cache_offset = 0
+  };
+  static int static_cache_offset;
+ public:
+  static Symbol* symbol();
+  static objArrayOop  cache(InstanceKlass *k);
+
+  // Debugging
+  friend class JavaClasses;
+};
+
+class java_lang_Long_LongCache : AllStatic {
+ private:
+  enum {
+    hc_static_cache_offset = 0
+  };
+  static int static_cache_offset;
+ public:
+  static Symbol* symbol();
+  static objArrayOop  cache(InstanceKlass *k);
+
+  // Debugging
+  friend class JavaClasses;
+};
+
+class java_lang_Character_CharacterCache : AllStatic {
+ private:
+  enum {
+    hc_static_cache_offset = 0
+  };
+  static int static_cache_offset;
+ public:
+  static Symbol* symbol();
+  static objArrayOop  cache(InstanceKlass *k);
+
+  // Debugging
+  friend class JavaClasses;
+};
+
+class java_lang_Short_ShortCache : AllStatic {
+ private:
+  enum {
+    hc_static_cache_offset = 0
+  };
+  static int static_cache_offset;
+ public:
+  static Symbol* symbol();
+  static objArrayOop  cache(InstanceKlass *k);
+
+  // Debugging
+  friend class JavaClasses;
+};
+
+class java_lang_Byte_ByteCache : AllStatic {
+ private:
+  enum {
+    hc_static_cache_offset = 0
+  };
+  static int static_cache_offset;
+ public:
+  static Symbol* symbol();
+  static objArrayOop  cache(InstanceKlass *k);
+
+  // Debugging
+  friend class JavaClasses;
+};
+
 // Use to declare fields that need to be injected into Java classes
 // for the JVM to use.  The name_index and signature_index are
 // declared in vmSymbols.  The may_be_java flag is used to declare

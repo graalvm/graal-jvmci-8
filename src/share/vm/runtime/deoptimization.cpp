@@ -41,6 +41,7 @@
 #include "runtime/biasedLocking.hpp"
 #include "runtime/compilationPolicy.hpp"
 #include "runtime/deoptimization.hpp"
+#include "runtime/fieldDescriptor.hpp"
 #include "runtime/interfaceSupport.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/signature.hpp"
@@ -792,6 +793,129 @@ int Deoptimization::deoptimize_dependents() {
   return 0;
 }
 
+#if INCLUDE_JVMCI
+template<typename CacheType>
+class BoxCacheBase : public CHeapObj<mtCompiler> {
+protected:
+  static InstanceKlass* find_cache_klass(Symbol* klass_name, TRAPS) {
+    ResourceMark rm;
+    Klass* k = SystemDictionary::find(klass_name, Handle(), Handle(), THREAD);
+    if (k == NULL) {
+      fatal(err_msg("%s must be loaded", klass_name->as_C_string()));
+    }
+    InstanceKlass* ik = InstanceKlass::cast(k);
+    if (!ik->is_initialized()) {
+      fatal(err_msg("%s must be initialized", klass_name->as_C_string()));
+    }
+    return ik;
+  }
+};
+
+template<typename PrimitiveType, typename CacheType, typename BoxType> class BoxCache  : public BoxCacheBase<CacheType> {
+  PrimitiveType _low;
+  PrimitiveType _high;
+  jobject _cache;
+protected:
+  static BoxCache<PrimitiveType, CacheType, BoxType> *_singleton;
+  BoxCache(Thread* thread) {
+    InstanceKlass* ik = BoxCacheBase<CacheType>::find_cache_klass(CacheType::symbol(), thread);
+    objArrayOop cache = CacheType::cache(ik);
+    guarantee(cache != NULL, "Null cache");
+    assert(cache->length() > 0, "Empty cache");
+    _low = BoxType::value(cache->obj_at(0));
+    _high = _low + cache->length() - 1;
+    _cache = JNIHandles::make_global(Handle(thread, cache));
+  }
+  ~BoxCache() {
+    JNIHandles::destroy_global(_cache);
+  }
+public:
+  static BoxCache<PrimitiveType, CacheType, BoxType>* singleton(Thread* thread) {
+    if (_singleton == NULL) {
+      BoxCache<PrimitiveType, CacheType, BoxType>* s = new BoxCache<PrimitiveType, CacheType, BoxType>(thread);
+      if (NULL != Atomic::cmpxchg_ptr(s, &_singleton, NULL)) {
+        delete s;
+      }
+    }
+    return _singleton;
+  }
+  oop lookup(PrimitiveType value) {
+    if (_low <= value && value <= _high) {
+      int offset = value - _low;
+      return objArrayOop(JNIHandles::resolve_non_null(_cache))->obj_at(offset);
+    }
+    return NULL;
+  }
+};
+
+typedef BoxCache<jint, java_lang_Integer_IntegerCache, java_lang_Integer> IntegerBoxCache;
+typedef BoxCache<jlong, java_lang_Long_LongCache, java_lang_Long> LongBoxCache;
+typedef BoxCache<jchar, java_lang_Character_CharacterCache, java_lang_Character> CharacterBoxCache;
+typedef BoxCache<jshort, java_lang_Short_ShortCache, java_lang_Short> ShortBoxCache;
+typedef BoxCache<jbyte, java_lang_Byte_ByteCache, java_lang_Byte> ByteBoxCache;
+
+template<> BoxCache<jint, java_lang_Integer_IntegerCache, java_lang_Integer>* BoxCache<jint, java_lang_Integer_IntegerCache, java_lang_Integer>::_singleton = NULL;
+template<> BoxCache<jlong, java_lang_Long_LongCache, java_lang_Long>* BoxCache<jlong, java_lang_Long_LongCache, java_lang_Long>::_singleton = NULL;
+template<> BoxCache<jchar, java_lang_Character_CharacterCache, java_lang_Character>* BoxCache<jchar, java_lang_Character_CharacterCache, java_lang_Character>::_singleton = NULL;
+template<> BoxCache<jshort, java_lang_Short_ShortCache, java_lang_Short>* BoxCache<jshort, java_lang_Short_ShortCache, java_lang_Short>::_singleton = NULL;
+template<> BoxCache<jbyte, java_lang_Byte_ByteCache, java_lang_Byte>* BoxCache<jbyte, java_lang_Byte_ByteCache, java_lang_Byte>::_singleton = NULL;
+
+class BooleanBoxCache : public BoxCacheBase<java_lang_Boolean> {
+  jobject _true_cache;
+  jobject _false_cache;
+protected:
+  static BooleanBoxCache *_singleton;
+  BooleanBoxCache(Thread *thread) {
+    InstanceKlass* ik = find_cache_klass(java_lang_Boolean::symbol(), thread);
+    _true_cache = JNIHandles::make_global(Handle(thread, java_lang_Boolean::get_TRUE(ik)));
+    _false_cache = JNIHandles::make_global(Handle(thread, java_lang_Boolean::get_FALSE(ik)));
+  }
+  ~BooleanBoxCache() {
+    JNIHandles::destroy_global(_true_cache);
+    JNIHandles::destroy_global(_false_cache);
+  }
+public:
+  static BooleanBoxCache* singleton(Thread* thread) {
+    if (_singleton == NULL) {
+      BooleanBoxCache* s = new BooleanBoxCache(thread);
+      if (NULL != Atomic::cmpxchg_ptr(s, &_singleton, NULL)) {
+        delete s;
+      }
+    }
+    return _singleton;
+  }
+  oop lookup(jboolean value) {
+    if (value != 0) {
+      return JNIHandles::resolve_non_null(_true_cache);
+    }
+    return JNIHandles::resolve_non_null(_false_cache);
+  }
+};
+
+BooleanBoxCache* BooleanBoxCache::_singleton = NULL;
+
+oop Deoptimization::get_cached_box(AutoBoxObjectValue* bv, frame* fr, RegisterMap* reg_map, TRAPS) {
+   Klass* k = java_lang_Class::as_Klass(bv->klass()->as_ConstantOopReadValue()->value()());
+   BasicType box_type = SystemDictionary::box_klass_type(k);
+   if (box_type != T_OBJECT) {
+     StackValue* value = StackValue::create_stack_value(fr, reg_map, bv->field_at(0));
+     switch(box_type) {
+       case T_INT:     return IntegerBoxCache::singleton(THREAD)->lookup(value->get_int());
+       case T_LONG: {
+                       StackValue* low = StackValue::create_stack_value(fr, reg_map, bv->field_at(1));
+                       jlong res = (jlong)low->get_int();
+                       return LongBoxCache::singleton(THREAD)->lookup(res);
+                     }
+       case T_CHAR:    return CharacterBoxCache::singleton(THREAD)->lookup(value->get_int());
+       case T_SHORT:   return ShortBoxCache::singleton(THREAD)->lookup(value->get_int());
+       case T_BYTE:    return ByteBoxCache::singleton(THREAD)->lookup(value->get_int());
+       case T_BOOLEAN: return BooleanBoxCache::singleton(THREAD)->lookup(value->get_int());
+       default:;
+     }
+   }
+   return NULL;
+}
+#endif // INCLUDE_JVMCI
 
 #if defined(COMPILER2) || INCLUDE_JVMCI
 bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, RegisterMap* reg_map, GrowableArray<ScopeValue*>* objects, TRAPS) {
@@ -815,8 +939,21 @@ bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, RegisterMap*
 
     if (obj == NULL) {
       if (k->oop_is_instance()) {
-        InstanceKlass* ik = InstanceKlass::cast(k());
-        obj = ik->allocate_instance(THREAD);
+#if INCLUDE_JVMCI
+        nmethod* nm = fr->cb()->as_nmethod_or_null();
+        if (nm->is_compiled_by_jvmci() && sv->is_auto_box()) {
+          AutoBoxObjectValue* bv = (AutoBoxObjectValue*) sv;
+          obj = get_cached_box(bv, fr, reg_map, THREAD);
+          if (obj != NULL) {
+            // Set the flag to indicate the box came from a cache, so that we can skip the field reassignment for it.
+            bv->set_cached(true);
+          }
+        }
+#endif // INCLUDE_JVMCI
+        if (obj == NULL) {
+          InstanceKlass* ik = InstanceKlass::cast(k());
+          obj = ik->allocate_instance(THREAD);
+        }
       } else if (k->oop_is_typeArray()) {
         TypeArrayKlass* ak = TypeArrayKlass::cast(k());
         assert(sv->field_size() % type2size[ak->element_type()] == 0, "non-integral array length");
@@ -1107,6 +1244,12 @@ void Deoptimization::reassign_fields(frame* fr, RegisterMap* reg_map, GrowableAr
     }
 #endif
 
+#if INCLUDE_JVMCI
+    // Don't reassign fields of boxes that came from a cache. Caches may be in CDS.
+    if (sv->is_auto_box() && ((AutoBoxObjectValue*) sv)->is_cached()) {
+      continue;
+    }
+#endif
     if (k->oop_is_instance()) {
       InstanceKlass* ik = InstanceKlass::cast(k());
       reassign_fields_by_klass(ik, fr, reg_map, sv, 0, obj(), skip_internal);

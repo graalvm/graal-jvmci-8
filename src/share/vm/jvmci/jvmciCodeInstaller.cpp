@@ -990,6 +990,7 @@ GrowableArray<ScopeValue*>* CodeInstaller::record_virtual_objects(JVMCIObject de
     int id = jvmci_env()->get_VirtualObject_id(value);
     JVMCIObject base_object = JVMCIENV->get_VirtualObject_baseObject(value);
     JVMCIObject type = jvmci_env()->get_VirtualObject_type(value);
+    jboolean is_auto_box = jvmci_env()->get_VirtualObject_isAutoBox(value);
     Klass* klass = jvmci_env()->asKlass(type);
     oop javaMirror = klass->java_mirror();
     ScopeValue* baseObjectValue;
@@ -999,7 +1000,8 @@ GrowableArray<ScopeValue*>* CodeInstaller::record_virtual_objects(JVMCIObject de
       ScopeValue* second = NULL;
       baseObjectValue = get_scope_value(base_object, T_OBJECT, objects, second, JVMCI_CHECK_NULL);
     }
-    ObjectValue* sv = new ObjectValue(id, new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror)), baseObjectValue);
+    ScopeValue *klass_sv = new ConstantOopWriteValue(JNIHandles::make_local(Thread::current(), javaMirror));
+    ObjectValue* sv = is_auto_box ? new AutoBoxObjectValue(id, klass_sv, baseObjectValue) : new ObjectValue(id, klass_sv, baseObjectValue);
     if (id < 0 || id >= objects->length()) {
       JVMCI_ERROR_NULL("virtual object id %d out of bounds", id);
     }
