@@ -105,5 +105,3 @@ CLSS public abstract interface !annotation jdk.vm.ci.common.NativeImageReinitial
  anno 0 java.lang.annotation.Target(java.lang.annotation.ElementType[] value=[FIELD])
 intf java.lang.annotation.Annotation
 
-CLSS abstract interface jdk.vm.ci.common.package-info
-

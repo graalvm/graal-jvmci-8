@@ -63,12 +63,12 @@ fld public final static boolean IS_BUILDING_NATIVE_IMAGE
 fld public final static boolean IS_IN_NATIVE_IMAGE
 meth public static <%0 extends java.lang.Object> java.lang.Iterable<{%%0}> load(java.lang.Class<{%%0}>)
 meth public static <%0 extends java.lang.Object> {%%0} loadSingle(java.lang.Class<{%%0}>,boolean)
+meth public static java.lang.String getSavedProperty(java.lang.String)
+meth public static java.lang.String getSavedProperty(java.lang.String,java.lang.String)
 meth public static java.util.Map<java.lang.String,java.lang.String> getSavedProperties()
 meth public static void exportJVMCITo(java.lang.Class<?>)
 meth public static void initializeJVMCI()
 supr java.lang.Object
-hfds jvmciEnabled,servicesCache
+hfds MAX_UNICODE_IN_UTF8_LENGTH,MAX_UTF8_PROPERTY_STRING_LENGTH,jvmciEnabled,savedProperties,servicesCache
 hcls LazyBootClassPath
-
-CLSS abstract interface jdk.vm.ci.services.package-info
 

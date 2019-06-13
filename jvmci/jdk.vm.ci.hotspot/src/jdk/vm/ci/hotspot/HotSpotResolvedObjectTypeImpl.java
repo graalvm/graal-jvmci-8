@@ -108,12 +108,19 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
      *
      * @param metadataPointer the Klass* to create the mirror for
      */
+    @SuppressWarnings("try")
     HotSpotResolvedObjectTypeImpl(long metadataPointer, String name) {
         super(name);
         assert metadataPointer != 0;
         this.metadataPointer = metadataPointer;
-        this.mirror = runtime().compilerToVm.getJavaMirror(this);
-        assert getName().charAt(0) != '[' || isArray() : getName();
+
+        // The mirror object must be in the global scope since
+        // this object will be cached in HotSpotJVMCIRuntime.resolvedJavaTypes
+        // and live across more than one compilation.
+        try (HotSpotObjectConstantScope global = HotSpotObjectConstantScope.enterGlobalScope()) {
+            this.mirror = runtime().compilerToVm.getJavaMirror(this);
+            assert getName().charAt(0) != '[' || isArray() : getName();
+        }
     }
 
     /**
