@@ -26,6 +26,8 @@ package sun.jvm.hotspot.utilities.soql;
 
 import java.io.*;
 import java.util.*;
+import java.util.function.Predicate;
+import javax.script.Bindings;
 import javax.script.Invocable;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -446,6 +448,14 @@ public abstract class JSJavaScriptEngine extends MapScriptObject {
       if (engine == null) {
         throw new RuntimeException("can't load JavaScript engine");
       }
+      Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+      bindings.put("polyglot.js.allowHostAccess", true);
+      bindings.put("polyglot.js.allowHostClassLookup", new Predicate<String>() {
+              @Override
+              public boolean test(String s) {
+                  return true;
+              }
+          });
       Method[] methods = getClass().getMethods();
       for (int i = 0; i < methods.length; i++) {
         Method m = methods[i];
