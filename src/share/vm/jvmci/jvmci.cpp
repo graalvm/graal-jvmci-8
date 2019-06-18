@@ -28,6 +28,9 @@
 #include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "jvmci/metadataHandleBlock.hpp"
+#ifdef INCLUDE_ALL_GCS
+#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
+#endif
 
 JNIHandleBlock* JVMCI::_object_handles = NULL;
 MetadataHandleBlock* JVMCI::_metadata_handles = NULL;
@@ -84,6 +87,15 @@ void JVMCI::release_handle(jmetadata handle) {
   MutexLocker ml(JVMCI_lock);
   _metadata_handles->chain_free_list(handle);
 }
+
+#ifdef INCLUDE_ALL_GCS
+oop JVMCI::ensure_oop_alive(oop obj) {
+    if (UseG1GC && obj != NULL) {
+      G1SATBCardTableModRefBS::enqueue(obj);
+    }
+    return obj;
+}
+#endif // INCLUDE_ALL_GCS
 
 void JVMCI::oops_do(OopClosure* f) {
   if (_object_handles != NULL) {

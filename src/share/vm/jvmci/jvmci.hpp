@@ -94,6 +94,14 @@ class JVMCI : public AllStatic {
 
   static JVMCIRuntime* compiler_runtime() { return _compiler_runtime; }
   static JVMCIRuntime* java_runtime()     { return _java_runtime; }
+
+  // The `obj` value might have come from a weak location so enqueue
+  // it to make sure it's noticed by G1.
+#ifdef INCLUDE_ALL_GCS
+  static oop ensure_oop_alive(oop obj);
+#else
+  static oop ensure_oop_alive(oop obj) { return obj; };
+#endif
 };
 
 #endif // SHARE_VM_JVMCI_JVMCI_HPP

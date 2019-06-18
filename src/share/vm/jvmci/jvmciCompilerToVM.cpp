@@ -50,14 +50,14 @@ JVMCIKlassHandle::JVMCIKlassHandle(Thread* thread, Klass* klass) {
   _thread = thread;
   _klass = klass;
   if (klass != NULL) {
-    _holder = Handle(_thread, klass->java_mirror());
+    _holder = Handle(_thread, JVMCI::ensure_oop_alive(klass->java_mirror()));
   }
 }
 
 JVMCIKlassHandle& JVMCIKlassHandle::operator=(Klass* klass) {
   _klass = klass;
   if (klass != NULL) {
-    _holder = Handle(_thread, klass->java_mirror());
+    _holder = Handle(_thread, JVMCI::ensure_oop_alive(klass->java_mirror()));
   }
   return *this;
 }

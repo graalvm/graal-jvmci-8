@@ -35,9 +35,6 @@
 #include "runtime/frame.inline.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/sweeper.hpp"
-#ifdef INCLUDE_ALL_GCS
-#include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
-#endif
 
 // Simple helper to see if the caller of a runtime stub which
 // entered the VM has been deoptimized
@@ -713,16 +710,7 @@ oop JVMCINMethodData::get_nmethod_mirror(nmethod* nm) {
   if (_nmethod_mirror_index == -1) {
     return NULL;
   }
-  oop nmethod_mirror = nm->oop_at(_nmethod_mirror_index);
-#if INCLUDE_ALL_GCS
-  if (UseG1GC && nmethod_mirror != NULL) {
-    // A lookup in the nmethod oops table could return an object that was previously
-    // considered dead. The SATB part of G1 needs to get notified about this
-    // potential resurrection, otherwise the marking might not find the object.
-    G1SATBCardTableModRefBS::enqueue(nmethod_mirror);
-  }
-#endif
-  return nmethod_mirror;
+  return JVMCI::ensure_oop_alive(nm->oop_at(_nmethod_mirror_index));
 }
 
 void JVMCINMethodData::set_nmethod_mirror(nmethod* nm, oop new_mirror) {
