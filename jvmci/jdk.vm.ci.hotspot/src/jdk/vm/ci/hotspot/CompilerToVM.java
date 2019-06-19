@@ -997,4 +997,9 @@ final class CompilerToVM {
      * @see HotSpotJVMCIRuntime#detachCurrentThread()
      */
     native void detachCurrentThread();
+
+    /**
+     * @see HotSpotJVMCIRuntime#exitHotSpot(int)
+     */
+    native void callSystemExit(int status);
 }
