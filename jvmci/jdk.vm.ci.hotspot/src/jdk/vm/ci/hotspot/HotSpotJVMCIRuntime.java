@@ -664,24 +664,22 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     private HotSpotCompilationRequestResult compileMethod(HotSpotResolvedJavaMethod method, int entryBCI, long compileState, int id) {
         Thread.currentThread().setContextClassLoader(HotSpotJVMCIRuntime.class.getClassLoader());
         HotSpotCompilationRequest request = new HotSpotCompilationRequest(method, entryBCI, compileState, id);
-        try (HotSpotObjectConstantScope scope = HotSpotObjectConstantScope.openLocalScope(request)) {
-            CompilationRequestResult result = getCompiler().compileMethod(request);
-            assert result != null : "compileMethod must always return something";
-            HotSpotCompilationRequestResult hsResult;
-            if (result instanceof HotSpotCompilationRequestResult) {
-                hsResult = (HotSpotCompilationRequestResult) result;
+        CompilationRequestResult result = getCompiler().compileMethod(request);
+        assert result != null : "compileMethod must always return something";
+        HotSpotCompilationRequestResult hsResult;
+        if (result instanceof HotSpotCompilationRequestResult) {
+            hsResult = (HotSpotCompilationRequestResult) result;
+        } else {
+            Object failure = result.getFailure();
+            if (failure != null) {
+                boolean retry = false; // Be conservative with unknown compiler
+                hsResult = HotSpotCompilationRequestResult.failure(failure.toString(), retry);
             } else {
-                Object failure = result.getFailure();
-                if (failure != null) {
-                    boolean retry = false; // Be conservative with unknown compiler
-                    hsResult = HotSpotCompilationRequestResult.failure(failure.toString(), retry);
-                } else {
-                    int inlinedBytecodes = -1;
-                    hsResult = HotSpotCompilationRequestResult.success(inlinedBytecodes);
-                }
+                int inlinedBytecodes = -1;
+                hsResult = HotSpotCompilationRequestResult.success(inlinedBytecodes);
             }
-            return hsResult;
         }
+        return hsResult;
     }
 
     /**

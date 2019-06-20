@@ -128,8 +128,10 @@
         }
     },
 
-    # Downstream Graal branch to test against
-    local downstream_branch = "ds/GR-16369",
+    # Downstream Graal branch to test against. If not master, then
+    # the branch must exist on both graal and graal-enterprise to
+    # ensure a consistent downstream code base is tested against.
+    local downstream_branch = "master",
 
     Build:: {
         packages+: {
@@ -153,6 +155,9 @@
 
             ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "clone", ["mx", "urlrewrite", "${GRAAL_REPO_URL}"]],
             ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "-C", "${GRAAL_REPO_NAME}", "checkout", downstream_branch, "||", "true"],
+
+            # Ensure that all downstream repos are on the same branch
+            ["test", ["git", "-C", "graal", "rev-parse", "--abbrev-ref", "HEAD"], "=", ["git", "-C", "${GRAAL_REPO_NAME}", "rev-parse", "--abbrev-ref", "HEAD"] ],
         ],
     },
 

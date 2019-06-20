@@ -710,7 +710,7 @@ oop JVMCINMethodData::get_nmethod_mirror(nmethod* nm) {
   if (_nmethod_mirror_index == -1) {
     return NULL;
   }
-  return nm->oop_at(_nmethod_mirror_index);
+  return JVMCI::ensure_oop_alive(nm->oop_at(_nmethod_mirror_index));
 }
 
 void JVMCINMethodData::set_nmethod_mirror(nmethod* nm, oop new_mirror) {
