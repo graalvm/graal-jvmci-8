@@ -6,7 +6,8 @@ function assertEQ(expect, actual) {
 }
 
 function fib(n) {
-    return (n <= 1) ? 1 : fib(n-1)+fib(n-1);
+    return (n <= 1) ? 1 : fib(n-1) + fib(n-1);
 }
 
 assertEQ(fib(25), 16777216);
+
