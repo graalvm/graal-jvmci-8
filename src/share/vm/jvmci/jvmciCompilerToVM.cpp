@@ -2633,6 +2633,18 @@ C2V_VMENTRY_0(jboolean, addFailedSpeculation, (JNIEnv* env, jobject, jlong faile
   return FailedSpeculation::add_failed_speculation(NULL, (FailedSpeculation**)(address) failed_speculations_address, (address) speculation, speculation_len);
 }
 
+C2V_VMENTRY(void, callSystemExit, (JNIEnv* env, jobject, jint status))
+  JavaValue result(T_VOID);
+  JavaCallArguments jargs(1);
+  jargs.push_int(status);
+  JavaCalls::call_static(&result,
+                       KlassHandle(THREAD, SystemDictionary::System_klass()),
+                       vmSymbols::exit_method_name(),
+                       vmSymbols::int_void_signature(),
+                       &jargs,
+                       CHECK);
+}
+
 #define CC (char*)  /*cast a literal from (const char*)*/
 #define FN_PTR(f) CAST_FROM_FN_PTR(void*, &(c2v_ ## f))
 
@@ -2779,6 +2791,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "getFailedSpeculationsAddress",                 CC "(" HS_RESOLVED_METHOD ")J",                                                       FN_PTR(getFailedSpeculationsAddress)},
   {CC "releaseFailedSpeculations",                    CC "(J)V",                                                                            FN_PTR(releaseFailedSpeculations)},
   {CC "addFailedSpeculation",                         CC "(J[B)Z",                                                                          FN_PTR(addFailedSpeculation)},
+  {CC "callSystemExit",                               CC "(I)V",                                                                            FN_PTR(callSystemExit)},
 };
 
 int CompilerToVM::methods_count() {

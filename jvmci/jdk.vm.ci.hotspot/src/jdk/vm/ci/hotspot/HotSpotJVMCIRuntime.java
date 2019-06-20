@@ -1048,4 +1048,14 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     public void excludeFromJVMCICompilation(ClassLoader... loaders) {
         this.excludeFromJVMCICompilation = loaders.clone();
     }
+
+    /**
+     * Calls {@link System#exit(int)} in HotSpot's runtime.
+     */
+    public void exitHotSpot(int status) {
+        if (!IS_IN_NATIVE_IMAGE) {
+            System.exit(status);
+        }
+        compilerToVm.callSystemExit(status);
+    }
 }
