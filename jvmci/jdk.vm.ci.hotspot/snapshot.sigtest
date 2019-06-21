@@ -664,7 +664,9 @@ CLSS public abstract jdk.vm.ci.hotspot.HotSpotResolvedJavaType
 intf jdk.vm.ci.meta.ResolvedJavaType
 meth public abstract boolean equals(java.lang.Object)
 meth public final int hashCode()
+meth public jdk.vm.ci.hotspot.HotSpotResolvedObjectType getArrayClass()
 supr jdk.vm.ci.hotspot.HotSpotJavaType
+hfds arrayOfType
 
 CLSS public abstract interface jdk.vm.ci.hotspot.HotSpotResolvedObjectType
 intf jdk.vm.ci.meta.ResolvedJavaType
@@ -736,7 +738,7 @@ meth public jdk.vm.ci.meta.ResolvedJavaType resolve(jdk.vm.ci.meta.ResolvedJavaT
 meth public jdk.vm.ci.meta.ResolvedJavaType[] getInterfaces()
 meth public void initialize()
 supr jdk.vm.ci.hotspot.HotSpotResolvedJavaType
-hfds arrayClass,kind,mirror,primitives
+hfds kind,mirror,primitives
 
 CLSS public jdk.vm.ci.hotspot.HotSpotRuntimeStub
 cons public init(java.lang.String)

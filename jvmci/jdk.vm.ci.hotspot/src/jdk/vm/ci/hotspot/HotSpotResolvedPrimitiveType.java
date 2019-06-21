@@ -46,7 +46,6 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     @NativeImageReinitialize static HotSpotResolvedPrimitiveType[] primitives;
 
     private JavaKind kind;
-    private HotSpotResolvedObjectType arrayClass;
     HotSpotObjectConstantImpl mirror;
 
     /**

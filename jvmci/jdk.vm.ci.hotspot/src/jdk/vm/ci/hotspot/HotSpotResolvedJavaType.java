@@ -29,7 +29,7 @@ import jdk.vm.ci.meta.ResolvedJavaType;
 
 public abstract class HotSpotResolvedJavaType extends HotSpotJavaType implements ResolvedJavaType {
 
-    protected HotSpotResolvedObjectTypeImpl arrayOfType;
+    HotSpotResolvedObjectTypeImpl arrayOfType;
 
     HotSpotResolvedJavaType(String name) {
         super(name);
