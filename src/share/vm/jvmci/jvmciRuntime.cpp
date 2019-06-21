@@ -659,7 +659,7 @@ JVM_ENTRY_NO_ENV(jobject, JVM_GetJVMCIRuntime(JNIEnv *env, jclass c))
   return JVMCIENV->get_jobject(runtime);
 JVM_END
 
-// private static ClassLoader Services.getJVMCIClassLoader()
+// private static ClassLoader Services.getJVMCIClassLoader0()
 JVM_ENTRY_NO_ENV(jobject, JVM_GetJVMCIClassLoader(JNIEnv *env, jclass c))
   JNI_JVMCIENV(thread, env);
   if (!EnableJVMCI) {
