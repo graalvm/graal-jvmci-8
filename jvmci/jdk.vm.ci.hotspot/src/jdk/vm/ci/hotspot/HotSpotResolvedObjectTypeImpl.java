@@ -574,6 +574,11 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
             return null;
         }
 
+        if (resolvedMethod.canBeStaticallyBound()) {
+            // No assumptions are required.
+            return new AssumptionResult<>(resolvedMethod);
+        }
+
         ResolvedJavaMethod result = resolvedMethod.uniqueConcreteMethod(this);
         if (result != null) {
             return new AssumptionResult<>(result, new ConcreteMethod(method, this, result));
