@@ -72,7 +72,6 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     private volatile HotSpotResolvedJavaField[] instanceFields;
     private volatile HotSpotResolvedObjectTypeImpl[] interfaces;
     private HotSpotConstantPool constantPool;
-    private HotSpotResolvedObjectType arrayOfType;
     private final JavaConstant mirror;
     private HotSpotResolvedObjectTypeImpl superClass;
 
@@ -151,18 +150,6 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     public int getAccessFlags() {
         HotSpotVMConfig config = config();
         return UNSAFE.getInt(getMetaspaceKlass() + config.klassAccessFlagsOffset);
-    }
-
-    @Override
-    public HotSpotResolvedObjectType getArrayClass() {
-        if (arrayOfType == null) {
-            try {
-                arrayOfType = (HotSpotResolvedObjectType) runtime().compilerToVm.lookupType("[" + getName(), this, true);
-            } catch (ClassNotFoundException e) {
-                throw new JVMCIError(e);
-            }
-        }
-        return arrayOfType;
     }
 
     @Override
