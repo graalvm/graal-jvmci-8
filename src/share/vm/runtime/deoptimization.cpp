@@ -848,6 +848,10 @@ public:
   }
   oop lookup_raw(intptr_t raw_value) {
     // Have to cast to avoid little/big-endian problems.
+    if (sizeof(PrimitiveType) > sizeof(jint)) {
+      jlong value = (jlong)raw_value;
+      return lookup(value);
+    }
     PrimitiveType value = (PrimitiveType)*((jint*)&raw_value);
     return lookup(value);
   }
