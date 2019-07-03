@@ -131,7 +131,7 @@
     # Downstream Graal branch to test against. If not master, then
     # the branch must exist on both graal and graal-enterprise to
     # ensure a consistent downstream code base is tested against.
-    local downstream_branch = "master",
+    local downstream_branch = "ds/GR-16861",
 
     Build:: {
         packages+: {
