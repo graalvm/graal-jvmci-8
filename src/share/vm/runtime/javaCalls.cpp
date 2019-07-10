@@ -336,7 +336,7 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
   if (CheckJNICalls)  {
     args->verify(method, result->get_type());
   }
-  else debug_only(args->verify(method, result->get_type(), thread));
+  else debug_only(args->verify(method, result->get_type()));
 #if INCLUDE_JVMCI
   }
 #else
