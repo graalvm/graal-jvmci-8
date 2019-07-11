@@ -811,7 +811,9 @@ CompileTask* CompileQueue::get() {
     No_Safepoint_Verifier nsv;
     task = CompilationPolicy::policy()->select_task(this);
   }
-  remove(task);
+  if (task != NULL) {
+    remove(task);
+  }
   purge_stale_tasks(); // may temporarily release MCQ lock
   return task;
 }

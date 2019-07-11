@@ -111,7 +111,7 @@
         downloads: {
             JAVA_HOME: {
                 name : "oraclejdk",
-                version : "8u212",
+                version : "8u221",
                 platformspecific: true
             }
         }
@@ -122,7 +122,7 @@
         downloads: {
             JAVA_HOME: {
                 name : "openjdk",
-                version : "8u212-nofreetype",
+                version : "8u222",
                 platformspecific: true
             }
         }
@@ -131,7 +131,7 @@
     # Downstream Graal branch to test against. If not master, then
     # the branch must exist on both graal and graal-enterprise to
     # ensure a consistent downstream code base is tested against.
-    local downstream_branch = "master",
+    local downstream_branch = "topic/GR-16913",
 
     Build:: {
         packages+: {
@@ -175,7 +175,6 @@
         timelimit: "1:30:00",
         run+: [
             # Build and test JavaScript on GraalVM
-            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graaljs.git"]],
             ["mx", "-p", "${VM_SUITE}", "--dynamicimports", "/graal-js,${SVM_IMPORT}", "--disable-polyglot", "--disable-libpolyglot", "--force-bash-launchers=native-image", "build"],
             ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
             ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
