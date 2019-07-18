@@ -1,5 +1,5 @@
 {
-    overlay: "24020f0a991bf53910d22a54b6b8559341c9da34",
+    overlay: "7ae71ed606bd7a3c225ac70aa5c93561b67050ac",
 
     Windows:: {
         capabilities+: ["windows"],
