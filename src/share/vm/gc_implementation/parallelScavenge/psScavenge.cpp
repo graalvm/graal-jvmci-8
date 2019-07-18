@@ -641,12 +641,6 @@ bool PSScavenge::invoke_no_policy() {
 
     NOT_PRODUCT(reference_processor()->verify_no_references_recorded());
 
-    {
-      GCTraceTime tm("Prune Scavenge Root Methods", false, false, &_gc_timer, _gc_tracer.gc_id());
-
-      CodeCache::prune_scavenge_root_nmethods();
-    }
-
     // Re-verify object start arrays
     if (VerifyObjectStartArray &&
         VerifyAfterGC) {
