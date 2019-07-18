@@ -175,7 +175,6 @@
         timelimit: "1:30:00",
         run+: [
             # Build and test JavaScript on GraalVM
-            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graaljs.git"]],
             ["mx", "-p", "${VM_SUITE}", "--dynamicimports", "/graal-js,${SVM_IMPORT}", "--disable-polyglot", "--disable-libpolyglot", "--force-bash-launchers=native-image", "build"],
             ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
             ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
