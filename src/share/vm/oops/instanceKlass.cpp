@@ -3396,16 +3396,25 @@ void InstanceKlass::collect_statistics(KlassSizeStats *sz) const {
 // Verification
 
 class VerifyFieldClosure: public OopClosure {
+  bool _failed;
+  oop  _obj;
  protected:
   template <class T> void do_oop_work(T* p) {
     oop obj = oopDesc::load_decode_heap_oop(p);
     if (!obj->is_oop_or_null()) {
       tty->print_cr("Failed: " PTR_FORMAT " -> " PTR_FORMAT, p, (address)obj);
-      Universe::print();
-      guarantee(false, "boom");
     }
   }
  public:
+  VerifyFieldClosure(oop obj): _failed(false), _obj(obj) {}
+  ~VerifyFieldClosure() {
+    if (_failed) {
+      Universe::print();
+      guarantee(false, err_msg("invalid oop for in " INTPTR_FORMAT " a %s", p2i(_obj), _obj->klass()->external_name()));
+    }
+  }
+
+
   virtual void do_oop(oop* p)       { VerifyFieldClosure::do_oop_work(p); }
   virtual void do_oop(narrowOop* p) { VerifyFieldClosure::do_oop_work(p); }
 };
@@ -3543,7 +3552,7 @@ void InstanceKlass::verify_on(outputStream* st) {
 
 void InstanceKlass::oop_verify_on(oop obj, outputStream* st) {
   Klass::oop_verify_on(obj, st);
-  VerifyFieldClosure blk;
+  VerifyFieldClosure blk(obj);
   obj->oop_iterate_no_header(&blk);
 }
 

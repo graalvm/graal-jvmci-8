@@ -347,7 +347,7 @@ bool PSScavenge::invoke_no_policy() {
 
     // Verify no unmarked old->young roots
     if (VerifyRememberedSets) {
-      CardTableExtension::verify_all_young_refs_imprecise();
+      CardTableExtension::verify_all_young_refs_imprecise(true);
     }
 
     if (!ScavengeWithObjectsInToSpace) {
@@ -652,7 +652,7 @@ bool PSScavenge::invoke_no_policy() {
       // Precise verification will give false positives. Until this is fixed,
       // use imprecise verification.
       // CardTableExtension::verify_all_young_refs_precise();
-      CardTableExtension::verify_all_young_refs_imprecise();
+      CardTableExtension::verify_all_young_refs_imprecise(false);
     }
 
     if (TraceGen0Time) accumulated_time()->stop();
