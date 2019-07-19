@@ -264,4 +264,8 @@ void JVMCIGlobals::set_jvmci_specific_flags() {
     warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
     ScavengeRootsInCode = 1;
   }
+
+  if (ZapTLAB) {
+    FastTLABRefill = false;
+  }
 }

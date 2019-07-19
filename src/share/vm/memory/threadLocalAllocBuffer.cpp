@@ -42,6 +42,9 @@ GlobalTLABStats* ThreadLocalAllocBuffer::_global_stats   = NULL;
 
 void ThreadLocalAllocBuffer::clear_before_allocation() {
   _slow_refill_waste += (unsigned)remaining();
+#if INCLUDE_JVMCI
+  guarantee(!ZapTLAB || top() == NULL || *(juint*)top() == badHeapWordVal, err_msg("TLAB overwriting detected: " INTPTR_FORMAT, *(intptr_t*)top()));
+#endif
   // In debug mode we expect the storage above top to be uninitialized
   // or filled with a padding object.
   assert(!ZapUnusedHeapArea || VM_Version::reserve_for_allocation_prefetch() > 0 || top() == NULL || *(intptr_t*)top() != 0, "overzeroing detected");
@@ -179,6 +182,13 @@ void ThreadLocalAllocBuffer::fill(HeapWord* start,
   if (PrintTLAB && Verbose) {
     print_stats("fill");
   }
+
+#if INCLUDE_JVMCI
+  if (ZapTLAB && !ZapUnusedHeapArea) {
+    Copy::fill_to_words(start, new_size, badHeapWordVal);
+  }
+#endif
+
   assert(top <= start + new_size - alignment_reserve(), "size too small");
   initialize(start, top, start + new_size - alignment_reserve());
 
