@@ -360,6 +360,11 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     }
 
     @Override
+    public boolean isBeingInitialized() {
+        return isArray() ? false : getInitState() == config().instanceKlassStateBeingInitialized;
+    }
+
+    @Override
     public boolean isLinked() {
         return isArray() ? true : getInitState() >= config().instanceKlassStateLinked;
     }
@@ -379,7 +384,7 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     public void initialize() {
         if (!isInitialized()) {
             runtime().compilerToVm.ensureInitialized(this);
-            assert isInitialized();
+            assert isInitialized() || isBeingInitialized();
         }
     }
 
