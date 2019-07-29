@@ -68,7 +68,7 @@ class CardTableExtension : public CardTableModRefBS {
                                   uint stripe_total);
 
   // Verification
-  static void verify_all_young_refs_imprecise();
+  static void verify_all_young_refs_imprecise(bool before_gc);
   static void verify_all_young_refs_precise();
 
   bool addr_is_marked_imprecise(void *addr);

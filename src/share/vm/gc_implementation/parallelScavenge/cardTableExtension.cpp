@@ -40,23 +40,27 @@ class CheckForUnmarkedOops : public OopClosure {
   CardTableExtension* _card_table;
   HeapWord*           _unmarked_addr;
   jbyte*              _unmarked_card;
+  bool                _marked;
 
  protected:
   template <class T> void do_oop_work(T* p) {
     oop obj = oopDesc::load_decode_heap_oop(p);
     if (_young_gen->is_in_reserved(obj) &&
-        !_card_table->addr_is_marked_imprecise(p)) {
+        !_card_table->addr_is_marked_imprecise(p) && !_marked) {
       // Don't overwrite the first missing card mark
       if (_unmarked_addr == NULL) {
         _unmarked_addr = (HeapWord*)p;
         _unmarked_card = _card_table->byte_for(p);
       }
+      tty->print_cr("pointer " PTR_FORMAT " at " PTR_FORMAT " on "
+                    "clean card at " PTR_FORMAT,
+                    p2i((HeapWord*)obj), p2i(p), p2i(_unmarked_card));
     }
   }
 
  public:
-  CheckForUnmarkedOops(PSYoungGen* young_gen, CardTableExtension* card_table) :
-    _young_gen(young_gen), _card_table(card_table), _unmarked_addr(NULL) { }
+  CheckForUnmarkedOops(PSYoungGen* young_gen, CardTableExtension* card_table, bool marked) :
+    _young_gen(young_gen), _card_table(card_table), _unmarked_addr(NULL), _marked(marked) { }
 
   virtual void do_oop(oop* p)       { CheckForUnmarkedOops::do_oop_work(p); }
   virtual void do_oop(narrowOop* p) { CheckForUnmarkedOops::do_oop_work(p); }
@@ -70,11 +74,13 @@ class CheckForUnmarkedOops : public OopClosure {
 // precise or imprecise, dirty or newgen.
 class CheckForUnmarkedObjects : public ObjectClosure {
  private:
+  bool                _before_gc;
   PSYoungGen*         _young_gen;
   CardTableExtension* _card_table;
+  bool                _had_error;
 
  public:
-  CheckForUnmarkedObjects() {
+  CheckForUnmarkedObjects(bool before_gc): _before_gc(before_gc), _had_error(false) {
     ParallelScavengeHeap* heap = (ParallelScavengeHeap*)Universe::heap();
     assert(heap->kind() == CollectedHeap::ParallelScavengeHeap, "Sanity");
 
@@ -83,16 +89,23 @@ class CheckForUnmarkedObjects : public ObjectClosure {
     // No point in asserting barrier set type here. Need to make CardTableExtension
     // a unique barrier set type.
   }
+  ~CheckForUnmarkedObjects() {
+    guarantee(!_had_error, err_msg("Found unmarked young_gen object %s gc", _before_gc ? "before" : "after"));
+  }
 
   // Card marks are not precise. The current system can leave us with
   // a mismash of precise marks and beginning of object marks. This means
   // we test for missing precise marks first. If any are found, we don't
   // fail unless the object head is also unmarked.
   virtual void do_object(oop obj) {
-    CheckForUnmarkedOops object_check(_young_gen, _card_table);
+    CheckForUnmarkedOops object_check(_young_gen, _card_table, _card_table->addr_is_marked_imprecise(obj));
     obj->oop_iterate_no_header(&object_check);
     if (object_check.has_unmarked_oop()) {
-      assert(_card_table->addr_is_marked_imprecise(obj), "Found unmarked young_gen object");
+      tty->print_cr(INTPTR_FORMAT " %s", p2i(obj), obj->klass()->external_name());
+#ifndef PRODUCT
+      obj->print();
+#endif
+      _had_error = true;
     }
   }
 };
@@ -321,8 +334,8 @@ void CardTableExtension::scavenge_contents_parallel(ObjectStartArray* start_arra
 }
 
 // This should be called before a scavenge.
-void CardTableExtension::verify_all_young_refs_imprecise() {
-  CheckForUnmarkedObjects check;
+void CardTableExtension::verify_all_young_refs_imprecise(bool before_gc) {
+  CheckForUnmarkedObjects check(before_gc);
 
   ParallelScavengeHeap* heap = (ParallelScavengeHeap*)Universe::heap();
   assert(heap->kind() == CollectedHeap::ParallelScavengeHeap, "Sanity");
