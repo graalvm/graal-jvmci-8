@@ -773,7 +773,7 @@ def _hotspotReplaceResultsVar(m):
         return _vmbuild
     return mx._replaceResultsVar(m)
 
-class HotSpotProject(mx.NativeProject):
+class HotSpotProject(mx.NativeProject):  # pylint: disable=too-many-ancestors
     def __init__(self, suite, name, deps, workingSets, results, output, **args):
         mx.NativeProject.__init__(self, suite, name, "", [], deps, workingSets, results, output, join(suite.dir, "src")) # TODO...
 
