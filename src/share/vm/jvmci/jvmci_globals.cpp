@@ -179,6 +179,7 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
   }
   JVMCI_FLAG_CHECKED(TraceClassLoadingCause)
   JVMCI_FLAG_CHECKED(EagerJVMCI)
+  JVMCI_FLAG_CHECKED(ZapTLAB)
 
   CHECK_NOT_SET(UseJVMCIClassLoader,          EnableJVMCI)
   CHECK_NOT_SET(CodeInstallSafepointChecks,   EnableJVMCI)
@@ -263,5 +264,9 @@ void JVMCIGlobals::set_jvmci_specific_flags() {
   if (!ScavengeRootsInCode) {
     warning("forcing ScavengeRootsInCode non-zero because JVMCI is enabled");
     ScavengeRootsInCode = 1;
+  }
+
+  if (ZapTLAB) {
+    FastTLABRefill = false;
   }
 }

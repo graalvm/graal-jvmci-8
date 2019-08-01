@@ -110,6 +110,9 @@
   product(intx, MethodProfileWidth, 0,                                      \
           "Number of methods to record in call profile")                    \
                                                                             \
+  product(bool, ZapTLAB, false,                                             \
+             "Ensure newly allocated TLABs are filled with 0xBAADBABE")     \
+                                                                            \
   product(ccstr, JVMCILibPath, NULL,                                        \
           "LD path for loading the JVMCI shared library")                   \
                                                                             \
