@@ -179,6 +179,7 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
   }
   JVMCI_FLAG_CHECKED(TraceClassLoadingCause)
   JVMCI_FLAG_CHECKED(EagerJVMCI)
+  JVMCI_FLAG_CHECKED(ZapTLAB)
 
   CHECK_NOT_SET(UseJVMCIClassLoader,          EnableJVMCI)
   CHECK_NOT_SET(CodeInstallSafepointChecks,   EnableJVMCI)
