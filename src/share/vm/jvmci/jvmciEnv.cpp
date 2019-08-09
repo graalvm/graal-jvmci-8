@@ -1484,14 +1484,7 @@ void JVMCIEnv::invalidate_nmethod_mirror(JVMCIObject mirror, JVMCI_TRAPS) {
                     "Cannot invalidate HotSpotNmethod object in shared library VM heap from non-JavaThread");
   }
 
-  nmethodLocker nml(nm);
-  if (nm->is_alive()) {
-    // Invalidating the HotSpotNmethod means we want the nmethod
-    // to be deoptimized.
-    nm->mark_for_deoptimization();
-    VM_Deoptimize op;
-    VMThread::execute(&op);
-  }
+  VM_DeoptimizeNMethod::invalidate(nm);
 
   // A HotSpotNmethod instance can only reference a single nmethod
   // during its lifetime so simply clear it here.

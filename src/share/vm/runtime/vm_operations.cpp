@@ -124,6 +124,33 @@ void VM_DeoptimizeFrame::doit() {
 }
 
 
+void VM_DeoptimizeNMethod::invalidate(nmethod* nm) {
+  nmethodLocker nml(nm);
+  if (nm->is_alive()) {
+    // Invalidating the HotSpotNmethod means we want the nmethod
+    // to be deoptimized.
+    nm->mark_for_deoptimization();
+    VM_DeoptimizeNMethod op(nm);
+    VMThread::execute(&op);
+  }
+}
+
+
+VM_DeoptimizeNMethod::VM_DeoptimizeNMethod(nmethod* nm): _locker(nm), _nm(nm) {
+}
+
+
+void VM_DeoptimizeNMethod::doit() {
+  // We do not want any GCs to happen while we are in the middle of this VM operation
+  ResourceMark rm;
+  DeoptimizationMarker dm;
+
+  // Deoptimize all activations depending on marked nmethods
+  Deoptimization::deoptimize_dependents();
+
+  _nm->make_not_entrant();
+}
+
 #ifndef PRODUCT
 
 void VM_DeoptimizeAll::doit() {
