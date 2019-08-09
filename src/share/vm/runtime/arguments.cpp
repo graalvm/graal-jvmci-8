@@ -3652,7 +3652,10 @@ jint Arguments::finalize_vm_init_args(SysClassPath* scp_p, bool scp_assembly_req
       char* class_path = NEW_C_HEAP_ARRAY(char, st.st_size + 1, mtInternal);
       int file_handle = os::open(pathBuffer, 0, 0);
       if (file_handle != -1) {
-        int class_path_len = (int) os::read(file_handle, class_path, st.st_size);
+        // Cannot use os::read here as ThreadLocalStorage has not been initialized and
+        // the Solaris implementation of os::read requires a JavaThread. This is safe
+        // since Java threading has not yet been initialized.
+        int class_path_len = (int) ::read(file_handle, class_path, st.st_size);
         // close file
         os::close(file_handle);
         if (class_path_len == st.st_size) {
