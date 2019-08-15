@@ -44,6 +44,9 @@
 #if INCLUDE_ALL_GCS
 #include "gc_implementation/parallelScavenge/parallelScavengeHeap.hpp"
 #endif // INCLUDE_ALL_GCS
+#if INCLUDE_JVMCI
+#include "jvmci/jvmci.hpp"
+#endif
 
 /*
  * HPROF binary format - description copied from:
@@ -1811,6 +1814,13 @@ void VM_HeapDumper::doit() {
   JNIHandles::oops_do(&jni_dumper);
   Universe::oops_do(&jni_dumper);  // technically not jni roots, but global roots
                                    // for things like preallocated throwable backtraces
+  // JVMCI - use jni roots
+#if INCLUDE_JVMCI
+  if (EnableJVMCI) {
+    JVMCI::oops_do(&jni_dumper);
+  }
+#endif
+
   check_segment_length();
 
   // HPROF_GC_ROOT_STICKY_CLASS
