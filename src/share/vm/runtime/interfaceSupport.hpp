@@ -362,12 +362,6 @@ class VMEntryWrapper {
       InterfaceSupport::zap_dead_locals_old();
     }
 #endif
-#ifdef COMPILER2
-    // This option is not used by Compiler 1
-    if (StressDerivedPointers) {
-      InterfaceSupport::stress_derived_pointers();
-    }
-#endif
     if (DeoptimizeALot || DeoptimizeRandom) {
       InterfaceSupport::deoptimizeAll();
     }

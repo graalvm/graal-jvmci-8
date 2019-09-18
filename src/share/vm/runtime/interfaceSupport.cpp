@@ -228,31 +228,6 @@ void InterfaceSupport::deoptimizeAll() {
 }
 
 
-void InterfaceSupport::stress_derived_pointers() {
-#ifdef COMPILER2
-  JavaThread *thread = JavaThread::current();
-  if (!is_init_completed()) return;
-  ResourceMark rm(thread);
-  bool found = false;
-  for (StackFrameStream sfs(thread); !sfs.is_done() && !found; sfs.next()) {
-    CodeBlob* cb = sfs.current()->cb();
-    if (cb != NULL && cb->oop_maps() ) {
-      // Find oopmap for current method
-      OopMap* map = cb->oop_map_for_return_address(sfs.current()->pc());
-      assert(map != NULL, "no oopmap found for pc");
-      found = map->has_derived_pointer();
-    }
-  }
-  if (found) {
-    // $$$ Not sure what to do here.
-    /*
-    Scavenge::invoke(0);
-    */
-  }
-#endif
-}
-
-
 void InterfaceSupport::verify_stack() {
   JavaThread* thread = JavaThread::current();
   ResourceMark rm(thread);
