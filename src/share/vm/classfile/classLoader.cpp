@@ -1567,8 +1567,8 @@ void ClassLoader::compile_the_world_in(char* name, Handle loader, TRAPS) {
   if (len > 6 && strcmp(".class", name + len - 6) == 0) {
     // We have a .class file
     char buffer[2048];
-    strncpy(buffer, name, len - 6);
-    buffer[len-6] = 0;
+    strncpy(buffer, name, sizeof(buffer));
+    buffer[len-6 >= 2048 ? 2047 : len-6] = 0;
     // If the file has a period after removing .class, it's not really a
     // valid class file.  The class loader will check everything else.
     if (strchr(buffer, '.') == NULL) {
