@@ -994,6 +994,57 @@ bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, RegisterMap*
   return failures;
 }
 
+
+static int count_number_of_bytes(ObjectValue* ov, int i) {
+  int count = 1;
+  int index = i + 1;
+  ScopeValue* sv;
+  while (index < ov->field_size()) {
+    sv = ov->field_at(index);
+    if (!(sv->is_location() && ((LocationValue *)sv)->location().type() == Location::invalid)) {
+      break;
+    }
+    count++;
+    index++;
+  }
+  return count;
+}
+
+static jbyte* check_alignment_get_addr(typeArrayOop obj, int index, int mask) {
+    jbyte* res = obj->byte_at_addr(index);
+    assert((((intptr_t) res) & mask) == 0, "Non-aligned write");
+    return res;
+}
+
+static void byte_array_put(typeArrayOop obj, intptr_t val, int index, int byte_count) {
+  switch (byte_count) {
+    case 1:
+      obj->byte_at_put(index, (jbyte) *((jint *) &val));
+      break;
+    case 2:
+      *((jshort *) check_alignment_get_addr(obj, index, 0b1)) = (jshort) *((jint *) &val);
+      break;
+    case 4:
+      *((jint *) check_alignment_get_addr(obj, index, 0b11)) = (jint) *((jint *) &val);
+      break;
+    case 8: {
+#ifdef SPARC
+      // For SPARC we have to swap high and low words.
+      jlong v = (jlong) *((jlong *) &val);
+      jlong res = 0;
+      res = (v << 32) | (v >> 32);
+#else
+      jlong res = (jlong) *((jlong *) &val);
+#endif
+      *((jlong *) check_alignment_get_addr(obj, index, 0b111)) = res;
+      break;
+  }
+    default:
+      ShouldNotReachHere();
+  }
+}
+
+
 // restore elements of an eliminated type array
 void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_map, ObjectValue* sv, typeArrayOop obj, BasicType type) {
   int index = 0;
@@ -1076,17 +1127,23 @@ void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_ma
       obj->char_at_put(index, (jchar)*((jint*)&val));
       break;
 
-    case T_BYTE:
+    case T_BYTE: {
       assert(value->type() == T_INT, "Agreement.");
       val = value->get_int();
-      obj->byte_at_put(index, (jbyte)*((jint*)&val));
-      break;
+      int byte_count = count_number_of_bytes(sv, i);
+      byte_array_put(obj, val, index, byte_count);
+      i += byte_count;
+      index += byte_count;
+//      obj->byte_at_put(index, (jbyte)*((jint*)&val));
+      continue;
+    }
 
-    case T_BOOLEAN:
+    case T_BOOLEAN: {
       assert(value->type() == T_INT, "Agreement.");
       val = value->get_int();
       obj->bool_at_put(index, (jboolean)*((jint*)&val));
       break;
+    }
 
       default:
         ShouldNotReachHere();
@@ -1094,7 +1151,6 @@ void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_ma
     index++;
   }
 }
-
 
 // restore fields of an eliminated object array
 void Deoptimization::reassign_object_array_elements(frame* fr, RegisterMap* reg_map, ObjectValue* sv, objArrayOop obj) {

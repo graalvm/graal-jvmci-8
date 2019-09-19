@@ -414,6 +414,7 @@ void CodeInstaller::record_object_value(ObjectValue* sv, JVMCIObject value, Grow
   int id = jvmci_env()->get_VirtualObject_id(value);
   Klass* klass = JVMCIENV->asKlass(type);
   bool isLongArray = klass == Universe::longArrayKlassObj();
+  bool isByteArray = klass == Universe::byteArrayKlassObj();
 
   JVMCIObjectArray values = jvmci_env()->get_VirtualObject_values(value);
   JVMCIObjectArray slotKinds = jvmci_env()->get_VirtualObject_slotKinds(value);
@@ -436,6 +437,12 @@ void CodeInstaller::record_object_value(ObjectValue* sv, JVMCIObject value, Grow
       // we're trying to put ints into a long array... this isn't really valid, but it's used for some optimizations.
       // add an int 0 constant
       cur_second = _int_0_scope_value;
+    }
+
+    if (isByteArray && cur_second != NULL && (type == T_DOUBLE || type == T_LONG)) {
+      // we are trying to write a long in a byte Array. We will need to count the illegals to restore the type of
+      // the thing we put inside.
+      cur_second = NULL;
     }
 
     if (cur_second != NULL) {
