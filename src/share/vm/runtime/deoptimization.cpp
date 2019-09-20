@@ -994,25 +994,44 @@ bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, RegisterMap*
   return failures;
 }
 
-
-static int count_number_of_bytes(ObjectValue* ov, int i) {
-  int count = 1;
-  int index = i + 1;
-  ScopeValue* sv;
-  while (index < ov->field_size()) {
-    sv = ov->field_at(index);
-    if (!(sv->is_location() && ((LocationValue *)sv)->location().type() == Location::invalid)) {
-      break;
-    }
-    count++;
-    index++;
-  }
-  return count;
+static bool is_illegal_entry(ScopeValue* value) {
+    return value->is_location() && ((LocationValue *)value)->location().type() == Location::invalid;
 }
 
-static jbyte* check_alignment_get_addr(typeArrayOop obj, int index, int mask) {
+/**
+ * For primitive types whose kind gets "erased" at runtime (shorts become stack ints),
+ * we need to somehow be able to recover the actual kind to be able to write the correct
+ * amount of bytes.
+ * For that purpose, this method assumes that, for an entry spanning n bytes at index i,
+ * the entries at index n + 1 to n + i are 'invalid'.
+ * For example, if we were writing a short at index 4 of a byte array of size 8, the
+ * expected form of the array would be:
+ *
+ * {b0, b1, b2, b3, INT, ILLEGAL, b6, b7}
+ *
+ * Thus, in order to get back the size of the entry, we simply need to count the number
+ * of illegal entries
+ *
+ * @param virtualArray the virtualized byte array
+ * @param i index of the virtual entry we are recovering
+ * @return The number of bytes the entry spans
+ */
+static int count_number_of_bytes_for_entry(ObjectValue *virtualArray, int i) {
+  int index = i;
+  while (++index < virtualArray->field_size() && is_illegal_entry(virtualArray->field_at(index))) {}
+  return index - i;
+}
+
+/**
+ * If there was a guarantee for byte array to always start aligned to a long, we could
+ * do a simple check on the parity of the index. Unfortunately, that is not always the
+ * case. Thus, we check alignment of the actual address we are writing to.
+ * In the unlikely case index 0 is 5-aligned for example, it would then be possible to
+ * write a long to index 3.
+ */
+static jbyte* check_alignment_get_addr(typeArrayOop obj, int index, int expected_alignment) {
     jbyte* res = obj->byte_at_addr(index);
-    assert((((intptr_t) res) & mask) == 0, "Non-aligned write");
+    assert((((intptr_t) res) % expected_alignment) == 0, "Non-aligned write");
     return res;
 }
 
@@ -1022,16 +1041,16 @@ static void byte_array_put(typeArrayOop obj, intptr_t val, int index, int byte_c
       obj->byte_at_put(index, (jbyte) *((jint *) &val));
       break;
     case 2:
-      *((jshort *) check_alignment_get_addr(obj, index, 0x1)) = (jshort) *((jint *) &val);
+      *((jshort *) check_alignment_get_addr(obj, index, 2)) = (jshort) *((jint *) &val);
       break;
     case 4:
-      *((jint *) check_alignment_get_addr(obj, index, 0x3)) = (jint) *((jint *) &val);
+      *((jint *) check_alignment_get_addr(obj, index, 4)) = (jint) *((jint *) &val);
       break;
     case 8: {
-#ifndef _LP64
+#ifdef _LP64
         jlong res = (jlong) *((jlong *) &val);
 #else
-#ifndef SPARC
+#ifdef SPARC
       // For SPARC we have to swap high and low words.
       jlong v = (jlong) *((jlong *) &val);
       jlong res = 0;
@@ -1041,7 +1060,7 @@ static void byte_array_put(typeArrayOop obj, intptr_t val, int index, int byte_c
       jlong res = (jlong) *((jlong *) &val);
 #endif // SPARC
 #endif
-      *((jlong *) check_alignment_get_addr(obj, index, 0x7)) = res;
+      *((jlong *) check_alignment_get_addr(obj, index, 8)) = res;
       break;
   }
     default:
@@ -1134,12 +1153,13 @@ void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_ma
 
     case T_BYTE: {
       assert(value->type() == T_INT, "Agreement.");
+      // The value we get is erased as a regular int. We will need to find its actual byte count 'by hand'.
       val = value->get_int();
-      int byte_count = count_number_of_bytes(sv, i);
+      int byte_count = count_number_of_bytes_for_entry(sv, i);
       byte_array_put(obj, val, index, byte_count);
+      // According to byte_count contract, the values from i + 1 to i + byte_count are illegal values. Skip.
       i += byte_count;
       index += byte_count;
-//      obj->byte_at_put(index, (jbyte)*((jint*)&val));
       continue;
     }
 
