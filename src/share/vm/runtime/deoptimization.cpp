@@ -1022,21 +1022,26 @@ static void byte_array_put(typeArrayOop obj, intptr_t val, int index, int byte_c
       obj->byte_at_put(index, (jbyte) *((jint *) &val));
       break;
     case 2:
-      *((jshort *) check_alignment_get_addr(obj, index, 0b1)) = (jshort) *((jint *) &val);
+      *((jshort *) check_alignment_get_addr(obj, index, 0x1)) = (jshort) *((jint *) &val);
       break;
     case 4:
-      *((jint *) check_alignment_get_addr(obj, index, 0b11)) = (jint) *((jint *) &val);
+      *((jint *) check_alignment_get_addr(obj, index, 0x3)) = (jint) *((jint *) &val);
       break;
     case 8: {
-#ifdef SPARC
+#ifndef _LP64
+        jlong res = (jlong) *((jlong *) &val);
+#else
+#ifndef SPARC
       // For SPARC we have to swap high and low words.
       jlong v = (jlong) *((jlong *) &val);
       jlong res = 0;
-      res = (v << 32) | (v >> 32);
+      res |= ((v & (jlong) 0xffffffff) << 32);
+      res |= ((v >> 32) & (jlong) 0xffffffff);
 #else
       jlong res = (jlong) *((jlong *) &val);
+#endif // SPARC
 #endif
-      *((jlong *) check_alignment_get_addr(obj, index, 0b111)) = res;
+      *((jlong *) check_alignment_get_addr(obj, index, 0x7)) = res;
       break;
   }
     default:
