@@ -1078,8 +1078,7 @@ Handle SharedRuntime::find_callee_info(JavaThread* thread, Bytecodes::Code& bc, 
   // last java frame on stack (which includes native call frames)
   vframeStream vfst(thread, true);  // Do not skip and javaCalls
 
-  Handle h = find_callee_info_helper(thread, vfst, bc, callinfo, CHECK_(Handle()));
-  return h;
+  return find_callee_info_helper(thread, vfst, bc, callinfo, THREAD);
 }
 
 

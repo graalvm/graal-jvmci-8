@@ -258,17 +258,15 @@ Klass* SystemDictionary::resolve_or_null(Symbol* class_name, Handle class_loader
     // Ignore wrapping L and ;.
     TempNewSymbol name = SymbolTable::new_symbol(class_name->as_C_string() + 1,
                                    class_name->utf8_length() - 2, CHECK_NULL);
-    Klass* k = resolve_instance_class_or_null(name, class_loader, protection_domain, CHECK_NULL);
-    return k;
+    return resolve_instance_class_or_null(name, class_loader, protection_domain, THREAD);
   } else {
-    Klass* k = resolve_instance_class_or_null(class_name, class_loader, protection_domain, CHECK_NULL);
-    return k;
+    return resolve_instance_class_or_null(class_name, class_loader, protection_domain, THREAD);
+
   }
 }
 
 Klass* SystemDictionary::resolve_or_null(Symbol* class_name, TRAPS) {
-  Klass* k = resolve_or_null(class_name, Handle(), Handle(), THREAD);
-  return k;
+  return resolve_or_null(class_name, Handle(), Handle(), THREAD);
 }
 
 // Forwards to resolve_instance_class_or_null
