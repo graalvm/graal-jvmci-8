@@ -229,7 +229,30 @@ public final class VirtualObject implements JavaValue {
             if (fieldIndex < fields.length) {
                 throw new JVMCIError("Not enough values provided for fields in %s", this);
             }
+        } else if (type.getComponentType().getJavaKind() == JavaKind.Byte) {
+            for (int i = 0; i < values.length;) {
+                JavaKind slotkind = slotKinds[i];
+                if (slotkind != JavaKind.Byte) {
+                    if (!slotkind.isPrimitive()) {
+                        throw new JVMCIError("Storing a non-primitive in a byte array %s", toString());
+                    }
+                    int byteCount = 1;
+                    while (++i < values.length && slotKinds[i] == JavaKind.Illegal) {
+                        byteCount++;
+                    }
+                    if (!isPowerOfTwo(byteCount) || (slotkind.getStackKind() != JavaKind.Int && byteCount != slotkind.getByteCount()) || byteCount > JavaKind.Long.getByteCount()) {
+                        throw new JVMCIError("Invalid number of illegals to reconstruct a byte array: %s in %s", byteCount, toString());
+                    }
+                    i += byteCount;
+                    continue;
+                }
+                i++;
+            }
         }
+    }
+
+    private static boolean isPowerOfTwo(int count) {
+        return (count > 0) && (count & (count - 1)) == 0;
     }
 
     @Override
