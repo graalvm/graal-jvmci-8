@@ -36,7 +36,7 @@ import jdk.vm.ci.runtime.JVMCI;
 
 public abstract class VirtualObjectTestBase {
 
-    public static int BYTE_ARRAY_LENGTH = 16;
+    public static int defaultByteArrayLength = 16;
 
     public static class SimpleObject {
         int i1;
@@ -127,8 +127,8 @@ public abstract class VirtualObjectTestBase {
 
         ResolvedJavaType byteArrayType = metaAccess.lookupJavaType(byte[].class);
 
-        JavaKind[] arrayKinds = new JavaKind[BYTE_ARRAY_LENGTH];
-        for (int i = 0; i < BYTE_ARRAY_LENGTH; i++) {
+        JavaKind[] arrayKinds = new JavaKind[defaultByteArrayLength];
+        for (int i = 0; i < defaultByteArrayLength; i++) {
             arrayKinds[i] = JavaKind.Byte;
         }
 
@@ -140,12 +140,13 @@ public abstract class VirtualObjectTestBase {
         values = getJavaValues(kinds);
         test(byteArrayType, values, kinds, false);
 
-        // Write all primitive kinds into a byte array. Only primitives with enough Illegals should succeed.
-        for (JavaKind kind: JavaKind.values()) {
+        // Write all primitive kinds into a byte array. Only primitives with enough Illegals should
+        // succeed.
+        for (JavaKind kind : JavaKind.values()) {
             if (kind.isPrimitive() && kind != JavaKind.Void) {
                 kinds = arrayKinds.clone();
                 kinds[0] = kind;
-                for (int i = 1; i < kind.getByteCount() /* && i < BYTE_ARRAY_LENGTH */; i++) {
+                for (int i = 1; i < kind.getByteCount() /* && i < defaultByteArrayLength */; i++) {
                     kinds[i] = JavaKind.Illegal;
                 }
                 values = getJavaValues(kinds);
@@ -154,21 +155,21 @@ public abstract class VirtualObjectTestBase {
         }
 
         // Write all kinds into a byte array, but forget to set Illegals.
-        for (JavaKind kind: JavaKind.values()) {
+        for (JavaKind kind : JavaKind.values()) {
             if (kind.isPrimitive() && kind != JavaKind.Void) {
                 kinds = arrayKinds.clone();
                 kinds[0] = kind;
                 values = getJavaValues(kinds);
-                test(byteArrayType, values, kinds,kind.getStackKind() != JavaKind.Int);
+                test(byteArrayType, values, kinds, kind.getStackKind() != JavaKind.Int);
             }
         }
 
         // Write all kinds into a byte array, but set a wrong number of Illegals.
-        for (JavaKind kind: JavaKind.values()) {
+        for (JavaKind kind : JavaKind.values()) {
             if (kind.isPrimitive() && kind != JavaKind.Void) {
                 kinds = arrayKinds.clone();
                 kinds[0] = kind;
-                for (int i = 1; i < 5 /* && i < BYTE_ARRAY_LENGTH */; i++) {
+                for (int i = 1; i < 5 /* && i < defaultByteArrayLength */; i++) {
                     kinds[i] = JavaKind.Illegal;
                 }
                 values = getJavaValues(kinds);
@@ -184,7 +185,7 @@ public abstract class VirtualObjectTestBase {
 
         // Put too many Illegals.
         kinds = arrayKinds.clone();
-        for (int i = 1; i < BYTE_ARRAY_LENGTH; i++) {
+        for (int i = 1; i < defaultByteArrayLength; i++) {
             kinds[i] = JavaKind.Illegal;
         }
         values = getJavaValues(kinds);
@@ -192,7 +193,7 @@ public abstract class VirtualObjectTestBase {
 
         // Fill a byte array with Illegals.
         kinds = arrayKinds.clone();
-        for (int i = 0; i < BYTE_ARRAY_LENGTH; i++) {
+        for (int i = 0; i < defaultByteArrayLength; i++) {
             kinds[i] = JavaKind.Illegal;
         }
         values = getJavaValues(kinds);

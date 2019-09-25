@@ -240,7 +240,7 @@ public final class VirtualObject implements JavaValue {
                     while (++i < values.length && slotKinds[i] == JavaKind.Illegal) {
                         byteCount++;
                     }
-                    if (!isPowerOfTwo(byteCount) || (slotkind.getStackKind() != JavaKind.Int && byteCount != slotkind.getByteCount()) || byteCount > JavaKind.Long.getByteCount()) {
+                    if (!CodeUtil.isPowerOf2(byteCount) || (slotkind.getStackKind() != JavaKind.Int && byteCount != slotkind.getByteCount()) || byteCount > JavaKind.Long.getByteCount()) {
                         throw new JVMCIError("Invalid number of illegals to reconstruct a byte array: %s in %s", byteCount, toString());
                     }
                     i += byteCount;
@@ -249,10 +249,6 @@ public final class VirtualObject implements JavaValue {
                 i++;
             }
         }
-    }
-
-    private static boolean isPowerOfTwo(int count) {
-        return (count > 0) && (count & (count - 1)) == 0;
     }
 
     @Override
