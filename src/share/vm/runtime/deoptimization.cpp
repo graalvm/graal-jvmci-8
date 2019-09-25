@@ -1158,7 +1158,7 @@ void Deoptimization::reassign_type_array_elements(frame* fr, RegisterMap* reg_ma
       int byte_count = count_number_of_bytes_for_entry(sv, i);
       byte_array_put(obj, val, index, byte_count);
       // According to byte_count contract, the values from i + 1 to i + byte_count are illegal values. Skip.
-      i += byte_count;
+      i += byte_count - 1; // Balance the loop counter.
       index += byte_count;
       continue;
     }
