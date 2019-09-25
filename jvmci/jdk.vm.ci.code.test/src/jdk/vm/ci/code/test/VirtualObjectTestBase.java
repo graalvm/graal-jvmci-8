@@ -36,7 +36,7 @@ import jdk.vm.ci.runtime.JVMCI;
 
 public abstract class VirtualObjectTestBase {
 
-    public static int defaultByteArrayLength = 16;
+    private static final int DEFAULT_BYTE_ARRAY_LENGTH = 16;
 
     public static class SimpleObject {
         int i1;
@@ -127,8 +127,8 @@ public abstract class VirtualObjectTestBase {
 
         ResolvedJavaType byteArrayType = metaAccess.lookupJavaType(byte[].class);
 
-        JavaKind[] arrayKinds = new JavaKind[defaultByteArrayLength];
-        for (int i = 0; i < defaultByteArrayLength; i++) {
+        JavaKind[] arrayKinds = new JavaKind[DEFAULT_BYTE_ARRAY_LENGTH];
+        for (int i = 0; i < DEFAULT_BYTE_ARRAY_LENGTH; i++) {
             arrayKinds[i] = JavaKind.Byte;
         }
 
@@ -146,7 +146,7 @@ public abstract class VirtualObjectTestBase {
             if (kind.isPrimitive() && kind != JavaKind.Void) {
                 kinds = arrayKinds.clone();
                 kinds[0] = kind;
-                for (int i = 1; i < kind.getByteCount() /* && i < defaultByteArrayLength */; i++) {
+                for (int i = 1; i < kind.getByteCount() /* && i < DEFAULT_BYTE_ARRAY_LENGTH */; i++) {
                     kinds[i] = JavaKind.Illegal;
                 }
                 values = getJavaValues(kinds);
@@ -169,7 +169,7 @@ public abstract class VirtualObjectTestBase {
             if (kind.isPrimitive() && kind != JavaKind.Void) {
                 kinds = arrayKinds.clone();
                 kinds[0] = kind;
-                for (int i = 1; i < 5 /* && i < defaultByteArrayLength */; i++) {
+                for (int i = 1; i < 5 /* && i < DEFAULT_BYTE_ARRAY_LENGTH */; i++) {
                     kinds[i] = JavaKind.Illegal;
                 }
                 values = getJavaValues(kinds);
@@ -185,7 +185,7 @@ public abstract class VirtualObjectTestBase {
 
         // Put too many Illegals.
         kinds = arrayKinds.clone();
-        for (int i = 1; i < defaultByteArrayLength; i++) {
+        for (int i = 1; i < DEFAULT_BYTE_ARRAY_LENGTH; i++) {
             kinds[i] = JavaKind.Illegal;
         }
         values = getJavaValues(kinds);
@@ -193,7 +193,7 @@ public abstract class VirtualObjectTestBase {
 
         // Fill a byte array with Illegals.
         kinds = arrayKinds.clone();
-        for (int i = 0; i < defaultByteArrayLength; i++) {
+        for (int i = 0; i < DEFAULT_BYTE_ARRAY_LENGTH; i++) {
             kinds[i] = JavaKind.Illegal;
         }
         values = getJavaValues(kinds);
