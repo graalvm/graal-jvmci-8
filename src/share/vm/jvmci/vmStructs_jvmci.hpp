@@ -136,6 +136,7 @@
   declare_constant(Deoptimization::Reason_not_compiled_exception_handler)                         \
   declare_constant(Deoptimization::Reason_unresolved)                                             \
   declare_constant(Deoptimization::Reason_jsr_mismatch)                                           \
+  declare_constant(Deoptimization::_support_large_access_byte_array_virtualization)               \
   declare_preprocessor_constant("JVMCIEnv::ok",                   JVMCI::ok)                      \
   declare_preprocessor_constant("JVMCIEnv::dependencies_failed",  JVMCI::dependencies_failed)     \
   declare_preprocessor_constant("JVMCIEnv::dependencies_invalid", JVMCI::dependencies_invalid)    \
