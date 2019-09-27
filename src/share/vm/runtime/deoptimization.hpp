@@ -121,6 +121,8 @@ class Deoptimization : AllStatic {
     Unpack_LIMIT                = 4
   };
 
+  static const int _support_large_access_byte_array_virtualization = 1;
+
   // Checks all compiled methods. Invalid methods are deleted and
   // corresponding activations are deoptimized.
   static int deoptimize_dependents();
