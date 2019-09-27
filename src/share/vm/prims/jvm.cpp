@@ -910,7 +910,7 @@ JVM_END
 JVM_ENTRY(jboolean, JVM_KnownToNotExist(JNIEnv *env, jobject loader, const char *classname))
   JVMWrapper("JVM_KnownToNotExist");
 #if INCLUDE_CDS
-  return ClassLoaderExt::known_to_not_exist(env, loader, classname, CHECK_(false));
+    return ClassLoaderExt::known_to_not_exist(env, loader, classname, THREAD);
 #else
   return false;
 #endif
@@ -920,7 +920,7 @@ JVM_END
 JVM_ENTRY(jobjectArray, JVM_GetResourceLookupCacheURLs(JNIEnv *env, jobject loader))
   JVMWrapper("JVM_GetResourceLookupCacheURLs");
 #if INCLUDE_CDS
-  return ClassLoaderExt::get_lookup_cache_urls(env, loader, CHECK_NULL);
+    return ClassLoaderExt::get_lookup_cache_urls(env, loader, THREAD);
 #else
   return NULL;
 #endif
@@ -930,7 +930,7 @@ JVM_END
 JVM_ENTRY(jintArray, JVM_GetResourceLookupCache(JNIEnv *env, jobject loader, const char *resource_name))
   JVMWrapper("JVM_GetResourceLookupCache");
 #if INCLUDE_CDS
-  return ClassLoaderExt::get_lookup_cache(env, loader, resource_name, CHECK_NULL);
+    return ClassLoaderExt::get_lookup_cache(env, loader, resource_name, THREAD);
 #else
   return NULL;
 #endif
@@ -4345,7 +4345,7 @@ JVM_ENTRY(jlong,JVM_DTraceActivate(
     JVM_DTraceProvider* providers))
   JVMWrapper("JVM_DTraceActivate");
   return DTraceJSDT::activate(
-    version, module_name, providers_count, providers, CHECK_0);
+    version, module_name, providers_count, providers, THREAD);
 JVM_END
 
 JVM_ENTRY(jboolean,JVM_DTraceIsProbeEnabled(JNIEnv* env, jmethodID method))
