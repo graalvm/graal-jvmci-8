@@ -396,10 +396,11 @@ OopMap *OopFlow::build_oop_map( Node *n, int max_reg, PhaseRegAlloc *regalloc, i
     }
     bool found = false;
     for( OopMapStream oms2(omap); !oms2.is_done(); oms2.next()) {
-      if (omv1.type() != OopMapValue::oop_value) {
+      OopMapValue omv2 = oms2.current();
+      if (omv2.type() != OopMapValue::oop_value) {
         continue;
       }
-      if( omv1.content_reg() == oms2.current().reg() ) {
+      if( omv1.content_reg() == omv2.reg() ) {
         found = true;
         break;
       }
