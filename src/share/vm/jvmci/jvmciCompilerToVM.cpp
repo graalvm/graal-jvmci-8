@@ -2403,7 +2403,7 @@ C2V_VMENTRY_PREFIX(jlong, getCurrentJavaThread, (JNIEnv* env, jobject c2vm))
   }
   JVMCITraceMark jtm("getCurrentJavaThread");
   assert(base_thread->is_Java_thread(), "just checking");
-  return (long) base_thread;
+  return (jlong) p2i(base_thread);
 C2V_END
 
 C2V_VMENTRY_PREFIX(jboolean, attachCurrentThread, (JNIEnv* env, jobject c2vm, jboolean as_daemon))
