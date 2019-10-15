@@ -234,16 +234,20 @@ public final class VirtualObject implements JavaValue {
                 JavaKind slotkind = slotKinds[i];
                 if (slotkind != JavaKind.Byte) {
                     if (!slotkind.isPrimitive()) {
-                        throw new JVMCIError("Storing a non-primitive in a byte array %s", toString());
+                        throw new JVMCIError("Storing a non-primitive in a byte array: %s %s", slotkind, toString());
                     }
                     int byteCount = 1;
                     while (++i < values.length && slotKinds[i] == JavaKind.Illegal) {
                         byteCount++;
                     }
+                    /*
+                     * Checks: a) The byte count is a valid count (ie: power of two), b) if the kind
+                     * was not erased to int (happens for regular byte array accesses), check that
+                     * the count is correct, c) No writes spanning more than a long.
+                     */
                     if (!CodeUtil.isPowerOf2(byteCount) || (slotkind.getStackKind() != JavaKind.Int && byteCount != slotkind.getByteCount()) || byteCount > JavaKind.Long.getByteCount()) {
                         throw new JVMCIError("Invalid number of illegals to reconstruct a byte array: %s in %s", byteCount, toString());
                     }
-                    i += byteCount;
                     continue;
                 }
                 i++;
