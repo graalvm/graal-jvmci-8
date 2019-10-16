@@ -127,11 +127,11 @@ public class AArch64HotSpotRegisterConfig implements RegisterConfig {
     public static final Register fp = r29;
 
     /**
-     * The heapBaseRegister, i.e. r27, is reserved unconditionally because HotSpot
-     * does not intend to support it as an allocatable register even when compressed
-     * oops is off. This register is excluded from callee-saved register at
-     * cpu/aarch64/sharedRuntime_aarch64.cpp:RegisterSaver::save_live_registers, which
-     * may lead to dereferencing unknown value from the stack at
+     * The heapBaseRegister, i.e. r27, is reserved unconditionally because HotSpot does not intend
+     * to support it as an allocatable register even when compressed oops is off. This register is
+     * excluded from callee-saved register at
+     * cpu/aarch64/sharedRuntime_aarch64.cpp:RegisterSaver::save_live_registers, which may lead to
+     * dereferencing unknown value from the stack at
      * share/runtime/stackValue.cpp:StackValue::create_stack_value during deoptimization.
      */
     private static final RegisterArray reservedRegisters = new RegisterArray(rscratch1, rscratch2, heapBaseRegister, threadRegister, fp, lr, r31, zr, sp);

@@ -45,7 +45,7 @@ meth public jdk.vm.ci.runtime.JVMCIBackend createJVMCIBackend(jdk.vm.ci.hotspot.
 supr java.lang.Object
 
 CLSS public jdk.vm.ci.hotspot.aarch64.AArch64HotSpotRegisterConfig
-cons public init(jdk.vm.ci.code.TargetDescription,boolean)
+cons public init(jdk.vm.ci.code.TargetDescription)
 cons public init(jdk.vm.ci.code.TargetDescription,jdk.vm.ci.code.RegisterArray)
 fld public final static jdk.vm.ci.code.Register fp
 fld public final static jdk.vm.ci.code.Register heapBaseRegister
