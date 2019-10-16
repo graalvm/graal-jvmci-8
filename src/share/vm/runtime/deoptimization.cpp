@@ -994,8 +994,11 @@ bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, RegisterMap*
   return failures;
 }
 
-static bool is_illegal_entry(ScopeValue* value) {
-    return value->is_location() && ((LocationValue *)value)->location().type() == Location::invalid;
+static bool is_virtualized_byte_array_access_marker(ScopeValue *value) {
+  Location loc;
+  return value->is_location() &&
+         ((loc = ((LocationValue *)value)->location()).type() == Location::invalid) &&
+         loc.offset() == 1;
 }
 
 /**
@@ -1003,14 +1006,14 @@ static bool is_illegal_entry(ScopeValue* value) {
  * we need to somehow be able to recover the actual kind to be able to write the correct
  * amount of bytes.
  * For that purpose, this method assumes that, for an entry spanning n bytes at index i,
- * the entries at index n + 1 to n + i are 'invalid'.
+ * the entries at index n + 1 to n + i are 'markers'.
  * For example, if we were writing a short at index 4 of a byte array of size 8, the
  * expected form of the array would be:
  *
- * {b0, b1, b2, b3, INT, ILLEGAL, b6, b7}
+ * {b0, b1, b2, b3, INT, marker, b6, b7}
  *
  * Thus, in order to get back the size of the entry, we simply need to count the number
- * of illegal entries
+ * of marked entries.
  *
  * @param virtualArray the virtualized byte array
  * @param i index of the virtual entry we are recovering
@@ -1018,7 +1021,8 @@ static bool is_illegal_entry(ScopeValue* value) {
  */
 static int count_number_of_bytes_for_entry(ObjectValue *virtualArray, int i) {
   int index = i;
-  while (++index < virtualArray->field_size() && is_illegal_entry(virtualArray->field_at(index))) {}
+  while (++index < virtualArray->field_size() &&
+    is_virtualized_byte_array_access_marker(virtualArray->field_at(index))) {}
   return index - i;
 }
 

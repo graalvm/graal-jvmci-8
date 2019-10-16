@@ -121,6 +121,7 @@ class Deoptimization : AllStatic {
     Unpack_LIMIT                = 4
   };
 
+  // Can reconstruct virtualized unsafe large accesses to byte arrays.
   static const int _support_large_access_byte_array_virtualization = 1;
 
   // Checks all compiled methods. Invalid methods are deleted and
