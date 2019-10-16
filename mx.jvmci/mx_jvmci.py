@@ -24,6 +24,8 @@
 #
 # ----------------------------------------------------------------------------------------------------
 
+from __future__ import print_function
+
 import os, stat, errno, sys, shutil, zipfile, tarfile, tempfile, re, time, datetime, platform, subprocess, socket
 from os.path import join, exists, basename
 from argparse import ArgumentParser, REMAINDER
@@ -38,6 +40,20 @@ from mx_unittest import unittest
 from mx_gate import Task
 from mx_sigtest import sigtest
 import mx_gate
+
+# Temporary imports and (re)definitions while porting mx from Python 2 to Python 3
+if sys.version_info[0] < 3:
+    def _decode(x):
+        return x
+    def _encode(x):
+        return x
+    _unicode = unicode                         # pylint: disable=undefined-variable
+else:
+    def _decode(x):
+        return x.decode()
+    def _encode(x):
+        return x.encode()
+    _unicode = str
 
 _suite = mx.suite('jvmci')
 
@@ -204,9 +220,9 @@ jdkDeployedDists = [
     HotSpotVMJDKDeployedDist('JVM_<vmbuild>_<vm>'),
 ]
 
-JDK_UNIX_PERMISSIONS_DIR = 0755
-JDK_UNIX_PERMISSIONS_FILE = 0644
-JDK_UNIX_PERMISSIONS_EXEC = 0755
+JDK_UNIX_PERMISSIONS_DIR = 0o755
+JDK_UNIX_PERMISSIONS_FILE = 0o644
+JDK_UNIX_PERMISSIONS_EXEC = 0o755
 
 def isVMSupported(vm):
     if 'client' == vm and len(platform.mac_ver()[0]) != 0:
@@ -346,7 +362,7 @@ def export(args):
 
         jsonFileName = 'export-' + suffix + '.json'
         with open(jsonFileName, 'w') as f:
-            print >> f, json.dumps(d)
+            print(json.dumps(d), file=f)
         return jsonFileName
 
 
@@ -378,7 +394,7 @@ def export(args):
 
                 for f in files:
                     name = join(root, f)
-                    # print name
+                    # print(name)
                     tar.add(name, name)
 
             n = _writeJson("basejdk-" + vmBuild, {'vmbuild' : vmBuild})
@@ -399,7 +415,7 @@ def export(args):
                             debugFiles.add(f)
                         else:
                             name = join(root, f)
-                            # print name
+                            # print(name)
                             tar.add(name, name)
 
                 n = _writeJson("vm-" + vmBuild + "-" + bVm, {'vmbuild' : vmBuild, 'vm' : bVm})
@@ -411,7 +427,7 @@ def export(args):
                 with tarfile.open(debugTarName, 'w:gz') as tar:
                     for f in debugFiles:
                         name = join(root, f)
-                        # print name
+                        # print(name)
                         tar.add(name, name)
 
                     n = _writeJson("debugfilesvm-" + vmBuild + "-" + bVm, {'vmbuild' : vmBuild, 'vm' : bVm})
@@ -424,7 +440,7 @@ def export(args):
         for root, _, files in os.walk("jvmci"):
             for f in [f for f in files if not f.endswith('.java')]:
                 name = join(root, f)
-                # print name
+                # print(name)
                 tar.add(name, name)
 
         n = _writeJson("jvmci", {'javacompiler' : 'javac'})
@@ -741,7 +757,7 @@ def jdkhome(vm=None):
 
 def print_jdkhome(args, vm=None):
     """print the JDK directory selected for the 'vm' command"""
-    print jdkhome(vm)
+    print(jdkhome(vm))
 
 def buildvars(args):
     """describe the variables that can be set by the -D option to the 'mx build' commmand"""
@@ -802,7 +818,7 @@ def get_hotspot_release_version(tag=mx.DEFAULT_JDK_TAG):
     Gets the value to use for the HOTSPOT_RELEASE_VERSION make variable for the output of ``java -version``.
     """
     jdk = mx.get_jdk(tag=tag)
-    output = subprocess.check_output([jdk.java, '-version'], stderr=subprocess.STDOUT).strip().split('\n')
+    output = _decode(subprocess.check_output([jdk.java, '-version'], stderr=subprocess.STDOUT)).strip().split('\n')
     # Last line of `java -version` output is the HotSpot version info. Here are some samples:
     #   OpenJDK 64-Bit Server VM (build 25.71-b01-internal-jvmci-0.49-dev, mixed mode)
     #   Java HotSpot(TM) 64-Bit Server VM (build 25.192-b12, mixed mode)
@@ -1257,7 +1273,7 @@ def c1visualizer(args):
 
     if mx.get_os() != 'windows':
         # Make sure that execution is allowed. The zip file does not always specfiy that correctly
-        os.chmod(executable, 0777)
+        os.chmod(executable, 0o777)
 
     mx.run([executable])
 
@@ -1350,7 +1366,7 @@ def hcfdis(args):
                 mx.log('updating ' + f)
                 with open('new_' + f, "w") as fp:
                     for l in lines:
-                        print >> fp, l
+                        print(l, file=fp)
 
 def jniconfig(args):
     """Generate or verify a JNI config file for use by SVM"""
@@ -1418,12 +1434,12 @@ def jniconfig(args):
 
         missing = (oldnames - newnames)
         if missing:
-            print 'Missing types:\n  ' + '\n  '.join(missing)
+            print('Missing types:\n  ' + '\n  '.join(missing))
         added = (newnames - oldnames)
         if added:
-            print 'Added types:'
+            print('Added types:')
             for a in added:
-                print json.dumps(a, sort_keys=True, indent=2)
+                print(json.dumps(a, sort_keys=True, indent=2))
 
         for name in oldnames & newnames:
             o = olddict[name]
@@ -1432,12 +1448,12 @@ def jniconfig(args):
             new = json.dumps(n, sort_keys=True, indent=2)
             diff = '\n'.join(difflib.unified_diff(old.split('\n'), new.split('\n')))
             if diff:
-                print name
-                print diff
+                print(name)
+                print(diff)
     else:
         with open(args.generate, 'w') as fp:
             fp.write(json.dumps(newconfig, sort_keys=True, indent=2))
-        print 'Wrote new JNI config to ' + args.generate
+        print('Wrote new JNI config to ' + args.generate)
 
 def jol(args):
     """Java Object Layout"""
@@ -1500,7 +1516,7 @@ mx.add_argument('--installed-jdks', help='the base directory in which the JDKs c
                 join('<path>', '<jdk-version>', '<vmbuild>', 'jre', 'lib', '<vm>', mx.add_lib_prefix(mx.add_lib_suffix('jvm'))) + ')', default=None, metavar='<path>')
 
 mx.add_argument('-M', '--jvmci-mode', action='store', dest='jvmci_mode', choices=_jvmciModes.keys(), help='the JVMCI mode to use (default: ' + _jvmciMode.jvmciMode + ')')
-mx.add_argument('--vm', action='store', dest='vm', choices=_vmChoices.keys() + _vmAliases.keys(), help='the VM type to build/run')
+mx.add_argument('--vm', action='store', dest='vm', choices=list(_vmChoices.keys()) + list(_vmAliases.keys()), help='the VM type to build/run')
 mx.add_argument('--vmbuild', action='store', dest='vmbuild', choices=_vmbuildChoices, help='the VM build to build/run (default: ' + _vmbuildChoices[0] + ')')
 mx.add_argument('--ecl', action='store_true', dest='make_eclipse_launch', help='create launch configuration for running VM execution(s) in Eclipse')
 mx.add_argument('--vmprefix', action='store', dest='vm_prefix', help='prefix for running the VM (e.g. "/usr/bin/gdb --args")', metavar='<prefix>')
@@ -1521,7 +1537,8 @@ def get_jvmci_bootstrap_jdk():
         if _untilVersion:
             versionDesc += " and <" + str(_untilVersion)
         _jvmci_bootstrap_jdk = mx.get_jdk(_versionCheck, versionDescription=versionDesc, tag='default')
-        _jvmci_bootstrap_jdk.is_openjdk = 'openjdk' in subprocess.check_output([_jvmci_bootstrap_jdk.java, '-version'], stderr=subprocess.STDOUT).lower()
+        java_version = _decode(subprocess.check_output([_jvmci_bootstrap_jdk.java, '-version'], stderr=subprocess.STDOUT))
+        _jvmci_bootstrap_jdk.is_openjdk = 'openjdk' in java_version.lower()
         is_oraclejdk = not _jvmci_bootstrap_jdk.is_openjdk
         if is_oraclejdk and platform.mac_ver()[0] != '':
             # OracleJDK on macOS should have a `Contents/Home` top level directory
