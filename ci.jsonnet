@@ -61,7 +61,8 @@
             ac_cv_func_getentropy: "no",
             ac_cv_func_mkostemp: "no",
             ac_cv_func_mkostemps: "no",
-            MACOSX_DEPLOYMENT_TARGET: "10.11"
+            MACOSX_DEPLOYMENT_TARGET: "10.11",
+            JAVA_HOME_PREFIX: "/Contents/Home"
         },
         capabilities+: ["darwin_sierra"],
         name+: "-darwin",
@@ -113,6 +114,11 @@
                 name : "oraclejdk",
                 version : "8u221",
                 platformspecific: true
+            },
+            JAVA_HOME_OVERLAY: {
+                name : "oraclejdk-overlay",
+                version : "8u221_1",
+                platformspecific: true
             }
         }
     },
@@ -123,6 +129,11 @@
             JAVA_HOME: {
                 name : "openjdk",
                 version : "8u222",
+                platformspecific: true
+            },
+            JAVA_HOME_OVERLAY: {
+                name : "openjdk-overlay",
+                version : "8u222_1",
                 platformspecific: true
             }
         }
@@ -147,6 +158,12 @@
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
             ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
+
+            # Overlay static libraries
+            ["set-export", "OLD_PWD", "${PWD}"],
+            ["cd", "${JAVA_HOME_OVERLAY}${JAVA_HOME_PREFIX}"],
+            ["cp", "-r", ".", "${JAVA_HOME}"],
+            ["cd", "${OLD_PWD}"],
 
             # Test on graal
 
