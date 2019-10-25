@@ -117,7 +117,7 @@
             },
             JAVA_HOME_OVERLAY: {
                 name : "oraclejdk-overlay",
-                version : "8u231",
+                version : "8u231_1",
                 platformspecific: true
             }
         }
@@ -133,7 +133,7 @@
             },
             JAVA_HOME_OVERLAY: {
                 name : "openjdk-overlay",
-                version : "8u232",
+                version : "8u232_1",
                 platformspecific: true
             }
         }
