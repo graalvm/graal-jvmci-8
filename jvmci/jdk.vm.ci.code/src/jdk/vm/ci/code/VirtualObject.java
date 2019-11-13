@@ -205,7 +205,7 @@ public final class VirtualObject implements JavaValue {
                     if (slotKind.getSlotCount() == 2 && fieldKind == JavaKind.Int) {
                         int offset = verifier.getOffset(field);
                         if (offset % 8 != 0) {
-                            throw new JVMCIError("Double word value stored across two ints must be aligned %s", toString());
+                            throw new JVMCIError("Double word value stored across two ints must be aligned %s (unaligned offset: %d)", toString(), offset);
                         }
 
                         if (fieldIndex + 1 >= fields.length) {

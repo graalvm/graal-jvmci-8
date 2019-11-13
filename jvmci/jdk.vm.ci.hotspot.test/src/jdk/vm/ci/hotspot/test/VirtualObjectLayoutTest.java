@@ -43,7 +43,9 @@ public class VirtualObjectLayoutTest extends VirtualObjectTestBase {
         try {
             HotSpotCompiledCode.verifyVirtualObject(virtual);
         } catch (JVMCIError e) {
-            Assert.assertTrue("Unexpected error verifying " + virtual, error);
+            if (!error) {
+                throw new AssertionError("Unexpected error verifying " + virtual, e);
+            }
             return;
         }
         Assert.assertFalse("Expected error but passed verifying " + virtual, error);
