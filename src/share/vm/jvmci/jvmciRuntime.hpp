@@ -73,8 +73,11 @@ public:
   // is dead, the HotSpotNmethod.entryPoint field is also cleared.
   void invalidate_nmethod_mirror(nmethod* nm);
 
-  // Gets the mirror from nm's oops table.
-  oop get_nmethod_mirror(nmethod* nm);
+  // Gets the mirror from nm's oops table. The `for_publishing`
+  // arg specifies whether the caller publishes the oop
+  // (i.e., writes it to a reference field or wraps it
+  // in a handle).
+  oop get_nmethod_mirror(nmethod* nm, bool for_publishing);
 
   // Sets the mirror in nm's oops table.
   void set_nmethod_mirror(nmethod* nm, oop mirror);
