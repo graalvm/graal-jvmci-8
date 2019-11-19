@@ -3231,6 +3231,12 @@ VMStructs::init() {
              CHECK_NO_OP,
              CHECK_NO_OP);
 
+#if INCLUDE_JVMCI
+  VM_STRUCTS_JVMCI(CHECK_NONSTATIC_VM_STRUCT_ENTRY,
+                   CHECK_STATIC_VM_STRUCT_ENTRY,
+                   CHECK_VOLATILE_NONSTATIC_VM_STRUCT_ENTRY)
+#endif
+
 #if INCLUDE_ALL_GCS
   VM_STRUCTS_PARALLELGC(CHECK_NONSTATIC_VM_STRUCT_ENTRY,
              CHECK_STATIC_VM_STRUCT_ENTRY);
@@ -3348,6 +3354,13 @@ VMStructs::init() {
                         ENSURE_C2_FIELD_TYPE_PRESENT,
                         CHECK_NO_OP,
                         CHECK_NO_OP));
+
+#if INCLUDE_JVMCI
+  debug_only(VM_STRUCTS_JVMCI(ENSURE_FIELD_TYPE_PRESENT,
+                              ENSURE_FIELD_TYPE_PRESENT,
+                              ENSURE_FIELD_TYPE_PRESENT))
+#endif
+
 #if INCLUDE_ALL_GCS
   debug_only(VM_STRUCTS_PARALLELGC(ENSURE_FIELD_TYPE_PRESENT,
                                    ENSURE_FIELD_TYPE_PRESENT));
