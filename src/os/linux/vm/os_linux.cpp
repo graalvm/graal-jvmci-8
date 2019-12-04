@@ -4224,7 +4224,13 @@ static int prio_init() {
 }
 
 OSReturn os::set_native_priority(Thread* thread, int newpri) {
-  if ( !UseThreadPriorities || ThreadPriorityPolicy == 0 ) return OS_OK;
+  if ( !UseThreadPriorities ) return OS_OK;
+
+  int pri = getpriority(PRIO_PROCESS, thread->osthread()->thread_id());
+
+  if ( newpri < pri && geteuid() != 0 ) {
+    return OS_OK;
+  }
 
   int ret = setpriority(PRIO_PROCESS, thread->osthread()->thread_id(), newpri);
   return (ret == 0) ? OS_OK : OS_ERR;
