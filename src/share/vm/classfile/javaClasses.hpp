@@ -1355,7 +1355,6 @@ class java_lang_StackTraceElement: AllStatic {
   static oop create(methodHandle method, int bci, TRAPS);
 
 #if INCLUDE_JVMCI
-  static void decode(Handle mirror, int method, int version, int bci, int cpref, Symbol*& methodName, Symbol*& fileName, int& lineNumber);
   static void decode(Handle mirror, methodHandle method, int bci, Symbol*& methodName, Symbol*& fileName, int& lineNumber);
 #endif
 
