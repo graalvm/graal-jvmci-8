@@ -195,7 +195,7 @@ private:
   static ConstantIntValue*    _int_1_scope_value;
   static ConstantIntValue*    _int_2_scope_value;
   static LocationValue*       _illegal_value;
-  static LocationValue*       _virtual_byte_array_marker;
+  static MarkerValue*         _virtual_byte_array_marker;
 
   jint pd_next_offset(NativeInstruction* inst, jint pc_offset, JVMCIObject method, JVMCI_TRAPS);
   void pd_patch_OopConstant(int pc_offset, JVMCIObject constant, JVMCI_TRAPS);

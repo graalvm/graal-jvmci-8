@@ -994,13 +994,6 @@ bool Deoptimization::realloc_objects(JavaThread* thread, frame* fr, RegisterMap*
   return failures;
 }
 
-static bool is_virtualized_byte_array_access_marker(ScopeValue *value) {
-  Location loc;
-  return value->is_location() &&
-         ((loc = ((LocationValue *)value)->location()).type() == Location::invalid) &&
-         loc.offset() == 1;
-}
-
 /**
  * For primitive types whose kind gets "erased" at runtime (shorts become stack ints),
  * we need to somehow be able to recover the actual kind to be able to write the correct
@@ -1022,7 +1015,7 @@ static bool is_virtualized_byte_array_access_marker(ScopeValue *value) {
 static int count_number_of_bytes_for_entry(ObjectValue *virtualArray, int i) {
   int index = i;
   while (++index < virtualArray->field_size() &&
-    is_virtualized_byte_array_access_marker(virtualArray->field_at(index))) {}
+         virtualArray->field_at(index)->is_marker()) {}
   return index - i;
 }
 

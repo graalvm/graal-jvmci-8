@@ -40,7 +40,7 @@ ConstantIntValue*      CodeInstaller::_int_0_scope_value =  new (ResourceObj::C_
 ConstantIntValue*      CodeInstaller::_int_1_scope_value =  new (ResourceObj::C_HEAP, mtJVMCI) ConstantIntValue(1);
 ConstantIntValue*      CodeInstaller::_int_2_scope_value =  new (ResourceObj::C_HEAP, mtJVMCI) ConstantIntValue(2);
 LocationValue*         CodeInstaller::_illegal_value = new (ResourceObj::C_HEAP, mtJVMCI) LocationValue(Location());
-LocationValue*         CodeInstaller::_virtual_byte_array_marker = new (ResourceObj::C_HEAP, mtJVMCI) LocationValue(Location::new_stk_loc(Location::invalid, 1));;
+MarkerValue*           CodeInstaller::_virtual_byte_array_marker = new (ResourceObj::C_HEAP, mtJVMCI) MarkerValue();
 
 VMReg CodeInstaller::getVMRegFromLocation(JVMCIObject location, int total_frame_size, JVMCI_TRAPS) {
   if (location.is_null()) {
