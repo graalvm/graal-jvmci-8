@@ -3510,7 +3510,7 @@ class CommandLineFlags {
   /* Priorities */                                                          \
   product_pd(bool, UseThreadPriorities,  "Use native thread priorities")    \
                                                                             \
-  product(intx, ThreadPriorityPolicy, 0,                                    \
+  product(intx, ThreadPriorityPolicy, 1,                                    \
           "0 : Normal.                                                     "\
           "    VM chooses priorities that are appropriate for normal       "\
           "    applications. On Solaris NORM_PRIORITY and above are mapped "\
@@ -3530,7 +3530,8 @@ class CommandLineFlags {
           "    to higher native thread priorities. This policy should be   "\
           "    used with care, as sometimes it can cause performance       "\
           "    degradation in the application and/or the entire system. On "\
-          "    Linux this policy requires root privilege.")                 \
+          "    Linux/BSD/macOS this policy requires root privilege or an   "\
+          "    extended capability.")                                       \
                                                                             \
   product(bool, ThreadPriorityVerbose, false,                               \
           "Print priority changes")                                         \

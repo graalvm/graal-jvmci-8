@@ -4207,14 +4207,12 @@ int os::java_to_os_priority[CriticalPriority + 1] = {
 
 static int prio_init() {
   if (ThreadPriorityPolicy == 1) {
-    // Only root can raise thread priority. Don't allow ThreadPriorityPolicy=1
-    // if effective uid is not root. Perhaps, a more elegant way of doing
-    // this is to test CAP_SYS_NICE capability, but that will require libcap.so
     if (geteuid() != 0) {
       if (!FLAG_IS_DEFAULT(ThreadPriorityPolicy)) {
-        warning("-XX:ThreadPriorityPolicy requires root privilege on Linux");
+        warning("-XX:ThreadPriorityPolicy=1 may require system level permission, " \
+                "e.g., being the root user. If the necessary permission is not " \
+                "possessed, changes to priority will be silently ignored.");
       }
-      ThreadPriorityPolicy = 0;
     }
   }
   if (UseCriticalJavaThreadPriority) {
@@ -4224,13 +4222,7 @@ static int prio_init() {
 }
 
 OSReturn os::set_native_priority(Thread* thread, int newpri) {
-  if ( !UseThreadPriorities ) return OS_OK;
-
-  int pri = getpriority(PRIO_PROCESS, thread->osthread()->thread_id());
-
-  if ( newpri < pri && geteuid() != 0 ) {
-    return OS_OK;
-  }
+  if ( !UseThreadPriorities || ThreadPriorityPolicy == 0 ) return OS_OK;
 
   int ret = setpriority(PRIO_PROCESS, thread->osthread()->thread_id(), newpri);
   return (ret == 0) ? OS_OK : OS_ERR;
