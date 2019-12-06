@@ -36,7 +36,7 @@ import jdk.vm.ci.runtime.JVMCI;
 
 public abstract class VirtualObjectTestBase {
 
-    private static final int DEFAULT_BYTE_ARRAY_LENGTH = 16;
+    private static final int DEFAULT_BYTE_ARRAY_LENGTH = 50;
 
     public static class SimpleObject {
         int i1;
@@ -198,5 +198,35 @@ public abstract class VirtualObjectTestBase {
         }
         values = getJavaValues(kinds);
         test(byteArrayType, values, kinds, true);
+
+        // Write all kinds in a byte array successively.
+        kinds = arrayKinds.clone();
+        int i = 0;
+        for (JavaKind kind : JavaKind.values()) {
+            if (kind.isPrimitive() && kind != JavaKind.Void) {
+                kinds[i] = kind;
+                for (int j = 1; j < kind.getByteCount(); j++) {
+                    kinds[i + j] = JavaKind.Illegal;
+                }
+                i = i + kind.getByteCount();
+            }
+        }
+        values = getJavaValues(kinds);
+        test(byteArrayType, values, kinds, false);
+
+        // Write all kinds in a byte array successively, with an interleaving byte.
+        kinds = arrayKinds.clone();
+        i = 0;
+        for (JavaKind kind : JavaKind.values()) {
+            if (kind.isPrimitive() && kind != JavaKind.Void) {
+                kinds[i] = kind;
+                for (int j = 1; j < kind.getByteCount(); j++) {
+                    kinds[i + j] = JavaKind.Illegal;
+                }
+                i = i + kind.getByteCount() + 1;
+            }
+        }
+        values = getJavaValues(kinds);
+        test(byteArrayType, values, kinds, false);
     }
 }
