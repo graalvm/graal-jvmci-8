@@ -2703,7 +2703,8 @@ void os::loop_breaker(int attempts) {
 // not the entire user process, and user level threads are 1:1 mapped to kernel
 // threads. It has always been the case, but could change in the future. For
 // this reason, the code should not be used as default (ThreadPriorityPolicy=0).
-// It is only used when ThreadPriorityPolicy=1 and requires root privilege.
+// It is only used when ThreadPriorityPolicy=1 and may require system level permission
+// (e.g., root privilege or CAP_SYS_NICE capability).
 
 #if !defined(__APPLE__)
 int os::java_to_os_priority[CriticalPriority + 1] = {
@@ -2755,9 +2756,10 @@ static int prio_init() {
     // this is to test CAP_SYS_NICE capability, but that will require libcap.so
     if (geteuid() != 0) {
       if (!FLAG_IS_DEFAULT(ThreadPriorityPolicy)) {
-        warning("-XX:ThreadPriorityPolicy requires root privilege on Bsd");
+        warning("-XX:ThreadPriorityPolicy=1 may require system level permission, " \
+                "e.g., being the root user. If the necessary permission is not " \
+                "possessed, changes to priority will be silently ignored.");
       }
-      ThreadPriorityPolicy = 0;
     }
   }
   if (UseCriticalJavaThreadPriority) {
@@ -2774,6 +2776,7 @@ OSReturn os::set_native_priority(Thread* thread, int newpri) {
   return OS_OK;
 #elif defined(__FreeBSD__)
   int ret = pthread_setprio(thread->osthread()->pthread_id(), newpri);
+  return (ret == 0) ? OS_OK : OS_ERR;
 #elif defined(__APPLE__) || defined(__NetBSD__)
   struct sched_param sp;
   int policy;
