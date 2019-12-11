@@ -1677,7 +1677,7 @@ bool nmethod::make_not_entrant_or_zombie(unsigned int state) {
     }
 
     // Must happen before state change. Otherwise we have a race condition in
-    // nmethod::can_not_entrant_be_converted(). I.e., a method can immediately
+    // nmethod::can_convert_to_zombie(). I.e., a method can immediately
     // transition its state from 'not_entrant' to 'zombie' without having to wait
     // for stack scanning.
     if (state == not_entrant) {

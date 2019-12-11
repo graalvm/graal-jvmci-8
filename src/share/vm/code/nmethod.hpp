@@ -864,10 +864,10 @@ class nmethodLocker : public StackObj {
   ~nmethodLocker() { unlock_nmethod(_nm); }
 
   nmethod* code() { return _nm; }
-  void set_code(nmethod* new_nm) {
+  void set_code(nmethod* new_nm, bool zombie_ok = false) {
     unlock_nmethod(_nm);   // note:  This works even if _nm==new_nm.
     _nm = new_nm;
-    lock_nmethod(_nm);
+    lock_nmethod(_nm, zombie_ok);
   }
 };
 
