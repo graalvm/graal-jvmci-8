@@ -1892,43 +1892,19 @@ oop java_lang_StackTraceElement::create(Handle mirror, int method_id,
   oop classname = StringTable::intern((char*) str, CHECK_0);
   java_lang_StackTraceElement::set_declaringClass(element(), classname);
 
-  Symbol* methodname_sym;
-  Symbol* filename_sym;
-  int line_number;
-  decode(mirror, method_id, version, bci, cpref, methodname_sym, filename_sym, line_number);
-
-  oop methodname = StringTable::intern(methodname_sym, CHECK_0);
-  java_lang_StackTraceElement::set_methodName(element(), methodname);
-
-  oop filename = StringTable::intern(filename_sym, CHECK_0);
-  java_lang_StackTraceElement::set_fileName(element(), filename);
-  java_lang_StackTraceElement::set_lineNumber(element(), line_number);
-
-  return element();
-}
-
-#if INCLUDE_JVMCI
-void java_lang_StackTraceElement::decode(Handle mirror, methodHandle method, int bci, Symbol*& methodname, Symbol*& filename, int& line_number) {
-  int method_id = method->orig_method_idnum();
-  int cpref = method->name_index();
-  decode(mirror, method_id, method->constants()->version(), bci, cpref, methodname, filename, line_number);
-}
-
-void java_lang_StackTraceElement::decode(Handle mirror, int method_id, int version, int bci, int cpref, Symbol*& methodname, Symbol*& filename, int& line_number) {
-  // Fill in class name
-  InstanceKlass* holder = InstanceKlass::cast(java_lang_Class::as_Klass(mirror()));
   Method* method = holder->method_with_orig_idnum(method_id, version);
 
   // The method can be NULL if the requested class version is gone
   Symbol* sym = (method != NULL) ? method->name() : holder->constants()->symbol_at(cpref);
 
   // Fill in method name
-  methodname = sym;
+  oop methodname = StringTable::intern(sym, CHECK_0);
+  java_lang_StackTraceElement::set_methodName(element(), methodname);
 
   if (!version_matches(method, version)) {
-    // If the method was redefined, accurate line number information isn't available
-    filename = NULL;
-    line_number = -1;
+    // The method was redefined, accurate line number information isn't available
+    java_lang_StackTraceElement::set_fileName(element(), NULL);
+    java_lang_StackTraceElement::set_lineNumber(element(), -1);
   } else {
     // Fill in source file name and line number.
     // Use a specific ik version as a holder since the mirror might
@@ -1939,10 +1915,24 @@ void java_lang_StackTraceElement::decode(Handle mirror, int method_id, int versi
     Symbol* source = holder->source_file_name();
     if (ShowHiddenFrames && source == NULL)
       source = vmSymbols::unknown_class_name();
+    oop filename = StringTable::intern(source, CHECK_0);
+    java_lang_StackTraceElement::set_fileName(element(), filename);
 
-    filename = source;
-    line_number = get_line_number(method, bci);
+    int line_number = get_line_number(method, bci);
+    java_lang_StackTraceElement::set_lineNumber(element(), line_number);
   }
+  return element();
+}
+
+#if INCLUDE_JVMCI
+void java_lang_StackTraceElement::decode(Handle mirror, methodHandle method, int bci, Symbol*& methodname, Symbol*& filename, int& line_number) {
+  // Fill in method name
+  methodname = method->name();
+
+  // Fill in source file name and line number.
+  InstanceKlass* holder = method->method_holder();
+  filename = holder->source_file_name();
+  line_number = get_line_number(method(), bci);
 }
 #endif // INCLUDE_JVMCI
 
