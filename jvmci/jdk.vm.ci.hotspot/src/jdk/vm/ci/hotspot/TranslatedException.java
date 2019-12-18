@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2018, 2019, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -36,8 +36,14 @@ import java.util.Objects;
 @SuppressWarnings("serial")
 final class TranslatedException extends Exception {
 
-    private TranslatedException(String message, Throwable translationFailure) {
-        super("[" + translationFailure + "]" + Objects.toString(message, ""));
+    /**
+     * Class name of exception that could not be instantiated.
+     */
+    private String originalExceptionClassName;
+
+    private TranslatedException(String message, String originalExceptionClassName) {
+        super(message);
+        this.originalExceptionClassName = originalExceptionClassName;
     }
 
     /**
@@ -47,6 +53,18 @@ final class TranslatedException extends Exception {
     @Override
     public Throwable fillInStackTrace() {
         return this;
+    }
+
+    @Override
+    public String toString() {
+        String s;
+        if (originalExceptionClassName.equals(TranslatedException.class.getName())) {
+            s = getClass().getName();
+        } else {
+            s = getClass().getName() + "[" + originalExceptionClassName + "]";
+        }
+        String message = getMessage();
+        return (message != null) ? (s + ": " + message) : s;
     }
 
     /**
@@ -86,14 +104,9 @@ final class TranslatedException extends Exception {
             if (message == null) {
                 return initCause((Throwable) cls.getConstructor().newInstance(), cause);
             }
-            cls.getDeclaredConstructor(String.class);
-            return initCause((Throwable) cls.getConstructor(String.class).newInstance(message), cause);
+            return initCause((Throwable) cls.getDeclaredConstructor(String.class).newInstance(message), cause);
         } catch (Throwable translationFailure) {
-            if (className.equals(TranslatedException.class.getName())) {
-                // Chop the class name when boxing another TranslatedException
-                return initCause(new TranslatedException(message, translationFailure), cause);
-            }
-            return initCause(new TranslatedException(null, translationFailure), cause);
+            return initCause(new TranslatedException(message, className), cause);
         }
     }
 
@@ -222,7 +235,7 @@ final class TranslatedException extends Exception {
             return throwable;
         } catch (Throwable translationFailure) {
             assert printStackTrace(translationFailure);
-            return new TranslatedException("Error decoding exception: " + encodedThrowable, translationFailure);
+            return new TranslatedException("Error decoding exception: " + encodedThrowable, translationFailure.getClass().getName());
         }
     }
 }

@@ -68,7 +68,7 @@ public class TestTranslatedException {
         String after = printToString(decoded);
 
         after = after.replace(
-                        "jdk.vm.ci.hotspot.TranslatedException: [java.lang.ClassNotFoundException: jdk/vm/ci/hotspot/test/TestTranslatedException$Untranslatable]",
+                        "jdk.vm.ci.hotspot.TranslatedException[jdk.vm.ci.hotspot.test.TestTranslatedException$Untranslatable]: test exception",
                         "jdk.vm.ci.hotspot.test.TestTranslatedException$Untranslatable: test exception");
 
         Assert.assertEquals("before:\n" + before + "\nafter:\n" + after, before, after);
