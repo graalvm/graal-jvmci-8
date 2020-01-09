@@ -336,9 +336,11 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   static jboolean validate_object(JavaThread* thread, oopDesc* parent, oopDesc* child);
   static void new_store_pre_barrier(JavaThread* thread);
 
-  // used to throw exceptions from compiled JVMCI code
+  // These functions are used to throw exceptions from compiled JVMCI code.  They all return a
+  // non-zero value if the caller has been deoptimized since the caller may need to dispatch the
+  // resulting exception manually depending on the debug info use at the call site.
   static int throw_and_post_jvmti_exception(JavaThread* thread, const char* exception, const char* message);
-  // helper methods to throw exception with complex messages
+  // These are variants to produce more specialized messages to match the behaviour of the JDK.
   static int throw_klass_external_name_exception(JavaThread* thread, const char* exception, Klass* klass);
   static int throw_class_cast_exception(JavaThread* thread, const char* exception, Klass* caster_klass, Klass* target_klass);
 
