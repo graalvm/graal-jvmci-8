@@ -453,22 +453,31 @@ JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
   }
 JRT_END
 
-JRT_ENTRY(void, JVMCIRuntime::throw_and_post_jvmti_exception(JavaThread* thread, const char* exception, const char* message))
-  TempNewSymbol symbol = SymbolTable::new_symbol(exception, CHECK);
+JRT_BLOCK_ENTRY(int, JVMCIRuntime::throw_and_post_jvmti_exception(JavaThread* thread, const char* exception, const char* message))
+  JRT_BLOCK;
+  TempNewSymbol symbol = SymbolTable::new_symbol(exception, CHECK_EXIT_(0));
   SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, message);
+  JRT_BLOCK_END;
+  return caller_is_deopted();
 JRT_END
 
-JRT_ENTRY(void, JVMCIRuntime::throw_klass_external_name_exception(JavaThread* thread, const char* exception, Klass* klass))
+JRT_BLOCK_ENTRY(int, JVMCIRuntime::throw_klass_external_name_exception(JavaThread* thread, const char* exception, Klass* klass))
+  JRT_BLOCK;
   ResourceMark rm(thread);
-  TempNewSymbol symbol = SymbolTable::new_symbol(exception, CHECK);
+  TempNewSymbol symbol = SymbolTable::new_symbol(exception, CHECK_EXIT_(0));
   SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, klass->external_name());
+  JRT_BLOCK_END;
+  return caller_is_deopted();
 JRT_END
 
-JRT_ENTRY(void, JVMCIRuntime::throw_class_cast_exception(JavaThread* thread, const char* exception, Klass* caster_klass, Klass* target_klass))
+JRT_BLOCK_ENTRY(int, JVMCIRuntime::throw_class_cast_exception(JavaThread* thread, const char* exception, Klass* caster_klass, Klass* target_klass))
+  JRT_BLOCK;
   ResourceMark rm(thread);
   const char* message = SharedRuntime::generate_class_cast_message(caster_klass->external_name(), target_klass->external_name());
-  TempNewSymbol symbol = SymbolTable::new_symbol(exception, CHECK);
+  TempNewSymbol symbol = SymbolTable::new_symbol(exception, CHECK_EXIT_(0));
   SharedRuntime::throw_and_post_jvmti_exception(thread, symbol, message);
+  JRT_BLOCK_END;
+  return caller_is_deopted();
 JRT_END
 
 JRT_LEAF(void, JVMCIRuntime::log_object(JavaThread* thread, oopDesc* obj, bool as_string, bool newline))
