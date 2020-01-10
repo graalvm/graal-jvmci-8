@@ -3,7 +3,7 @@ suite = {
   "name" : "jvmci",
 
   "version" : "19.3-b07",
-  "release" : False,
+  "release" : True,
 
   "url" : "http://openjdk.java.net/projects/graal",
   "developer" : {
