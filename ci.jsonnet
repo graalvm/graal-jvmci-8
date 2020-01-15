@@ -112,12 +112,12 @@
         downloads: {
             JAVA_HOME: {
                 name : "oraclejdk",
-                version : "8u231",
+                version : "8u241",
                 platformspecific: true
             },
             JAVA_HOME_OVERLAY: {
                 name : "oraclejdk-overlay",
-                version : "8u231_1",
+                version : "8u241",
                 platformspecific: true
             }
         }
@@ -128,12 +128,12 @@
         downloads: {
             JAVA_HOME: {
                 name : "openjdk",
-                version : "8u232",
+                version : "8u242",
                 platformspecific: true
             },
             JAVA_HOME_OVERLAY: {
                 name : "openjdk-overlay",
-                version : "8u232_1",
+                version : "8u242",
                 platformspecific: true
             }
         }
@@ -142,7 +142,7 @@
     # Downstream Graal branch to test against. If not master, then
     # the branch must exist on both graal and graal-enterprise to
     # ensure a consistent downstream code base is tested against.
-    local downstream_branch = "me/GR-18988",
+    local downstream_branch = "ds/GR-20596",
 
     Build:: {
         packages+: {
