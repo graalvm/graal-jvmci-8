@@ -38,9 +38,8 @@
   /* JavaFrameAnchor            */                                                                                                   \
   /******************************/                                                                                                   \
   volatile_nonstatic_field(JavaFrameAnchor,     _last_Java_fp,                                    intptr_t*)                         \
+  static_field(VM_Version, _has_intel_jcc_erratum, bool)                                                                             \
   static_field(VM_Version, _cpuFeatures, int)
-
-
 
 #define VM_TYPES_CPU(declare_type, declare_toplevel_type, declare_oop_type, declare_integer_type, declare_unsigned_integer_type, declare_c1_toplevel_type, declare_c2_type, declare_c2_toplevel_type) \
   declare_toplevel_type(VM_Version)
