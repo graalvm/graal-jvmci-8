@@ -5,7 +5,7 @@ Fork of jdk8u/hotspot with support for JVMCI.
 
 ## Building JVMCI JDK 8
 
-To create a JVMCI enabled JDK 8 on other platforms (e.g., Windows):
+To create a JVMCI-enabled JDK 8, make sure you have [`mx`](https://github.com/graalvm/mx) on your system. Then run the following commands:
 
 ```
 git clone https://github.com/graalvm/graal-jvmci-8
