@@ -1,11 +1,11 @@
-# graal-jvmci-8
+# Welcome to graal-jvmci-8
 
-Fork of jdk8u/hotspot with support for JVMCI.
-
+This is a fork of http://hg.openjdk.java.net/jdk8u/jdk8u/hotspot that includes [JVMCI](https://openjdk.java.net/jeps/243).
 
 ## Building JVMCI JDK 8
 
-To create a JVMCI-enabled JDK 8, make sure you have [`mx`](https://github.com/graalvm/mx) on your system. Then run the following commands:
+To create a JVMCI-enabled JDK 8, make sure you have [`mx`](https://github.com/graalvm/mx) on your system.
+Then run the following commands:
 
 ```
 git clone https://github.com/graalvm/graal-jvmci-8
@@ -23,7 +23,7 @@ If you run into build problems, send a message to http://mail.openjdk.java.net/m
 ### Windows Specifics
 
 Building JDK requires some bash-like environment. Fortunately, the one that comes as a part of the standard
-*Git for Windows* installation will suffice, in which case you will just have to set `MKS_HOME` to point
+*Git for Windows* installation will suffice, in which case you will have to set `MKS_HOME` to point
 to the directory with Linux tools, e.g.:
 
 ```
