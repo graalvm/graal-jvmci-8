@@ -91,7 +91,7 @@ class JVMCIMode:
 
     def __enter__(self):
         global _jvmciMode
-        self.previousMode = _jvmciMode
+        self.previousMode = _jvmciMode # pylint: disable=used-before-assignment
         _jvmciMode = self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -225,7 +225,7 @@ JDK_UNIX_PERMISSIONS_FILE = 0o644
 JDK_UNIX_PERMISSIONS_EXEC = 0o755
 
 def isVMSupported(vm):
-    if 'client' == vm and len(platform.mac_ver()[0]) != 0:
+    if vm == 'client' and len(platform.mac_ver()[0]) != 0:
         # Client VM not supported: java launcher on Mac OS X translates '-client' to '-server'
         return False
     return True
@@ -322,10 +322,8 @@ def chmodRecursive(dirname, chmodFlagsDir):
     if mx.get_os() == 'windows':
         return
 
-    def _chmodDir(chmodFlags, dirname, fnames):
-        os.chmod(dirname, chmodFlagsDir)
-
-    os.path.walk(dirname, _chmodDir, chmodFlagsDir)
+    for root, _, _ in os.walk(dirname):
+        os.chmod(root, chmodFlagsDir)
 
 def export(args):
     """create archives of builds split by vmbuild and vm"""
@@ -356,7 +354,7 @@ def export(args):
 
     def _writeJson(suffix, properties):
         d = infos.copy()
-        for k, v in properties.iteritems():
+        for k, v in properties.items():
             assert not d.has_key(k)
             d[k] = v
 
@@ -562,7 +560,7 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
 
             # Install a copy of the disassembler library
             try:
-                if 'true' == mx.get_env('INCLUDE_HSDIS', 'true').lower():
+                if mx.get_env('INCLUDE_HSDIS', 'true').lower() == 'true':
                     hsdis_args = []
                     syntax = mx.get_env('HSDIS_SYNTAX')
                     if syntax:
@@ -608,7 +606,7 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
                                 versions['jvmci'] = "unknown"
                             if 'hotspot' in versions:
                                 del versions['hotspot']
-                            fp.write('SOURCE=" ' + ' '.join((k + ":" + v for k, v in versions.iteritems())) + '"' + os.linesep)
+                            fp.write('SOURCE=" ' + ' '.join((k + ":" + v for k, v in versions.items())) + '"' + os.linesep)
                             mx.logv("Updating " + releaseFile)
                         except BaseException as e:
                             mx.warn("Exception " + str(e) + " while updating release file")
@@ -712,19 +710,15 @@ def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo
     ret = False
 
     def _writeProcess(s):
-        stdin.write(s + newLine)
+        stdin.write(_encode(s + newLine))
 
     _writeProcess("echo " + startToken)
     while True:
-        # encoding may be None on windows plattforms
-        if sys.stdout.encoding is None:
-            encoding = 'utf-8'
-        else:
-            encoding = sys.stdout.encoding
-
+        # encoding may be None on Windows
+        encoding = sys.stdout.encoding or 'utf-8'
         line = stdout.readline().decode(encoding)
         if logFile:
-            log.write(line.encode('utf-8'))
+            log.write(line)
         line = line.strip()
         mx.log(line)
         if line == startToken:
@@ -772,7 +766,7 @@ def buildvars(args):
 
     mx.log('HotSpot build variables that can be set by the -D option to "mx build":')
     mx.log('')
-    for n in sorted(buildVars.iterkeys()):
+    for n in sorted(buildVars.keys()):
         mx.log(n)
         mx.log(textwrap.fill(buildVars[n], initial_indent='    ', subsequent_indent='    ', width=200))
 
@@ -919,7 +913,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
 
             if mx.get_os() == 'solaris':
                 # If using sparcWorks, setup flags to avoid make complaining about CC version
-                cCompilerVersion = subprocess.Popen('CC -V', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).stderr.readlines()[0]
+                cCompilerVersion = _decode(subprocess.Popen('CC -V', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).stderr.readlines()[0])
                 if cCompilerVersion.startswith('CC: Sun C++'):
                     compilerRev = cCompilerVersion.split(' ')[3]
                     setMakeVar('ENFORCE_COMPILER_REV', compilerRev, env=env)
@@ -940,7 +934,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             if not mx._opts.verbose:
                 mx.log('--------------- make command line ----------------------')
 
-            envPrefix = ' '.join([key + '=' + env[key] for key in env.iterkeys() if not os.environ.has_key(key) or env[key] != os.environ[key]])
+            envPrefix = ' '.join([key + '=' + env[key] for key in env.keys() if key not in os.environ or env[key] != os.environ[key]])
             if len(envPrefix):
                 mx.log('env ' + envPrefix + ' \\')
 
@@ -1005,7 +999,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)  # 0777
                 func(path)
             else:
-                raise
+                raise exc
 
         def rmIfExists(name):
             if os.path.isdir(name):
