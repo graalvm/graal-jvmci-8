@@ -230,6 +230,9 @@ protected:
   static int _cpu;
   static int _model;
   static int _stepping;
+
+  static bool _has_intel_jcc_erratum;
+
   static int _cpuFeatures;     // features returned by the "cpuid" instruction
                                // 0 if this instruction is not available
   static const char* _features_str;
@@ -404,6 +407,8 @@ protected:
     uint result = threads_per_core();
     return result;
   }
+
+  static bool compute_has_intel_jcc_erratum();
 
   static uint32_t feature_flags() {
     uint32_t result = 0;
