@@ -43,3 +43,6 @@
 **/test-output/
 **/workingsets.xml
 /jdk*/
+/openjdk*/
+/src/closed
+/make/closed

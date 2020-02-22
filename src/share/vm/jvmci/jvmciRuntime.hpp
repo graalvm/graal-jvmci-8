@@ -127,7 +127,7 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   // Helper methods
   static bool       check_klass_accessibility(Klass* accessing_klass, Klass* resolved_klass);
   static methodHandle  lookup_method(InstanceKlass*  accessor,
-                                     InstanceKlass*  holder,
+                                     Klass*  holder,
                                      Symbol*         name,
                                      Symbol*         sig,
                                      Bytecodes::Code bc);
@@ -204,12 +204,6 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   static methodHandle  get_method_by_index(const constantPoolHandle& cpool,
                                            int method_index, Bytecodes::Code bc,
                                            InstanceKlass* loading_klass);
-
-  // converts the Klass* representing the holder of a method into a
-  // InstanceKlass*.  This is needed since the holder of a method in
-  // the bytecodes could be an array type.  Basically this converts
-  // array types into java/lang/Object and other types stay as they are.
-  static InstanceKlass* get_instance_klass_for_declared_method_holder(Klass* klass);
 
   // Helper routine for determining the validity of a compilation
   // with respect to concurrent class loading.
