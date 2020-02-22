@@ -153,7 +153,7 @@
         name: "gate-jvmci",
         timelimit: "1:00:00",
         diskspace_required: "10G",
-        logs: ["*.log"],
+        logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],

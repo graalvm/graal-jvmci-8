@@ -684,13 +684,11 @@ def _getJdkDeployedJars(jdkDir):
         jars.append(join(dist.targetDir(), jar))
     return jars
 
-# run a command in the windows SDK Debug Shell
-def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):
-    if respondTo is None:
-        respondTo = {}
-    newLine = os.linesep
-    startToken = 'RUNINDEBUGSHELL_STARTSEQUENCE'
-    endToken = 'RUNINDEBUGSHELL_ENDSEQUENCE'
+
+def _runActionInWinSDKEnv(action_name, action_command, workingDir):
+    """
+    Runs an action in a Windows SDK environment.
+    """
 
     winSDK = mx.get_env('WIN_SDK', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\')
 
@@ -701,49 +699,26 @@ def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo
     if not exists(winSDKSetEnv):
         mx.abort("Invalid Windows SDK path (" + winSDK + ") : could not find Bin/SetEnv.cmd (you can use the WIN_SDK environment variable to specify an other path)")
 
-    wincmd = 'cmd.exe /E:ON /V:ON /K "' + mx._cygpathU2W(winSDKSetEnv) + '"'
-    p = subprocess.Popen(wincmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = p.stdout
-    stdin = p.stdin
-    if logFile:
-        log = open(logFile, 'w')
-    ret = False
+    action_command_file = action_name + '.cmd'
+    with open(action_command_file, 'w') as fp:
+        with open(winSDKSetEnv) as in_fp:
+            for line in in_fp.readlines():
+                if line.startswith('CLS'):
+                    # Disable screen clearing
+                    pass
+                else:
+                    fp.write(line)
+        print('cd /D ' + workingDir + ' & ' + action_command, file=fp)
 
-    def _writeProcess(s):
-        stdin.write(_encode(s + newLine))
-
-    _writeProcess("echo " + startToken)
-    while True:
-        # encoding may be None on Windows
-        encoding = sys.stdout.encoding or 'utf-8'
-        line = stdout.readline().decode(encoding)
-        if logFile:
-            log.write(line)
-        line = line.strip()
-        mx.log(line)
-        if line == startToken:
-            _writeProcess('cd /D ' + workingDir + ' & ' + cmd + ' & echo ' + endToken)
-        for regex in respondTo.keys():
-            match = regex.search(line)
-            if match:
-                _writeProcess(respondTo[regex])
-        if findInOutput:
-            match = findInOutput.search(line)
-            if match:
-                ret = True
-        if line == endToken:
-            if not findInOutput:
-                _writeProcess('echo ERRXXX%errorlevel%')
-            else:
-                break
-        if line.startswith('ERRXXX'):
-            if line == 'ERRXXX0':
-                ret = True
-            break
-    _writeProcess("exit")
-    if logFile:
-        log.close()
-    return ret
+    stdout = open(action_name + '.log', 'w') if not mx.get_opts().verbose else None
+    cmd = 'cmd.exe /D /E:ON /V:ON /C "' + mx._cygpathU2W(action_command_file) + '"'
+    mx.log('Executing in Windows SDK Debug Environment: {} (output in {})'.format(action_name, 'console' if stdout is None else stdout.name))
+    subprocess.check_call(cmd, stdout=stdout, stderr=subprocess.STDOUT, universal_newlines=True)
+    # Files only removed if action exited with 0 return code
+    os.remove(action_command_file)
+    if stdout is not None:
+        stdout.close()
+        os.remove(stdout.name)
 
 def jdkhome(vm=None):
     """return the JDK directory selected for the 'vm' command"""
@@ -843,7 +818,6 @@ class HotSpotBuildTask(mx.NativeBuildTask):
         hs_release_version = get_hotspot_release_version()
 
         if self.is_windows:
-            t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "jvmciCompile.log"))
             mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
             if ' ' in mksHome:
                 mx.abort('Spaces are not supported in MKS_HOME: "{}"'.format(mksHome))
@@ -853,18 +827,15 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             jvmciHome = mx._cygpathU2W(_suite.dir)
             project_file = jvmciHome + r'\build\vs-amd64\jvm.vcxproj'
             if exists(mx._cygpathW2U(project_file)):
-                _runInDebugShell('msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /target:clean', jvmciHome)
+                _runActionInWinSDKEnv('HotSpotClean', 'msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /target:clean', jvmciHome)
             winCompileCmd = r'set HOTSPOT_RELEASE_VERSION=' + hs_release_version + '-' + jvmci_version + \
                             r'& set HotSpotMksHome=' + mksHome + \
                             r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + \
                             r'& set path=!JAVA_HOME!\bin;%path%;!HotSpotMksHome!;' \
                             r'& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
-            winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
-            if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
-                mx.abort('Error executing create command')
+            _runActionInWinSDKEnv('PrepareHotSpotBuild', winCompileCmd, jvmciHome)
             winBuildCmd = 'msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /p:TargetRuntime=Native'
-            if not _runInDebugShell(winBuildCmd, jvmciHome, t_compilelogfile):
-                mx.abort('Error building project')
+            _runActionInWinSDKEnv('RunHotSpotBuild', winBuildCmd, jvmciHome)
         else:
             def filterXusage(line):
                 if not 'Xusage.txt' in line:
@@ -902,7 +873,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 setMakeVar('INCLUDE_TRACE', 'false', env=env)
                 setMakeVar('DISABLE_COMMERCIAL_FEATURES', 'true', env=env)
 
-            setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
+            setMakeVar('MAKE_VERBOSE', 'y' if mx.get_opts().verbose else '')
             setMakeVar('HOTSPOT_RELEASE_VERSION', hs_release_version)
             setMakeVar('USER_RELEASE_SUFFIX', jvmci_version)
             setMakeVar('INCLUDE_JVMCI', 'true')
@@ -931,7 +902,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             env.pop('CLASSPATH', None)
 
             # Issue an env prefix that can be used to run the make on the command line
-            if not mx._opts.verbose:
+            if not mx.get_opts().verbose:
                 mx.log('--------------- make command line ----------------------')
 
             envPrefix = ' '.join([key + '=' + env[key] for key in env.keys() if key not in os.environ or env[key] != os.environ[key]])
@@ -942,7 +913,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             runCmd.append("docs")
             # runCmd.append("export_" + build)
 
-            if not mx._opts.verbose:
+            if not mx.get_opts().verbose:
                 mx.log(' '.join(runCmd))
                 mx.log('--------------------------------------------------------')
             mx.run(runCmd, err=filterXusage, env=env)
@@ -1011,7 +982,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             rmIfExists(join(_suite.dir, 'build', 'vs-amd64'))
         else:
             makeFiles = join(_suite.dir, 'make')
-            if mx._opts.verbose:
+            if mx.get_opts().verbose:
                 outCapture = None
             else:
                 def _consume(s):
@@ -1117,7 +1088,7 @@ def buildvms(args):
                 log = open(join(_suite.dir, logFile), 'wb')
                 start = time.time()
                 mx.log('BEGIN: ' + vm + '-' + vmbuild + '\t(see: ' + logFile + ')')
-                verbose = ['-v'] if mx._opts.verbose else []
+                verbose = ['-v'] if mx.get_opts().verbose else []
                 # Run as subprocess so that output can be directed to a file
                 cmd = [sys.executable, '-u', mx.__file__] + verbose + ['--vm=' + vm, '--vmbuild=' + vmbuild, 'build']
                 mx.logv("executing command: " + str(cmd))
