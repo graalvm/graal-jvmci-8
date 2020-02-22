@@ -150,6 +150,9 @@
             "01:pip:astroid" : "==1.1.0",
             "pip:pylint" : "==1.1.0",
         },
+        environment+: {
+            MX_PYTHON: "python3",
+        },
         name: "gate-jvmci",
         timelimit: "1:00:00",
         diskspace_required: "10G",
