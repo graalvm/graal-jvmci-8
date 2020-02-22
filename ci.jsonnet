@@ -62,7 +62,11 @@
             ac_cv_func_mkostemp: "no",
             ac_cv_func_mkostemps: "no",
             MACOSX_DEPLOYMENT_TARGET: "10.11",
-            JAVA_HOME_PREFIX: "/Contents/Home"
+            JAVA_HOME_PREFIX: "/Contents/Home",
+
+            # These 2 are needed for pylint on macOS
+            LC_ALL: "en_US.UTF-8",
+            LANG: "en_US.UTF-8",
         },
         capabilities+: ["darwin_sierra"],
         name+: "-darwin",
@@ -150,10 +154,13 @@
             "01:pip:astroid" : "==1.1.0",
             "pip:pylint" : "==1.1.0",
         },
+        environment+: {
+            MX_PYTHON: "python3",
+        },
         name: "gate-jvmci",
         timelimit: "1:00:00",
         diskspace_required: "10G",
-        logs: ["*.log"],
+        logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
