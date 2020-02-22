@@ -268,9 +268,9 @@ suite = {
         "windows" : {
           "<others>" : {
             "results" : [
-              'vs-<arch>/<buildname>/generated/jvmtifiles/jvmti.h',
-              'vs-<arch>/<buildname>/<vmbuild>/<lib:jvm>',
-              'vs-<arch>/<buildname>/<vmbuild>/<libdebug:jvm>',
+              'vs-<arch>\\<buildname>\\generated\\jvmtifiles\\jvmti.h',
+              'vs-<arch>\\<buildname>\\<vmbuild>\\<lib:jvm>',
+              'vs-<arch>\\<buildname>\\<vmbuild>\\<libdebug:jvm>',
             ]
           }
         },
