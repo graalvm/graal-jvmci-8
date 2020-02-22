@@ -1239,12 +1239,11 @@ void JVMCIRuntime::get_field_by_index(InstanceKlass* accessor, fieldDescriptor& 
 // Perform an appropriate method lookup based on accessor, holder,
 // name, signature, and bytecode.
 methodHandle JVMCIRuntime::lookup_method(InstanceKlass* h_accessor,
-                               InstanceKlass* h_holder,
+                               Klass* h_holder,
                                Symbol*       name,
                                Symbol*       sig,
                                Bytecodes::Code bc) {
-  JVMCI_EXCEPTION_CONTEXT;
-  LinkResolver::check_klass_accessability(h_accessor, h_holder, KILL_COMPILE_ON_FATAL_(NULL));
+  // Accessibility checks are performed by caller.
   methodHandle dest_method;
   switch (bc) {
   case Bytecodes::_invokestatic:
@@ -1319,8 +1318,7 @@ methodHandle JVMCIRuntime::get_method_by_index_impl(const constantPoolHandle& cp
   }
 
   if (holder_is_accessible) { // Our declared holder is loaded.
-    InstanceKlass* lookup = get_instance_klass_for_declared_method_holder(holder);
-    methodHandle m = lookup_method(accessor, lookup, name_sym, sig_sym, bc);
+    methodHandle m = lookup_method(accessor, holder, name_sym, sig_sym, bc);
     if (!m.is_null()) {
       // We found the method.
       return m;
@@ -1332,22 +1330,6 @@ methodHandle JVMCIRuntime::get_method_by_index_impl(const constantPoolHandle& cp
 
   return NULL;
 }
-
-// ------------------------------------------------------------------
-InstanceKlass* JVMCIRuntime::get_instance_klass_for_declared_method_holder(Klass* method_holder) {
-  // For the case of <array>.clone(), the method holder can be an ArrayKlass*
-  // instead of an InstanceKlass*.  For that case simply pretend that the
-  // declared holder is Object.clone since that's where the call will bottom out.
-  if (method_holder->oop_is_instance()) {
-    return InstanceKlass::cast(method_holder);
-  } else if (method_holder->oop_is_array()) {
-    return InstanceKlass::cast(SystemDictionary::Object_klass());
-  } else {
-    ShouldNotReachHere();
-  }
-  return NULL;
-}
-
 
 // ------------------------------------------------------------------
 methodHandle JVMCIRuntime::get_method_by_index(const constantPoolHandle& cpool,
