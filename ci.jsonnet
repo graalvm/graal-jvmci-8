@@ -142,7 +142,7 @@
     # Downstream Graal branch to test against. If not master, then
     # the branch must exist on both graal and graal-enterprise to
     # ensure a consistent downstream code base is tested against.
-    local downstream_branch = "gd/implCrypt-8u241",
+    local downstream_branch = "release/graal-vm/19.3",
 
     Build:: {
         packages+: {
