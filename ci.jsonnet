@@ -128,12 +128,12 @@
         downloads: {
             JAVA_HOME: {
                 name : "openjdk",
-                version : "8u242",
+                version : "8u252",
                 platformspecific: true
             },
             JAVA_HOME_OVERLAY: {
                 name : "openjdk-overlay",
-                version : "8u242",
+                version : "8u252",
                 platformspecific: true
             }
         }
