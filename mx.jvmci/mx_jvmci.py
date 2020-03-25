@@ -261,7 +261,7 @@ def dealiased_vm(vm):
     If 'vm' is an alias, returns the aliased name otherwise returns 'vm'.
     """
     if vm and vm in _vmAliases:
-        if vm == 'jvmci' or vm == 'graal':
+        if vm in ['jvmci', 'graal']:
             mx.log('"--vm ' + vm + '" is deprecated, using "--vm server -Mjit" instead')
             global _jvmciMode
             _jvmciMode = JVMCIMode('jit')
@@ -345,7 +345,7 @@ def export(args):
     infos['architecture'] = mx.get_arch()
     infos['platform'] = mx.get_os()
 
-    if mx.get_os != 'windows':
+    if mx.get_os() != 'windows':
         pass
         # infos['ccompiler']
         # infos['linker']
@@ -448,7 +448,7 @@ def relativeVmLibDirInJdk():
     mxos = mx.get_os()
     if mxos == 'darwin':
         return join('jre', 'lib')
-    if mxos == 'windows' or mxos == 'cygwin':
+    if mxos in ['windows', 'cygwin']:
         return join('jre', 'bin')
     return join('jre', 'lib', mx.get_arch())
 
@@ -466,7 +466,7 @@ def getVmJliLibDirs(jdkDir):
     mxos = mx.get_os()
     if mxos == 'darwin':
         return [join(jdkDir, 'jre', 'lib', 'jli')]
-    if mxos == 'windows' or mxos == 'cygwin':
+    if mxos in ['windows', 'cygwin']:
         return [join(jdkDir, 'jre', 'bin'), join(jdkDir, 'bin')]
     return [join(jdkDir, 'jre', 'lib', mx.get_arch(), 'jli'), join(jdkDir, 'lib', mx.get_arch(), 'jli')]
 
@@ -475,7 +475,7 @@ def getVmCfgInJdk(jdkDir, jvmCfgFile='jvm.cfg'):
     Get the jvm.cfg file.
     """
     mxos = mx.get_os()
-    if mxos == "windows" or mxos == "cygwin":
+    if mxos in ['windows', 'cygwin']:
         return join(jdkDir, 'jre', 'lib', mx.get_arch(), jvmCfgFile)
     return join(vmLibDirInJdk(jdkDir), jvmCfgFile)
 
@@ -1311,7 +1311,7 @@ def hcfdis(args):
             if len(addressAndSymbol) == 2:
                 address, symbol = addressAndSymbol
                 if address.startswith('0x'):
-                    address = long(address, 16)
+                    address = int(address, 16)
                     symbols[address] = symbol
         for f in args.files:
             with open(f) as fp:
@@ -1321,7 +1321,7 @@ def hcfdis(args):
                 l = lines[i]
                 for m in addressRE.finditer(l):
                     sval = m.group(0)
-                    val = long(sval, 16)
+                    val = int(sval, 16)
                     sym = symbols.get(val)
                     if sym:
                         l = l.replace(sval, sym)
@@ -1453,7 +1453,7 @@ _jvmci_version = None
 def _get_jvmci_version():
     global _jvmci_version
     if _jvmci_version is None:
-        version_re = re.compile("^jvmci-(\d+)\.(\\d+)-b(\\d+)")
+        version_re = re.compile(r"^jvmci-(\d+)\.(\d+)-b(\d+)")
         versions = []
         for tag in _decode(subprocess.check_output(['git', 'tag'], cwd=_suite.dir)).split():
             m = version_re.match(tag)
