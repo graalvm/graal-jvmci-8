@@ -1448,8 +1448,26 @@ def deploy_binary(args):
                 mx.instantiateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=vmbuild, vm=vm))
     mx.deploy_binary(args)
 
+_jvmci_version = None
+
 def _get_jvmci_version():
-    return 'jvmci-' + _suite.release_version()
+    global _jvmci_version
+    if _jvmci_version is None:
+        version_re = re.compile("^jvmci-(\d+)\.(\\d+)-b(\\d+)")
+        versions = []
+        for tag in _decode(subprocess.check_output(['git', 'tag'], cwd=_suite.dir)).split():
+            m = version_re.match(tag)
+            if m:
+                versions.append(tuple([int(g) for g in m.groups()]))
+        newest_version = sorted(versions, reverse=True)[0]
+        parent_tags = _suite.vc.parent_tags(_suite.dir)
+        result = "jvmci-%d.%d-b%02d" % newest_version
+        status = _decode(subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=_suite.dir))
+        if result not in parent_tags or len(status) != 0:
+            dev_version = newest_version[0], newest_version[1], newest_version[2] + 1
+            result = "jvmci-%d.%d-b%02d-dev" % dev_version
+        _jvmci_version = result
+    return _jvmci_version
 
 def show_jvmci_version(args):
     """show the jvmci version derived from the "version" and "release" suite attributes"""
