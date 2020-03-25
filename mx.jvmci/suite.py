@@ -2,9 +2,6 @@ suite = {
   "mxversion" : "5.215.7",
   "name" : "jvmci",
 
-  "version" : "19.3-b09",
-  "release" : False,
-
   "url" : "http://openjdk.java.net/projects/graal",
   "developer" : {
     "name" : "Truffle and Graal developers",
