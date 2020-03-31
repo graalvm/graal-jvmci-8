@@ -91,7 +91,7 @@ class JVMCIMode:
 
     def __enter__(self):
         global _jvmciMode
-        self.previousMode = _jvmciMode
+        self.previousMode = _jvmciMode # pylint: disable=used-before-assignment
         _jvmciMode = self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -225,7 +225,7 @@ JDK_UNIX_PERMISSIONS_FILE = 0o644
 JDK_UNIX_PERMISSIONS_EXEC = 0o755
 
 def isVMSupported(vm):
-    if 'client' == vm and len(platform.mac_ver()[0]) != 0:
+    if vm == 'client' and len(platform.mac_ver()[0]) != 0:
         # Client VM not supported: java launcher on Mac OS X translates '-client' to '-server'
         return False
     return True
@@ -261,7 +261,7 @@ def dealiased_vm(vm):
     If 'vm' is an alias, returns the aliased name otherwise returns 'vm'.
     """
     if vm and vm in _vmAliases:
-        if vm == 'jvmci' or vm == 'graal':
+        if vm in ['jvmci', 'graal']:
             mx.log('"--vm ' + vm + '" is deprecated, using "--vm server -Mjit" instead')
             global _jvmciMode
             _jvmciMode = JVMCIMode('jit')
@@ -322,10 +322,8 @@ def chmodRecursive(dirname, chmodFlagsDir):
     if mx.get_os() == 'windows':
         return
 
-    def _chmodDir(chmodFlags, dirname, fnames):
-        os.chmod(dirname, chmodFlagsDir)
-
-    os.path.walk(dirname, _chmodDir, chmodFlagsDir)
+    for root, _, _ in os.walk(dirname):
+        os.chmod(root, chmodFlagsDir)
 
 def export(args):
     """create archives of builds split by vmbuild and vm"""
@@ -347,7 +345,7 @@ def export(args):
     infos['architecture'] = mx.get_arch()
     infos['platform'] = mx.get_os()
 
-    if mx.get_os != 'windows':
+    if mx.get_os() != 'windows':
         pass
         # infos['ccompiler']
         # infos['linker']
@@ -356,7 +354,7 @@ def export(args):
 
     def _writeJson(suffix, properties):
         d = infos.copy()
-        for k, v in properties.iteritems():
+        for k, v in properties.items():
             assert not d.has_key(k)
             d[k] = v
 
@@ -450,7 +448,7 @@ def relativeVmLibDirInJdk():
     mxos = mx.get_os()
     if mxos == 'darwin':
         return join('jre', 'lib')
-    if mxos == 'windows' or mxos == 'cygwin':
+    if mxos in ['windows', 'cygwin']:
         return join('jre', 'bin')
     return join('jre', 'lib', mx.get_arch())
 
@@ -468,7 +466,7 @@ def getVmJliLibDirs(jdkDir):
     mxos = mx.get_os()
     if mxos == 'darwin':
         return [join(jdkDir, 'jre', 'lib', 'jli')]
-    if mxos == 'windows' or mxos == 'cygwin':
+    if mxos in ['windows', 'cygwin']:
         return [join(jdkDir, 'jre', 'bin'), join(jdkDir, 'bin')]
     return [join(jdkDir, 'jre', 'lib', mx.get_arch(), 'jli'), join(jdkDir, 'lib', mx.get_arch(), 'jli')]
 
@@ -477,7 +475,7 @@ def getVmCfgInJdk(jdkDir, jvmCfgFile='jvm.cfg'):
     Get the jvm.cfg file.
     """
     mxos = mx.get_os()
-    if mxos == "windows" or mxos == "cygwin":
+    if mxos in ['windows', 'cygwin']:
         return join(jdkDir, 'jre', 'lib', mx.get_arch(), jvmCfgFile)
     return join(vmLibDirInJdk(jdkDir), jvmCfgFile)
 
@@ -562,7 +560,7 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
 
             # Install a copy of the disassembler library
             try:
-                if 'true' == mx.get_env('INCLUDE_HSDIS', 'true').lower():
+                if mx.get_env('INCLUDE_HSDIS', 'true').lower() == 'true':
                     hsdis_args = []
                     syntax = mx.get_env('HSDIS_SYNTAX')
                     if syntax:
@@ -608,7 +606,7 @@ def get_jvmci_jdk_dir(build=None, vmToCheck=None, create=False, deployDists=True
                                 versions['jvmci'] = "unknown"
                             if 'hotspot' in versions:
                                 del versions['hotspot']
-                            fp.write('SOURCE=" ' + ' '.join((k + ":" + v for k, v in versions.iteritems())) + '"' + os.linesep)
+                            fp.write('SOURCE=" ' + ' '.join((k + ":" + v for k, v in versions.items())) + '"' + os.linesep)
                             mx.logv("Updating " + releaseFile)
                         except BaseException as e:
                             mx.warn("Exception " + str(e) + " while updating release file")
@@ -686,13 +684,11 @@ def _getJdkDeployedJars(jdkDir):
         jars.append(join(dist.targetDir(), jar))
     return jars
 
-# run a command in the windows SDK Debug Shell
-def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo=None):
-    if respondTo is None:
-        respondTo = {}
-    newLine = os.linesep
-    startToken = 'RUNINDEBUGSHELL_STARTSEQUENCE'
-    endToken = 'RUNINDEBUGSHELL_ENDSEQUENCE'
+
+def _runActionInWinSDKEnv(action_name, action_command, workingDir):
+    """
+    Runs an action in a Windows SDK environment.
+    """
 
     winSDK = mx.get_env('WIN_SDK', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\')
 
@@ -703,53 +699,26 @@ def _runInDebugShell(cmd, workingDir, logFile=None, findInOutput=None, respondTo
     if not exists(winSDKSetEnv):
         mx.abort("Invalid Windows SDK path (" + winSDK + ") : could not find Bin/SetEnv.cmd (you can use the WIN_SDK environment variable to specify an other path)")
 
-    wincmd = 'cmd.exe /E:ON /V:ON /K "' + mx._cygpathU2W(winSDKSetEnv) + '"'
-    p = subprocess.Popen(wincmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-    stdout = p.stdout
-    stdin = p.stdin
-    if logFile:
-        log = open(logFile, 'w')
-    ret = False
+    action_command_file = action_name + '.cmd'
+    with open(action_command_file, 'w') as fp:
+        with open(winSDKSetEnv) as in_fp:
+            for line in in_fp.readlines():
+                if line.startswith('CLS'):
+                    # Disable screen clearing
+                    pass
+                else:
+                    fp.write(line)
+        print('cd /D ' + workingDir + ' & ' + action_command, file=fp)
 
-    def _writeProcess(s):
-        stdin.write(s + newLine)
-
-    _writeProcess("echo " + startToken)
-    while True:
-        # encoding may be None on windows plattforms
-        if sys.stdout.encoding is None:
-            encoding = 'utf-8'
-        else:
-            encoding = sys.stdout.encoding
-
-        line = stdout.readline().decode(encoding)
-        if logFile:
-            log.write(line.encode('utf-8'))
-        line = line.strip()
-        mx.log(line)
-        if line == startToken:
-            _writeProcess('cd /D ' + workingDir + ' & ' + cmd + ' & echo ' + endToken)
-        for regex in respondTo.keys():
-            match = regex.search(line)
-            if match:
-                _writeProcess(respondTo[regex])
-        if findInOutput:
-            match = findInOutput.search(line)
-            if match:
-                ret = True
-        if line == endToken:
-            if not findInOutput:
-                _writeProcess('echo ERRXXX%errorlevel%')
-            else:
-                break
-        if line.startswith('ERRXXX'):
-            if line == 'ERRXXX0':
-                ret = True
-            break
-    _writeProcess("exit")
-    if logFile:
-        log.close()
-    return ret
+    stdout = open(action_name + '.log', 'w') if not mx.get_opts().verbose else None
+    cmd = 'cmd.exe /D /E:ON /V:ON /C "' + mx._cygpathU2W(action_command_file) + '"'
+    mx.log('Executing in Windows SDK Debug Environment: {} (output in {})'.format(action_name, 'console' if stdout is None else stdout.name))
+    subprocess.check_call(cmd, stdout=stdout, stderr=subprocess.STDOUT, universal_newlines=True)
+    # Files only removed if action exited with 0 return code
+    os.remove(action_command_file)
+    if stdout is not None:
+        stdout.close()
+        os.remove(stdout.name)
 
 def jdkhome(vm=None):
     """return the JDK directory selected for the 'vm' command"""
@@ -772,7 +741,7 @@ def buildvars(args):
 
     mx.log('HotSpot build variables that can be set by the -D option to "mx build":')
     mx.log('')
-    for n in sorted(buildVars.iterkeys()):
+    for n in sorted(buildVars.keys()):
         mx.log(n)
         mx.log(textwrap.fill(buildVars[n], initial_indent='    ', subsequent_indent='    ', width=200))
 
@@ -849,7 +818,6 @@ class HotSpotBuildTask(mx.NativeBuildTask):
         hs_release_version = get_hotspot_release_version()
 
         if self.is_windows:
-            t_compilelogfile = mx._cygpathU2W(os.path.join(_suite.dir, "jvmciCompile.log"))
             mksHome = mx.get_env('MKS_HOME', 'C:\\cygwin\\bin')
             if ' ' in mksHome:
                 mx.abort('Spaces are not supported in MKS_HOME: "{}"'.format(mksHome))
@@ -859,18 +827,15 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             jvmciHome = mx._cygpathU2W(_suite.dir)
             project_file = jvmciHome + r'\build\vs-amd64\jvm.vcxproj'
             if exists(mx._cygpathW2U(project_file)):
-                _runInDebugShell('msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /target:clean', jvmciHome)
+                _runActionInWinSDKEnv('HotSpotClean', 'msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /target:clean', jvmciHome)
             winCompileCmd = r'set HOTSPOT_RELEASE_VERSION=' + hs_release_version + '-' + jvmci_version + \
                             r'& set HotSpotMksHome=' + mksHome + \
                             r'& set JAVA_HOME=' + mx._cygpathU2W(get_jvmci_bootstrap_jdk().home) + \
                             r'& set path=!JAVA_HOME!\bin;%path%;!HotSpotMksHome!;' \
                             r'& cd /D "' + jvmciHome + r'\make\windows"& call create.bat ' + jvmciHome
-            winCompileSuccess = re.compile(r"^Writing \.vcxproj file:")
-            if not _runInDebugShell(winCompileCmd, jvmciHome, t_compilelogfile, winCompileSuccess):
-                mx.abort('Error executing create command')
+            _runActionInWinSDKEnv('PrepareHotSpotBuild', winCompileCmd, jvmciHome)
             winBuildCmd = 'msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /p:TargetRuntime=Native'
-            if not _runInDebugShell(winBuildCmd, jvmciHome, t_compilelogfile):
-                mx.abort('Error building project')
+            _runActionInWinSDKEnv('RunHotSpotBuild', winBuildCmd, jvmciHome)
         else:
             def filterXusage(line):
                 if not 'Xusage.txt' in line:
@@ -908,7 +873,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 setMakeVar('INCLUDE_TRACE', 'false', env=env)
                 setMakeVar('DISABLE_COMMERCIAL_FEATURES', 'true', env=env)
 
-            setMakeVar('MAKE_VERBOSE', 'y' if mx._opts.verbose else '')
+            setMakeVar('MAKE_VERBOSE', 'y' if mx.get_opts().verbose else '')
             setMakeVar('HOTSPOT_RELEASE_VERSION', hs_release_version)
             setMakeVar('USER_RELEASE_SUFFIX', jvmci_version)
             setMakeVar('INCLUDE_JVMCI', 'true')
@@ -919,7 +884,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
 
             if mx.get_os() == 'solaris':
                 # If using sparcWorks, setup flags to avoid make complaining about CC version
-                cCompilerVersion = subprocess.Popen('CC -V', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).stderr.readlines()[0]
+                cCompilerVersion = _decode(subprocess.Popen('CC -V', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).stderr.readlines()[0])
                 if cCompilerVersion.startswith('CC: Sun C++'):
                     compilerRev = cCompilerVersion.split(' ')[3]
                     setMakeVar('ENFORCE_COMPILER_REV', compilerRev, env=env)
@@ -937,10 +902,10 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             env.pop('CLASSPATH', None)
 
             # Issue an env prefix that can be used to run the make on the command line
-            if not mx._opts.verbose:
+            if not mx.get_opts().verbose:
                 mx.log('--------------- make command line ----------------------')
 
-            envPrefix = ' '.join([key + '=' + env[key] for key in env.iterkeys() if not os.environ.has_key(key) or env[key] != os.environ[key]])
+            envPrefix = ' '.join([key + '=' + env[key] for key in env.keys() if key not in os.environ or env[key] != os.environ[key]])
             if len(envPrefix):
                 mx.log('env ' + envPrefix + ' \\')
 
@@ -948,7 +913,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             runCmd.append("docs")
             # runCmd.append("export_" + build)
 
-            if not mx._opts.verbose:
+            if not mx.get_opts().verbose:
                 mx.log(' '.join(runCmd))
                 mx.log('--------------------------------------------------------')
             mx.run(runCmd, err=filterXusage, env=env)
@@ -1005,7 +970,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
                 os.chmod(path, stat.S_IRWXU | stat.S_IRWXG | stat.S_IRWXO)  # 0777
                 func(path)
             else:
-                raise
+                raise exc
 
         def rmIfExists(name):
             if os.path.isdir(name):
@@ -1017,7 +982,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             rmIfExists(join(_suite.dir, 'build', 'vs-amd64'))
         else:
             makeFiles = join(_suite.dir, 'make')
-            if mx._opts.verbose:
+            if mx.get_opts().verbose:
                 outCapture = None
             else:
                 def _consume(s):
@@ -1123,7 +1088,7 @@ def buildvms(args):
                 log = open(join(_suite.dir, logFile), 'wb')
                 start = time.time()
                 mx.log('BEGIN: ' + vm + '-' + vmbuild + '\t(see: ' + logFile + ')')
-                verbose = ['-v'] if mx._opts.verbose else []
+                verbose = ['-v'] if mx.get_opts().verbose else []
                 # Run as subprocess so that output can be directed to a file
                 cmd = [sys.executable, '-u', mx.__file__] + verbose + ['--vm=' + vm, '--vmbuild=' + vmbuild, 'build']
                 mx.logv("executing command: " + str(cmd))
@@ -1346,7 +1311,7 @@ def hcfdis(args):
             if len(addressAndSymbol) == 2:
                 address, symbol = addressAndSymbol
                 if address.startswith('0x'):
-                    address = long(address, 16)
+                    address = int(address, 16)
                     symbols[address] = symbol
         for f in args.files:
             with open(f) as fp:
@@ -1356,7 +1321,7 @@ def hcfdis(args):
                 l = lines[i]
                 for m in addressRE.finditer(l):
                     sval = m.group(0)
-                    val = long(sval, 16)
+                    val = int(sval, 16)
                     sym = symbols.get(val)
                     if sym:
                         l = l.replace(sval, sym)
@@ -1483,8 +1448,26 @@ def deploy_binary(args):
                 mx.instantiateDistribution('JVM_<vmbuild>_<vm>', dict(vmbuild=vmbuild, vm=vm))
     mx.deploy_binary(args)
 
+_jvmci_version = None
+
 def _get_jvmci_version():
-    return 'jvmci-' + _suite.release_version()
+    global _jvmci_version
+    if _jvmci_version is None:
+        version_re = re.compile(r"^jvmci-(\d+)\.(\d+)-b(\d+)")
+        versions = []
+        for tag in _decode(subprocess.check_output(['git', 'tag'], cwd=_suite.dir)).split():
+            m = version_re.match(tag)
+            if m:
+                versions.append(tuple([int(g) for g in m.groups()]))
+        newest_version = sorted(versions, reverse=True)[0]
+        parent_tags = _suite.vc.parent_tags(_suite.dir)
+        result = "jvmci-%d.%d-b%02d" % newest_version
+        status = _decode(subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=_suite.dir))
+        if result not in parent_tags or len(status) != 0:
+            dev_version = newest_version[0], newest_version[1], newest_version[2] + 1
+            result = "jvmci-%d.%d-b%02d-dev" % dev_version
+        _jvmci_version = result
+    return _jvmci_version
 
 def show_jvmci_version(args):
     """show the jvmci version derived from the "version" and "release" suite attributes"""
