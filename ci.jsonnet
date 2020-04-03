@@ -146,7 +146,7 @@
     # Downstream Graal branch to test against. If not master, then
     # the branch must exist on both graal and graal-enterprise to
     # ensure a consistent downstream code base is tested against.
-    local downstream_branch = "release/graal-vm/19.3",
+    local downstream_branch = "cpu/graal-vm/19.3.2",
 
     Build:: {
         packages+: {
@@ -163,6 +163,17 @@
         logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
+            # Clone graal for testing
+            ["git", "--version"],
+            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
+            ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
+
+            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "clone", ["mx", "urlrewrite", "${GRAAL_REPO_URL}"]],
+            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "-C", "${GRAAL_REPO_NAME}", "checkout", downstream_branch, "||", "true"],
+
+            # Ensure that all downstream repos are on the same branch
+            ["test", ["git", "-C", "graal", "rev-parse", "--abbrev-ref", "HEAD"], "=", ["git", "-C", "${GRAAL_REPO_NAME}", "rev-parse", "--abbrev-ref", "HEAD"] ],
+
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
             ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
@@ -172,17 +183,6 @@
             ["cd", "${JAVA_HOME_OVERLAY}${JAVA_HOME_PREFIX}"],
             ["cp", "-r", ".", "${JAVA_HOME}"],
             ["cd", "${OLD_PWD}"],
-
-            # Test on graal
-
-            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
-            ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
-
-            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "clone", ["mx", "urlrewrite", "${GRAAL_REPO_URL}"]],
-            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "-C", "${GRAAL_REPO_NAME}", "checkout", downstream_branch, "||", "true"],
-
-            # Ensure that all downstream repos are on the same branch
-            ["test", ["git", "-C", "graal", "rev-parse", "--abbrev-ref", "HEAD"], "=", ["git", "-C", "${GRAAL_REPO_NAME}", "rev-parse", "--abbrev-ref", "HEAD"] ],
         ],
     },
 
