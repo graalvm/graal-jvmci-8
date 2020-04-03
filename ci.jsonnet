@@ -62,7 +62,11 @@
             ac_cv_func_mkostemp: "no",
             ac_cv_func_mkostemps: "no",
             MACOSX_DEPLOYMENT_TARGET: "10.11",
-            JAVA_HOME_PREFIX: "/Contents/Home"
+            JAVA_HOME_PREFIX: "/Contents/Home",
+
+            # These 2 are needed for pylint on macOS
+            LC_ALL: "en_US.UTF-8",
+            LANG: "en_US.UTF-8",
         },
         capabilities+: ["darwin_sierra"],
         name+: "-darwin",
@@ -142,7 +146,7 @@
     # Downstream Graal branch to test against. If not master, then
     # the branch must exist on both graal and graal-enterprise to
     # ensure a consistent downstream code base is tested against.
-    local downstream_branch = "release/graal-vm/19.3",
+    local downstream_branch = "cpu/graal-vm/19.3.2",
 
     Build:: {
         packages+: {
@@ -150,12 +154,26 @@
             "01:pip:astroid" : "==1.1.0",
             "pip:pylint" : "==1.1.0",
         },
+        environment+: {
+            MX_PYTHON: "python3",
+        },
         name: "gate-jvmci",
         timelimit: "1:00:00",
         diskspace_required: "10G",
-        logs: ["*.log"],
+        logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
+            # Clone graal for testing
+            ["git", "--version"],
+            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
+            ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
+
+            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "clone", ["mx", "urlrewrite", "${GRAAL_REPO_URL}"]],
+            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "-C", "${GRAAL_REPO_NAME}", "checkout", downstream_branch, "||", "true"],
+
+            # Ensure that all downstream repos are on the same branch
+            ["test", ["git", "-C", "graal", "rev-parse", "--abbrev-ref", "HEAD"], "=", ["git", "-C", "${GRAAL_REPO_NAME}", "rev-parse", "--abbrev-ref", "HEAD"] ],
+
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
             ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
@@ -165,17 +183,6 @@
             ["cd", "${JAVA_HOME_OVERLAY}${JAVA_HOME_PREFIX}"],
             ["cp", "-r", ".", "${JAVA_HOME}"],
             ["cd", "${OLD_PWD}"],
-
-            # Test on graal
-
-            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
-            ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
-
-            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "clone", ["mx", "urlrewrite", "${GRAAL_REPO_URL}"]],
-            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "-C", "${GRAAL_REPO_NAME}", "checkout", downstream_branch, "||", "true"],
-
-            # Ensure that all downstream repos are on the same branch
-            ["test", ["git", "-C", "graal", "rev-parse", "--abbrev-ref", "HEAD"], "=", ["git", "-C", "${GRAAL_REPO_NAME}", "rev-parse", "--abbrev-ref", "HEAD"] ],
         ],
     },
 
