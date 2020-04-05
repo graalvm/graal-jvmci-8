@@ -1450,15 +1450,32 @@ def deploy_binary(args):
 
 _jvmci_version = None
 
+def _jvmci_versions_in_current_branch():
+    """
+    Get the list of JVMCI versions from the tags in this suite's repository that are ancestors
+    of the current HEAD.
+
+    :rtype: list of tuples composed of major, minor, build
+    """
+    tags_out = subprocess.check_output(['git', 'log', '--simplify-by-decoration', '--pretty=format:%d', 'HEAD'], cwd=_suite.dir)
+    tags_out = tags_out.strip()
+    jvmci_tag_re = re.compile(r"^tag: jvmci-(\d+)\.(\d+)-b(\d+)")
+    versions = []
+    for line in tags_out.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+        assert line.startswith('(') and line.endswith(')'), "Unexpected format: " + line
+        for decoration in line[1:-1].split(', '):
+            m = jvmci_tag_re.match(decoration)
+            if m:
+                versions.append(tuple([int(g) for g in m.groups()]))
+    return versions
+
 def _get_jvmci_version():
     global _jvmci_version
     if _jvmci_version is None:
-        version_re = re.compile(r"^jvmci-(\d+)\.(\d+)-b(\d+)")
-        versions = []
-        for tag in _decode(subprocess.check_output(['git', 'tag'], cwd=_suite.dir)).split():
-            m = version_re.match(tag)
-            if m:
-                versions.append(tuple([int(g) for g in m.groups()]))
+        versions = _jvmci_versions_in_current_branch()
         newest_version = sorted(versions, reverse=True)[0]
         parent_tags = _suite.vc.parent_tags(_suite.dir)
         result = "jvmci-%d.%d-b%02d" % newest_version

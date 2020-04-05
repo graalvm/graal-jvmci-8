@@ -161,6 +161,7 @@
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
             ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
+            ["${JAVA_HOME}/bin/java", "-version"],
 
             # Overlay static libraries
             ["set-export", "OLD_PWD", "${PWD}"],
