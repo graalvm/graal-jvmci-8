@@ -111,33 +111,17 @@
         }
     },
 
-    OracleJDK:: {
-        name+: "-oraclejdk",
-        downloads: {
-            JAVA_HOME: {
-                name : "oraclejdk",
-                version : "8u241",
-                platformspecific: true
-            },
-            JAVA_HOME_OVERLAY: {
-                name : "oraclejdk-overlay",
-                version : "8u241",
-                platformspecific: true
-            }
-        }
-    },
-
     OpenJDK:: {
         name+: "-openjdk",
         downloads: {
             JAVA_HOME: {
                 name : "openjdk",
-                version : "8u242",
+                version : "8u252+09",
                 platformspecific: true
             },
             JAVA_HOME_OVERLAY: {
                 name : "openjdk-overlay",
-                version : "8u242",
+                version : "8u252+09",
                 platformspecific: true
             }
         }
@@ -163,6 +147,11 @@
         logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
+            # Clone graal for testing
+            ["git", "--version"],
+            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
+            ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
+
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
             ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
@@ -173,25 +162,13 @@
             ["cd", "${JAVA_HOME_OVERLAY}${JAVA_HOME_PREFIX}"],
             ["cp", "-r", ".", "${JAVA_HOME}"],
             ["cd", "${OLD_PWD}"],
-
-            # Test on graal
-
-            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
-            ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
-
-            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "clone", ["mx", "urlrewrite", "${GRAAL_REPO_URL}"]],
-            ["test", "${GRAAL_REPO_NAME}", "=", "graal", "||", "git", "-C", "${GRAAL_REPO_NAME}", "checkout", downstream_branch, "||", "true"],
-
-            # Ensure that all downstream repos are on the same branch
-            ["test", ["git", "-C", "graal", "rev-parse", "--abbrev-ref", "HEAD"], "=", ["git", "-C", "${GRAAL_REPO_NAME}", "rev-parse", "--abbrev-ref", "HEAD"] ],
         ],
     },
 
     GraalTest:: {
         name+: "-graal",
         run+: [
-            ["mx", "-v", "-p", "${GATE_SUITE}", "gate", "--tags", "build,test,bootstraplite"
-            ]
+            ["mx", "-v", "-p", "graal/compiler", "gate", "--tags", "build,test,bootstraplite"]
         ]
     },
 
@@ -201,29 +178,18 @@
         timelimit: "1:30:00",
         run+: [
             # Build and test JavaScript on GraalVM
-            ["mx", "-p", "${VM_SUITE}", "--dynamicimports", "/graal-js,${SVM_IMPORT}", "--disable-polyglot", "--disable-libpolyglot", "--force-bash-launchers=native-image", "build"],
+            ["mx", "-p", "graal/vm", "--dynamicimports", "/graal-js,/substratevm", "--disable-polyglot", "--disable-libpolyglot", "--force-bash-launchers=native-image", "build"],
             ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
             ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
 
              # Build and test LibGraal
-            ["mx", "-p", "${VM_SUITE}", "--env", "${VM_SUITE_ENV}", "--extra-image-builder-argument=-J-esa", "--extra-image-builder-argument=-H:+ReportExceptionStackTraces", "build"],
-            ["mx", "-p", "${VM_SUITE}", "--env", "${VM_SUITE_ENV}", "gate", "--task", "LibGraal"],
+            ["mx", "-p", "graal/vm", "--env", "libgraal", "--extra-image-builder-argument=-J-esa", "--extra-image-builder-argument=-H:+ReportExceptionStackTraces", "build"],
+            ["mx", "-p", "graal/vm", "--env", "libgraal", "gate", "--task", "LibGraal"],
         ]
     },
 
-    GraalCE:: {
-        environment+: {
-            VM_SUITE: "graal/vm",
-            VM_SUITE_ENV: "libgraal",
-            GATE_SUITE: "graal/compiler",
-            SVM_IMPORT: "/substratevm",
-            GRAAL_REPO_NAME: "graal",
-            GRAAL_REPO_URL: "https://github.com/graalvm/graal.git"
-        }
-    },
-
     builds: [
-        self.Build + self.GraalTest + mach + self.GraalCE
+        self.Build + self.GraalTest + mach
         for mach in [
             # Only need to test formatting and building
             # with Eclipse on one platform.

@@ -264,6 +264,7 @@ typedef TwoOopHashtable<Symbol*, mtClass>     SymbolTwoOopHashtable;
 
 #define VM_STRUCTS(nonstatic_field, \
                    static_field, \
+                   static_ptr_volatile_field, \
                    unchecked_nonstatic_field, \
                    volatile_nonstatic_field, \
                    nonproduct_nonstatic_field, \
@@ -1132,7 +1133,7 @@ typedef TwoOopHashtable<Symbol*, mtClass>     SymbolTwoOopHashtable;
   volatile_nonstatic_field(BasicLock,          _displaced_header,                             markOop)                               \
   nonstatic_field(BasicObjectLock,             _lock,                                         BasicLock)                             \
   nonstatic_field(BasicObjectLock,             _obj,                                          oop)                                   \
-  static_field(ObjectSynchronizer,             gBlockList,                                    ObjectMonitor*)                        \
+  static_ptr_volatile_field(ObjectSynchronizer,gBlockList,                                    ObjectMonitor*)                        \
                                                                                                                                      \
   /*********************/                                                                                                            \
   /* Matcher (C2 only) */                                                                                                            \
@@ -2796,6 +2797,11 @@ typedef TwoOopHashtable<Symbol*, mtClass>     SymbolTwoOopHashtable;
 #define GENERATE_STATIC_VM_STRUCT_ENTRY(typeName, fieldName, type)                 \
  { QUOTE(typeName), QUOTE(fieldName), QUOTE(type), 1, 0, &typeName::fieldName },
 
+// This macro generates a VMStructEntry line for a static pointer volatile field,
+// e.g.: "static ObjectMonitor * volatile gBlockList;"
+#define GENERATE_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY(typeName, fieldName, type)    \
+ { QUOTE(typeName), QUOTE(fieldName), QUOTE(type), 1, 0, (void*)&typeName::fieldName },
+
 // This macro generates a VMStructEntry line for an unchecked
 // nonstatic field, in which the size of the type is also specified.
 // The type string is given as NULL, indicating an "opaque" type.
@@ -2821,9 +2827,14 @@ typedef TwoOopHashtable<Symbol*, mtClass>     SymbolTwoOopHashtable;
 #define CHECK_VOLATILE_NONSTATIC_VM_STRUCT_ENTRY(typeName, fieldName, type)        \
  {typedef type dummyvtype; typeName *dummyObj = NULL; volatile dummyvtype* dummy = &dummyObj->fieldName; }
 
-// This macro checks the type of a VMStructEntry by comparing pointer types
+// This macro checks the type of a static VMStructEntry by comparing pointer types
 #define CHECK_STATIC_VM_STRUCT_ENTRY(typeName, fieldName, type)                    \
  {type* dummy = &typeName::fieldName; }
+
+// This macro checks the type of a static pointer volatile VMStructEntry by comparing pointer types,
+// e.g.: "static ObjectMonitor * volatile gBlockList;"
+#define CHECK_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY(typeName, fieldName, type)       \
+ {type volatile * dummy = &typeName::fieldName; }
 
 // This macro ensures the type of a field and its containing type are
 // present in the type table. The assertion string is shorter than
@@ -3035,6 +3046,7 @@ VMStructEntry VMStructs::localHotSpotVMStructs[] = {
 
   VM_STRUCTS(GENERATE_NONSTATIC_VM_STRUCT_ENTRY,
              GENERATE_STATIC_VM_STRUCT_ENTRY,
+             GENERATE_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY,
              GENERATE_UNCHECKED_NONSTATIC_VM_STRUCT_ENTRY,
              GENERATE_NONSTATIC_VM_STRUCT_ENTRY,
              GENERATE_NONPRODUCT_NONSTATIC_VM_STRUCT_ENTRY,
@@ -3224,6 +3236,7 @@ void
 VMStructs::init() {
   VM_STRUCTS(CHECK_NONSTATIC_VM_STRUCT_ENTRY,
              CHECK_STATIC_VM_STRUCT_ENTRY,
+             CHECK_STATIC_PTR_VOLATILE_VM_STRUCT_ENTRY,
              CHECK_NO_OP,
              CHECK_VOLATILE_NONSTATIC_VM_STRUCT_ENTRY,
              CHECK_NONPRODUCT_NONSTATIC_VM_STRUCT_ENTRY,
@@ -3345,8 +3358,10 @@ VMStructs::init() {
                         CHECK_NO_OP,
                         CHECK_NO_OP,
                         CHECK_NO_OP,
+                        CHECK_NO_OP,
                         CHECK_NO_OP));
   debug_only(VM_STRUCTS(CHECK_NO_OP,
+                        ENSURE_FIELD_TYPE_PRESENT,
                         ENSURE_FIELD_TYPE_PRESENT,
                         CHECK_NO_OP,
                         ENSURE_FIELD_TYPE_PRESENT,
