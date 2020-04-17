@@ -62,7 +62,6 @@
             ac_cv_func_mkostemp: "no",
             ac_cv_func_mkostemps: "no",
             MACOSX_DEPLOYMENT_TARGET: "10.11",
-            JAVA_HOME_PREFIX: "/Contents/Home",
 
             # These 2 are needed for pylint on macOS
             LC_ALL: "en_US.UTF-8",
@@ -147,19 +146,25 @@
         logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
+            ["mx", "jvmci-version"],
+
             # Clone graal for testing
             ["git", "--version"],
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
             ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
 
-            ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
-            ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
-            ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate"],
+            ["mv", ["mx", "--vm=server", "jdkhome"], "java_home"],
+            ["set-export", "JAVA_HOME", "${PWD}/java_home"],
             ["${JAVA_HOME}/bin/java", "-version"],
+
+            # Free up disk space for space tight CI slaves
+            ["rm", "-rf", "build", "mxbuild", "*jdk1.8.0*"],
 
             # Overlay static libraries
             ["set-export", "OLD_PWD", "${PWD}"],
-            ["cd", "${JAVA_HOME_OVERLAY}${JAVA_HOME_PREFIX}"],
+            ["cd", "${JAVA_HOME_OVERLAY}"],
             ["cp", "-r", ".", "${JAVA_HOME}"],
             ["cd", "${OLD_PWD}"],
         ],
