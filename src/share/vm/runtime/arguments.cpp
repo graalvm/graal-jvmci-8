@@ -69,7 +69,7 @@
 #ifdef VENDOR_URL_VM_BUG
 # define DEFAULT_VENDOR_URL_BUG VENDOR_URL_VM_BUG
 #else
-# define DEFAULT_VENDOR_URL_BUG "http://bugreport.java.com/bugreport/crash.jsp"
+# define DEFAULT_VENDOR_URL_BUG "https://github.com/oracle/graal/issues"
 #endif
 #define DEFAULT_JAVA_LAUNCHER  "generic"
 
