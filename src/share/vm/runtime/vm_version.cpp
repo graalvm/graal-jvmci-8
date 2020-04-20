@@ -249,8 +249,7 @@ const char* Abstract_VM_Version::vm_vendor() {
 #ifdef VENDOR
   return VENDOR;
 #else
-  return JDK_Version::is_gte_jdk17x_version() ?
-    "Oracle Corporation" : "Sun Microsystems Inc.";
+  return "GraalVM Community";
 #endif
 }
 
