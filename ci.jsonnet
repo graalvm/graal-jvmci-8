@@ -163,6 +163,9 @@
         logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
+            # To reduce load, the CI system does not fetch all tags so it must be done explicitly (GR-22662)
+            ["git", "fetch", "origin", "--tags"],
+
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "-v", "--kill-with-sigquit", "--strict-compliance", "gate"],
             ["set-export", "JAVA_HOME", ["mx", "--vm=server", "jdkhome"]],
