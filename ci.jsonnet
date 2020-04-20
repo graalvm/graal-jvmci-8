@@ -146,7 +146,10 @@
         logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
-            ["mx", "jvmci-version"],
+            # To reduce load, the CI system does not fetch all tags so it must
+            # be done explicitly as `mx jvmci-version` relies on it.
+            # See GR-22662.
+            ["git", "fetch", "origin", "--tags"],
 
             # Clone graal for testing
             ["git", "--version"],
