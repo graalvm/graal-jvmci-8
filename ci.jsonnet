@@ -111,22 +111,6 @@
         }
     },
 
-    OracleJDK:: {
-        name+: "-oraclejdk",
-        downloads: {
-            JAVA_HOME: {
-                name : "oraclejdk",
-                version : "8u241",
-                platformspecific: true
-            },
-            JAVA_HOME_OVERLAY: {
-                name : "oraclejdk-overlay",
-                version : "8u241",
-                platformspecific: true
-            }
-        }
-    },
-
     OpenJDK:: {
         name+: "-openjdk",
         downloads: {
