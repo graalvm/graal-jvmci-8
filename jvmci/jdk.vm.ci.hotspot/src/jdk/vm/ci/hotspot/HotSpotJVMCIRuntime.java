@@ -259,20 +259,20 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
         private void init(String propertyValue) {
             assert value == null : "cannot re-initialize " + name();
-                if (propertyValue == null) {
-                    this.value = defaultValue == null ? NULL_VALUE : defaultValue;
-                    this.isDefault = true;
+            if (propertyValue == null) {
+                this.value = defaultValue == null ? NULL_VALUE : defaultValue;
+                this.isDefault = true;
+            } else {
+                if (type == Boolean.class) {
+                    this.value = Boolean.parseBoolean(propertyValue);
+                } else if (type == String.class) {
+                    this.value = propertyValue;
                 } else {
-                    if (type == Boolean.class) {
-                        this.value = Boolean.parseBoolean(propertyValue);
-                    } else if (type == String.class) {
-                        this.value = propertyValue;
-                    } else {
-                        throw new JVMCIError("Unexpected option type " + type);
-                    }
-                    this.isDefault = false;
+                    throw new JVMCIError("Unexpected option type " + type);
                 }
+                this.isDefault = false;
             }
+        }
 
         @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
         private Object getValue() {
@@ -1005,8 +1005,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * </pre>
      *
      * The implementation of the native {@code JCompile.compile0} method would be in the JVMCI
-     * shared library that contains the bulk of the JVMCI compiler. The {@code JCompile.compile0}
-     * implementation will be exported as the following JNI-compatible symbol:
+     * shared library that contains the JVMCI compiler. The {@code JCompile.compile0} implementation
+     * must be exported as the following JNI-compatible symbol:
      *
      * <pre>
      * Java_com_jcompile_JCompile_compile0
@@ -1017,9 +1017,18 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * @see "https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/invocation.html#invocation_api_functions"
      *
      *
-     * @return an array of 4 longs where the first value is the {@code JavaVM*} value representing
-     *         the Java VM in the JVMCI shared library, and the remaining values are the first 3
-     *         pointers in the Invocation API function table (i.e., {@code JNIInvokeInterface})
+     * @return info about the Java VM in the JVMCI shared library {@code JavaVM*}. The info is
+     *         encoded in a long array as follows:
+     *
+     *         <pre>
+     *     long[] info = {
+     *         javaVM, // the {@code JavaVM*} value
+     *         javaVM->functions->reserved0,
+     *         javaVM->functions->reserved1,
+     *         javaVM->functions->reserved2
+     *     }
+     *         </pre>
+     *
      * @throws NullPointerException if {@code clazz == null}
      * @throws UnsupportedOperationException if the JVMCI shared library is not enabled (i.e.
      *             {@code -XX:-UseJVMCINativeLibrary})
@@ -1108,6 +1117,8 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      *             {@code -XX:-UseJVMCINativeLibrary})
      * @throws IllegalStateException if the peer runtime has not been initialized or there is an
      *             error while trying to attach the thread
+     * @throws ArrayIndexOutOfBoundsException if {@code javaVMInfo} is non-null and is shorter than
+     *             the length of the array returned by {@link #registerNativeMethods}
      */
     public boolean attachCurrentThread(boolean asDaemon) {
         return compilerToVm.attachCurrentThread(asDaemon);
