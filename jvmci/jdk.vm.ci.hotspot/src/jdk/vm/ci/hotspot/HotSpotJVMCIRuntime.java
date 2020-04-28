@@ -37,6 +37,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Formatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -200,6 +201,15 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     }
 
     /**
+     * Set of recognized {@code "jvmci.*"} system properties. Entries not associated with an
+     * {@link Option} have this object as their value.
+     */
+    static final Map<String, Object> options = new HashMap<>();
+    static {
+        options.put("jvmci.class.path.append", options);
+    }
+
+    /**
      * A list of all supported JVMCI options.
      */
     public enum Option {
@@ -242,12 +252,13 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
             this.type = type;
             this.defaultValue = defaultValue;
             this.helpLines = helpLines;
+            Object existing = options.put(getPropertyName(), this);
+            assert existing == null : getPropertyName();
         }
 
         @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
-        private Object getValue() {
-            if (value == null) {
-                String propertyValue = Services.getSavedProperty(getPropertyName());
+        private void init(String propertyValue) {
+            assert value == null : "cannot re-initialize " + name();
                 if (propertyValue == null) {
                     this.value = defaultValue == null ? NULL_VALUE : defaultValue;
                     this.isDefault = true;
@@ -262,7 +273,16 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                     this.isDefault = false;
                 }
             }
-            return value == NULL_VALUE ? null : value;
+
+        @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
+        private Object getValue() {
+            if (value == NULL_VALUE) {
+                return null;
+            }
+            if (value == null) {
+                return defaultValue;
+            }
+            return value;
         }
 
         /**
@@ -320,6 +340,61 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                 }
                 for (String line : option.helpLines) {
                     out.printf("%" + PROPERTY_HELP_INDENT + "s%s%n", "", line);
+                }
+            }
+        }
+
+        /**
+         * Compute string similarity based on Dice's coefficient.
+         *
+         * Ported from str_similar() in globals.cpp.
+         */
+        static float stringSimiliarity(String str1, String str2) {
+            int hit = 0;
+            for (int i = 0; i < str1.length() - 1; ++i) {
+                for (int j = 0; j < str2.length() - 1; ++j) {
+                    if ((str1.charAt(i) == str2.charAt(j)) && (str1.charAt(i + 1) == str2.charAt(j + 1))) {
+                        ++hit;
+                        break;
+                    }
+                }
+            }
+            return 2.0f * hit / (str1.length() + str2.length());
+        }
+
+        private static final float FUZZY_MATCH_THRESHOLD = 0.7F;
+
+        /**
+         * Parses all system properties starting with {@value #JVMCI_OPTION_PROPERTY_PREFIX} and
+         * initializes the options based on their values.
+         */
+        static void parse() {
+            Map<String, String> savedProps = jdk.vm.ci.services.Services.getSavedProperties();
+            for (Map.Entry<String, String> e : savedProps.entrySet()) {
+                String name = e.getKey();
+                if (name.startsWith(Option.JVMCI_OPTION_PROPERTY_PREFIX)) {
+                    Object value = options.get(name);
+                    if (value == null) {
+                        List<String> matches = new ArrayList<>();
+                        for (String pn : options.keySet()) {
+                            float score = stringSimiliarity(pn, name);
+                            if (score >= FUZZY_MATCH_THRESHOLD) {
+                                matches.add(pn);
+                            }
+                        }
+                        Formatter msg = new Formatter();
+                        msg.format("Could not find option %s", name);
+                        if (!matches.isEmpty()) {
+                            msg.format("%nDid you mean one of the following?");
+                            for (String match : matches) {
+                                msg.format("%n    %s=<value>", match);
+                            }
+                        }
+                        throw new IllegalArgumentException(msg.toString());
+                    } else if (value instanceof Option) {
+                        Option option = (Option) value;
+                        option.init(e.getValue());
+                    }
                 }
             }
         }
@@ -419,6 +494,9 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
             System.setOut(vmLogStream);
             System.setErr(vmLogStream);
         }
+
+        // Initialize the Option values.
+        Option.parse();
 
         String hostArchitecture = config.getHostArchitectureName();
 
