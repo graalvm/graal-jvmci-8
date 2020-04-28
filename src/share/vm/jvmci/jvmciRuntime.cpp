@@ -781,6 +781,104 @@ void JVMCINMethodData::invalidate_nmethod_mirror(nmethod* nm) {
   }
 }
 
+JVMCIRuntime::JVMCIRuntime(int id) {
+  _init_state = uninitialized;
+  _shared_library_javavm = NULL;
+  _id = id;
+  TRACE_jvmci_1("created new JVMCI runtime %d (" PTR_FORMAT ")", id, p2i(this));
+}
+
+JNIEnv* JVMCIRuntime::init_shared_library_javavm() {
+  JavaVM* javaVM = (JavaVM*) _shared_library_javavm;
+  if (javaVM == NULL) {
+    MutexLocker locker(JVMCI_lock);
+    // Check again under JVMCI_lock
+    javaVM = (JavaVM*) _shared_library_javavm;
+    if (javaVM != NULL) {
+      return NULL;
+    }
+    char* sl_path;
+    void* sl_handle = JVMCI::get_shared_library(sl_path, true);
+
+    jint (*JNI_CreateJavaVM)(JavaVM **pvm, void **penv, void *args);
+    typedef jint (*JNI_CreateJavaVM_t)(JavaVM **pvm, void **penv, void *args);
+
+    JNI_CreateJavaVM = CAST_TO_FN_PTR(JNI_CreateJavaVM_t, os::dll_lookup(sl_handle, "JNI_CreateJavaVM"));
+    if (JNI_CreateJavaVM == NULL) {
+      vm_exit_during_initialization("Unable to find JNI_CreateJavaVM", sl_path);
+    }
+
+    ResourceMark rm;
+    JavaVMInitArgs vm_args;
+    vm_args.version = JNI_VERSION_1_2;
+    vm_args.ignoreUnrecognized = JNI_TRUE;
+    JavaVMOption options[1];
+    jlong javaVM_id = 0;
+
+    // Protocol: JVMCI shared library JavaVM should support a non-standard "_javavm_id"
+    // option whose extraInfo info field is a pointer to which a unique id for the
+    // JavaVM should be written.
+    options[0].optionString = (char*) "_javavm_id";
+    options[0].extraInfo = &javaVM_id;
+
+    vm_args.version = JNI_VERSION_1_2;
+    vm_args.options = options;
+    vm_args.nOptions = sizeof(options) / sizeof(JavaVMOption);
+
+    JNIEnv* env = NULL;
+    int result = (*JNI_CreateJavaVM)(&javaVM, (void**) &env, &vm_args);
+    if (result == JNI_OK) {
+      guarantee(env != NULL, "missing env");
+      _shared_library_javavm = javaVM;
+      TRACE_jvmci_1("created JavaVM[%ld]@" PTR_FORMAT " for JVMCI runtime %d", javaVM_id, p2i(javaVM), _id);
+      return env;
+    } else {
+      vm_exit_during_initialization(err_msg("JNI_CreateJavaVM failed with return value %d", result), sl_path);
+    }
+  }
+  return NULL;
+}
+
+void JVMCIRuntime::init_JavaVM_info(jlongArray info, JVMCI_TRAPS) {
+  if (info != NULL) {
+    typeArrayOop info_oop = (typeArrayOop) JNIHandles::resolve(info);
+    if (info_oop->length() < 4) {
+      JVMCI_THROW_MSG(ArrayIndexOutOfBoundsException, err_msg("%d < 4", info_oop->length()));
+    }
+    JavaVM* javaVM = (JavaVM*) _shared_library_javavm;
+    info_oop->long_at_put(0, (jlong) (address) javaVM);
+    info_oop->long_at_put(1, (jlong) (address) javaVM->functions->reserved0);
+    info_oop->long_at_put(2, (jlong) (address) javaVM->functions->reserved1);
+    info_oop->long_at_put(3, (jlong) (address) javaVM->functions->reserved2);
+  }
+}
+
+#define JAVAVM_CALL_BLOCK                                             \
+  guarantee(thread != NULL && _shared_library_javavm != NULL, "npe"); \
+  ThreadToNativeFromVM ttnfv(thread);                                 \
+  JavaVM* javavm = (JavaVM*) _shared_library_javavm;
+
+jint JVMCIRuntime::AttachCurrentThread(JavaThread* thread, void **penv, void *args) {
+  JAVAVM_CALL_BLOCK
+  return javavm->AttachCurrentThread(penv, args);
+}
+
+jint JVMCIRuntime::AttachCurrentThreadAsDaemon(JavaThread* thread, void **penv, void *args) {
+  JAVAVM_CALL_BLOCK
+  return javavm->AttachCurrentThreadAsDaemon(penv, args);
+}
+
+jint JVMCIRuntime::DetachCurrentThread(JavaThread* thread) {
+  JAVAVM_CALL_BLOCK
+  return javavm->DetachCurrentThread();
+}
+
+jint JVMCIRuntime::GetEnv(JavaThread* thread, void **penv, jint version) {
+  JAVAVM_CALL_BLOCK
+  return javavm->GetEnv(penv, version);
+}
+#undef JAVAVM_CALL_BLOCK                                             \
+
 void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(JVMCI_TRAPS) {
   if (!_HotSpotJVMCIRuntime_instance.is_null()) {
     if (JVMCIENV->is_hotspot() && UseJVMCINativeLibrary) {
@@ -794,28 +892,37 @@ void JVMCIRuntime::initialize_HotSpotJVMCIRuntime(JVMCI_TRAPS) {
   JVMCIObject result = JVMCIENV->call_HotSpotJVMCIRuntime_runtime(JVMCI_CHECK);
 
   _HotSpotJVMCIRuntime_instance = JVMCIENV->make_global(result);
+  JVMCI::_is_initialized = true;
 }
 
 void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
   // Check first without JVMCI_lock
-  if (_initialized) {
+  if (_init_state == fully_initialized) {
     return;
   }
 
   MutexLocker locker(JVMCI_lock);
   // Check again under JVMCI_lock
-  if (_initialized) {
+  if (_init_state == fully_initialized) {
     return;
   }
 
-  while (_being_initialized) {
+  if (JVMCI::in_shutdown()) {
+    TRACE_jvmci_1("in JVMCI shutdown - abort initializing JVMCI runtime %d", _id);
+    return;
+  }
+
+  while (_init_state == being_initialized) {
+    TRACE_jvmci_1("waiting for initialization of JVMCI runtime %d", _id);
     JVMCI_lock->wait();
-    if (_initialized) {
+    if (_init_state == fully_initialized) {
+      TRACE_jvmci_1("done waiting for initialization of JVMCI runtime %d", _id);
       return;
     }
   }
 
-  _being_initialized = true;
+  TRACE_jvmci_1("initializing JVMCI runtime %d", _id);
+  _init_state = being_initialized;
 
   {
     MutexUnlocker unlock(JVMCI_lock);
@@ -834,6 +941,11 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
         fatal("JNI exception during init");
       }
     }
+
+    if (!JVMCIENV->is_hotspot()) {
+      JNIAccessMark jni(JVMCIENV);
+      JNIJVMCI::register_natives(jni.env());
+    }
     create_jvmci_primitive_type(T_BOOLEAN, JVMCI_CHECK_EXIT_((void)0));
     create_jvmci_primitive_type(T_BYTE, JVMCI_CHECK_EXIT_((void)0));
     create_jvmci_primitive_type(T_CHAR, JVMCI_CHECK_EXIT_((void)0));
@@ -849,8 +961,8 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
     }
   }
 
-  _initialized = true;
-  _being_initialized = false;
+  _init_state = fully_initialized;
+  TRACE_jvmci_1("initialized JVMCI runtime %d", _id);
   JVMCI_lock->notify_all();
 }
 
@@ -961,11 +1073,13 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized(JVMCIEnv* JVMCIENV) 
 
 
 void JVMCIRuntime::shutdown() {
-  if (_HotSpotJVMCIRuntime_instance.is_non_null()) {
-    _shutdown_called = true;
-
-    THREAD_JVMCIENV(JavaThread::current());
-    JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(_HotSpotJVMCIRuntime_instance);
+  JVMCIObject instance = _HotSpotJVMCIRuntime_instance;
+  if (instance.is_non_null()) {
+    TRACE_jvmci_1("shutting down JVMCI runtime %d", _id);
+    _HotSpotJVMCIRuntime_instance = JVMCIObject();
+    JVMCIEnv __stack_jvmci_env__(JavaThread::current(), instance.is_hotspot(), __FILE__, __LINE__);
+    JVMCIEnv* JVMCIENV = &__stack_jvmci_env__;
+    JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(instance);
   }
 }
 
@@ -1392,7 +1506,7 @@ void JVMCIRuntime::compile_method(JVMCIEnv* JVMCIENV, JVMCICompiler* compiler, c
     compile_state->set_failure(true, "No OSR during boostrap");
     return;
   }
-  if (JVMCI::shutdown_called()) {
+  if (JVMCI::in_shutdown()) {
     compile_state->set_failure(false, "Avoiding compilation during shutdown");
     return;
   }
@@ -1616,4 +1730,18 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
   }
 
   return result;
+}
+
+bool JVMCIRuntime::trace_prefix(int level) {
+  Thread* thread = ThreadLocalStorage::thread();
+  if (thread == NULL) {
+    thread = ThreadLocalStorage::get_thread_slow();
+  }
+  if (thread != NULL) {
+    ResourceMark rm;
+    tty->print("JVMCITrace-%d[%s]:%*c", level, thread == NULL ? "?" : thread->name(), level, ' ');
+  } else {
+    tty->print("JVMCITrace-%d[?]:%*c", level, level, ' ');
+  }
+  return true;
 }

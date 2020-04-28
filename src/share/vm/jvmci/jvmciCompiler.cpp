@@ -106,39 +106,38 @@ void JVMCICompiler::bootstrap(TRAPS) {
     tty->print_cr(" in " JLONG_FORMAT " ms (compiled %d methods)", os::javaTimeMillis() - start, _methods_compiled);
   }
   _bootstrapping = false;
-  JVMCI::compiler_runtime()->bootstrap_finished(CHECK);
+  JVMCI::java_runtime()->bootstrap_finished(CHECK);
 }
 
 bool JVMCICompiler::force_comp_at_level_simple(Method* method) {
-  if (UseJVMCINativeLibrary) {
-    // This mechanism exists to force compilation of a JVMCI compiler by C1
-    // to reduces the compilation time spent on the JVMCI compiler itself. In
-    // +UseJVMCINativeLibrary mode, the JVMCI compiler is AOT compiled.
-    return false;
-  }
-
   if (_bootstrapping) {
     // When bootstrapping, the JVMCI compiler can compile its own methods.
     return false;
   }
-
-  JVMCIRuntime* runtime = JVMCI::compiler_runtime();
-  if (runtime != NULL && runtime->is_HotSpotJVMCIRuntime_initialized()) {
-    Handle class_loader = method->method_holder()->class_loader_data()->class_loader();
-    if (!class_loader.is_null()) {
-      THREAD_JVMCIENV(JavaThread::current());
-      JVMCIObject receiver = runtime->get_HotSpotJVMCIRuntime(JVMCIENV);
-      objArrayOop loaders = HotSpotJVMCI::HotSpotJVMCIRuntime::excludeFromJVMCICompilation(JVMCIENV, HotSpotJVMCI::resolve(receiver));
-      if (loaders != NULL) {
-        for (int i = 0; i < loaders->length(); i++) {
-          if (loaders->obj_at(i) == class_loader()) {
-            return true;
+  if (UseJVMCINativeLibrary) {
+    // This mechanism exists to force compilation of a JVMCI compiler by C1
+    // to reduce the compilation time spent on the JVMCI compiler itself. In
+    // +UseJVMCINativeLibrary mode, the JVMCI compiler is AOT compiled.
+    return false;
+  } else {
+    JVMCIRuntime* runtime = JVMCI::java_runtime();
+    if (runtime != NULL && runtime->is_HotSpotJVMCIRuntime_initialized()) {
+      Handle class_loader = method->method_holder()->class_loader_data()->class_loader();
+      if (!class_loader.is_null()) {
+        THREAD_JVMCIENV(JavaThread::current());
+        JVMCIObject receiver = runtime->get_HotSpotJVMCIRuntime(JVMCIENV);
+        objArrayOop loaders = HotSpotJVMCI::HotSpotJVMCIRuntime::excludeFromJVMCICompilation(JVMCIENV, HotSpotJVMCI::resolve(receiver));
+        if (loaders != NULL) {
+          for (int i = 0; i < loaders->length(); i++) {
+            if (loaders->obj_at(i) == class_loader()) {
+              return true;
+            }
           }
         }
       }
     }
+    return false;
   }
-  return false;
 }
 
 // Compilation entry point for methods

@@ -1,5 +1,6 @@
 {
     overlay: "7ae71ed606bd7a3c225ac70aa5c93561b67050ac",
+    specVersion: "2",
 
     Windows:: {
         capabilities+: ["windows"],
@@ -15,7 +16,6 @@
     Linux:: {
         packages+: {
             git: ">=1.8.3",
-            mercurial: ">=2.2",
             make : ">=3.83",
             "gcc-build-essentials" : "==4.9.2",
 
@@ -28,19 +28,6 @@
         name+: "-linux",
         environment+: {
             CI_OS: "linux"
-        }
-    },
-    Solaris:: {
-        packages+: {
-            git: ">=1.8.3",
-            mercurial: ">=2.2",
-            make : ">=3.83",
-            solarisstudio: "==12.3"
-        },
-        capabilities+: ["solaris"],
-        name+: "-solaris",
-        environment+: {
-            CI_OS: "solaris"
         }
     },
     Darwin:: {
@@ -78,14 +65,6 @@
             CI_ARCH: "amd64"
         }
     },
-    SPARCv9:: {
-        capabilities+: ["sparcv9"],
-        name+: "-sparcv9",
-        timelimit: "1:30:00",
-        environment+: {
-            CI_ARCH: "sparcv9"
-        }
-    },
 
     Eclipse:: {
         downloads+: {
@@ -111,16 +90,19 @@
     },
 
     OpenJDK:: {
+        local jdk_version = "8u252",
+        local jdk_build = "09",
+
         name+: "-openjdk",
-        downloads: {
+        downloads+: {
             JAVA_HOME: {
                 name : "openjdk",
-                version : "8u252+09",
+                version : jdk_version + "+" + jdk_build,
                 platformspecific: true
             },
             JAVA_HOME_OVERLAY: {
                 name : "openjdk-overlay",
-                version : "8u252+09",
+                version : jdk_version + "+" + jdk_build,
                 platformspecific: true
             }
         }
@@ -131,7 +113,11 @@
     # ensure a consistent downstream code base is tested against.
     local downstream_branch = "master",
 
-    Build:: {
+    # Only need to test formatting and building
+    # with Eclipse on one platform.
+    local eclipse_conf(conf) = if conf.environment["CI_OS"] == "linux" then (self.Eclipse + self.JDT) else {},
+
+    Build(conf):: eclipse_conf(conf) + {
         packages+: {
             "00:pip:logilab-common": "==1.4.4",
             "01:pip:astroid" : "==1.1.0",
@@ -140,7 +126,14 @@
         environment+: {
             MX_PYTHON: "python3",
         },
-        name: "gate-jvmci",
+        publishArtifacts: [
+            {
+                name: 'build' + conf.name,
+                dir: '.',
+                patterns: ["java_home"]
+            }
+        ],
+        name: "build-jvmci",
         timelimit: "1:00:00",
         diskspace_required: "10G",
         logs: ["*.log", "*.cmd"],
@@ -149,12 +142,7 @@
             # To reduce load, the CI system does not fetch all tags so it must
             # be done explicitly as `mx jvmci-version` relies on it.
             # See GR-22662.
-            ["git", "fetch", "origin", "--tags"],
-
-            # Clone graal for testing
-            ["git", "--version"],
-            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
-            ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
+            ["git", "fetch", "--tags"],
 
             ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
             ["mx", "--kill-with-sigquit", "--strict-compliance", "gate"],
@@ -162,49 +150,130 @@
             ["set-export", "JAVA_HOME", "${PWD}/java_home"],
             ["${JAVA_HOME}/bin/java", "-version"],
 
-            # Free up disk space for space tight CI slaves
-            ["rm", "-rf", "build", "mxbuild", "*jdk1.8.0*"],
-
             # Overlay static libraries
             ["set-export", "OLD_PWD", "${PWD}"],
             ["cd", "${JAVA_HOME_OVERLAY}"],
+            ["cd", "Contents/Home", "||", "true"], # macOS
             ["cp", "-r", ".", "${JAVA_HOME}"],
             ["cd", "${OLD_PWD}"],
         ],
     },
 
-    GraalTest:: {
-        name+: "-graal",
+    local clone_graal = {
         run+: [
-            ["mx", "-v", "-p", "graal/compiler", "gate", "--tags", "build,test,bootstraplite"]
+            ["git", "--version"],
+            ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
+            ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
         ]
     },
 
-    # Build a basic GraalVM and run some simple tests.
-    GraalVMTest:: {
-        name+: "-graalvm",
+    local requireJVMCI(conf) = {
+        requireArtifacts+: [
+            {
+                name: 'build' + conf.name,
+                dir: '.'
+            }
+        ],
+        run+: [
+            ["set-export", "JAVA_HOME", "${PWD}/java_home"]
+        ]
+    },
+
+    # Run Graal compiler tests
+    CompilerTests(conf):: clone_graal + requireJVMCI(conf) + {
+        name: "gate-compiler",
+        timelimit: "1:00:00",
+        logs: ["*.log", "*.cmd"],
+        targets: ["gate"],
+        run+: [
+            ["mx", "-p", "graal/compiler", "gate", "--tags", "build,test,bootstraplite"]
+        ]
+    },
+
+    # Build and test JavaScript on GraalVM
+    JavaScriptTests(conf):: clone_graal + requireJVMCI(conf) + {
+        name: "gate-js",
         timelimit: "1:30:00",
-        run+: [
-            # Build and test JavaScript on GraalVM
-            ["mx", "-p", "graal/vm", "--dynamicimports", "/graal-js,/substratevm", "--disable-polyglot", "--disable-libpolyglot", "--force-bash-launchers=native-image", "build"],
-            ["./graal/vm/latest_graalvm_home/bin/js",          "mx.jvmci/test.js"],
-            ["./graal/vm/latest_graalvm_home/bin/js", "--jvm", "mx.jvmci/test.js"],
+        logs: ["*.log", "*.cmd"],
+        targets: ["gate"],
+        local os_path(path) = if conf.environment["CI_OS"] == "windows" then std.strReplace(path, "/", "\\") else path,
+        local exe(path) = if conf.environment["CI_OS"] == "windows" then os_path(path) + ".exe" else os_path(path),
 
-             # Build and test LibGraal
-            ["mx", "-p", "graal/vm", "--env", "libgraal", "--extra-image-builder-argument=-J-esa", "--extra-image-builder-argument=-H:+ReportExceptionStackTraces", "build"],
-            ["mx", "-p", "graal/vm", "--env", "libgraal", "gate", "--task", "LibGraal"],
-        ]
+        local mx = [
+            "mx",
+            "-p", "graal/vm",
+            "--dynamicimports", "/graal-js,/substratevm",
+            "--disable-polyglot",
+            "--disable-libpolyglot",
+            "--force-bash-launchers=native-image",
+        ],
+
+        run+: [
+            mx + ["build"],
+            ["set-export", "GRAALVM_HOME", mx + ["graalvm-home"] ],
+            [exe("${GRAALVM_HOME}/jre/languages/js/bin/js"),          os_path("mx.jvmci/test.js")],
+            [exe("${GRAALVM_HOME}/jre/languages/js/bin/js"), "--jvm", os_path("mx.jvmci/test.js")],
+        ],
     },
 
-    builds: [
-        self.Build + self.GraalTest + mach
-        for mach in [
-            # Only need to test formatting and building
-            # with Eclipse on one platform.
-            self.GraalVMTest + self.Linux + self.AMD64 + self.OpenJDK + self.Eclipse + self.JDT,
-            self.GraalVMTest + self.Darwin + self.AMD64 + self.OpenJDK,
-            # GraalVM not (yet) supported on these platforms
-            self.Windows + self.AMD64 + self.OpenJDK,
-        ]
-    ]
+    # Build LibGraal
+    BuildLibGraal(conf):: clone_graal + requireJVMCI(conf) + {
+        name: "gate-libgraal-build",
+        timelimit: "1:30:00",
+        logs: ["*.log", "*.cmd"],
+        targets: ["gate"],
+
+        publishArtifacts: [
+            {
+                name: 'build-libgraal' + conf.name,
+                dir: '.',
+                patterns: ["graal/*/mxbuild"]
+            }
+        ],
+        run+: [
+            ["mx", "-p", "graal/vm",
+                "--env", "libgraal",
+                "--extra-image-builder-argument=-J-esa",
+                "--extra-image-builder-argument=-H:+ReportExceptionStackTraces",
+                "build"],
+        ],
+    },
+
+    local requireLibGraal(conf) = {
+        requireArtifacts+: [
+            {
+                name: 'build-libgraal' + conf.name,
+                dir: '.',
+                autoExtract: false
+            }
+        ],
+    },
+
+    # Test LibGraal
+    TestLibGraal(conf):: clone_graal + requireJVMCI(conf) + requireLibGraal(conf) + {
+        name: "gate-libgraal-test",
+        timelimit: "1:30:00",
+        logs: ["*.log", "*.cmd"],
+        targets: ["gate"],
+
+        run+: [
+            ["unpack-artifact", "build-libgraal" + conf.name],
+            ["mx", "-p", "graal/vm",
+                "--env", "libgraal",
+                "gate", "--task", "LibGraal"],
+        ],
+    },
+
+    # GraalVM CE is not supported on Solaris-SPARC
+    local graalvm_test_confs = [
+        self.Linux + self.AMD64 + self.OpenJDK,
+        self.Darwin + self.AMD64 + self.OpenJDK,
+        self.Windows + self.AMD64 + self.OpenJDK
+    ],
+
+    builds: [ self.Build(conf) + conf for conf in graalvm_test_confs ] +
+            [ self.CompilerTests(conf) + conf for conf in graalvm_test_confs ] +
+            [ self.JavaScriptTests(conf) + conf for conf in graalvm_test_confs ] +
+            [ self.BuildLibGraal(conf) + conf for conf in graalvm_test_confs ] +
+            [ self.TestLibGraal(conf) + conf for conf in graalvm_test_confs ]
 }
