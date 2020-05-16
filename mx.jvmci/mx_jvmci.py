@@ -41,23 +41,9 @@ from mx_gate import Task
 from mx_sigtest import sigtest
 import mx_gate
 
-# Temporary imports and (re)definitions while porting mx from Python 2 to Python 3
-if sys.version_info[0] < 3:
-    def _decode(x):
-        return x
-    def _encode(x):
-        return x
-    _unicode = unicode                         # pylint: disable=undefined-variable
-else:
-    def _decode(x):
-        return x.decode()
-    def _encode(x):
-        return x.encode()
-    _unicode = str
+assert sys.version_info[0] >= 3, 'Requires Python 3: ' + str(sys.version_info)
 
 _suite = mx.suite('jvmci')
-
-JVMCI_VERSION = 8
 
 """ The VMs that can be built and run along with an optional description. Only VMs with a
     description are listed in the dialogue for setting the default VM (see get_vm()). """
@@ -787,7 +773,7 @@ def get_hotspot_release_version(tag=mx.DEFAULT_JDK_TAG):
     Gets the value to use for the HOTSPOT_RELEASE_VERSION make variable for the output of ``java -version``.
     """
     jdk = mx.get_jdk(tag=tag)
-    output = _decode(subprocess.check_output([jdk.java, '-version'], stderr=subprocess.STDOUT)).strip().split('\n')
+    output = subprocess.check_output([jdk.java, '-version'], stderr=subprocess.STDOUT, universal_newlines=True).strip().split('\n')
     # Last line of `java -version` output is the HotSpot version info. Here are some samples:
     #   OpenJDK 64-Bit Server VM (build 25.71-b01-internal-jvmci-0.49-dev, mixed mode)
     #   Java HotSpot(TM) 64-Bit Server VM (build 25.192-b12, mixed mode)
@@ -884,7 +870,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
 
             if mx.get_os() == 'solaris':
                 # If using sparcWorks, setup flags to avoid make complaining about CC version
-                cCompilerVersion = _decode(subprocess.Popen('CC -V', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True).stderr.readlines()[0])
+                cCompilerVersion = subprocess.Popen('CC -V', stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, universal_newlines=True).stderr.readlines()[0]
                 if cCompilerVersion.startswith('CC: Sun C++'):
                     compilerRev = cCompilerVersion.split(' ')[3]
                     setMakeVar('ENFORCE_COMPILER_REV', compilerRev, env=env)
@@ -1450,19 +1436,36 @@ def deploy_binary(args):
 
 _jvmci_version = None
 
+def _jvmci_versions_in_current_branch():
+    """
+    Get the list of JVMCI versions from the tags in this suite's repository that are ancestors
+    of the current HEAD.
+
+    :rtype: list of tuples composed of major, minor, build
+    """
+    tags_out = subprocess.check_output(['git', 'log', '--simplify-by-decoration', '--pretty=format:%d', 'HEAD'], cwd=_suite.dir, universal_newlines=True)
+    tags_out = tags_out.strip()
+    jvmci_tag_re = re.compile(r"^tag: jvmci-(\d+)\.(\d+)-b(\d+)")
+    versions = []
+    for line in tags_out.split('\n'):
+        line = line.strip()
+        if not line:
+            continue
+        assert line.startswith('(') and line.endswith(')'), "Unexpected format: " + line
+        for decoration in line[1:-1].split(', '):
+            m = jvmci_tag_re.match(decoration)
+            if m:
+                versions.append(tuple([int(g) for g in m.groups()]))
+    return versions
+
 def _get_jvmci_version():
     global _jvmci_version
     if _jvmci_version is None:
-        version_re = re.compile(r"^jvmci-(\d+)\.(\d+)-b(\d+)")
-        versions = []
-        for tag in _decode(subprocess.check_output(['git', 'tag'], cwd=_suite.dir)).split():
-            m = version_re.match(tag)
-            if m:
-                versions.append(tuple([int(g) for g in m.groups()]))
+        versions = _jvmci_versions_in_current_branch()
         newest_version = sorted(versions, reverse=True)[0]
         parent_tags = _suite.vc.parent_tags(_suite.dir)
         result = "jvmci-%d.%d-b%02d" % newest_version
-        status = _decode(subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=_suite.dir))
+        status = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=_suite.dir, universal_newlines=True)
         if result not in parent_tags or len(status) != 0:
             dev_version = newest_version[0], newest_version[1], newest_version[2] + 1
             result = "jvmci-%d.%d-b%02d-dev" % dev_version
@@ -1520,7 +1523,7 @@ def get_jvmci_bootstrap_jdk():
         if _untilVersion:
             versionDesc += " and <" + str(_untilVersion)
         _jvmci_bootstrap_jdk = mx.get_jdk(_versionCheck, versionDescription=versionDesc, tag='default')
-        java_version = _decode(subprocess.check_output([_jvmci_bootstrap_jdk.java, '-version'], stderr=subprocess.STDOUT))
+        java_version = subprocess.check_output([_jvmci_bootstrap_jdk.java, '-version'], stderr=subprocess.STDOUT, universal_newlines=True)
         _jvmci_bootstrap_jdk.is_openjdk = 'openjdk' in java_version.lower()
         is_oraclejdk = not _jvmci_bootstrap_jdk.is_openjdk
         if is_oraclejdk and platform.mac_ver()[0] != '':
