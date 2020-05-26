@@ -545,7 +545,7 @@ class HotSpotJVMCI {
   static void check(JVMCIEnv* jvmciEnv, JVMCIObject obj, const char* field_name, jfieldID offset);  \
   static jclass _class;                                                                             \
 public:                                                                                             \
- static jclass clazz() { assert(_class != NULL, #fullClassName " uninitialized"); return _class; }                         \
+ static jclass clazz() { assert(_class != NULL, #fullClassName " uninitialized"); return _class; }  \
  static jclass fullClassName ##_class()  { assert(_class != NULL, "uninit"); return _class; }
 
 #undef METHOD
@@ -640,6 +640,7 @@ class JNIJVMCI {
 
   static void initialize_ids(JNIEnv* env);
   static void initialize_field_id(JNIEnv* env, jfieldID &dest_offset, jclass klass, const char* klass_name, const char* name, const char* signature, bool static_field);
+  static void register_natives(JNIEnv* env);
 
   static jobject resolve_handle(JVMCIObject obj) { return obj.as_jobject(); }
   static JVMCIObject wrap(jobject obj) { return JVMCIObject(obj, false); }

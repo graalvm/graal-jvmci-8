@@ -23,6 +23,7 @@
 
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
+#include "runtime/arguments.hpp"
 #include "jvmci/jvmci.hpp"
 #include "jvmci/jvmci_globals.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
@@ -36,6 +37,44 @@ JNIHandleBlock* JVMCI::_object_handles = NULL;
 MetadataHandleBlock* JVMCI::_metadata_handles = NULL;
 JVMCIRuntime* JVMCI::_compiler_runtime = NULL;
 JVMCIRuntime* JVMCI::_java_runtime = NULL;
+volatile bool JVMCI::_is_initialized = false;
+void* JVMCI::_shared_library_handle = NULL;
+char* JVMCI::_shared_library_path = NULL;
+volatile bool JVMCI::_in_shutdown = false;
+
+void* JVMCI::get_shared_library(char*& path, bool load) {
+  void* sl_handle = _shared_library_handle;
+  if (sl_handle != NULL || !load) {
+    path = _shared_library_path;
+    return sl_handle;
+  }
+  assert(JVMCI_lock->owner() == Thread::current(), "must be");
+  path = NULL;
+  if (_shared_library_handle == NULL) {
+    char path[JVM_MAXPATHLEN];
+    char ebuf[1024];
+    if (JVMCILibPath != NULL) {
+      if (!os::dll_build_name(path, sizeof(path), JVMCILibPath, JVMCI_SHARED_LIBRARY_NAME)) {
+        vm_exit_during_initialization("Unable to locate JVMCI shared library in path specified by -XX:JVMCILibPath value", JVMCILibPath);
+      }
+    } else {
+      if (!os::dll_build_name(path, sizeof(path), Arguments::get_dll_dir(), JVMCI_SHARED_LIBRARY_NAME)) {
+        vm_exit_during_initialization("Unable to create path to JVMCI shared library");
+      }
+    }
+
+    void* handle = os::dll_load(path, ebuf, sizeof ebuf);
+    if (handle == NULL) {
+      vm_exit_during_initialization("Unable to load JVMCI shared library", ebuf);
+    }
+    _shared_library_handle = handle;
+    _shared_library_path = strdup(path);
+
+    TRACE_jvmci_1("loaded JVMCI shared library from %s", path);
+  }
+  path = _shared_library_path;
+  return _shared_library_handle;
+}
 
 void JVMCI::initialize_compiler(TRAPS) {
   if (JVMCILibDumpJNIConfig) {
@@ -51,11 +90,11 @@ void JVMCI::initialize_globals() {
   _metadata_handles = MetadataHandleBlock::allocate_block();
   if (UseJVMCINativeLibrary) {
     // There are two runtimes.
-    _compiler_runtime = new JVMCIRuntime();
-    _java_runtime = new JVMCIRuntime();
+    _compiler_runtime = new JVMCIRuntime(0);
+    _java_runtime = new JVMCIRuntime(-1);
   } else {
     // There is only a single runtime
-    _java_runtime = _compiler_runtime = new JVMCIRuntime();
+    _java_runtime = _compiler_runtime = new JVMCIRuntime(0);
   }
 }
 
@@ -116,18 +155,25 @@ void JVMCI::do_unloading(bool unloading_occurred) {
 }
 
 bool JVMCI::is_compiler_initialized() {
-  return compiler_runtime()->is_HotSpotJVMCIRuntime_initialized();
+  return _is_initialized;
 }
 
 void JVMCI::shutdown() {
+  ResourceMark rm;
+  {
+    MutexLocker locker(JVMCI_lock);
+    _in_shutdown = true;
+    TRACE_jvmci_1("shutting down JVMCI");
+  }
+  JVMCIRuntime* java_runtime = _java_runtime;
+  if (java_runtime != compiler_runtime()) {
+    java_runtime->shutdown();
+  }
   if (compiler_runtime() != NULL) {
     compiler_runtime()->shutdown();
   }
 }
 
-bool JVMCI::shutdown_called() {
-  if (compiler_runtime() != NULL) {
-    return compiler_runtime()->shutdown_called();
-  }
-  return false;
+bool JVMCI::in_shutdown() {
+  return _in_shutdown;
 }

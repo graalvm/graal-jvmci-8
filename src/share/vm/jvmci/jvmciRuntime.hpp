@@ -89,6 +89,7 @@ public:
 // A top level class that represents an initialized JVMCI runtime.
 // There is one instance of this class per HotSpotJVMCIRuntime object.
 class JVMCIRuntime: public CHeapObj<mtJVMCI> {
+  friend class JVMCI;
  public:
   // Constants describing whether JVMCI wants to be able to adjust the compilation
   // level selected for a method by the VM compilation policy and if so, based on
@@ -100,12 +101,24 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   };
 
  private:
-  volatile bool _being_initialized;
-  volatile bool _initialized;
+  enum InitState {
+    uninitialized,
+    being_initialized,
+    fully_initialized
+  };
+
+  // Initialization state of this JVMCIRuntime.
+  InitState _init_state;
 
   JVMCIObject _HotSpotJVMCIRuntime_instance;
 
-  bool _shutdown_called;
+  // Result of calling JNI_CreateJavaVM in the JVMCI shared library.
+  // Must only be modified under JVMCI_lock.
+  volatile JavaVM* _shared_library_javavm;
+
+  // The HotSpot heap based runtime will have an id of -1 and the
+  // JVMCI shared library runtime will have an id of 0.
+  int _id;
 
   JVMCIObject create_jvmci_primitive_type(BasicType type, JVMCI_TRAPS);
 
@@ -133,48 +146,61 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
                                      Bytecodes::Code bc);
 
  public:
-  JVMCIRuntime() {
-    _initialized = false;
-    _being_initialized = false;
-    _shutdown_called = false;
-  }
+  JVMCIRuntime(int id);
 
-  /**
-   * Compute offsets and construct any state required before executing JVMCI code.
-   */
+  int id() const        { return _id;   }
+
+  // Ensures that a JVMCI shared library JavaVM exists for this runtime.
+  // If the JavaVM was created by this call, then the thread-local JNI
+  // interface pointer for the JavaVM is returned otherwise NULL is returned.
+  JNIEnv* init_shared_library_javavm();
+
+  // Determines if the JVMCI shared library JavaVM exists for this runtime.
+  bool has_shared_library_javavm() { return _shared_library_javavm != NULL; }
+
+  // Copies info about the JVMCI shared library JavaVM associated with this
+  // runtime into `info` as follows:
+  // {
+  //     javaVM, // the {@code JavaVM*} value
+  //     javaVM->functions->reserved0,
+  //     javaVM->functions->reserved1,
+  //     javaVM->functions->reserved2
+  // }
+  void init_JavaVM_info(jlongArray info, JVMCI_TRAPS);
+
+  // Wrappers for calling Invocation Interface functions on the
+  // JVMCI shared library JavaVM associated with this runtime.
+  // These wrappers ensure all required thread state transitions are performed.
+  jint AttachCurrentThread(JavaThread* thread, void **penv, void *args);
+  jint AttachCurrentThreadAsDaemon(JavaThread* thread, void **penv, void *args);
+  jint DetachCurrentThread(JavaThread* thread);
+  jint GetEnv(JavaThread* thread, void **penv, jint version);
+
+  // Compute offsets and construct any state required before executing JVMCI code.
   void initialize(JVMCIEnv* jvmciEnv);
 
-  /**
-   * Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
-   */
+  // Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
   void ensure_jvmci_class_loader_is_initialized(JVMCIEnv* jvmciEnv);
 
-  /**
-   * Gets the singleton HotSpotJVMCIRuntime instance, initializing it if necessary
-   */
+  // Gets the HotSpotJVMCIRuntime instance for this runtime,
+  // initializing it first if necessary.
   JVMCIObject get_HotSpotJVMCIRuntime(JVMCI_TRAPS);
 
   bool is_HotSpotJVMCIRuntime_initialized() {
     return _HotSpotJVMCIRuntime_instance.is_non_null();
   }
 
-  /**
-   * Trigger initialization of HotSpotJVMCIRuntime through JVMCI.getRuntime()
-   */
+  // Trigger initialization of HotSpotJVMCIRuntime through JVMCI.getRuntime()
   void initialize_JVMCI(JVMCI_TRAPS);
 
-  /**
-   * Explicitly initialize HotSpotJVMCIRuntime itself
-   */
+  // Explicitly initialize HotSpotJVMCIRuntime itself
   void initialize_HotSpotJVMCIRuntime(JVMCI_TRAPS);
 
   void call_getCompiler(TRAPS);
 
+  // Shuts down this runtime by calling HotSpotJVMCIRuntime.shutdown()
+  // and releasing the global handle to the HotSpotJVMCIRuntime instance.
   void shutdown();
-
-  bool shutdown_called() {
-    return _shutdown_called;
-  }
 
   void bootstrap_finished(TRAPS);
 
@@ -236,9 +262,7 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
                        char*                     speculations,
                        int                       speculations_len);
 
-  /**
-   * Exits the VM due to an unexpected exception.
-   */
+  // Exits the VM due to an unexpected exception.
   static void exit_on_pending_exception(JVMCIEnv* JVMCIENV, const char* message);
 
   static void describe_pending_hotspot_exception(JavaThread* THREAD, bool clear);
@@ -340,6 +364,11 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
 
   // Test only function
   static int test_deoptimize_call_int(JavaThread* thread, int value);
+
+  // Emits the following on tty:
+  //   "JVMCITrace-" <level> "[" <current thread name> "]:" <padding of width `level`>
+  // Returns true.
+  static bool trace_prefix(int level);
 };
 
 // Tracing macros.
@@ -350,10 +379,11 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
 #define IF_TRACE_jvmci_4 if (!(JVMCITraceLevel >= 4)) ; else
 #define IF_TRACE_jvmci_5 if (!(JVMCITraceLevel >= 5)) ; else
 
-#define TRACE_jvmci_1 if (!(JVMCITraceLevel >= 1 && (tty->print(PTR_FORMAT " JVMCITrace-1: ", p2i(JavaThread::current())), true))) ; else tty->print_cr
-#define TRACE_jvmci_2 if (!(JVMCITraceLevel >= 2 && (tty->print(PTR_FORMAT "    JVMCITrace-2: ", p2i(JavaThread::current())), true))) ; else tty->print_cr
-#define TRACE_jvmci_3 if (!(JVMCITraceLevel >= 3 && (tty->print(PTR_FORMAT "       JVMCITrace-3: ", p2i(JavaThread::current())), true))) ; else tty->print_cr
-#define TRACE_jvmci_4 if (!(JVMCITraceLevel >= 4 && (tty->print(PTR_FORMAT "          JVMCITrace-4: ", p2i(JavaThread::current())), true))) ; else tty->print_cr
-#define TRACE_jvmci_5 if (!(JVMCITraceLevel >= 5 && (tty->print(PTR_FORMAT "             JVMCITrace-5: ", p2i(JavaThread::current())), true))) ; else tty->print_cr
+#define TRACE_jvmci_(n) if (!(JVMCITraceLevel >= n && JVMCIRuntime::trace_prefix(n))) ; else tty->print_cr
+#define TRACE_jvmci_1 TRACE_jvmci_(1)
+#define TRACE_jvmci_2 TRACE_jvmci_(2)
+#define TRACE_jvmci_3 TRACE_jvmci_(3)
+#define TRACE_jvmci_4 TRACE_jvmci_(4)
+#define TRACE_jvmci_5 TRACE_jvmci_(5)
 
 #endif // SHARE_VM_JVMCI_JVMCI_RUNTIME_HPP
