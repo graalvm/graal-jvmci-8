@@ -244,7 +244,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         private final Class<?> type;
         @NativeImageReinitialize private Object value;
         private final Object defaultValue;
-        private boolean isDefault;
+        private boolean isDefault = true;
         private final String[] helpLines;
 
         Option(Class<?> type, Object defaultValue, String... helpLines) {
@@ -256,7 +256,6 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
             assert existing == null : getPropertyName();
         }
 
-        @SuppressFBWarnings(value = "ES_COMPARING_STRINGS_WITH_EQ", justification = "sentinel must be String since it's a static final in an enum")
         private void init(String propertyValue) {
             assert value == null : "cannot re-initialize " + name();
             if (propertyValue == null) {
