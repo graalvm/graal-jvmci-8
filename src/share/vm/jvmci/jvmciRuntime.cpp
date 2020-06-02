@@ -907,11 +907,6 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
     return;
   }
 
-  if (JVMCI::in_shutdown()) {
-    TRACE_jvmci_1("in JVMCI shutdown - abort initializing JVMCI runtime %d", _id);
-    return;
-  }
-
   while (_init_state == being_initialized) {
     TRACE_jvmci_1("waiting for initialization of JVMCI runtime %d", _id);
     JVMCI_lock->wait();
