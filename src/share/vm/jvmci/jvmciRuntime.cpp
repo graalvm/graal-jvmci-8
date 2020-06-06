@@ -26,6 +26,7 @@
 #include "jvmci/jniAccessMark.inline.hpp"
 #include "jvmci/jvmciCompilerToVM.hpp"
 #include "jvmci/jvmciRuntime.hpp"
+#include "jvmci/metadataHandles.hpp"
 #include "memory/oopFactory.hpp"
 #include "oops/constantPool.hpp"
 #include "oops/oop.inline.hpp"
@@ -785,7 +786,34 @@ JVMCIRuntime::JVMCIRuntime(int id) {
   _init_state = uninitialized;
   _shared_library_javavm = NULL;
   _id = id;
+  _object_handles = JNIHandleBlock::allocate_block();
+  _metadata_handles = new MetadataHandles();
   TRACE_jvmci_1("created new JVMCI runtime %d (" PTR_FORMAT ")", id, p2i(this));
+}
+
+jobject JVMCIRuntime::make_global(const Handle& obj) {
+  MutexLocker ml(JVMCI_lock);
+  return _object_handles->allocate_handle(obj());
+}
+
+bool JVMCIRuntime::is_global_handle(jobject handle) {
+  MutexLocker ml(JVMCI_lock);
+  return _object_handles->chain_contains(handle);
+}
+
+jmetadata JVMCIRuntime::allocate_handle(const methodHandle& handle) {
+  MutexLocker ml(JVMCI_lock);
+  return _metadata_handles->allocate_handle(handle);
+}
+
+jmetadata JVMCIRuntime::allocate_handle(const constantPoolHandle& handle) {
+  MutexLocker ml(JVMCI_lock);
+  return _metadata_handles->allocate_handle(handle);
+}
+
+void JVMCIRuntime::release_handle(jmetadata handle) {
+  MutexLocker ml(JVMCI_lock);
+  _metadata_handles->chain_free_list(handle);
 }
 
 JNIEnv* JVMCIRuntime::init_shared_library_javavm() {
@@ -1075,6 +1103,13 @@ void JVMCIRuntime::shutdown() {
     JVMCIEnv __stack_jvmci_env__(JavaThread::current(), instance.is_hotspot(), __FILE__, __LINE__);
     JVMCIEnv* JVMCIENV = &__stack_jvmci_env__;
     JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(instance);
+    if (!instance.is_hotspot()) {
+      // Need to keep the HotSpot based instance alive for the sake of
+      // JVMCICompiler::force_comp_at_level_simple which can race with
+      // shutting down the JVMCI runtime.
+      JVMCIENV->destroy_global(instance);
+    }
+    TRACE_jvmci_1("shut down JVMCI runtime %d", _id);
   }
 }
 

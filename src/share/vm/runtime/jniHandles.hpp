@@ -150,7 +150,7 @@ class JNIHandleBlock : public CHeapObj<mtInternal> {
   void zap();
 
  protected:
-  // No more handles in the both the current and following blocks
+  // No more handles in both the current and following blocks
   void clear() { _top = 0; }
 
  private:

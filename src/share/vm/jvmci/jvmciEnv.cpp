@@ -954,18 +954,6 @@ JVMCIObject JVMCIEnv::make_global(JVMCIObject object) {
   }
 }
 
-JVMCIObject JVMCIEnv::make_weak(JVMCIObject object) {
-  if (object.is_null()) {
-    return JVMCIObject();
-  }
-  if (is_hotspot()) {
-    return wrap(JNIHandles::make_weak_global(HotSpotJVMCI::resolve(object)));
-  } else {
-    JNIAccessMark jni(this);
-    return wrap(jni()->NewWeakGlobalRef(object.as_jobject()));
-  }
-}
-
 void JVMCIEnv::destroy_local(JVMCIObject object) {
   if (is_hotspot()) {
     JNIHandles::destroy_local(object.as_jobject());
@@ -981,15 +969,6 @@ void JVMCIEnv::destroy_global(JVMCIObject object) {
   } else {
     JNIAccessMark jni(this);
     jni()->DeleteGlobalRef(object.as_jobject());
-  }
-}
-
-void JVMCIEnv::destroy_weak(JVMCIObject object) {
-  if (is_hotspot()) {
-    JNIHandles::destroy_weak_global(object.as_jweak());
-  } else {
-    JNIAccessMark jni(this);
-    jni()->DeleteWeakGlobalRef(object.as_jweak());
   }
 }
 
@@ -1015,7 +994,7 @@ JVMCIObject JVMCIEnv::get_jvmci_method(const methodHandle& method, JVMCI_TRAPS) 
   }
 
   Thread* THREAD = Thread::current();
-  jmetadata handle = JVMCI::allocate_handle(method);
+  jmetadata handle = _runtime->allocate_handle(method);
   jboolean exception = false;
   if (is_hotspot()) {
     JavaValue result(T_OBJECT);
@@ -1038,13 +1017,13 @@ JVMCIObject JVMCIEnv::get_jvmci_method(const methodHandle& method, JVMCI_TRAPS) 
   }
 
   if (exception) {
-    JVMCI::release_handle(handle);
+    _runtime->release_handle(handle);
     return JVMCIObject();
   }
 
   assert(asMethod(method_object) == method(), "must be");
   if (get_HotSpotResolvedJavaMethodImpl_metadataHandle(method_object) != (jlong) handle) {
-    JVMCI::release_handle(handle);
+    _runtime->release_handle(handle);
   }
   assert(!method_object.is_null(), "must be");
   return method_object;
@@ -1095,7 +1074,7 @@ JVMCIObject JVMCIEnv::get_jvmci_type(const JVMCIKlassHandle& klass, JVMCI_TRAPS)
 
 JVMCIObject JVMCIEnv::get_jvmci_constant_pool(const constantPoolHandle& cp, JVMCI_TRAPS) {
   JVMCIObject cp_object;
-  jmetadata handle = JVMCI::allocate_handle(cp);
+  jmetadata handle = _runtime->allocate_handle(cp);
   jboolean exception = false;
   JavaThread* THREAD = JavaThread::current();
   if (is_hotspot()) {
@@ -1120,7 +1099,7 @@ JVMCIObject JVMCIEnv::get_jvmci_constant_pool(const constantPoolHandle& cp, JVMC
   }
 
   if (exception) {
-    JVMCI::release_handle(handle);
+    _runtime->release_handle(handle);
     return JVMCIObject();
   }
 
@@ -1322,7 +1301,7 @@ JVMCIObject JVMCIEnv::wrap(jobject object) {
 
 jlong JVMCIEnv::make_handle(const Handle& obj) {
   assert(!obj.is_null(), "should only create handle for non-NULL oops");
-  jobject handle = JVMCI::make_global(obj);
+  jobject handle = _runtime->make_global(obj);
   return (jlong) handle;
 }
 

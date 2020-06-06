@@ -374,10 +374,8 @@ public:
   // These are analagous to the JNI routines
   JVMCIObject make_local(JVMCIObject object);
   JVMCIObject make_global(JVMCIObject object);
-  JVMCIObject make_weak(JVMCIObject object);
   void destroy_local(JVMCIObject object);
   void destroy_global(JVMCIObject object);
-  void destroy_weak(JVMCIObject object);
 
   // Deoptimizes the nmethod (if any) in the HotSpotNmethod.address
   // field of mirror. The field is subsequently zeroed.

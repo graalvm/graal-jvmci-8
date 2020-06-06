@@ -32,6 +32,7 @@
 class JVMCIEnv;
 class JVMCICompiler;
 class JVMCICompileState;
+class MetadataHandles;
 
 // Encapsulates the JVMCI metadata for an nmethod.
 // JVMCINMethodData objects are inlined into nmethods
@@ -120,6 +121,12 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   // JVMCI shared library runtime will have an id of 0.
   int _id;
 
+  // Handles to objects in the HotSpot heap.
+  JNIHandleBlock* _object_handles;
+
+  // Handles to Metadata objects.
+  MetadataHandles* _metadata_handles;
+
   JVMCIObject create_jvmci_primitive_type(BasicType type, JVMCI_TRAPS);
 
   // Implementation methods for loading and constant pool access.
@@ -182,12 +189,27 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   // Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
   void ensure_jvmci_class_loader_is_initialized(JVMCIEnv* jvmciEnv);
 
+  // Allocation and management of JNI global object handles.
+  jobject make_global(const Handle& obj);
+  bool is_global_handle(jobject handle);
+
+  // Allocation and management of matadata handles.
+  jmetadata allocate_handle(const methodHandle& handle);
+  jmetadata allocate_handle(const constantPoolHandle& handle);
+  void release_handle(jmetadata handle);
+
   // Gets the HotSpotJVMCIRuntime instance for this runtime,
   // initializing it first if necessary.
   JVMCIObject get_HotSpotJVMCIRuntime(JVMCI_TRAPS);
 
   bool is_HotSpotJVMCIRuntime_initialized() {
     return _HotSpotJVMCIRuntime_instance.is_non_null();
+  }
+
+  // Gets the current HotSpotJVMCIRuntime instance for this runtime which
+  // may be a "null" JVMCIObject value.
+  JVMCIObject probe_HotSpotJVMCIRuntime() {
+    return _HotSpotJVMCIRuntime_instance;
   }
 
   // Trigger initialization of HotSpotJVMCIRuntime through JVMCI.getRuntime()
