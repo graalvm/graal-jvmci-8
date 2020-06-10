@@ -121,12 +121,15 @@ bool JVMCICompiler::force_comp_at_level_simple(Method* method) {
     return false;
   } else {
     JVMCIRuntime* runtime = JVMCI::java_runtime();
-    if (runtime != NULL && runtime->is_HotSpotJVMCIRuntime_initialized()) {
+    if (runtime != NULL) {
+      JVMCIObject receiver = runtime->probe_HotSpotJVMCIRuntime();
+      if (receiver.is_null()) {
+        return false;
+      }
       Handle class_loader = method->method_holder()->class_loader_data()->class_loader();
       if (!class_loader.is_null()) {
-        THREAD_JVMCIENV(JavaThread::current());
-        JVMCIObject receiver = runtime->get_HotSpotJVMCIRuntime(JVMCIENV);
-        objArrayOop loaders = HotSpotJVMCI::HotSpotJVMCIRuntime::excludeFromJVMCICompilation(JVMCIENV, HotSpotJVMCI::resolve(receiver));
+        JVMCIEnv* ignored_env = NULL;
+        objArrayOop loaders = HotSpotJVMCI::HotSpotJVMCIRuntime::excludeFromJVMCICompilation(ignored_env, HotSpotJVMCI::resolve(receiver));
         if (loaders != NULL) {
           for (int i = 0; i < loaders->length(); i++) {
             if (loaders->obj_at(i) == class_loader()) {

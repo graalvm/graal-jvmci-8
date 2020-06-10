@@ -33,7 +33,6 @@ class JNIHandleBlock;
 class JVMCIEnv;
 class JVMCIRuntime;
 class Metadata;
-class MetadataHandleBlock;
 class OopClosure;
 
 
@@ -45,12 +44,6 @@ class JVMCI : public AllStatic {
   friend class JVMCIEnv;
 
  private:
-  // Handles to objects in the HotSpot heap.
-  static JNIHandleBlock* _object_handles;
-
-  // Handles to Metadata objects.
-  static MetadataHandleBlock* _metadata_handles;
-
   // Access to the HotSpotJVMCIRuntime used by the CompileBroker.
   static JVMCIRuntime* _compiler_runtime;
 
@@ -102,14 +95,6 @@ class JVMCI : public AllStatic {
   static void initialize_globals();
 
   static void initialize_compiler(TRAPS);
-
-  static jobject make_global(const Handle& obj);
-  static bool is_global_handle(jobject handle);
-
-  static jmetadata allocate_handle(const methodHandle& handle);
-  static jmetadata allocate_handle(const constantPoolHandle& handle);
-
-  static void release_handle(jmetadata handle);
 
   static JVMCIRuntime* compiler_runtime() { return _compiler_runtime; }
   // Gets the single runtime for JVMCI on the Java heap. This is the only

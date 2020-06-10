@@ -28,13 +28,11 @@
 #include "jvmci/jvmci_globals.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciRuntime.hpp"
-#include "jvmci/metadataHandleBlock.hpp"
+#include "jvmci/metadataHandles.hpp"
 #ifdef INCLUDE_ALL_GCS
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #endif
 
-JNIHandleBlock* JVMCI::_object_handles = NULL;
-MetadataHandleBlock* JVMCI::_metadata_handles = NULL;
 JVMCIRuntime* JVMCI::_compiler_runtime = NULL;
 JVMCIRuntime* JVMCI::_java_runtime = NULL;
 volatile bool JVMCI::_is_initialized = false;
@@ -86,8 +84,6 @@ void JVMCI::initialize_compiler(TRAPS) {
 }
 
 void JVMCI::initialize_globals() {
-  _object_handles = JNIHandleBlock::allocate_block();
-  _metadata_handles = MetadataHandleBlock::allocate_block();
   if (UseJVMCINativeLibrary) {
     // There are two runtimes.
     _compiler_runtime = new JVMCIRuntime(0);
@@ -96,35 +92,6 @@ void JVMCI::initialize_globals() {
     // There is only a single runtime
     _java_runtime = _compiler_runtime = new JVMCIRuntime(0);
   }
-}
-
-jobject JVMCI::make_global(const Handle& obj) {
-  assert(_object_handles != NULL, "uninitialized");
-  MutexLocker ml(JVMCI_lock);
-  return _object_handles->allocate_handle(obj());
-}
-
-bool JVMCI::is_global_handle(jobject handle) {
-  assert(_object_handles != NULL, "uninitialized");
-  MutexLocker ml(JVMCI_lock);
-  return _object_handles->chain_contains(handle);
-}
-
-jmetadata JVMCI::allocate_handle(const methodHandle& handle) {
-  assert(_metadata_handles != NULL, "uninitialized");
-  MutexLocker ml(JVMCI_lock);
-  return _metadata_handles->allocate_handle(handle);
-}
-
-jmetadata JVMCI::allocate_handle(const constantPoolHandle& handle) {
-  assert(_metadata_handles != NULL, "uninitialized");
-  MutexLocker ml(JVMCI_lock);
-  return _metadata_handles->allocate_handle(handle);
-}
-
-void JVMCI::release_handle(jmetadata handle) {
-  MutexLocker ml(JVMCI_lock);
-  _metadata_handles->chain_free_list(handle);
 }
 
 #ifdef INCLUDE_ALL_GCS
@@ -137,20 +104,31 @@ oop JVMCI::ensure_oop_alive(oop obj) {
 #endif // INCLUDE_ALL_GCS
 
 void JVMCI::oops_do(OopClosure* f) {
-  if (_object_handles != NULL) {
-    _object_handles->oops_do(f);
+  if (_java_runtime != NULL) {
+    _java_runtime->_object_handles->oops_do(f);
+  }
+  if (_compiler_runtime != NULL && _compiler_runtime != _java_runtime) {
+    _compiler_runtime->_object_handles->oops_do(f);
   }
 }
 
 void JVMCI::metadata_do(void f(Metadata*)) {
-  if (_metadata_handles != NULL) {
-    _metadata_handles->metadata_do(f);
+  if (_java_runtime != NULL) {
+    _java_runtime->_metadata_handles->metadata_do(f);
+  }
+  if (_compiler_runtime != NULL && _compiler_runtime != _java_runtime) {
+    _compiler_runtime->_metadata_handles->metadata_do(f);
   }
 }
 
 void JVMCI::do_unloading(bool unloading_occurred) {
-  if (_metadata_handles != NULL && unloading_occurred) {
-    _metadata_handles->do_unloading();
+  if (unloading_occurred) {
+    if (_java_runtime != NULL) {
+      _java_runtime->_metadata_handles->do_unloading();
+    }
+    if (_compiler_runtime != NULL && _compiler_runtime != _java_runtime) {
+      _compiler_runtime->_metadata_handles->do_unloading();
+    }
   }
 }
 
