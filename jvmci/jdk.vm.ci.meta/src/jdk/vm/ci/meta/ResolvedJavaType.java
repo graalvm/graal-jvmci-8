@@ -108,6 +108,16 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
     boolean isLinked();
 
     /**
+     * Links this type. If the method returns with an exception, then future calls of
+     * {@link #isLinked} will return true and future calls of {@link #link} are no-ops. If the
+     * method throws an exception, then future calls of {@link #isLinked} will return false and
+     * future calls of {@link #link} will throw the same exception again.
+     */
+    default void link() {
+        throw new UnsupportedOperationException("link is unsupported");
+    }
+
+    /**
      * Determines if this type is either the same as, or is a superclass or superinterface of, the
      * type represented by the specified parameter. This method is identical to
      * {@link Class#isAssignableFrom(Class)} in terms of the value return for this type.

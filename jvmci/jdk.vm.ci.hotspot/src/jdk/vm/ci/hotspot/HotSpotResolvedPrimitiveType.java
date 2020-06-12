@@ -251,6 +251,10 @@ public final class HotSpotResolvedPrimitiveType extends HotSpotResolvedJavaType 
     }
 
     @Override
+    public void link() {
+    }
+
+    @Override
     public ResolvedJavaField findInstanceFieldWithOffset(long offset, JavaKind expectedType) {
         return null;
     }

@@ -369,6 +369,13 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return isArray() ? true : getInitState() >= config().instanceKlassStateLinked;
     }
 
+    @Override
+    public void link() {
+        if (!isLinked()) {
+            runtime().compilerToVm.ensureLinked(this);
+        }
+    }
+
     /**
      * Returns the value of the state field {@code InstanceKlass::_init_state} of the metaspace
      * klass.
