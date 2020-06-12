@@ -118,6 +118,20 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
     }
 
     /**
+     * Checks whether this type or any of its supertypes or superinterfaces has default methods.
+     */
+    default boolean hasDefaultMethods() {
+        throw new UnsupportedOperationException("hasDefaultMethods is unsupported");
+    }
+
+    /**
+     * Checks whether this type declares defaults methods.
+     */
+    default boolean declaresDefaultMethods() {
+        throw new UnsupportedOperationException("declaresDefaultMethods is unsupported");
+    }
+
+    /**
      * Determines if this type is either the same as, or is a superclass or superinterface of, the
      * type represented by the specified parameter. This method is identical to
      * {@link Class#isAssignableFrom(Class)} in terms of the value return for this type.

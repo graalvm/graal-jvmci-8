@@ -317,6 +317,56 @@ public class TestResolvedJavaType extends TypeUniverse {
         }
     }
 
+    @Test
+    public void linkTest() {
+        for (Class<?> c : classes) {
+            ResolvedJavaType type = metaAccess.lookupJavaType(c);
+            type.link();
+        }
+    }
+
+    @Test
+    public void hasDefaultMethodsTest() {
+        for (Class<?> c : classes) {
+            ResolvedJavaType type = metaAccess.lookupJavaType(c);
+            assertEquals(hasDefaultMethods(type), type.hasDefaultMethods());
+        }
+    }
+
+    @Test
+    public void declaresDefaultMethodsTest() {
+        for (Class<?> c : classes) {
+            ResolvedJavaType type = metaAccess.lookupJavaType(c);
+            assertEquals(declaresDefaultMethods(type), type.declaresDefaultMethods());
+        }
+    }
+
+    private static boolean hasDefaultMethods(ResolvedJavaType type) {
+        if (!type.isInterface() && type.getSuperclass() != null && hasDefaultMethods(type.getSuperclass())) {
+            return true;
+        }
+        for (ResolvedJavaType iface : type.getInterfaces()) {
+            if (hasDefaultMethods(iface)) {
+                return true;
+            }
+        }
+        return declaresDefaultMethods(type);
+    }
+
+    static boolean declaresDefaultMethods(ResolvedJavaType type) {
+        if (!type.isInterface()) {
+            /* Only interfaces can declare default methods. */
+            return false;
+        }
+        for (ResolvedJavaMethod method : type.getDeclaredMethods()) {
+            if (method.isDefault()) {
+                assert !Modifier.isStatic(method.getModifiers()) : "Default method that is static?";
+                return true;
+            }
+        }
+        return false;
+    }
+
     private static class Base {
     }
 

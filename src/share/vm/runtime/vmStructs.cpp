@@ -314,6 +314,7 @@ typedef TwoOopHashtable<Symbol*, mtClass>     SymbolTwoOopHashtable;
   nonstatic_field(InstanceKlass,               _static_oop_field_count,                       u2)                                   \
   nonstatic_field(InstanceKlass,               _nonstatic_oop_map_size,                       int)                                   \
   nonstatic_field(InstanceKlass,               _is_marked_dependent,                          bool)                                  \
+  nonstatic_field(InstanceKlass,               _misc_flags,                                   u2)                                    \
   nonstatic_field(InstanceKlass,               _minor_version,                                u2)                                    \
   nonstatic_field(InstanceKlass,               _major_version,                                u2)                                    \
   nonstatic_field(InstanceKlass,               _init_state,                                   u1)                                    \
@@ -2510,6 +2511,13 @@ typedef TwoOopHashtable<Symbol*, mtClass>     SymbolTwoOopHashtable;
   declare_constant(InstanceKlass::being_initialized)                      \
   declare_constant(InstanceKlass::fully_initialized)                      \
   declare_constant(InstanceKlass::initialization_error)                   \
+                                                                          \
+  /*********************************/                                     \
+  /* InstanceKlass _misc_flags */                                         \
+  /*********************************/                                     \
+                                                                          \
+  declare_constant(InstanceKlass::_misc_has_default_methods)              \
+  declare_constant(InstanceKlass::_misc_declares_default_methods)         \
                                                                           \
   /*********************************/                                     \
   /* Symbol* - symbol max length */                                       \
