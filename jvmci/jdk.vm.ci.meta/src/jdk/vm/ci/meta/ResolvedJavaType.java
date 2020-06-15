@@ -334,13 +334,15 @@ public interface ResolvedJavaType extends JavaType, ModifiersProvider, Annotated
 
     /**
      * Returns an array reflecting all the constructors declared by this type. This method is
-     * similar to {@link Class#getDeclaredConstructors()} in terms of returned constructors.
+     * similar to {@link Class#getDeclaredConstructors()} in terms of returned constructors. Calling
+     * this method forces this type to be {@link #link linked}.
      */
     ResolvedJavaMethod[] getDeclaredConstructors();
 
     /**
      * Returns an array reflecting all the methods declared by this type. This method is similar to
-     * {@link Class#getDeclaredMethods()} in terms of returned methods.
+     * {@link Class#getDeclaredMethods()} in terms of returned methods. Calling this method forces
+     * this type to be {@link #link linked}.
      */
     ResolvedJavaMethod[] getDeclaredMethods();
 
