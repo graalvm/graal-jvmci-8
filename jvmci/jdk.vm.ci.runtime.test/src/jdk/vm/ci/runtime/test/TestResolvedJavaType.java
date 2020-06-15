@@ -44,6 +44,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -57,6 +60,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import jdk.vm.ci.common.JVMCIError;
@@ -322,6 +326,61 @@ public class TestResolvedJavaType extends TypeUniverse {
         for (Class<?> c : classes) {
             ResolvedJavaType type = metaAccess.lookupJavaType(c);
             type.link();
+        }
+    }
+
+    private class HidingCLassLoader extends ClassLoader {
+        @Override
+        protected Class<?> findClass(final String name) throws ClassNotFoundException {
+            if (name.endsWith("MissingInterface")) {
+                throw new ClassNotFoundException("missing");
+            }
+            byte[] classData = null;
+            try {
+                InputStream is = HidingCLassLoader.class.getResourceAsStream("/" + name.replace('.', '/') + ".class");
+                classData = new byte[is.available()];
+                new DataInputStream(is).readFully(classData);
+            } catch (IOException e) {
+                Assert.fail("can't access class: " + name);
+            }
+
+            return defineClass(null, classData, 0, classData.length);
+        }
+
+        ResolvedJavaType lookupJavaType(String name) throws ClassNotFoundException {
+            return metaAccess.lookupJavaType(loadClass(name));
+        }
+
+        HidingCLassLoader() {
+            super(null);
+        }
+
+    }
+
+    interface MissingInterface {
+    }
+
+    static class MissingInterfaceImpl implements MissingInterface {
+    }
+
+    interface SomeInterface {
+        default MissingInterface someMethod() {
+            return new MissingInterfaceImpl();
+        }
+    }
+
+    static class Wrapper implements SomeInterface {
+    }
+
+    @Test
+    public void linkExceptionTest() throws ClassNotFoundException {
+        HidingCLassLoader cl = new HidingCLassLoader();
+        ResolvedJavaType inner = cl.lookupJavaType(Wrapper.class.getName());
+        assertTrue("expected default methods", inner.hasDefaultMethods());
+        try {
+            inner.link();
+            assertFalse("link should throw an exception", true);
+        } catch (NoClassDefFoundError e) {
         }
     }
 
