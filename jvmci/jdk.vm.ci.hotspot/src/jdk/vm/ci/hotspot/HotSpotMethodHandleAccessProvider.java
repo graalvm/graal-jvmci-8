@@ -55,6 +55,7 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
         final ResolvedJavaField lambdaFormVmentryField;
         final HotSpotResolvedJavaField memberNameVmtargetField;
         final HotSpotResolvedJavaField callSiteTargetField;
+        final HotSpotResolvedJavaField constantCallSiteFrozenField;
 
         /**
          * Search for an instance field with the given name in a class.
@@ -89,6 +90,9 @@ public class HotSpotMethodHandleAccessProvider implements MethodHandleAccessProv
                 memberNameVmtargetField = (HotSpotResolvedJavaField) findFieldInClass(memberNameType, "vmtarget", resolveType("J"));
                 ResolvedJavaType callSiteType = resolveType("Ljava/lang/invoke/CallSite;");
                 callSiteTargetField = (HotSpotResolvedJavaField) findFieldInClass(callSiteType, "target", methodHandleType);
+                ResolvedJavaType constantCallSiteType = resolveType("Ljava/lang/invoke/ConstantCallSite;");
+                ResolvedJavaType booleanType = resolveType("Z");
+                constantCallSiteFrozenField = (HotSpotResolvedJavaField) findFieldInClass(constantCallSiteType, "isFrozen", booleanType);
             } catch (Throwable ex) {
                 throw new JVMCIError(ex);
             }

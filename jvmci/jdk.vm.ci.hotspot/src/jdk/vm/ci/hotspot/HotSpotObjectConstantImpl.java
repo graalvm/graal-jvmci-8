@@ -65,18 +65,35 @@ abstract class HotSpotObjectConstantImpl implements HotSpotObjectConstant {
     @Override
     public abstract int getIdentityHashCode();
 
+    private boolean isFullyInitializedConstantCallSite() {
+        if (!runtime().getConstantCallSite().isInstance(this)) {
+            return false;
+        }
+        // read ConstantCallSite.isFrozen as a volatile field
+        HotSpotResolvedJavaField field = HotSpotMethodHandleAccessProvider.Internals.instance().constantCallSiteFrozenField;
+        boolean isFrozen = readFieldValue(field, true).asBoolean();
+        // isFrozen true implies fully-initialized
+        return isFrozen;
+    }
+
+    private HotSpotObjectConstantImpl readTarget() {
+        // read CallSite.target as a volatile field
+        HotSpotResolvedJavaField field = HotSpotMethodHandleAccessProvider.Internals.instance().callSiteTargetField;
+        return (HotSpotObjectConstantImpl) readFieldValue(field, true);
+    }
+
     @Override
     public JavaConstant getCallSiteTarget(Assumptions assumptions) {
         if (runtime().getCallSite().isInstance(this)) {
-            HotSpotObjectConstantImpl target = (HotSpotObjectConstantImpl) runtime().getHostJVMCIBackend().getConstantReflection().readFieldValue(
-                            HotSpotMethodHandleAccessProvider.Internals.instance().callSiteTargetField, this);
-            if (!runtime().getConstantCallSite().isInstance(this)) {
+            // For ConstantCallSites, we need to read "isFrozen" before reading "target"
+            // isFullyInitializedConstantCallSite() reads "isFrozen"
+            if (!isFullyInitializedConstantCallSite()) {
                 if (assumptions == null) {
                     return null;
                 }
-                assumptions.record(new Assumptions.CallSiteTargetValue(this, target));
+                assumptions.record(new Assumptions.CallSiteTargetValue(this, readTarget()));
             }
-            return target;
+            return readTarget();
         }
         return null;
     }
