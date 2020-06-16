@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011, 2019, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2011, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -175,6 +175,7 @@
   end_class                                                                                                   \
   start_class(site_Call, jdk_vm_ci_code_site_Call)                                                            \
     object_field(site_Call, target, "Ljdk/vm/ci/meta/InvokeTarget;")                                          \
+    boolean_field(site_Call, direct)                                                                          \
   end_class                                                                                                   \
   start_class(site_DataPatch, jdk_vm_ci_code_site_DataPatch)                                                  \
     object_field(site_DataPatch, reference, "Ljdk/vm/ci/code/site/Reference;")                                \
@@ -511,11 +512,11 @@ class HotSpotJVMCI {
  public:
 
   static oop resolve(JVMCIObject obj);
-  
+
   static arrayOop resolve(JVMCIArray obj);
   static objArrayOop resolve(JVMCIObjectArray obj);
   static typeArrayOop resolve(JVMCIPrimitiveArray obj);
-  
+
   static JVMCIObject wrap(jobject obj) { return JVMCIObject(obj, true); }
   static JVMCIObject wrap(oop obj);
 

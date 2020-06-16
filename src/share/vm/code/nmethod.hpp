@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2017, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved.
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -667,7 +667,7 @@ public:
   // Records the pending failed speculation in the
   // JVMCI speculation log associated with this nmethod.
   void update_speculation(JavaThread* thread);
-  
+
   // Gets the data specific to a JVMCI compiled method.
   // This returns a non-NULL value iff this nmethod was
   // compiled by the JVMCI compiler.
@@ -736,7 +736,7 @@ public:
   // Return true is the PC is one would expect if the frame is being deopted.
   bool is_deopt_pc      (address pc) { return is_deopt_entry(pc) || is_deopt_mh_entry(pc); }
   bool is_deopt_entry(address pc);
-  bool is_deopt_mh_entry(address pc) { return pc == deopt_mh_handler_begin(); }
+  bool is_deopt_mh_entry(address pc);
   // Accessor/mutator for the original pc of a frame before a frame was deopted.
   address get_original_pc(const frame* fr) { return *orig_pc_addr(fr); }
   void    set_original_pc(const frame* fr, address pc) { *orig_pc_addr(fr) = pc; }
