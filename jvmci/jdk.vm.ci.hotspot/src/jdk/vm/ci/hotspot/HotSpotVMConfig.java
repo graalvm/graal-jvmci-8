@@ -96,7 +96,7 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int vtableEntryMethodOffset = getFieldOffset("vtableEntry::_method", Integer.class, "Method*");
 
     final int instanceKlassSourceFileNameIndexOffset = getFieldOffset("InstanceKlass::_source_file_name_index", Integer.class, "u2");
-    final int klassMiscFlagsOffset = getFieldOffset("InstanceKlass::_misc_flags", Integer.class, "u2");
+    final int instanceKlassMiscFlagsOffset = getFieldOffset("InstanceKlass::_misc_flags", Integer.class, "u2");
     final int instanceKlassInitStateOffset = getFieldOffset("InstanceKlass::_init_state", Integer.class, "u1");
     final int instanceKlassConstantsOffset = getFieldOffset("InstanceKlass::_constants", Integer.class, "ConstantPool*");
     final int instanceKlassFieldsOffset = getFieldOffset("InstanceKlass::_fields", Integer.class, "Array<u2>*");
