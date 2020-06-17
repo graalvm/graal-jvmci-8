@@ -379,14 +379,14 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
     @Override
     public boolean hasDefaultMethods() {
         HotSpotVMConfig config = config();
-        int miscFlags = UNSAFE.getInt(getMetaspaceKlass() + config.instanceKlassMiscFlagsOffset);
+        int miscFlags = UNSAFE.getChar(getMetaspaceKlass() + config.instanceKlassMiscFlagsOffset);
         return (miscFlags & config.jvmMiscFlagsHasDefaultMethods) != 0;
     }
 
     @Override
     public boolean declaresDefaultMethods() {
         HotSpotVMConfig config = config();
-        int miscFlags = UNSAFE.getInt(getMetaspaceKlass() + config.instanceKlassMiscFlagsOffset);
+        int miscFlags = UNSAFE.getChar(getMetaspaceKlass() + config.instanceKlassMiscFlagsOffset);
         return (miscFlags & config.jvmMiscFlagsDeclaresDefaultMethods) != 0;
     }
 
