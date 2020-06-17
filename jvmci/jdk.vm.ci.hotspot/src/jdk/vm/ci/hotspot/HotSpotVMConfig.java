@@ -100,6 +100,7 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int instanceKlassConstantsOffset = getFieldOffset("InstanceKlass::_constants", Integer.class, "ConstantPool*");
     final int instanceKlassFieldsOffset = getFieldOffset("InstanceKlass::_fields", Integer.class, "Array<u2>*");
     final int instanceKlassAnnotationsOffset = getFieldOffset("InstanceKlass::_annotations", Integer.class, "Annotations*");
+    final int instanceKlassMiscFlagsOffset = getFieldOffset("InstanceKlass::_misc_flags", Integer.class, "u2");
     final int klassVtableStartOffset = getFieldValue("CompilerToVM::Data::Klass_vtable_start_offset", Integer.class, "int");
     final int klassVtableLengthOffset = getFieldValue("CompilerToVM::Data::Klass_vtable_length_offset", Integer.class, "int");
 
@@ -136,6 +137,9 @@ class HotSpotVMConfig extends HotSpotVMConfigAccess {
     final int jvmAccVarargs = getConstant("JVM_ACC_VARARGS", Integer.class);
     final int jvmAccEnum = getConstant("JVM_ACC_ENUM", Integer.class);
     final int jvmAccInterface = getConstant("JVM_ACC_INTERFACE", Integer.class);
+
+    final int jvmMiscFlagsHasDefaultMethods = getConstant("InstanceKlass::_misc_has_default_methods", Integer.class);
+    final int jvmMiscFlagsDeclaresDefaultMethods = getConstant("InstanceKlass::_misc_declares_default_methods", Integer.class);
 
     // This is only valid on AMD64.
     final int runtimeCallStackSize = getConstant("frame::arg_reg_save_area_bytes", Integer.class, osArch.equals("amd64") ? null : 0);
