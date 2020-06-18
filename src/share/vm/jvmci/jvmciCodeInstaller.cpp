@@ -1234,10 +1234,11 @@ void CodeInstaller::site_Call(CodeBuffer& buffer, jint pc_offset, JVMCIObject si
     if (hotspot_method.is_non_null()) {
       Method *method = jvmci_env()->asMethod(hotspot_method);
       vmIntrinsics::ID iid = method->intrinsic_id();
-      bool is_direct = (bool) jvmci_env()->get_site_Call_direct(site);
-      bool is_static = method->is_static();
-      bool is_mh_invoke = is_direct && !is_static && (iid == vmIntrinsics::_compiledLambdaForm ||
-              (MethodHandles::is_signature_polymorphic(iid) && MethodHandles::is_signature_polymorphic_intrinsic(iid)));
+      bool is_mh_invoke = false;
+      if (jvmci_env()->get_site_Call_direct(site)) {
+        is_mh_invoke = !method->is_static() && (iid == vmIntrinsics::_compiledLambdaForm ||
+                (MethodHandles::is_signature_polymorphic(iid) && MethodHandles::is_signature_polymorphic_intrinsic(iid)));
+      }
       bool return_oop = method->is_returning_oop();
       record_scope(next_pc_offset, debug_info, CodeInstaller::FullFrame, is_mh_invoke, return_oop, JVMCI_CHECK);
     } else {
