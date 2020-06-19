@@ -26,6 +26,9 @@
 #include "memory/allocation.hpp"
 #include "memory/allocation.inline.hpp"
 #include "memory/genCollectedHeap.hpp"
+#ifdef ASSERT
+#include "memory/guardedMemory.hpp"
+#endif
 #include "memory/metaspaceShared.hpp"
 #include "memory/resourceArea.hpp"
 #include "memory/universe.hpp"
@@ -226,6 +229,18 @@ void trace_heap_free(void* p) {
   tty->print_cr("Heap free   " INTPTR_FORMAT, p2i(p));
 }
 
+static void verify_memory(void* ptr) {
+#ifdef ASSERT
+  GuardedMemory guarded(ptr);
+  if (!guarded.verify_guards()) {
+    tty->print_cr("## nof_mallocs = " UINT64_FORMAT ", nof_frees = " UINT64_FORMAT, os::num_mallocs, os::num_frees);
+    tty->print_cr("## memory stomp:");
+    guarded.print_on(tty);
+    fatal("memory stomping error");
+  }
+#endif
+}
+
 //--------------------------------------------------------------------------------------
 // ChunkPool implementation
 
@@ -276,6 +291,7 @@ class ChunkPool: public CHeapObj<mtInternal> {
 
   // Return a chunk to the pool
   void free(Chunk* chunk) {
+    verify_memory(chunk);
     assert(chunk->length() + Chunk::aligned_overhead_size() == _size, "bad size");
     ThreadCritical tc;
     _num_used--;
