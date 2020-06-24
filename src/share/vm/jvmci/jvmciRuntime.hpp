@@ -111,6 +111,11 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   // Initialization state of this JVMCIRuntime.
   InitState _init_state;
 
+  // A wrapper for a VM scoped JNI global handle (i.e. JVMCIEnv::make_global)
+  // to a HotSpotJVMCIRuntime instance. This JNI global handle must never
+  // be explicitly destroyed as it can be accessed in a racy way during
+  // JVMCI shutdown. Furthermore, it will be reclaimed when
+  // the VM or shared library JavaVM managing the handle dies.
   JVMCIObject _HotSpotJVMCIRuntime_instance;
 
   // Result of calling JNI_CreateJavaVM in the JVMCI shared library.
@@ -189,8 +194,14 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   // Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
   void ensure_jvmci_class_loader_is_initialized(JVMCIEnv* jvmciEnv);
 
-  // Allocation and management of JNI global object handles.
+  // Allocation and management of JNI global object handles
+  // whose lifetime is scoped by this JVMCIRuntime. The lifetime
+  // of these handles is the same as the JVMCI shared library JavaVM
+  // associated with this JVMCIRuntime. These JNI handles are
+  // used when creating a IndirectHotSpotObjectConstantImpl in the
+  // shared library JavaVM.
   jobject make_global(const Handle& obj);
+  void destroy_global(jobject handle);
   bool is_global_handle(jobject handle);
 
   // Allocation and management of matadata handles.
@@ -386,26 +397,6 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
 
   // Test only function
   static int test_deoptimize_call_int(JavaThread* thread, int value);
-
-  // Emits the following on tty:
-  //   "JVMCITrace-" <level> "[" <current thread name> "]:" <padding of width `level`>
-  // Returns true.
-  static bool trace_prefix(int level);
 };
-
-// Tracing macros.
-
-#define IF_TRACE_jvmci_1 if (!(JVMCITraceLevel >= 1)) ; else
-#define IF_TRACE_jvmci_2 if (!(JVMCITraceLevel >= 2)) ; else
-#define IF_TRACE_jvmci_3 if (!(JVMCITraceLevel >= 3)) ; else
-#define IF_TRACE_jvmci_4 if (!(JVMCITraceLevel >= 4)) ; else
-#define IF_TRACE_jvmci_5 if (!(JVMCITraceLevel >= 5)) ; else
-
-#define TRACE_jvmci_(n) if (!(JVMCITraceLevel >= n && JVMCIRuntime::trace_prefix(n))) ; else tty->print_cr
-#define TRACE_jvmci_1 TRACE_jvmci_(1)
-#define TRACE_jvmci_2 TRACE_jvmci_(2)
-#define TRACE_jvmci_3 TRACE_jvmci_(3)
-#define TRACE_jvmci_4 TRACE_jvmci_(4)
-#define TRACE_jvmci_5 TRACE_jvmci_(5)
 
 #endif // SHARE_VM_JVMCI_JVMCI_RUNTIME_HPP

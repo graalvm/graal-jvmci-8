@@ -39,6 +39,8 @@ volatile bool JVMCI::_is_initialized = false;
 void* JVMCI::_shared_library_handle = NULL;
 char* JVMCI::_shared_library_path = NULL;
 volatile bool JVMCI::_in_shutdown = false;
+StringEventLog* JVMCI::_events = NULL;
+StringEventLog* JVMCI::_verbose_events = NULL;
 
 void* JVMCI::get_shared_library(char*& path, bool load) {
   void* sl_handle = _shared_library_handle;
@@ -68,7 +70,7 @@ void* JVMCI::get_shared_library(char*& path, bool load) {
     _shared_library_handle = handle;
     _shared_library_path = strdup(path);
 
-    TRACE_jvmci_1("loaded JVMCI shared library from %s", path);
+    JVMCI_event_1("loaded JVMCI shared library from %s", path);
   }
   path = _shared_library_path;
   return _shared_library_handle;
@@ -84,6 +86,19 @@ void JVMCI::initialize_compiler(TRAPS) {
 }
 
 void JVMCI::initialize_globals() {
+  if (LogEvents) {
+    if (JVMCIEventLogLevel > 0) {
+      _events = new StringEventLog("JVMCI Events");
+      if (JVMCIEventLogLevel > 1) {
+        int count = LogEventsBufferEntries;
+        for (int i = 1; i < JVMCIEventLogLevel && i < max_EventLog_level; i++) {
+          // Expand event buffer by 10x for each level above 1
+          count = count * 10;
+        }
+        _verbose_events = new StringEventLog("Verbose JVMCI Events", count);
+      }
+    }
+  }
   if (UseJVMCINativeLibrary) {
     // There are two runtimes.
     _compiler_runtime = new JVMCIRuntime(0);
@@ -141,7 +156,7 @@ void JVMCI::shutdown() {
   {
     MutexLocker locker(JVMCI_lock);
     _in_shutdown = true;
-    TRACE_jvmci_1("shutting down JVMCI");
+    JVMCI_event_1("shutting down JVMCI");
   }
   JVMCIRuntime* java_runtime = _java_runtime;
   if (java_runtime != compiler_runtime()) {
@@ -155,3 +170,43 @@ void JVMCI::shutdown() {
 bool JVMCI::in_shutdown() {
   return _in_shutdown;
 }
+
+Thread* JVMCI::current_thread_or_null() {
+  Thread* thread = ThreadLocalStorage::thread();
+  return thread == NULL ? ThreadLocalStorage::get_thread_slow() : thread;
+}
+
+void JVMCI::vlog(int level, const char* format, va_list ap) {
+  if (LogEvents && JVMCIEventLogLevel >= level) {
+    StringEventLog* events = level == 1 ? _events : _verbose_events;
+    guarantee(events != NULL, "JVMCI event log not yet initialized");
+    Thread* thread = current_thread_or_null();
+    events->logv(thread, format, ap);
+  }
+}
+
+void JVMCI::vtrace(int level, const char* format, va_list ap) {
+  if (JVMCITraceLevel >= level) {
+    Thread* thread = current_thread_or_null();
+    if (thread != NULL) {
+      ResourceMark rm;
+      tty->print("JVMCITrace-%d[%s]:%*c", level, thread->name(), level, ' ');
+    } else {
+      tty->print("JVMCITrace-%d[?]:%*c", level, level, ' ');
+    }
+    tty->vprint_cr(format, ap);
+  }
+}
+
+#define LOG_TRACE(level) { va_list ap; \
+  va_start(ap, format); vlog(level, format, ap); va_end(ap); \
+  va_start(ap, format); vtrace(level, format, ap); va_end(ap); \
+}
+
+void JVMCI::event(int level, const char* format, ...) LOG_TRACE(level)
+void JVMCI::event1(const char* format, ...) LOG_TRACE(1)
+void JVMCI::event2(const char* format, ...) LOG_TRACE(2)
+void JVMCI::event3(const char* format, ...) LOG_TRACE(3)
+void JVMCI::event4(const char* format, ...) LOG_TRACE(4)
+
+#undef LOG_TRACE

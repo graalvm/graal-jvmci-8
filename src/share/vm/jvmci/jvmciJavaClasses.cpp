@@ -86,7 +86,7 @@ void HotSpotJVMCI::compute_offset(int &dest_offset, Klass* klass, const char* na
     // accessor itself does not include a class initialization check.
     ik->initialize(CHECK);
   }
-  TRACE_jvmci_2("   field offset for %s %s.%s = %d", signature, ik->external_name(), name, dest_offset);
+  JVMCI_event_2("   field offset for %s %s.%s = %d", signature, ik->external_name(), name, dest_offset);
 }
 
 #ifndef PRODUCT
@@ -122,7 +122,7 @@ jmethodID JNIJVMCI::_HotSpotResolvedPrimitiveType_fromMetaspace_method;
 #define START_CLASS(className, fullClassName)                          { \
   Klass* k = SystemDictionary::resolve_or_fail(vmSymbols::fullClassName(), SystemDictionary::jvmci_loader(), Handle(), true, CHECK); \
   className::_klass = InstanceKlass::cast(k);                                     \
-  TRACE_jvmci_2(" klass for %s = " PTR_FORMAT, k->external_name(), p2i(k));       \
+  JVMCI_event_2(" klass for %s = " PTR_FORMAT, k->external_name(), p2i(k));       \
   className::_klass->initialize(CHECK);
 
 #define END_CLASS }
@@ -306,7 +306,7 @@ void JNIJVMCI::initialize_field_id(JNIEnv* env, jfieldID &fieldid, jclass clazz,
     // Class initialization barrier
     fieldid = env->GetFieldID(clazz, name, signature);
   }
-  TRACE_jvmci_2("   jfieldID for %s %s.%s = " PTR_FORMAT, signature, class_name, name, p2i(fieldid));
+  JVMCI_event_2("   jfieldID for %s %s.%s = " PTR_FORMAT, signature, class_name, name, p2i(fieldid));
 
   if (env->ExceptionCheck()) {
     env->ExceptionDescribe();
@@ -327,7 +327,7 @@ void JNIJVMCI::initialize_field_id(JNIEnv* env, jfieldID &fieldid, jclass clazz,
     JVMCI_EXCEPTION_CHECK(env, "FindClass(%s)", current_class_name);                        \
     assert(k != NULL, #fullClassName " not initialized");                                   \
     k = (jclass) env->NewGlobalRef(k);                                                      \
-    TRACE_jvmci_2(" jclass for %s = " PTR_FORMAT, current_class_name, p2i(k));              \
+    JVMCI_event_2(" jclass for %s = " PTR_FORMAT, current_class_name, p2i(k));              \
     className::_class = k;                                                                  \
   }
 
@@ -354,7 +354,7 @@ void JNIJVMCI::initialize_field_id(JNIEnv* env, jfieldID &fieldid, jclass clazz,
       JVMCI_EXCEPTION_CHECK(env, #jniGetMethod "(%s.%s%s)",                                    \
                   current_class_name, methodName, signature);                                  \
       assert(dst != NULL, "uninitialized");                                                    \
-      TRACE_jvmci_2("   jmethodID for %s.%s%s = " PTR_FORMAT,                                  \
+      JVMCI_event_2("   jmethodID for %s.%s%s = " PTR_FORMAT,                                  \
                   current_class_name, methodName, signature, p2i(dst));                        \
     }
 

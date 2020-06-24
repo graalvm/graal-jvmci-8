@@ -96,10 +96,10 @@ class JVMCITraceMark : public StackObj {
  public:
   JVMCITraceMark(const char* msg) {
     _msg = msg;
-    TRACE_jvmci_2("Enter %s", _msg);
+    JVMCI_event_2("Enter %s", _msg);
   }
   ~JVMCITraceMark() {
-    TRACE_jvmci_2(" Exit %s", _msg);
+    JVMCI_event_2(" Exit %s", _msg);
   }
 };
 
@@ -1624,7 +1624,7 @@ C2V_VMENTRY_PREFIX(jint, writeDebugOutput, (JNIEnv* env, jobject, jbyteArray byt
   if (thread == NULL) {
     if (!ad._attached) {
       // Can only use tty if the current thread is attached
-      TRACE_jvmci_1("Cannot write to tty on unattached thread");
+      JVMCI_event_1("Cannot write to tty on unattached thread");
       return 0;
     }
     thread = get_current_thread(false);
@@ -2281,7 +2281,9 @@ C2V_VMENTRY_NULL(jobject, getObject, (JNIEnv* env, jobject, jobject x, long disp
 
 C2V_VMENTRY(void, deleteGlobalHandle, (JNIEnv* env, jobject, jlong h))
   jobject handle = (jobject)(address)h;
-  JNIHandles::destroy_global(handle);
+  if (handle != NULL) {
+    JVMCIENV->runtime()->destroy_global(handle);
+  }
 }
 
 static void requireJVMCINativeLibrary(JVMCI_TRAPS) {
@@ -2438,7 +2440,7 @@ C2V_VMENTRY_PREFIX(jboolean, attachCurrentThread, (JNIEnv* env, jobject c2vm, jb
 
     if (res == JNI_OK) {
       guarantee(peerJNIEnv != NULL, "must be");
-      TRACE_jvmci_1("attached to JavaVM for JVMCI runtime %d", runtime->id());
+      JVMCI_event_1("attached to JavaVM for JVMCI runtime %d", runtime->id());
       return true;
     }
     JVMCI_THROW_MSG_0(InternalError, err_msg("Error %d while attaching %s", res, attach_args.name));
@@ -2471,7 +2473,7 @@ C2V_VMENTRY_PREFIX(void, detachCurrentThread, (JNIEnv* env, jobject c2vm))
     if (res != JNI_OK) {
       JVMCI_THROW_MSG(InternalError, err_msg("Error %d while attaching %s", res, thread->name()));
     }
-    TRACE_jvmci_1("detached from JavaVM for JVMCI runtime %d", runtime->id());
+    JVMCI_event_1("detached from JavaVM for JVMCI runtime %d", runtime->id());
   } else {
     // Called from attached JVMCI shared library thread
     extern struct JavaVM_ main_vm;

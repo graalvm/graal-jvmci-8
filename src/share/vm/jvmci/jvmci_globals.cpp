@@ -183,6 +183,7 @@ bool JVMCIGlobals::check_jvmci_flags_are_consistent() {
 
   CHECK_NOT_SET(UseJVMCIClassLoader,          EnableJVMCI)
   CHECK_NOT_SET(CodeInstallSafepointChecks,   EnableJVMCI)
+  CHECK_NOT_SET(JVMCIEventLogLevel,           EnableJVMCI)
   CHECK_NOT_SET(JVMCITraceLevel,              EnableJVMCI)
   CHECK_NOT_SET(JVMCICounterSize,             EnableJVMCI)
   CHECK_NOT_SET(JVMCICountersExcludeCompiler, EnableJVMCI)
