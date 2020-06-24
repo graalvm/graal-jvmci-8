@@ -69,12 +69,12 @@ void CodeInstaller::pd_patch_MetaspaceConstant(int pc_offset, JVMCIObject consta
     NativeMovConstReg32* move = nativeMovConstReg32_at(pc);
     narrowKlass narrowOop = record_narrow_metadata_reference(_instructions, pc, constant, JVMCI_CHECK);
     move->set_data((intptr_t)narrowOop);
-    TRACE_jvmci_3("relocating (narrow metaspace constant) at " PTR_FORMAT "/0x%x", p2i(pc), narrowOop);
+    JVMCI_event_3("relocating (narrow metaspace constant) at " PTR_FORMAT "/0x%x", p2i(pc), narrowOop);
   } else {
     NativeMovConstReg* move = nativeMovConstReg_at(pc);
     void* reference = record_metadata_reference(_instructions, pc, constant, JVMCI_CHECK);
     move->set_data((intptr_t)reference);
-    TRACE_jvmci_3("relocating (metaspace constant) at " PTR_FORMAT "/" PTR_FORMAT, p2i(pc), p2i(reference));
+    JVMCI_event_3("relocating (metaspace constant) at " PTR_FORMAT "/" PTR_FORMAT, p2i(pc), p2i(reference));
   }
 }
 
@@ -89,13 +89,13 @@ void CodeInstaller::pd_patch_DataSectionReference(int pc_offset, int data_offset
         _instructions->relocate(pc + NativeMovConstReg::sethi_offset, internal_word_Relocation::spec((address) dest));
         _instructions->relocate(pc + NativeMovConstReg::add_offset, internal_word_Relocation::spec((address) dest));
       }
-      TRACE_jvmci_3("relocating at " PTR_FORMAT " (+%d) with destination at %d", p2i(pc), pc_offset, data_offset);
+      JVMCI_event_3("relocating at " PTR_FORMAT " (+%d) with destination at %d", p2i(pc), pc_offset, data_offset);
   }else {
     int const_size = align_size_up(_constants->end()-_constants->start(), CodeEntryAlignment);
     NativeMovRegMem* load = nativeMovRegMem_at(pc);
     // This offset must match with SPARCLoadConstantTableBaseOp.emitCode
     load->set_offset(- (const_size - data_offset + Assembler::min_simm13()));
-    TRACE_jvmci_3("relocating ld at " PTR_FORMAT " (+%d) with destination at %d", p2i(pc), pc_offset, data_offset);
+    JVMCI_event_3("relocating ld at " PTR_FORMAT " (+%d) with destination at %d", p2i(pc), pc_offset, data_offset);
   }
 }
 
@@ -112,7 +112,7 @@ void CodeInstaller::pd_relocate_ForeignCall(NativeInstruction* inst, jlong forei
   } else {
     JVMCI_ERROR("unknown call or jump instruction at " PTR_FORMAT, p2i(pc));
   }
-  TRACE_jvmci_3("relocating (foreign call) at " PTR_FORMAT, p2i(inst));
+  JVMCI_event_3("relocating (foreign call) at " PTR_FORMAT, p2i(inst));
 }
 
 void CodeInstaller::pd_relocate_JavaMethod(CodeBuffer &, JVMCIObject hotspot_method, jint pc_offset, JVMCI_TRAPS) {

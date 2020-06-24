@@ -396,13 +396,6 @@ address JVMCIRuntime::exception_handler_for_pc(JavaThread* thread) {
 }
 
 JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc* obj, BasicLock* lock))
-  IF_TRACE_jvmci_3 {
-    char type[O_BUFLEN];
-    obj->klass()->name()->as_C_string(type, O_BUFLEN);
-    markOop mark = obj->mark();
-    TRACE_jvmci_3("%s: entered locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(mark), p2i(lock));
-    tty->flush();
-  }
   if (PrintBiasedLockingStatistics) {
     Atomic::inc(BiasedLocking::slow_path_entry_count_addr());
   }
@@ -419,7 +412,6 @@ JRT_ENTRY_NO_ASYNC(void, JVMCIRuntime::monitorenter(JavaThread* thread, oopDesc*
       ObjectSynchronizer::fast_enter(h_obj, lock, false, THREAD);
     }
   }
-  TRACE_jvmci_3("%s: exiting locking slow with obj=" INTPTR_FORMAT, thread->name(), p2i(obj));
 JRT_END
 
 JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, BasicLock* lock))
@@ -445,12 +437,6 @@ JRT_LEAF(void, JVMCIRuntime::monitorexit(JavaThread* thread, oopDesc* obj, Basic
     ObjectSynchronizer::slow_exit(obj, lock, THREAD);
   } else {
     ObjectSynchronizer::fast_exit(obj, lock, THREAD);
-  }
-  IF_TRACE_jvmci_3 {
-    char type[O_BUFLEN];
-    obj->klass()->name()->as_C_string(type, O_BUFLEN);
-    TRACE_jvmci_3("%s: exited locking slow case with obj=" INTPTR_FORMAT ", type=%s, mark=" INTPTR_FORMAT ", lock=" INTPTR_FORMAT, thread->name(), p2i(obj), type, p2i(obj->mark()), p2i(lock));
-    tty->flush();
   }
 JRT_END
 
@@ -788,7 +774,7 @@ JVMCIRuntime::JVMCIRuntime(int id) {
   _id = id;
   _object_handles = JNIHandleBlock::allocate_block();
   _metadata_handles = new MetadataHandles();
-  JVMCI::log("created new JVMCI runtime %d (" PTR_FORMAT ")", id, p2i(this));
+  JVMCI_event_1("created new JVMCI runtime %d (" PTR_FORMAT ")", id, p2i(this));
 }
 
 jobject JVMCIRuntime::make_global(const Handle& obj) {
@@ -886,7 +872,7 @@ JNIEnv* JVMCIRuntime::init_shared_library_javavm() {
     if (result == JNI_OK) {
       guarantee(env != NULL, "missing env");
       _shared_library_javavm = javaVM;
-      JVMCI::log("created JavaVM[%ld]@" PTR_FORMAT " for JVMCI runtime %d", javaVM_id, p2i(javaVM), _id);
+      JVMCI_event_1("created JavaVM[%ld]@" PTR_FORMAT " for JVMCI runtime %d", javaVM_id, p2i(javaVM), _id);
       return env;
     } else {
       vm_exit_during_initialization(err_msg("JNI_CreateJavaVM failed with return value %d", result), sl_path);
@@ -964,15 +950,15 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
   }
 
   while (_init_state == being_initialized) {
-    JVMCI::log("waiting for initialization of JVMCI runtime %d", _id);
+    JVMCI_event_1("waiting for initialization of JVMCI runtime %d", _id);
     JVMCI_lock->wait();
     if (_init_state == fully_initialized) {
-      JVMCI::log("done waiting for initialization of JVMCI runtime %d", _id);
+      JVMCI_event_1("done waiting for initialization of JVMCI runtime %d", _id);
       return;
     }
   }
 
-  JVMCI::log("initializing JVMCI runtime %d", _id);
+  JVMCI_event_1("initializing JVMCI runtime %d", _id);
   _init_state = being_initialized;
 
   {
@@ -1013,7 +999,7 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
   }
 
   _init_state = fully_initialized;
-  JVMCI::log("initialized JVMCI runtime %d", _id);
+  JVMCI_event_1("initialized JVMCI runtime %d", _id);
   JVMCI_lock->notify_all();
 }
 
@@ -1126,12 +1112,12 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized(JVMCIEnv* JVMCIENV) 
 void JVMCIRuntime::shutdown() {
   JVMCIObject instance = _HotSpotJVMCIRuntime_instance;
   if (instance.is_non_null()) {
-    JVMCI::log("shutting down JVMCI runtime %d", _id);
+    JVMCI_event_1("shutting down JVMCI runtime %d", _id);
     _HotSpotJVMCIRuntime_instance = JVMCIObject();
     JVMCIEnv __stack_jvmci_env__(JavaThread::current(), instance.is_hotspot(), __FILE__, __LINE__);
     JVMCIEnv* JVMCIENV = &__stack_jvmci_env__;
     JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(instance);
-    JVMCI::log("shut down JVMCI runtime %d", _id);
+    JVMCI_event_1("shut down JVMCI runtime %d", _id);
   }
 }
 

@@ -66,9 +66,10 @@ class JVMCI : public AllStatic {
 
   // JVMCI event log (shows up in hs_err crash logs).
   static StringEventLog* _events;
-
-  // Gets the Thread* value for the current thread or NULL if it's not available.
-  static Thread* current_thread_or_null();
+  static StringEventLog* _verbose_events;
+  enum {
+    max_EventLog_level = 4
+  };
 
  public:
   enum CodeInstallResult {
@@ -115,28 +116,28 @@ class JVMCI : public AllStatic {
   static oop ensure_oop_alive(oop obj) { return obj; };
 #endif
 
- public:
-  // Emits the following on tty:
-  //   "JVMCITrace-" <level> "[" <current thread name> "]:" <padding of width `level`>
-  // Returns true.
-  static bool trace_prefix(int level);
+  // Appends an event to the JVMCI event log if JVMCIEventLogLevel >= `level`
+  static void vlog(int level, const char* format, va_list ap);
 
-  // Writes a message to the JVMCI event log and traces it if JVMCITraceLevel >= 1.
-  static void log(const char* format, ...);
+  // Traces an event to tty if JVMCITraceLevel >= `level`
+  static void vtrace(int level, const char* format, va_list ap);
+
+ public:
+  // Gets the Thread* value for the current thread or NULL if it's not available.
+  static Thread* current_thread_or_null();
+
+  // Log/trace a JVMCI event
+  static void event(int level, const char* format, ...);
+  static void event1(const char* format, ...);
+  static void event2(const char* format, ...);
+  static void event3(const char* format, ...);
+  static void event4(const char* format, ...);
 };
 
-// Tracing macros.
-
-#define IF_TRACE_jvmci_2 if (!(JVMCITraceLevel >= 2)) ; else
-#define IF_TRACE_jvmci_3 if (!(JVMCITraceLevel >= 3)) ; else
-#define IF_TRACE_jvmci_4 if (!(JVMCITraceLevel >= 4)) ; else
-#define IF_TRACE_jvmci_5 if (!(JVMCITraceLevel >= 5)) ; else
-
-// JVMCI::log is deliberately omitted - use JVMCI::log instead.
-#define TRACE_jvmci_(n) if (!(JVMCITraceLevel >= n && ::JVMCI::trace_prefix(n))) ; else tty->print_cr
-#define TRACE_jvmci_2 TRACE_jvmci_(2)
-#define TRACE_jvmci_3 TRACE_jvmci_(3)
-#define TRACE_jvmci_4 TRACE_jvmci_(4)
-#define TRACE_jvmci_5 TRACE_jvmci_(5)
+// JVMCI event macros.
+#define JVMCI_event_1 if (JVMCITraceLevel < 1 && JVMCIEventLogLevel < 1) ; else ::JVMCI::event1
+#define JVMCI_event_2 if (JVMCITraceLevel < 2 && JVMCIEventLogLevel < 2) ; else ::JVMCI::event2
+#define JVMCI_event_3 if (JVMCITraceLevel < 3 && JVMCIEventLogLevel < 3) ; else ::JVMCI::event3
+#define JVMCI_event_4 if (JVMCITraceLevel < 4 && JVMCIEventLogLevel < 4) ; else ::JVMCI::event4
 
 #endif // SHARE_VM_JVMCI_JVMCI_HPP
