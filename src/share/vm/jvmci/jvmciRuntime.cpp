@@ -816,6 +816,21 @@ void JVMCIRuntime::release_handle(jmetadata handle) {
   _metadata_handles->chain_free_list(handle);
 }
 
+// Function for redirecting shared library JavaVM output to tty
+static void _log(const char* buf, size_t count) {
+  tty->write((char*) buf, count);
+}
+
+// Function for shared library JavaVM to flush tty
+static void _flush_log() {
+  tty->flush();
+}
+
+// Function for shared library JavaVM to exit HotSpot on a fatal error
+static void _fatal() {
+  fatal("Fatal error in JVMCI shared library");
+}
+
 JNIEnv* JVMCIRuntime::init_shared_library_javavm() {
   JavaVM* javaVM = (JavaVM*) _shared_library_javavm;
   if (javaVM == NULL) {
@@ -840,7 +855,7 @@ JNIEnv* JVMCIRuntime::init_shared_library_javavm() {
     JavaVMInitArgs vm_args;
     vm_args.version = JNI_VERSION_1_2;
     vm_args.ignoreUnrecognized = JNI_TRUE;
-    JavaVMOption options[1];
+    JavaVMOption options[4];
     jlong javaVM_id = 0;
 
     // Protocol: JVMCI shared library JavaVM should support a non-standard "_javavm_id"
@@ -848,6 +863,13 @@ JNIEnv* JVMCIRuntime::init_shared_library_javavm() {
     // JavaVM should be written.
     options[0].optionString = (char*) "_javavm_id";
     options[0].extraInfo = &javaVM_id;
+
+    options[1].optionString = (char*) "_log";
+    options[1].extraInfo = (void*) _log;
+    options[2].optionString = (char*) "_flush_log";
+    options[2].extraInfo = (void*) _flush_log;
+    options[3].optionString = (char*) "_fatal";
+    options[3].extraInfo = (void*) _fatal;
 
     vm_args.version = JNI_VERSION_1_2;
     vm_args.options = options;
