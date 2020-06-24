@@ -397,26 +397,6 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
 
   // Test only function
   static int test_deoptimize_call_int(JavaThread* thread, int value);
-
-  // Emits the following on tty:
-  //   "JVMCITrace-" <level> "[" <current thread name> "]:" <padding of width `level`>
-  // Returns true.
-  static bool trace_prefix(int level);
 };
-
-// Tracing macros.
-
-#define IF_TRACE_jvmci_1 if (!(JVMCITraceLevel >= 1)) ; else
-#define IF_TRACE_jvmci_2 if (!(JVMCITraceLevel >= 2)) ; else
-#define IF_TRACE_jvmci_3 if (!(JVMCITraceLevel >= 3)) ; else
-#define IF_TRACE_jvmci_4 if (!(JVMCITraceLevel >= 4)) ; else
-#define IF_TRACE_jvmci_5 if (!(JVMCITraceLevel >= 5)) ; else
-
-#define TRACE_jvmci_(n) if (!(JVMCITraceLevel >= n && JVMCIRuntime::trace_prefix(n))) ; else tty->print_cr
-#define TRACE_jvmci_1 TRACE_jvmci_(1)
-#define TRACE_jvmci_2 TRACE_jvmci_(2)
-#define TRACE_jvmci_3 TRACE_jvmci_(3)
-#define TRACE_jvmci_4 TRACE_jvmci_(4)
-#define TRACE_jvmci_5 TRACE_jvmci_(5)
 
 #endif // SHARE_VM_JVMCI_JVMCI_RUNTIME_HPP

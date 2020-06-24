@@ -788,7 +788,7 @@ JVMCIRuntime::JVMCIRuntime(int id) {
   _id = id;
   _object_handles = JNIHandleBlock::allocate_block();
   _metadata_handles = new MetadataHandles();
-  TRACE_jvmci_1("created new JVMCI runtime %d (" PTR_FORMAT ")", id, p2i(this));
+  JVMCI::log("created new JVMCI runtime %d (" PTR_FORMAT ")", id, p2i(this));
 }
 
 jobject JVMCIRuntime::make_global(const Handle& obj) {
@@ -886,7 +886,7 @@ JNIEnv* JVMCIRuntime::init_shared_library_javavm() {
     if (result == JNI_OK) {
       guarantee(env != NULL, "missing env");
       _shared_library_javavm = javaVM;
-      TRACE_jvmci_1("created JavaVM[%ld]@" PTR_FORMAT " for JVMCI runtime %d", javaVM_id, p2i(javaVM), _id);
+      JVMCI::log("created JavaVM[%ld]@" PTR_FORMAT " for JVMCI runtime %d", javaVM_id, p2i(javaVM), _id);
       return env;
     } else {
       vm_exit_during_initialization(err_msg("JNI_CreateJavaVM failed with return value %d", result), sl_path);
@@ -964,15 +964,15 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
   }
 
   while (_init_state == being_initialized) {
-    TRACE_jvmci_1("waiting for initialization of JVMCI runtime %d", _id);
+    JVMCI::log("waiting for initialization of JVMCI runtime %d", _id);
     JVMCI_lock->wait();
     if (_init_state == fully_initialized) {
-      TRACE_jvmci_1("done waiting for initialization of JVMCI runtime %d", _id);
+      JVMCI::log("done waiting for initialization of JVMCI runtime %d", _id);
       return;
     }
   }
 
-  TRACE_jvmci_1("initializing JVMCI runtime %d", _id);
+  JVMCI::log("initializing JVMCI runtime %d", _id);
   _init_state = being_initialized;
 
   {
@@ -1013,7 +1013,7 @@ void JVMCIRuntime::initialize(JVMCIEnv* JVMCIENV) {
   }
 
   _init_state = fully_initialized;
-  TRACE_jvmci_1("initialized JVMCI runtime %d", _id);
+  JVMCI::log("initialized JVMCI runtime %d", _id);
   JVMCI_lock->notify_all();
 }
 
@@ -1126,12 +1126,12 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized(JVMCIEnv* JVMCIENV) 
 void JVMCIRuntime::shutdown() {
   JVMCIObject instance = _HotSpotJVMCIRuntime_instance;
   if (instance.is_non_null()) {
-    TRACE_jvmci_1("shutting down JVMCI runtime %d", _id);
+    JVMCI::log("shutting down JVMCI runtime %d", _id);
     _HotSpotJVMCIRuntime_instance = JVMCIObject();
     JVMCIEnv __stack_jvmci_env__(JavaThread::current(), instance.is_hotspot(), __FILE__, __LINE__);
     JVMCIEnv* JVMCIENV = &__stack_jvmci_env__;
     JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(instance);
-    TRACE_jvmci_1("shut down JVMCI runtime %d", _id);
+    JVMCI::log("shut down JVMCI runtime %d", _id);
   }
 }
 
@@ -1782,18 +1782,4 @@ JVMCI::CodeInstallResult JVMCIRuntime::register_method(JVMCIEnv* JVMCIENV,
   }
 
   return result;
-}
-
-bool JVMCIRuntime::trace_prefix(int level) {
-  Thread* thread = ThreadLocalStorage::thread();
-  if (thread == NULL) {
-    thread = ThreadLocalStorage::get_thread_slow();
-  }
-  if (thread != NULL) {
-    ResourceMark rm;
-    tty->print("JVMCITrace-%d[%s]:%*c", level, thread == NULL ? "?" : thread->name(), level, ' ');
-  } else {
-    tty->print("JVMCITrace-%d[?]:%*c", level, level, ' ');
-  }
-  return true;
 }

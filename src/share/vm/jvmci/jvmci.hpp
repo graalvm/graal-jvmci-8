@@ -64,6 +64,12 @@ class JVMCI : public AllStatic {
   // Access to the HotSpot heap based JVMCIRuntime
   static JVMCIRuntime* _java_runtime;
 
+  // JVMCI event log (shows up in hs_err crash logs).
+  static StringEventLog* _events;
+
+  // Gets the Thread* value for the current thread or NULL if it's not available.
+  static Thread* current_thread_or_null();
+
  public:
   enum CodeInstallResult {
      ok,
@@ -108,6 +114,29 @@ class JVMCI : public AllStatic {
 #else
   static oop ensure_oop_alive(oop obj) { return obj; };
 #endif
+
+ public:
+  // Emits the following on tty:
+  //   "JVMCITrace-" <level> "[" <current thread name> "]:" <padding of width `level`>
+  // Returns true.
+  static bool trace_prefix(int level);
+
+  // Writes a message to the JVMCI event log and traces it if JVMCITraceLevel >= 1.
+  static void log(const char* format, ...);
 };
+
+// Tracing macros.
+
+#define IF_TRACE_jvmci_2 if (!(JVMCITraceLevel >= 2)) ; else
+#define IF_TRACE_jvmci_3 if (!(JVMCITraceLevel >= 3)) ; else
+#define IF_TRACE_jvmci_4 if (!(JVMCITraceLevel >= 4)) ; else
+#define IF_TRACE_jvmci_5 if (!(JVMCITraceLevel >= 5)) ; else
+
+// JVMCI::log is deliberately omitted - use JVMCI::log instead.
+#define TRACE_jvmci_(n) if (!(JVMCITraceLevel >= n && ::JVMCI::trace_prefix(n))) ; else tty->print_cr
+#define TRACE_jvmci_2 TRACE_jvmci_(2)
+#define TRACE_jvmci_3 TRACE_jvmci_(3)
+#define TRACE_jvmci_4 TRACE_jvmci_(4)
+#define TRACE_jvmci_5 TRACE_jvmci_(5)
 
 #endif // SHARE_VM_JVMCI_JVMCI_HPP
