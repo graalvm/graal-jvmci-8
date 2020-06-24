@@ -796,6 +796,12 @@ jobject JVMCIRuntime::make_global(const Handle& obj) {
   return _object_handles->allocate_handle(obj());
 }
 
+void JVMCIRuntime::destroy_global(jobject handle) {
+  // Assert before nulling out, for better debugging.
+  assert(is_global_handle(handle), "Invalid delete of JVMCIRuntime scoped global JNI handle");
+  *((oop*)handle) = JNIHandles::deleted_handle(); // Mark the handle as deleted, allocate will reuse it
+}
+
 bool JVMCIRuntime::is_global_handle(jobject handle) {
   MutexLocker ml(JVMCI_lock);
   return _object_handles->chain_contains(handle);
@@ -1125,12 +1131,6 @@ void JVMCIRuntime::shutdown() {
     JVMCIEnv __stack_jvmci_env__(JavaThread::current(), instance.is_hotspot(), __FILE__, __LINE__);
     JVMCIEnv* JVMCIENV = &__stack_jvmci_env__;
     JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(instance);
-    if (!instance.is_hotspot()) {
-      // Need to keep the HotSpot based instance alive for the sake of
-      // JVMCICompiler::force_comp_at_level_simple which can race with
-      // shutting down the JVMCI runtime.
-      JVMCIENV->destroy_global(instance);
-    }
     TRACE_jvmci_1("shut down JVMCI runtime %d", _id);
   }
 }

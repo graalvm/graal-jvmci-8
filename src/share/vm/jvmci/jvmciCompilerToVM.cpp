@@ -2281,7 +2281,9 @@ C2V_VMENTRY_NULL(jobject, getObject, (JNIEnv* env, jobject, jobject x, long disp
 
 C2V_VMENTRY(void, deleteGlobalHandle, (JNIEnv* env, jobject, jlong h))
   jobject handle = (jobject)(address)h;
-  JNIHandles::destroy_global(handle);
+  if (handle != NULL) {
+    JVMCIENV->runtime()->destroy_global(handle);
+  }
 }
 
 static void requireJVMCINativeLibrary(JVMCI_TRAPS) {

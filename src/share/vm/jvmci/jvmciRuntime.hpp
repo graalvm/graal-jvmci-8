@@ -111,6 +111,11 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   // Initialization state of this JVMCIRuntime.
   InitState _init_state;
 
+  // A wrapper for a VM scoped JNI global handle (i.e. JVMCIEnv::make_global)
+  // to a HotSpotJVMCIRuntime instance. This JNI global handle must never
+  // be explicitly destroyed as it can be accessed in a racy way during
+  // JVMCI shutdown. Furthermore, it will be reclaimed when
+  // the VM or shared library JavaVM managing the handle dies.
   JVMCIObject _HotSpotJVMCIRuntime_instance;
 
   // Result of calling JNI_CreateJavaVM in the JVMCI shared library.
@@ -189,8 +194,14 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
   // Ensures that the JVMCI class loader is initialized and the well known JVMCI classes are loaded.
   void ensure_jvmci_class_loader_is_initialized(JVMCIEnv* jvmciEnv);
 
-  // Allocation and management of JNI global object handles.
+  // Allocation and management of JNI global object handles
+  // whose lifetime is scoped by this JVMCIRuntime. The lifetime
+  // of these handles is the same as the JVMCI shared library JavaVM
+  // associated with this JVMCIRuntime. These JNI handles are
+  // used when creating a IndirectHotSpotObjectConstantImpl in the
+  // shared library JavaVM.
   jobject make_global(const Handle& obj);
+  void destroy_global(jobject handle);
   bool is_global_handle(jobject handle);
 
   // Allocation and management of matadata handles.
