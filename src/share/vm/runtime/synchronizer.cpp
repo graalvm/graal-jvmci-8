@@ -1303,7 +1303,7 @@ ObjectMonitor * ATTR ObjectSynchronizer::inflate (Thread * Self, oop object) {
           // object is in the mark.  Furthermore the owner can't complete
           // an unlock on the object, either.
           markOop dmw = mark->displaced_mark_helper() ;
-          assert (dmw->is_neutral(), "invariant") ;
+          guarantee(dmw->is_neutral(), err_msg("displaced mark in " INTPTR_FORMAT "is not neutral " INTPTR_FORMAT, p2i(object), p2i(dmw)));
 
           // Setup monitor fields to proper values -- prepare the monitor
           m->set_header(dmw) ;
@@ -1347,7 +1347,7 @@ ObjectMonitor * ATTR ObjectSynchronizer::inflate (Thread * Self, oop object) {
       // An inflateTry() method that we could call from fast_enter() and slow_enter()
       // would be useful.
 
-      assert (mark->is_neutral(), "invariant");
+      guarantee(mark->is_neutral(), err_msg("mark in " INTPTR_FORMAT "is not neutral " INTPTR_FORMAT, p2i(object), p2i(mark)));
       ObjectMonitor * m = omAlloc (Self) ;
       // prepare m for installation - set monitor to initial state
       m->Recycle();
