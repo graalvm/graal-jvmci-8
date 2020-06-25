@@ -326,27 +326,15 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
 
   CHECK_UNHANDLED_OOPS_ONLY(thread->clear_unhandled_oops();)
 
-#if INCLUDE_JVMCI
-  // Gets the nmethod (if any) that should be called instead of normal target
-  nmethod* alternative_target = args->alternative_target();
-  if (alternative_target == NULL) {
-#endif
-// Verify the arguments
-
-  if (CheckJNICalls)  {
+  // Verify the arguments
+  if (JVMCI_ONLY(args->alternative_target().is_null() &&) (DEBUG_ONLY(true ||) CheckJNICalls)) {
     args->verify(method, result->get_type());
   }
-  else debug_only(args->verify(method, result->get_type()));
-#if INCLUDE_JVMCI
-  }
-#else
-
   // Ignore call if method is empty
-  if (method->is_empty_method()) {
+  if (JVMCI_ONLY(args->alternative_target().is_null() &&) method->is_empty_method()) {
     assert(result->get_type() == T_VOID, "an empty method must return a void value");
     return;
   }
-#endif
 
 #ifdef ASSERT
   { InstanceKlass* holder = method->method_holder();
@@ -396,21 +384,24 @@ void JavaCalls::call_helper(JavaValue* result, methodHandle* m, JavaCallArgument
     os::bang_stack_shadow_pages();
   }
 
-#if INCLUDE_JVMCI
-  if (alternative_target != NULL) {
-    if (alternative_target->is_alive()) {
-      thread->set_jvmci_alternate_call_target(alternative_target->verified_entry_point());
-      entry_point = method->adapter()->get_i2c_entry();
-    } else {
-      THROW(vmSymbols::jdk_vm_ci_code_InvalidInstalledCodeException());
-    }
-  }
-#endif
-  
   // do call
   { JavaCallWrapper link(method, receiver, result, CHECK);
     { HandleMark hm(thread);  // HandleMark used by HandleMarkCleaner
 
+#if INCLUDE_JVMCI
+      // Gets the alternative target (if any) that should be called
+      Handle alternative_target = args->alternative_target();
+      if (!alternative_target.is_null()) {
+        // Must extract verified entry point from HotSpotNmethod after VM to Java
+        // transition in JavaCallWrapper constructor so that it is safe with
+        // respect to nmethod sweeping.
+        address verified_entry_point = (address) HotSpotJVMCI::InstalledCode::entryPoint(NULL, alternative_target());
+        if (verified_entry_point != NULL) {
+          thread->set_jvmci_alternate_call_target(verified_entry_point);
+          entry_point = method->adapter()->get_i2c_entry();
+        }
+      }
+#endif
       StubRoutines::call_stub()(
         (address)&link,
         // (intptr_t*)&(result->_value), // see NOTE above (compiler problem)
