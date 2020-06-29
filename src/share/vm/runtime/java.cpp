@@ -491,7 +491,9 @@ void before_exit(JavaThread * thread) {
   }
 
 #if INCLUDE_JVMCI
-  JVMCI::shutdown();
+  if (EnableJVMCI) {
+    JVMCI::shutdown();
+  }
 #endif
 
   // The only difference between this and Win32's _onexit procs is that
