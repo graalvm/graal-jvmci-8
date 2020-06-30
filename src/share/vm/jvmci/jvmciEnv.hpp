@@ -258,7 +258,6 @@ public:
   JVMCIObject create_box(BasicType type, jvalue* value, JVMCI_TRAPS);
 
   const char* as_utf8_string(JVMCIObject str);
-  char* as_utf8_string(JVMCIObject str, char* buf, int buflen);
 
   JVMCIObject create_string(Symbol* str, JVMCI_TRAPS) {
     return create_string(str->as_C_string(), JVMCI_CHECK_(JVMCIObject()));
