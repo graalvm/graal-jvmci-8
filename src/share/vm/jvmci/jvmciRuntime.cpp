@@ -1110,14 +1110,12 @@ void JVMCIRuntime::ensure_jvmci_class_loader_is_initialized(JVMCIEnv* JVMCIENV) 
 
 
 void JVMCIRuntime::shutdown() {
-  JVMCIObject instance = _HotSpotJVMCIRuntime_instance;
-  if (instance.is_non_null()) {
-    JVMCI_event_1("shutting down JVMCI runtime %d", _id);
-    _HotSpotJVMCIRuntime_instance = JVMCIObject();
-    JVMCIEnv __stack_jvmci_env__(JavaThread::current(), instance.is_hotspot(), __FILE__, __LINE__);
+  if (_HotSpotJVMCIRuntime_instance.is_non_null()) {
+    JVMCI_event_1("shutting down HotSpotJVMCIRuntime for JVMCI runtime %d", _id);
+    JVMCIEnv __stack_jvmci_env__(JavaThread::current(), _HotSpotJVMCIRuntime_instance.is_hotspot(), __FILE__, __LINE__);
     JVMCIEnv* JVMCIENV = &__stack_jvmci_env__;
-    JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(instance);
-    JVMCI_event_1("shut down JVMCI runtime %d", _id);
+    JVMCIENV->call_HotSpotJVMCIRuntime_shutdown(_HotSpotJVMCIRuntime_instance);
+    JVMCI_event_1("shut down HotSpotJVMCIRuntime for JVMCI runtime %d", _id);
   }
 }
 
