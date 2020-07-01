@@ -231,8 +231,7 @@ class JVMCIRuntime: public CHeapObj<mtJVMCI> {
 
   void call_getCompiler(TRAPS);
 
-  // Shuts down this runtime by calling HotSpotJVMCIRuntime.shutdown()
-  // and releasing the global handle to the HotSpotJVMCIRuntime instance.
+  // Shuts down this runtime by calling HotSpotJVMCIRuntime.shutdown().
   void shutdown();
 
   void bootstrap_finished(TRAPS);

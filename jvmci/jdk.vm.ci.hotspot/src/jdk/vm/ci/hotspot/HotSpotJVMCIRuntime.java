@@ -760,16 +760,24 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
     }
 
     /**
+     * Guard to ensure shut down actions are performed at most once.
+     */
+    private boolean isShutdown;
+
+    /**
      * Shuts down the runtime.
      */
     @VMEntryPoint
-    private void shutdown() throws Exception {
-        // Cleaners are normally only processed when a new Cleaner is
-        // instantiated so process all remaining cleaners now.
-        Cleaner.clean();
+    private synchronized void shutdown() throws Exception {
+        if (!isShutdown) {
+            isShutdown = true;
+            // Cleaners are normally only processed when a new Cleaner is
+            // instantiated so process all remaining cleaners now.
+            Cleaner.clean();
 
-        for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
-            vmEventListener.notifyShutdown();
+            for (HotSpotVMEventListener vmEventListener : getVmEventListeners()) {
+                vmEventListener.notifyShutdown();
+            }
         }
     }
 
