@@ -580,10 +580,10 @@ void Parse::jump_switch_ranges(Node* key_val, SwitchRange *lo, SwitchRange *hi, 
       // if there is a higher range, test for it and process it:
       if (mid < hi && !eq_test_only) {
         // two comparisons of same values--should enable 1 test for 2 branches
-        // Use BoolTest::le instead of BoolTest::gt
-        IfNode *iff_le  = jump_if_fork_int(key_val, test_val, BoolTest::le);
-        Node   *iftrue  = _gvn.transform( new (C) IfTrueNode(iff_le) );
-        Node   *iffalse = _gvn.transform( new (C) IfFalseNode(iff_le) );
+        // Use BoolTest::lt instead of BoolTest::gt
+        IfNode *iff_lt  = jump_if_fork_int(key_val, test_val, BoolTest::lt);
+        Node   *iftrue  = _gvn.transform( new (C) IfTrueNode(iff_lt) );
+        Node   *iffalse = _gvn.transform( new (C) IfFalseNode(iff_lt) );
         { PreserveJVMState pjvms(this);
           set_control(iffalse);
           jump_switch_ranges(key_val, mid+1, hi, switch_depth+1);
