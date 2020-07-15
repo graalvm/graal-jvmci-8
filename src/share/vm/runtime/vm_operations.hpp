@@ -100,6 +100,7 @@
   template(WhiteBoxOperation)                     \
   template(JVMCIResizeCounters)                   \
   template(ClassLoaderStatsOperation)             \
+  template(JFROldObject)                          \
 
 class VM_Operation: public CHeapObj<mtInternal> {
  public:

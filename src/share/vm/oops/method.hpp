@@ -37,6 +37,10 @@
 #include "oops/typeArrayOop.hpp"
 #include "utilities/accessFlags.hpp"
 #include "utilities/growableArray.hpp"
+#include "utilities/macros.hpp"
+#if INCLUDE_JFR
+#include "jfr/support/jfrTraceIdExtension.hpp"
+#endif
 
 // A Method* represents a Java method.
 //
@@ -119,6 +123,8 @@ class Method : public Metadata {
     _running_emcp         = 1 << 6
   };
   u1 _flags;
+
+  JFR_ONLY(DEFINE_TRACE_FLAG;)
 
 #ifndef PRODUCT
   int               _compiled_invocation_count;  // Number of nmethod invocations so far (for perf. debugging)
@@ -837,6 +843,8 @@ class Method : public Metadata {
   void set_has_injected_profile(bool x) {
     _flags = x ? (_flags | _has_injected_profile) : (_flags & ~_has_injected_profile);
   }
+
+  JFR_ONLY(DEFINE_TRACE_FLAG_ACCESSOR;)
 
   ConstMethod::MethodType method_type() const {
       return _constMethod->method_type();

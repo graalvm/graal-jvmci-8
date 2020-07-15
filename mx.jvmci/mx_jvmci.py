@@ -862,6 +862,7 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             setMakeVar('MAKE_VERBOSE', 'y' if mx.get_opts().verbose else '')
             setMakeVar('HOTSPOT_RELEASE_VERSION', hs_release_version)
             setMakeVar('USER_RELEASE_SUFFIX', jvmci_version)
+            setMakeVar('ENABLE_JFR', 'true') # JDK-8223147
             setMakeVar('INCLUDE_JVMCI', 'true')
             # setMakeVar('INSTALL', 'y', env=env)
             if mx.get_os() == 'darwin' and platform.mac_ver()[0] != '':

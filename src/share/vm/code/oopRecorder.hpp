@@ -158,7 +158,7 @@ class ObjectLookup : public ResourceObj {
    public:
     ObjectEntry(jobject value, int index): _value(value), _index(index) {}
     ObjectEntry() {}
-    oop oop_value(); // { return JNIHandles::resolve(_value); }
+    oop oop_value() const; // { return JNIHandles::resolve(_value); }
     int index() { return _index; }
   };
 
@@ -168,7 +168,7 @@ class ObjectLookup : public ResourceObj {
   // Utility sort functions
   static int sort_by_address(oop a, oop b);
   static int sort_by_address(ObjectEntry* a, ObjectEntry* b);
-  static int sort_oop_by_address(oop& a, ObjectEntry& b);
+  static int sort_oop_by_address(const oop& a, const ObjectEntry& b);
 
  public:
   ObjectLookup();

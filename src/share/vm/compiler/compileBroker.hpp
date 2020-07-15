@@ -28,7 +28,6 @@
 #include "ci/compilerInterface.hpp"
 #include "compiler/abstractCompiler.hpp"
 #include "runtime/perfData.hpp"
-#include "trace/tracing.hpp"
 #if INCLUDE_JVMCI
 #include "jvmci/jvmciCompiler.hpp"
 #endif
@@ -197,7 +196,8 @@ class CompilerCounters : public CHeapObj<mtCompiler> {
     // these methods should be called in a thread safe context
 
     void set_current_method(const char* method) {
-      strncpy(_current_method, method, (size_t)cmname_buffer_length);
+      strncpy(_current_method, method, (size_t)cmname_buffer_length-1);
+      _current_method[cmname_buffer_length-1] = '\0';
       if (UsePerfData) _perf_current_method->set_value(method);
     }
 
@@ -382,7 +382,6 @@ class CompileBroker: AllStatic {
 #endif
 
   static void invoke_compiler_on_method(CompileTask* task);
-  static void post_compile(CompilerThread* thread, CompileTask* task, EventCompilation& event, bool success, ciEnv* ci_env);
   static void set_last_compile(CompilerThread *thread, methodHandle method, bool is_osr, int comp_level);
   static void push_jni_handle_block();
   static void pop_jni_handle_block();

@@ -162,7 +162,7 @@ class DebugInformationRecorder: public ResourceObj {
   OopRecorder* _oop_recorder;
 
   // Scopes that have been described so far.
-  GrowableArray<DIR_Chunk*>* _all_chunks;
+  GrowableArray<const DIR_Chunk*>* _all_chunks;
 #if !INCLUDE_JVMCI
   GrowableArray<DIR_Chunk*>* _shared_chunks;
 #endif

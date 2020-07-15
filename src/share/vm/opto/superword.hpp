@@ -449,6 +449,7 @@ class SuperWord : public ResourceObj {
 };
 
 
+
 //------------------------------SWPointer---------------------------
 // Information about an address for dependence checking and vector alignment
 class SWPointer VALUE_OBJ_CLASS_SPEC {
