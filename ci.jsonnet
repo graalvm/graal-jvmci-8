@@ -108,9 +108,7 @@
         }
     },
 
-    # Downstream Graal branch to test against. If not master, then
-    # the branch must exist on both graal and graal-enterprise to
-    # ensure a consistent downstream code base is tested against.
+    # Downstream Graal branch to test against.
     local downstream_branch = "master",
 
     # Only need to test formatting and building
