@@ -89,6 +89,8 @@ ProjectCreatorIDEOptions = \
         -useToGeneratePch  java.cpp \
         -disablePch        os_windows.cpp \
         -disablePch        os_windows_$(Platform_arch).cpp \
+        -disablePch        os_perf_windows.cpp \
+        -disablePch        iphlp_interface.cpp \
         -disablePch        osThread_windows.cpp \
         -disablePch        bytecodeInterpreter.cpp \
         -disablePch        bytecodeInterpreterWithChecks.cpp \
