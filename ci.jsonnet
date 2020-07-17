@@ -142,8 +142,8 @@
             # See GR-22662.
             ["git", "fetch", "--tags"],
 
-            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
-            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate"],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--only-build-jvmci", "--dry-run"],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--only-build-jvmci"],
             ["mv", ["mx", "--vm=server", "jdkhome"], "java_home"],
             ["set-export", "JAVA_HOME", "${PWD}/java_home"],
             ["${JAVA_HOME}/bin/java", "-version"],
@@ -184,7 +184,7 @@
         logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
-            ["mx", "-p", "graal/compiler", "gate", "--tags", "build,test,bootstraplite"]
+            ["mx", "-p", "graal/compiler", "gate", "--tags", "build,test"]
         ]
     },
 
