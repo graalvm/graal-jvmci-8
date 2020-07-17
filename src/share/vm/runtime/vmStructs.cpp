@@ -176,10 +176,6 @@
 #include "gc_implementation/g1/vmStructs_g1.hpp"
 #endif // INCLUDE_ALL_GCS
 
-#if INCLUDE_TRACE
- #include "runtime/vmStructs_trace.hpp"
-#endif
-
 #ifdef COMPILER2
 #include "opto/addnode.hpp"
 #include "opto/block.hpp"
@@ -3081,11 +3077,6 @@ VMStructEntry VMStructs::localHotSpotVMStructs[] = {
                 GENERATE_STATIC_VM_STRUCT_ENTRY)
 #endif // INCLUDE_ALL_GCS
 
-#if INCLUDE_TRACE
-  VM_STRUCTS_TRACE(GENERATE_NONSTATIC_VM_STRUCT_ENTRY,
-                GENERATE_STATIC_VM_STRUCT_ENTRY)
-#endif
-
   VM_STRUCTS_CPU(GENERATE_NONSTATIC_VM_STRUCT_ENTRY,
                  GENERATE_STATIC_VM_STRUCT_ENTRY,
                  GENERATE_UNCHECKED_NONSTATIC_VM_STRUCT_ENTRY,
@@ -3136,11 +3127,6 @@ VMTypeEntry VMStructs::localHotSpotVMTypes[] = {
               GENERATE_TOPLEVEL_VM_TYPE_ENTRY)
 #endif // INCLUDE_ALL_GCS
 
-#if INCLUDE_TRACE
-  VM_TYPES_TRACE(GENERATE_VM_TYPE_ENTRY,
-              GENERATE_TOPLEVEL_VM_TYPE_ENTRY)
-#endif
-
   VM_TYPES_CPU(GENERATE_VM_TYPE_ENTRY,
                GENERATE_TOPLEVEL_VM_TYPE_ENTRY,
                GENERATE_OOP_VM_TYPE_ENTRY,
@@ -3181,10 +3167,6 @@ VMIntConstantEntry VMStructs::localHotSpotVMIntConstants[] = {
 
   VM_INT_CONSTANTS_PARNEW(GENERATE_VM_INT_CONSTANT_ENTRY)
 #endif // INCLUDE_ALL_GCS
-
-#if INCLUDE_TRACE
-  VM_INT_CONSTANTS_TRACE(GENERATE_VM_INT_CONSTANT_ENTRY)
-#endif
 
   VM_INT_CONSTANTS_CPU(GENERATE_VM_INT_CONSTANT_ENTRY,
                        GENERATE_PREPROCESSOR_VM_INT_CONSTANT_ENTRY,
@@ -3272,11 +3254,6 @@ VMStructs::init() {
 
 #endif // INCLUDE_ALL_GCS
 
-#if INCLUDE_TRACE
-  VM_STRUCTS_TRACE(CHECK_NONSTATIC_VM_STRUCT_ENTRY,
-                CHECK_STATIC_VM_STRUCT_ENTRY);
-#endif
-
   VM_STRUCTS_CPU(CHECK_NONSTATIC_VM_STRUCT_ENTRY,
                  CHECK_STATIC_VM_STRUCT_ENTRY,
                  CHECK_NO_OP,
@@ -3317,11 +3294,6 @@ VMStructs::init() {
               CHECK_SINGLE_ARG_VM_TYPE_NO_OP);
 
 #endif // INCLUDE_ALL_GCS
-
-#if INCLUDE_TRACE
-  VM_TYPES_TRACE(CHECK_VM_TYPE_ENTRY,
-              CHECK_SINGLE_ARG_VM_TYPE_NO_OP);
-#endif
 
   VM_TYPES_CPU(CHECK_VM_TYPE_ENTRY,
                CHECK_SINGLE_ARG_VM_TYPE_NO_OP,
@@ -3394,11 +3366,6 @@ VMStructs::init() {
   debug_only(VM_STRUCTS_G1(ENSURE_FIELD_TYPE_PRESENT,
                            ENSURE_FIELD_TYPE_PRESENT));
 #endif // INCLUDE_ALL_GCS
-
-#if INCLUDE_TRACE
-  debug_only(VM_STRUCTS_TRACE(ENSURE_FIELD_TYPE_PRESENT,
-                           ENSURE_FIELD_TYPE_PRESENT));
-#endif
 
   debug_only(VM_STRUCTS_CPU(ENSURE_FIELD_TYPE_PRESENT,
                             ENSURE_FIELD_TYPE_PRESENT,

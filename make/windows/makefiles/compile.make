@@ -314,6 +314,13 @@ LD_FLAGS = $(SAFESEH_FLAG) $(LD_FLAGS)
 
 CXX_FLAGS = $(CXX_FLAGS) $(MP_FLAG)
 
+!if "$(ENABLE_JFR)" == "true"
+INCLUDE_JFR=1
+!else
+INCLUDE_JFR=0
+!endif
+CXX_FLAGS=$(CXX_FLAGS) /D INCLUDE_JFR=$(INCLUDE_JFR)
+
 # If NO_OPTIMIZATIONS is defined in the environment, turn everything off
 !ifdef NO_OPTIMIZATIONS
 PRODUCT_OPT_OPTION   = $(DEBUG_OPT_OPTION)
@@ -332,8 +339,7 @@ LD_FLAGS= $(LD_FLAGS) kernel32.lib user32.lib gdi32.lib winspool.lib \
 LD_FLAGS= $(LD_FLAGS) /map /debug
 !endif
 
-
-!if $(MSC_VER) >= 1600 
+!if "$(MSC_VER)" >= "1600"
 LD_FLAGS= $(LD_FLAGS) psapi.lib
 !endif
 
@@ -357,4 +363,3 @@ RC_FLAGS=/D "HS_VER=$(HS_VER)" \
 !if "$(MFC_DEBUG)" == "true"
 RC_FLAGS = $(RC_FLAGS) /D "_DEBUG"
 !endif
-

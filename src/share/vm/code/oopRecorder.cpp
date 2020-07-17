@@ -158,7 +158,7 @@ template <class T> int ValueRecorder<T>::maybe_find_index(T h) {
 template class ValueRecorder<Metadata*>;
 template class ValueRecorder<jobject>;
 
-oop ObjectLookup::ObjectEntry::oop_value() { return JNIHandles::resolve(_value); }
+oop ObjectLookup::ObjectEntry::oop_value() const { return JNIHandles::resolve(_value); }
 
 ObjectLookup::ObjectLookup(): _gc_count(Universe::heap()->total_collections()), _values(4) {}
 
@@ -181,7 +181,7 @@ int ObjectLookup::sort_by_address(ObjectEntry* a, ObjectEntry* b) {
   return sort_by_address(a->oop_value(), b->oop_value());
 }
 
-int ObjectLookup::sort_oop_by_address(oop& a, ObjectEntry& b) {
+int ObjectLookup::sort_oop_by_address(const oop& a, const ObjectEntry& b) {
   return sort_by_address(a, b.oop_value());
 }
   

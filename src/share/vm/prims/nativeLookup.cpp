@@ -41,6 +41,9 @@
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/signature.hpp"
 #include "utilities/macros.hpp"
+#if INCLUDE_JFR
+#include "jfr/jfr.hpp"
+#endif
 #ifdef TARGET_OS_FAMILY_linux
 # include "os_linux.inline.hpp"
 #endif
@@ -143,10 +146,13 @@ static JNINativeMethod lookup_special_native_methods[] = {
   { CC"Java_sun_misc_Perf_registerNatives",                        NULL, FN_PTR(JVM_RegisterPerfMethods)         },
   { CC"Java_sun_hotspot_WhiteBox_registerNatives",                 NULL, FN_PTR(JVM_RegisterWhiteBoxMethods)     },
 #if INCLUDE_JVMCI
-  { CC"Java_jdk_vm_ci_services_JVMCIClassLoaderFactory_init",  NULL, FN_PTR(JVM_InitJVMCIClassLoader)     },
-  { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",        NULL, FN_PTR(JVM_GetJVMCIRuntime)          },
-  { CC"Java_jdk_vm_ci_services_Services_getJVMCIClassLoader0", NULL, FN_PTR(JVM_GetJVMCIClassLoader)      },
-  { CC"Java_jdk_vm_ci_hotspot_CompilerToVM_registerNatives",   NULL, FN_PTR(JVM_RegisterJVMCINatives)     },
+  { CC"Java_jdk_vm_ci_services_JVMCIClassLoaderFactory_init",      NULL, FN_PTR(JVM_InitJVMCIClassLoader)        },
+  { CC"Java_jdk_vm_ci_runtime_JVMCI_initializeRuntime",            NULL, FN_PTR(JVM_GetJVMCIRuntime)             },
+  { CC"Java_jdk_vm_ci_services_Services_getJVMCIClassLoader0",     NULL, FN_PTR(JVM_GetJVMCIClassLoader)         },
+  { CC"Java_jdk_vm_ci_hotspot_CompilerToVM_registerNatives",       NULL, FN_PTR(JVM_RegisterJVMCINatives)        },
+#endif
+#if INCLUDE_JFR
+  { CC"Java_jdk_jfr_internal_JVM_registerNatives",                 NULL, FN_PTR(jfr_register_natives)            },
 #endif
 };
 

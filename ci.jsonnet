@@ -90,8 +90,8 @@
     },
 
     OpenJDK:: {
-        local jdk_version = "8u252",
-        local jdk_build = "09",
+        local jdk_version = "8u262",
+        local jdk_build = "10",
 
         name+: "-openjdk",
         downloads+: {
@@ -108,10 +108,8 @@
         }
     },
 
-    # Downstream Graal branch to test against. If not master, then
-    # the branch must exist on both graal and graal-enterprise to
-    # ensure a consistent downstream code base is tested against.
-    local downstream_branch = "master",
+    # Downstream Graal branch to test against.
+    local downstream_branch = "ds/GR-24732", # Needed to pass CheckGraalIntrinsics in context of JFR backport
 
     # Only need to test formatting and building
     # with Eclipse on one platform.
@@ -144,8 +142,8 @@
             # See GR-22662.
             ["git", "fetch", "--tags"],
 
-            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
-            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate"],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--only-build-jvmci", "--dry-run"],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--only-build-jvmci"],
             ["mv", ["mx", "--vm=server", "jdkhome"], "java_home"],
             ["set-export", "JAVA_HOME", "${PWD}/java_home"],
             ["${JAVA_HOME}/bin/java", "-version"],
@@ -186,7 +184,7 @@
         logs: ["*.log", "*.cmd"],
         targets: ["gate"],
         run+: [
-            ["mx", "-p", "graal/compiler", "gate", "--tags", "build,test,bootstraplite"]
+            ["mx", "-p", "graal/compiler", "gate", "--tags", "build,test"]
         ]
     },
 

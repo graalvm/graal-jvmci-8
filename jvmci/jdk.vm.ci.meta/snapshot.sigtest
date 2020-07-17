@@ -186,6 +186,7 @@ meth public abstract jdk.vm.ci.meta.JavaMethod lookupMethod(int,int)
 meth public abstract jdk.vm.ci.meta.JavaType lookupType(int,int)
 meth public abstract jdk.vm.ci.meta.Signature lookupSignature(int)
 meth public abstract void loadReferencedType(int,int)
+meth public abstract jdk.vm.ci.meta.JavaType lookupReferencedType(int,int)
 
 CLSS public abstract interface jdk.vm.ci.meta.ConstantReflectionProvider
 meth public abstract java.lang.Boolean constantEquals(jdk.vm.ci.meta.Constant,jdk.vm.ci.meta.Constant)
