@@ -172,6 +172,9 @@
                 dir: '.'
             }
         ],
+        catch_files+: [
+            "Graal diagnostic output saved in (?P<filename>.+\\.zip)"
+        ],
         run+: [
             ["set-export", "JAVA_HOME", "${PWD}/java_home"]
         ]
