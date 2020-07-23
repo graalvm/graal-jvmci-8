@@ -30,6 +30,7 @@
 #include "compiler/compileLog.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "interpreter/linkResolver.hpp"
+#include "jfr/jfrEvents.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/methodData.hpp"
 #include "oops/method.hpp"
@@ -43,7 +44,6 @@
 #include "runtime/os.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/sweeper.hpp"
-#include "trace/tracing.hpp"
 #include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #ifdef COMPILER1
@@ -2295,6 +2295,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     if (ci_env.failing()) {
       failure_reason = ci_env.failure_reason();
       retry_message = ci_env.retry_message();
+      task->set_failure_reason(failure_reason);
     }
 
     post_compile(thread, task, event, !ci_env.failing(), &ci_env);

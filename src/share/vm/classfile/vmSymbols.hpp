@@ -25,10 +25,11 @@
 #ifndef SHARE_VM_CLASSFILE_VMSYMBOLS_HPP
 #define SHARE_VM_CLASSFILE_VMSYMBOLS_HPP
 
-#include "oops/symbol.hpp"
+#include "jfr/support/jfrIntrinsics.hpp"
 #include "memory/iterator.hpp"
-#include "trace/traceMacros.hpp"
 #include "jvmci/vmSymbols_jvmci.hpp"
+#include "oops/symbol.hpp"
+#include "utilities/macros.hpp"
 
 // The class vmSymbols is a name space for fast lookup of
 // symbols commonly used in the VM.
@@ -612,8 +613,8 @@
   template(classRedefinedCount_name,                   "classRedefinedCount")                                     \
   template(classLoader_name,                           "classLoader")                                             \
                                                                                                                   \
-  /* trace signatures */                                                                                          \
-  TRACE_TEMPLATES(template)                                                                                       \
+  /* jfr signatures */                                                                                            \
+  JFR_TEMPLATES(template)                                                                                         \
                                                                                                                   \
   /*end*/
 
@@ -742,7 +743,7 @@
   do_intrinsic(_nanoTime,                 java_lang_System,       nanoTime_name,          void_long_signature,   F_S)   \
    do_name(     nanoTime_name,                                   "nanoTime")                                            \
                                                                                                                         \
-  TRACE_INTRINSICS(do_intrinsic, do_class, do_name, do_signature, do_alias)                                             \
+  JFR_INTRINSICS(do_intrinsic, do_class, do_name, do_signature, do_alias)                                               \
                                                                                                                         \
   do_intrinsic(_arraycopy,                java_lang_System,       arraycopy_name, arraycopy_signature,           F_S)   \
    do_name(     arraycopy_name,                                  "arraycopy")                                           \
