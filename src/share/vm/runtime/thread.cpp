@@ -1453,7 +1453,7 @@ void JavaThread::collect_counters(jlong* array, int length) {
 
 // Attempt to enlarge the array for per thread counters.
 jlong* resize_counters_array(jlong* old_counters, int current_size, int new_size) {
-  jlong* new_counters = NEW_C_HEAP_ARRAY(jlong, new_size, mtInternal);
+  jlong* new_counters = NEW_C_HEAP_ARRAY_RETURN_NULL(jlong, new_size, mtInternal);
   if (new_counters == NULL) {
     return NULL;
   }
