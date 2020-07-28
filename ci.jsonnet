@@ -160,8 +160,8 @@
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
             ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
 
-            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
-            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate"],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--only-build-jvmci", "--dry-run"],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--only-build-jvmci"],
             ["mv", ["mx", "--vm=server", "jdkhome"], "java_home"],
             ["set-export", "JAVA_HOME", "${PWD}/java_home"],
             ["${JAVA_HOME}/bin/java", "-version"],
@@ -181,7 +181,7 @@
     GraalTest:: {
         name+: "-graal",
         run+: [
-            ["mx", "-v", "-p", "graal/compiler", "gate", "--tags", "build,test,bootstraplite"]
+            ["mx", "-v", "-p", "graal/compiler", "gate", "--tags", "build,test"]
             ]
     },
 

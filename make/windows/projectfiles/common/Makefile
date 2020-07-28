@@ -76,7 +76,7 @@ JfrOutDir=$(HOTSPOTBUILDSPACE)\$(Variant)\generated\jfrfiles
 
 HS_INTERNAL_NAME=jvm
 
-default:: $(AdditionalTargets) $(JvmtiGeneratedFiles) $(TraceGeneratedFiles)
+default:: $(AdditionalTargets) $(JvmtiGeneratedFiles) $(JfrGeneratedFiles)
 
 !include $(HOTSPOTWORKSPACE)/make/hotspot_version
 

@@ -340,7 +340,7 @@ LD_FLAGS= $(LD_FLAGS) /map /debug
 !endif
 
 
-!if $(MSC_VER) >= 1600 
+!if "$(MSC_VER)" >= "1600"
 LD_FLAGS= $(LD_FLAGS) psapi.lib
 !endif
 
