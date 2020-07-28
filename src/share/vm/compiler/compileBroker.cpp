@@ -30,6 +30,7 @@
 #include "compiler/compileLog.hpp"
 #include "compiler/compilerOracle.hpp"
 #include "interpreter/linkResolver.hpp"
+#include "jfr/jfrEvents.hpp"
 #include "memory/allocation.inline.hpp"
 #include "oops/methodData.hpp"
 #include "oops/method.hpp"
@@ -43,7 +44,6 @@
 #include "runtime/os.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/sweeper.hpp"
-#include "trace/tracing.hpp"
 #include "utilities/dtrace.hpp"
 #include "utilities/events.hpp"
 #ifdef COMPILER1
@@ -2129,7 +2129,7 @@ static void codecache_print(bool detailed)
   tty->print("%s", s.as_string());
 }
 
-void CompileBroker::post_compile(CompilerThread* thread, CompileTask* task, EventCompilation& event, bool success, ciEnv* ci_env) {
+static void post_compile(CompilerThread* thread, CompileTask* task, EventCompilation& event, bool success, ciEnv* ci_env) {
 
   if (success) {
     task->mark_success();
@@ -2148,7 +2148,7 @@ void CompileBroker::post_compile(CompilerThread* thread, CompileTask* task, Even
   assert(task->compile_id() != CICrashAt, "just as planned");
   if (event.should_commit()) {
     event.set_method(task->method());
-    event.set_compileID(task->compile_id());
+    event.set_compileId(task->compile_id());
     event.set_compileLevel(task->comp_level());
     event.set_succeded(task->is_success());
     event.set_isOsr(task->osr_bci() != CompileBroker::standard_entry_bci);
@@ -2295,6 +2295,7 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
     if (ci_env.failing()) {
       failure_reason = ci_env.failure_reason();
       retry_message = ci_env.retry_message();
+      task->set_failure_reason(failure_reason);
     }
 
     post_compile(thread, task, event, !ci_env.failing(), &ci_env);
@@ -2312,6 +2313,13 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
         err_msg_res("COMPILE SKIPPED: %s (%s)", failure_reason, retry_message) :
         err_msg_res("COMPILE SKIPPED: %s",      failure_reason);
       task->print_compilation(tty, msg);
+    }
+
+    EventCompilationFailure event;
+    if (event.should_commit()) {
+      event.set_compileId(compile_id);
+      event.set_failureMessage(failure_reason);
+      event.commit();
     }
   }
 

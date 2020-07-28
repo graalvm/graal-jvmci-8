@@ -111,8 +111,8 @@
     },
 
     OpenJDK:: {
-        local jdk_version = "8u252",
-        local jdk_build = "09",
+        local jdk_version = "8u262",
+        local jdk_build = "10",
 
         name+: "-openjdk",
         downloads: {
@@ -132,7 +132,7 @@
     # Downstream Graal branch to test against. If not master, then
     # the branch must exist on both graal and graal-enterprise to
     # ensure a consistent downstream code base is tested against.
-    local downstream_branch = "cpu/graal-vm/19.3.2",
+    local downstream_branch = "me/GR-25096",
 
     Build:: {
         packages+: {
@@ -160,8 +160,8 @@
             ["git", "clone", ["mx", "urlrewrite", "https://github.com/graalvm/graal.git"]],
             ["git", "-C", "graal", "checkout", downstream_branch, "||", "true"],
 
-            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--dry-run"],
-            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate"],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--only-build-jvmci", "--dry-run"],
+            ["mx", "--kill-with-sigquit", "--strict-compliance", "gate", "--only-build-jvmci"],
             ["mv", ["mx", "--vm=server", "jdkhome"], "java_home"],
             ["set-export", "JAVA_HOME", "${PWD}/java_home"],
             ["${JAVA_HOME}/bin/java", "-version"],
@@ -181,7 +181,7 @@
     GraalTest:: {
         name+: "-graal",
         run+: [
-            ["mx", "-v", "-p", "graal/compiler", "gate", "--tags", "build,test,bootstraplite"]
+            ["mx", "-v", "-p", "graal/compiler", "gate", "--tags", "build,test"]
             ]
     },
 

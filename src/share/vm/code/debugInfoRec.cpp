@@ -85,7 +85,7 @@ class DIR_Chunk {
   }
 
 #if INCLUDE_JVMCI
-  static int compare(DIR_Chunk*& a, DIR_Chunk*& b) {
+  static int compare(const DIR_Chunk* const & a, const DIR_Chunk* const & b) {
     if (b->_hash > a->_hash) {
       return 1;
     }
@@ -137,7 +137,7 @@ DebugInformationRecorder::DebugInformationRecorder(OopRecorder* oop_recorder)
 
   _oop_recorder = oop_recorder;
 
-  _all_chunks    = new GrowableArray<DIR_Chunk*>(300);
+  _all_chunks    = new GrowableArray<const DIR_Chunk*>(300);
 #if !INCLUDE_JVMCI
   _shared_chunks = new GrowableArray<DIR_Chunk*>(30);
 #endif
@@ -278,7 +278,7 @@ int DebugInformationRecorder::find_sharable_decode_offset(int stream_offset) {
   DIR_Chunk* ns = new(this) DIR_Chunk(stream_offset, stream_length, this);
 
 #if INCLUDE_JVMCI
-  DIR_Chunk* match = _all_chunks->insert_sorted<DIR_Chunk::compare>(ns);
+  const DIR_Chunk* match = _all_chunks->insert_sorted<DIR_Chunk::compare>(ns);
   if (match != ns) {
     // Found an existing chunk
     NOT_PRODUCT(++dir_stats.chunks_shared);

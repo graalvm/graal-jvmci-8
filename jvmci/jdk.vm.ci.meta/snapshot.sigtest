@@ -183,6 +183,7 @@ meth public abstract java.lang.String lookupUtf8(int)
 meth public abstract jdk.vm.ci.meta.JavaConstant lookupAppendix(int,int)
 meth public abstract jdk.vm.ci.meta.JavaField lookupField(int,jdk.vm.ci.meta.ResolvedJavaMethod,int)
 meth public abstract jdk.vm.ci.meta.JavaMethod lookupMethod(int,int)
+meth public abstract jdk.vm.ci.meta.JavaType lookupReferencedType(int,int)
 meth public abstract jdk.vm.ci.meta.JavaType lookupType(int,int)
 meth public abstract jdk.vm.ci.meta.Signature lookupSignature(int)
 meth public abstract void loadReferencedType(int,int)
@@ -253,6 +254,16 @@ fld public final static jdk.vm.ci.meta.DeoptimizationReason Unresolved
 meth public static jdk.vm.ci.meta.DeoptimizationReason valueOf(java.lang.String)
 meth public static jdk.vm.ci.meta.DeoptimizationReason[] values()
 supr java.lang.Enum<jdk.vm.ci.meta.DeoptimizationReason>
+
+CLSS public jdk.vm.ci.meta.EncodedSpeculationReason
+cons public init(int,java.lang.String,java.lang.Object[])
+intf jdk.vm.ci.meta.SpeculationLog$SpeculationReason
+meth public boolean equals(java.lang.Object)
+meth public int hashCode()
+meth public java.lang.String toString()
+meth public jdk.vm.ci.meta.SpeculationLog$SpeculationReasonEncoding encode(java.util.function.Supplier<jdk.vm.ci.meta.SpeculationLog$SpeculationReasonEncoding>)
+supr java.lang.Object
+hfds context,encoding,groupId,groupName
 
 CLSS public final jdk.vm.ci.meta.ExceptionHandler
 cons public init(int,int,int,int,jdk.vm.ci.meta.JavaType)

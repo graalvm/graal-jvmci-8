@@ -57,12 +57,6 @@ suite = {
     },
   },
 
-  "jrelibraries" : {
-    "JFR" : {
-      "jar" : "jfr.jar",
-    }
-  },
-
   "projects" : {
 
     # ------------- JVMCI:Service -------------
@@ -238,19 +232,6 @@ suite = {
       "workingSets" : "JVMCI,HotSpot,SPARC",
     },
 
-    "jdk.vm.ci.hotspot.jfr" : {
-      "subDir" : "jvmci",
-      "sourceDirs" : ["src"],
-      "dependencies" : [
-        "jdk.vm.ci.hotspot",
-        "JFR",
-      ],
-      "checkstyle" : "jdk.vm.ci.hotspot",
-      "javaCompliance" : "1.8",
-      "profile" : "",
-      "workingSets" : "JVMCI,HotSpot",
-    },
-
     "hotspot" : {
       "native" : True,
       "dependencies" : [
@@ -351,7 +332,6 @@ suite = {
         "jdk.vm.ci.hotspot.aarch64",
         "jdk.vm.ci.hotspot.amd64",
         "jdk.vm.ci.hotspot.sparc",
-        "jdk.vm.ci.hotspot.jfr",
       ],
       "distDependencies" : [
         "JVMCI_SERVICES",

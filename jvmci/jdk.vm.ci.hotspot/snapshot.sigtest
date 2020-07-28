@@ -333,6 +333,7 @@ meth public java.lang.String toString()
 meth public jdk.vm.ci.meta.JavaConstant lookupAppendix(int,int)
 meth public jdk.vm.ci.meta.JavaField lookupField(int,jdk.vm.ci.meta.ResolvedJavaMethod,int)
 meth public jdk.vm.ci.meta.JavaMethod lookupMethod(int,int)
+meth public jdk.vm.ci.meta.JavaType lookupReferencedType(int,int)
 meth public jdk.vm.ci.meta.JavaType lookupType(int,int)
 meth public jdk.vm.ci.meta.Signature lookupSignature(int)
 meth public long getMetadataHandle()
@@ -481,12 +482,14 @@ meth public jdk.vm.ci.hotspot.HotSpotVMConfigStore getConfigStore()
 meth public jdk.vm.ci.meta.JavaType lookupType(java.lang.String,jdk.vm.ci.hotspot.HotSpotResolvedObjectType,boolean)
 meth public jdk.vm.ci.runtime.JVMCIBackend getHostJVMCIBackend()
 meth public jdk.vm.ci.runtime.JVMCICompiler getCompiler()
+meth public long getCurrentJavaThread()
 meth public long translate(java.lang.Object)
 meth public long[] collectCounters()
 meth public long[] registerNativeMethods(java.lang.Class<?>)
 meth public static jdk.vm.ci.hotspot.HotSpotJVMCIRuntime runtime()
 meth public static jdk.vm.ci.meta.JavaKind getHostWordKind()
 meth public void detachCurrentThread()
+meth public void exitHotSpot(int)
 supr java.lang.Object
 hfds backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,excludeFromJVMCICompilation,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,resolvedJavaType,resolvedJavaTypes,serializableType,throwableType,vmEventListeners
 hcls CompileLogStream
@@ -699,6 +702,7 @@ meth public boolean equals(java.lang.Object)
 meth public boolean hasFinalizer()
 meth public boolean isArray()
 meth public boolean isAssignableFrom(jdk.vm.ci.meta.ResolvedJavaType)
+meth public boolean isBeingInitialized()
 meth public boolean isCloneableWithAllocation()
 meth public boolean isEnum()
 meth public boolean isInitialized()
@@ -871,6 +875,12 @@ meth public void notifyBootstrapFinished()
 meth public void notifyInstall(jdk.vm.ci.hotspot.HotSpotCodeCacheProvider,jdk.vm.ci.code.InstalledCode,jdk.vm.ci.code.CompiledCode)
 meth public void notifyShutdown()
 
+CLSS public jdk.vm.ci.hotspot.SharedHotSpotSpeculationLog
+cons public init(jdk.vm.ci.hotspot.HotSpotSpeculationLog)
+meth public java.lang.String toString()
+supr jdk.vm.ci.hotspot.HotSpotSpeculationLog
+hfds masterLog
+
 CLSS public final jdk.vm.ci.hotspot.VMField
 fld public final java.lang.Object value
 fld public final java.lang.String name
@@ -909,6 +919,7 @@ meth public abstract java.lang.String lookupUtf8(int)
 meth public abstract jdk.vm.ci.meta.JavaConstant lookupAppendix(int,int)
 meth public abstract jdk.vm.ci.meta.JavaField lookupField(int,jdk.vm.ci.meta.ResolvedJavaMethod,int)
 meth public abstract jdk.vm.ci.meta.JavaMethod lookupMethod(int,int)
+meth public abstract jdk.vm.ci.meta.JavaType lookupReferencedType(int,int)
 meth public abstract jdk.vm.ci.meta.JavaType lookupType(int,int)
 meth public abstract jdk.vm.ci.meta.Signature lookupSignature(int)
 meth public abstract void loadReferencedType(int,int)
