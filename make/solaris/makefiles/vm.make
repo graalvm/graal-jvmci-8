@@ -164,10 +164,11 @@ LIBJVM   = lib$(JVM).so
 
 LIBJVM_DEBUGINFO   = lib$(JVM).debuginfo
 LIBJVM_DIZ         = lib$(JVM).diz
+
 ifeq ($(ENABLE_JFR),false)
 EXCLUDE_JFR_PATHS:= -o -name jfr -prune
 endif
-SPECIAL_PATHS:=adlc c1 gc_implementation opto shark libadt jvmci
+SPECIAL_PATHS:=adlc c1 dist gc_implementation opto shark libadt jvmci
 
 SOURCE_PATHS=\
   $(shell find $(HS_COMMON_SRC)/share/vm/* -type d \! \

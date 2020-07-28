@@ -67,7 +67,6 @@
 #endif // INCLUDE_JFR
 
 GenCollectedHeap* GenCollectedHeap::_gch;
-NOT_PRODUCT(size_t GenCollectedHeap::_skip_header_HeapWords = 0;)
 
 // The set of potentially parallel tasks in root scanning.
 enum GCH_strong_roots_tasks {

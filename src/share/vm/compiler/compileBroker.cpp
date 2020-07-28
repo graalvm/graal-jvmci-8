@@ -2129,7 +2129,7 @@ static void codecache_print(bool detailed)
   tty->print("%s", s.as_string());
 }
 
-void CompileBroker::post_compile(CompilerThread* thread, CompileTask* task, EventCompilation& event, bool success, ciEnv* ci_env) {
+static void post_compile(CompilerThread* thread, CompileTask* task, EventCompilation& event, bool success, ciEnv* ci_env) {
 
   if (success) {
     task->mark_success();
@@ -2148,7 +2148,7 @@ void CompileBroker::post_compile(CompilerThread* thread, CompileTask* task, Even
   assert(task->compile_id() != CICrashAt, "just as planned");
   if (event.should_commit()) {
     event.set_method(task->method());
-    event.set_compileID(task->compile_id());
+    event.set_compileId(task->compile_id());
     event.set_compileLevel(task->comp_level());
     event.set_succeded(task->is_success());
     event.set_isOsr(task->osr_bci() != CompileBroker::standard_entry_bci);
@@ -2313,6 +2313,13 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
         err_msg_res("COMPILE SKIPPED: %s (%s)", failure_reason, retry_message) :
         err_msg_res("COMPILE SKIPPED: %s",      failure_reason);
       task->print_compilation(tty, msg);
+    }
+
+    EventCompilationFailure event;
+    if (event.should_commit()) {
+      event.set_compileId(compile_id);
+      event.set_failureMessage(failure_reason);
+      event.commit();
     }
   }
 

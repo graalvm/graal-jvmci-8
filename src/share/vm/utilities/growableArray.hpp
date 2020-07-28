@@ -385,6 +385,7 @@ template<class E> class GrowableArray : public GenericGrowableArray {
     bool found;
     int location = find_sorted<E, compare>(key, found);
     if (!found) {
+      assert(location <= length(), "out of range");
       insert_before(location, key);
     }
     return at(location);
@@ -394,7 +395,7 @@ template<class E> class GrowableArray : public GenericGrowableArray {
     found = false;
     int min = 0;
     int max = length() - 1;
-
+  
     while (max >= min) {
       int mid = (int)(((uint)max + min) / 2);
       E value = at(mid);
