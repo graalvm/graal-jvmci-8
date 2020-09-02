@@ -93,6 +93,7 @@ class JVMCICompileState : public ResourceObj {
   friend class VMStructs;
  private:
   CompileTask*     _task;
+  JVMCICompiler*   _compiler;
   int              _system_dictionary_modification_counter;
 
   // Cache JVMTI state. Defined as bytes so that reading them from Java
@@ -111,8 +112,13 @@ class JVMCICompileState : public ResourceObj {
   // with the mtCompiler NMT flag.
   bool             _failure_reason_on_C_heap;
 
+  // A value indicating compilation activity during the compilation.
+  // If successive calls to this method return a different value, then
+  // some degree of JVMCI compilation occurred between the calls.
+  jint             _compilation_ticks;
+
  public:
-  JVMCICompileState(CompileTask* task, int system_dictionary_modification_counter);
+  JVMCICompileState(CompileTask* task, JVMCICompiler* compiler, int system_dictionary_modification_counter);
 
   CompileTask* task() { return _task; }
 
@@ -132,6 +138,9 @@ class JVMCICompileState : public ResourceObj {
     _failure_reason_on_C_heap = reason_on_C_heap;
     _retryable = retryable;
   }
+
+  jint compilation_ticks() const { return _compilation_ticks; }
+  void inc_compilation_ticks();
 };
 
 // This class is a top level wrapper around interactions between HotSpot
@@ -280,7 +289,7 @@ public:
   JVMCIPrimitiveArray wrap(typeArrayOop obj) { assert(is_hotspot(), "must be"); return (JVMCIPrimitiveArray) wrap(JNIHandles::make_local(obj)); }
 
  public:
-  // Compiles a method with the JVMIC compiler.
+  // Compiles a method with the JVMCI compiler.
   // Caller must handle pending exception.
   JVMCIObject call_HotSpotJVMCIRuntime_compileMethod(JVMCIObject runtime, JVMCIObject method, int entry_bci,
                                                      jlong compile_state, int id);

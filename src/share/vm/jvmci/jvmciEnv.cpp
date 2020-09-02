@@ -24,6 +24,7 @@
 
 #include "precompiled.hpp"
 #include "code/codeCache.hpp"
+#include "compiler/compileBroker.hpp"
 #include "memory/oopFactory.hpp"
 #include "memory/resourceArea.hpp"
 #include "oops/typeArrayOop.hpp"
@@ -35,8 +36,9 @@
 #include "gc_implementation/g1/g1SATBCardTableModRefBS.hpp"
 #endif
 
-JVMCICompileState::JVMCICompileState(CompileTask* task, int system_dictionary_modification_counter):
+JVMCICompileState::JVMCICompileState(CompileTask* task, JVMCICompiler* compiler, int system_dictionary_modification_counter):
   _task(task),
+  _compiler(compiler),
   _system_dictionary_modification_counter(system_dictionary_modification_counter),
   _failure_reason(NULL),
   _failure_reason_on_C_heap(false),
@@ -47,6 +49,20 @@ JVMCICompileState::JVMCICompileState(CompileTask* task, int system_dictionary_mo
   _jvmti_can_access_local_variables     = JvmtiExport::can_access_local_variables() ? 1 : 0;
   _jvmti_can_post_on_exceptions         = JvmtiExport::can_post_on_exceptions() ? 1 : 0;
   _jvmti_can_pop_frame                  = JvmtiExport::can_pop_frame() ? 1 : 0;
+  if (task->is_blocking()) {
+    task->set_blocking_jvmci_compile_state(this);
+  }
+}
+
+// Update global JVMCI compilation ticks after 512 thread-local JVMCI compilation ticks.
+// This mitigates the overhead of the atomic operation used for the global update.
+#define THREAD_TICKS_PER_GLOBAL_TICKS (2 << 9)
+#define THREAD_TICKS_PER_GLOBAL_TICKS_MASK (THREAD_TICKS_PER_GLOBAL_TICKS - 1)
+
+void JVMCICompileState::inc_compilation_ticks() {
+  if ((++_compilation_ticks & THREAD_TICKS_PER_GLOBAL_TICKS_MASK) == 0) {
+    _compiler->inc_global_compilation_ticks();
+  }
 }
 
 bool JVMCICompileState::jvmti_state_changed() const {
@@ -611,8 +627,8 @@ void JVMCIEnv::fthrow_error(const char* file, int line, const char* format, ...)
 
 JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_compileMethod (JVMCIObject runtime, JVMCIObject method, int entry_bci,
                                                               jlong compile_state, int id) {
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
-    Thread* THREAD = Thread::current();
     JavaCallArguments jargs;
     jargs.push_oop(HotSpotJVMCI::resolve(runtime));
     jargs.push_oop(HotSpotJVMCI::resolve(method));
@@ -626,7 +642,7 @@ JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_compileMethod (JVMCIObject runtim
                             vmSymbols::compileMethod_signature(), &jargs, CHECK_(JVMCIObject()));
     return wrap((oop) result.get_jobject());
   } else {
-    JNIAccessMark jni(this);
+    JNIAccessMark jni(this, THREAD);
     jobject result = jni()->CallNonvirtualObjectMethod(runtime.as_jobject(),
                                                      JNIJVMCI::HotSpotJVMCIRuntime::clazz(),
                                                      JNIJVMCI::HotSpotJVMCIRuntime::compileMethod_method(),
@@ -639,14 +655,14 @@ JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_compileMethod (JVMCIObject runtim
 }
 
 void JVMCIEnv::call_HotSpotJVMCIRuntime_bootstrapFinished (JVMCIObject runtime, JVMCIEnv* JVMCIENV) {
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
-    Thread* THREAD = Thread::current();
     JavaCallArguments jargs;
     jargs.push_oop(HotSpotJVMCI::resolve(runtime));
     JavaValue result(T_VOID);
     JavaCalls::call_special(&result, HotSpotJVMCI::HotSpotJVMCIRuntime::klass(), vmSymbols::bootstrapFinished_name(), vmSymbols::void_method_signature(), &jargs, CHECK);
   } else {
-    JNIAccessMark jni(this);
+    JNIAccessMark jni(this, THREAD);
     jni()->CallNonvirtualVoidMethod(runtime.as_jobject(), JNIJVMCI::HotSpotJVMCIRuntime::clazz(), JNIJVMCI::HotSpotJVMCIRuntime::bootstrapFinished_method());
 
   }
@@ -654,7 +670,7 @@ void JVMCIEnv::call_HotSpotJVMCIRuntime_bootstrapFinished (JVMCIObject runtime, 
 
 void JVMCIEnv::call_HotSpotJVMCIRuntime_shutdown (JVMCIObject runtime) {
   HandleMark hm;
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
     JavaCallArguments jargs;
     jargs.push_oop(HotSpotJVMCI::resolve(runtime));
@@ -672,7 +688,7 @@ void JVMCIEnv::call_HotSpotJVMCIRuntime_shutdown (JVMCIObject runtime) {
 }
 
 JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_runtime (JVMCIEnv* JVMCIENV) {
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
     JavaCallArguments jargs;
     JavaValue result(T_OBJECT);
@@ -689,7 +705,7 @@ JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_runtime (JVMCIEnv* JVMCIENV) {
 }
 
 JVMCIObject JVMCIEnv::call_JVMCI_getRuntime (JVMCIEnv* JVMCIENV) {
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
     JavaCallArguments jargs;
     JavaValue result(T_OBJECT);
@@ -706,7 +722,7 @@ JVMCIObject JVMCIEnv::call_JVMCI_getRuntime (JVMCIEnv* JVMCIENV) {
 }
 
 JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_getCompiler (JVMCIObject runtime, JVMCIEnv* JVMCIENV) {
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
     JavaCallArguments jargs;
     jargs.push_oop(HotSpotJVMCI::resolve(runtime));
@@ -725,7 +741,7 @@ JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_getCompiler (JVMCIObject runtime,
 
 
 JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_callToString(JVMCIObject object, JVMCIEnv* JVMCIENV) {
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
     JavaCallArguments jargs;
     jargs.push_oop(HotSpotJVMCI::resolve(object));
@@ -749,7 +765,7 @@ JVMCIObject JVMCIEnv::call_HotSpotJVMCIRuntime_callToString(JVMCIObject object, 
 
 
 JVMCIObject JVMCIEnv::call_PrimitiveConstant_forTypeChar(jchar kind, jlong value, JVMCI_TRAPS) {
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
     JavaCallArguments jargs;
     jargs.push_int(kind);
@@ -773,7 +789,7 @@ JVMCIObject JVMCIEnv::call_PrimitiveConstant_forTypeChar(jchar kind, jlong value
 }
 
 JVMCIObject JVMCIEnv::call_JavaConstant_forFloat(float value, JVMCI_TRAPS) {
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
     JavaCallArguments jargs;
     jargs.push_float(value);
@@ -796,7 +812,7 @@ JVMCIObject JVMCIEnv::call_JavaConstant_forFloat(float value, JVMCI_TRAPS) {
 }
 
 JVMCIObject JVMCIEnv::call_JavaConstant_forDouble(double value, JVMCI_TRAPS) {
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
     JavaCallArguments jargs;
     jargs.push_double(value);
@@ -877,7 +893,7 @@ JVMCIObject JVMCIEnv::new_StackTraceElement(const methodHandle& method, int bci,
 }
 
 JVMCIObject JVMCIEnv::new_HotSpotNmethod(const methodHandle& method, const char* name, jboolean isDefault, jlong compileId, JVMCI_TRAPS) {
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
 
   JVMCIObject methodObject = get_jvmci_method(method(), JVMCI_CHECK_(JVMCIObject()));
 
@@ -980,7 +996,7 @@ JVMCIObject JVMCIEnv::get_jvmci_method(const methodHandle& method, JVMCI_TRAPS) 
     return method_object;
   }
 
-  Thread* THREAD = Thread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   jmetadata handle = _runtime->allocate_handle(method);
   jboolean exception = false;
   if (is_hotspot()) {
@@ -1024,7 +1040,7 @@ JVMCIObject JVMCIEnv::get_jvmci_type(const JVMCIKlassHandle& klass, JVMCI_TRAPS)
   JVMCI::ensure_oop_alive(klass()->java_mirror());
 
   jlong pointer = (jlong) klass();
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   JVMCIObject signature = create_string(klass->signature_name(), JVMCI_CHECK_(JVMCIObject()));
   jboolean exception = false;
   if (is_hotspot()) {
@@ -1063,7 +1079,7 @@ JVMCIObject JVMCIEnv::get_jvmci_constant_pool(const constantPoolHandle& cp, JVMC
   JVMCIObject cp_object;
   jmetadata handle = _runtime->allocate_handle(cp);
   jboolean exception = false;
-  JavaThread* THREAD = JavaThread::current();
+  JavaThread* THREAD = JVMCI::compilation_tick(JavaThread::current());
   if (is_hotspot()) {
     JavaValue result(T_OBJECT);
     JavaCallArguments args;

@@ -23,9 +23,11 @@
 
 #include "precompiled.hpp"
 #include "classfile/systemDictionary.hpp"
+#include "compiler/compileBroker.hpp"
 #include "runtime/arguments.hpp"
 #include "jvmci/jvmci.hpp"
 #include "jvmci/jvmci_globals.hpp"
+#include "jvmci/jvmciEnv.hpp"
 #include "jvmci/jvmciJavaClasses.hpp"
 #include "jvmci/jvmciRuntime.hpp"
 #include "jvmci/metadataHandles.hpp"
@@ -107,6 +109,19 @@ void JVMCI::initialize_globals() {
     // There is only a single runtime
     _java_runtime = _compiler_runtime = new JVMCIRuntime(0);
   }
+}
+
+JavaThread* JVMCI::compilation_tick(JavaThread* thread) {
+  if (thread->is_Compiler_thread()) {
+    CompileTask *task = thread->as_CompilerThread()->task();
+    if (task != NULL) {
+      JVMCICompileState *state = task->blocking_jvmci_compile_state();
+      if (state != NULL) {
+        state->inc_compilation_ticks();
+      }
+    }
+  }
+  return thread;
 }
 
 #ifdef INCLUDE_ALL_GCS
