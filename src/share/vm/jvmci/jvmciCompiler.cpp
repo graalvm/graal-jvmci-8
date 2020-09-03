@@ -36,6 +36,7 @@ JVMCICompiler::JVMCICompiler() : AbstractCompiler(jvmci) {
   _bootstrapping = false;
   _bootstrap_compilation_request_handled = false;
   _methods_compiled = 0;
+  _global_compilation_ticks = 0;
   assert(_instance == NULL, "only one instance allowed");
   _instance = this;
 }
@@ -157,4 +158,13 @@ void JVMCICompiler::print_timers() {
 void JVMCICompiler::print_compilation_timers() {
   JVMCI_event_1("JVMCICompiler::print_timers");
   tty->print_cr("       JVMCI code install time:        %6.3f s",    _codeInstallTimer.seconds());
+}
+
+void JVMCICompiler::inc_methods_compiled() {
+  Atomic::inc(&_methods_compiled);
+  Atomic::inc(&_global_compilation_ticks);
+}
+
+void JVMCICompiler::inc_global_compilation_ticks() {
+  Atomic::inc(&_global_compilation_ticks);
 }
