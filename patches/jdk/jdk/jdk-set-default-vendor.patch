@@ -1,0 +1,28 @@
+# HG changeset patch
+# User dnsimon
+# Date 1587235468 -7200
+#      Sat Apr 18 20:44:28 2020 +0200
+# Node ID bcae047f145761be4442b8f15c3d381353f16762
+# Parent  490e6b2fb4460b35ffabb83b6ccab7ef13a0b2ae
+set default vendor info to GraalVM community
+
+diff -r 490e6b2fb446 -r bcae047f1457 src/share/native/java/lang/System.c
+--- a/src/share/native/java/lang/System.c	Tue Feb 11 13:52:19 2020 +0100
++++ b/src/share/native/java/lang/System.c	Sat Apr 18 20:44:28 2020 +0200
+@@ -110,13 +110,13 @@
+ 
+ /* Third party may overwrite these values. */
+ #ifndef VENDOR
+-#define VENDOR "Oracle Corporation"
++#define VENDOR "GraalVM Community"
+ #endif
+ #ifndef VENDOR_URL
+-#define VENDOR_URL "http://java.oracle.com/"
++#define VENDOR_URL "https://www.graalvm.org/"
+ #endif
+ #ifndef VENDOR_URL_BUG
+-#define VENDOR_URL_BUG "http://bugreport.sun.com/bugreport/"
++#define VENDOR_URL_BUG "https://github.com/oracle/graal/issues"
+ #endif
+ 
+ #define JAVA_MAX_SUPPORTED_VERSION 52
