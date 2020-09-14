@@ -20,6 +20,9 @@ The build step above should work on all [supported JDK 8 build platforms](https:
 It should also work on other platforms (such as Oracle Linux, CentOS and Fedora as described [here](http://mail.openjdk.java.net/pipermail/graal-dev/2015-December/004050.html)).
 If you run into build problems, send a message to http://mail.openjdk.java.net/mailman/listinfo/graal-dev.
 
+Patches in `patches/jdk` are applied to the JDK8 sources when JVMCI JDK 8 gets built.
+Patches in `patches/static-libs` are applied when static JDK libraries are built.
+
 ### Windows Specifics
 
 Building JDK requires some bash-like environment. Fortunately, the one that comes as a part of the standard

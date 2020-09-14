@@ -1,0 +1,20 @@
+# HG changeset patch
+# User never
+# Date 1570634191 -7200
+#      Wed Oct 09 17:16:31 2019 +0200
+# Node ID a2efe1ab0201cd1d6b84e2e6fda309fd0838fc07
+# Parent  c751303497d539aa85c6373aa0fa85580d3f3044
+Fix macos compilation issue
+
+diff -r c751303497d5 -r a2efe1ab0201 src/share/vm/oops/klass.cpp
+--- a/src/share/vm/oops/klass.cpp	Fri Jun 13 05:10:44 2014 -0700
++++ b/src/share/vm/oops/klass.cpp	Wed Oct 09 17:16:31 2019 +0200
+@@ -215,7 +215,7 @@
+   int  hsize = arrayOopDesc::base_offset_in_bytes(etype);
+   int  esize = type2aelembytes(etype);
+   bool isobj = (etype == T_OBJECT);
+-  int  tag   =  isobj ? _lh_array_tag_obj_value : _lh_array_tag_type_value;
++  int  tag   =  isobj ? _lh_array_tag_obj_value : (int) _lh_array_tag_type_value;
+   int lh = array_layout_helper(tag, hsize, etype, exact_log2(esize));
+ 
+   assert(lh < (int)_lh_neutral_value, "must look like an array layout");

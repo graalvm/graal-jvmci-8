@@ -1,0 +1,33 @@
+# HG changeset patch
+# User Doug Simon <doug.simon@oracle.com>
+# Date 1578498527 -3600
+#      Wed Jan 08 16:48:47 2020 +0100
+# Node ID 5438d47deeef03f7484379d9da10717dfdda1c25
+# Parent  8163e59959ed5462891f2b1db7bc0fa2af1de0a6
+Backed out changeset d32fc856e071
+
+Even though JPRT Windows slaves provide FreeType 2.3.4, for some
+unknown reason the FT_Library_SetLcdFilter symbol cannot be
+found at link time (although can be found by the C compiler in the
+relevant FT header file).
+
+diff -r 8a052ce21c5d src/share/native/sun/font/freetypeScaler.c
+--- a/src/share/native/sun/font/freetypeScaler.c        Mon Dec 09 23:08:16 2019 +0100
++++ b/src/share/native/sun/font/freetypeScaler.c        Wed Jan 08 18:09:25 2020 +0100
+@@ -38,7 +38,6 @@
+ #include FT_SIZES_H
+ #include FT_OUTLINE_H
+ #include FT_SYNTHESIS_H
+-#include FT_LCD_FILTER_H
+
+ #include "fontscaler.h"
+
+@@ -440,8 +439,6 @@
+         if (errCode == 0) {
+             errCode = FT_Activate_Size(scalerInfo->face->size);
+         }
+-
+-        FT_Library_SetLcdFilter(scalerInfo->library, FT_LCD_FILTER_DEFAULT);
+     }
+
+     return errCode;
