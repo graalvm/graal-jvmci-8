@@ -27,13 +27,24 @@ package jdk.vm.ci.code.site;
 import jdk.vm.ci.code.DebugInfo;
 
 /**
- * Represents an implicit exception in the code.
+ * Represents an implicit exception dispatch in the code. Implicit exception is a platform-specific
+ * optimization that makes use of operating system's trap mechanism, to turn specific branches into
+ * sequential code with implicit traps. Information contained in this class will be used by the
+ * runtime to register implicit exception dispatch, i.e., a mapping from an exceptional PC offset to
+ * a continuation PC offset.
  */
-public final class ImplicitException extends Infopoint {
+public final class ImplicitExceptionDispatch extends Infopoint {
 
     public final int dispatchOffset;
 
-    public ImplicitException(int pcOffset, int dispatchOffset, DebugInfo debugInfo) {
+    /**
+     * Construct an implicit exception dispatch.
+     * 
+     * @param pcOffset the exceptional PC offset
+     * @param dispatchOffset the continuation PC offset
+     * @param debugInfo debugging information at the exceptional PC
+     */
+    public ImplicitExceptionDispatch(int pcOffset, int dispatchOffset, DebugInfo debugInfo) {
         super(pcOffset, debugInfo, InfopointReason.IMPLICIT_EXCEPTION);
         this.dispatchOffset = dispatchOffset;
     }
@@ -43,8 +54,8 @@ public final class ImplicitException extends Infopoint {
         if (this == obj) {
             return true;
         }
-        if (obj instanceof ImplicitException && super.equals(obj)) {
-            ImplicitException that = (ImplicitException) obj;
+        if (obj instanceof ImplicitExceptionDispatch && super.equals(obj)) {
+            ImplicitExceptionDispatch that = (ImplicitExceptionDispatch) obj;
             if (this.dispatchOffset == that.dispatchOffset) {
                 return true;
             }

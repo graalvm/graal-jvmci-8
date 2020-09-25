@@ -884,8 +884,8 @@ JVMCI::CodeInstallResult CodeInstaller::initialize_buffer(CodeBuffer& buffer, bo
           JVMCI_ERROR_OK("method contains safepoint, but has no deopt rescue slot");
         }
         if (JVMCIENV->equals(reason, jvmci_env()->get_site_InfopointReason_IMPLICIT_EXCEPTION())) {
-          if (jvmci_env()->isa_site_ImplicitException(site)) {
-            jint dispatch_offset = jvmci_env()->get_site_ImplicitException_dispatchOffset(site);
+          if (jvmci_env()->isa_site_ImplicitExceptionDispatch(site)) {
+            jint dispatch_offset = jvmci_env()->get_site_ImplicitExceptionDispatch_dispatchOffset(site);
             JVMCI_event_4("implicit exception at %i, dispatch to %i", pc_offset, dispatch_offset);
             _implicit_exception_table.append(pc_offset, dispatch_offset);
           } else {

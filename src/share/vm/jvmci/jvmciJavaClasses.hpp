@@ -177,8 +177,8 @@
     object_field(site_Call, target, "Ljdk/vm/ci/meta/InvokeTarget;")                                          \
     boolean_field(site_Call, direct)                                                                          \
   end_class                                                                                                   \
-  start_class(site_ImplicitException, jdk_vm_ci_code_site_ImplicitException)                                  \
-    int_field(site_ImplicitException, dispatchOffset)                                                         \
+  start_class(site_ImplicitExceptionDispatch, jdk_vm_ci_code_site_ImplicitExceptionDispatch)                  \
+    int_field(site_ImplicitExceptionDispatch, dispatchOffset)                                                 \
   end_class                                                                                                   \
   start_class(site_DataPatch, jdk_vm_ci_code_site_DataPatch)                                                  \
     object_field(site_DataPatch, reference, "Ljdk/vm/ci/code/site/Reference;")                                \
