@@ -103,8 +103,6 @@ class CompileTask : public CHeapObj<mtCompiler> {
   void         clear_waiter()                    { _has_waiter = false; }
   JVMCICompileState* blocking_jvmci_compile_state() const { return _blocking_jvmci_compile_state; }
   void         set_blocking_jvmci_compile_state(JVMCICompileState* state) {
-    assert(is_blocking(), "must be");
-    assert((state == NULL) != (_blocking_jvmci_compile_state == NULL), "must be");
     _blocking_jvmci_compile_state = state;
   }
 #endif
