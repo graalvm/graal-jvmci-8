@@ -212,12 +212,12 @@ int Abstract_VM_Version::init_vm_properties(const char*& name, const char*& vers
             const char* key = line;
             char* value = sep + 1;
             if (strcmp(key, "name") == 0) {
-              if (name == VMNAME) {
+              if (strcmp(name, VMNAME) == 0) {
                 non_defaults++;
               }
               name = value;
             } else if (strcmp(key, "version") == 0) {
-              if (version == VM_RELEASE) {
+              if (strcmp(version, VM_RELEASE) == 0) {
                 non_defaults++;
               }
               version = value;
@@ -384,7 +384,7 @@ const char* Abstract_VM_Version::init_internal_vm_info_string() {
   " JRE (" JRE_RELEASE_VERSION "), built on " __DATE__ " " __TIME__ \
   " by " XSTR(HOTSPOT_BUILD_USER) " with " HOTSPOT_BUILD_COMPILER
 
-  if (_s_vm_name != VMNAME || _s_vm_release != VM_RELEASE) {
+  if (strcmp(_s_vm_name, VMNAME) != 0 || strcmp(_s_vm_release, VM_RELEASE) != 0) {
     int len = (int) (strlen(VM_INTERNAL_INFO_FORMAT(VMNAME, VM_RELEASE)) - strlen(VMNAME VM_RELEASE) +
               strlen(_s_vm_name) + strlen(_s_vm_release));
     char* buffer = NEW_C_HEAP_ARRAY(char, len + 1, mtInternal);
