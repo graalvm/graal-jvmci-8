@@ -157,6 +157,7 @@
   declare_preprocessor_constant("JVM_ACC_ENUM", JVM_ACC_ENUM)                                     \
   declare_preprocessor_constant("JVM_ACC_SYNTHETIC", JVM_ACC_SYNTHETIC)                           \
   declare_preprocessor_constant("JVM_ACC_INTERFACE", JVM_ACC_INTERFACE)                           \
+  declare_preprocessor_constant("JVM_ACC_FIELD_INITIALIZED_FINAL_UPDATE", JVM_ACC_FIELD_INITIALIZED_FINAL_UPDATE) \
                                                                                                   \
   declare_constant(BitData::exception_seen_flag)                                                  \
   declare_constant(BitData::null_seen_flag)                                                       \
