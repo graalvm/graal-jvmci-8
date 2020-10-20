@@ -172,6 +172,7 @@
   declare_constant(ArrayData::array_len_off_set)                                                  \
   declare_constant(ArrayData::array_start_off_set)                                                \
   declare_constant(MultiBranchData::per_case_cell_count)                                          \
+  declare_constant(JVMCINMethodData::SPECULATION_LENGTH_BITS)                                     \
                                                                                                   \
   declare_constant(CodeInstaller::VERIFIED_ENTRY)                                                 \
   declare_constant(CodeInstaller::UNVERIFIED_ENTRY)                                               \

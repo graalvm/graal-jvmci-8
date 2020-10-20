@@ -29,8 +29,12 @@ import org.junit.Assume;
 import org.junit.Test;
 
 import jdk.vm.ci.hotspot.HotSpotSpeculationLog;
+import jdk.vm.ci.meta.JavaConstant;
+import jdk.vm.ci.meta.JavaKind;
+import jdk.vm.ci.meta.MetaAccessProvider;
 import jdk.vm.ci.meta.SpeculationLog;
 import jdk.vm.ci.meta.SpeculationLog.SpeculationReasonEncoding;
+import jdk.vm.ci.runtime.JVMCI;
 
 public class TestHotSpotSpeculationLog {
 
@@ -76,6 +80,7 @@ public class TestHotSpotSpeculationLog {
 
     @Test
     public synchronized void testFailedSpeculations() {
+        MetaAccessProvider metaAccess = JVMCI.getRuntime().getHostJVMCIBackend().getMetaAccess();
         HotSpotSpeculationLog log = new HotSpotSpeculationLog();
         DummyReason reason1 = new DummyReason("dummy1");
         String longName = new String(new char[2000]).replace('\0', 'X');
@@ -85,6 +90,11 @@ public class TestHotSpotSpeculationLog {
 
         SpeculationLog.Speculation s1 = log.speculate(reason1);
         SpeculationLog.Speculation s2 = log.speculate(reason2);
+
+        JavaConstant encodedS1 = metaAccess.encodeSpeculation(s1);
+        JavaConstant encodedS2 = metaAccess.encodeSpeculation(s2);
+        Assert.assertEquals(JavaKind.Long, encodedS1.getJavaKind());
+        Assert.assertEquals(JavaKind.Long, encodedS2.getJavaKind());
 
         boolean added = log.addFailedSpeculation(s1);
         Assume.assumeTrue(added);
