@@ -164,8 +164,12 @@ LIBJVM   = lib$(JVM).so
 
 LIBJVM_DEBUGINFO   = lib$(JVM).debuginfo
 LIBJVM_DIZ         = lib$(JVM).diz
+<<<<<<< HEAD
 
 ifeq ($(ENABLE_JFR),false)
+=======
+ifneq ($(ENABLE_JFR),true)
+>>>>>>> jdk8u272-b09
 EXCLUDE_JFR_PATHS:= -o -name jfr -prune
 endif
 SPECIAL_PATHS:=adlc c1 dist gc_implementation opto shark libadt jvmci
