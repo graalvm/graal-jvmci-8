@@ -1,0 +1,20 @@
+# HG changeset patch
+# User Doug Simon <doug.simon@oracle.com>
+# Date 1603616068 -3600
+#      Sun Oct 25 09:54:28 2020 +0100
+# Node ID d71010a5e0eb6d3b4a966cb5c876c812401cb62b
+# Parent  eb7f437285a174d7121502922c75dc18561da8d4
+8251546-macOS: 8u backport of JDK-8194298 breaks macosx build
+
+diff -r eb7f437285a1 -r d71010a5e0eb src/solaris/native/java/net/ExtendedOptionsImpl.c
+--- a/src/solaris/native/java/net/ExtendedOptionsImpl.c	Wed Oct 21 02:49:56 2020 +0100
++++ b/src/solaris/native/java/net/ExtendedOptionsImpl.c	Sun Oct 25 09:54:28 2020 +0100
+@@ -348,6 +348,8 @@
+ #define SOCK_OPT_LEVEL IPPROTO_TCP
+ #define SOCK_OPT_NAME_KEEPIDLE TCP_KEEPALIVE
+ #define SOCK_OPT_NAME_KEEPIDLE_STR "TCP_KEEPALIVE"
++#define TCP_KEEPCNT -1
++#define TCP_KEEPINTVL -1
+ #endif
+ 
+ static jint socketOptionSupported(jint sockopt) {
