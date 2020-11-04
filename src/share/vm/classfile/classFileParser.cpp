@@ -4229,8 +4229,12 @@ instanceKlassHandle ClassFileParser::parseClassFile(Symbol* name,
     ClassLoadingService::notify_class_loaded(InstanceKlass::cast(this_klass()),
                                              false /* not shared class */);
 
+#if INCLUDE_JVMCI
     bool trace_loading_cause = TraceClassLoadingCause != NULL &&
         (strcmp(TraceClassLoadingCause, "*") == 0 || strstr(this_klass->external_name(), TraceClassLoadingCause) != NULL);
+#else
+    bool trace_loading_cause = false;
+#endif
     if (TraceClassLoading || trace_loading_cause) {
       ResourceMark rm;
       // print in a single call to reduce interleaving of output
