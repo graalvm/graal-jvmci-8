@@ -1462,15 +1462,20 @@ def _jvmci_versions_in_current_branch():
 def _get_jvmci_version():
     global _jvmci_version
     if _jvmci_version is None:
-        versions = _jvmci_versions_in_current_branch()
-        newest_version = sorted(versions, reverse=True)[0]
-        parent_tags = _suite.vc.parent_tags(_suite.dir)
-        result = "jvmci-%d.%d-b%02d" % newest_version
-        status = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=_suite.dir, universal_newlines=True)
-        if result not in parent_tags or len(status) != 0:
-            dev_version = newest_version[0], newest_version[1], newest_version[2] + 1
-            result = "jvmci-%d.%d-b%02d-dev" % dev_version
-        _jvmci_version = result
+        version_file = join(_suite.dir, "jvmci.version")
+        if exists(version_file):
+            with open(version_file, 'r') as f:
+                _jvmci_version = f.read().strip()
+        else:
+            versions = _jvmci_versions_in_current_branch()
+            newest_version = sorted(versions, reverse=True)[0]
+            parent_tags = _suite.vc.parent_tags(_suite.dir)
+            result = "jvmci-%d.%d-b%02d" % newest_version
+            status = subprocess.check_output(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=_suite.dir, universal_newlines=True)
+            if result not in parent_tags or len(status) != 0:
+                dev_version = newest_version[0], newest_version[1], newest_version[2] + 1
+                result = "jvmci-%d.%d-b%02d-dev" % dev_version
+            _jvmci_version = result
     return _jvmci_version
 
 def show_jvmci_version(args):
