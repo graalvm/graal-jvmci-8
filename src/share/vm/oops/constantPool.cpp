@@ -627,6 +627,7 @@ void ConstantPool::save_and_throw_exception(constantPoolHandle this_oop, int whi
     this_oop->tag_at_put(which, error_tag);
   } else {
     // some other thread put this in error state
+    MutexUnlockerEx ul(this_oop->lock());
     throw_resolution_error(this_oop, which, CHECK);
   }
 
