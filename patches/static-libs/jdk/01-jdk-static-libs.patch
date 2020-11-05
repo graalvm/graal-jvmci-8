@@ -2,12 +2,12 @@
 # User Peter Hofer <peter.hofer@oracle.com>
 # Date 1581425539 -3600
 #      Tue Feb 11 13:52:19 2020 +0100
-# Node ID 56b431c3a631fe994c18953c56d19fb14ef882fb
-# Parent  3560e0ebe876ce658c5261070fe728e47994210f
+# Node ID 28acef6763a9db45022d37a1baf46f4b6db83e8f
+# Parent  a72057a7a07710a968348eac1509bdc0c05eec45
 Build static libraries.
 
-diff -r 3560e0ebe876 -r 56b431c3a631 make/BuildJdk.gmk
---- a/make/BuildJdk.gmk	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 make/BuildJdk.gmk
+--- a/make/BuildJdk.gmk	Fri Sep 11 12:28:41 2020 -0700
 +++ b/make/BuildJdk.gmk	Tue Feb 11 13:52:19 2020 +0100
 @@ -99,6 +99,7 @@
  # in these cases.
@@ -17,10 +17,10 @@ diff -r 3560e0ebe876 -r 56b431c3a631 make/BuildJdk.gmk
  	+$(MAKE) PROFILE="" -f Images.gmk
          ifeq ($(OPENJDK_TARGET_OS), macosx)
  	  +$(MAKE) -f Bundles.gmk
-diff -r 3560e0ebe876 -r 56b431c3a631 make/StaticLibs.gmk
+diff -r a72057a7a077 -r 28acef6763a9 make/StaticLibs.gmk
 --- /dev/null	Thu Jan 01 00:00:00 1970 +0000
 +++ b/make/StaticLibs.gmk	Tue Feb 11 13:52:19 2020 +0100
-@@ -0,0 +1,64 @@
+@@ -0,0 +1,67 @@
 +#
 +# Copyright (c) 2018, Oracle and/or its affiliates. All rights reserved.
 +# DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
@@ -59,8 +59,11 @@ diff -r 3560e0ebe876 -r 56b431c3a631 make/StaticLibs.gmk
 +                  $(JDK_OUTPUTDIR)/lib/$(LIBRARY_PREFIX)nio$(STATIC_LIBRARY_SUFFIX) \
 +                  $(JDK_OUTPUTDIR)/lib/$(LIBRARY_PREFIX)zip$(STATIC_LIBRARY_SUFFIX) \
 +                  $(JDK_OUTPUTDIR)/lib/$(LIBRARY_PREFIX)fdlibm$(STATIC_LIBRARY_SUFFIX) \
-+                  $(JDK_OUTPUTDIR)/lib/$(LIBRARY_PREFIX)jaas$(STATIC_LIBRARY_SUFFIX) \
-+                  $(JDK_OUTPUTDIR)/lib/$(LIBRARY_PREFIX)sunec$(STATIC_LIBRARY_SUFFIX)
++                  $(JDK_OUTPUTDIR)/lib/$(LIBRARY_PREFIX)jaas$(STATIC_LIBRARY_SUFFIX)
++
++ifeq ($(ENABLE_INTREE_EC), yes)
++  JDK_STATIC_LIB_TARGETS += $(JDK_OUTPUTDIR)/lib/$(LIBRARY_PREFIX)sunec$(STATIC_LIBRARY_SUFFIX)
++endif
 +
 +# Restrict targets for libsctp same as NioLibraries.gmk
 +ifeq ($(OPENJDK_TARGET_OS_API), posix)
@@ -85,8 +88,8 @@ diff -r 3560e0ebe876 -r 56b431c3a631 make/StaticLibs.gmk
 +jdk-static-libs:
 +endif
 +
-diff -r 3560e0ebe876 -r 56b431c3a631 src/share/native/common/check_version.c
---- a/src/share/native/common/check_version.c	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 src/share/native/common/check_version.c
+--- a/src/share/native/common/check_version.c	Fri Sep 11 12:28:41 2020 -0700
 +++ b/src/share/native/common/check_version.c	Tue Feb 11 13:52:19 2020 +0100
 @@ -27,7 +27,13 @@
  #include "jvm.h"
@@ -116,8 +119,8 @@ diff -r 3560e0ebe876 -r 56b431c3a631 src/share/native/common/check_version.c
 +    return JNI_REQ_VERSION;
  }
 +
-diff -r 3560e0ebe876 -r 56b431c3a631 src/share/native/java/net/net_util.c
---- a/src/share/native/java/net/net_util.c	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 src/share/native/java/net/net_util.c
+--- a/src/share/native/java/net/net_util.c	Fri Sep 11 12:28:41 2020 -0700
 +++ b/src/share/native/java/net/net_util.c	Tue Feb 11 13:52:19 2020 +0100
 @@ -38,7 +38,13 @@
  }
@@ -162,8 +165,8 @@ diff -r 3560e0ebe876 -r 56b431c3a631 src/share/native/java/net/net_util.c
  }
  
  static int initialized = 0;
-diff -r 3560e0ebe876 -r 56b431c3a631 src/share/native/java/util/zip/ZipFile.c
---- a/src/share/native/java/util/zip/ZipFile.c	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 src/share/native/java/util/zip/ZipFile.c
+--- a/src/share/native/java/util/zip/ZipFile.c	Fri Sep 11 12:28:41 2020 -0700
 +++ b/src/share/native/java/util/zip/ZipFile.c	Tue Feb 11 13:52:19 2020 +0100
 @@ -55,6 +55,14 @@
  static int OPEN_READ = java_util_zip_ZipFile_OPEN_READ;
@@ -180,8 +183,8 @@ diff -r 3560e0ebe876 -r 56b431c3a631 src/share/native/java/util/zip/ZipFile.c
  JNIEXPORT void JNICALL
  Java_java_util_zip_ZipFile_initIDs(JNIEnv *env, jclass cls)
  {
-diff -r 3560e0ebe876 -r 56b431c3a631 src/share/native/sun/security/ec/ECC_JNI.cpp
---- a/src/share/native/sun/security/ec/ECC_JNI.cpp	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 src/share/native/sun/security/ec/ECC_JNI.cpp
+--- a/src/share/native/sun/security/ec/ECC_JNI.cpp	Fri Sep 11 12:28:41 2020 -0700
 +++ b/src/share/native/sun/security/ec/ECC_JNI.cpp	Tue Feb 11 13:52:19 2020 +0100
 @@ -35,6 +35,14 @@
  
@@ -198,8 +201,8 @@ diff -r 3560e0ebe876 -r 56b431c3a631 src/share/native/sun/security/ec/ECC_JNI.cp
  /*
   * Throws an arbitrary Java exception.
   */
-diff -r 3560e0ebe876 -r 56b431c3a631 src/solaris/native/com/sun/security/auth/module/Unix.c
---- a/src/solaris/native/com/sun/security/auth/module/Unix.c	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 src/solaris/native/com/sun/security/auth/module/Unix.c
+--- a/src/solaris/native/com/sun/security/auth/module/Unix.c	Fri Sep 11 12:28:41 2020 -0700
 +++ b/src/solaris/native/com/sun/security/auth/module/Unix.c	Tue Feb 11 13:52:19 2020 +0100
 @@ -36,6 +36,14 @@
  #include <stdlib.h>
@@ -216,8 +219,8 @@ diff -r 3560e0ebe876 -r 56b431c3a631 src/solaris/native/com/sun/security/auth/mo
  JNIEXPORT void JNICALL
  Java_com_sun_security_auth_module_UnixSystem_getUnixInfo
                                                  (JNIEnv *env, jobject obj) {
-diff -r 3560e0ebe876 -r 56b431c3a631 src/solaris/native/sun/nio/ch/FileChannelImpl.c
---- a/src/solaris/native/sun/nio/ch/FileChannelImpl.c	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 src/solaris/native/sun/nio/ch/FileChannelImpl.c
+--- a/src/solaris/native/sun/nio/ch/FileChannelImpl.c	Fri Sep 11 12:28:41 2020 -0700
 +++ b/src/solaris/native/sun/nio/ch/FileChannelImpl.c	Tue Feb 11 13:52:19 2020 +0100
 @@ -51,6 +51,14 @@
  
@@ -234,8 +237,8 @@ diff -r 3560e0ebe876 -r 56b431c3a631 src/solaris/native/sun/nio/ch/FileChannelIm
  JNIEXPORT jlong JNICALL
  Java_sun_nio_ch_FileChannelImpl_initIDs(JNIEnv *env, jclass clazz)
  {
-diff -r 3560e0ebe876 -r 56b431c3a631 src/solaris/native/sun/nio/ch/sctp/SctpNet.c
---- a/src/solaris/native/sun/nio/ch/sctp/SctpNet.c	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 src/solaris/native/sun/nio/ch/sctp/SctpNet.c
+--- a/src/solaris/native/sun/nio/ch/sctp/SctpNet.c	Fri Sep 11 12:28:41 2020 -0700
 +++ b/src/solaris/native/sun/nio/ch/sctp/SctpNet.c	Tue Feb 11 13:52:19 2020 +0100
 @@ -43,9 +43,16 @@
  static const char* nativeSctpLib = "libsctp.so.1";
@@ -257,8 +260,8 @@ diff -r 3560e0ebe876 -r 56b431c3a631 src/solaris/native/sun/nio/ch/sctp/SctpNet.
  }
  
  static int preCloseFD = -1;     /* File descriptor to which we dup other fd's
-diff -r 3560e0ebe876 -r 56b431c3a631 src/windows/native/com/sun/security/auth/module/nt.c
---- a/src/windows/native/com/sun/security/auth/module/nt.c	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 src/windows/native/com/sun/security/auth/module/nt.c
+--- a/src/windows/native/com/sun/security/auth/module/nt.c	Fri Sep 11 12:28:41 2020 -0700
 +++ b/src/windows/native/com/sun/security/auth/module/nt.c	Tue Feb 11 13:52:19 2020 +0100
 @@ -32,6 +32,14 @@
  #include <ntsecapi.h>
@@ -275,8 +278,8 @@ diff -r 3560e0ebe876 -r 56b431c3a631 src/windows/native/com/sun/security/auth/mo
  static BOOL debug = FALSE;
  
  BOOL getToken(PHANDLE);
-diff -r 3560e0ebe876 -r 56b431c3a631 src/windows/native/sun/nio/ch/FileChannelImpl.c
---- a/src/windows/native/sun/nio/ch/FileChannelImpl.c	Mon Sep 16 18:07:13 2019 +0100
+diff -r a72057a7a077 -r 28acef6763a9 src/windows/native/sun/nio/ch/FileChannelImpl.c
+--- a/src/windows/native/sun/nio/ch/FileChannelImpl.c	Fri Sep 11 12:28:41 2020 -0700
 +++ b/src/windows/native/sun/nio/ch/FileChannelImpl.c	Tue Feb 11 13:52:19 2020 +0100
 @@ -38,6 +38,14 @@
  
