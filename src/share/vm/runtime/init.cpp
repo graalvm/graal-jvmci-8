@@ -126,9 +126,11 @@ jint init_globals() {
   compilerOracle_init();
   compilationPolicy_init();
   compileBroker_init();
+#if INCLUDE_JVMCI
   if (EnableJVMCI) {
     JVMCI::initialize_globals();
   }
+#endif
   VMRegImpl::set_regName();
 
   if (!universe_post_init()) {
