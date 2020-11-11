@@ -151,7 +151,7 @@ OopMap* RegisterSaver::save_live_registers(MacroAssembler* masm, int additional_
     assert(MaxVectorSize == 32, "only 256bit vectors are supported now");
     // Save upper half of YMM registes
     vect_words = 16 * 16 / wordSize;
-    ymmhi_offset = additional_frame_words;
+    ymmhi_offset = additional_frame_words + frame::arg_reg_save_area_bytes/BytesPerInt;
     additional_frame_words += vect_words;
   }
 #else
