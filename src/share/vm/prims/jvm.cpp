@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 1997, 2018, Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 1997, 2020, Oracle and/or its affiliates. All rights reserved
  * DO NOT ALTER OR REMOVE COPYRIGHT NOTICES OR THIS FILE HEADER.
  *
  * This code is free software; you can redistribute it and/or modify it
@@ -931,7 +931,11 @@ JVM_END
 JVM_ENTRY(jboolean, JVM_KnownToNotExist(JNIEnv *env, jobject loader, const char *classname))
   JVMWrapper("JVM_KnownToNotExist");
 #if INCLUDE_CDS
+<<<<<<< HEAD
     return ClassLoaderExt::known_to_not_exist(env, loader, classname, THREAD);
+=======
+  return ClassLoaderExt::known_to_not_exist(env, loader, classname, THREAD);
+>>>>>>> jdk8u282-b03
 #else
   return false;
 #endif
@@ -941,7 +945,11 @@ JVM_END
 JVM_ENTRY(jobjectArray, JVM_GetResourceLookupCacheURLs(JNIEnv *env, jobject loader))
   JVMWrapper("JVM_GetResourceLookupCacheURLs");
 #if INCLUDE_CDS
+<<<<<<< HEAD
     return ClassLoaderExt::get_lookup_cache_urls(env, loader, THREAD);
+=======
+  return ClassLoaderExt::get_lookup_cache_urls(env, loader, THREAD);
+>>>>>>> jdk8u282-b03
 #else
   return NULL;
 #endif
@@ -951,7 +959,11 @@ JVM_END
 JVM_ENTRY(jintArray, JVM_GetResourceLookupCache(JNIEnv *env, jobject loader, const char *resource_name))
   JVMWrapper("JVM_GetResourceLookupCache");
 #if INCLUDE_CDS
+<<<<<<< HEAD
     return ClassLoaderExt::get_lookup_cache(env, loader, resource_name, THREAD);
+=======
+  return ClassLoaderExt::get_lookup_cache(env, loader, resource_name, THREAD);
+>>>>>>> jdk8u282-b03
 #else
   return NULL;
 #endif
