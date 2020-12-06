@@ -2301,7 +2301,6 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
       task->set_failure_reason(failure_reason);
     }
 
-<<<<<<< HEAD
     post_compile(thread, task, event, !ci_env.failing(), &ci_env);
   }
   // Remove the JNI handle block after the ciEnv destructor has run in
@@ -2317,32 +2316,15 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
         err_msg_res("COMPILE SKIPPED: %s (%s)", failure_reason, retry_message) :
         err_msg_res("COMPILE SKIPPED: %s",      failure_reason);
       task->print_compilation(tty, msg);
-=======
-      EventCompilationFailure event;
-      if (event.should_commit()) {
-        event.set_compileId(compile_id);
-        event.set_failureMessage(failure_reason);
-        event.commit();
-      }
+    }
 
-      if (AbortVMOnCompilationFailure) {
-        if (compilable == ciEnv::MethodCompilable_not_at_tier) {
-          fatal(err_msg("Not compilable at tier %d: %s", task_level, failure_reason));
-        }
-        if (compilable == ciEnv::MethodCompilable_never) {
+    if (AbortVMOnCompilationFailure) {
+      if (compilable == ciEnv::MethodCompilable_not_at_tier) {
+         fatal(err_msg("Not compilable at tier %d: %s", task_level, failure_reason));
+      }
+      if (compilable == ciEnv::MethodCompilable_never) {
           fatal(err_msg("Never compilable: %s", failure_reason));
-        }
       }
-    } else {
-      task->mark_success();
-      task->set_num_inlined_bytecodes(ci_env.num_inlined_bytecodes());
-      if (_compilation_log != NULL) {
-        nmethod* code = task->code();
-        if (code != NULL) {
-          _compilation_log->log_nmethod(thread, code);
-        }
-      }
->>>>>>> jdk8u282-b03
     }
 
     EventCompilationFailure event;
