@@ -259,7 +259,7 @@ Klass* SystemDictionary::resolve_or_null(Symbol* class_name, Handle class_loader
                  class_name->as_C_string(),
                  class_loader.is_null() ? "null" : class_loader->klass()->name()->as_C_string()));
   if (FieldType::is_array(class_name)) {
-    return resolve_array_class_or_null(class_name, class_loader, protection_domain, CHECK_NULL);
+    return resolve_array_class_or_null(class_name, class_loader, protection_domain, THREAD);
   } else if (FieldType::is_obj(class_name)) {
     ResourceMark rm(THREAD);
     // Ignore wrapping L and ;.
@@ -268,7 +268,6 @@ Klass* SystemDictionary::resolve_or_null(Symbol* class_name, Handle class_loader
     return resolve_instance_class_or_null(name, class_loader, protection_domain, THREAD);
   } else {
     return resolve_instance_class_or_null(class_name, class_loader, protection_domain, THREAD);
-
   }
 }
 
@@ -1050,14 +1049,21 @@ Klass* SystemDictionary::parse_stream(Symbol* class_name,
   //
   // Note: "name" is updated.
 
-  instanceKlassHandle k = ClassFileParser(st).parseClassFile(class_name,
-                                                             loader_data,
-                                                             protection_domain,
-                                                             host_klass,
-                                                             cp_patches,
-                                                             parsed_name,
-                                                             true,
-                                                             THREAD);
+  instanceKlassHandle k;
+  {
+  // Callers are expected to declare a ResourceMark to determine
+  // the lifetime of any updated (resource) allocated under
+  // this call to parseClassFile
+  ResourceMark rm(THREAD);
+  k = ClassFileParser(st).parseClassFile(class_name,
+                                         loader_data,
+                                         protection_domain,
+                                         host_klass,
+                                         cp_patches,
+                                         parsed_name,
+                                         true,
+                                         THREAD);
+  }
 
 
   if (host_klass.not_null() && k.not_null()) {
@@ -1144,6 +1150,10 @@ Klass* SystemDictionary::resolve_from_stream(Symbol* class_name,
   //
   // Note: "name" is updated.
 
+  // Callers are expected to declare a ResourceMark to determine
+  // the lifetime of any updated (resource) allocated under
+  // this call to parseClassFile
+  ResourceMark rm(THREAD);
   ClassFileParser parser(st);
   instanceKlassHandle k = parser.parseClassFile(class_name,
                                                 loader_data,
