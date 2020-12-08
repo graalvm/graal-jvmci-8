@@ -721,6 +721,9 @@ class CommandLineFlags {
   product(bool, CriticalJNINatives, true,                                   \
           "Check for critical JNI entry points")                            \
                                                                             \
+  product(bool, UseLegacyJNINameEscaping, false,                            \
+          "Use the original JNI name escaping scheme")                      \
+                                                                            \
   notproduct(bool, StressCriticalJNINatives, false,                         \
           "Exercise register saving code in critical natives")              \
                                                                             \
@@ -3510,6 +3513,9 @@ class CommandLineFlags {
           "the purpose of testing, e.g. generation of replay data")         \
   notproduct(bool, CIObjectFactoryVerify, false,                            \
           "enable potentially expensive verification in ciObjectFactory")   \
+                                                                            \
+  diagnostic(bool, AbortVMOnCompilationFailure, false,                      \
+          "Abort VM when method had failed to compile.")                    \
                                                                             \
   /* Priorities */                                                          \
   product_pd(bool, UseThreadPriorities,  "Use native thread priorities")    \

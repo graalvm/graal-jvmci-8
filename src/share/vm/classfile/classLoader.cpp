@@ -1639,8 +1639,14 @@ void ClassLoader::compile_the_world_in(char* name, Handle loader, TRAPS) {
   if (len > 6 && strcmp(".class", name + len - 6) == 0) {
     // We have a .class file
     char buffer[2048];
+<<<<<<< HEAD
     strncpy(buffer, name, sizeof(buffer));
     buffer[MIN2(len - 6, sizeof(buffer) - 1)] = 0;
+=======
+    if (len-6 >= sizeof(buffer)) return;
+    strncpy(buffer, name, sizeof(buffer));
+    buffer[len-6] = 0; // Truncate ".class" suffix.
+>>>>>>> jdk8u282-b03
     // If the file has a period after removing .class, it's not really a
     // valid class file.  The class loader will check everything else.
     if (strchr(buffer, '.') == NULL) {
