@@ -268,10 +268,6 @@ Klass* SystemDictionary::resolve_or_null(Symbol* class_name, Handle class_loader
     return resolve_instance_class_or_null(name, class_loader, protection_domain, THREAD);
   } else {
     return resolve_instance_class_or_null(class_name, class_loader, protection_domain, THREAD);
-<<<<<<< HEAD
-
-=======
->>>>>>> jdk8u282-b03
   }
 }
 
