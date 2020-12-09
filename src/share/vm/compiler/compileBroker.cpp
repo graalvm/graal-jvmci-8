@@ -2318,6 +2318,15 @@ void CompileBroker::invoke_compiler_on_method(CompileTask* task) {
       task->print_compilation(tty, msg);
     }
 
+    if (AbortVMOnCompilationFailure) {
+      if (compilable == ciEnv::MethodCompilable_not_at_tier) {
+         fatal(err_msg("Not compilable at tier %d: %s", task_level, failure_reason));
+      }
+      if (compilable == ciEnv::MethodCompilable_never) {
+          fatal(err_msg("Never compilable: %s", failure_reason));
+      }
+    }
+
     EventCompilationFailure event;
     if (event.should_commit()) {
       event.set_compileId(compile_id);
@@ -2649,7 +2658,7 @@ const char* CompileBroker::compiler_name(int comp_level) {
 }
 
 void CompileBroker::print_times(const char* name, CompilerStatistics* stats) {
-  tty->print_cr("  %s {speed: %d bytes/s; standard: %6.3f s, %d bytes, %d methods; osr: %6.3f s, %d bytes, %d methods; nmethods_size: %d bytes; nmethods_code_size: %d bytes}",
+  tty->print_cr("  %s {speed: %.3f bytes/s; standard: %6.3f s, %d bytes, %d methods; osr: %6.3f s, %d bytes, %d methods; nmethods_size: %d bytes; nmethods_code_size: %d bytes}",
                 name, stats->bytes_per_second(),
                 stats->_standard._time.seconds(), stats->_standard._bytes, stats->_standard._count,
                 stats->_osr._time.seconds(), stats->_osr._bytes, stats->_osr._count,
