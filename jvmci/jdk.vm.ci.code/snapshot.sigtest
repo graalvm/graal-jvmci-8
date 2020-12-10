@@ -543,6 +543,13 @@ meth public boolean equals(java.lang.Object)
 meth public java.lang.String toString()
 supr jdk.vm.ci.code.site.Site
 
+CLSS public final jdk.vm.ci.code.site.ImplicitExceptionDispatch
+cons public init(int,int,jdk.vm.ci.code.DebugInfo)
+fld public final int dispatchOffset
+meth public boolean equals(java.lang.Object)
+meth public java.lang.String toString()
+supr jdk.vm.ci.code.site.Infopoint
+
 CLSS public jdk.vm.ci.code.site.Infopoint
 cons public init(int,jdk.vm.ci.code.DebugInfo,jdk.vm.ci.code.site.InfopointReason)
 fld public final jdk.vm.ci.code.DebugInfo debugInfo

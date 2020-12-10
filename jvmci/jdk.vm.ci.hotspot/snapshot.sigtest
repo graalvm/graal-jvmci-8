@@ -333,6 +333,7 @@ meth public java.lang.String toString()
 meth public jdk.vm.ci.meta.JavaConstant lookupAppendix(int,int)
 meth public jdk.vm.ci.meta.JavaField lookupField(int,jdk.vm.ci.meta.ResolvedJavaMethod,int)
 meth public jdk.vm.ci.meta.JavaMethod lookupMethod(int,int)
+meth public jdk.vm.ci.meta.JavaType lookupReferencedType(int,int)
 meth public jdk.vm.ci.meta.JavaType lookupType(int,int)
 meth public jdk.vm.ci.meta.Signature lookupSignature(int)
 meth public long getMetadataHandle()
@@ -490,8 +491,8 @@ meth public static jdk.vm.ci.meta.JavaKind getHostWordKind()
 meth public void detachCurrentThread()
 meth public void exitHotSpot(int)
 supr java.lang.Object
-hfds backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,excludeFromJVMCICompilation,hostBackend,hsCompilerFactory,instance,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,options,resolvedJavaType,resolvedJavaTypes,serializableType,throwableType,vmEventListeners
-hcls CompileLogStream
+hfds backends,cachedHotSpotJVMCIBackendFactories,callSiteType,cloneableType,compiler,compilerFactory,compilerToVm,config,constantCallSiteType,creatingCompiler,enumType,excludeFromJVMCICompilation,hostBackend,hsCompilerFactory,instance,isShutdown,javaLangClass,javaLangInvokeMethodHandle,javaLangObject,javaLangString,options,resolvedJavaType,resolvedJavaTypes,serializableType,throwableType,vmEventListeners
+hcls CompileLogStream,ErrorCreatingCompiler
 
 CLSS public final static !enum jdk.vm.ci.hotspot.HotSpotJVMCIRuntime$Option
  outer jdk.vm.ci.hotspot.HotSpotJVMCIRuntime
@@ -921,6 +922,7 @@ meth public abstract java.lang.String lookupUtf8(int)
 meth public abstract jdk.vm.ci.meta.JavaConstant lookupAppendix(int,int)
 meth public abstract jdk.vm.ci.meta.JavaField lookupField(int,jdk.vm.ci.meta.ResolvedJavaMethod,int)
 meth public abstract jdk.vm.ci.meta.JavaMethod lookupMethod(int,int)
+meth public abstract jdk.vm.ci.meta.JavaType lookupReferencedType(int,int)
 meth public abstract jdk.vm.ci.meta.JavaType lookupType(int,int)
 meth public abstract jdk.vm.ci.meta.Signature lookupSignature(int)
 meth public abstract void loadReferencedType(int,int)
@@ -948,6 +950,7 @@ fld public final static jdk.vm.ci.meta.PrimitiveConstant DOUBLE_1
 fld public final static jdk.vm.ci.meta.PrimitiveConstant FALSE
 fld public final static jdk.vm.ci.meta.PrimitiveConstant FLOAT_0
 fld public final static jdk.vm.ci.meta.PrimitiveConstant FLOAT_1
+fld public final static jdk.vm.ci.meta.PrimitiveConstant ILLEGAL
 fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_0
 fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_1
 fld public final static jdk.vm.ci.meta.PrimitiveConstant INT_2
@@ -981,6 +984,7 @@ meth public static jdk.vm.ci.meta.PrimitiveConstant forIllegal()
 meth public static jdk.vm.ci.meta.PrimitiveConstant forInt(int)
 meth public static jdk.vm.ci.meta.PrimitiveConstant forIntegerKind(jdk.vm.ci.meta.JavaKind,long)
 meth public static jdk.vm.ci.meta.PrimitiveConstant forLong(long)
+meth public static jdk.vm.ci.meta.PrimitiveConstant forPrimitive(jdk.vm.ci.meta.JavaKind,long)
 meth public static jdk.vm.ci.meta.PrimitiveConstant forPrimitiveInt(int,long)
 meth public static jdk.vm.ci.meta.PrimitiveConstant forShort(short)
 
