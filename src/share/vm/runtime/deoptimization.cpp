@@ -1634,6 +1634,18 @@ address Deoptimization::deoptimize_for_missing_exception_handler(nmethod* nm) {
   frame runtime_frame = thread->last_frame();
   frame caller_frame = runtime_frame.sender(&reg_map);
   assert(caller_frame.cb()->as_nmethod_or_null() == nm, "expect top frame nmethod");
+  vframe* vf = vframe::new_vframe(&caller_frame, &reg_map, thread);
+  compiledVFrame* cvf = compiledVFrame::cast(vf);
+  ScopeDesc* imm_scope = cvf->scope();
+  MethodData* imm_mdo = get_method_data(thread, imm_scope->method(), true);
+  if (imm_mdo != NULL) {
+    ProfileData* pdata = imm_mdo->allocate_bci_to_data(imm_scope->bci(), NULL);
+    if (pdata != NULL && pdata->is_BitData()) {
+      BitData* bit_data = (BitData*) pdata;
+      bit_data->set_exception_seen();
+    }
+  }
+
   Deoptimization::deoptimize(thread, caller_frame, &reg_map, Deoptimization::Reason_not_compiled_exception_handler);
 
   MethodData* trap_mdo = get_method_data(thread, nm->method(), true);
@@ -1775,7 +1787,7 @@ JRT_ENTRY(void, Deoptimization::uncommon_trap_inner(JavaThread* thread, jint tra
     nmethod* nm = cvf->code();
 
     ScopeDesc*      trap_scope  = cvf->scope();
-    
+
     if (TraceDeoptimization) {
       ttyLocker ttyl;
       tty->print_cr("  bci=%d pc=" INTPTR_FORMAT ", relative_pc=%d, method=%s" JVMCI_ONLY(", debug_id=%d"), trap_scope->bci(), fr.pc(), fr.pc() - nm->code_begin(), trap_scope->method()->name_and_sig_as_C_string()
@@ -2295,7 +2307,7 @@ Deoptimization::update_method_data_from_interpreter(MethodData* trap_mdo, int tr
 
 Deoptimization::UnrollBlock* Deoptimization::uncommon_trap(JavaThread* thread, jint trap_request, jint exec_mode) {
   if (TraceDeoptimization) {
-    tty->print("Uncommon trap "); 
+    tty->print("Uncommon trap ");
   }
   // Still in Java no safepoints
   {
