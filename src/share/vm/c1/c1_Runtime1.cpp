@@ -484,6 +484,17 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
   }
 #endif
 
+  // debugging support
+  // tracing
+  if (TraceExceptions) {
+    ttyLocker ttyl;
+    ResourceMark rm;
+    tty->print_cr("Exception <%s> (" INTPTR_FORMAT ") thrown in C1 compiled method <%s> at PC " INTPTR_FORMAT " for thread " INTPTR_FORMAT "",
+                  exception->print_value_string(), p2i((address)exception()), nm->method()->print_value_string(), p2i(pc), p2i(thread));
+  }
+  // for AbortVMOnException flag
+  NOT_PRODUCT(Exceptions::debug_check_abort(exception));
+
   // Check the stack guard pages and reenable them if necessary and there is
   // enough space on the stack to do so.  Use fast exceptions only if the guard
   // pages are enabled.
@@ -530,17 +541,6 @@ JRT_ENTRY_NO_ASYNC(static address, exception_handler_for_pc_helper(JavaThread* t
 
     // New exception handling mechanism can support inlined methods
     // with exception handlers since the mappings are from PC to PC
-
-    // debugging support
-    // tracing
-    if (TraceExceptions) {
-      ttyLocker ttyl;
-      ResourceMark rm;
-      tty->print_cr("Exception <%s> (" INTPTR_FORMAT ") thrown in compiled method <%s> at PC " INTPTR_FORMAT " for thread " INTPTR_FORMAT "",
-                    exception->print_value_string(), p2i((address)exception()), nm->method()->print_value_string(), p2i(pc), p2i(thread));
-    }
-    // for AbortVMOnException flag
-    NOT_PRODUCT(Exceptions::debug_check_abort(exception));
 
     // Clear out the exception oop and pc since looking up an
     // exception handler can cause class loading, which might throw an
