@@ -996,6 +996,9 @@ void CodeCache::print_summary(outputStream* st, bool detailed) {
                  "enabled" : Arguments::mode() == Arguments::_int ?
                  "disabled (interpreter mode)" :
                  "disabled (not enough contiguous free space left)");
+    st->print_cr("              stopped_count=%d, restarted_count=%d",
+                 CompileBroker::get_total_compiler_stopped_count(),
+                 CompileBroker::get_total_compiler_restarted_count());
   }
 }
 

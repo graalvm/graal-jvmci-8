@@ -180,6 +180,8 @@ int CompileBroker::_total_invalidated_count      = 0;
 int CompileBroker::_total_compile_count          = 0;
 int CompileBroker::_total_osr_compile_count      = 0;
 int CompileBroker::_total_standard_compile_count = 0;
+int CompileBroker::_total_compiler_stopped_count = 0;
+int CompileBroker::_total_compiler_restarted_count = 0;
 
 int CompileBroker::_sum_osr_bytes_compiled       = 0;
 int CompileBroker::_sum_standard_bytes_compiled  = 0;
