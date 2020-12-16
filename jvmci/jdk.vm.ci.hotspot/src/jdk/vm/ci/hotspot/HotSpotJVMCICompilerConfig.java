@@ -22,14 +22,11 @@
  */
 package jdk.vm.ci.hotspot;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.List;
 
 import jdk.vm.ci.code.CompilationRequest;
 import jdk.vm.ci.code.CompilationRequestResult;
-import jdk.vm.ci.common.JVMCIError;
+
 import jdk.vm.ci.common.NativeImageReinitialize;
 import jdk.vm.ci.hotspot.HotSpotJVMCIRuntime.Option;
 import jdk.vm.ci.runtime.JVMCICompiler;
@@ -49,14 +46,16 @@ final class HotSpotJVMCICompilerConfig {
     private static class DummyCompilerFactory implements JVMCICompilerFactory, JVMCICompiler {
 
         private final String reason;
+        private final HotSpotJVMCIRuntime runtime;
 
-        DummyCompilerFactory(String reason) {
+        DummyCompilerFactory(String reason, HotSpotJVMCIRuntime runtime) {
             this.reason = reason;
+            this.runtime = runtime;
         }
 
         @Override
         public CompilationRequestResult compileMethod(CompilationRequest request) {
-            throw new JVMCIError("No JVMCI compiler selected. " + reason);
+            throw runtime.exitHotSpotWithMessage(1, "Cannot use JVMCI compiler: %s%n", reason);
         }
 
         @Override
@@ -65,7 +64,7 @@ final class HotSpotJVMCICompilerConfig {
         }
 
         @Override
-        public JVMCICompiler createCompiler(JVMCIRuntime runtime) {
+        public JVMCICompiler createCompiler(JVMCIRuntime rt) {
             return this;
         }
     }
@@ -82,14 +81,16 @@ final class HotSpotJVMCICompilerConfig {
      * @throws SecurityException if a security manager is present and it denies
      *             {@link JVMCIPermission} for any {@link JVMCIServiceLocator} loaded by this method
      */
-    static JVMCICompilerFactory getCompilerFactory() {
+    static JVMCICompilerFactory getCompilerFactory(HotSpotJVMCIRuntime runtime) {
         if (compilerFactory == null) {
             JVMCICompilerFactory factory = null;
             String compilerName = Option.Compiler.getString();
             if (compilerName != null) {
-                if (compilerName.isEmpty() || compilerName.equals("null")) {
-                    factory = new DummyCompilerFactory("Value of " + Option.Compiler.getPropertyName() + " property is \"" +
-                                    compilerName + "\" which denotes the null JVMCI compiler.");
+                String compPropertyName = Option.Compiler.getPropertyName();
+                if (compilerName.isEmpty()) {
+                    factory = new DummyCompilerFactory("Value of " + compPropertyName + " is empty", runtime);
+                } else if (compilerName.equals("null")) {
+                    factory = new DummyCompilerFactory("Value of " + compPropertyName + " is \"null\"", runtime);
                 } else {
                     for (JVMCICompilerFactory f : getJVMCICompilerFactories()) {
                         if (f.getCompilerName().equals(compilerName)) {
@@ -97,33 +98,29 @@ final class HotSpotJVMCICompilerConfig {
                         }
                     }
                     if (factory == null) {
-                        throw new JVMCIError("JVMCI compiler \"%s\" not found", compilerName);
+                        if (Services.IS_IN_NATIVE_IMAGE) {
+                            throw runtime.exitHotSpotWithMessage(1, "JVMCI compiler '%s' not found in JVMCI native library.%n" +
+                                            "Use -XX:-UseJVMCINativeLibrary when specifying a JVMCI compiler available on a class path with %s.%n",
+                                            compilerName, compPropertyName);
+                        }
+                        throw runtime.exitHotSpotWithMessage(1, "JVMCI compiler '%s' specified by %s not found%n", compilerName, compPropertyName);
                     }
                 }
             } else {
                 // Auto select a single available compiler
-                List<String> multiple = null;
+                String reason = "No JVMCI compiler found";
                 for (JVMCICompilerFactory f : getJVMCICompilerFactories()) {
-                    if (multiple != null) {
-                        multiple.add(f.getCompilerName());
-                    } else if (factory == null) {
+                    if (factory == null) {
                         factory = f;
                     } else {
-                        multiple = new ArrayList<>();
-                        multiple.add(f.getCompilerName());
-                        multiple.add(factory.getCompilerName());
+                        // Multiple factories seen - cancel auto selection
+                        reason = "Multiple JVMCI compilers found: \"" + factory.getCompilerName() + "\" and \"" + f.getCompilerName() + "\"";
                         factory = null;
+                        break;
                     }
                 }
-                if (multiple != null) {
-                    factory = new DummyCompilerFactory("Multiple providers of " + JVMCICompilerFactory.class + " available: " +
-                                    String.join(", ", multiple) +
-                                    ". You can select one of these with the " + Option.Compiler.getPropertyName() + " property " +
-                                    "(e.g., -D" + Option.Compiler.getPropertyName() + "=" + multiple.get(0) + ").");
-                } else if (factory == null) {
-                    Path jvmciDir = Paths.get(Services.getSavedProperty("java.home"), "lib", "jvmci");
-                    factory = new DummyCompilerFactory("No providers of " + JVMCICompilerFactory.class + " found in " + jvmciDir +
-                                    " or on the class path specified by the jvmci.class.path.append property.");
+                if (factory == null) {
+                    factory = new DummyCompilerFactory(reason, runtime);
                 }
             }
             factory.onSelection();
