@@ -2589,18 +2589,44 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
 
     if (CITime) {
       int bytes_compiled = method->code_size() + task->num_inlined_bytecodes();
-      JVMCI_ONLY(CompilerStatistics* stats = compiler(task->comp_level())->stats();)
+      CompilerStatistics* stats = compiler(task->comp_level())->stats();
       if (is_osr) {
         _t_osr_compilation.add(time);
         _sum_osr_bytes_compiled += bytes_compiled;
-        JVMCI_ONLY(stats->_osr.update(time, bytes_compiled);)
       } else {
         _t_standard_compilation.add(time);
         _sum_standard_bytes_compiled += method->code_size() + task->num_inlined_bytecodes();
-        JVMCI_ONLY(stats->_standard.update(time, bytes_compiled);)
       }
-      JVMCI_ONLY(stats->_nmethods_size += code->total_size();)
-      JVMCI_ONLY(stats->_nmethods_code_size += code->insts_size();)
+
+      // Collect statistic per compilation level
+      if (comp_level > CompLevel_none && comp_level <= CompLevel_full_optimization) {
+        CompilerStatistics* stats = &_stats_per_level[comp_level-1];
+        if (is_osr) {
+          stats->_osr.update(time, bytes_compiled);
+        } else {
+          stats->_standard.update(time, bytes_compiled);
+        }
+        stats->_nmethods_size += code->total_size();
+        stats->_nmethods_code_size += code->insts_size();
+      } else {
+        assert(false, err_msg("CompilerStatistics object does not exist for compilation level %d", comp_level));
+      }
+
+      // Collect statistic per compiler
+      AbstractCompiler* comp = compiler(comp_level);
+      if (comp) {
+        CompilerStatistics* stats = comp->stats();
+        if (is_osr) {
+          stats->_osr.update(time, bytes_compiled);
+        } else {
+          stats->_standard.update(time, bytes_compiled);
+        }
+        stats->_nmethods_size += code->total_size();
+        stats->_nmethods_code_size += code->insts_size();
+      } else { // if (!comp)
+        assert(false, "Compiler object must exist");
+      }
+
     }
 
     if (UsePerfData) {
