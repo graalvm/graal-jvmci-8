@@ -368,9 +368,9 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
          * Parses all system properties starting with {@value #JVMCI_OPTION_PROPERTY_PREFIX} and
          * initializes the options based on their values.
          *
-         * @param compilerToVm
+         * @param runtime
          */
-        static void parse(CompilerToVM compilerToVm) {
+        static void parse(HotSpotJVMCIRuntime runtime) {
             Map<String, String> savedProps = jdk.vm.ci.services.Services.getSavedProperties();
             for (Map.Entry<String, String> e : savedProps.entrySet()) {
                 String name = e.getKey();
@@ -393,9 +393,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                             }
                         }
                         msg.format("%nError: A fatal exception has occurred. Program will exit.%n");
-                        byte[] msgBytes = msg.toString().getBytes();
-                        compilerToVm.writeDebugOutput(msgBytes, 0, msgBytes.length, true, true);
-                        compilerToVm.callSystemExit(1);
+                        runtime.exitHotSpotWithMessage(1, msg.toString());
                     } else if (value instanceof Option) {
                         Option option = (Option) value;
                         option.init(e.getValue());
@@ -501,7 +499,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         }
 
         // Initialize the Option values.
-        Option.parse(compilerToVm);
+        Option.parse(this);
 
         String hostArchitecture = config.getHostArchitectureName();
 
@@ -514,7 +512,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
             hostBackend = registerBackend(factory.createJVMCIBackend(this, null));
         }
 
-        compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory();
+        compilerFactory = HotSpotJVMCICompilerConfig.getCompilerFactory(this);
         if (compilerFactory instanceof HotSpotJVMCICompilerFactory) {
             hsCompilerFactory = (HotSpotJVMCICompilerFactory) compilerFactory;
             if (hsCompilerFactory.getCompilationLevelAdjustment() != None) {
@@ -1189,5 +1187,16 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
             System.exit(status);
         }
         compilerToVm.callSystemExit(status);
+    }
+
+    /**
+     * Writes a message to HotSpot's log stream and then calls {@link System#exit(int)} in HotSpot's
+     * runtime.
+     */
+    synchronized JVMCIError exitHotSpotWithMessage(int status, String format, Object... args) {
+        byte[] messageBytes = String.format(format, args).getBytes();
+        compilerToVm.writeDebugOutput(messageBytes, 0, messageBytes.length, true, true);
+        exitHotSpot(status);
+        throw JVMCIError.shouldNotReachHere();
     }
 }

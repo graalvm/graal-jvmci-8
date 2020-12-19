@@ -180,6 +180,8 @@ int CompileBroker::_total_invalidated_count      = 0;
 int CompileBroker::_total_compile_count          = 0;
 int CompileBroker::_total_osr_compile_count      = 0;
 int CompileBroker::_total_standard_compile_count = 0;
+int CompileBroker::_total_compiler_stopped_count = 0;
+int CompileBroker::_total_compiler_restarted_count = 0;
 
 int CompileBroker::_sum_osr_bytes_compiled       = 0;
 int CompileBroker::_sum_standard_bytes_compiled  = 0;
@@ -2589,18 +2591,44 @@ void CompileBroker::collect_statistics(CompilerThread* thread, elapsedTimer time
 
     if (CITime) {
       int bytes_compiled = method->code_size() + task->num_inlined_bytecodes();
-      JVMCI_ONLY(CompilerStatistics* stats = compiler(task->comp_level())->stats();)
+      CompilerStatistics* stats = compiler(task->comp_level())->stats();
       if (is_osr) {
         _t_osr_compilation.add(time);
         _sum_osr_bytes_compiled += bytes_compiled;
-        JVMCI_ONLY(stats->_osr.update(time, bytes_compiled);)
       } else {
         _t_standard_compilation.add(time);
         _sum_standard_bytes_compiled += method->code_size() + task->num_inlined_bytecodes();
-        JVMCI_ONLY(stats->_standard.update(time, bytes_compiled);)
       }
-      JVMCI_ONLY(stats->_nmethods_size += code->total_size();)
-      JVMCI_ONLY(stats->_nmethods_code_size += code->insts_size();)
+
+      // Collect statistic per compilation level
+      if (comp_level > CompLevel_none && comp_level <= CompLevel_full_optimization) {
+        CompilerStatistics* stats = &_stats_per_level[comp_level-1];
+        if (is_osr) {
+          stats->_osr.update(time, bytes_compiled);
+        } else {
+          stats->_standard.update(time, bytes_compiled);
+        }
+        stats->_nmethods_size += code->total_size();
+        stats->_nmethods_code_size += code->insts_size();
+      } else {
+        assert(false, err_msg("CompilerStatistics object does not exist for compilation level %d", comp_level));
+      }
+
+      // Collect statistic per compiler
+      AbstractCompiler* comp = compiler(comp_level);
+      if (comp) {
+        CompilerStatistics* stats = comp->stats();
+        if (is_osr) {
+          stats->_osr.update(time, bytes_compiled);
+        } else {
+          stats->_standard.update(time, bytes_compiled);
+        }
+        stats->_nmethods_size += code->total_size();
+        stats->_nmethods_code_size += code->insts_size();
+      } else { // if (!comp)
+        assert(false, "Compiler object must exist");
+      }
+
     }
 
     if (UsePerfData) {
@@ -2658,7 +2686,7 @@ const char* CompileBroker::compiler_name(int comp_level) {
 }
 
 void CompileBroker::print_times(const char* name, CompilerStatistics* stats) {
-  tty->print_cr("  %s {speed: %.3f bytes/s; standard: %6.3f s, %d bytes, %d methods; osr: %6.3f s, %d bytes, %d methods; nmethods_size: %d bytes; nmethods_code_size: %d bytes}",
+  tty->print_cr("  %s {speed: %6.3f bytes/s; standard: %6.3f s, %d bytes, %d methods; osr: %6.3f s, %d bytes, %d methods; nmethods_size: %d bytes; nmethods_code_size: %d bytes}",
                 name, stats->bytes_per_second(),
                 stats->_standard._time.seconds(), stats->_standard._bytes, stats->_standard._count,
                 stats->_osr._time.seconds(), stats->_osr._bytes, stats->_osr._count,
@@ -2692,13 +2720,6 @@ void CompileBroker::print_times(bool per_compiler, bool aggregate) {
       print_times(tier_name, stats);
     }
   }
-
-#if INCLUDE_JVMCI
-  // In hosted mode, print the JVMCI compiler specific counters manually.
-  if (EnableJVMCI && !UseJVMCICompiler) {
-    JVMCICompiler::print_compilation_timers();
-  }
-#endif
 
   if (!aggregate) {
     return;
@@ -2743,6 +2764,13 @@ void CompileBroker::print_times(bool per_compiler, bool aggregate) {
     tty->cr();
     comp->print_timers();
   }
+#if INCLUDE_JVMCI
+  if (EnableJVMCI) {
+    tty->cr();
+    JVMCICompiler::print_hosted_timers();
+  }
+#endif
+
   tty->cr();
   tty->print_cr("  Total compiled methods    : %8d methods", total_compile_count);
   tty->print_cr("    Standard compilation    : %8d methods", standard_compile_count);
