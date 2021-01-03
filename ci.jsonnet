@@ -109,7 +109,7 @@
     },
 
     # Downstream Graal branch to test against.
-    local downstream_branch = "ds/GR-24732", # Needed to pass CheckGraalIntrinsics in context of JFR backport
+    local downstream_branch = "release/graal-vm/20.3", # Needed to pass CheckGraalIntrinsics in context of JFR backport
 
     # Only need to test formatting and building
     # with Eclipse on one platform.
