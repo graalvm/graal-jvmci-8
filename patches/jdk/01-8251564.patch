@@ -1,0 +1,20 @@
+# HG changeset patch
+# User kevinw
+# Date 1600118403 -3600
+# Node ID 0fe9d7118935184d951d4d8bf7e5653e777c6432
+# Parent  19f461e88b7ae17ef6fd437aa485232b6ed87e73
+8251564: JPRT should build JDK 8 with VS 2017 by default
+Reviewed-by: aivanov
+
+diff -r cf82ddc02f88 make/jprt.properties
+--- a/make/jprt.properties      Wed Nov 18 06:55:27 2020 +0000
++++ b/make/jprt.properties      Fri Dec 11 19:57:31 2020 +0100
+@@ -85,6 +85,8 @@
+     --with-update-version=${my.jdk.update.version}                     \
+     ${my.additional.build.configure.args.${jprt.test.set}}
+
++jprt.windows.build.configure.args=--with-devkit=$VS2017_15_5_5_HOME
++
+ # i586 is often cross-compiled from 64-bit machines, so need to set target bits explicitly
+ jprt.i586.build.configure.args=                                                \
+     --with-target-bits=32
