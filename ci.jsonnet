@@ -1,5 +1,5 @@
 {
-    overlay: "7ae71ed606bd7a3c225ac70aa5c93561b67050ac",
+    overlay: "f598ffb9d249c7f64cde615186d53b41019752a0",
     specVersion: "2",
 
     Windows:: {
@@ -10,7 +10,7 @@
             CI_OS: "windows"
         },
         packages+: {
-            "devkit:VS2017-15.5.5+1"  : "==0",
+            "devkit:VS2017-15.9.16+1"  : "==0",
         },
     },
     Linux:: {
@@ -90,8 +90,8 @@
     },
 
     OpenJDK:: {
-        local jdk_version = "8u262",
-        local jdk_build = "10",
+        local jdk_version = "8u282",
+        local jdk_build = "03",
 
         name+: "-openjdk",
         downloads+: {
@@ -109,7 +109,7 @@
     },
 
     # Downstream Graal branch to test against.
-    local downstream_branch = "ds/GR-24732", # Needed to pass CheckGraalIntrinsics in context of JFR backport
+    local downstream_branch = "cpu/graal-vm/20.3", # Needed to pass CheckGraalIntrinsics in context of JFR backport
 
     # Only need to test formatting and building
     # with Eclipse on one platform.
