@@ -20,6 +20,8 @@ The build step above should work on all [supported JDK 8 build platforms](https:
 It should also work on other platforms (such as Oracle Linux, CentOS and Fedora as described [here](http://mail.openjdk.java.net/pipermail/graal-dev/2015-December/004050.html)).
 If you run into build problems, send a message to http://mail.openjdk.java.net/mailman/listinfo/graal-dev.
 
+The patches, if any, used to build a JVMCI binary will be in a `.patches` top level directory in the binary archive file.
+
 ### Windows Specifics
 
 Building JDK requires some bash-like environment. Fortunately, the one that comes as a part of the standard
