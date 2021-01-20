@@ -1,2 +1,0 @@
-# Avoids issues with git on Windows and newlines and whitespace in patches
-*.patch -text
