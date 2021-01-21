@@ -20,8 +20,7 @@ The build step above should work on all [supported JDK 8 build platforms](https:
 It should also work on other platforms (such as Oracle Linux, CentOS and Fedora as described [here](http://mail.openjdk.java.net/pipermail/graal-dev/2015-December/004050.html)).
 If you run into build problems, send a message to http://mail.openjdk.java.net/mailman/listinfo/graal-dev.
 
-The patches in `patches/jdk` are applied (in sort order of patch file name) to the JDK8 sources when building a JVMCI-enabled JDK 8.
-When building the JDK static libraries, the patches in `patches/static-libs` are applied in addition.
+The patches, if any, used to build a JVMCI binary will be in a `.patches` top level directory in the binary archive file.
 
 ### Windows Specifics
 
