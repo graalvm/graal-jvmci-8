@@ -314,6 +314,9 @@ class nmethod : public CodeBlob {
 #if INCLUDE_JVMCI
           , char* speculations,
           int speculations_len,
+          int nmethod_mirror_index,
+          const char* nmethod_mirror_name,
+          FailedSpeculation** failed_speculations,
           int jvmci_data_size
 #endif
           );
