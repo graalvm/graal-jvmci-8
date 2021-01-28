@@ -725,18 +725,14 @@ nmethod* nmethod::new_nmethod(methodHandle method,
 #if INCLUDE_JVMCI
             , speculations,
             speculations_len,
+            nmethod_mirror_index,
+            nmethod_mirror_name,
+            failed_speculations,
             jvmci_data_size
 #endif
             );
 
     if (nm != NULL) {
-#if INCLUDE_JVMCI
-      if (compiler->is_jvmci()) {
-        // Initialize the JVMCINMethodData object inlined into nm
-        nm->jvmci_nmethod_data()->initialize(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
-      }
-#endif
-
       // To make dependency checking during class loading fast, record
       // the nmethod dependencies in the classes it is dependent on.
       // This allows the dependency checking code to simply walk the
@@ -975,6 +971,9 @@ nmethod::nmethod(
 #if INCLUDE_JVMCI
   , char* speculations,
   int speculations_len,
+  int nmethod_mirror_index,
+  const char* nmethod_mirror_name,
+  FailedSpeculation** failed_speculations,
   int jvmci_data_size
 #endif
   )
@@ -1085,6 +1084,10 @@ nmethod::nmethod(
     // Copy speculations to nmethod
     if (speculations_size() != 0) {
       memcpy(speculations_begin(), speculations, speculations_len);
+    }
+    if (compiler->is_jvmci()) {
+      // Initialize the JVMCINMethodData object inlined into nm
+      jvmci_nmethod_data()->initialize(nmethod_mirror_index, nmethod_mirror_name, failed_speculations);
     }
 #endif
 
