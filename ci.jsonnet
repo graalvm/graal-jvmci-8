@@ -91,7 +91,7 @@
 
     OpenJDK:: {
         local jdk_version = "8u282",
-        local jdk_build = "07",
+        local jdk_build = "08",
 
         name+: "-openjdk",
         downloads+: {
@@ -109,7 +109,7 @@
     },
 
     # Downstream Graal branch to test against.
-    local downstream_branch = "ds/GR-24732", # Needed to pass CheckGraalIntrinsics in context of JFR backport
+    local downstream_branch = "master",
 
     # Only need to test formatting and building
     # with Eclipse on one platform.
