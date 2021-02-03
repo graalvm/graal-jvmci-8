@@ -2793,13 +2793,8 @@ bool LibraryCallKit::inline_unsafe_access(bool is_native_ptr, bool is_store, Bas
     }
 
     MemNode::MemOrd mo = is_volatile ? MemNode::release : MemNode::unordered;
-<<<<<<< HEAD
-    if (type == T_OBJECT) {
-      store_oop_to_unknown(control(), heap_base_oop, adr, adr_type, val, type, mo, mismatched);
-=======
     if (type == T_OBJECT ) {
       store = store_oop_to_unknown(control(), heap_base_oop, adr, adr_type, val, type, mo, mismatched);
->>>>>>> jdk8u292-b01
     } else {
       store = store_to_memory(control(), adr, val, type, adr_type, mo, is_volatile, unaligned, mismatched);
     }

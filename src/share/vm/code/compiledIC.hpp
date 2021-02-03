@@ -323,15 +323,11 @@ class CompiledStaticCall: public NativeCall {
   friend CompiledStaticCall* compiledStaticCall_at(Relocation* call_site);
 
   // Code
-<<<<<<< HEAD
-  static address emit_to_interp_stub(CodeBuffer &cbuf, address mark = NULL);
-=======
 #if defined(AARCH64) && !defined(ZERO)
   static address emit_to_interp_stub(CodeBuffer &cbuf, address mark);
 #else
-  static address emit_to_interp_stub(CodeBuffer &cbuf);
+  static address emit_to_interp_stub(CodeBuffer &cbuf, address mark=NULL);
 #endif
->>>>>>> jdk8u292-b01
   static int to_interp_stub_size();
   static int reloc_to_interp_stub();
 
