@@ -407,8 +407,6 @@ HeapRegion::object_iterate_mem_careful(MemRegion mr,
   return NULL;
 }
 
-<<<<<<< HEAD
-=======
 // Humongous objects are allocated directly in the old-gen.  Need
 // special handling for concurrent processing encountering an
 // in-progress allocation.
@@ -452,7 +450,6 @@ static bool do_oops_on_card_in_humongous(MemRegion mr,
   return true;
 }
 
->>>>>>> jdk8u292-b01
 bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
                                                   FilterOutOfRegionClosure* cl,
                                                   jbyte* card_ptr) {
@@ -470,10 +467,6 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
   if (mr.is_empty()) {
     return true;
   }
-<<<<<<< HEAD
-  // Otherwise, find the obj that extends onto mr.start().
-=======
->>>>>>> jdk8u292-b01
 
   // The intersection of the incoming mr (for the card) and the
   // allocated part of the region is non-empty. This implies that
@@ -490,14 +483,11 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
   *card_ptr = CardTableModRefBS::clean_card_val();
   // We must complete this write before we do any of the reads below.
   OrderAccess::storeload();
-<<<<<<< HEAD
-=======
 
   // Special handling for humongous regions.
   if (isHumongous()) {
     return do_oops_on_card_in_humongous(mr, cl, this, g1h);
   }
->>>>>>> jdk8u292-b01
 
   // During GC we limit mr by scan_top. So we never get here with an
   // mr covering objects allocated during GC.  Non-humongous objects
@@ -509,7 +499,6 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
   HeapWord* const start = mr.start();
   HeapWord* const end = mr.end();
 
-<<<<<<< HEAD
   // Update BOT as needed while finding start of (potential) object.
   HeapWord* cur = block_start(start);
   assert(cur <= start, "Postcondition");
@@ -529,12 +518,6 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
     // Otherwise...
     next = cur + block_size(cur);
   } while (next <= start);
-=======
-  // Find the obj that extends onto mr.start().
-  // Update BOT as needed while finding start of (possibly dead)
-  // object containing the start of the region.
-  HeapWord* cur = block_start(start);
->>>>>>> jdk8u292-b01
 
 #ifdef ASSERT
   {
@@ -547,25 +530,6 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
 #endif
 
   do {
-<<<<<<< HEAD
-    obj = oop(cur);
-    assert((cur + block_size(cur)) > (HeapWord*)obj, "Loop invariant");
-    if (obj->klass_or_null() == NULL) {
-      // Ran into an unparseable point.
-      assert(!g1h->is_gc_active(),
-             err_msg("Unparsable heap during GC at " PTR_FORMAT, p2i(cur)));
-      return false;
-    }
-
-    // Advance the current pointer. "obj" still points to the object to iterate.
-    cur = cur + block_size(cur);
-
-    if (!g1h->is_obj_dead(obj)) {
-      // Non-objArrays are sometimes marked imprecise at the object start. We
-      // always need to iterate over them in full.
-      // We only iterate over object arrays in full if they are completely contained
-      // in the memory region.
-=======
     oop obj = oop(cur);
     assert(obj->is_oop(true), err_msg("Not an oop at " PTR_FORMAT, p2i(cur)));
     assert(obj->klass_or_null() != NULL,
@@ -581,7 +545,6 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
       // start, in which case we need to iterate over them in full.
       // objArrays are precisely marked, but can still be iterated
       // over in full if completely covered.
->>>>>>> jdk8u292-b01
       if (!obj->is_objArray() || (((HeapWord*)obj) >= start && cur <= end)) {
         obj->oop_iterate(cl);
       } else {

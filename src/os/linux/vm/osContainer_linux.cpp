@@ -113,8 +113,6 @@ class CgroupSubsystem: CHeapObj<mtInternal> {
     void set_cache_expiry_time(jlong timeout) {
       _next_check_counter = os::elapsed_counter() + timeout;
     }
-<<<<<<< HEAD
-=======
 };
 
 class CgroupMemorySubsystem: CgroupSubsystem {
@@ -133,7 +131,6 @@ class CgroupMemorySubsystem: CgroupSubsystem {
 
     bool is_hierarchical() { return _uses_mem_hierarchy; }
     void set_hierarchical(bool value) { _uses_mem_hierarchy = value; }
->>>>>>> jdk8u292-b01
 };
 
 CgroupMemorySubsystem* memory = NULL;
@@ -339,11 +336,7 @@ void OSContainer::init() {
     }
     while ((token = strsep(&cptr, ",")) != NULL) {
       if (strcmp(token, "memory") == 0) {
-<<<<<<< HEAD
-        memory = new CgroupSubsystem(tmproot, tmpmount);
-=======
         memory = new CgroupMemorySubsystem(tmproot, tmpmount);
->>>>>>> jdk8u292-b01
       } else if (strcmp(token, "cpuset") == 0) {
         cpuset = new CgroupSubsystem(tmproot, tmpmount);
       } else if (strcmp(token, "cpu") == 0) {
@@ -430,13 +423,10 @@ void OSContainer::init() {
     while ((token = strsep(&controllers, ",")) != NULL) {
       if (strcmp(token, "memory") == 0) {
         memory->set_subsystem_path(base);
-<<<<<<< HEAD
-=======
         jlong hierarchy = uses_mem_hierarchy();
         if (hierarchy > 0) {
           memory->set_hierarchical(true);
         }
->>>>>>> jdk8u292-b01
       } else if (strcmp(token, "cpuset") == 0) {
         cpuset->set_subsystem_path(base);
       } else if (strcmp(token, "cpu") == 0) {
