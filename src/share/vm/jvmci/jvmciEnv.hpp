@@ -302,9 +302,7 @@ public:
 
   JVMCIObject call_HotSpotJVMCIRuntime_callToString(JVMCIObject object, JVMCI_TRAPS);
 
-  JVMCIObject call_PrimitiveConstant_forTypeChar(jchar kind, jlong value, JVMCI_TRAPS);
-  JVMCIObject call_JavaConstant_forFloat(float value, JVMCI_TRAPS);
-  JVMCIObject call_JavaConstant_forDouble(double value, JVMCI_TRAPS);
+  JVMCIObject call_JavaConstant_forPrimitive(JVMCIObject kind, jlong value, JVMCI_TRAPS);
 
   BasicType kindToBasicType(JVMCIObject kind, JVMCI_TRAPS);
 

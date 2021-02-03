@@ -1023,7 +1023,4 @@ final class HotSpotResolvedObjectTypeImpl extends HotSpotResolvedJavaType implem
         return (getAccessFlags() & config().jvmAccIsCloneable) != 0;
     }
 
-    JavaConstant readFieldValue(HotSpotResolvedJavaField field, boolean isVolatile) {
-        return runtime().reflection.readFieldValue(this, field, isVolatile);
-    }
 }
