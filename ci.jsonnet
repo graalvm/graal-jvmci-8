@@ -268,7 +268,7 @@
     # GraalVM CE is not supported on Solaris-SPARC
     local graalvm_test_confs = [
         self.Linux + self.AMD64 + self.OpenJDK,
-        self.Darwin + self.AMD64 + self.OpenJDK,
+        # GR-29152 self.Darwin + self.AMD64 + self.OpenJDK,
         self.Windows + self.AMD64 + self.OpenJDK
     ],
 
