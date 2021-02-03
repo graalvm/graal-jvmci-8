@@ -575,9 +575,16 @@ bool G1RemSet::refine_card(jbyte* card_ptr, uint worker_i,
                                         card_ptr);
 
   // If unable to process the card then we encountered an unparsable
+<<<<<<< HEAD
   // part of the heap (e.g. a partially allocated object).  Redirty
   // and re-enqueue: if we put off the card until a GC pause, then the
   // allocation will have completed.
+=======
+  // part of the heap (e.g. a partially allocated object) while
+  // processing a stale card.  Despite the card being stale, redirty
+  // and re-enqueue, because we've already cleaned the card.  Without
+  // this we could incorrectly discard a non-stale card.
+>>>>>>> jdk8u292-b01
   if (!card_processed) {
     assert(!_g1->is_gc_active(), "Unparsable heap during GC");
     // The card might have gotten re-dirtied and re-enqueued while we

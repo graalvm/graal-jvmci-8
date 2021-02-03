@@ -407,6 +407,52 @@ HeapRegion::object_iterate_mem_careful(MemRegion mr,
   return NULL;
 }
 
+<<<<<<< HEAD
+=======
+// Humongous objects are allocated directly in the old-gen.  Need
+// special handling for concurrent processing encountering an
+// in-progress allocation.
+static bool do_oops_on_card_in_humongous(MemRegion mr,
+                                         FilterOutOfRegionClosure* cl,
+                                         HeapRegion* hr,
+                                         G1CollectedHeap* g1h) {
+  assert(hr->isHumongous(), "precondition");
+  HeapRegion* sr = hr->humongous_start_region();
+  oop obj = oop(sr->bottom());
+
+  // If concurrent and klass_or_null is NULL, then space has been
+  // allocated but the object has not yet been published by setting
+  // the klass.  That can only happen if the card is stale.  However,
+  // we've already set the card clean, so we must return failure,
+  // since the allocating thread could have performed a write to the
+  // card that might be missed otherwise.
+  if (!g1h->is_gc_active() && (obj->klass_or_null_acquire() == NULL)) {
+    return false;
+  }
+
+  // Only filler objects follow a humongous object in the containing
+  // regions, and we can ignore those.  So only process the one
+  // humongous object.
+  if (!g1h->is_obj_dead(obj, sr)) {
+    if (obj->is_objArray() || (sr->bottom() < mr.start())) {
+      // objArrays are always marked precisely, so limit processing
+      // with mr.  Non-objArrays might be precisely marked, and since
+      // it's humongous it's worthwhile avoiding full processing.
+      // However, the card could be stale and only cover filler
+      // objects.  That should be rare, so not worth checking for;
+      // instead let it fall out from the bounded iteration.
+      obj->oop_iterate(cl, mr);
+    } else {
+      // If obj is not an objArray and mr contains the start of the
+      // obj, then this could be an imprecise mark, and we need to
+      // process the entire object.
+      obj->oop_iterate(cl);
+    }
+  }
+  return true;
+}
+
+>>>>>>> jdk8u292-b01
 bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
                                                   FilterOutOfRegionClosure* cl,
                                                   jbyte* card_ptr) {
@@ -424,7 +470,10 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
   if (mr.is_empty()) {
     return true;
   }
+<<<<<<< HEAD
   // Otherwise, find the obj that extends onto mr.start().
+=======
+>>>>>>> jdk8u292-b01
 
   // The intersection of the incoming mr (for the card) and the
   // allocated part of the region is non-empty. This implies that
@@ -441,11 +490,26 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
   *card_ptr = CardTableModRefBS::clean_card_val();
   // We must complete this write before we do any of the reads below.
   OrderAccess::storeload();
+<<<<<<< HEAD
+=======
+
+  // Special handling for humongous regions.
+  if (isHumongous()) {
+    return do_oops_on_card_in_humongous(mr, cl, this, g1h);
+  }
+>>>>>>> jdk8u292-b01
+
+  // During GC we limit mr by scan_top. So we never get here with an
+  // mr covering objects allocated during GC.  Non-humongous objects
+  // are only allocated in the old-gen during GC.  So the parts of the
+  // heap that may be examined here are always parsable; there's no
+  // need to use klass_or_null here to detect in-progress allocations.
 
   // Cache the boundaries of the memory region in some const locals
   HeapWord* const start = mr.start();
   HeapWord* const end = mr.end();
 
+<<<<<<< HEAD
   // Update BOT as needed while finding start of (potential) object.
   HeapWord* cur = block_start(start);
   assert(cur <= start, "Postcondition");
@@ -465,14 +529,25 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
     // Otherwise...
     next = cur + block_size(cur);
   } while (next <= start);
+=======
+  // Find the obj that extends onto mr.start().
+  // Update BOT as needed while finding start of (possibly dead)
+  // object containing the start of the region.
+  HeapWord* cur = block_start(start);
+>>>>>>> jdk8u292-b01
 
-  // If we finish the above loop...We have a parseable object that
-  // begins on or before the start of the memory region, and ends
-  // inside or spans the entire region.
-  assert(cur <= start, "Loop postcondition");
-  assert(obj->klass_or_null() != NULL, "Loop postcondition");
+#ifdef ASSERT
+  {
+    assert(cur <= start,
+           err_msg("cur: " PTR_FORMAT ", start: " PTR_FORMAT, p2i(cur), p2i(start)));
+    HeapWord* next = cur + block_size(cur);
+    assert(start < next,
+           err_msg("start: " PTR_FORMAT ", next: " PTR_FORMAT, p2i(start), p2i(next)));
+  }
+#endif
 
   do {
+<<<<<<< HEAD
     obj = oop(cur);
     assert((cur + block_size(cur)) > (HeapWord*)obj, "Loop invariant");
     if (obj->klass_or_null() == NULL) {
@@ -490,6 +565,23 @@ bool HeapRegion::oops_on_card_seq_iterate_careful(MemRegion mr,
       // always need to iterate over them in full.
       // We only iterate over object arrays in full if they are completely contained
       // in the memory region.
+=======
+    oop obj = oop(cur);
+    assert(obj->is_oop(true), err_msg("Not an oop at " PTR_FORMAT, p2i(cur)));
+    assert(obj->klass_or_null() != NULL,
+           err_msg("Unparsable heap at " PTR_FORMAT, p2i(cur)));
+
+    if (g1h->is_obj_dead(obj, this)) {
+      // Carefully step over dead object.
+      cur += block_size(cur);
+    } else {
+      // Step over live object, and process its references.
+      cur += obj->size();
+      // Non-objArrays are usually marked imprecise at the object
+      // start, in which case we need to iterate over them in full.
+      // objArrays are precisely marked, but can still be iterated
+      // over in full if completely covered.
+>>>>>>> jdk8u292-b01
       if (!obj->is_objArray() || (((HeapWord*)obj) >= start && cur <= end)) {
         obj->oop_iterate(cl);
       } else {
