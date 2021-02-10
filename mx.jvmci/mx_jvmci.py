@@ -811,6 +811,12 @@ class HotSpotBuildTask(mx.NativeBuildTask):
             variant = _hotspotGetVariant(self.vm)
             project_config = variant + '_' + self.vmbuild
             jvmciHome = mx._cygpathU2W(_suite.dir)
+
+            # exclude aarch64 files to be compiled on windows
+            aarch64_src_dir = os.path.join(jvmciHome, 'src', 'cpu', 'aarch64')
+            if os.path.isdir(aarch64_src_dir):
+                shutil.rmtree(aarch64_src_dir, ignore_errors=False)
+
             project_file = jvmciHome + r'\build\vs-amd64\jvm.vcxproj'
             if exists(mx._cygpathW2U(project_file)):
                 _runActionInWinSDKEnv('HotSpotClean', 'msbuild ' + project_file + ' /p:Configuration=' + project_config + ' /p:Platform=x64 /target:clean', jvmciHome)
