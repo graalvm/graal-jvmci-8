@@ -35,6 +35,8 @@ import java.lang.invoke.CallSite;
 import java.lang.invoke.ConstantCallSite;
 import java.lang.invoke.MethodHandle;
 import java.lang.ref.WeakReference;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Formatter;
@@ -63,6 +65,8 @@ import jdk.vm.ci.runtime.JVMCICompilerFactory;
 import jdk.vm.ci.runtime.JVMCIRuntime;
 import jdk.vm.ci.services.JVMCIServiceLocator;
 import jdk.vm.ci.services.Services;
+
+import sun.misc.Unsafe;
 
 /**
  * HotSpot implementation of a JVMCI runtime.
@@ -532,7 +536,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         }
 
         if (Option.PrintConfig.getBoolean()) {
-            configStore.printConfig();
+            configStore.printConfig(this);
         }
     }
 
@@ -840,7 +844,46 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
      * @throws IndexOutOfBoundsException if copying would cause access of data outside array bounds
      */
     public int writeDebugOutput(byte[] bytes, int offset, int length, boolean flush, boolean canThrow) {
-        return compilerToVm.writeDebugOutput(bytes, offset, length, flush, canThrow);
+        return writeDebugOutput0(compilerToVm, bytes, offset, length, flush, canThrow);
+    }
+
+    /**
+     * @see #writeDebugOutput
+     */
+    static int writeDebugOutput0(CompilerToVM vm, byte[] bytes, int offset, int length, boolean flush, boolean canThrow) {
+        if (bytes == null) {
+            if (!canThrow) {
+                return -1;
+            }
+            throw new NullPointerException();
+        }
+        if (offset < 0 || length < 0 || offset + length > bytes.length) {
+            if (!canThrow) {
+                return -2;
+            }
+            throw new ArrayIndexOutOfBoundsException();
+        }
+        if (length <= 8) {
+            ByteBuffer buffer = ByteBuffer.wrap(bytes, offset, length);
+            if (length != 8) {
+                ByteBuffer buffer8 = ByteBuffer.allocate(8);
+                buffer8.put(buffer);
+                buffer8.position(8);
+                buffer = buffer8;
+            }
+            buffer.order(ByteOrder.nativeOrder());
+            vm.writeDebugOutput(buffer.getLong(0), length, flush);
+        } else {
+            Unsafe unsafe = UnsafeAccess.UNSAFE;
+            long buffer = unsafe.allocateMemory(length);
+            try {
+                unsafe.copyMemory(bytes, vm.ARRAY_BYTE_BASE_OFFSET, null, buffer, length);
+                vm.writeDebugOutput(buffer, length, flush);
+            } finally {
+                unsafe.freeMemory(buffer);
+            }
+        }
+        return 0;
     }
 
     /**
@@ -858,7 +901,7 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
                 } else if (len == 0) {
                     return;
                 }
-                compilerToVm.writeDebugOutput(b, off, len, false, true);
+                writeDebugOutput(b, off, len, false, true);
             }
 
             @Override
@@ -1185,4 +1228,18 @@ public final class HotSpotJVMCIRuntime implements JVMCIRuntime {
         }
         compilerToVm.callSystemExit(status);
     }
+<<<<<<< HEAD
+=======
+
+    /**
+     * Writes a message to HotSpot's log stream and then calls {@link System#exit(int)} in HotSpot's
+     * runtime.
+     */
+    synchronized JVMCIError exitHotSpotWithMessage(int status, String format, Object... args) {
+        byte[] messageBytes = String.format(format, args).getBytes();
+        writeDebugOutput(messageBytes, 0, messageBytes.length, true, true);
+        exitHotSpot(status);
+        throw JVMCIError.shouldNotReachHere();
+    }
+>>>>>>> ec7e1a5356... allow printing to tty from unattached libgraal thread (JDK-8262011)
 }
