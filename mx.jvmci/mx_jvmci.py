@@ -676,18 +676,22 @@ def _runActionInWinSDKEnv(action_name, action_command, workingDir):
     Runs an action in a Windows SDK environment.
     """
 
-    winSDK = mx.get_env('WIN_SDK', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\')
+    # Check if we should use env as is, or set it up
+    use_env = mx.get_env('UseEnv', 'false') == 'true'
 
-    if not exists(mx._cygpathW2U(winSDK)):
-        mx.abort("Could not find Windows SDK : '" + winSDK + "' does not exist")
+    if not use_env:
+        winSDK = mx.get_env('WIN_SDK', 'C:\\Program Files\\Microsoft SDKs\\Windows\\v7.1\\')
+        if not exists(mx._cygpathW2U(winSDK)):
+            mx.abort("Could not find Windows SDK : '" + winSDK + "' does not exist")
 
-    winSDKSetEnv = mx._cygpathW2U(join(winSDK, 'Bin', 'SetEnv.cmd'))
-    if not exists(winSDKSetEnv):
-        mx.abort("Invalid Windows SDK path (" + winSDK + ") : could not find Bin/SetEnv.cmd (you can use the WIN_SDK environment variable to specify an other path)")
+        winSDKSetEnv = mx._cygpathW2U(join(winSDK, 'Bin', 'SetEnv.cmd'))
+        if not exists(winSDKSetEnv):
+            mx.abort("Invalid Windows SDK path ({}) : could not find Bin\\SetEnv.cmd (you can use"
+                     " the WIN_SDK environment variable to specify an other path)".format(winSDK))
 
     action_command_file = action_name + '.cmd'
     with open(action_command_file, 'w') as fp:
-        with open(winSDKSetEnv) as in_fp:
+        with open(os.devnull if use_env else winSDKSetEnv) as in_fp:
             for line in in_fp.readlines():
                 if line.startswith('CLS'):
                     # Disable screen clearing
@@ -698,7 +702,10 @@ def _runActionInWinSDKEnv(action_name, action_command, workingDir):
 
     stdout = open(action_name + '.log', 'w') if not mx.get_opts().verbose else None
     cmd = 'cmd.exe /D /E:ON /V:ON /C "' + mx._cygpathU2W(action_command_file) + '"'
-    mx.log('Executing in Windows SDK Debug Environment: {} (output in {})'.format(action_name, 'console' if stdout is None else stdout.name))
+    mx.log('Executing{}: {} (output in {})'.format(
+        '' if use_env else ' in Windows SDK Debug Environment',
+        action_name,
+        'console' if stdout is None else stdout.name))
     subprocess.check_call(cmd, stdout=stdout, stderr=subprocess.STDOUT, universal_newlines=True)
     # Files only removed if action exited with 0 return code
     os.remove(action_command_file)
