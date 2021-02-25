@@ -1975,6 +1975,9 @@ C2V_VMENTRY_NULL(jobject, readFieldValue, (JNIEnv* env, jobject, jobject object,
       if (displacement < arrayOopDesc::base_offset_in_bytes(T_OBJECT)) {
         JVMCI_THROW_MSG_NULL(IllegalArgumentException, "reading from array header");
       }
+      if (displacement + heapOopSize > arrayOopDesc::base_offset_in_bytes(T_OBJECT) + arrayOop(obj())->length() * heapOopSize) {
+        JVMCI_THROW_MSG_NULL(IllegalArgumentException, "reading after last array element");
+      }
       if (((displacement - arrayOopDesc::base_offset_in_bytes(T_OBJECT)) % heapOopSize) != 0) {
         JVMCI_THROW_MSG_NULL(IllegalArgumentException, "misaligned object read from array");
       }
