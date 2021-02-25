@@ -2,15 +2,14 @@
     overlay: "7ae71ed606bd7a3c225ac70aa5c93561b67050ac",
 
     Windows:: {
-        capabilities+: ["windows"],
-        name+: "-windows",
-        environment+: {
-            PATH : "$MKS_HOME;$PATH",  # Makes the `test` utility available
-            CI_OS: "windows"
-        },
         packages+: {
             "devkit:VS2017-15.9.16+1" : "==0"
         },
+        capabilities+: ["windows"],
+        name+: "-windows",
+        environment+: {
+            CI_OS: "windows"
+        }
     },
     Linux:: {
         packages+: {
@@ -176,7 +175,14 @@
             ["cp", "-r", ".", "${JAVA_HOME}"],
             ["cd", "${OLD_PWD}"],
         ],
-    },
+    } + if conf.environment["CI_OS"] == "windows" then {
+        environment+: {
+            # Make `msbuild` and common *nix utilities in MKS_HOME available
+            PATH : "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319;$MKS_HOME;$PATH",
+            # Tell `msbuild` to use the environment as is (i.e., the devkit)
+            UseEnv: "true",
+        },
+    } else {},
 
     GraalTest:: {
         name+: "-graal",
