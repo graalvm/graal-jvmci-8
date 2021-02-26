@@ -90,7 +90,7 @@ void JNIHandleMark::pop_jni_handle_block(JavaThread* thread) {
     JNIHandleBlock::release_block(compile_handles, thread); // may block
   }
 }
-  
+
 class JVMCITraceMark : public StackObj {
   const char* _msg;
  public:
@@ -2766,7 +2766,7 @@ JNINativeMethod CompilerToVM::methods[] = {
   {CC "getMetadata",                                  CC "(" TARGET_DESCRIPTION HS_COMPILED_CODE HS_METADATA ")I",                          FN_PTR(getMetadata)},
   {CC "resetCompilationStatistics",                   CC "()V",                                                                             FN_PTR(resetCompilationStatistics)},
   {CC "disassembleCodeBlob",                          CC "(" INSTALLED_CODE ")" STRING,                                                     FN_PTR(disassembleCodeBlob)},
-  {CC "executeHotSpotNmethod",                        CC "(["OBJECT HS_NMETHOD ")" OBJECT,                                                  FN_PTR(executeHotSpotNmethod)},
+  {CC "executeHotSpotNmethod",                        CC "([" OBJECT HS_NMETHOD ")" OBJECT,                                                 FN_PTR(executeHotSpotNmethod)},
   {CC "getLineNumberTable",                           CC "(" HS_RESOLVED_METHOD ")[J",                                                      FN_PTR(getLineNumberTable)},
   {CC "getLocalVariableTableStart",                   CC "(" HS_RESOLVED_METHOD ")J",                                                       FN_PTR(getLocalVariableTableStart)},
   {CC "getLocalVariableTableLength",                  CC "(" HS_RESOLVED_METHOD ")I",                                                       FN_PTR(getLocalVariableTableLength)},

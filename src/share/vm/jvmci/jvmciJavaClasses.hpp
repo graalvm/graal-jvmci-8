@@ -526,8 +526,7 @@ class HotSpotJVMCI {
     return *(ConstantPool**) HotSpotConstantPool::metadataHandle(env, jvmci_constant_pool);
   }
   static inline Klass* asKlass(JVMCIEnv* env, oop jvmci_type) {
-    long handle = HotSpotResolvedObjectTypeImpl::metadataPointer(env, jvmci_type);
-    return (Klass*) handle;
+    return (Klass*) HotSpotResolvedObjectTypeImpl::metadataPointer(env, jvmci_type);
   }
 
   static void compute_offsets(TRAPS);
