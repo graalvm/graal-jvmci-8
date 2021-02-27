@@ -10,7 +10,7 @@
             CI_OS: "windows"
         },
         packages+: {
-            "devkit:VS2017-15.5.5+1" : "==0"
+            "devkit:VS2017-15.9.16+1" : "==0"
         },
     },
     Linux:: {
