@@ -19,7 +19,7 @@
 # Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
 # or visit www.oracle.com if you need additional information or have any
 # questions.
-#  
+#
 #
 
 # These are the commands used externally to compile and run.
@@ -49,35 +49,39 @@ BOOT_TARGET_CLASS_VERSION=7
 JAVAC_FLAGS=-g -encoding ascii
 BOOTSTRAP_JAVAC_FLAGS=$(JAVAC_FLAGS) -source $(BOOT_SOURCE_LANGUAGE_VERSION) -target $(BOOT_TARGET_CLASS_VERSION)
 
-ProjectFile=jvm.vcproj
-
 !if "$(MSC_VER)" == "1200"
 
 VcVersion=VC6
 ProjectFile=jvm.dsp
 
+!elseif "$(MSC_VER)" == "1300"
+
+VcVersion=VC7
+ProjectFile=jvm.vcproj
+
+!elseif "$(MSC_VER)" == "1310"
+
+VcVersion=VC7
+ProjectFile=jvm.vcproj
+
+!elseif "$(MSC_VER)" == "1399"
+
+VcVersion=VC7
+ProjectFile=jvm.vcproj
+
 !elseif "$(MSC_VER)" == "1400"
 
 VcVersion=VC8
+ProjectFile=jvm.vcproj
 
 !elseif "$(MSC_VER)" == "1500"
 
 VcVersion=VC9
-
-!elseif "$(MSC_VER)" == "1600"
-
-VcVersion=VC10
-ProjectFile=jvm.vcxproj
-
-!elseif "$(MSC_VER)" == "1700"
-# This is VS2012, but it loads VS10 projects just fine (and will
-# upgrade them automatically to VS2012 format).
-
-VcVersion=VC10
-ProjectFile=jvm.vcxproj
+ProjectFile=jvm.vcproj
 
 !else
 
-VcVersion=VC7
+VcVersion=VC10
+ProjectFile=jvm.vcxproj
 
 !endif
