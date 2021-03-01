@@ -20,7 +20,7 @@ REM
 REM Please contact Oracle, 500 Oracle Parkway, Redwood Shores, CA 94065 USA
 REM or visit www.oracle.com if you need additional information or have any
 REM questions.
-REM  
+REM
 REM
 
 REM This is the interactive build setup script (as opposed to the batch
@@ -32,10 +32,10 @@ REM the vm.vcproj file in the buildspace, which is then used in Visual C++.
 REM
 REM Since we don't have uname and we could be cross-compiling,
 REM Use the compiler to determine which ARCH we are building
-REM 
+REM
 REM Note: Running this batch file from the Windows command shell requires
 REM that "grep" be accessible on the PATH. An MKS install does this.
-REM 
+REM
 
 
 
@@ -85,28 +85,34 @@ REM figure out MSC version
 for /F %%i in ('sh %HotSpotWorkSpace%/make/windows/get_msc_ver.sh') do set %%i
 
 echo **************************************************************
-set ProjectFile=%HotSpotBuildSpace%\jvm.vcproj
-echo MSC_VER = "%MSC_VER%" 
+echo MSC_VER = "%MSC_VER%"
 if "%MSC_VER%" == "1200" (
-set ProjectFile=%HotSpotBuildSpace%\jvm.dsp
 echo Will generate VC6 project {unsupported}
+set ProjectFile=%HotSpotBuildSpace%\jvm.dsp
+) else (
+if "%MSC_VER%" == "1300" (
+echo Will generate VC7 project {Visual Studio 2003}
+set ProjectFile=%HotSpotBuildSpace%\jvm.vcproj
+) else (
+if "%MSC_VER%" == "1310" (
+echo Will generate VC7 project {Visual Studio 2003}
+set ProjectFile=%HotSpotBuildSpace%\jvm.vcproj
+) else (
+if "%MSC_VER%" == "1399" (
+echo Will generate VC7 project {Visual Studio 2003}
+set ProjectFile=%HotSpotBuildSpace%\jvm.vcproj
 ) else (
 if "%MSC_VER%" == "1400" (
-echo Will generate VC8 {Visual Studio 2005}
+echo Will generate VC8 project {Visual Studio 2005}
+set ProjectFile=%HotSpotBuildSpace%\jvm.vcproj
 ) else (
 if "%MSC_VER%" == "1500" (
-echo Will generate VC9 {Visual Studio 2008}
+echo Will generate VC9 project {Visual Studio 2008}
+set ProjectFile=%HotSpotBuildSpace%\jvm.vcproj
 ) else (
-if "%MSC_VER%" == "1600" (
-echo Will generate VC10 {Visual Studio 2010}
+echo Will generate VC10 project {Visual Studio 2010}
 set ProjectFile=%HotSpotBuildSpace%\jvm.vcxproj
-) else (
-if "%MSC_VER%" == "1700" (
-echo Will generate VC10 {compatible with Visual Studio 2012}
-echo After opening in VS 2012, click "Update" when prompted.
-set ProjectFile=%HotSpotBuildSpace%\jvm.vcxproj
-) else (
-echo Will generate VC7 project {Visual Studio 2003 .NET}
+)
 )
 )
 )
@@ -145,7 +151,7 @@ goto usage
 if not "%HOTSPOTMKSHOME%" == "" goto makedir
 if exist c:\cygwin\bin set HOTSPOTMKSHOME=c:\cygwin\bin
 if not "%HOTSPOTMKSHOME%" == "" goto makedir
-echo Warning: please set variable HOTSPOTMKSHOME to place where 
+echo Warning: please set variable HOTSPOTMKSHOME to place where
 echo          your MKS/Cygwin installation is
 echo.
 goto usage
