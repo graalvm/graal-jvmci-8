@@ -2277,8 +2277,13 @@ C2V_VMENTRY_NULL(jobject, getObject, (JNIEnv* env, jobject, jobject x, long disp
 
   Handle obj = JVMCIENV->asConstant(JVMCIENV->wrap(x), JVMCI_CHECK_0);
 
-  // Perform minimal sanity checks on the read.  Primitive reads are permitted to read outside the
-  // bounds of their fields but object reads must map exactly onto the underlying oop slot.
+  if (displacement < 0 || ((long) displacement + type2aelembytes(T_OBJECT) > HeapWordSize * obj->size())) {
+    // Reading outside of the object bounds
+    JVMCI_THROW_MSG_NULL(IllegalArgumentException, "reading outside object bounds");
+  }
+
+  // Perform basic sanity checks on the read.  Object reads must map exactly onto the underlying
+  // oop slot.
   if (obj->is_objArray()) {
     if (displacement < arrayOopDesc::base_offset_in_bytes(T_OBJECT)) {
       JVMCI_THROW_MSG_NULL(IllegalArgumentException, "reading from array header");
@@ -2304,7 +2309,9 @@ C2V_VMENTRY_NULL(jobject, getObject, (JNIEnv* env, jobject, jobject x, long disp
                                                              klass->external_name(), type2name(fd.field_type())));
     }
   } else if (obj->is_typeArray()) {
-    JVMCI_THROW_MSG_NULL(IllegalArgumentException, "Unexpected kind: T_OBJECT");
+    JVMCI_THROW_MSG_NULL(IllegalArgumentException, "Can't read objects from primitive array");
+  } else {
+    ShouldNotReachHere();
   }
 
   oop res = obj->obj_field(displacement);
