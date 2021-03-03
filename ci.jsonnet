@@ -10,7 +10,7 @@
             CI_OS: "windows"
         },
         packages+: {
-            "devkit:VS2017-15.5.5+1" : "==0"
+            "devkit:VS2017-15.9.16+1" : "==0"
         },
     },
     Linux:: {
@@ -90,8 +90,8 @@
     },
 
     OpenJDK:: {
-        local jdk_version = "8u282",
-        local jdk_build = "08",
+        local jdk_version = "8u292",
+        local jdk_build = "04",
 
         name+: "-openjdk",
         downloads+: {
