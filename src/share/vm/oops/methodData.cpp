@@ -881,7 +881,7 @@ FailedSpeculation::FailedSpeculation(address speculation, int speculation_len) :
 
 // A heuristic check to detect nmethods that outlive a failed speculations list.
 static void guarantee_failed_speculations_alive(nmethod* nm, FailedSpeculation** failed_speculations_address) {
-  long head = (long)(address) *failed_speculations_address;
+  uintptr_t head = (uintptr_t)(address) *failed_speculations_address;
   if ((head & 0x1) == 0x1) {
     stringStream st;
     if (nm != NULL) {
