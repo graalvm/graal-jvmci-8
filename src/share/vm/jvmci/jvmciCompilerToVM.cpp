@@ -1968,7 +1968,7 @@ C2V_VMENTRY_NULL(jobject, readFieldValue, (JNIEnv* env, jobject, jobject object,
     JVMCI_THROW_MSG_NULL(IllegalArgumentException, "reading outside object bounds");
   }
 
-  // Perform minimal sanity checks on the read.  Primitive reads are permitted to read outside the
+  // Perform basic sanity checks on the read.  Primitive reads are permitted to read outside the
   // bounds of their fields but object reads must map exactly onto the underlying oop slot.
   if (basic_type == T_OBJECT) {
     if (obj->is_objArray()) {
@@ -1992,7 +1992,9 @@ C2V_VMENTRY_NULL(jobject, readFieldValue, (JNIEnv* env, jobject, jobject object,
                                                                klass->external_name(), type2name(fd.field_type()), type2name(basic_type)));
       }
     } else if (obj->is_typeArray()) {
-      JVMCI_THROW_MSG_NULL(IllegalArgumentException, "Unexpected kind: T_OBJECT");
+      JVMCI_THROW_MSG_NULL(IllegalArgumentException, "Can't read objects from primitive array");
+    } else {
+      ShouldNotReachHere();
     }
   } else {
     if (obj->is_objArray()) {
@@ -2020,6 +2022,15 @@ C2V_VMENTRY_NULL(jobject, readFieldValue, (JNIEnv* env, jobject, jobject object,
       if (value == NULL) {
         return JVMCIENV->get_jobject(JVMCIENV->get_JavaConstant_NULL_POINTER());
       } else {
+        if (value != NULL && !value->is_oop()) {
+          // Throw an exception to improve debuggability.  This check isn't totally reliable because
+          // is_oop doesn't try to be completety safe but for most invalid values it provides a good
+          // enough answer.  It possible to crash in the is_oop call but that just means the crash happens
+          // closer to where things went wrong.
+          JVMCI_THROW_MSG_NULL(InternalError, err_msg("Read bad oop " INTPTR_FORMAT " at offset " JLONG_FORMAT " in object " INTPTR_FORMAT " of type %s",
+                                                      p2i(value), displacement, p2i(obj()), obj->klass()->external_name()));
+        }
+
         JVMCIObject result = JVMCIENV->get_object_constant(value);
         return JVMCIENV->get_jobject(result);
       }
