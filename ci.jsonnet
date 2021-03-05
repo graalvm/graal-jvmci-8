@@ -8,6 +8,10 @@
         capabilities+: ["windows"],
         name+: "-windows",
         environment+: {
+            # Make `msbuild` and common *nix utilities in MKS_HOME available
+            PATH : "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319;$MKS_HOME;$PATH",
+            # Tell `msbuild` to use the environment as is (i.e., the devkit)
+            UseEnv: "true",
             CI_OS: "windows"
         }
     },
@@ -175,14 +179,7 @@
             ["cp", "-r", ".", "${JAVA_HOME}"],
             ["cd", "${OLD_PWD}"],
         ],
-    } + if conf.environment["CI_OS"] == "windows" then {
-        environment+: {
-            # Make `msbuild` and common *nix utilities in MKS_HOME available
-            PATH : "C:\\Windows\\Microsoft.NET\\Framework64\\v4.0.30319;$MKS_HOME;$PATH",
-            # Tell `msbuild` to use the environment as is (i.e., the devkit)
-            UseEnv: "true",
-        },
-    } else {},
+    },
 
     GraalTest:: {
         name+: "-graal",
