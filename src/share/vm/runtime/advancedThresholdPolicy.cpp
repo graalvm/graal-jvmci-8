@@ -379,14 +379,6 @@ CompLevel AdvancedThresholdPolicy::common(Predicate p, Method* method, CompLevel
       if (common(p, method, CompLevel_full_profile, disable_feedback) == CompLevel_full_optimization) {
         next_level = CompLevel_full_optimization;
       } else if ((this->*p)(i, b, cur_level)) {
-#if INCLUDE_JVMCI
-        if (UseJVMCICompiler) {
-          // Since JVMCI takes a while to warm up, its queue inevitably backs up during
-          // early VM execution.
-          next_level = CompLevel_full_profile;
-          break;
-        }
-#endif
         // C1-generated fully profiled code is about 30% slower than the limited profile
         // code that has only invocation and backedge counters. The observation is that
         // if C2 queue is large enough we can spend too much time in the fully profiled code
