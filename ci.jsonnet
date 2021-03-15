@@ -114,8 +114,8 @@
     },
 
     OpenJDK:: {
-        local jdk_version = "8u262",
-        local jdk_build = "10",
+        local jdk_version = "8u292",
+        local jdk_build = "05",
 
         name+: "-openjdk",
         downloads: {
@@ -210,7 +210,8 @@
             # Only need to test formatting and building
             # with Eclipse on one platform.
             self.GraalVMTest + self.Linux + self.AMD64 + self.OpenJDK + self.Eclipse + self.JDT,
-            self.GraalVMTest + self.Darwin + self.AMD64 + self.OpenJDK,
+            # darwin support is disabled as per GR-29152 
+            # self.GraalVMTest + self.Darwin + self.AMD64 + self.OpenJDK,
             # GraalVM not (yet) supported on these platforms
             self.Windows + self.AMD64 + self.OpenJDK,
         ]
