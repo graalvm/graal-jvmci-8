@@ -556,13 +556,11 @@ JRT_ENTRY(jlong, JVMCIRuntime::invoke_static_method_one_arg(JavaThread* thread, 
       case T_SHORT:
         return (jshort) value->i;
       case T_INT:
+      case T_FLOAT:
         return value->i;
       case T_LONG:
-        return value->j;
-      case T_FLOAT:
-        return value->f;
       case T_DOUBLE:
-        return value->d;
+        return value->j;
       default:
         ShouldNotReachHere();
         return 0;
