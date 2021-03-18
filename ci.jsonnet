@@ -90,7 +90,7 @@
 
     OpenJDK:: {
         local jdk_version = "8u292",
-        local jdk_build = "05",
+        local jdk_build = "07",
 
         name+: "-openjdk",
         downloads+: {
