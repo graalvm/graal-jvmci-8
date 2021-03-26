@@ -108,7 +108,7 @@
     },
 
     # Downstream Graal branch to test against.
-    local downstream_branch = "cpu/graal-vm/20.3", # Needed to pass CheckGraalIntrinsics in context of JFR backport
+    local downstream_branch = "me/GR-30392", # ignore JVMCI in CheckGraalInvariants 
 
     # Only need to test formatting and building
     # with Eclipse on one platform.
