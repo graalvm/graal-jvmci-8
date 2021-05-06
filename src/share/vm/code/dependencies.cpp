@@ -29,11 +29,8 @@
 #include "ci/ciMethod.hpp"
 #include "code/dependencies.hpp"
 #include "compiler/compileLog.hpp"
-<<<<<<< HEAD
 #include "compiler/compileBroker.hpp"
-=======
 #include "oops/klass.hpp"
->>>>>>> jdk8u302-b01
 #include "oops/oop.inline.hpp"
 #include "oops/objArrayKlass.hpp"
 #include "runtime/handles.hpp"
