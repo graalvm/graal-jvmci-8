@@ -26,11 +26,13 @@
 #define SHARE_VM_GC_IMPLEMENTATION_G1_HEAPREGIONSET_HPP
 
 #include "gc_implementation/g1/heapRegion.hpp"
+#include "utilities/macros.hpp"
 
 // Large buffer for some cases where the output might be larger than normal.
 #define HRS_ERR_MSG_BUFSZ 512
 typedef FormatBuffer<HRS_ERR_MSG_BUFSZ> hrs_err_msg;
 
+<<<<<<< HEAD
 // Set verification will be forced either if someone defines
 // HEAP_REGION_SET_FORCE_VERIFY to be 1, or in builds in which
 // asserts are compiled in.
@@ -42,6 +44,8 @@ typedef FormatBuffer<HRS_ERR_MSG_BUFSZ> hrs_err_msg;
 #endif
 #endif // HEAP_REGION_SET_FORCE_VERIFY
 
+=======
+>>>>>>> jdk8u302-b01
 class hrs_ext_msg;
 
 class HRSMtSafeChecker : public CHeapObj<mtGC> {
@@ -149,13 +153,7 @@ public:
   void verify_next_region(HeapRegion* hr);
   void verify_end();
 
-#if HEAP_REGION_SET_FORCE_VERIFY
-  void verify_optional() {
-    verify();
-  }
-#else // HEAP_REGION_SET_FORCE_VERIFY
-  void verify_optional() { }
-#endif // HEAP_REGION_SET_FORCE_VERIFY
+  void verify_optional() { DEBUG_ONLY(verify();) }
 
   virtual void print_on(outputStream* out, bool print_contents = false);
 };
