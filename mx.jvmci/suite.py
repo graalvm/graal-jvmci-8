@@ -66,7 +66,7 @@ suite = {
       "sourceDirs" : ["src"],
       "javaCompliance" : "1.8",
       "workingSets" : "API,JVMCI",
-      "checkstyleVersion" : "8.8",
+      "checkstyleVersion" : "8.36.1",
     },
 
     # ------------- JVMCI:API -------------
@@ -175,7 +175,7 @@ suite = {
       "dependencies" : [
         "jdk.vm.ci.runtime",
       ],
-      "checkstyleVersion" : "8.8",
+      "checkstyleVersion" : "8.36.1",
       "javaCompliance" : "1.8",
       "workingSets" : "JVMCI",
     },
