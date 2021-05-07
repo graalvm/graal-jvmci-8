@@ -2837,6 +2837,7 @@ address nmethod::continuation_for_implicit_exception(address pc, bool for_div0_c
     ResourceMark rm(thread);
     CodeBlob* cb = CodeCache::find_blob(pc);
     assert(cb != NULL && cb == this, "");
+    ttyLocker ttyl;
     tty->print_cr("implicit exception happened at " INTPTR_FORMAT, pc);
     print();
     method()->print_codes();
@@ -3203,13 +3204,6 @@ void nmethod::print() const {
                                               jvmci_data_size());
 #endif
 }
-
-void nmethod::print_code() {
-  HandleMark hm;
-  ResourceMark m;
-  Disassembler::decode(this);
-}
-
 
 #ifndef PRODUCT
 
