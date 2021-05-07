@@ -164,14 +164,14 @@ decode_instructions(void* start_pv, void* end_pv,
                     printf_callback_t printf_callback_arg, void* printf_stream_arg,
                     const char* options) {
   return decode_instructions_virtual((uintptr_t)start_pv,
-                             (uintptr_t)end_pv,
-                             (unsigned char*)start_pv,
-                             (uintptr_t)end_pv - (uintptr_t)start_pv,
-                             event_callback_arg,
-                             event_stream_arg,
-                             printf_callback_arg,
-                             printf_stream_arg,
-                             options, false);
+                                     (uintptr_t)end_pv,
+                                     (unsigned char*)start_pv,
+                                     (uintptr_t)end_pv - (uintptr_t)start_pv,
+                                     event_callback_arg,
+                                     event_stream_arg,
+                                     printf_callback_arg,
+                                     printf_stream_arg,
+                                     options, false);
 }
 
 static void* decode(struct hsdis_app_data* app_data, const char* options) {

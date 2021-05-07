@@ -32,17 +32,6 @@
 #define HRS_ERR_MSG_BUFSZ 512
 typedef FormatBuffer<HRS_ERR_MSG_BUFSZ> hrs_err_msg;
 
-// Set verification will be forced either if someone defines
-// HEAP_REGION_SET_FORCE_VERIFY to be 1, or in builds in which
-// asserts are compiled in.
-#ifndef HEAP_REGION_SET_FORCE_VERIFY
-#if defined(ASSERT)
-#define HEAP_REGION_SET_FORCE_VERIFY 1
-#else
-#define HEAP_REGION_SET_FORCE_VERIFY 0
-#endif
-#endif // HEAP_REGION_SET_FORCE_VERIFY
-
 class hrs_ext_msg;
 
 class HRSMtSafeChecker : public CHeapObj<mtGC> {
