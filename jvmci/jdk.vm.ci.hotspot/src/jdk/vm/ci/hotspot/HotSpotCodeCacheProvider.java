@@ -147,7 +147,7 @@ public class HotSpotCodeCacheProvider implements CodeCacheProvider {
                 if (result == config.codeInstallResultDependenciesInvalid) {
                     throw new AssertionError(resultDesc + " " + msg);
                 }
-                throw new BailoutException(result != config.codeInstallResultDependenciesFailed, msg);
+                throw new BailoutException(result >= config.codeInstallResultFirstPermanentBailout, msg);
             } else {
                 throw new BailoutException("Error installing %s: %s", ((HotSpotCompiledCode) compiledCode).getName(), resultDesc);
             }

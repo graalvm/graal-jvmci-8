@@ -597,6 +597,7 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
     JVMCIObject target,
     JVMCIObject compiled_code,
     CodeBlob*& cb,
+    nmethodLocker& nmethod_handle,
     JVMCIObject installed_code,
     FailedSpeculation** failed_speculations,
     char* speculations,
@@ -655,16 +656,18 @@ JVMCI::CodeInstallResult CodeInstaller::install(JVMCICompiler* compiler,
     }
 
     JVMCIObject mirror = installed_code;
-    nmethod* nm = NULL;
-    result = runtime()->register_method(jvmci_env(), method, nm, entry_bci, &_offsets, _orig_pc_offset, &buffer,
+    result = runtime()->register_method(jvmci_env(), method, nmethod_handle, entry_bci, &_offsets, _orig_pc_offset, &buffer,
                                         stack_slots, _debug_recorder->_oopmaps, &_exception_handler_table, &_implicit_exception_table,
                                         compiler, _debug_recorder, _dependencies, id,
                                         has_unsafe_access, _has_wide_vector, compiled_code, mirror,
                                         failed_speculations, speculations, speculations_len);
-    cb = nm;
+    if (result == JVMCI::ok) {
+      nmethod* nm = nmethod_handle.code()->as_nmethod_or_null();
+      cb = nm;
+    }
   }
 
-  if (cb != NULL) {
+  if (result == JVMCI::ok) {
     // Make sure the pre-calculated constants section size was correct.
     guarantee((cb->code_begin() - cb->content_begin()) >= _constants_size, err_msg("%d < %d", (int)(cb->code_begin() - cb->content_begin()), _constants_size));
   }

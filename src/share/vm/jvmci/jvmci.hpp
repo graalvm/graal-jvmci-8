@@ -90,7 +90,9 @@ class JVMCI : public AllStatic {
      dependencies_failed,
      dependencies_invalid,
      cache_full,
-     code_too_large
+     nmethod_reclaimed, // code cache sweeper reclaimed nmethod in between its creation and being marked "in_use"
+     code_too_large,
+     first_permanent_bailout = code_too_large
   };
 
   // Gets the handle to the loaded JVMCI shared library, loading it
