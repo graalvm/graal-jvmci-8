@@ -1470,6 +1470,8 @@ def _jvmci_versions_in_current_branch():
             m = jvmci_tag_re.match(decoration)
             if m:
                 versions.append(tuple([int(g) for g in m.groups()]))
+    if not versions:
+        mx.abort('No JVMCI versions found. If this is a shallow clone of the git repo, it may need to be unshallowed and load tags with `git fetch --unshallow --tags`')
     return versions
 
 def _get_jvmci_version():
