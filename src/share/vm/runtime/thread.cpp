@@ -1566,8 +1566,8 @@ void JavaThread::initialize() {
   _jvmci._alternate_call_target = NULL;
   assert(_jvmci._implicit_exception_pc == NULL, "must be");
   _jvmci_counters = NULL;
-  _jvmci_reserved0 = NULL;
-  _jvmci_reserved1 = NULL;
+  _jvmci_reserved0 = 0;
+  _jvmci_reserved1 = 0;
   _jvmci_reserved_oop0 = NULL;
   if (JVMCICounterSize > 0) {
     resize_counters(0, (int) JVMCICounterSize);

@@ -974,4 +974,24 @@ final class CompilerToVM {
      * @see HotSpotJVMCIRuntime#exitHotSpot(int)
      */
     native void callSystemExit(int status);
+
+    /**
+     * @see HotSpotJVMCIRuntime#setThreadLocalObject(int, Object)
+     */
+    native void setThreadLocalObject(int id, Object value);
+
+    /**
+     * @see HotSpotJVMCIRuntime#getThreadLocalObject(int)
+     */
+    native Object getThreadLocalObject(int id);
+
+    /**
+     * @see HotSpotJVMCIRuntime#setThreadLocalLong(int, long)
+     */
+    native void setThreadLocalLong(int id, long value);
+
+    /**
+     * @see HotSpotJVMCIRuntime#getThreadLocalLong(int)
+     */
+    native long getThreadLocalLong(int id);
 }
