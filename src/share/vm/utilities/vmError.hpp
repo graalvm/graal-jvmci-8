@@ -140,6 +140,11 @@ public:
   static jlong get_first_error_tid() {
     return first_error_tid;
   }
+
+  // Construct file name for a log file and return it's file descriptor.
+  // Name and location depends on pattern, default_pattern params and access
+  // permissions.
+  static int prepare_log_file(const char* pattern, const char* default_pattern, char* buf, size_t buflen);
 };
 
 #endif // SHARE_VM_UTILITIES_VMERROR_HPP
