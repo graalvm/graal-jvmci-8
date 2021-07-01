@@ -2678,6 +2678,7 @@ C2V_VMENTRY(void, setThreadLocalObject, (JNIEnv* env, jobject, jint id, jobject 
   requireInHotSpot("setThreadLocalObject", JVMCI_CHECK);
   if (id == 0) {
     thread->set_jvmci_reserved_oop0(JNIHandles::resolve(value));
+    return;
   }
   THROW_MSG(vmSymbols::java_lang_IllegalArgumentException(),
             err_msg("%d is not a valid thread local id", id));
