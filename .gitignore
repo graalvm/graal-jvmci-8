@@ -12,7 +12,6 @@
 **/*.orig
 **/*.pdf
 **/*.pyc
-**/*.rej
 **/*.swn
 **/*.swo
 **/*.swp
