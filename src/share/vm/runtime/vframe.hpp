@@ -282,12 +282,16 @@ class MonitorInfo : public ResourceObj {
 class vframeStreamCommon : StackObj {
  protected:
   // common
+  frame        _prev_frame;
   frame        _frame;
   JavaThread*  _thread;
   RegisterMap  _reg_map;
   enum { interpreted_mode, compiled_mode, at_end_mode } _mode;
 
+  // For compiled_mode
+  int _decode_offset;
   int _sender_decode_offset;
+  int _vframe_id;
 
   // Cached information
   Method* _method;
@@ -319,12 +323,16 @@ class vframeStreamCommon : StackObj {
   int bci() const { return _bci; }
   intptr_t* frame_id() const { return _frame.id(); }
   address frame_pc() const { return _frame.pc(); }
+  inline int vframe_id() const;
+  inline int decode_offset() const;
 
   CodeBlob*          cb()         const { return _frame.cb();  }
   nmethod*           nm()         const {
       assert( cb() != NULL && cb()->is_nmethod(), "usage");
       return (nmethod*) cb();
   }
+
+  javaVFrame* asJavaVFrame();
 
   // Frame type
   bool is_interpreted_frame() const { return _frame.is_interpreted_frame(); }
@@ -337,6 +345,7 @@ class vframeStreamCommon : StackObj {
 
     // handle general case
     do {
+      _prev_frame = _frame;
       _frame = _frame.sender(&_reg_map);
     } while (!fill_from_frame());
   }
@@ -367,6 +376,7 @@ class vframeStream : public vframeStreamCommon {
 
     _frame = _thread->last_frame();
     while (!fill_from_frame()) {
+      _prev_frame = _frame;
       _frame = _frame.sender(&_reg_map);
     }
   }
@@ -381,12 +391,14 @@ inline bool vframeStreamCommon::fill_in_compiled_inlined_sender() {
     return false;
   }
   fill_from_compiled_frame(_sender_decode_offset);
+  ++_vframe_id;
   return true;
 }
 
 
 inline void vframeStreamCommon::fill_from_compiled_frame(int decode_offset) {
   _mode = compiled_mode;
+  _decode_offset = decode_offset;
 
   // Range check to detect ridiculous offsets.
   if (decode_offset == DebugInformationRecorder::serialized_null ||
@@ -431,6 +443,8 @@ inline void vframeStreamCommon::fill_from_compiled_frame(int decode_offset) {
 inline void vframeStreamCommon::fill_from_compiled_native_frame() {
   _mode = compiled_mode;
   _sender_decode_offset = DebugInformationRecorder::serialized_null;
+  _decode_offset = DebugInformationRecorder::serialized_null;
+  _vframe_id = 0;
   _method = nm()->method();
   _bci = 0;
 }
@@ -500,6 +514,7 @@ inline bool vframeStreamCommon::fill_from_frame() {
         decode_offset = pc_desc->scope_decode_offset();
       }
       fill_from_compiled_frame(decode_offset);
+      _vframe_id = 0;
     }
     return true;
   }
@@ -532,6 +547,17 @@ inline void vframeStreamCommon::fill_from_interpreter_frame() {
   _mode   = interpreted_mode;
   _method = method;
   _bci    = bci;
+}
+
+
+inline int vframeStreamCommon::vframe_id() const {
+  assert(_mode == compiled_mode, "usage");
+  return _vframe_id;
+}
+
+inline int vframeStreamCommon::decode_offset() const {
+  assert(_mode == compiled_mode, "usage");
+  return _decode_offset;
 }
 
 #endif // SHARE_VM_RUNTIME_VFRAME_HPP
