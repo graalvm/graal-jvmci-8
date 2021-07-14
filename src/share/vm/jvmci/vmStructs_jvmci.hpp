@@ -145,11 +145,12 @@
   declare_constant(Deoptimization::Reason_unresolved)                                             \
   declare_constant(Deoptimization::Reason_jsr_mismatch)                                           \
   declare_constant(Deoptimization::_support_large_access_byte_array_virtualization)               \
-  declare_preprocessor_constant("JVMCIEnv::ok",                   JVMCI::ok)                      \
-  declare_preprocessor_constant("JVMCIEnv::dependencies_failed",  JVMCI::dependencies_failed)     \
-  declare_preprocessor_constant("JVMCIEnv::dependencies_invalid", JVMCI::dependencies_invalid)    \
-  declare_preprocessor_constant("JVMCIEnv::cache_full",           JVMCI::cache_full)              \
-  declare_preprocessor_constant("JVMCIEnv::code_too_large",       JVMCI::code_too_large)          \
+  declare_preprocessor_constant("JVMCI::ok",                      JVMCI::ok)                      \
+  declare_preprocessor_constant("JVMCI::dependencies_failed",     JVMCI::dependencies_failed)     \
+  declare_preprocessor_constant("JVMCI::dependencies_invalid",    JVMCI::dependencies_invalid)    \
+  declare_preprocessor_constant("JVMCI::cache_full",              JVMCI::cache_full)              \
+  declare_preprocessor_constant("JVMCI::code_too_large",          JVMCI::code_too_large)          \
+  declare_preprocessor_constant("JVMCI::first_permanent_bailout", JVMCI::first_permanent_bailout) \
   declare_constant(JVMCIRuntime::none)                                                            \
   declare_constant(JVMCIRuntime::by_holder)                                                       \
   declare_constant(JVMCIRuntime::by_full_signature)                                               \
