@@ -53,14 +53,22 @@ ScopeDesc::ScopeDesc(const nmethod* code, int decode_offset, bool reexecute, boo
 }
 
 
-ScopeDesc::ScopeDesc(const ScopeDesc* parent) {
+void ScopeDesc::initialize(const ScopeDesc* parent, int decode_offset) {
   _code          = parent->_code;
-  _decode_offset = parent->_sender_decode_offset;
+  _decode_offset = decode_offset;
   _objects       = parent->_objects;
   _reexecute     = false; //reexecute only applies to the first scope
   _rethrow_exception = false;
   _return_oop    = false;
   decode_body();
+}
+
+ScopeDesc::ScopeDesc(const ScopeDesc* parent) {
+  initialize(parent, parent->_sender_decode_offset);
+}
+
+ScopeDesc::ScopeDesc(const ScopeDesc* parent, int decode_offset) {
+  initialize(parent, decode_offset);
 }
 
 
