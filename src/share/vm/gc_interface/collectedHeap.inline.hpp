@@ -30,6 +30,7 @@
 #include "memory/threadLocalAllocBuffer.inline.hpp"
 #include "memory/universe.hpp"
 #include "oops/arrayOop.hpp"
+#include "oops/oop.inline.hpp"
 #include "prims/jvmtiExport.hpp"
 #include "runtime/sharedRuntime.hpp"
 #include "runtime/thread.inline.hpp"
